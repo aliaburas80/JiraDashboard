@@ -46,6 +46,18 @@ function formatDays(value) {
   return value === null || value === undefined ? '-' : `${value}d`;
 }
 
+function SectionHeader({ kicker, title, detail }) {
+  return (
+    <div className="section-heading">
+      <div>
+        <span>{kicker}</span>
+        <h3>{title}</h3>
+      </div>
+      {detail && <p>{detail}</p>}
+    </div>
+  );
+}
+
 function getUniqueValues(items, key) {
   return [...new Set((items || []).map((item) => item[key]).filter(Boolean))].sort();
 }
@@ -341,112 +353,140 @@ export default function DashboardPage({ data, onReset }) {
         </button>
       </div>
 
-      <section className="kpi-grid">
-        <KpiCard label="Completion" value={`${data.completionRate}%`} detail={`${data.doneIssues} of ${data.totalIssues} issues done`} />
-        <KpiCard label="Lead Time" value={`${flow.averageLeadTimeDays || 0}d`} detail={`${flow.leadTimeSampleSize || 0} completed items`} />
-        <KpiCard label="Cycle Time" value={`${flow.averageCycleTimeDays || 0}d`} detail={`${flow.cycleTimeSampleSize || 0} items with start dates`} />
-        <KpiCard label="Story Points" value={storyPoints.totalStoryPoints || 0} detail={`${storyPoints.pointCompletionRate || 0}% complete`} />
-        <KpiCard label="Active Work" value={data.activeIssues || 0} detail="Items in progress, review, QA, or UAT" />
-        <KpiCard label="Health Alerts" value={(flow.critical || 0) + (flow.warning || 0)} detail={`${flow.critical || 0} critical, ${flow.warning || 0} warning`} />
+      <section className="dashboard-section section-overview">
+        <SectionHeader
+          kicker="Overview"
+          title="Executive delivery snapshot"
+          detail="The cards summarize delivery completion, timing, scope, active load, and current health pressure."
+        />
+        <div className="kpi-grid">
+          <KpiCard label="Completion" value={`${data.completionRate}%`} detail={`${data.doneIssues} of ${data.totalIssues} issues done`} accent="green" />
+          <KpiCard label="Lead Time" value={`${flow.averageLeadTimeDays || 0}d`} detail={`${flow.leadTimeSampleSize || 0} completed items`} accent="blue" />
+          <KpiCard label="Cycle Time" value={`${flow.averageCycleTimeDays || 0}d`} detail={`${flow.cycleTimeSampleSize || 0} items with start dates`} accent="teal" />
+          <KpiCard label="Story Points" value={storyPoints.totalStoryPoints || 0} detail={`${storyPoints.pointCompletionRate || 0}% complete`} accent="violet" />
+          <KpiCard label="Active Work" value={data.activeIssues || 0} detail="Items in progress, review, QA, or UAT" accent="amber" />
+          <KpiCard label="Health Alerts" value={(flow.critical || 0) + (flow.warning || 0)} detail={`${flow.critical || 0} critical, ${flow.warning || 0} warning`} accent="red" />
+        </div>
       </section>
 
-      <section className="visual-grid">
-        <HealthDonut flow={flow} />
-        <QuarterChart quarters={quarters} />
-        <section className="dashboard-panel chart-panel">
-          <h3>Work State Distribution</h3>
-          <WorkStateChart rows={flowItems} />
-        </section>
+      <section className="dashboard-section section-visuals">
+        <SectionHeader
+          kicker="Visual intelligence"
+          title="Charts that explain the result"
+          detail="Use these charts to see health mix, quarter movement, sprint comparison, kanban distribution, and orphan scope."
+        />
+        <div className="visual-grid hero-visual-grid">
+          <HealthDonut flow={flow} />
+          <QuarterChart quarters={quarters} />
+          <section className="dashboard-panel chart-panel panel-work-state">
+            <h3>Work State Distribution</h3>
+            <WorkStateChart rows={flowItems} />
+          </section>
+        </div>
+
+        <div className="visual-grid">
+          <section className="dashboard-panel chart-panel panel-kanban">
+            <h3>Kanban Distribution</h3>
+            <CompactBarChart rows={kanban.byStatus?.slice(0, 6)} emptyMessage="No status data available." />
+          </section>
+          <section className="dashboard-panel chart-panel panel-sprint">
+            <h3>Sprint Comparison</h3>
+            <SprintCompareChart sprints={sprint.sprints} />
+          </section>
+          <section className="dashboard-panel chart-panel panel-orphans">
+            <h3>Orphan Items</h3>
+            <div className="orphan-summary">
+              <strong>{flowItems.filter((item) => item.isOrphan).length}</strong>
+              <span>items without epic or parent</span>
+            </div>
+          </section>
+        </div>
       </section>
 
-      <section className="visual-grid">
-        <section className="dashboard-panel chart-panel">
-          <h3>Kanban Distribution</h3>
-          <CompactBarChart rows={kanban.byStatus?.slice(0, 6)} emptyMessage="No status data available." />
-        </section>
-        <section className="dashboard-panel chart-panel">
-          <h3>Sprint Comparison</h3>
-          <SprintCompareChart sprints={sprint.sprints} />
-        </section>
-        <section className="dashboard-panel chart-panel">
-          <h3>Orphan Items</h3>
-          <div className="orphan-summary">
-            <strong>{flowItems.filter((item) => item.isOrphan).length}</strong>
-            <span>items without epic or parent</span>
-          </div>
-        </section>
+      <section className="dashboard-section section-ratios">
+        <SectionHeader
+          kicker="Ratios"
+          title="Circle metrics by delivery theme"
+          detail="Each circle gives a fast percentage view for completion, points, risk, ownership gaps, and active work."
+        />
+        <div className="circle-grid">
+          <CircleMetric title="Done Ratio" value={data.doneIssues || 0} total={totalIssues} label="done items" color="#16a34a" />
+          <CircleMetric title="Story Points" value={storyPoints.completedStoryPoints || 0} total={storyPoints.totalStoryPoints || 0} label="completed points" color="#14b8a6" />
+          <CircleMetric title="Risk Pressure" value={riskItems} total={totalIssues} label="warning or critical" color="#dc2626" />
+          <CircleMetric title="Orphan Ratio" value={orphanItems} total={totalIssues} label="without epic/parent" color="#f97316" />
+          <CircleMetric title="Active Work" value={data.activeIssues || 0} total={totalIssues} label="active items" color="#7c3aed" />
+        </div>
       </section>
 
-      <section className="circle-grid">
-        <CircleMetric title="Done Ratio" value={data.doneIssues || 0} total={totalIssues} label="done items" color="#16a34a" />
-        <CircleMetric title="Story Points" value={storyPoints.completedStoryPoints || 0} total={storyPoints.totalStoryPoints || 0} label="completed points" color="#14b8a6" />
-        <CircleMetric title="Risk Pressure" value={riskItems} total={totalIssues} label="warning or critical" color="#dc2626" />
-        <CircleMetric title="Orphan Ratio" value={orphanItems} total={totalIssues} label="without epic/parent" color="#f97316" />
-        <CircleMetric title="Active Work" value={data.activeIssues || 0} total={totalIssues} label="active items" color="#7c3aed" />
+      <section className="dashboard-section section-delivery">
+        <SectionHeader
+          kicker="Delivery controls"
+          title="Flow, scope, and risk readout"
+          detail="These panels explain whether delivery speed, points, and risk conditions support the project result."
+        />
+        <div className="analysis-grid">
+          <section className="dashboard-panel panel-flow">
+            <h3>Flow Efficiency</h3>
+            <div className="metric-list">
+              <div>
+                <span>Average lead time</span>
+                <strong>{flow.averageLeadTimeDays || 0} days</strong>
+              </div>
+              <div>
+                <span>Average cycle time</span>
+                <strong>{flow.averageCycleTimeDays || 0} days</strong>
+              </div>
+              <div>
+                <span>Completed sample</span>
+                <strong>{flow.leadTimeSampleSize || 0} issues</strong>
+              </div>
+              <div>
+                <span>Critical items</span>
+                <strong>{flow.critical || 0}</strong>
+              </div>
+            </div>
+          </section>
+
+          <section className="dashboard-panel panel-points">
+            <h3>Story Point Delivery</h3>
+            <div className="metric-list">
+              <div>
+                <span>Completed points</span>
+                <strong>{storyPoints.completedStoryPoints || 0}</strong>
+              </div>
+              <div>
+                <span>Remaining points</span>
+                <strong>{storyPoints.remainingStoryPoints || 0}</strong>
+              </div>
+              <div>
+                <span>Point completion</span>
+                <strong>{storyPoints.pointCompletionRate || 0}%</strong>
+              </div>
+            </div>
+            <ProgressBar value={storyPoints.pointCompletionRate || 0} />
+          </section>
+
+          <section className="dashboard-panel panel-risk">
+            <h3>Risk Readout</h3>
+            <div className="metric-list">
+              <div>
+                <span>Blocked</span>
+                <strong>{risk.blockedIssues || 0}</strong>
+              </div>
+              <div>
+                <span>Overdue</span>
+                <strong>{risk.overdueIssues || 0}</strong>
+              </div>
+              <div>
+                <span>High priority open</span>
+                <strong>{risk.highPriorityOpenIssues || 0}</strong>
+              </div>
+            </div>
+          </section>
+        </div>
       </section>
 
-      <section className="analysis-grid">
-        <section className="dashboard-panel">
-          <h3>Flow Efficiency</h3>
-          <div className="metric-list">
-            <div>
-              <span>Average lead time</span>
-              <strong>{flow.averageLeadTimeDays || 0} days</strong>
-            </div>
-            <div>
-              <span>Average cycle time</span>
-              <strong>{flow.averageCycleTimeDays || 0} days</strong>
-            </div>
-            <div>
-              <span>Completed sample</span>
-              <strong>{flow.leadTimeSampleSize || 0} issues</strong>
-            </div>
-            <div>
-              <span>Critical items</span>
-              <strong>{flow.critical || 0}</strong>
-            </div>
-          </div>
-        </section>
-
-        <section className="dashboard-panel">
-          <h3>Story Point Delivery</h3>
-          <div className="metric-list">
-            <div>
-              <span>Completed points</span>
-              <strong>{storyPoints.completedStoryPoints || 0}</strong>
-            </div>
-            <div>
-              <span>Remaining points</span>
-              <strong>{storyPoints.remainingStoryPoints || 0}</strong>
-            </div>
-            <div>
-              <span>Point completion</span>
-              <strong>{storyPoints.pointCompletionRate || 0}%</strong>
-            </div>
-          </div>
-          <ProgressBar value={storyPoints.pointCompletionRate || 0} />
-        </section>
-
-        <section className="dashboard-panel">
-          <h3>Risk Readout</h3>
-          <div className="metric-list">
-            <div>
-              <span>Blocked</span>
-              <strong>{risk.blockedIssues || 0}</strong>
-            </div>
-            <div>
-              <span>Overdue</span>
-              <strong>{risk.overdueIssues || 0}</strong>
-            </div>
-            <div>
-              <span>High priority open</span>
-              <strong>{risk.highPriorityOpenIssues || 0}</strong>
-            </div>
-          </div>
-        </section>
-      </section>
-
-      <section className="dashboard-panel">
+      <section className="dashboard-panel table-section panel-quarter">
         <h3>Quarter Statistics</h3>
         <MetricTable
           columns={[
@@ -471,7 +511,7 @@ export default function DashboardPage({ data, onReset }) {
         />
       </section>
 
-      <section className="dashboard-panel">
+      <section className="dashboard-panel table-section panel-kanban-detail">
         <h3>Kanban Status Health</h3>
         <DistributionDonut title="Kanban Share" rows={kanban.byStatus?.slice(0, 6)} emptyMessage="No status data found." />
         <CompactBarChart rows={kanban.byStatus?.slice(0, 8)} emptyMessage="No status data found." />
@@ -492,7 +532,7 @@ export default function DashboardPage({ data, onReset }) {
         />
       </section>
 
-      <section className="dashboard-panel">
+      <section className="dashboard-panel table-section panel-sprint-detail">
         <h3>Sprint Status</h3>
         <DistributionDonut title="Sprint Share" rows={sprint.sprints?.slice(0, 6)} labelKey="name" valueKey="issues" emptyMessage="No sprint data found." />
         <MetricTable
@@ -512,8 +552,14 @@ export default function DashboardPage({ data, onReset }) {
         />
       </section>
 
-      <section className="split-panels">
-        <section className="dashboard-panel">
+      <section className="dashboard-section section-ownership">
+        <SectionHeader
+          kicker="Ownership"
+          title="Capacity and epic performance"
+          detail="Understand who carries the work and which epic or parent groups are moving cleanly."
+        />
+        <div className="split-panels">
+        <section className="dashboard-panel panel-capacity">
           <h3>Capacity By Assignee</h3>
           <CompactBarChart rows={data.capacity?.slice(0, 8)} labelKey="assignee" valueKey="issues" emptyMessage="No assignee data found." />
           <MetricTable
@@ -529,7 +575,7 @@ export default function DashboardPage({ data, onReset }) {
           />
         </section>
 
-        <section className="dashboard-panel">
+        <section className="dashboard-panel panel-epic">
           <h3>Epic / Parent Performance</h3>
           <MetricTable
             columns={[
@@ -546,9 +592,10 @@ export default function DashboardPage({ data, onReset }) {
             emptyMessage="No epic or parent data found."
           />
         </section>
+        </div>
       </section>
 
-      <section className="dashboard-panel">
+      <section className="dashboard-panel panel-justification">
         <h3>Justification</h3>
         <ul className="insight-list">
           {(data.insights || []).map((insight) => (
@@ -557,7 +604,7 @@ export default function DashboardPage({ data, onReset }) {
         </ul>
       </section>
 
-      <section className={`dashboard-panel collapsible-panel ${isFlowPanelOpen ? 'open' : ''}`}>
+      <section className={`dashboard-panel collapsible-panel panel-flow-health ${isFlowPanelOpen ? 'open' : ''}`}>
         <button
           className="collapsible-trigger"
           type="button"
