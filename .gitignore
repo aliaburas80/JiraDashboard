@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+.env
+.env.*
+.DS_Store
+
+frontend/node_modules/
+frontend/build/
+backend/node_modules/
+
+backend/data/import-logs.json
+data/
+~$*.xlsx
