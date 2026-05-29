@@ -1,3 +1,4 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 function escapeHtml(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')

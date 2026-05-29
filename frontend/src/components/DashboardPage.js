@@ -1,3 +1,4 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 import { useMemo, useState, useRef, useEffect } from 'react';
 import KpiCard from './KpiCard';
 
@@ -46,14 +47,39 @@ function formatDays(value) {
   return value === null || value === undefined ? '-' : `${value}d`;
 }
 
-function SectionHeader({ kicker, title, detail }) {
+function HelpButton({ topic, label, onOpenHelp }) {
+  if (!onOpenHelp) return null;
+
+  return (
+    <button className="context-help-button" type="button" onClick={() => onOpenHelp(topic)} aria-label={label || `Help for ${topic}`}>
+      ?
+    </button>
+  );
+}
+
+function SectionHeader({ icon, kicker, title, detail, helpTopic, onOpenHelp }) {
   return (
     <div className="section-heading">
-      <div>
-        <span>{kicker}</span>
-        <h3>{title}</h3>
+      <div className="section-heading-left">
+        {icon && <span className="section-heading-icon" aria-hidden="true">{icon}</span>}
+        <div>
+          <span>{kicker}</span>
+          <div className="heading-title-row">
+            <h3>{title}</h3>
+            <HelpButton topic={helpTopic} label={`Help for ${title}`} onOpenHelp={onOpenHelp} />
+          </div>
+        </div>
       </div>
       {detail && <p>{detail}</p>}
+    </div>
+  );
+}
+
+function PanelTitle({ children, helpTopic, onOpenHelp }) {
+  return (
+    <div className="panel-title-row">
+      <h3>{children}</h3>
+      <HelpButton topic={helpTopic} label={`Help for ${children}`} onOpenHelp={onOpenHelp} />
     </div>
   );
 }
@@ -287,7 +313,444 @@ function SprintCompareChart({ sprints }) {
   return <CompactBarChart rows={rows} emptyMessage="No sprint data available." />;
 }
 
-export default function DashboardPage({ data, onReset }) {
+const DONE_STATUSES = ['done', 'closed', 'resolved'];
+
+function healthScoreMeta(score) {
+  if (score >= 90) return { band: 'excellent', label: 'Excellent' };
+  if (score >= 75) return { band: 'good',      label: 'Good' };
+  if (score >= 60) return { band: 'moderate',  label: 'Moderate' };
+  if (score >= 40) return { band: 'at-risk',   label: 'At Risk' };
+  return               { band: 'critical',  label: 'Critical' };
+}
+
+function HealthScoreGauge({ score, onClick }) {
+  const { band, label } = healthScoreMeta(score);
+  return (
+    <button type="button" className="health-score-gauge" onClick={onClick} title="Open Quick Overview">
+      <div className={`health-score-circle score-${band}`}>
+        <span>{score}</span>
+        <small>/ 100</small>
+      </div>
+      <div className="health-score-info">
+        <strong>Health Score</strong>
+        <span>{label}</span>
+      </div>
+    </button>
+  );
+}
+
+function SmartActions({ actions, onAction }) {
+  if (!actions.length) return null;
+  return (
+    <section className="smart-actions" aria-label="Smart recommendations">
+      <div className="smart-actions-header">
+        <span className="smart-actions-title">⚡ Smart Recommendations</span>
+        <span className="smart-actions-count">{actions.length} action{actions.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div className="smart-actions-grid">
+        {actions.map((action, i) => (
+          <button
+            key={i}
+            type="button"
+            className={`smart-action-card smart-action-${action.type}`}
+            onClick={() => onAction(action)}
+          >
+            <div className="smart-action-top">
+              <span className="smart-action-num">{i + 1}</span>
+              <span className="smart-action-icon" aria-hidden="true">{action.icon}</span>
+              <span className={`smart-action-badge ${action.type}`}>{action.type}</span>
+            </div>
+            <div className="smart-action-title">{action.title}</div>
+            <div className="smart-action-detail">{action.detail}</div>
+            <div className="smart-action-cta">Go to details →</div>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ManagerReport({ data, flowItems, epicReadiness, healthStatus, riskItems, onClose, onNavigate }) {
+  const flow = data.flow || {};
+  const sp = data.storyPoints || {};
+  const sprint = data.sprint || {};
+
+  const healthClass = riskItems === 0 ? 'healthy' : riskItems < 4 ? 'at-risk' : 'urgent-attention';
+  const topRisks = (flowItems || []).filter((i) => i.health === 'critical').slice(0, 3);
+  const latestSprint = sprint.sprints?.slice().sort((a, b) => b.issues - a.issues)[0];
+  const atRisk = (epicReadiness || []).filter((e) => e.risk === 'critical' || e.completion < 60);
+  const topLabels = (data.labels?.labelStats || []).filter((l) => l.label !== '(unlabeled)').slice(0, 3);
+  const insights = (data.insights || []).slice(0, 3);
+  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  return (
+    <div className="report-backdrop" role="dialog" aria-modal="true" aria-labelledby="report-title" onClick={onClose}>
+      <div className="report-panel" onClick={(e) => e.stopPropagation()}>
+
+        <header className="report-header">
+          <div>
+            <span className="report-eyebrow">Delivery Clarity — Executive Summary</span>
+            <h2 className="report-title" id="report-title">Delivery Health Report</h2>
+            <p className="report-date">Generated {today}</p>
+          </div>
+          <button type="button" className="report-close-btn" onClick={onClose} aria-label="Close report">Close ✕</button>
+        </header>
+
+        <div className="report-scroll">
+          <div className={`report-health-banner ${healthClass}`}>
+            <div className="report-health-left">
+              <span className="report-health-indicator">
+                <span className="report-health-dot" />
+                {healthStatus}
+              </span>
+              <span className="report-health-sub">
+                {riskItems === 0 ? 'No items require attention' : `${riskItems} item${riskItems !== 1 ? 's' : ''} require attention`}
+              </span>
+            </div>
+            <div className="report-health-right">
+              <span className="report-completion">{data.completionRate || 0}%</span>
+              <span className="report-completion-label">complete</span>
+            </div>
+          </div>
+
+          <div className="report-snapshot-grid">
+            {[
+              { label: 'Total',      value: data.totalIssues || 0,              cls: '' },
+              { label: 'Done',       value: data.doneIssues || 0,               cls: 'green' },
+              { label: 'Active',     value: data.activeIssues || 0,             cls: 'blue' },
+              { label: 'Critical',   value: flow.critical || 0,                 cls: 'red' },
+              { label: 'Warning',    value: flow.warning || 0,                  cls: 'amber' },
+              { label: 'Lead Time',  value: `${flow.averageLeadTimeDays || 0}d`, cls: '' },
+              { label: 'Cycle Time', value: `${flow.averageCycleTimeDays || 0}d`, cls: '' },
+              ...(sp.totalStoryPoints > 0 ? [{
+                label: 'Points',
+                value: `${sp.pointCompletionRate || 0}%`,
+                cls: '',
+                sub: `${sp.completedStoryPoints} / ${sp.totalStoryPoints}`,
+              }] : []),
+            ].map(({ label, value, cls, sub }) => (
+              <div key={label} className="report-snapshot-cell">
+                <span className="report-snapshot-label">{label}</span>
+                <span className={`report-snapshot-value ${cls}`}>{value}</span>
+                {sub && <span className="report-snapshot-sub">{sub}</span>}
+              </div>
+            ))}
+          </div>
+
+          <div className="report-rows">
+
+            <div className="report-row">
+              <div className="report-row-body">
+                <div className="report-row-header">
+                  <span className="report-row-icon" aria-hidden="true">🔴</span>
+                  <span className="report-row-title">Risk Indicators</span>
+                  <span className={`report-row-badge ${topRisks.length > 0 ? 'critical' : 'good'}`}>
+                    {topRisks.length > 0 ? `${topRisks.length} critical` : 'All clear'}
+                  </span>
+                </div>
+                {topRisks.length > 0 ? (
+                  <ul className="report-risk-list">
+                    {topRisks.map((item) => (
+                      <li key={item.key} className="report-risk-item">
+                        <span className="report-risk-key">{item.key}</span>
+                        <span className="report-risk-reason">{item.summary || item.reason}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="report-row-content">No critical items detected. Delivery is on track.</p>
+                )}
+              </div>
+              <button type="button" className="report-details-btn" onClick={() => onNavigate('flow-health-panel', 'openFlow')}>Details →</button>
+            </div>
+
+            {latestSprint && (
+              <div className="report-row">
+                <div className="report-row-body">
+                  <div className="report-row-header">
+                    <span className="report-row-icon" aria-hidden="true">🏃</span>
+                    <span className="report-row-title">Sprint Status</span>
+                    <span className={`report-row-badge ${latestSprint.completionRate >= 80 ? 'good' : latestSprint.completionRate >= 60 ? 'warning' : 'critical'}`}>
+                      {latestSprint.completionRate}% done
+                    </span>
+                  </div>
+                  <p className="report-row-content">
+                    <strong>{latestSprint.name}</strong> — {latestSprint.completedIssues} of {latestSprint.issues} issues done
+                    {latestSprint.critical > 0 && ` · ${latestSprint.critical} critical`}
+                    {latestSprint.completedPoints > 0 && ` · ${latestSprint.completedPoints} pts delivered`}
+                  </p>
+                </div>
+                <button type="button" className="report-details-btn" onClick={() => onNavigate('section-sprint')}>Details →</button>
+              </div>
+            )}
+
+            <div className="report-row">
+              <div className="report-row-body">
+                <div className="report-row-header">
+                  <span className="report-row-icon" aria-hidden="true">🎯</span>
+                  <span className="report-row-title">Epic Readiness</span>
+                  <span className={`report-row-badge ${atRisk.length > 0 ? (atRisk.some((e) => e.risk === 'critical') ? 'critical' : 'warning') : 'good'}`}>
+                    {atRisk.length > 0 ? `${atRisk.length} at-risk` : 'All healthy'}
+                  </span>
+                </div>
+                {atRisk.length > 0 ? (
+                  <p className="report-row-content">
+                    {atRisk.filter((e) => e.risk === 'critical').length > 0 && (
+                      <><strong>{atRisk.filter((e) => e.risk === 'critical').length} critical epic{atRisk.filter((e) => e.risk === 'critical').length !== 1 ? 's' : ''}</strong> · </>
+                    )}
+                    Top: <strong>{atRisk[0]?.epic || '—'}</strong> at {atRisk[0]?.completion || 0}% complete
+                  </p>
+                ) : (
+                  <p className="report-row-content">All epics are progressing well toward completion.</p>
+                )}
+              </div>
+              <button type="button" className="report-details-btn" onClick={() => onNavigate('section-readiness')}>Details →</button>
+            </div>
+
+            {data.capacity?.length > 0 && (
+              <div className="report-row">
+                <div className="report-row-body">
+                  <div className="report-row-header">
+                    <span className="report-row-icon" aria-hidden="true">👥</span>
+                    <span className="report-row-title">Capacity</span>
+                    <span className="report-row-badge info">{data.capacity.length} assignees</span>
+                  </div>
+                  <p className="report-row-content">
+                    Top load: <strong>{data.capacity[0]?.assignee}</strong> {data.capacity[0]?.loadShare}%
+                    ({data.capacity[0]?.issues} issues{data.capacity[0]?.activeIssues > 0 ? `, ${data.capacity[0].activeIssues} active` : ''})
+                    {data.capacity[1] && ` · ${data.capacity[1].assignee} ${data.capacity[1].loadShare}%`}
+                  </p>
+                </div>
+                <button type="button" className="report-details-btn" onClick={() => onNavigate('capacity-section')}>Details →</button>
+              </div>
+            )}
+
+            {topLabels.length > 0 && (
+              <div className="report-row">
+                <div className="report-row-body">
+                  <div className="report-row-header">
+                    <span className="report-row-icon" aria-hidden="true">🏷️</span>
+                    <span className="report-row-title">Labels & Classification</span>
+                    <span className="report-row-badge info">{data.labels.uniqueLabels} labels</span>
+                  </div>
+                  <p className="report-row-content">
+                    Top: {topLabels.map((l) => `${l.label} (${l.count})`).join(' · ')}
+                    {data.labels.totalUnlabeled > 0 && ` · ${data.labels.totalUnlabeled} unlabeled`}
+                  </p>
+                </div>
+                <button type="button" className="report-details-btn" onClick={() => onNavigate('section-labels')}>Details →</button>
+              </div>
+            )}
+
+            {data.relations?.hasLinks && (
+              <div className="report-row">
+                <div className="report-row-body">
+                  <div className="report-row-header">
+                    <span className="report-row-icon" aria-hidden="true">🔗</span>
+                    <span className="report-row-title">Issue Relations</span>
+                    <span className={`report-row-badge ${data.relations.blockedItems?.length > 0 ? 'warning' : 'info'}`}>
+                      {data.relations.totalLinks} links
+                    </span>
+                  </div>
+                  <p className="report-row-content">
+                    {data.relations.itemsWithLinks} item{data.relations.itemsWithLinks !== 1 ? 's' : ''} with relationships
+                    {data.relations.blockedItems?.length > 0 && <> · <strong>{data.relations.blockedItems.length} explicitly blocked</strong></>}
+                    {` · ${data.relations.linkTypes} link type${data.relations.linkTypes !== 1 ? 's' : ''}`}
+                  </p>
+                </div>
+                <button type="button" className="report-details-btn" onClick={() => onNavigate('section-relations')}>Details →</button>
+              </div>
+            )}
+
+            {insights.length > 0 && (
+              <div className="report-row">
+                <div className="report-row-body">
+                  <div className="report-row-header">
+                    <span className="report-row-icon" aria-hidden="true">💡</span>
+                    <span className="report-row-title">Key Insights</span>
+                  </div>
+                  <ul className="report-insights">
+                    {insights.map((insight, i) => (
+                      <li key={i} className="report-insight-item">
+                        <span className="report-insight-dot" aria-hidden="true" />
+                        {insight}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <button type="button" className="report-details-btn" onClick={() => onNavigate('section-overview')}>Details →</button>
+              </div>
+            )}
+
+          </div>
+        </div>
+
+        <footer className="report-footer">
+          <button type="button" className="report-print-btn" onClick={() => window.print()}>🖨 Print report</button>
+          <button type="button" className="report-back-btn" onClick={onClose}>Back to dashboard</button>
+        </footer>
+      </div>
+    </div>
+  );
+}
+const ACTIVE_STATUSES = ['in progress', 'code review', 'qa', 'testing', 'uat'];
+
+function DeliveryCircle({ flowItems, data, flow, storyPoints, orphanItems, totalIssues, onOpenHelp, helpTopic }) {
+  const total = Math.max(totalIssues, 1);
+
+  const doneBucket = flowItems.filter((i) => DONE_STATUSES.includes(normalizeText(i.status))).length;
+  const criticalBucket = flowItems.filter((i) => !DONE_STATUSES.includes(normalizeText(i.status)) && normalizeText(i.health) === 'critical').length;
+  const warningBucket = flowItems.filter((i) => !DONE_STATUSES.includes(normalizeText(i.status)) && normalizeText(i.health) === 'warning').length;
+  const activeBucket = flowItems.filter((i) =>
+    ACTIVE_STATUSES.includes(normalizeText(i.status)) &&
+    !DONE_STATUSES.includes(normalizeText(i.status)) &&
+    normalizeText(i.health) !== 'critical' &&
+    normalizeText(i.health) !== 'warning'
+  ).length;
+  const otherBucket = Math.max(total - doneBucket - criticalBucket - warningBucket - activeBucket, 0);
+
+  const segments = [
+    { key: 'done',     label: 'Done',            value: doneBucket,     color: '#16a34a' },
+    { key: 'active',   label: 'In Progress',      value: activeBucket,   color: '#2563eb' },
+    { key: 'warning',  label: 'At Risk',           value: warningBucket,  color: '#f59e0b' },
+    { key: 'critical', label: 'Critical',          value: criticalBucket, color: '#dc2626' },
+    { key: 'other',    label: 'Backlog / Other',   value: otherBucket,    color: '#cbd5e1' },
+  ].filter((s) => s.value > 0);
+
+  const segTotal = Math.max(segments.reduce((acc, s) => acc + s.value, 0), 1);
+  let cursor = 0;
+  const background = `conic-gradient(${segments.map((seg) => {
+    const start = cursor;
+    cursor += (seg.value / segTotal) * 100;
+    return `${seg.color} ${start}% ${cursor}%`;
+  }).join(', ')})`;
+
+  return (
+    <div className="dashboard-panel delivery-circle-panel">
+      <div className="panel-title-row">
+        <h3>Delivery Composition</h3>
+        <HelpButton topic={helpTopic} label="Help for delivery ratios" onOpenHelp={onOpenHelp} />
+      </div>
+      <div className="delivery-circle-layout">
+        <div className="delivery-circle-wrap">
+          <div className="delivery-circle" style={{ background }}>
+            <div className="delivery-circle-inner">
+              <span className="delivery-circle-value">{data.completionRate || 0}%</span>
+              <small>complete</small>
+              <span className="delivery-circle-issues">{data.doneIssues || 0} of {total}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="delivery-circle-legend">
+          {segments.map((seg) => (
+            <div key={seg.key} className={`delivery-legend-row${seg.key === 'other' ? ' delivery-legend-muted' : ''}`}>
+              <span className="legend-swatch" style={{ background: seg.color }} />
+              <span className="legend-label">{seg.label}</span>
+              <strong className="legend-count">{seg.value}</strong>
+              <span className="legend-pct">{Math.round((seg.value / total) * 100)}%</span>
+            </div>
+          ))}
+
+          <div className="delivery-legend-divider" />
+
+          <div className="delivery-legend-totals">
+            <div><span>Total</span><strong>{total} issues</strong></div>
+            {orphanItems > 0 && <div><span>Orphans</span><strong>{orphanItems}</strong></div>}
+            {storyPoints.totalStoryPoints > 0 && (
+              <div>
+                <span>Points</span>
+                <strong>{storyPoints.completedStoryPoints || 0} / {storyPoints.totalStoryPoints}</strong>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const DASHBOARD_SECTIONS = [
+  { id: 'dashboard-summary',          label: 'Summary',     color: '#2563eb' },
+  { id: 'section-attention',          label: 'Alerts',      color: '#f59e0b' },
+  { id: 'section-overview',           label: 'KPIs',        color: '#16a34a' },
+  { id: 'section-visuals',            label: 'Charts',      color: '#0891b2' },
+  { id: 'section-ratios',             label: 'Composition', color: '#7c3aed' },
+  { id: 'section-delivery-controls',  label: 'Delivery',    color: '#f97316' },
+  { id: 'section-quarters',           label: 'Quarters',    color: '#f97316' },
+  { id: 'section-kanban',             label: 'Kanban',      color: '#0f766e' },
+  { id: 'section-sprint',             label: 'Sprint',      color: '#7c3aed' },
+  { id: 'section-ownership',          label: 'Ownership',   color: '#0f766e' },
+  { id: 'section-labels',             label: 'Labels',      color: '#7c3aed' },
+  { id: 'section-relations',          label: 'Relations',   color: '#dc2626' },
+  { id: 'section-readiness',          label: 'Readiness',   color: '#dc2626' },
+  { id: 'flow-health-panel',          label: 'Flow Table',  color: '#2563eb' },
+];
+
+function SectionNav() {
+  const [active, setActive] = useState(DASHBOARD_SECTIONS[0].id);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length) setActive(visible[0].target.id);
+      },
+      { rootMargin: '-20% 0px -70% 0px', threshold: 0 }
+    );
+    DASHBOARD_SECTIONS.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <nav className="section-nav" aria-label="Page sections">
+      {DASHBOARD_SECTIONS.map(({ id, label, color }) => (
+        <button
+          key={id}
+          type="button"
+          className={`section-nav-item${active === id ? ' active' : ''}`}
+          onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          aria-label={`Go to ${label}`}
+        >
+          <span
+            className="section-nav-dot"
+            style={active === id ? { background: color, boxShadow: `0 0 0 3px ${color}33` } : {}}
+          />
+          <span className="section-nav-label" style={active === id ? { color, fontWeight: 900 } : {}}>
+            {label}
+          </span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function ScrollToTopFab() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 400);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  if (!visible) return null;
+  return (
+    <button
+      type="button"
+      className="scroll-top-fab"
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      aria-label="Scroll to top"
+    >
+      ↑
+    </button>
+  );
+}
+
+export default function DashboardPage({ data, onReset, onOpenHelp }) {
   const flow = data.flow || {};
   const sprint = data.sprint || {};
   const kanban = data.kanban || {};
@@ -298,8 +761,7 @@ export default function DashboardPage({ data, onReset }) {
   const orphanItems = flowItems.filter((item) => item.isOrphan).length;
   const totalIssues = data.totalIssues || flowItems.length || 0;
   const riskItems = (flow.critical || 0) + (flow.warning || 0);
-  const flowPanelRef = useRef(null);
-  const capacityPanelRef = useRef(null);
+  const flowFiltersRef = useRef(null);
   const [keyFilter, setKeyFilter] = useState('');
   const [summaryFilter, setSummaryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -314,6 +776,12 @@ export default function DashboardPage({ data, onReset }) {
   const [detailPanel, setDetailPanel] = useState(null);
   const [layoutSaved, setLayoutSaved] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
+  const [activeQuickFilter, setActiveQuickFilter] = useState('all');
+  const [hideStickyFilter, setHideStickyFilter] = useState(false);
+  const [stickyTop, setStickyTop] = useState(0);
+  const [showManagerReport, setShowManagerReport] = useState(false);
+  const [labelFilter, setLabelFilter] = useState('');
+  const [flowItemVisibleCount, setFlowItemVisibleCount] = useState(100);
 
   const statusOptions = useMemo(() => getUniqueValues(flowItems, 'status'), [flowItems]);
   const sprintOptions = useMemo(() => getUniqueValues(flowItems, 'sprint'), [flowItems]);
@@ -346,6 +814,67 @@ export default function DashboardPage({ data, onReset }) {
       target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   };
+
+  const openFlowFilters = () => {
+    setIsFlowPanelOpen(true);
+    window.setTimeout(() => {
+      const target = flowFiltersRef.current || document.getElementById('flow-health-panel');
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+  };
+
+  useEffect(() => {
+    const header = document.querySelector('.app-header');
+    const updateStickyTop = () => {
+      if (!header) return;
+      const headerStyle = window.getComputedStyle(header);
+      const marginBottom = Number(headerStyle.marginBottom.replace('px', '')) || 0;
+      const nextTop = header.offsetHeight + marginBottom + 4;
+      setStickyTop(nextTop);
+    };
+
+    updateStickyTop();
+
+    const resizeObserver = new ResizeObserver(updateStickyTop);
+    if (header) resizeObserver.observe(header);
+    window.addEventListener('resize', updateStickyTop);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateStickyTop);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isFlowPanelOpen) {
+      setHideStickyFilter(false);
+      return undefined;
+    }
+
+    const target = flowFiltersRef.current;
+    if (!target) {
+      setHideStickyFilter(false);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setHideStickyFilter(entry.isIntersecting);
+      },
+      {
+        root: null,
+        rootMargin: `-${stickyTop || 120}px 0px 0px 0px`,
+        threshold: 0.05,
+      }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [isFlowPanelOpen, stickyTop]);
+
+  useEffect(() => {
+    setFlowItemVisibleCount(100);
+  }, [keyFilter, summaryFilter, statusFilter, sprintFilter, assigneeFilter, leadMaxFilter, cycleMaxFilter, openAgeMaxFilter, healthFilter, reasonFilter, labelFilter]);
 
   const openDetailPanel = (title, description, items = []) => {
     setDetailPanel({ title, description, items });
@@ -416,6 +945,7 @@ export default function DashboardPage({ data, onReset }) {
       reasonFilter,
       keyFilter,
       summaryFilter,
+      labelFilter,
     };
     window.localStorage.setItem('dashboardLayout', JSON.stringify(layoutState));
     setLayoutSaved(true);
@@ -445,6 +975,7 @@ export default function DashboardPage({ data, onReset }) {
   };
 
   const applyQuickFilter = (type) => {
+    setActiveQuickFilter(type);
     setKeyFilter('');
     setSummaryFilter('');
     setStatusFilter('all');
@@ -455,10 +986,10 @@ export default function DashboardPage({ data, onReset }) {
     setOpenAgeMaxFilter('');
     setHealthFilter('all');
     setReasonFilter('');
+    setLabelFilter('');
 
     if (type === 'high-risk') {
       setHealthFilter('critical');
-      setReasonFilter('block');
     }
     if (type === 'needs-review') {
       setStatusFilter('in progress');
@@ -469,6 +1000,8 @@ export default function DashboardPage({ data, onReset }) {
     if (type === 'sprint-today') {
       setReasonFilter('today');
     }
+
+    openFlowFilters();
   };
 
   const [targetCompletion, actualCompletion] = [data.sprintTargetCompletion || '82%', `${data.completionRate || 0}%`];
@@ -485,6 +1018,7 @@ export default function DashboardPage({ data, onReset }) {
       const matchesOpenAge = isWithinMaxDays(item.ageDays, openAgeMaxFilter);
       const matchesHealth = matchesSelect(item.health, healthFilter);
       const matchesReason = matchesText(item.reason, reasonFilter);
+      const matchesLabel = !labelFilter || (item.labels || '').toLowerCase().includes(labelFilter.toLowerCase());
 
       return (
         matchesKey &&
@@ -496,7 +1030,8 @@ export default function DashboardPage({ data, onReset }) {
         matchesCycle &&
         matchesOpenAge &&
         matchesHealth &&
-        matchesReason
+        matchesReason &&
+        matchesLabel
       );
     });
   }, [
@@ -505,6 +1040,7 @@ export default function DashboardPage({ data, onReset }) {
     flowItems,
     healthFilter,
     keyFilter,
+    labelFilter,
     leadMaxFilter,
     openAgeMaxFilter,
     reasonFilter,
@@ -531,6 +1067,74 @@ export default function DashboardPage({ data, onReset }) {
       });
   }, [data.epics, flowItems]);
 
+  const smartActions = useMemo(() => {
+    const acts = [];
+
+    const criticalBlockers = flowItems.filter(
+      (i) => i.health === 'critical' && normalizeText(i.reason).includes('block')
+    );
+    if (criticalBlockers.length)
+      acts.push({ type: 'critical', icon: '🚫', navTarget: 'flow-health-panel', filterAction: 'blockers',
+        title: `Unblock ${criticalBlockers.length} critical item${criticalBlockers.length > 1 ? 's' : ''}`,
+        detail: `${criticalBlockers[0].key}: ${(criticalBlockers[0].summary || criticalBlockers[0].reason).slice(0, 70)}` });
+
+    const staleActive = flowItems.filter(
+      (i) => i.health === 'critical' && normalizeText(i.reason).includes('in progress over 14')
+    );
+    if (staleActive.length)
+      acts.push({ type: 'critical', icon: '⏳', navTarget: 'flow-health-panel', filterAction: 'stale',
+        title: `${staleActive.length} item${staleActive.length > 1 ? 's' : ''} stalled in progress`,
+        detail: `${staleActive[0].key} has been active for ${Math.round(staleActive[0].activeAgeDays || 0)} days without resolution` });
+
+    const capacity = data.capacity || [];
+    const overloaded = capacity.filter((c) => c.loadShare > 35);
+    if (overloaded.length && capacity.length > 2)
+      acts.push({ type: 'warning', icon: '⚖️', navTarget: 'section-ownership', filterAction: null,
+        title: 'Team capacity imbalance detected',
+        detail: `${overloaded[0].assignee} carries ${overloaded[0].loadShare}% of all work — consider redistributing` });
+
+    const orphanCount = flowItems.filter((i) => i.isOrphan).length;
+    if (orphanCount > 0)
+      acts.push({ type: 'info', icon: '👻', navTarget: 'section-attention', filterAction: null,
+        title: `Link ${orphanCount} orphan item${orphanCount > 1 ? 's' : ''} to epics`,
+        detail: 'Items without parent/epic reduce scope traceability and epic completion accuracy' });
+
+    const criticalEpics = epicReadiness.filter((e) => e.risk === 'critical');
+    if (criticalEpics.length)
+      acts.push({ type: 'warning', icon: '🚨', navTarget: 'section-readiness', filterAction: null,
+        title: `${criticalEpics.length} epic${criticalEpics.length > 1 ? 's' : ''} in critical state`,
+        detail: `${criticalEpics[0].epic || 'Top epic'}: ${criticalEpics[0].completion}% complete — needs immediate attention` });
+
+    if (data.relations?.blockedItems?.length)
+      acts.push({ type: 'critical', icon: '🔗', navTarget: 'section-relations', filterAction: null,
+        title: `${data.relations.blockedItems.length} item${data.relations.blockedItems.length > 1 ? 's' : ''} explicitly blocked`,
+        detail: `${data.relations.blockedItems[0].key} is blocked by ${data.relations.blockedItems[0].blockedBy}` });
+
+    return acts.slice(0, 5);
+  }, [flowItems, data.capacity, data.relations, epicReadiness]);
+
+  const handleSmartAction = (action) => {
+    if (action.filterAction === 'blockers') {
+      setIsFlowPanelOpen(true);
+      setHealthFilter('critical');
+      setReasonFilter('block');
+      setActiveQuickFilter('blocked');
+    } else if (action.filterAction === 'stale') {
+      setIsFlowPanelOpen(true);
+      setHealthFilter('critical');
+    }
+    setTimeout(() => {
+      document.getElementById(action.navTarget)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 200);
+  };
+
+  const activeFilterCount =
+    [keyFilter, summaryFilter, reasonFilter, labelFilter].filter((s) => s !== '').length +
+    [statusFilter, sprintFilter, assigneeFilter, healthFilter].filter((s) => s !== 'all').length +
+    [leadMaxFilter, cycleMaxFilter, openAgeMaxFilter].filter((s) => s !== '').length;
+
+  const visibleFlowItems = filteredFlowItems.slice(0, flowItemVisibleCount);
+
   return (
   <main className="dashboard-page" aria-hidden={detailPanel ? true : undefined}>
       <div className="dashboard-top">
@@ -538,12 +1142,18 @@ export default function DashboardPage({ data, onReset }) {
           <h2>Delivery Health Analysis</h2>
           <p>Flow, sprint, kanban, capacity, story point, and epic performance from the uploaded Jira export.</p>
         </div>
-        <button className="secondary" onClick={onReset}>
-          Upload new file
-        </button>
+        <div className="dashboard-top-right">
+          {data.healthScore !== undefined && (
+            <HealthScoreGauge score={data.healthScore} onClick={() => setShowManagerReport(true)} />
+          )}
+          <button className="secondary" onClick={onReset}>Upload new file</button>
+        </div>
       </div>
 
-      <section className="dashboard-summary-bar">
+      <section id="dashboard-summary" className="dashboard-summary-bar">
+        <div className="floating-help">
+          <HelpButton topic="summary" label="Help for summary bar" onOpenHelp={onOpenHelp} />
+        </div>
         <div className="summary-pill-row">
           <div className={`summary-pill summary-pill-${healthStatus.replace(/\s+/g, '-').toLowerCase()}`}>
             <strong>{healthStatus}</strong>
@@ -567,8 +1177,25 @@ export default function DashboardPage({ data, onReset }) {
             <span>Cycle time</span>
             <strong>{summaryDelta.cycleTime}</strong>
           </div>
+          {data.prediction && !data.prediction.complete && data.prediction.daysRemaining !== null && (
+            <div className="summary-change-card prediction-card">
+              <span>Est. completion</span>
+              <strong>~{data.prediction.daysRemaining}d</strong>
+              <small>{data.prediction.predictedDate}</small>
+            </div>
+          )}
+          {data.prediction?.complete && (
+            <div className="summary-change-card prediction-card complete">
+              <span>Completion</span>
+              <strong>Done ✅</strong>
+              <small>100% complete</small>
+            </div>
+          )}
         </div>
         <div className="summary-actions">
+          <button type="button" className="secondary report-trigger-btn" onClick={() => setShowManagerReport(true)}>
+            📋 Quick Overview
+          </button>
           <button type="button" className="secondary" onClick={() => openDetailPanel('High-risk review', 'Review the highest-risk items and assign mitigation tasks.', topBlockers)}>
             Review high-risk items
           </button>
@@ -587,19 +1214,39 @@ export default function DashboardPage({ data, onReset }) {
         </div>
       </section>
 
-      <section className="sticky-filter-bar" aria-label="Quick filters">
+      <section
+        className={`sticky-filter-bar ${hideStickyFilter ? 'hidden' : ''}`}
+        aria-label="Quick filters"
+        style={stickyTop ? { top: `${stickyTop}px` } : undefined}
+      >
+        <HelpButton topic="quickFilters" label="Help for quick filters" onOpenHelp={onOpenHelp} />
         <div className="filter-left">
-          <button type="button" className="secondary ghost" onClick={() => applyQuickFilter('all')}>All</button>
-          <button type="button" className="secondary" onClick={() => applyQuickFilter('high-risk')}>High risk</button>
-          <button type="button" className="secondary" onClick={() => applyQuickFilter('blocked')}>Blocked</button>
-          <button type="button" className="secondary" onClick={() => applyQuickFilter('needs-review')}>Needs review</button>
-          <button type="button" className="secondary" onClick={() => applyQuickFilter('sprint-today')}>Sprint today</button>
+          <button type="button" className={`quick-filter-button ${activeQuickFilter === 'all' ? 'active' : ''}`} onClick={() => applyQuickFilter('all')}>All</button>
+          <button type="button" className={`quick-filter-button ${activeQuickFilter === 'high-risk' ? 'active' : ''}`} onClick={() => applyQuickFilter('high-risk')}>High risk</button>
+          <button type="button" className={`quick-filter-button ${activeQuickFilter === 'blocked' ? 'active' : ''}`} onClick={() => applyQuickFilter('blocked')}>Blocked</button>
+          <button type="button" className={`quick-filter-button ${activeQuickFilter === 'needs-review' ? 'active' : ''}`} onClick={() => applyQuickFilter('needs-review')}>Needs review</button>
+          <button type="button" className={`quick-filter-button ${activeQuickFilter === 'sprint-today' ? 'active' : ''}`} onClick={() => applyQuickFilter('sprint-today')}>Sprint today</button>
         </div>
         <div className="filter-right">
-          <button type="button" className="secondary ghost" onClick={() => { setKeyFilter(''); setSummaryFilter(''); setReportMessage('Filters cleared'); setTimeout(() => setReportMessage(''), 1400); }}>Clear</button>
-          <button type="button" className="secondary" onClick={() => { setIsFlowPanelOpen(true); const t = document.getElementById('flow-health-panel'); t?.scrollIntoView({ behavior: 'smooth' }); }}>Show filters</button>
+          {activeFilterCount > 0 && (
+            <span className="filter-count-badge">{activeFilterCount} active</span>
+          )}
+          <button
+            type="button"
+            className="quick-filter-button ghost"
+            onClick={() => {
+              applyQuickFilter('all');
+              setReportMessage('Filters cleared');
+              setTimeout(() => setReportMessage(''), 1400);
+            }}
+          >
+            Clear
+          </button>
+          <button type="button" className="quick-filter-button active" onClick={openFlowFilters}>Show filters</button>
         </div>
       </section>
+
+      <SmartActions actions={smartActions} onAction={handleSmartAction} />
 
       <section className="dashboard-splash">
         <div className="splash-copy">
@@ -614,50 +1261,83 @@ export default function DashboardPage({ data, onReset }) {
         </div>
       </section>
 
-      <section className="issue-highlight-strip">
+      <section id="section-attention" className="issue-highlight-strip">
         <div className="issue-highlight-card card-blockers">
-          <strong>Top blockers</strong>
+          <div className="floating-help">
+            <HelpButton topic="attention" label="Help for blockers" onOpenHelp={onOpenHelp} />
+          </div>
+          <div className="issue-highlight-heading">
+            <span>Blockers</span>
+            <strong>{topBlockers.length}</strong>
+          </div>
+          <h3>Top blockers</h3>
           {topBlockers.length ? (
             <ul>
               {topBlockers.map((item) => (
-                <li key={item.key}>{item.key}: {item.summary || item.reason}</li>
+                <li key={item.key}>
+                  <span className="issue-key">{item.key}</span>
+                  <span className="issue-title">{item.summary || item.reason}</span>
+                </li>
               ))}
             </ul>
           ) : (
-            <p>No blockers found.</p>
+            <p className="empty-highlight">No blockers found.</p>
           )}
         </div>
         <div className="issue-highlight-card card-overdue">
-          <strong>Top overdue</strong>
+          <div className="floating-help">
+            <HelpButton topic="attention" label="Help for overdue items" onOpenHelp={onOpenHelp} />
+          </div>
+          <div className="issue-highlight-heading">
+            <span>Schedule</span>
+            <strong>{topOverdue.length}</strong>
+          </div>
+          <h3>Top overdue</h3>
           {topOverdue.length ? (
             <ul>
               {topOverdue.map((item) => (
-                <li key={item.key}>{item.key}: {item.summary || item.status}</li>
+                <li key={item.key}>
+                  <span className="issue-key">{item.key}</span>
+                  <span className="issue-title">{item.summary || item.status}</span>
+                </li>
               ))}
             </ul>
           ) : (
-            <p>No overdue work detected.</p>
+            <p className="empty-highlight">No overdue work detected.</p>
           )}
         </div>
         <div className="issue-highlight-card card-orphans">
-          <strong>Top orphans</strong>
+          <div className="floating-help">
+            <HelpButton topic="ownership" label="Help for orphan items" onOpenHelp={onOpenHelp} />
+          </div>
+          <div className="issue-highlight-heading">
+            <span>Ownership</span>
+            <strong>{topOrphans.length}</strong>
+          </div>
+          <h3>Top orphans</h3>
           {topOrphans.length ? (
             <ul>
               {topOrphans.map((item) => (
-                <li key={item.key}>{item.key}: {item.summary || item.epic || 'No epic'}</li>
+                <li key={item.key}>
+                  <span className="issue-key">{item.key}</span>
+                  <span className="issue-title">{item.summary || item.epic || 'No epic'}</span>
+                </li>
               ))}
             </ul>
           ) : (
-            <p>No orphan items.</p>
+            <p className="empty-highlight">No orphan items.</p>
           )}
         </div>
       </section>
 
-      <section className="dashboard-section section-overview">
+      <section id="section-overview" className="dashboard-section section-overview">
         <SectionHeader
+          icon="🎯"
           kicker="Overview"
           title="Executive delivery snapshot"
           detail="The cards summarize delivery completion, timing, scope, active load, and current health pressure."
+          helpTopic="kpis"
+          onOpenHelp={onOpenHelp}
         />
         <div className="kpi-grid">
           <KpiCard
@@ -711,32 +1391,35 @@ export default function DashboardPage({ data, onReset }) {
         </div>
       </section>
 
-      <section className="dashboard-section section-visuals">
+      <section id="section-visuals" className="dashboard-section section-visuals">
         <SectionHeader
+          icon="📊"
           kicker="Visual intelligence"
           title="Charts that explain the result"
           detail="Use these charts to see health mix, quarter movement, sprint comparison, kanban distribution, and orphan scope."
+          helpTopic="visuals"
+          onOpenHelp={onOpenHelp}
         />
         <div className="visual-grid hero-visual-grid">
           <HealthDonut flow={flow} />
           <QuarterChart quarters={quarters} />
           <section className="dashboard-panel chart-panel panel-work-state">
-            <h3>Work State Distribution</h3>
+            <PanelTitle helpTopic="visuals" onOpenHelp={onOpenHelp}>Work State Distribution</PanelTitle>
             <WorkStateChart rows={flowItems} />
           </section>
         </div>
 
         <div className="visual-grid">
           <section className="dashboard-panel chart-panel panel-kanban">
-            <h3>Kanban Distribution</h3>
+            <PanelTitle helpTopic="kanban" onOpenHelp={onOpenHelp}>Kanban Distribution</PanelTitle>
             <CompactBarChart rows={kanban.byStatus?.slice(0, 6)} emptyMessage="No status data available." />
           </section>
           <section className="dashboard-panel chart-panel panel-sprint">
-            <h3>Sprint Comparison</h3>
+            <PanelTitle helpTopic="sprint" onOpenHelp={onOpenHelp}>Sprint Comparison</PanelTitle>
             <SprintCompareChart sprints={sprint.sprints} />
           </section>
           <section className="dashboard-panel chart-panel panel-orphans">
-            <h3>Orphan Items</h3>
+            <PanelTitle helpTopic="ownership" onOpenHelp={onOpenHelp}>Orphan Items</PanelTitle>
             <div className="orphan-summary">
               <strong>{flowItems.filter((item) => item.isOrphan).length}</strong>
               <span>items without epic or parent</span>
@@ -745,30 +1428,39 @@ export default function DashboardPage({ data, onReset }) {
         </div>
       </section>
 
-      <section className="dashboard-section section-ratios">
+      <section id="section-ratios" className="dashboard-section section-ratios">
         <SectionHeader
+          icon="💠"
           kicker="Ratios"
-          title="Circle metrics by delivery theme"
-          detail="Each circle gives a fast percentage view for completion, points, risk, ownership gaps, and active work."
+          title="Delivery composition at a glance"
+          detail="One ring — every issue accounted for: done, in-progress, at-risk, critical, and backlog."
+          helpTopic="ratios"
+          onOpenHelp={onOpenHelp}
         />
-        <div className="circle-grid">
-          <CircleMetric title="Done Ratio" value={data.doneIssues || 0} total={totalIssues} label="done items" color="#16a34a" />
-          <CircleMetric title="Story Points" value={storyPoints.completedStoryPoints || 0} total={storyPoints.totalStoryPoints || 0} label="completed points" color="#14b8a6" />
-          <CircleMetric title="Risk Pressure" value={riskItems} total={totalIssues} label="warning or critical" color="#dc2626" />
-          <CircleMetric title="Orphan Ratio" value={orphanItems} total={totalIssues} label="without epic/parent" color="#f97316" />
-          <CircleMetric title="Active Work" value={data.activeIssues || 0} total={totalIssues} label="active items" color="#7c3aed" />
-        </div>
+        <DeliveryCircle
+          flowItems={flowItems}
+          data={data}
+          flow={flow}
+          storyPoints={storyPoints}
+          orphanItems={orphanItems}
+          totalIssues={totalIssues}
+          onOpenHelp={onOpenHelp}
+          helpTopic="ratios"
+        />
       </section>
 
-      <section className="dashboard-section section-delivery">
+      <section id="section-delivery-controls" className="dashboard-section section-delivery">
         <SectionHeader
+          icon="🌊"
           kicker="Delivery controls"
           title="Flow, scope, and risk readout"
           detail="These panels explain whether delivery speed, points, and risk conditions support the project result."
+          helpTopic="delivery"
+          onOpenHelp={onOpenHelp}
         />
         <div className="analysis-grid">
           <section className="dashboard-panel panel-flow">
-            <h3>Flow Efficiency</h3>
+            <PanelTitle helpTopic="delivery" onOpenHelp={onOpenHelp}>Flow Efficiency</PanelTitle>
             <div className="metric-list">
               <div>
                 <span>Average lead time</span>
@@ -790,7 +1482,7 @@ export default function DashboardPage({ data, onReset }) {
           </section>
 
           <section className="dashboard-panel panel-points">
-            <h3>Story Point Delivery</h3>
+            <PanelTitle helpTopic="delivery" onOpenHelp={onOpenHelp}>Story Point Delivery</PanelTitle>
             <div className="metric-list">
               <div>
                 <span>Completed points</span>
@@ -809,7 +1501,7 @@ export default function DashboardPage({ data, onReset }) {
           </section>
 
           <section className="dashboard-panel panel-risk">
-            <h3>Risk Readout</h3>
+            <PanelTitle helpTopic="attention" onOpenHelp={onOpenHelp}>Risk Readout</PanelTitle>
             <div className="metric-list">
               <div>
                 <span>Blocked</span>
@@ -828,8 +1520,8 @@ export default function DashboardPage({ data, onReset }) {
         </div>
       </section>
 
-      <section className="dashboard-panel table-section panel-quarter">
-        <h3>Quarter Statistics</h3>
+      <section id="section-quarters" className="dashboard-panel table-section panel-quarter">
+        <PanelTitle helpTopic="quarters" onOpenHelp={onOpenHelp}>Quarter Statistics</PanelTitle>
         <MetricTable
           columns={[
             { key: 'quarter', label: 'Quarter' },
@@ -853,8 +1545,8 @@ export default function DashboardPage({ data, onReset }) {
         />
       </section>
 
-      <section className="dashboard-panel table-section panel-kanban-detail">
-        <h3>Kanban Status Health</h3>
+      <section id="section-kanban" className="dashboard-panel table-section panel-kanban-detail">
+        <PanelTitle helpTopic="kanban" onOpenHelp={onOpenHelp}>Kanban Status Health</PanelTitle>
         <DistributionDonut title="Kanban Share" rows={kanban.byStatus?.slice(0, 6)} emptyMessage="No status data found." />
         <CompactBarChart rows={kanban.byStatus?.slice(0, 8)} emptyMessage="No status data found." />
         <MetricTable
@@ -874,8 +1566,8 @@ export default function DashboardPage({ data, onReset }) {
         />
       </section>
 
-      <section className="dashboard-panel table-section panel-sprint-detail">
-        <h3>Sprint Status</h3>
+      <section id="section-sprint" className="dashboard-panel table-section panel-sprint-detail">
+        <PanelTitle helpTopic="sprint" onOpenHelp={onOpenHelp}>Sprint Status</PanelTitle>
         <DistributionDonut title="Sprint Share" rows={sprint.sprints?.slice(0, 6)} labelKey="name" valueKey="issues" emptyMessage="No sprint data found." />
         <MetricTable
           columns={[
@@ -894,15 +1586,18 @@ export default function DashboardPage({ data, onReset }) {
         />
       </section>
 
-      <section className="dashboard-section section-ownership">
+      <section id="section-ownership" className="dashboard-section section-ownership">
         <SectionHeader
+          icon="👥"
           kicker="Ownership"
           title="Capacity and epic performance"
           detail="Understand who carries the work and which epic or parent groups are moving cleanly."
+          helpTopic="ownership"
+          onOpenHelp={onOpenHelp}
         />
         <div className="split-panels">
         <section id="capacity-section" className="dashboard-panel panel-capacity">
-          <h3>Capacity By Assignee</h3>
+          <PanelTitle helpTopic="ownership" onOpenHelp={onOpenHelp}>Capacity By Assignee</PanelTitle>
           <CompactBarChart rows={data.capacity?.slice(0, 8)} labelKey="assignee" valueKey="issues" emptyMessage="No assignee data found." />
           <MetricTable
             columns={[
@@ -918,7 +1613,7 @@ export default function DashboardPage({ data, onReset }) {
         </section>
 
         <section className="dashboard-panel panel-epic">
-          <h3>Epic / Parent Performance</h3>
+          <PanelTitle helpTopic="ownership" onOpenHelp={onOpenHelp}>Epic / Parent Performance</PanelTitle>
           <MetricTable
             columns={[
               { key: 'epic', label: 'Epic or Parent' },
@@ -937,8 +1632,195 @@ export default function DashboardPage({ data, onReset }) {
         </div>
       </section>
 
+      <section id="section-labels" className="dashboard-section section-labels">
+        <SectionHeader
+          icon="🏷️"
+          kicker="Classification"
+          title="Labels, types & project breakdown"
+          detail="How labels, issue types, and projects distribute across your delivery — volume, completion rate, and health per category."
+          helpTopic="labels"
+          onOpenHelp={onOpenHelp}
+        />
+
+        <div className="split-panels">
+          <section className="dashboard-panel panel-labels">
+            <PanelTitle helpTopic="labels" onOpenHelp={onOpenHelp}>Label Distribution</PanelTitle>
+            {data.labels?.labelStats?.filter((l) => l.label !== '(unlabeled)').length ? (
+              <>
+                <div className="label-coverage-row">
+                  <span className="label-pill">{data.labels.uniqueLabels} unique labels</span>
+                  <span className="label-pill label-pill-muted">{data.labels.totalUnlabeled} unlabeled</span>
+                </div>
+                <CompactBarChart
+                  rows={data.labels.labelStats.filter((l) => l.label !== '(unlabeled)').slice(0, 8)}
+                  labelKey="label"
+                  valueKey="count"
+                  emptyMessage="No labels found."
+                />
+              </>
+            ) : (
+              <p className="muted">No label data found in this export. Add labels to Jira issues to see this breakdown.</p>
+            )}
+          </section>
+
+          <section className="dashboard-panel panel-type">
+            <PanelTitle helpTopic="labels" onOpenHelp={onOpenHelp}>Issue Type Breakdown</PanelTitle>
+            {data.types?.length ? (
+              <>
+                <DistributionDonut title="Type Share" rows={data.types} labelKey="type" valueKey="count" emptyMessage="No type data." />
+                <CompactBarChart rows={data.types} labelKey="type" valueKey="count" emptyMessage="No type data." />
+              </>
+            ) : (
+              <p className="muted">No issue type data found.</p>
+            )}
+          </section>
+        </div>
+
+        {data.labels?.labelStats?.filter((l) => l.label !== '(unlabeled)').length > 0 && (
+          <section className="dashboard-panel panel-label-health">
+            <PanelTitle helpTopic="labels" onOpenHelp={onOpenHelp}>Label Health & Completion</PanelTitle>
+            <MetricTable
+              columns={[
+                { key: 'label', label: 'Label' },
+                { key: 'count', label: 'Issues' },
+                { key: 'done', label: 'Done' },
+                { key: 'completionRate', label: 'Completion', render: (row) => (
+                  <div className="table-progress">
+                    <ProgressBar value={row.completionRate} />
+                    <span>{row.completionRate}%</span>
+                  </div>
+                )},
+                { key: 'critical', label: 'Critical' },
+                { key: 'warning', label: 'Warning' },
+                { key: 'storyPoints', label: 'Points' },
+                { key: 'averageLeadTimeDays', label: 'Avg Lead', render: (row) => formatDays(row.averageLeadTimeDays) },
+                { key: 'averageCycleTimeDays', label: 'Avg Cycle', render: (row) => formatDays(row.averageCycleTimeDays) },
+              ]}
+              rows={data.labels.labelStats.filter((l) => l.label !== '(unlabeled)')}
+              emptyMessage="No label data found."
+            />
+          </section>
+        )}
+
+        {(data.parents?.length > 0 || data.projects?.length > 1) && (
+          <div className="split-panels">
+            {data.parents?.length > 0 && (
+              <section className="dashboard-panel panel-parents">
+                <PanelTitle helpTopic="labels" onOpenHelp={onOpenHelp}>Parent Key Breakdown</PanelTitle>
+                <CompactBarChart rows={data.parents.slice(0, 8)} labelKey="parent" valueKey="count" emptyMessage="No parent data." />
+                <MetricTable
+                  columns={[
+                    { key: 'parent', label: 'Parent' },
+                    { key: 'count', label: 'Issues' },
+                    { key: 'done', label: 'Done' },
+                    { key: 'completionRate', label: 'Completion', render: (row) => `${row.completionRate}%` },
+                    { key: 'critical', label: 'Critical' },
+                    { key: 'warning', label: 'Warning' },
+                    { key: 'storyPoints', label: 'Points' },
+                  ]}
+                  rows={data.parents}
+                  emptyMessage="No parent key data found."
+                />
+              </section>
+            )}
+            {data.projects?.length > 1 && (
+              <section className="dashboard-panel panel-projects">
+                <PanelTitle helpTopic="labels" onOpenHelp={onOpenHelp}>Project Breakdown</PanelTitle>
+                <DistributionDonut title="Project Share" rows={data.projects} labelKey="project" valueKey="count" emptyMessage="No project data." />
+                <MetricTable
+                  columns={[
+                    { key: 'project', label: 'Project' },
+                    { key: 'count', label: 'Issues' },
+                    { key: 'done', label: 'Done' },
+                    { key: 'completionRate', label: 'Completion', render: (row) => `${row.completionRate}%` },
+                    { key: 'critical', label: 'Critical' },
+                    { key: 'warning', label: 'Warning' },
+                  ]}
+                  rows={data.projects}
+                  emptyMessage="No project data found."
+                />
+              </section>
+            )}
+          </div>
+        )}
+      </section>
+
+      <section id="section-relations" className="dashboard-section section-relations">
+        <SectionHeader
+          icon="🔗"
+          kicker="Relations"
+          title="Linked issues & dependency map"
+          detail={data.relations?.hasLinks
+            ? `${data.relations.totalLinks} link relationship${data.relations.totalLinks !== 1 ? 's' : ''} across ${data.relations.itemsWithLinks} item${data.relations.itemsWithLinks !== 1 ? 's' : ''} — ${data.relations.linkTypes} link type${data.relations.linkTypes !== 1 ? 's' : ''} detected.`
+            : 'Linked issue columns were not found in this export. Re-export from Jira with linked issue columns to see dependency data here.'
+          }
+          helpTopic="relations"
+          onOpenHelp={onOpenHelp}
+        />
+
+        {data.relations?.hasLinks ? (
+          <>
+            <div className="split-panels">
+              <section className="dashboard-panel panel-link-types">
+                <PanelTitle helpTopic="relations" onOpenHelp={onOpenHelp}>Link Type Distribution</PanelTitle>
+                <DistributionDonut title="Link Types" rows={data.relations.linkStats} labelKey="type" valueKey="count" emptyMessage="No link types found." />
+                <CompactBarChart rows={data.relations.linkStats} labelKey="type" valueKey="count" emptyMessage="No link types found." />
+              </section>
+
+              <section className="dashboard-panel panel-most-linked">
+                <PanelTitle helpTopic="relations" onOpenHelp={onOpenHelp}>Most Connected Items</PanelTitle>
+                <MetricTable
+                  columns={[
+                    { key: 'key', label: 'Key' },
+                    { key: 'summary', label: 'Summary' },
+                    { key: 'linkCount', label: 'Links' },
+                    { key: 'linkTypes', label: 'Types' },
+                    { key: 'status', label: 'Status' },
+                  ]}
+                  rows={data.relations.mostLinked}
+                  emptyMessage="No linked items found."
+                />
+              </section>
+            </div>
+
+            {data.relations.blockedItems?.length > 0 && (
+              <section className="dashboard-panel panel-blocked-links">
+                <PanelTitle helpTopic="relations" onOpenHelp={onOpenHelp}>Items Explicitly Blocked by Others</PanelTitle>
+                <MetricTable
+                  columns={[
+                    { key: 'key', label: 'Blocked Item' },
+                    { key: 'summary', label: 'Summary' },
+                    { key: 'status', label: 'Status' },
+                    { key: 'blockedBy', label: 'Blocked By' },
+                    { key: 'blockCount', label: 'Blockers' },
+                  ]}
+                  rows={data.relations.blockedItems}
+                  emptyMessage="No explicitly blocked items."
+                />
+              </section>
+            )}
+          </>
+        ) : (
+          <div className="relations-empty">
+            <span className="relations-empty-icon" aria-hidden="true">🔗</span>
+            <h3 className="relations-empty-title">No linked issues found in this export</h3>
+            <p className="relations-empty-body">
+              Jira linked-issue columns were not detected. To see blockers, dependencies, and related items here, re-export from Jira with link columns included.
+            </p>
+            <ol className="relations-empty-steps">
+              <li>In Jira, open your board or project and go to <strong>Export → Excel / CSV</strong></li>
+              <li>In the export dialog, select <strong>all columns</strong> — or manually check <strong>Linked Issues</strong></li>
+              <li>Re-upload the new file to this dashboard</li>
+            </ol>
+            <p className="relations-empty-note">
+              Expected column names: <code>Inward issue link (Blocks)</code> · <code>Outward issue link (Blocks)</code> · <code>Inward issue link (Relates)</code>
+            </p>
+          </div>
+        )}
+      </section>
+
       <section className="dashboard-panel panel-justification">
-        <h3>Justification</h3>
+        <PanelTitle helpTopic="justification" onOpenHelp={onOpenHelp}>Justification</PanelTitle>
         <ul className="insight-list">
           {(data.insights || []).map((insight) => (
             <li key={insight}>{insight}</li>
@@ -946,16 +1828,19 @@ export default function DashboardPage({ data, onReset }) {
         </ul>
       </section>
 
-      <section className="dashboard-section section-delivery">
+      <section id="section-readiness" className="dashboard-section section-delivery">
         <SectionHeader
+          icon="🚀"
           kicker="Readiness"
-          title="Epic health & release readiness"
+          title="Epic health &amp; release readiness"
           detail="Top at-risk epics and dependency callouts to surface blockers before release."
+          helpTopic="readiness"
+          onOpenHelp={onOpenHelp}
         />
 
         <div className="split-panels">
           <section className="dashboard-panel panel-epic-readiness">
-            <h3>Top at-risk epics</h3>
+            <PanelTitle helpTopic="readiness" onOpenHelp={onOpenHelp}>Top at-risk epics</PanelTitle>
             {(epicReadiness.filter((e) => e.risk === 'critical' || e.completion < 60).length) ? (
               <ul className="insight-list">
                 {epicReadiness.filter((e) => e.risk === 'critical' || e.completion < 60).slice(0, 8).map((e) => (
@@ -975,7 +1860,7 @@ export default function DashboardPage({ data, onReset }) {
           </section>
 
           <section className="dashboard-panel panel-dependency-callouts">
-            <h3>Dependency callouts</h3>
+            <PanelTitle helpTopic="readiness" onOpenHelp={onOpenHelp}>Dependency callouts</PanelTitle>
             <p className="muted">Items referencing other epics or external blockers.</p>
             {(flowItems.filter((i) => i.dependsOn || i.externalEpic).length) ? (
               <ul className="insight-list">
@@ -1043,6 +1928,9 @@ export default function DashboardPage({ data, onReset }) {
       )}
 
       <section id="flow-health-panel" className={`dashboard-panel collapsible-panel panel-flow-health ${isFlowPanelOpen ? 'open' : ''}`}>
+        <div className="flow-panel-help">
+          <HelpButton topic="flow" label="Help for Story / Task Flow Health" onOpenHelp={onOpenHelp} />
+        </div>
         <button
           className="collapsible-trigger"
           type="button"
@@ -1067,7 +1955,7 @@ export default function DashboardPage({ data, onReset }) {
               The graph and table below show only items that match the selected filters.
             </p>
 
-            <div className="flow-filters">
+            <div className="flow-filters" ref={flowFiltersRef}>
           <label>
             Key
             <input
@@ -1161,6 +2049,15 @@ export default function DashboardPage({ data, onReset }) {
               placeholder="Blocked, overdue, cycle"
             />
           </label>
+          <label>
+            Labels
+            <input
+              type="search"
+              value={labelFilter}
+              onChange={(event) => setLabelFilter(event.target.value)}
+              placeholder="bug-fix, mobile…"
+            />
+          </label>
           <button
             className="secondary ghost"
             type="button"
@@ -1175,6 +2072,8 @@ export default function DashboardPage({ data, onReset }) {
               setOpenAgeMaxFilter('');
               setHealthFilter('all');
               setReasonFilter('');
+              setLabelFilter('');
+              setActiveQuickFilter('all');
             }}
           >
             Reset
@@ -1184,7 +2083,7 @@ export default function DashboardPage({ data, onReset }) {
             <StatusGraph rows={filteredFlowItems} />
 
             <div className="filtered-summary">
-              Showing <strong>{filteredFlowItems.length}</strong> matching items from <strong>{flowItems.length}</strong> total.
+              Showing <strong>{visibleFlowItems.length}</strong> of <strong>{filteredFlowItems.length}</strong> matching items from <strong>{flowItems.length}</strong> total.
               {filteredFlowItems.some((item) => item.isOrphan) && <span>{filteredFlowItems.filter((item) => item.isOrphan).length} orphan items highlighted</span>}
             </div>
 
@@ -1196,19 +2095,56 @@ export default function DashboardPage({ data, onReset }) {
             { key: 'sprint', label: 'Sprint' },
             { key: 'epic', label: 'Epic / Parent', render: (row) => row.epic || 'Orphan' },
             { key: 'assignee', label: 'Assignee' },
+            { key: 'labels', label: 'Labels' },
+            { key: 'linkedTo', label: 'Linked To' },
             { key: 'leadTimeDays', label: 'Lead', render: (row) => formatDays(row.leadTimeDays) },
             { key: 'cycleTimeDays', label: 'Cycle', render: (row) => formatDays(row.cycleTimeDays) },
             { key: 'ageDays', label: 'Open Age', render: (row) => formatDays(row.ageDays) },
             { key: 'health', label: 'Health', render: (row) => <HealthBadge value={row.health} /> },
             { key: 'reason', label: 'Reason' },
           ]}
-          rows={filteredFlowItems}
+          rows={visibleFlowItems}
           emptyMessage="No story or task data found."
           rowClassName={(row) => (row.isOrphan ? 'orphan-row' : '')}
             />
+            {filteredFlowItems.length > flowItemVisibleCount && (
+              <button
+                type="button"
+                className="secondary load-more-button"
+                onClick={() => setFlowItemVisibleCount((c) => c + 100)}
+              >
+                Show {Math.min(100, filteredFlowItems.length - flowItemVisibleCount)} more
+                <span className="muted"> — {filteredFlowItems.length - flowItemVisibleCount} remaining</span>
+              </button>
+            )}
           </>
         )}
       </section>
+
+      {showManagerReport && (
+        <ManagerReport
+          data={data}
+          flowItems={flowItems}
+          epicReadiness={epicReadiness}
+          healthStatus={healthStatus}
+          riskItems={riskItems}
+          onClose={() => setShowManagerReport(false)}
+          onNavigate={(sectionId, extra) => {
+            setShowManagerReport(false);
+            if (extra === 'openFlow') {
+              setIsFlowPanelOpen(true);
+              setHealthFilter('critical');
+              setActiveQuickFilter('high-risk');
+            }
+            setTimeout(() => {
+              document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 200);
+          }}
+        />
+      )}
+
+      <SectionNav />
+      <ScrollToTopFab />
     </main>
   );
 }

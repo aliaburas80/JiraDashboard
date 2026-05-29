@@ -1,3 +1,4 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 const fs = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');

@@ -1,3 +1,4 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 const express = require('express');
 const cors = require('cors');
 const uploadRouter = require('./routes/upload');

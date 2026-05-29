@@ -1,3 +1,4 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

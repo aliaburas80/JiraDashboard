@@ -1,3 +1,4 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 export default function KpiCard({ label, value, detail, accent = 'blue', onClick, tooltip, thresholds }) {
   const numeric = (() => {
     if (typeof value === 'number') return value;
@@ -23,18 +24,20 @@ export default function KpiCard({ label, value, detail, accent = 'blue', onClick
         </div>
       )}
 
-      <div className="kpi-hover" role="presentation">
-        <div className="kpi-hover-inner">
-          {tooltip ? <div className="kpi-tooltip">{tooltip}</div> : null}
-          {thresholds ? (
-            <div className="kpi-threshold-legend">
-              <span className="legend good">Good ≤ {thresholds.good}{thresholds.unit || ''}</span>
-              <span className="legend warning">Warn ≤ {thresholds.warning}{thresholds.unit || ''}</span>
-              <span className="legend critical">Crit ≤ {thresholds.critical}{thresholds.unit || ''}</span>
-            </div>
-          ) : null}
+      {(tooltip || thresholds) ? (
+        <div className="kpi-hover" role="presentation">
+          <div className="kpi-hover-inner">
+            {tooltip ? <div className="kpi-tooltip">{tooltip}</div> : null}
+            {thresholds ? (
+              <div className="kpi-threshold-legend">
+                <span className="legend good">Good ≤ {thresholds.good}{thresholds.unit || ''}</span>
+                <span className="legend warning">Warn ≤ {thresholds.warning}{thresholds.unit || ''}</span>
+                <span className="legend critical">Crit ≤ {thresholds.critical}{thresholds.unit || ''}</span>
+              </div>
+            ) : null}
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 

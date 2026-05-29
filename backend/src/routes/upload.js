@@ -1,3 +1,4 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 const express = require('express');
 const multer = require('multer');
 const { parseJiraFile } = require('../services/parser');
