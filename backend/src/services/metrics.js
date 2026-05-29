@@ -599,6 +599,54 @@ function buildLinksMetrics(issues) {
   return { hasLinks: true, totalLinks, itemsWithLinks: Object.keys(issueLinksMap).length, linkTypes: linkStats.length, linkStats, mostLinked, blockedItems, _issueLinksText: issueLinksText };
 }
 
+function calculateHealthScore({ totalIssues, completionRate, flow, sprint, storyPoints }) {
+  const total = Math.max(totalIssues, 1);
+  const criticalRatio = (flow.critical || 0) / total;
+  const warningRatio = (flow.warning || 0) / total;
+  const orphanCount = (flow.items || []).filter((i) => i.isOrphan).length;
+  const orphanRatio = orphanCount / total;
+  const latestSprintRate = sprint.sprints?.[0]?.completionRate ?? completionRate;
+  const avgCycle = flow.averageCycleTimeDays || 0;
+  const cycleScore = avgCycle === 0 ? 100 : Math.max(0, 100 - (avgCycle - 3) * 8);
+
+  const raw =
+    completionRate * 0.28 +
+    (1 - Math.min(criticalRatio, 1)) * 100 * 0.24 +
+    (1 - Math.min(warningRatio, 1)) * 100 * 0.12 +
+    latestSprintRate * 0.14 +
+    (1 - Math.min(orphanRatio, 1)) * 100 * 0.12 +
+    Math.min(cycleScore, 100) * 0.10;
+
+  return Math.round(Math.max(0, Math.min(100, raw)));
+}
+
+function calculatePrediction(issues, doneIssues, totalIssues) {
+  if (doneIssues >= totalIssues) return { complete: true, daysRemaining: 0 };
+  const remaining = totalIssues - doneIssues;
+
+  const timestamps = issues
+    .map((i) => parseDate(i['Created Date']))
+    .filter(Boolean)
+    .map((d) => d.getTime());
+
+  if (!timestamps.length) return { complete: false, daysRemaining: null };
+
+  const elapsed = Math.max((Date.now() - Math.min(...timestamps)) / 86400000, 1);
+  const velocity = doneIssues / elapsed;
+
+  if (velocity < 0.01) return { complete: false, daysRemaining: null };
+
+  const daysRemaining = Math.round(remaining / velocity);
+  const predicted = new Date(Date.now() + daysRemaining * 86400000);
+
+  return {
+    complete: false,
+    daysRemaining,
+    predictedDate: predicted.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+    velocityPerDay: round(velocity, 2),
+  };
+}
+
 function buildInsights(metrics) {
   const insights = [];
 
@@ -704,8 +752,13 @@ function calculateDashboardMetrics(issues) {
     },
   };
 
+  const healthScore = calculateHealthScore(metrics);
+  const prediction = calculatePrediction(issues, doneIssues, totalIssues);
+
   return {
     ...metrics,
+    healthScore,
+    prediction,
     insights: buildInsights(metrics),
   };
 }

@@ -57,14 +57,17 @@ function HelpButton({ topic, label, onOpenHelp }) {
   );
 }
 
-function SectionHeader({ kicker, title, detail, helpTopic, onOpenHelp }) {
+function SectionHeader({ icon, kicker, title, detail, helpTopic, onOpenHelp }) {
   return (
     <div className="section-heading">
-      <div>
-        <span>{kicker}</span>
-        <div className="heading-title-row">
-          <h3>{title}</h3>
-          <HelpButton topic={helpTopic} label={`Help for ${title}`} onOpenHelp={onOpenHelp} />
+      <div className="section-heading-left">
+        {icon && <span className="section-heading-icon" aria-hidden="true">{icon}</span>}
+        <div>
+          <span>{kicker}</span>
+          <div className="heading-title-row">
+            <h3>{title}</h3>
+            <HelpButton topic={helpTopic} label={`Help for ${title}`} onOpenHelp={onOpenHelp} />
+          </div>
         </div>
       </div>
       {detail && <p>{detail}</p>}
@@ -311,6 +314,61 @@ function SprintCompareChart({ sprints }) {
 }
 
 const DONE_STATUSES = ['done', 'closed', 'resolved'];
+
+function healthScoreMeta(score) {
+  if (score >= 90) return { band: 'excellent', label: 'Excellent' };
+  if (score >= 75) return { band: 'good',      label: 'Good' };
+  if (score >= 60) return { band: 'moderate',  label: 'Moderate' };
+  if (score >= 40) return { band: 'at-risk',   label: 'At Risk' };
+  return               { band: 'critical',  label: 'Critical' };
+}
+
+function HealthScoreGauge({ score, onClick }) {
+  const { band, label } = healthScoreMeta(score);
+  return (
+    <button type="button" className="health-score-gauge" onClick={onClick} title="Open Quick Overview">
+      <div className={`health-score-circle score-${band}`}>
+        <span>{score}</span>
+        <small>/ 100</small>
+      </div>
+      <div className="health-score-info">
+        <strong>Health Score</strong>
+        <span>{label}</span>
+      </div>
+    </button>
+  );
+}
+
+function SmartActions({ actions, onAction }) {
+  if (!actions.length) return null;
+  return (
+    <section className="smart-actions" aria-label="Smart recommendations">
+      <div className="smart-actions-header">
+        <span className="smart-actions-title">⚡ Smart Recommendations</span>
+        <span className="smart-actions-count">{actions.length} action{actions.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div className="smart-actions-grid">
+        {actions.map((action, i) => (
+          <button
+            key={i}
+            type="button"
+            className={`smart-action-card smart-action-${action.type}`}
+            onClick={() => onAction(action)}
+          >
+            <div className="smart-action-top">
+              <span className="smart-action-num">{i + 1}</span>
+              <span className="smart-action-icon" aria-hidden="true">{action.icon}</span>
+              <span className={`smart-action-badge ${action.type}`}>{action.type}</span>
+            </div>
+            <div className="smart-action-title">{action.title}</div>
+            <div className="smart-action-detail">{action.detail}</div>
+            <div className="smart-action-cta">Go to details →</div>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 function ManagerReport({ data, flowItems, epicReadiness, healthStatus, riskItems, onClose, onNavigate }) {
   const flow = data.flow || {};
@@ -609,6 +667,66 @@ function DeliveryCircle({ flowItems, data, flow, storyPoints, orphanItems, total
         </div>
       </div>
     </div>
+  );
+}
+
+const DASHBOARD_SECTIONS = [
+  { id: 'dashboard-summary',          label: 'Summary',     color: '#2563eb' },
+  { id: 'section-attention',          label: 'Alerts',      color: '#f59e0b' },
+  { id: 'section-overview',           label: 'KPIs',        color: '#16a34a' },
+  { id: 'section-visuals',            label: 'Charts',      color: '#0891b2' },
+  { id: 'section-ratios',             label: 'Composition', color: '#7c3aed' },
+  { id: 'section-delivery-controls',  label: 'Delivery',    color: '#f97316' },
+  { id: 'section-quarters',           label: 'Quarters',    color: '#f97316' },
+  { id: 'section-kanban',             label: 'Kanban',      color: '#0f766e' },
+  { id: 'section-sprint',             label: 'Sprint',      color: '#7c3aed' },
+  { id: 'section-ownership',          label: 'Ownership',   color: '#0f766e' },
+  { id: 'section-labels',             label: 'Labels',      color: '#7c3aed' },
+  { id: 'section-relations',          label: 'Relations',   color: '#dc2626' },
+  { id: 'section-readiness',          label: 'Readiness',   color: '#dc2626' },
+  { id: 'flow-health-panel',          label: 'Flow Table',  color: '#2563eb' },
+];
+
+function SectionNav() {
+  const [active, setActive] = useState(DASHBOARD_SECTIONS[0].id);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length) setActive(visible[0].target.id);
+      },
+      { rootMargin: '-20% 0px -70% 0px', threshold: 0 }
+    );
+    DASHBOARD_SECTIONS.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <nav className="section-nav" aria-label="Page sections">
+      {DASHBOARD_SECTIONS.map(({ id, label, color }) => (
+        <button
+          key={id}
+          type="button"
+          className={`section-nav-item${active === id ? ' active' : ''}`}
+          onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          aria-label={`Go to ${label}`}
+        >
+          <span
+            className="section-nav-dot"
+            style={active === id ? { background: color, boxShadow: `0 0 0 3px ${color}33` } : {}}
+          />
+          <span className="section-nav-label" style={active === id ? { color, fontWeight: 900 } : {}}>
+            {label}
+          </span>
+        </button>
+      ))}
+    </nav>
   );
 }
 
@@ -949,6 +1067,67 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
       });
   }, [data.epics, flowItems]);
 
+  const smartActions = useMemo(() => {
+    const acts = [];
+
+    const criticalBlockers = flowItems.filter(
+      (i) => i.health === 'critical' && normalizeText(i.reason).includes('block')
+    );
+    if (criticalBlockers.length)
+      acts.push({ type: 'critical', icon: '🚫', navTarget: 'flow-health-panel', filterAction: 'blockers',
+        title: `Unblock ${criticalBlockers.length} critical item${criticalBlockers.length > 1 ? 's' : ''}`,
+        detail: `${criticalBlockers[0].key}: ${(criticalBlockers[0].summary || criticalBlockers[0].reason).slice(0, 70)}` });
+
+    const staleActive = flowItems.filter(
+      (i) => i.health === 'critical' && normalizeText(i.reason).includes('in progress over 14')
+    );
+    if (staleActive.length)
+      acts.push({ type: 'critical', icon: '⏳', navTarget: 'flow-health-panel', filterAction: 'stale',
+        title: `${staleActive.length} item${staleActive.length > 1 ? 's' : ''} stalled in progress`,
+        detail: `${staleActive[0].key} has been active for ${Math.round(staleActive[0].activeAgeDays || 0)} days without resolution` });
+
+    const capacity = data.capacity || [];
+    const overloaded = capacity.filter((c) => c.loadShare > 35);
+    if (overloaded.length && capacity.length > 2)
+      acts.push({ type: 'warning', icon: '⚖️', navTarget: 'section-ownership', filterAction: null,
+        title: 'Team capacity imbalance detected',
+        detail: `${overloaded[0].assignee} carries ${overloaded[0].loadShare}% of all work — consider redistributing` });
+
+    const orphanCount = flowItems.filter((i) => i.isOrphan).length;
+    if (orphanCount > 0)
+      acts.push({ type: 'info', icon: '👻', navTarget: 'section-attention', filterAction: null,
+        title: `Link ${orphanCount} orphan item${orphanCount > 1 ? 's' : ''} to epics`,
+        detail: 'Items without parent/epic reduce scope traceability and epic completion accuracy' });
+
+    const criticalEpics = epicReadiness.filter((e) => e.risk === 'critical');
+    if (criticalEpics.length)
+      acts.push({ type: 'warning', icon: '🚨', navTarget: 'section-readiness', filterAction: null,
+        title: `${criticalEpics.length} epic${criticalEpics.length > 1 ? 's' : ''} in critical state`,
+        detail: `${criticalEpics[0].epic || 'Top epic'}: ${criticalEpics[0].completion}% complete — needs immediate attention` });
+
+    if (data.relations?.blockedItems?.length)
+      acts.push({ type: 'critical', icon: '🔗', navTarget: 'section-relations', filterAction: null,
+        title: `${data.relations.blockedItems.length} item${data.relations.blockedItems.length > 1 ? 's' : ''} explicitly blocked`,
+        detail: `${data.relations.blockedItems[0].key} is blocked by ${data.relations.blockedItems[0].blockedBy}` });
+
+    return acts.slice(0, 5);
+  }, [flowItems, data.capacity, data.relations, epicReadiness]);
+
+  const handleSmartAction = (action) => {
+    if (action.filterAction === 'blockers') {
+      setIsFlowPanelOpen(true);
+      setHealthFilter('critical');
+      setReasonFilter('block');
+      setActiveQuickFilter('blocked');
+    } else if (action.filterAction === 'stale') {
+      setIsFlowPanelOpen(true);
+      setHealthFilter('critical');
+    }
+    setTimeout(() => {
+      document.getElementById(action.navTarget)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 200);
+  };
+
   const activeFilterCount =
     [keyFilter, summaryFilter, reasonFilter, labelFilter].filter((s) => s !== '').length +
     [statusFilter, sprintFilter, assigneeFilter, healthFilter].filter((s) => s !== 'all').length +
@@ -963,12 +1142,15 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
           <h2>Delivery Health Analysis</h2>
           <p>Flow, sprint, kanban, capacity, story point, and epic performance from the uploaded Jira export.</p>
         </div>
-        <button className="secondary" onClick={onReset}>
-          Upload new file
-        </button>
+        <div className="dashboard-top-right">
+          {data.healthScore !== undefined && (
+            <HealthScoreGauge score={data.healthScore} onClick={() => setShowManagerReport(true)} />
+          )}
+          <button className="secondary" onClick={onReset}>Upload new file</button>
+        </div>
       </div>
 
-      <section className="dashboard-summary-bar">
+      <section id="dashboard-summary" className="dashboard-summary-bar">
         <div className="floating-help">
           <HelpButton topic="summary" label="Help for summary bar" onOpenHelp={onOpenHelp} />
         </div>
@@ -995,6 +1177,20 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
             <span>Cycle time</span>
             <strong>{summaryDelta.cycleTime}</strong>
           </div>
+          {data.prediction && !data.prediction.complete && data.prediction.daysRemaining !== null && (
+            <div className="summary-change-card prediction-card">
+              <span>Est. completion</span>
+              <strong>~{data.prediction.daysRemaining}d</strong>
+              <small>{data.prediction.predictedDate}</small>
+            </div>
+          )}
+          {data.prediction?.complete && (
+            <div className="summary-change-card prediction-card complete">
+              <span>Completion</span>
+              <strong>Done ✅</strong>
+              <small>100% complete</small>
+            </div>
+          )}
         </div>
         <div className="summary-actions">
           <button type="button" className="secondary report-trigger-btn" onClick={() => setShowManagerReport(true)}>
@@ -1049,6 +1245,8 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
           <button type="button" className="quick-filter-button active" onClick={openFlowFilters}>Show filters</button>
         </div>
       </section>
+
+      <SmartActions actions={smartActions} onAction={handleSmartAction} />
 
       <section className="dashboard-splash">
         <div className="splash-copy">
@@ -1134,6 +1332,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
 
       <section id="section-overview" className="dashboard-section section-overview">
         <SectionHeader
+          icon="🎯"
           kicker="Overview"
           title="Executive delivery snapshot"
           detail="The cards summarize delivery completion, timing, scope, active load, and current health pressure."
@@ -1192,8 +1391,9 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         </div>
       </section>
 
-      <section className="dashboard-section section-visuals">
+      <section id="section-visuals" className="dashboard-section section-visuals">
         <SectionHeader
+          icon="📊"
           kicker="Visual intelligence"
           title="Charts that explain the result"
           detail="Use these charts to see health mix, quarter movement, sprint comparison, kanban distribution, and orphan scope."
@@ -1228,8 +1428,9 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         </div>
       </section>
 
-      <section className="dashboard-section section-ratios">
+      <section id="section-ratios" className="dashboard-section section-ratios">
         <SectionHeader
+          icon="💠"
           kicker="Ratios"
           title="Delivery composition at a glance"
           detail="One ring — every issue accounted for: done, in-progress, at-risk, critical, and backlog."
@@ -1248,8 +1449,9 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       </section>
 
-      <section className="dashboard-section section-delivery">
+      <section id="section-delivery-controls" className="dashboard-section section-delivery">
         <SectionHeader
+          icon="🌊"
           kicker="Delivery controls"
           title="Flow, scope, and risk readout"
           detail="These panels explain whether delivery speed, points, and risk conditions support the project result."
@@ -1318,7 +1520,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         </div>
       </section>
 
-      <section className="dashboard-panel table-section panel-quarter">
+      <section id="section-quarters" className="dashboard-panel table-section panel-quarter">
         <PanelTitle helpTopic="quarters" onOpenHelp={onOpenHelp}>Quarter Statistics</PanelTitle>
         <MetricTable
           columns={[
@@ -1343,7 +1545,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       </section>
 
-      <section className="dashboard-panel table-section panel-kanban-detail">
+      <section id="section-kanban" className="dashboard-panel table-section panel-kanban-detail">
         <PanelTitle helpTopic="kanban" onOpenHelp={onOpenHelp}>Kanban Status Health</PanelTitle>
         <DistributionDonut title="Kanban Share" rows={kanban.byStatus?.slice(0, 6)} emptyMessage="No status data found." />
         <CompactBarChart rows={kanban.byStatus?.slice(0, 8)} emptyMessage="No status data found." />
@@ -1384,8 +1586,9 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       </section>
 
-      <section className="dashboard-section section-ownership">
+      <section id="section-ownership" className="dashboard-section section-ownership">
         <SectionHeader
+          icon="👥"
           kicker="Ownership"
           title="Capacity and epic performance"
           detail="Understand who carries the work and which epic or parent groups are moving cleanly."
@@ -1431,6 +1634,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
 
       <section id="section-labels" className="dashboard-section section-labels">
         <SectionHeader
+          icon="🏷️"
           kicker="Classification"
           title="Labels, types & project breakdown"
           detail="How labels, issue types, and projects distribute across your delivery — volume, completion rate, and health per category."
@@ -1543,6 +1747,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
 
       <section id="section-relations" className="dashboard-section section-relations">
         <SectionHeader
+          icon="🔗"
           kicker="Relations"
           title="Linked issues & dependency map"
           detail={data.relations?.hasLinks
@@ -1625,6 +1830,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
 
       <section id="section-readiness" className="dashboard-section section-delivery">
         <SectionHeader
+          icon="🚀"
           kicker="Readiness"
           title="Epic health &amp; release readiness"
           detail="Top at-risk epics and dependency callouts to surface blockers before release."
@@ -1937,6 +2143,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       )}
 
+      <SectionNav />
       <ScrollToTopFab />
     </main>
   );
