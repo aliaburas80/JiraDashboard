@@ -7,6 +7,12 @@ function App() {
   const [dashboardData, setDashboardData] = useState(null);
   const [theme, setTheme] = useState('light');
   const [helpOpen, setHelpOpen] = useState(false);
+  const [helpSection, setHelpSection] = useState('start');
+
+  const openHelp = (section = 'start') => {
+    setHelpSection(section);
+    setHelpOpen(true);
+  };
 
   return (
     <div className={`app shell ${theme}`}>
@@ -16,7 +22,7 @@ function App() {
           <p>Upload Jira export data to visualize sprint, release, and risk health.</p>
         </div>
         <div className="header-actions">
-          <button className="help-button" type="button" onClick={() => setHelpOpen(true)}>
+          <button className="help-button" type="button" onClick={() => openHelp('start')}>
             Help
           </button>
           <button className="theme-toggle" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
@@ -28,10 +34,10 @@ function App() {
       {!dashboardData ? (
         <UploadPage onDataLoaded={setDashboardData} />
       ) : (
-        <DashboardPage data={dashboardData} onReset={() => setDashboardData(null)} />
+        <DashboardPage data={dashboardData} onReset={() => setDashboardData(null)} onOpenHelp={openHelp} />
       )}
 
-      <HelpGuide open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <HelpGuide open={helpOpen} activeSection={helpSection} onClose={() => setHelpOpen(false)} />
     </div>
   );
 }
