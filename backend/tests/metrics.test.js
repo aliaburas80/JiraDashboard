@@ -1,3 +1,4 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 const assert = require('assert');
 const { calculateDashboardMetrics } = require('../src/services/metrics');
 

@@ -1,3 +1,4 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 import { useMemo, useState, useRef, useEffect } from 'react';
 import KpiCard from './KpiCard';
 
@@ -309,6 +310,328 @@ function SprintCompareChart({ sprints }) {
   return <CompactBarChart rows={rows} emptyMessage="No sprint data available." />;
 }
 
+const DONE_STATUSES = ['done', 'closed', 'resolved'];
+
+function ManagerReport({ data, flowItems, epicReadiness, healthStatus, riskItems, onClose, onNavigate }) {
+  const flow = data.flow || {};
+  const sp = data.storyPoints || {};
+  const sprint = data.sprint || {};
+
+  const healthClass = riskItems === 0 ? 'healthy' : riskItems < 4 ? 'at-risk' : 'urgent-attention';
+  const topRisks = (flowItems || []).filter((i) => i.health === 'critical').slice(0, 3);
+  const latestSprint = sprint.sprints?.slice().sort((a, b) => b.issues - a.issues)[0];
+  const atRisk = (epicReadiness || []).filter((e) => e.risk === 'critical' || e.completion < 60);
+  const topLabels = (data.labels?.labelStats || []).filter((l) => l.label !== '(unlabeled)').slice(0, 3);
+  const insights = (data.insights || []).slice(0, 3);
+  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  return (
+    <div className="report-backdrop" role="dialog" aria-modal="true" aria-labelledby="report-title" onClick={onClose}>
+      <div className="report-panel" onClick={(e) => e.stopPropagation()}>
+
+        <header className="report-header">
+          <div>
+            <span className="report-eyebrow">Delivery Clarity — Executive Summary</span>
+            <h2 className="report-title" id="report-title">Delivery Health Report</h2>
+            <p className="report-date">Generated {today}</p>
+          </div>
+          <button type="button" className="report-close-btn" onClick={onClose} aria-label="Close report">Close ✕</button>
+        </header>
+
+        <div className="report-scroll">
+          <div className={`report-health-banner ${healthClass}`}>
+            <div className="report-health-left">
+              <span className="report-health-indicator">
+                <span className="report-health-dot" />
+                {healthStatus}
+              </span>
+              <span className="report-health-sub">
+                {riskItems === 0 ? 'No items require attention' : `${riskItems} item${riskItems !== 1 ? 's' : ''} require attention`}
+              </span>
+            </div>
+            <div className="report-health-right">
+              <span className="report-completion">{data.completionRate || 0}%</span>
+              <span className="report-completion-label">complete</span>
+            </div>
+          </div>
+
+          <div className="report-snapshot-grid">
+            {[
+              { label: 'Total',      value: data.totalIssues || 0,              cls: '' },
+              { label: 'Done',       value: data.doneIssues || 0,               cls: 'green' },
+              { label: 'Active',     value: data.activeIssues || 0,             cls: 'blue' },
+              { label: 'Critical',   value: flow.critical || 0,                 cls: 'red' },
+              { label: 'Warning',    value: flow.warning || 0,                  cls: 'amber' },
+              { label: 'Lead Time',  value: `${flow.averageLeadTimeDays || 0}d`, cls: '' },
+              { label: 'Cycle Time', value: `${flow.averageCycleTimeDays || 0}d`, cls: '' },
+              ...(sp.totalStoryPoints > 0 ? [{
+                label: 'Points',
+                value: `${sp.pointCompletionRate || 0}%`,
+                cls: '',
+                sub: `${sp.completedStoryPoints} / ${sp.totalStoryPoints}`,
+              }] : []),
+            ].map(({ label, value, cls, sub }) => (
+              <div key={label} className="report-snapshot-cell">
+                <span className="report-snapshot-label">{label}</span>
+                <span className={`report-snapshot-value ${cls}`}>{value}</span>
+                {sub && <span className="report-snapshot-sub">{sub}</span>}
+              </div>
+            ))}
+          </div>
+
+          <div className="report-rows">
+
+            <div className="report-row">
+              <div className="report-row-body">
+                <div className="report-row-header">
+                  <span className="report-row-icon" aria-hidden="true">🔴</span>
+                  <span className="report-row-title">Risk Indicators</span>
+                  <span className={`report-row-badge ${topRisks.length > 0 ? 'critical' : 'good'}`}>
+                    {topRisks.length > 0 ? `${topRisks.length} critical` : 'All clear'}
+                  </span>
+                </div>
+                {topRisks.length > 0 ? (
+                  <ul className="report-risk-list">
+                    {topRisks.map((item) => (
+                      <li key={item.key} className="report-risk-item">
+                        <span className="report-risk-key">{item.key}</span>
+                        <span className="report-risk-reason">{item.summary || item.reason}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="report-row-content">No critical items detected. Delivery is on track.</p>
+                )}
+              </div>
+              <button type="button" className="report-details-btn" onClick={() => onNavigate('flow-health-panel', 'openFlow')}>Details →</button>
+            </div>
+
+            {latestSprint && (
+              <div className="report-row">
+                <div className="report-row-body">
+                  <div className="report-row-header">
+                    <span className="report-row-icon" aria-hidden="true">🏃</span>
+                    <span className="report-row-title">Sprint Status</span>
+                    <span className={`report-row-badge ${latestSprint.completionRate >= 80 ? 'good' : latestSprint.completionRate >= 60 ? 'warning' : 'critical'}`}>
+                      {latestSprint.completionRate}% done
+                    </span>
+                  </div>
+                  <p className="report-row-content">
+                    <strong>{latestSprint.name}</strong> — {latestSprint.completedIssues} of {latestSprint.issues} issues done
+                    {latestSprint.critical > 0 && ` · ${latestSprint.critical} critical`}
+                    {latestSprint.completedPoints > 0 && ` · ${latestSprint.completedPoints} pts delivered`}
+                  </p>
+                </div>
+                <button type="button" className="report-details-btn" onClick={() => onNavigate('section-sprint')}>Details →</button>
+              </div>
+            )}
+
+            <div className="report-row">
+              <div className="report-row-body">
+                <div className="report-row-header">
+                  <span className="report-row-icon" aria-hidden="true">🎯</span>
+                  <span className="report-row-title">Epic Readiness</span>
+                  <span className={`report-row-badge ${atRisk.length > 0 ? (atRisk.some((e) => e.risk === 'critical') ? 'critical' : 'warning') : 'good'}`}>
+                    {atRisk.length > 0 ? `${atRisk.length} at-risk` : 'All healthy'}
+                  </span>
+                </div>
+                {atRisk.length > 0 ? (
+                  <p className="report-row-content">
+                    {atRisk.filter((e) => e.risk === 'critical').length > 0 && (
+                      <><strong>{atRisk.filter((e) => e.risk === 'critical').length} critical epic{atRisk.filter((e) => e.risk === 'critical').length !== 1 ? 's' : ''}</strong> · </>
+                    )}
+                    Top: <strong>{atRisk[0]?.epic || '—'}</strong> at {atRisk[0]?.completion || 0}% complete
+                  </p>
+                ) : (
+                  <p className="report-row-content">All epics are progressing well toward completion.</p>
+                )}
+              </div>
+              <button type="button" className="report-details-btn" onClick={() => onNavigate('section-readiness')}>Details →</button>
+            </div>
+
+            {data.capacity?.length > 0 && (
+              <div className="report-row">
+                <div className="report-row-body">
+                  <div className="report-row-header">
+                    <span className="report-row-icon" aria-hidden="true">👥</span>
+                    <span className="report-row-title">Capacity</span>
+                    <span className="report-row-badge info">{data.capacity.length} assignees</span>
+                  </div>
+                  <p className="report-row-content">
+                    Top load: <strong>{data.capacity[0]?.assignee}</strong> {data.capacity[0]?.loadShare}%
+                    ({data.capacity[0]?.issues} issues{data.capacity[0]?.activeIssues > 0 ? `, ${data.capacity[0].activeIssues} active` : ''})
+                    {data.capacity[1] && ` · ${data.capacity[1].assignee} ${data.capacity[1].loadShare}%`}
+                  </p>
+                </div>
+                <button type="button" className="report-details-btn" onClick={() => onNavigate('capacity-section')}>Details →</button>
+              </div>
+            )}
+
+            {topLabels.length > 0 && (
+              <div className="report-row">
+                <div className="report-row-body">
+                  <div className="report-row-header">
+                    <span className="report-row-icon" aria-hidden="true">🏷️</span>
+                    <span className="report-row-title">Labels & Classification</span>
+                    <span className="report-row-badge info">{data.labels.uniqueLabels} labels</span>
+                  </div>
+                  <p className="report-row-content">
+                    Top: {topLabels.map((l) => `${l.label} (${l.count})`).join(' · ')}
+                    {data.labels.totalUnlabeled > 0 && ` · ${data.labels.totalUnlabeled} unlabeled`}
+                  </p>
+                </div>
+                <button type="button" className="report-details-btn" onClick={() => onNavigate('section-labels')}>Details →</button>
+              </div>
+            )}
+
+            {data.relations?.hasLinks && (
+              <div className="report-row">
+                <div className="report-row-body">
+                  <div className="report-row-header">
+                    <span className="report-row-icon" aria-hidden="true">🔗</span>
+                    <span className="report-row-title">Issue Relations</span>
+                    <span className={`report-row-badge ${data.relations.blockedItems?.length > 0 ? 'warning' : 'info'}`}>
+                      {data.relations.totalLinks} links
+                    </span>
+                  </div>
+                  <p className="report-row-content">
+                    {data.relations.itemsWithLinks} item{data.relations.itemsWithLinks !== 1 ? 's' : ''} with relationships
+                    {data.relations.blockedItems?.length > 0 && <> · <strong>{data.relations.blockedItems.length} explicitly blocked</strong></>}
+                    {` · ${data.relations.linkTypes} link type${data.relations.linkTypes !== 1 ? 's' : ''}`}
+                  </p>
+                </div>
+                <button type="button" className="report-details-btn" onClick={() => onNavigate('section-relations')}>Details →</button>
+              </div>
+            )}
+
+            {insights.length > 0 && (
+              <div className="report-row">
+                <div className="report-row-body">
+                  <div className="report-row-header">
+                    <span className="report-row-icon" aria-hidden="true">💡</span>
+                    <span className="report-row-title">Key Insights</span>
+                  </div>
+                  <ul className="report-insights">
+                    {insights.map((insight, i) => (
+                      <li key={i} className="report-insight-item">
+                        <span className="report-insight-dot" aria-hidden="true" />
+                        {insight}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <button type="button" className="report-details-btn" onClick={() => onNavigate('section-overview')}>Details →</button>
+              </div>
+            )}
+
+          </div>
+        </div>
+
+        <footer className="report-footer">
+          <button type="button" className="report-print-btn" onClick={() => window.print()}>🖨 Print report</button>
+          <button type="button" className="report-back-btn" onClick={onClose}>Back to dashboard</button>
+        </footer>
+      </div>
+    </div>
+  );
+}
+const ACTIVE_STATUSES = ['in progress', 'code review', 'qa', 'testing', 'uat'];
+
+function DeliveryCircle({ flowItems, data, flow, storyPoints, orphanItems, totalIssues, onOpenHelp, helpTopic }) {
+  const total = Math.max(totalIssues, 1);
+
+  const doneBucket = flowItems.filter((i) => DONE_STATUSES.includes(normalizeText(i.status))).length;
+  const criticalBucket = flowItems.filter((i) => !DONE_STATUSES.includes(normalizeText(i.status)) && normalizeText(i.health) === 'critical').length;
+  const warningBucket = flowItems.filter((i) => !DONE_STATUSES.includes(normalizeText(i.status)) && normalizeText(i.health) === 'warning').length;
+  const activeBucket = flowItems.filter((i) =>
+    ACTIVE_STATUSES.includes(normalizeText(i.status)) &&
+    !DONE_STATUSES.includes(normalizeText(i.status)) &&
+    normalizeText(i.health) !== 'critical' &&
+    normalizeText(i.health) !== 'warning'
+  ).length;
+  const otherBucket = Math.max(total - doneBucket - criticalBucket - warningBucket - activeBucket, 0);
+
+  const segments = [
+    { key: 'done',     label: 'Done',            value: doneBucket,     color: '#16a34a' },
+    { key: 'active',   label: 'In Progress',      value: activeBucket,   color: '#2563eb' },
+    { key: 'warning',  label: 'At Risk',           value: warningBucket,  color: '#f59e0b' },
+    { key: 'critical', label: 'Critical',          value: criticalBucket, color: '#dc2626' },
+    { key: 'other',    label: 'Backlog / Other',   value: otherBucket,    color: '#cbd5e1' },
+  ].filter((s) => s.value > 0);
+
+  const segTotal = Math.max(segments.reduce((acc, s) => acc + s.value, 0), 1);
+  let cursor = 0;
+  const background = `conic-gradient(${segments.map((seg) => {
+    const start = cursor;
+    cursor += (seg.value / segTotal) * 100;
+    return `${seg.color} ${start}% ${cursor}%`;
+  }).join(', ')})`;
+
+  return (
+    <div className="dashboard-panel delivery-circle-panel">
+      <div className="panel-title-row">
+        <h3>Delivery Composition</h3>
+        <HelpButton topic={helpTopic} label="Help for delivery ratios" onOpenHelp={onOpenHelp} />
+      </div>
+      <div className="delivery-circle-layout">
+        <div className="delivery-circle-wrap">
+          <div className="delivery-circle" style={{ background }}>
+            <div className="delivery-circle-inner">
+              <span className="delivery-circle-value">{data.completionRate || 0}%</span>
+              <small>complete</small>
+              <span className="delivery-circle-issues">{data.doneIssues || 0} of {total}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="delivery-circle-legend">
+          {segments.map((seg) => (
+            <div key={seg.key} className={`delivery-legend-row${seg.key === 'other' ? ' delivery-legend-muted' : ''}`}>
+              <span className="legend-swatch" style={{ background: seg.color }} />
+              <span className="legend-label">{seg.label}</span>
+              <strong className="legend-count">{seg.value}</strong>
+              <span className="legend-pct">{Math.round((seg.value / total) * 100)}%</span>
+            </div>
+          ))}
+
+          <div className="delivery-legend-divider" />
+
+          <div className="delivery-legend-totals">
+            <div><span>Total</span><strong>{total} issues</strong></div>
+            {orphanItems > 0 && <div><span>Orphans</span><strong>{orphanItems}</strong></div>}
+            {storyPoints.totalStoryPoints > 0 && (
+              <div>
+                <span>Points</span>
+                <strong>{storyPoints.completedStoryPoints || 0} / {storyPoints.totalStoryPoints}</strong>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ScrollToTopFab() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 400);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  if (!visible) return null;
+  return (
+    <button
+      type="button"
+      className="scroll-top-fab"
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      aria-label="Scroll to top"
+    >
+      ↑
+    </button>
+  );
+}
+
 export default function DashboardPage({ data, onReset, onOpenHelp }) {
   const flow = data.flow || {};
   const sprint = data.sprint || {};
@@ -338,6 +661,9 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
   const [activeQuickFilter, setActiveQuickFilter] = useState('all');
   const [hideStickyFilter, setHideStickyFilter] = useState(false);
   const [stickyTop, setStickyTop] = useState(0);
+  const [showManagerReport, setShowManagerReport] = useState(false);
+  const [labelFilter, setLabelFilter] = useState('');
+  const [flowItemVisibleCount, setFlowItemVisibleCount] = useState(100);
 
   const statusOptions = useMemo(() => getUniqueValues(flowItems, 'status'), [flowItems]);
   const sprintOptions = useMemo(() => getUniqueValues(flowItems, 'sprint'), [flowItems]);
@@ -381,10 +707,24 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
 
   useEffect(() => {
     const header = document.querySelector('.app-header');
-    if (header) {
-      const nextTop = header.offsetHeight + 26;
+    const updateStickyTop = () => {
+      if (!header) return;
+      const headerStyle = window.getComputedStyle(header);
+      const marginBottom = Number(headerStyle.marginBottom.replace('px', '')) || 0;
+      const nextTop = header.offsetHeight + marginBottom + 4;
       setStickyTop(nextTop);
-    }
+    };
+
+    updateStickyTop();
+
+    const resizeObserver = new ResizeObserver(updateStickyTop);
+    if (header) resizeObserver.observe(header);
+    window.addEventListener('resize', updateStickyTop);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateStickyTop);
+    };
   }, []);
 
   useEffect(() => {
@@ -405,7 +745,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
       },
       {
         root: null,
-        rootMargin: `-${stickyTop || 100}px 0px 0px 0px`,
+        rootMargin: `-${stickyTop || 120}px 0px 0px 0px`,
         threshold: 0.05,
       }
     );
@@ -413,6 +753,10 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
     observer.observe(target);
     return () => observer.disconnect();
   }, [isFlowPanelOpen, stickyTop]);
+
+  useEffect(() => {
+    setFlowItemVisibleCount(100);
+  }, [keyFilter, summaryFilter, statusFilter, sprintFilter, assigneeFilter, leadMaxFilter, cycleMaxFilter, openAgeMaxFilter, healthFilter, reasonFilter, labelFilter]);
 
   const openDetailPanel = (title, description, items = []) => {
     setDetailPanel({ title, description, items });
@@ -483,6 +827,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
       reasonFilter,
       keyFilter,
       summaryFilter,
+      labelFilter,
     };
     window.localStorage.setItem('dashboardLayout', JSON.stringify(layoutState));
     setLayoutSaved(true);
@@ -523,6 +868,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
     setOpenAgeMaxFilter('');
     setHealthFilter('all');
     setReasonFilter('');
+    setLabelFilter('');
 
     if (type === 'high-risk') {
       setHealthFilter('critical');
@@ -554,6 +900,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
       const matchesOpenAge = isWithinMaxDays(item.ageDays, openAgeMaxFilter);
       const matchesHealth = matchesSelect(item.health, healthFilter);
       const matchesReason = matchesText(item.reason, reasonFilter);
+      const matchesLabel = !labelFilter || (item.labels || '').toLowerCase().includes(labelFilter.toLowerCase());
 
       return (
         matchesKey &&
@@ -565,7 +912,8 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         matchesCycle &&
         matchesOpenAge &&
         matchesHealth &&
-        matchesReason
+        matchesReason &&
+        matchesLabel
       );
     });
   }, [
@@ -574,6 +922,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
     flowItems,
     healthFilter,
     keyFilter,
+    labelFilter,
     leadMaxFilter,
     openAgeMaxFilter,
     reasonFilter,
@@ -599,6 +948,13 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         return (rank[a.risk] - rank[b.risk]) || (a.completion - b.completion);
       });
   }, [data.epics, flowItems]);
+
+  const activeFilterCount =
+    [keyFilter, summaryFilter, reasonFilter, labelFilter].filter((s) => s !== '').length +
+    [statusFilter, sprintFilter, assigneeFilter, healthFilter].filter((s) => s !== 'all').length +
+    [leadMaxFilter, cycleMaxFilter, openAgeMaxFilter].filter((s) => s !== '').length;
+
+  const visibleFlowItems = filteredFlowItems.slice(0, flowItemVisibleCount);
 
   return (
   <main className="dashboard-page" aria-hidden={detailPanel ? true : undefined}>
@@ -641,6 +997,9 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
           </div>
         </div>
         <div className="summary-actions">
+          <button type="button" className="secondary report-trigger-btn" onClick={() => setShowManagerReport(true)}>
+            📋 Quick Overview
+          </button>
           <button type="button" className="secondary" onClick={() => openDetailPanel('High-risk review', 'Review the highest-risk items and assign mitigation tasks.', topBlockers)}>
             Review high-risk items
           </button>
@@ -673,6 +1032,9 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
           <button type="button" className={`quick-filter-button ${activeQuickFilter === 'sprint-today' ? 'active' : ''}`} onClick={() => applyQuickFilter('sprint-today')}>Sprint today</button>
         </div>
         <div className="filter-right">
+          {activeFilterCount > 0 && (
+            <span className="filter-count-badge">{activeFilterCount} active</span>
+          )}
           <button
             type="button"
             className="quick-filter-button ghost"
@@ -701,7 +1063,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         </div>
       </section>
 
-      <section className="issue-highlight-strip">
+      <section id="section-attention" className="issue-highlight-strip">
         <div className="issue-highlight-card card-blockers">
           <div className="floating-help">
             <HelpButton topic="attention" label="Help for blockers" onOpenHelp={onOpenHelp} />
@@ -770,7 +1132,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         </div>
       </section>
 
-      <section className="dashboard-section section-overview">
+      <section id="section-overview" className="dashboard-section section-overview">
         <SectionHeader
           kicker="Overview"
           title="Executive delivery snapshot"
@@ -869,18 +1231,21 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
       <section className="dashboard-section section-ratios">
         <SectionHeader
           kicker="Ratios"
-          title="Circle metrics by delivery theme"
-          detail="Each circle gives a fast percentage view for completion, points, risk, ownership gaps, and active work."
+          title="Delivery composition at a glance"
+          detail="One ring — every issue accounted for: done, in-progress, at-risk, critical, and backlog."
           helpTopic="ratios"
           onOpenHelp={onOpenHelp}
         />
-        <div className="circle-grid">
-          <CircleMetric title="Done Ratio" value={data.doneIssues || 0} total={totalIssues} label="done items" color="#16a34a" />
-          <CircleMetric title="Story Points" value={storyPoints.completedStoryPoints || 0} total={storyPoints.totalStoryPoints || 0} label="completed points" color="#14b8a6" />
-          <CircleMetric title="Risk Pressure" value={riskItems} total={totalIssues} label="warning or critical" color="#dc2626" />
-          <CircleMetric title="Orphan Ratio" value={orphanItems} total={totalIssues} label="without epic/parent" color="#f97316" />
-          <CircleMetric title="Active Work" value={data.activeIssues || 0} total={totalIssues} label="active items" color="#7c3aed" />
-        </div>
+        <DeliveryCircle
+          flowItems={flowItems}
+          data={data}
+          flow={flow}
+          storyPoints={storyPoints}
+          orphanItems={orphanItems}
+          totalIssues={totalIssues}
+          onOpenHelp={onOpenHelp}
+          helpTopic="ratios"
+        />
       </section>
 
       <section className="dashboard-section section-delivery">
@@ -999,7 +1364,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       </section>
 
-      <section className="dashboard-panel table-section panel-sprint-detail">
+      <section id="section-sprint" className="dashboard-panel table-section panel-sprint-detail">
         <PanelTitle helpTopic="sprint" onOpenHelp={onOpenHelp}>Sprint Status</PanelTitle>
         <DistributionDonut title="Sprint Share" rows={sprint.sprints?.slice(0, 6)} labelKey="name" valueKey="issues" emptyMessage="No sprint data found." />
         <MetricTable
@@ -1064,6 +1429,191 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         </div>
       </section>
 
+      <section id="section-labels" className="dashboard-section section-labels">
+        <SectionHeader
+          kicker="Classification"
+          title="Labels, types & project breakdown"
+          detail="How labels, issue types, and projects distribute across your delivery — volume, completion rate, and health per category."
+          helpTopic="labels"
+          onOpenHelp={onOpenHelp}
+        />
+
+        <div className="split-panels">
+          <section className="dashboard-panel panel-labels">
+            <PanelTitle helpTopic="labels" onOpenHelp={onOpenHelp}>Label Distribution</PanelTitle>
+            {data.labels?.labelStats?.filter((l) => l.label !== '(unlabeled)').length ? (
+              <>
+                <div className="label-coverage-row">
+                  <span className="label-pill">{data.labels.uniqueLabels} unique labels</span>
+                  <span className="label-pill label-pill-muted">{data.labels.totalUnlabeled} unlabeled</span>
+                </div>
+                <CompactBarChart
+                  rows={data.labels.labelStats.filter((l) => l.label !== '(unlabeled)').slice(0, 8)}
+                  labelKey="label"
+                  valueKey="count"
+                  emptyMessage="No labels found."
+                />
+              </>
+            ) : (
+              <p className="muted">No label data found in this export. Add labels to Jira issues to see this breakdown.</p>
+            )}
+          </section>
+
+          <section className="dashboard-panel panel-type">
+            <PanelTitle helpTopic="labels" onOpenHelp={onOpenHelp}>Issue Type Breakdown</PanelTitle>
+            {data.types?.length ? (
+              <>
+                <DistributionDonut title="Type Share" rows={data.types} labelKey="type" valueKey="count" emptyMessage="No type data." />
+                <CompactBarChart rows={data.types} labelKey="type" valueKey="count" emptyMessage="No type data." />
+              </>
+            ) : (
+              <p className="muted">No issue type data found.</p>
+            )}
+          </section>
+        </div>
+
+        {data.labels?.labelStats?.filter((l) => l.label !== '(unlabeled)').length > 0 && (
+          <section className="dashboard-panel panel-label-health">
+            <PanelTitle helpTopic="labels" onOpenHelp={onOpenHelp}>Label Health & Completion</PanelTitle>
+            <MetricTable
+              columns={[
+                { key: 'label', label: 'Label' },
+                { key: 'count', label: 'Issues' },
+                { key: 'done', label: 'Done' },
+                { key: 'completionRate', label: 'Completion', render: (row) => (
+                  <div className="table-progress">
+                    <ProgressBar value={row.completionRate} />
+                    <span>{row.completionRate}%</span>
+                  </div>
+                )},
+                { key: 'critical', label: 'Critical' },
+                { key: 'warning', label: 'Warning' },
+                { key: 'storyPoints', label: 'Points' },
+                { key: 'averageLeadTimeDays', label: 'Avg Lead', render: (row) => formatDays(row.averageLeadTimeDays) },
+                { key: 'averageCycleTimeDays', label: 'Avg Cycle', render: (row) => formatDays(row.averageCycleTimeDays) },
+              ]}
+              rows={data.labels.labelStats.filter((l) => l.label !== '(unlabeled)')}
+              emptyMessage="No label data found."
+            />
+          </section>
+        )}
+
+        {(data.parents?.length > 0 || data.projects?.length > 1) && (
+          <div className="split-panels">
+            {data.parents?.length > 0 && (
+              <section className="dashboard-panel panel-parents">
+                <PanelTitle helpTopic="labels" onOpenHelp={onOpenHelp}>Parent Key Breakdown</PanelTitle>
+                <CompactBarChart rows={data.parents.slice(0, 8)} labelKey="parent" valueKey="count" emptyMessage="No parent data." />
+                <MetricTable
+                  columns={[
+                    { key: 'parent', label: 'Parent' },
+                    { key: 'count', label: 'Issues' },
+                    { key: 'done', label: 'Done' },
+                    { key: 'completionRate', label: 'Completion', render: (row) => `${row.completionRate}%` },
+                    { key: 'critical', label: 'Critical' },
+                    { key: 'warning', label: 'Warning' },
+                    { key: 'storyPoints', label: 'Points' },
+                  ]}
+                  rows={data.parents}
+                  emptyMessage="No parent key data found."
+                />
+              </section>
+            )}
+            {data.projects?.length > 1 && (
+              <section className="dashboard-panel panel-projects">
+                <PanelTitle helpTopic="labels" onOpenHelp={onOpenHelp}>Project Breakdown</PanelTitle>
+                <DistributionDonut title="Project Share" rows={data.projects} labelKey="project" valueKey="count" emptyMessage="No project data." />
+                <MetricTable
+                  columns={[
+                    { key: 'project', label: 'Project' },
+                    { key: 'count', label: 'Issues' },
+                    { key: 'done', label: 'Done' },
+                    { key: 'completionRate', label: 'Completion', render: (row) => `${row.completionRate}%` },
+                    { key: 'critical', label: 'Critical' },
+                    { key: 'warning', label: 'Warning' },
+                  ]}
+                  rows={data.projects}
+                  emptyMessage="No project data found."
+                />
+              </section>
+            )}
+          </div>
+        )}
+      </section>
+
+      <section id="section-relations" className="dashboard-section section-relations">
+        <SectionHeader
+          kicker="Relations"
+          title="Linked issues & dependency map"
+          detail={data.relations?.hasLinks
+            ? `${data.relations.totalLinks} link relationship${data.relations.totalLinks !== 1 ? 's' : ''} across ${data.relations.itemsWithLinks} item${data.relations.itemsWithLinks !== 1 ? 's' : ''} — ${data.relations.linkTypes} link type${data.relations.linkTypes !== 1 ? 's' : ''} detected.`
+            : 'Linked issue columns were not found in this export. Re-export from Jira with linked issue columns to see dependency data here.'
+          }
+          helpTopic="relations"
+          onOpenHelp={onOpenHelp}
+        />
+
+        {data.relations?.hasLinks ? (
+          <>
+            <div className="split-panels">
+              <section className="dashboard-panel panel-link-types">
+                <PanelTitle helpTopic="relations" onOpenHelp={onOpenHelp}>Link Type Distribution</PanelTitle>
+                <DistributionDonut title="Link Types" rows={data.relations.linkStats} labelKey="type" valueKey="count" emptyMessage="No link types found." />
+                <CompactBarChart rows={data.relations.linkStats} labelKey="type" valueKey="count" emptyMessage="No link types found." />
+              </section>
+
+              <section className="dashboard-panel panel-most-linked">
+                <PanelTitle helpTopic="relations" onOpenHelp={onOpenHelp}>Most Connected Items</PanelTitle>
+                <MetricTable
+                  columns={[
+                    { key: 'key', label: 'Key' },
+                    { key: 'summary', label: 'Summary' },
+                    { key: 'linkCount', label: 'Links' },
+                    { key: 'linkTypes', label: 'Types' },
+                    { key: 'status', label: 'Status' },
+                  ]}
+                  rows={data.relations.mostLinked}
+                  emptyMessage="No linked items found."
+                />
+              </section>
+            </div>
+
+            {data.relations.blockedItems?.length > 0 && (
+              <section className="dashboard-panel panel-blocked-links">
+                <PanelTitle helpTopic="relations" onOpenHelp={onOpenHelp}>Items Explicitly Blocked by Others</PanelTitle>
+                <MetricTable
+                  columns={[
+                    { key: 'key', label: 'Blocked Item' },
+                    { key: 'summary', label: 'Summary' },
+                    { key: 'status', label: 'Status' },
+                    { key: 'blockedBy', label: 'Blocked By' },
+                    { key: 'blockCount', label: 'Blockers' },
+                  ]}
+                  rows={data.relations.blockedItems}
+                  emptyMessage="No explicitly blocked items."
+                />
+              </section>
+            )}
+          </>
+        ) : (
+          <div className="relations-empty">
+            <span className="relations-empty-icon" aria-hidden="true">🔗</span>
+            <h3 className="relations-empty-title">No linked issues found in this export</h3>
+            <p className="relations-empty-body">
+              Jira linked-issue columns were not detected. To see blockers, dependencies, and related items here, re-export from Jira with link columns included.
+            </p>
+            <ol className="relations-empty-steps">
+              <li>In Jira, open your board or project and go to <strong>Export → Excel / CSV</strong></li>
+              <li>In the export dialog, select <strong>all columns</strong> — or manually check <strong>Linked Issues</strong></li>
+              <li>Re-upload the new file to this dashboard</li>
+            </ol>
+            <p className="relations-empty-note">
+              Expected column names: <code>Inward issue link (Blocks)</code> · <code>Outward issue link (Blocks)</code> · <code>Inward issue link (Relates)</code>
+            </p>
+          </div>
+        )}
+      </section>
+
       <section className="dashboard-panel panel-justification">
         <PanelTitle helpTopic="justification" onOpenHelp={onOpenHelp}>Justification</PanelTitle>
         <ul className="insight-list">
@@ -1073,10 +1623,10 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         </ul>
       </section>
 
-      <section className="dashboard-section section-delivery">
+      <section id="section-readiness" className="dashboard-section section-delivery">
         <SectionHeader
           kicker="Readiness"
-          title="Epic health & release readiness"
+          title="Epic health &amp; release readiness"
           detail="Top at-risk epics and dependency callouts to surface blockers before release."
           helpTopic="readiness"
           onOpenHelp={onOpenHelp}
@@ -1293,6 +1843,15 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
               placeholder="Blocked, overdue, cycle"
             />
           </label>
+          <label>
+            Labels
+            <input
+              type="search"
+              value={labelFilter}
+              onChange={(event) => setLabelFilter(event.target.value)}
+              placeholder="bug-fix, mobile…"
+            />
+          </label>
           <button
             className="secondary ghost"
             type="button"
@@ -1307,6 +1866,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
               setOpenAgeMaxFilter('');
               setHealthFilter('all');
               setReasonFilter('');
+              setLabelFilter('');
               setActiveQuickFilter('all');
             }}
           >
@@ -1317,7 +1877,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
             <StatusGraph rows={filteredFlowItems} />
 
             <div className="filtered-summary">
-              Showing <strong>{filteredFlowItems.length}</strong> matching items from <strong>{flowItems.length}</strong> total.
+              Showing <strong>{visibleFlowItems.length}</strong> of <strong>{filteredFlowItems.length}</strong> matching items from <strong>{flowItems.length}</strong> total.
               {filteredFlowItems.some((item) => item.isOrphan) && <span>{filteredFlowItems.filter((item) => item.isOrphan).length} orphan items highlighted</span>}
             </div>
 
@@ -1329,19 +1889,55 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
             { key: 'sprint', label: 'Sprint' },
             { key: 'epic', label: 'Epic / Parent', render: (row) => row.epic || 'Orphan' },
             { key: 'assignee', label: 'Assignee' },
+            { key: 'labels', label: 'Labels' },
+            { key: 'linkedTo', label: 'Linked To' },
             { key: 'leadTimeDays', label: 'Lead', render: (row) => formatDays(row.leadTimeDays) },
             { key: 'cycleTimeDays', label: 'Cycle', render: (row) => formatDays(row.cycleTimeDays) },
             { key: 'ageDays', label: 'Open Age', render: (row) => formatDays(row.ageDays) },
             { key: 'health', label: 'Health', render: (row) => <HealthBadge value={row.health} /> },
             { key: 'reason', label: 'Reason' },
           ]}
-          rows={filteredFlowItems}
+          rows={visibleFlowItems}
           emptyMessage="No story or task data found."
           rowClassName={(row) => (row.isOrphan ? 'orphan-row' : '')}
             />
+            {filteredFlowItems.length > flowItemVisibleCount && (
+              <button
+                type="button"
+                className="secondary load-more-button"
+                onClick={() => setFlowItemVisibleCount((c) => c + 100)}
+              >
+                Show {Math.min(100, filteredFlowItems.length - flowItemVisibleCount)} more
+                <span className="muted"> — {filteredFlowItems.length - flowItemVisibleCount} remaining</span>
+              </button>
+            )}
           </>
         )}
       </section>
+
+      {showManagerReport && (
+        <ManagerReport
+          data={data}
+          flowItems={flowItems}
+          epicReadiness={epicReadiness}
+          healthStatus={healthStatus}
+          riskItems={riskItems}
+          onClose={() => setShowManagerReport(false)}
+          onNavigate={(sectionId, extra) => {
+            setShowManagerReport(false);
+            if (extra === 'openFlow') {
+              setIsFlowPanelOpen(true);
+              setHealthFilter('critical');
+              setActiveQuickFilter('high-risk');
+            }
+            setTimeout(() => {
+              document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 200);
+          }}
+        />
+      )}
+
+      <ScrollToTopFab />
     </main>
   );
 }

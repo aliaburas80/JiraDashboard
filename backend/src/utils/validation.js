@@ -1,3 +1,4 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 const { ESSENTIAL_FIELDS } = require('../services/parser');
 
 function validateIssueData(issues) {

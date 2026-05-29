@@ -1,3 +1,4 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 const DONE_STATUSES = ['Done', 'Closed', 'Resolved'];
 const IN_PROGRESS_STATUSES = ['In Progress', 'Code Review', 'QA', 'Testing', 'UAT'];
 const MONTHS = {
@@ -113,6 +114,12 @@ function daysBetween(start, end) {
   return days > 3650 ? null : days;
 }
 
+function parseLabels(issue) {
+  const raw = String(issue['Labels'] || '').trim();
+  if (!raw) return [];
+  return raw.split(/[,;|]+/).map((l) => l.trim()).filter(Boolean);
+}
+
 function isDone(issue) {
   return DONE_STATUSES.includes(issue['Status']);
 }
@@ -218,6 +225,9 @@ function getHealthFromIssue(issue, today = new Date()) {
     cycleTimeDays: cycleTimeDays === null ? null : round(cycleTimeDays),
     ageDays: ageDays === null ? null : round(ageDays),
     activeAgeDays: activeAgeDays === null ? null : round(activeAgeDays),
+    labels: parseLabels(issue).join(', '),
+    parent: issue['Parent Key'] || '',
+    project: issue['Project'] || '',
     health,
     reason: reasons.join(' '),
   };
@@ -396,6 +406,99 @@ function buildQuarterMetrics(issues, flowItems) {
     });
 }
 
+function buildLabelMetrics(issues, flowItems) {
+  const labelMap = {};
+  issues.forEach((issue) => {
+    const ls = parseLabels(issue);
+    const targets = ls.length ? ls : ['(unlabeled)'];
+    targets.forEach((label) => {
+      if (!labelMap[label]) labelMap[label] = [];
+      labelMap[label].push(issue);
+    });
+  });
+
+  const labelStats = Object.entries(labelMap)
+    .map(([label, items]) => {
+      const keys = new Set(items.map((i) => i['Issue Key']));
+      const matching = flowItems.filter((fi) => keys.has(fi.key));
+      return {
+        label,
+        count: items.length,
+        done: countIssues(items, isDone),
+        completionRate: items.length ? Math.round((countIssues(items, isDone) / items.length) * 100) : 0,
+        storyPoints: round(sum(items.map(getStoryPoints))),
+        ...summarizeFlowItems(matching),
+      };
+    })
+    .sort((a, b) => {
+      if (a.label === '(unlabeled)') return 1;
+      if (b.label === '(unlabeled)') return -1;
+      return b.count - a.count;
+    });
+
+  const totalLabeled = issues.filter((i) => parseLabels(i).length > 0).length;
+  return {
+    labelStats: labelStats.slice(0, 15),
+    totalLabeled,
+    totalUnlabeled: issues.length - totalLabeled,
+    uniqueLabels: Object.keys(labelMap).filter((l) => l !== '(unlabeled)').length,
+  };
+}
+
+function buildTypeMetrics(issues, flowItems) {
+  return Object.entries(groupBy(issues, (i) => i['Issue Type'] || 'Unknown'))
+    .map(([type, items]) => {
+      const keys = new Set(items.map((i) => i['Issue Key']));
+      const matching = flowItems.filter((fi) => keys.has(fi.key));
+      return {
+        type,
+        count: items.length,
+        done: countIssues(items, isDone),
+        completionRate: items.length ? Math.round((countIssues(items, isDone) / items.length) * 100) : 0,
+        storyPoints: round(sum(items.map(getStoryPoints))),
+        ...summarizeFlowItems(matching),
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+}
+
+function buildProjectMetrics(issues, flowItems) {
+  return Object.entries(groupBy(issues, (i) => i['Project'] || 'Unknown'))
+    .map(([project, items]) => {
+      const keys = new Set(items.map((i) => i['Issue Key']));
+      const matching = flowItems.filter((fi) => keys.has(fi.key));
+      return {
+        project,
+        count: items.length,
+        done: countIssues(items, isDone),
+        completionRate: items.length ? Math.round((countIssues(items, isDone) / items.length) * 100) : 0,
+        storyPoints: round(sum(items.map(getStoryPoints))),
+        ...summarizeFlowItems(matching),
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+}
+
+function buildParentMetrics(issues, flowItems) {
+  const issuesWithParent = issues.filter((i) => i['Parent Key'] && String(i['Parent Key']).trim());
+  if (!issuesWithParent.length) return [];
+  return Object.entries(groupBy(issuesWithParent, (i) => i['Parent Key']))
+    .map(([parent, items]) => {
+      const keys = new Set(items.map((i) => i['Issue Key']));
+      const matching = flowItems.filter((fi) => keys.has(fi.key));
+      return {
+        parent,
+        count: items.length,
+        done: countIssues(items, isDone),
+        completionRate: items.length ? Math.round((countIssues(items, isDone) / items.length) * 100) : 0,
+        storyPoints: round(sum(items.map(getStoryPoints))),
+        ...summarizeFlowItems(matching),
+      };
+    })
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 12);
+}
+
 function buildRiskMetrics(issues) {
   const today = new Date();
   const blockedIssues = countIssues(issues, (issue) => issue['Blocked Flag'] === true || String(issue['Blocked Flag']).toLowerCase() === 'true');
@@ -412,6 +515,88 @@ function buildRiskMetrics(issues) {
     highPriorityOpenIssues,
     openDefects,
   };
+}
+
+function buildLinksMetrics(issues) {
+  if (!issues.length) return { hasLinks: false, linkStats: [], mostLinked: [], blockedItems: [], totalLinks: 0, itemsWithLinks: 0, linkTypes: 0 };
+
+  const allFields = Object.keys(issues[0]);
+  const linkColumns = allFields.filter((f) => /issue\s*link/i.test(f));
+
+  if (!linkColumns.length) {
+    return { hasLinks: false, linkStats: [], mostLinked: [], blockedItems: [], totalLinks: 0, itemsWithLinks: 0, linkTypes: 0 };
+  }
+
+  const linksByType = {};
+  const issueLinksMap = {};
+
+  issues.forEach((issue) => {
+    const key = issue['Issue Key'];
+    if (!key) return;
+
+    linkColumns.forEach((col) => {
+      const raw = String(issue[col] || '').trim();
+      if (!raw) return;
+
+      const typeMatch = col.match(/\(([^)]+)\)/);
+      const linkType = typeMatch ? typeMatch[1] : col;
+      const direction = /inward/i.test(col) ? 'inward' : /outward/i.test(col) ? 'outward' : 'unknown';
+
+      raw
+        .split(/[,;]+/)
+        .map((t) => t.replace(/\s*\([^)]+\)/g, '').trim())
+        .filter(Boolean)
+        .forEach((target) => {
+          if (!linksByType[linkType]) linksByType[linkType] = [];
+          linksByType[linkType].push({ from: key, to: target, direction });
+          if (!issueLinksMap[key]) issueLinksMap[key] = [];
+          issueLinksMap[key].push({ type: linkType, target, direction });
+        });
+    });
+  });
+
+  const totalLinks = Object.values(linksByType).reduce((s, arr) => s + arr.length, 0);
+  if (!totalLinks) {
+    return { hasLinks: false, linkStats: [], mostLinked: [], blockedItems: [], totalLinks: 0, itemsWithLinks: 0, linkTypes: 0 };
+  }
+
+  const linkStats = Object.entries(linksByType)
+    .map(([type, links]) => ({ type, count: links.length, uniqueFrom: new Set(links.map((l) => l.from)).size }))
+    .sort((a, b) => b.count - a.count);
+
+  const mostLinked = Object.entries(issueLinksMap)
+    .map(([key, links]) => {
+      const issue = issues.find((i) => i['Issue Key'] === key);
+      return {
+        key,
+        summary: issue ? (issue['Summary'] || '') : '',
+        status: issue ? (issue['Status'] || '') : '',
+        linkCount: links.length,
+        linkTypes: [...new Set(links.map((l) => l.type))].join(', '),
+      };
+    })
+    .sort((a, b) => b.linkCount - a.linkCount)
+    .slice(0, 10);
+
+  const blockedItems = Object.entries(issueLinksMap)
+    .reduce((acc, [key, links]) => {
+      const blocking = links.filter((l) => /block/i.test(l.type) && l.direction === 'inward');
+      if (!blocking.length) return acc;
+      const issue = issues.find((i) => i['Issue Key'] === key);
+      acc.push({ key, summary: issue ? (issue['Summary'] || '') : '', status: issue ? (issue['Status'] || '') : '', blockedBy: blocking.map((l) => l.target).join(', '), blockCount: blocking.length });
+      return acc;
+    }, [])
+    .sort((a, b) => b.blockCount - a.blockCount)
+    .slice(0, 10);
+
+  const issueLinksText = Object.fromEntries(
+    Object.entries(issueLinksMap).map(([k, links]) => [
+      k,
+      [...new Set(links.map((l) => `${l.type}: ${l.target}`))].slice(0, 4).join(' · '),
+    ])
+  );
+
+  return { hasLinks: true, totalLinks, itemsWithLinks: Object.keys(issueLinksMap).length, linkTypes: linkStats.length, linkStats, mostLinked, blockedItems, _issueLinksText: issueLinksText };
 }
 
 function buildInsights(metrics) {
@@ -464,6 +649,19 @@ function calculateDashboardMetrics(issues) {
   const quarters = buildQuarterMetrics(issues, flowItems);
   const capacity = buildCapacityMetrics(issues);
   const epics = buildEpicMetrics(issues, flowItems);
+  const labels = buildLabelMetrics(issues, flowItems);
+  const types = buildTypeMetrics(issues, flowItems);
+  const projects = buildProjectMetrics(issues, flowItems);
+  const parents = buildParentMetrics(issues, flowItems);
+  const relations = buildLinksMetrics(issues);
+
+  if (relations._issueLinksText) {
+    flow.items = flow.items.map((item) => ({
+      ...item,
+      linkedTo: relations._issueLinksText[item.key] || '',
+    }));
+    delete relations._issueLinksText;
+  }
   const totalStoryPoints = sum(issues.map(getStoryPoints));
   const completedStoryPoints = sum(issues.filter(isDone).map(getStoryPoints));
   const totalCustomerVisible = countIssues(issues, (issue) => String(issue['Customer Visible']).toLowerCase() === 'true');
@@ -492,6 +690,11 @@ function calculateDashboardMetrics(issues) {
     quarters,
     capacity,
     epics,
+    labels,
+    types,
+    projects,
+    parents,
+    relations,
     risk,
     storyPoints: {
       totalStoryPoints: round(totalStoryPoints),

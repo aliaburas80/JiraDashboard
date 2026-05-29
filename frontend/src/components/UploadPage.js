@@ -1,3 +1,4 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 import { useState } from 'react';
 import { uploadJiraFile } from '../services/api';
 
@@ -35,9 +36,9 @@ export default function UploadPage({ onDataLoaded }) {
   return (
     <main className="upload-page card">
       <div>
-        <span className="upload-eyebrow">Jira export analyzer</span>
-        <h2>Start with a Jira Export</h2>
-        <p>Upload a Jira CSV or Excel file and get delivery health, quarter trends, flow metrics, capacity, and risk analysis in one workspace.</p>
+        <span className="upload-eyebrow">Delivery Clarity — Jira Intelligence</span>
+        <h2>Turn your Jira export into instant delivery insight</h2>
+        <p>Upload any Jira CSV or Excel export and get sprint health, flow efficiency, risk signals, capacity, epic readiness, and quarter trends — all in one workspace.</p>
         <label className={`file-input-label upload-action ${loading ? 'disabled' : ''}`}>
           <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} disabled={loading} />
           {loading ? 'Uploading...' : 'Upload Jira file'}
