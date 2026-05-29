@@ -6,19 +6,27 @@ const sections = {
     cards: [
       {
         title: 'Upload Jira export',
-        body: 'Use a Jira CSV or Excel export. The dashboard maps common Jira headers, validates core fields, and builds analysis from the imported rows.',
+        body: (
+          <>Use a <span className="keyword">Jira CSV</span> or <span className="keyword">Excel export</span>. The dashboard maps common Jira headers, validates core fields, and builds analysis from the imported rows.</>
+        ),
       },
       {
         title: 'Read top-down',
-        body: 'Start with KPI cards and circle charts, then review quarter, kanban, sprint, capacity, and epic sections for the reason behind the result.',
+        body: (
+          <>Start with <span className="keyword">KPI cards</span> and <span className="keyword">circle charts</span>, then review quarter, kanban, sprint, capacity, and epic sections for the reason behind the result.</>
+        ),
       },
       {
         title: 'Drill into work items',
-        body: 'Open Story / Task Flow Health to filter by key, summary, status, sprint, assignee, health, cycle time, lead time, open age, or reason.',
+        body: (
+          <>Open <span className="keyword">Story / Task Flow Health</span> to filter by key, summary, status, sprint, assignee, health, cycle time, lead time, open age, or reason.</>
+        ),
       },
       {
         title: 'Check import history',
-        body: 'Open the backend control center to review import logs, extracted headers, statistics, and export the history to Excel.',
+        body: (
+          <>Open the backend <span className="keyword">control center</span> to review import logs, extracted headers, statistics, and export the history to Excel.</>
+        ),
       },
     ],
   },
