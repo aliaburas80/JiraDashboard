@@ -1,11 +1,25 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const uploadRouter = require('./routes/upload');
 const { renderBackendHome } = require('./services/backendView');
 
 const app = express();
-app.use(cors());
+
+// CORS: set ALLOWED_ORIGIN in production (comma-separated for multiple origins).
+// Defaults to allowing all origins in development.
+const allowedOrigins = process.env.ALLOWED_ORIGIN
+  ? process.env.ALLOWED_ORIGIN.split(',').map((o) => o.trim())
+  : true;
+
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type'],
+}));
+
 app.use(express.json());
 app.use('/api/upload', uploadRouter);
 
@@ -14,10 +28,11 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'jira-transparency-dashboard-backend' });
+  res.json({ status: 'ok', service: 'delivery-clarity-backend', version: '1.0.0' });
 });
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`Backend listening on http://localhost:${PORT}`);
+  console.log(`Delivery Clarity backend → http://localhost:${PORT}`);
+  console.log(`CORS origin: ${process.env.ALLOWED_ORIGIN || '* (all — set ALLOWED_ORIGIN in .env for production)'}`);
 });

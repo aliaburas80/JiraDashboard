@@ -1,8 +1,12 @@
 node_modules/
 dist/
 build/
+# Real secrets — never commit these
 .env
-.env.*
+.env.local
+.env.*.local
+# Allow .env.example (template for developers — contains no secrets)
+!.env.example
 .DS_Store
 
 frontend/node_modules/

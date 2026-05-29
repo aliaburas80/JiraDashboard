@@ -1,6 +1,7 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 const express = require('express');
 const multer = require('multer');
+const rateLimit = require('express-rate-limit');
 const { parseJiraFile } = require('../services/parser');
 const { validateIssueData } = require('../utils/validation');
 const { calculateDashboardMetrics } = require('../services/metrics');
@@ -13,9 +14,39 @@ const {
 } = require('../services/importLogs');
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/', upload.single('file'), async (req, res) => {
+// 20 MB file size limit — protects the server from very large uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['.csv', '.xlsx', '.xls'];
+    const ext = file.originalname.slice(file.originalname.lastIndexOf('.')).toLowerCase();
+    if (allowed.includes(ext)) return cb(null, true);
+    cb(new Error(`Unsupported file type "${ext}". Upload a .csv, .xlsx, or .xls Jira export.`));
+  },
+});
+
+// 20 uploads per 15 minutes per IP — prevents abuse while allowing normal usage
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many uploads from this IP. Please wait 15 minutes before trying again.' },
+});
+
+router.post('/', uploadLimiter, (req, res, next) => {
+  upload.single('file')(req, res, (err) => {
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'File exceeds the 20 MB size limit. Export a smaller date range or reduce the number of columns.' });
+    }
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded. Please upload a Jira Excel or CSV export.' });
