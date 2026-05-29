@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd \"/Users/aliaburas/Documents/Documents - Ali's MacBook Pro/JiraDashboard/frontend\" && npm run build$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

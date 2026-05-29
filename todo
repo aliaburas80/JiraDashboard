@@ -1,0 +1,134 @@
+How to make the dashboard more useful
+1. Turn insight into action
+Add a top-level risk/opportunity summary bar with clear outcome labels like Healthy, At Risk, Urgent Attention
+Show what changed vs previous import or sprint (deltas, up/down arrows, trend %)
+Include quick actions like Review high-risk items, Export risk report, Assign next sprint
+2. Improve drill-down and story flow
+Make KPI cards clickable to drill into the related issue list or chart
+Add a detail panel / modal for selected epic, assignee, or status group
+Include an issue highlight strip for top 5 blockers, top 5 overdue, and orphan items
+3. Add stronger context and guidance
+Add tooltips to KPI values and chart segments explaining what they mean
+Show confidence badges like Data complete, Missing sprint fields, No story points
+Add colored threshold bands for lead/cycle time and open age so readers instantly see healthy vs unhealthy ranges
+4. Make filters more powerful
+Add a global search / smart filter for key, summary, epic, assignee, and reason
+Add preset filter chips like High risk, Needs review, Sprint today, Blocked
+Keep filters visible and sticky so users can quickly adjust and compare
+5. Surface meaningful Jira-specific signals
+Highlight epic health and release readiness
+Show assignee capacity vs current work load
+Surface dependency and orphan counts in a callout card
+Add a target vs actual view for sprint completion
+6. Improve visual clarity
+Use a risk vs opportunity color system: green / blue for healthy/opportunity, amber/red for warning/critical
+Add sparkline trends inside KPI cards for momentum
+Animate chart entry and value roll-up so the dashboard feels alive but not distracting
+7. Support real work
+Add an export / share button for PDF/CSV snapshots
+Add a save layout or bookmark view for recurring reporting
+Add a help overlay with quick “what to check first” guidance
+In short: make it not just pretty, but easy to read at a glance, quick to act on, and clearly tied to Jira delivery health.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Prompt
+
+You are a senior UI/UX engineer tasked with making the Jira dashboard far more useful, actionable, and visually clear. Implement the following enhancements in the React frontend and CSS so the dashboard becomes a true delivery health workspace, not just a pretty page.
+
+### 1. Turn insight into action
+- Add a **top-level risk/opportunity summary bar** across the dashboard header or just below it.
+  - Show clear outcome labels: `Healthy`, `At Risk`, `Urgent Attention`
+  - Use colored pills / cards for each state
+  - Include a concise status sentence like “Delivery is stable” or “1 epic requires urgent attention”
+- Add a **change tracker** comparing current data to previous import or previous sprint
+  - Show delta values, up/down arrows, and trend percentages
+  - For example: `Completion +8%`, `Risk -3`, `Cycle time +2d`
+- Add **quick action buttons** in the summary: `Review high-risk items`, `Export risk report`, `Assign next sprint`
+  - These should look like immediate call-to-action tools, not generic buttons
+
+### 2. Improve drill-down and story flow
+- Make KPI cards **clickable**
+  - Each KPI card should navigate or filter the dashboard to the related issue list or chart
+  - Example: clicking `Health Alerts` scrolls to top risk items, clicking `Completion` opens sprint comparison
+- Add a **detail panel/modal**
+  - When a user selects an epic, assignee, or status group, a detail panel should open
+  - Show summary stats, top issues, and next recommended action for that selection
+- Add an **issue highlight strip**
+  - Show the top 5 blockers, top 5 overdue issues, and top orphan items
+  - Display as a horizontal card strip or compact row so users see critical work immediately
+
+### 3. Add stronger context and guidance
+- Add **tooltips** for KPI values and chart segments
+  - Explain what each metric means and how to interpret it
+- Add **confidence badges**
+  - Examples: `Data complete`, `Missing sprint fields`, `No story points`
+  - Place these near the summary or on the import status area
+- Add **colored threshold bands**
+  - For lead time, cycle time, and open age charts/tables, add visual bands:
+    - healthy / warning / critical
+  - This gives readers instant context for whether a value is good or bad
+
+### 4. Make filters more powerful
+- Add a **global search / smart filter**
+  - Search across `key`, `summary`, `epic`, `assignee`, and `reason`
+- Add **preset filter chips**
+  - Examples: `High risk`, `Needs review`, `Sprint today`, `Blocked`
+- Keep filters **visible and sticky**
+  - If users scroll, the filter bar should remain visible so they can adjust and compare without losing context
+
+### 5. Surface meaningful Jira-specific signals
+- Highlight **epic health** and **release readiness**
+  - Use cards or a summary row for epic-level status
+- Show **assignee capacity vs current workload**
+  - Add a capacity card or chart comparing planned work to actual assigned issues
+- Surface **dependency and orphan counts**
+  - Add a callout card with `dependency count`, `orphan issue count`, and explanation
+- Add a **target vs actual sprint completion view**
+  - Show planned sprint goals vs current progress
+
+### 6. Improve visual clarity
+- Use a **risk vs opportunity color system**
+  - Healthy/opportunity: green / blue
+  - Warning/critical: amber / red
+- Add **sparkline trends inside KPI cards**
+  - Small inline trend lines to show momentum on completion, lead time, risk, etc.
+- Animate **chart entry and value roll-up**
+  - Introduce gentle animation so the dashboard feels alive:
+    - Charts fade/slide in
+    - KPI values count up
+    - Trend bars animate from zero
+
+### 7. Support real work
+- Add an **export / share button**
+  - Support PDF / CSV snapshots
+- Add a **save layout or bookmark view**
+  - Allow users to save a preferred dashboard layout or reporting view for recurring use
+- Add a **help overlay**
+  - Show quick “what to check first” guidance for first-time users or a fast review
+
+### Outcome
+Make the dashboard:
+- not just pretty, but easy to read at a glance
+- quick to act on
+- clearly tied to Jira delivery health
+- oriented around risk/opportunity, not just raw metrics
+
+Use these enhancements to turn the current dashboard into a high-value delivery intelligence workspace.

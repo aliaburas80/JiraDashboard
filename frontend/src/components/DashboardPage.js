@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import KpiCard from './KpiCard';
 
 function ProgressBar({ value }) {
@@ -82,6 +82,19 @@ function isWithinMaxDays(value, maxDays) {
   if (!Number.isFinite(parsedMax)) return false;
   if (value === null || value === undefined) return false;
   return Number(value) <= parsedMax;
+}
+
+function csvFromRows(rows, columns) {
+  const csv = [columns.map((col) => `"${col.label}"`).join(',')];
+  rows.forEach((row) => {
+    const line = columns.map((col) => {
+      const value = col.render ? col.render(row) : row[col.key];
+      const text = typeof value === 'string' ? value : String(value ?? '');
+      return `"${text.replace(/"/g, '""')}"`;
+    });
+    csv.push(line.join(','));
+  });
+  return csv.join('\n');
 }
 
 function CompactBarChart({ rows, labelKey = 'name', valueKey = 'count', emptyMessage = 'No data available.' }) {
@@ -285,6 +298,8 @@ export default function DashboardPage({ data, onReset }) {
   const orphanItems = flowItems.filter((item) => item.isOrphan).length;
   const totalIssues = data.totalIssues || flowItems.length || 0;
   const riskItems = (flow.critical || 0) + (flow.warning || 0);
+  const flowPanelRef = useRef(null);
+  const capacityPanelRef = useRef(null);
   const [keyFilter, setKeyFilter] = useState('');
   const [summaryFilter, setSummaryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -296,11 +311,168 @@ export default function DashboardPage({ data, onReset }) {
   const [healthFilter, setHealthFilter] = useState('all');
   const [reasonFilter, setReasonFilter] = useState('');
   const [isFlowPanelOpen, setIsFlowPanelOpen] = useState(false);
+  const [detailPanel, setDetailPanel] = useState(null);
+  const [layoutSaved, setLayoutSaved] = useState(false);
+  const [reportMessage, setReportMessage] = useState('');
 
   const statusOptions = useMemo(() => getUniqueValues(flowItems, 'status'), [flowItems]);
   const sprintOptions = useMemo(() => getUniqueValues(flowItems, 'sprint'), [flowItems]);
   const assigneeOptions = useMemo(() => getUniqueValues(flowItems, 'assignee'), [flowItems]);
   const healthOptions = useMemo(() => getUniqueValues(flowItems, 'health'), [flowItems]);
+
+  const healthStatus = riskItems === 0 ? 'Healthy' : riskItems < 4 ? 'At Risk' : 'Urgent Attention';
+  const healthMessage = riskItems === 0 ? 'Delivery is stable' : `${riskItems} items require attention`;
+  const summaryDelta = data.summaryDelta || {
+    completion: '+0%',
+    risk: '0',
+    cycleTime: '0d',
+  };
+
+  const topBlockers = flowItems.filter((item) => normalizeText(item.reason).includes('block')).slice(0, 5);
+  const topOverdue = flowItems
+    .filter((item) => Number(item.ageDays) > 10 && !['done', 'closed', 'resolved'].includes(normalizeText(item.status)))
+    .slice(0, 5);
+  const topOrphans = flowItems.filter((item) => item.isOrphan).slice(0, 5);
+
+  const confidenceBadges = [];
+  if (!sprint.sprints?.length) confidenceBadges.push('Missing sprint fields');
+  if (!storyPoints.totalStoryPoints) confidenceBadges.push('No story points');
+  if (!confidenceBadges.length) confidenceBadges.push('Data complete');
+
+  const handleKpiNavigation = (targetId) => {
+    setIsFlowPanelOpen(true);
+    setTimeout(() => {
+      const target = document.getElementById(targetId);
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
+  const openDetailPanel = (title, description, items = []) => {
+    setDetailPanel({ title, description, items });
+  };
+
+  const detailPanelRef = useRef(null);
+
+  useEffect(() => {
+    if (!detailPanel) return;
+
+    const node = detailPanelRef.current;
+    node?.focus();
+
+    // Simple focus trap within the modal
+    const focusableSelector = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+    const focusables = node ? Array.from(node.querySelectorAll(focusableSelector)).filter((n) => n.offsetParent !== null) : [];
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setDetailPanel(null);
+        return;
+      }
+      if (e.key === 'Tab' && focusables && focusables.length) {
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [detailPanel]);
+
+  const copyToClipboard = async (text) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      setReportMessage('Copied to clipboard');
+      setTimeout(() => setReportMessage(''), 1800);
+    } catch (err) {
+      setReportMessage('Copy failed');
+      setTimeout(() => setReportMessage(''), 1800);
+    }
+  };
+
+  const saveLayout = () => {
+    const layoutState = {
+      statusFilter,
+      sprintFilter,
+      assigneeFilter,
+      healthFilter,
+      reasonFilter,
+      keyFilter,
+      summaryFilter,
+    };
+    window.localStorage.setItem('dashboardLayout', JSON.stringify(layoutState));
+    setLayoutSaved(true);
+    window.setTimeout(() => setLayoutSaved(false), 2500);
+  };
+
+  const exportRiskReport = () => {
+    const reportRows = flowItems.filter((item) => ['critical', 'warning'].includes(normalizeText(item.health)));
+    const columns = [
+      { key: 'key', label: 'Issue' },
+      { key: 'summary', label: 'Summary' },
+      { key: 'status', label: 'Status' },
+      { key: 'assignee', label: 'Assignee' },
+      { key: 'health', label: 'Health' },
+      { key: 'reason', label: 'Reason' },
+    ];
+    const csv = csvFromRows(reportRows, columns);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'jira-risk-report.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+    setReportMessage(`Exported ${reportRows.length} high-risk items`);
+    window.setTimeout(() => setReportMessage(''), 3000);
+  };
+
+  const applyQuickFilter = (type) => {
+    setKeyFilter('');
+    setSummaryFilter('');
+    setStatusFilter('all');
+    setSprintFilter('all');
+    setAssigneeFilter('all');
+    setLeadMaxFilter('');
+    setCycleMaxFilter('');
+    setOpenAgeMaxFilter('');
+    setHealthFilter('all');
+    setReasonFilter('');
+
+    if (type === 'high-risk') {
+      setHealthFilter('critical');
+      setReasonFilter('block');
+    }
+    if (type === 'needs-review') {
+      setStatusFilter('in progress');
+    }
+    if (type === 'blocked') {
+      setReasonFilter('block');
+    }
+    if (type === 'sprint-today') {
+      setReasonFilter('today');
+    }
+  };
+
+  const [targetCompletion, actualCompletion] = [data.sprintTargetCompletion || '82%', `${data.completionRate || 0}%`];
+
   const filteredFlowItems = useMemo(() => {
     return flowItems.filter((item) => {
       const matchesKey = matchesText(item.key, keyFilter);
@@ -341,8 +513,26 @@ export default function DashboardPage({ data, onReset }) {
     summaryFilter,
   ]);
 
+  const epicReadiness = useMemo(() => {
+    const epics = data.epics || [];
+    return (epics || [])
+      .map((e) => {
+        const issues = Number(e.issues || 0);
+        const done = Number(e.completedIssues || 0);
+        const completion = issues ? Math.round((done / issues) * 100) : 0;
+        const critical = Number(e.critical || 0);
+        const warning = Number(e.warning || 0);
+        const risk = critical > 0 ? 'critical' : warning > 0 ? 'warning' : completion >= 80 ? 'good' : 'warning';
+        return { ...e, completion, risk };
+      })
+      .sort((a, b) => {
+        const rank = { critical: 0, warning: 1, good: 2 };
+        return (rank[a.risk] - rank[b.risk]) || (a.completion - b.completion);
+      });
+  }, [data.epics, flowItems]);
+
   return (
-    <main className="dashboard-page">
+  <main className="dashboard-page" aria-hidden={detailPanel ? true : undefined}>
       <div className="dashboard-top">
         <div>
           <h2>Delivery Health Analysis</h2>
@@ -353,6 +543,116 @@ export default function DashboardPage({ data, onReset }) {
         </button>
       </div>
 
+      <section className="dashboard-summary-bar">
+        <div className="summary-pill-row">
+          <div className={`summary-pill summary-pill-${healthStatus.replace(/\s+/g, '-').toLowerCase()}`}>
+            <strong>{healthStatus}</strong>
+            <span>{healthMessage}</span>
+          </div>
+          <div className="summary-compare">
+            <strong>Target vs Actual</strong>
+            <span>{targetCompletion} target / {actualCompletion} actual</span>
+          </div>
+        </div>
+        <div className="summary-change-grid">
+          <div className="summary-change-card">
+            <span>Completion</span>
+            <strong>{summaryDelta.completion}</strong>
+          </div>
+          <div className="summary-change-card">
+            <span>Risk</span>
+            <strong>{summaryDelta.risk}</strong>
+          </div>
+          <div className="summary-change-card">
+            <span>Cycle time</span>
+            <strong>{summaryDelta.cycleTime}</strong>
+          </div>
+        </div>
+        <div className="summary-actions">
+          <button type="button" className="secondary" onClick={() => openDetailPanel('High-risk review', 'Review the highest-risk items and assign mitigation tasks.', topBlockers)}>
+            Review high-risk items
+          </button>
+          <button type="button" className="secondary" onClick={exportRiskReport}>
+            Export risk report
+          </button>
+          <button type="button" className="secondary" onClick={saveLayout}>
+            Save layout view
+          </button>
+          <div className="summary-status-message">{reportMessage || (layoutSaved ? 'Layout saved' : '')}</div>
+        </div>
+        <div className="summary-badges">
+          {confidenceBadges.map((badge) => (
+            <span key={badge} className="confidence-badge">{badge}</span>
+          ))}
+        </div>
+      </section>
+
+      <section className="sticky-filter-bar" aria-label="Quick filters">
+        <div className="filter-left">
+          <button type="button" className="secondary ghost" onClick={() => applyQuickFilter('all')}>All</button>
+          <button type="button" className="secondary" onClick={() => applyQuickFilter('high-risk')}>High risk</button>
+          <button type="button" className="secondary" onClick={() => applyQuickFilter('blocked')}>Blocked</button>
+          <button type="button" className="secondary" onClick={() => applyQuickFilter('needs-review')}>Needs review</button>
+          <button type="button" className="secondary" onClick={() => applyQuickFilter('sprint-today')}>Sprint today</button>
+        </div>
+        <div className="filter-right">
+          <button type="button" className="secondary ghost" onClick={() => { setKeyFilter(''); setSummaryFilter(''); setReportMessage('Filters cleared'); setTimeout(() => setReportMessage(''), 1400); }}>Clear</button>
+          <button type="button" className="secondary" onClick={() => { setIsFlowPanelOpen(true); const t = document.getElementById('flow-health-panel'); t?.scrollIntoView({ behavior: 'smooth' }); }}>Show filters</button>
+        </div>
+      </section>
+
+      <section className="dashboard-splash">
+        <div className="splash-copy">
+          <span>Explore in color</span>
+          <h3>Discover the story behind every Jira export</h3>
+          <p>Fast insight cards, vivid charts, and ordered panels guide you from <span className="keyword">completion</span> and <span className="keyword">risk</span> to a confident delivery narrative.</p>
+        </div>
+        <div className="splash-pill-grid">
+          <div className="splash-pill accent-red">High-risk work hot spots</div>
+          <div className="splash-pill accent-teal">Cycle time pressure</div>
+          <div className="splash-pill accent-amber">Open age and orphans</div>
+        </div>
+      </section>
+
+      <section className="issue-highlight-strip">
+        <div className="issue-highlight-card card-blockers">
+          <strong>Top blockers</strong>
+          {topBlockers.length ? (
+            <ul>
+              {topBlockers.map((item) => (
+                <li key={item.key}>{item.key}: {item.summary || item.reason}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>No blockers found.</p>
+          )}
+        </div>
+        <div className="issue-highlight-card card-overdue">
+          <strong>Top overdue</strong>
+          {topOverdue.length ? (
+            <ul>
+              {topOverdue.map((item) => (
+                <li key={item.key}>{item.key}: {item.summary || item.status}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>No overdue work detected.</p>
+          )}
+        </div>
+        <div className="issue-highlight-card card-orphans">
+          <strong>Top orphans</strong>
+          {topOrphans.length ? (
+            <ul>
+              {topOrphans.map((item) => (
+                <li key={item.key}>{item.key}: {item.summary || item.epic || 'No epic'}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>No orphan items.</p>
+          )}
+        </div>
+      </section>
+
       <section className="dashboard-section section-overview">
         <SectionHeader
           kicker="Overview"
@@ -360,12 +660,54 @@ export default function DashboardPage({ data, onReset }) {
           detail="The cards summarize delivery completion, timing, scope, active load, and current health pressure."
         />
         <div className="kpi-grid">
-          <KpiCard label="Completion" value={`${data.completionRate}%`} detail={`${data.doneIssues} of ${data.totalIssues} issues done`} accent="green" />
-          <KpiCard label="Lead Time" value={`${flow.averageLeadTimeDays || 0}d`} detail={`${flow.leadTimeSampleSize || 0} completed items`} accent="blue" />
-          <KpiCard label="Cycle Time" value={`${flow.averageCycleTimeDays || 0}d`} detail={`${flow.cycleTimeSampleSize || 0} items with start dates`} accent="teal" />
-          <KpiCard label="Story Points" value={storyPoints.totalStoryPoints || 0} detail={`${storyPoints.pointCompletionRate || 0}% complete`} accent="violet" />
-          <KpiCard label="Active Work" value={data.activeIssues || 0} detail="Items in progress, review, QA, or UAT" accent="amber" />
-          <KpiCard label="Health Alerts" value={(flow.critical || 0) + (flow.warning || 0)} detail={`${flow.critical || 0} critical, ${flow.warning || 0} warning`} accent="red" />
+          <KpiCard
+            label="Completion"
+            value={`${data.completionRate}%`}
+            detail={`${data.doneIssues} of ${data.totalIssues} issues done`}
+            accent="green"
+            onClick={() => handleKpiNavigation('flow-health-panel')}
+            tooltip="Percent of issues moved to Done. Target bands show healthy vs at-risk ranges."
+            thresholds={{ good: 80, warning: 60, critical: 0, max: 100, unit: '%' }}
+          />
+          <KpiCard
+            label="Health Alerts"
+            value={(flow.critical || 0) + (flow.warning || 0)}
+            detail={`${flow.critical || 0} critical, ${flow.warning || 0} warning`}
+            accent="red"
+            onClick={() => handleKpiNavigation('flow-health-panel')}
+          />
+          <KpiCard
+            label="Active Work"
+            value={data.activeIssues || 0}
+            detail="Items in progress, review, QA, or UAT"
+            accent="amber"
+            onClick={() => handleKpiNavigation('capacity-section')}
+          />
+          <KpiCard
+            label="Lead Time"
+            value={`${flow.averageLeadTimeDays || 0}d`}
+            detail={`${flow.leadTimeSampleSize || 0} completed items`}
+            accent="blue"
+            onClick={() => handleKpiNavigation('flow-health-panel')}
+            tooltip="Average time from first touch to completion. Shorter is better."
+            thresholds={{ good: 3, warning: 7, critical: 21, max: 30, unit: 'd' }}
+          />
+          <KpiCard
+            label="Cycle Time"
+            value={`${flow.averageCycleTimeDays || 0}d`}
+            detail={`${flow.cycleTimeSampleSize || 0} items with start dates`}
+            accent="teal"
+            onClick={() => handleKpiNavigation('flow-health-panel')}
+            tooltip="Average active cycle time — from start to done. Watch for outliers."
+            thresholds={{ good: 2, warning: 5, critical: 14, max: 20, unit: 'd' }}
+          />
+          <KpiCard
+            label="Story Points"
+            value={storyPoints.totalStoryPoints || 0}
+            detail={`${storyPoints.pointCompletionRate || 0}% complete`}
+            accent="violet"
+            onClick={() => handleKpiNavigation('capacity-section')}
+          />
         </div>
       </section>
 
@@ -559,7 +901,7 @@ export default function DashboardPage({ data, onReset }) {
           detail="Understand who carries the work and which epic or parent groups are moving cleanly."
         />
         <div className="split-panels">
-        <section className="dashboard-panel panel-capacity">
+        <section id="capacity-section" className="dashboard-panel panel-capacity">
           <h3>Capacity By Assignee</h3>
           <CompactBarChart rows={data.capacity?.slice(0, 8)} labelKey="assignee" valueKey="issues" emptyMessage="No assignee data found." />
           <MetricTable
@@ -604,7 +946,103 @@ export default function DashboardPage({ data, onReset }) {
         </ul>
       </section>
 
-      <section className={`dashboard-panel collapsible-panel panel-flow-health ${isFlowPanelOpen ? 'open' : ''}`}>
+      <section className="dashboard-section section-delivery">
+        <SectionHeader
+          kicker="Readiness"
+          title="Epic health & release readiness"
+          detail="Top at-risk epics and dependency callouts to surface blockers before release."
+        />
+
+        <div className="split-panels">
+          <section className="dashboard-panel panel-epic-readiness">
+            <h3>Top at-risk epics</h3>
+            {(epicReadiness.filter((e) => e.risk === 'critical' || e.completion < 60).length) ? (
+              <ul className="insight-list">
+                {epicReadiness.filter((e) => e.risk === 'critical' || e.completion < 60).slice(0, 8).map((e) => (
+                  <li key={e.epic || e.id}>
+                    <strong>{e.epic || e.id}</strong> — {e.completion}% complete — <span className={`health-badge ${e.risk}`}>{e.risk}</span>
+                    <div style={{ marginTop: 8 }}>
+                      <button type="button" className="secondary" onClick={() => openDetailPanel(`Epic ${e.epic || e.id}`, 'Issues in this epic', flowItems.filter((i) => (i.epic || i.parent) === (e.epic || e.id)))}>
+                        View items
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No at-risk epics detected.</p>
+            )}
+          </section>
+
+          <section className="dashboard-panel panel-dependency-callouts">
+            <h3>Dependency callouts</h3>
+            <p className="muted">Items referencing other epics or external blockers.</p>
+            {(flowItems.filter((i) => i.dependsOn || i.externalEpic).length) ? (
+              <ul className="insight-list">
+                {flowItems.filter((i) => i.dependsOn || i.externalEpic).slice(0, 10).map((it) => (
+                  <li key={it.key || it.id}>{it.key || it.id}: {it.summary} {it.dependsOn ? `— depends on ${it.dependsOn}` : ''}{it.externalEpic ? ` — external epic ${it.externalEpic}` : ''}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>No dependency callouts detected.</p>
+            )}
+          </section>
+        </div>
+      </section>
+
+      {detailPanel && (
+        <section className="detail-modal-backdrop" onClick={() => setDetailPanel(null)}>
+          <div
+            className="detail-panel"
+            role="dialog"
+            aria-modal="true"
+            ref={detailPanelRef}
+            tabIndex={-1}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="detail-panel-header">
+              <div>
+                <span className="help-eyebrow">Detail</span>
+                <h3>{detailPanel.title}</h3>
+                <p>{detailPanel.description}</p>
+              </div>
+              <button type="button" className="help-close" onClick={() => setDetailPanel(null)}>
+                Close
+              </button>
+            </header>
+            <div className="detail-list">
+              {detailPanel.items.length ? (
+                <ul>
+                  {detailPanel.items.map((item) => (
+                    <li key={item.key || item.id || item.summary}>
+                      <div style={{display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center'}}>
+                        <div>
+                          <strong>{item.key || item.id}</strong>
+                          <div style={{color: '#475569'}}>{item.summary || item.status || item.reason}</div>
+                        </div>
+                        <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                          {item.url || item.jiraUrl ? (
+                            <a href={item.url || item.jiraUrl} target="_blank" rel="noopener noreferrer" className="secondary">
+                              Open
+                            </a>
+                          ) : null}
+                          <button type="button" className="secondary" onClick={() => copyToClipboard(item.key || item.id || item.summary)}>
+                            Copy
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No items are available for this detail view.</p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section id="flow-health-panel" className={`dashboard-panel collapsible-panel panel-flow-health ${isFlowPanelOpen ? 'open' : ''}`}>
         <button
           className="collapsible-trigger"
           type="button"
@@ -614,12 +1052,12 @@ export default function DashboardPage({ data, onReset }) {
           <span className="trigger-copy">
             <span className="trigger-title">Story / Task Flow Health</span>
             <span className="trigger-hint">
-              {isFlowPanelOpen ? 'Hide filtered items' : 'Click to show filters, graph, and matching items'}
+              {isFlowPanelOpen ? 'Close expanded view and return to dashboard' : 'Open filters, health graph, and matching items'}
             </span>
           </span>
           <span className="trigger-meta">
             <strong>{filteredFlowItems.length} of {flowItems.length} items</strong>
-            <span className="trigger-icon" aria-hidden="true">{isFlowPanelOpen ? 'up' : 'down'}</span>
+            <span className="trigger-icon" aria-hidden="true">{isFlowPanelOpen ? 'Close' : 'Open'}</span>
           </span>
         </button>
 
