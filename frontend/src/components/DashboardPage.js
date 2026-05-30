@@ -1,5 +1,6 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 import { useMemo, useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import KpiCard from './KpiCard';
 
 function ProgressBar({ value }) {
@@ -751,6 +752,7 @@ function ScrollToTopFab() {
 }
 
 export default function DashboardPage({ data, onReset, onOpenHelp }) {
+  const navigate = useNavigate();
   const flow = data.flow || {};
   const sprint = data.sprint || {};
   const kanban = data.kanban || {};
@@ -1139,7 +1141,10 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
   <main className="dashboard-page" aria-hidden={detailPanel ? true : undefined}>
       <div className="dashboard-top">
         <div>
-          <h2>Delivery Health Analysis</h2>
+          <button type="button" className="back-to-summary" onClick={() => navigate('/summary')}>
+            ← Back to Overview
+          </button>
+          <h2>Full Delivery Report</h2>
           <p>Flow, sprint, kanban, capacity, story point, and epic performance from the uploaded Jira export.</p>
         </div>
         <div className="dashboard-top-right">
