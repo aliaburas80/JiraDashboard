@@ -77,6 +77,65 @@ function ChartWidget({ title, icon, children, span = 1, className = '' }) {
   );
 }
 
+function GanttChart({ epics, sprints }) {
+  // Prefer epics; fall back to sprints as rows if no epics
+  const rows = epics.length
+    ? epics.slice(0, 12).map(e => ({
+        label: (e.epic || 'No epic').slice(0, 28),
+        pct: e.progress || 0,
+        done: e.completedIssues || 0,
+        total: e.issues || 0,
+        health: e.critical > 0 ? 'critical' : e.warning > 0 ? 'warning' : 'good',
+      }))
+    : sprints.slice(0, 10).map(s => ({
+        label: (s.name || 'Sprint').slice(0, 28),
+        pct: s.completionRate || 0,
+        done: s.completedIssues || 0,
+        total: s.issues || 0,
+        health: s.completionRate >= 80 ? 'good' : s.completionRate >= 50 ? 'warning' : 'critical',
+      }));
+
+  if (!rows.length) return <p className="cp-empty">No epic or sprint data — include Epic Link or Sprint columns in export</p>;
+
+  const COLOR = { good: '#16a34a', warning: '#f59e0b', critical: '#dc2626' };
+  const BG    = { good: 'rgba(22,163,74,0.10)', warning: 'rgba(245,158,11,0.10)', critical: 'rgba(220,38,38,0.10)' };
+
+  return (
+    <div className="cp-gantt">
+      <div className="cp-gantt-head">
+        <span className="cp-gantt-lbl-col">{epics.length ? 'Epic' : 'Sprint'}</span>
+        <div className="cp-gantt-bar-col">
+          <div className="cp-gantt-scale">
+            <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+          </div>
+        </div>
+        <span className="cp-gantt-stat-col">Complete</span>
+      </div>
+
+      {rows.map((r, i) => (
+        <div key={i} className="cp-gantt-row" style={{ background: BG[r.health] }}>
+          <span className="cp-gantt-label" title={r.label}>{r.label}</span>
+          <div className="cp-gantt-bar-col">
+            <div className="cp-gantt-track">
+              <div className="cp-gantt-fill"
+                style={{ width: `${r.pct}%`, background: COLOR[r.health] }} />
+              <div className="cp-gantt-rest"
+                style={{ width: `${100 - r.pct}%` }} />
+            </div>
+            <div className="cp-gantt-tick-marks" aria-hidden="true">
+              {[25, 50, 75].map(t => <span key={t} className="cp-gantt-tick" style={{ left: `${t}%` }} />)}
+            </div>
+          </div>
+          <div className="cp-gantt-stat">
+            <strong style={{ color: COLOR[r.health] }}>{r.pct}%</strong>
+            <small>{r.done}/{r.total}</small>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── ChartsPage ───────────────────────────────────────────────────────────────
 export default function ChartsPage({ data, onReset }) {
   const navigate = useNavigate();
@@ -318,7 +377,12 @@ export default function ChartsPage({ data, onReset }) {
           ) : <p className="cp-empty">No status data</p>}
         </ChartWidget>
 
-        {/* ── 9. Label Landscape ───────────────────────── */}
+        {/* ── 9. Epic / Sprint Gantt ───────────────────── */}
+        <ChartWidget title={epics.length ? 'Epic Delivery Timeline' : 'Sprint Completion Timeline'} icon="📊" span={3}>
+          <GanttChart epics={epics} sprints={sprints} />
+        </ChartWidget>
+
+        {/* ── 11. Label Landscape ──────────────────────── */}
         {labelStats.length > 0 && (
           <ChartWidget title="Label Distribution" icon="🏷️" span={2}>
             <div className="cw-hbar-list cw-hbar-wide">

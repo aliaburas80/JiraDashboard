@@ -1887,14 +1887,14 @@ button, .kpi-card-button, .secondary, .theme-toggle { min-height: 44px; }
 }
 
 .donut-layout {
-  display: grid;
-  grid-template-columns: 150px 1fr;
+  display: inline-grid;            /* shrink-wraps instead of stretching */
+  grid-template-columns: 150px auto;
   gap: 18px;
   align-items: center;
 }
 
 .donut-layout.compact {
-  grid-template-columns: 118px 1fr;
+  grid-template-columns: 118px auto;
   margin-bottom: 16px;
 }
 
@@ -1978,8 +1978,8 @@ button, .kpi-card-button, .secondary, .theme-toggle { min-height: 44px; }
 
 .legend-list div {
   display: grid;
-  grid-template-columns: 12px 1fr auto;
-  gap: 8px;
+  grid-template-columns: 12px auto auto;
+  gap: 6px 14px;
   align-items: center;
   color: #334155;
   font-weight: 800;
@@ -3211,9 +3211,16 @@ tbody tr.orphan-row:hover {
   display: flex;
   gap: 18px;
   align-items: center;
+  justify-content: flex-start;   /* don't stretch across wide widget */
 }
 
 .cw-donut-compact { gap: 14px; }
+
+.cw-legend {
+  flex: 0 0 auto;                /* never grow beyond content */
+  min-width: 160px;
+  max-width: 260px;
+}
 
 /* ── Legend ── */
 .cw-legend { flex: 1; display: grid; gap: 8px; }
@@ -3407,6 +3414,110 @@ tbody tr.orphan-row:hover {
   font-size: 0.72rem;
   font-weight: 800;
   color: #64748b;
+}
+
+/* ── Gantt chart ── */
+.cp-gantt { display: flex; flex-direction: column; gap: 0; }
+
+.cp-gantt-head {
+  display: grid;
+  grid-template-columns: 200px 1fr 72px;
+  gap: 12px;
+  padding: 0 8px 10px;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.cp-gantt-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.66rem;
+  color: #cbd5e1;
+}
+
+.cp-gantt-bar-col  { position: relative; }
+.cp-gantt-stat-col { text-align: right; }
+
+.cp-gantt-row {
+  display: grid;
+  grid-template-columns: 200px 1fr 72px;
+  gap: 12px;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid rgba(226,232,240,0.5);
+  border-radius: 8px;
+  margin: 2px 0;
+  transition: filter 140ms ease;
+}
+
+.cp-gantt-row:last-child { border-bottom: none; }
+.cp-gantt-row:hover { filter: brightness(0.97); }
+
+.cp-gantt-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cp-gantt-track {
+  display: flex;
+  height: 22px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(226,232,240,0.4);
+}
+
+.cp-gantt-fill {
+  height: 100%;
+  border-radius: 5px 0 0 5px;
+  animation: growBar 600ms ease both;
+  transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  min-width: 4px;
+}
+
+.cp-gantt-rest { height: 100%; background: transparent; }
+
+.cp-gantt-tick-marks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cp-gantt-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(203,213,225,0.5);
+  transform: translateX(-50%);
+}
+
+.cp-gantt-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.cp-gantt-stat strong { font-size: 0.84rem; font-weight: 900; line-height: 1; }
+.cp-gantt-stat small  { font-size: 0.68rem; color: #94a3b8; font-weight: 700; }
+
+/* Dark mode gantt */
+.dark .cp-gantt-head  { border-color: #293548; }
+.dark .cp-gantt-row   { border-color: #1e293b; }
+.dark .cp-gantt-label { color: #cbd5e1; }
+.dark .cp-gantt-tick  { background: rgba(51,65,85,0.6); }
+.dark .cp-gantt-track { background: rgba(30,41,59,0.6); }
+
+@media (max-width: 600px) {
+  .cp-gantt-head, .cp-gantt-row { grid-template-columns: 130px 1fr 58px; gap: 8px; }
 }
 
 /* ── Empty states ── */
