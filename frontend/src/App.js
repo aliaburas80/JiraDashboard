@@ -24,6 +24,14 @@ const SECTION_ITEMS = [
   { id: 'flow-health-panel',         label: 'Flow',        color: '#2563eb' },
 ];
 
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const header = document.querySelector('.app-header');
+  const offset = (header ? header.offsetHeight : 0) + 16;
+  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
+}
+
 function SectionNavBar() {
   const [active, setActive] = useState(SECTION_ITEMS[0].id);
 
@@ -65,7 +73,7 @@ function SectionNavBar() {
                   color,
                 }
           }
-          onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          onClick={() => scrollToSection(id)}
           aria-label={`Go to ${label}`}
           aria-current={active === id ? 'location' : undefined}
         >

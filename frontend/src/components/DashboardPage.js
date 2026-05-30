@@ -751,19 +751,24 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
   if (!storyPoints.totalStoryPoints) confidenceBadges.push('No story points');
   if (!confidenceBadges.length) confidenceBadges.push('Data complete');
 
+  // Scroll to a section while clearing the sticky header from the viewport
+  const scrollToSection = (idOrEl) => {
+    const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+    if (!el) return;
+    const header = document.querySelector('.app-header');
+    const offset = (header ? header.offsetHeight : 0) + 16;
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
+  };
+
   const handleKpiNavigation = (targetId) => {
     setIsFlowPanelOpen(true);
-    setTimeout(() => {
-      const target = document.getElementById(targetId);
-      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+    setTimeout(() => scrollToSection(targetId), 100);
   };
 
   const openFlowFilters = () => {
     setIsFlowPanelOpen(true);
     window.setTimeout(() => {
-      const target = flowFiltersRef.current || document.getElementById('flow-health-panel');
-      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollToSection(flowFiltersRef.current || 'flow-health-panel');
     }, 120);
   };
 
@@ -1068,7 +1073,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
       setHealthFilter('critical');
     }
     setTimeout(() => {
-      document.getElementById(action.navTarget)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollToSection(action.navTarget);
     }, 200);
   };
 
@@ -2075,7 +2080,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
               setActiveQuickFilter('high-risk');
             }
             setTimeout(() => {
-              document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              scrollToSection(sectionId);
             }, 200);
           }}
         />
