@@ -284,37 +284,9 @@ export default function DashboardPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [detailPanel]);
 
-  if (loading) return <AppShell showNav><LoadingState message="Loading dashboard…" /></AppShell>;
-  if (!metrics) return null;
+  // ── useMemo hooks must be ABOVE all early returns (Rules of Hooks) ─────────
+  const flowItems: FlowItem[] = metrics?.flow?.items || [];
 
-  // ── derived values ───────────────────────────────────────────────────────────
-  const flow = metrics.flow;
-  const sprint = metrics.sprint;
-  const kanban = metrics.kanban as any;
-  const storyPoints = metrics.storyPoints;
-  const risk = metrics.risk;
-  const quarters = (metrics.quarters as any[]) || [];
-  const flowItems: FlowItem[] = flow.items || [];
-  const orphanCount = flowItems.filter(i => i.isOrphan).length;
-  const totalIssues = Math.max(metrics.totalIssues, 1);
-  const riskItems = (flow.critical || 0) + (flow.warning || 0);
-  const band = getHealthBand(metrics.healthScore);
-  const healthColor = HEALTH_COLORS[band];
-  const healthStatus = riskItems === 0 ? 'Healthy' : riskItems < 4 ? 'At Risk' : 'Urgent Attention';
-  const healthMessage = riskItems === 0 ? 'Delivery is stable' : `${riskItems} items require attention`;
-
-  // select options
-  const statusOptions = uniqueSorted(flowItems, 'status');
-  const sprintOptions = uniqueSorted(flowItems, 'sprint');
-  const assigneeOptions = uniqueSorted(flowItems, 'assignee');
-  const healthOptions = uniqueSorted(flowItems, 'health');
-
-  // top attention lists
-  const topBlockers = flowItems.filter(i => norm(i.reason).includes('block')).slice(0, 5);
-  const topOverdue = flowItems.filter(i => Number(i.ageDays) > 10 && !DONE_STATUSES.includes(norm(i.status))).slice(0, 5);
-  const topOrphans = flowItems.filter(i => i.isOrphan).slice(0, 5);
-
-  // filtered flow items
   const filteredFlowItems = useMemo(() => flowItems.filter(item =>
     matchText(item.key, keyFilter) &&
     matchText(item.summary, summaryFilter) &&
@@ -336,9 +308,9 @@ export default function DashboardPage() {
     [statusFilter, sprintFilter, assigneeFilter, healthFilter].filter(s => s !== 'all').length +
     [leadMaxFilter, cycleMaxFilter, openAgeMaxFilter].filter(s => s !== '').length;
 
-  // epic readiness
+  // epic readiness — guard metrics?.epics so hook runs even before metrics loads
   const epicReadiness = useMemo(() => {
-    const epics = (metrics.epics as any[]) || [];
+    const epics = (metrics?.epics as any[]) || [];
     return epics.map(e => {
       const issues = Number(e.issues || 0);
       const done = Number(e.completedIssues || 0);
@@ -349,11 +321,13 @@ export default function DashboardPage() {
       const rank: Record<string, number> = { critical: 0, warning: 1, good: 2 };
       return (rank[a.risk] - rank[b.risk]) || (a.completion - b.completion);
     });
-  }, [metrics.epics]);
+  }, [metrics?.epics]);
 
-  // smart actions
+  // smart actions — guard all metrics.* refs so hook runs before metrics loads
   const smartActions = useMemo(() => {
+    if (!metrics) return [];
     const acts: { type: string; icon: string; navTarget: string; filterAction: string | null; title: string; detail: string }[] = [];
+    const orphans = flowItems.filter(i => i.isOrphan).length;
     const critBlockers = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('block'));
     if (critBlockers.length)
       acts.push({ type: 'critical', icon: '🚫', navTarget: 'flow-health-panel', filterAction: 'blockers',
@@ -364,28 +338,54 @@ export default function DashboardPage() {
       acts.push({ type: 'critical', icon: '⏳', navTarget: 'flow-health-panel', filterAction: 'stale',
         title: `${staleActive.length} item${staleActive.length > 1 ? 's' : ''} stalled in progress`,
         detail: `${staleActive[0].key} has been active for ${Math.round((staleActive[0] as any).activeAgeDays || 0)} days` });
-    const capacity = (metrics.capacity || []) as any[];
-    const overloaded = capacity.filter(c => c.loadShare > 35);
+    const capacity = ((metrics?.capacity || []) as any[]);
+    const overloaded = capacity.filter((c: any) => c.loadShare > 35);
     if (overloaded.length && capacity.length > 2)
       acts.push({ type: 'warning', icon: '⚖️', navTarget: 'section-ownership', filterAction: null,
         title: 'Team capacity imbalance detected',
         detail: `${overloaded[0].assignee} carries ${overloaded[0].loadShare}% — consider redistributing` });
-    if (orphanCount > 0)
+    if (orphans > 0)
       acts.push({ type: 'info', icon: '👻', navTarget: 'section-attention', filterAction: null,
-        title: `Link ${orphanCount} orphan item${orphanCount > 1 ? 's' : ''} to epics`,
+        title: `Link ${orphans} orphan item${orphans > 1 ? 's' : ''} to epics`,
         detail: 'Items without epic reduce scope traceability and epic completion accuracy' });
-    const critEpics = epicReadiness.filter(e => e.risk === 'critical');
+    const critEpics = epicReadiness.filter((e: any) => e.risk === 'critical');
     if (critEpics.length)
       acts.push({ type: 'warning', icon: '🚨', navTarget: 'section-readiness', filterAction: null,
         title: `${critEpics.length} epic${critEpics.length > 1 ? 's' : ''} in critical state`,
-        detail: `${critEpics[0].epic || 'Top epic'}: ${critEpics[0].completion}% complete — needs attention` });
-    const rels = metrics.relations as any;
+        detail: `${(critEpics[0] as any).epic || 'Top epic'}: ${(critEpics[0] as any).completion}% complete — needs attention` });
+    const rels = metrics?.relations as any;
     if (rels?.blockedItems?.length)
       acts.push({ type: 'critical', icon: '🔗', navTarget: 'section-relations', filterAction: null,
         title: `${rels.blockedItems.length} item${rels.blockedItems.length > 1 ? 's' : ''} explicitly blocked`,
         detail: `${rels.blockedItems[0].key} is blocked by ${rels.blockedItems[0].blockedBy}` });
     return acts.slice(0, 5);
-  }, [flowItems, metrics.capacity, metrics.relations, epicReadiness, orphanCount]);
+  }, [flowItems, metrics?.capacity, metrics?.relations, epicReadiness]);
+
+  // ── All hooks are now above this line. Early returns are safe here. ─────────
+  if (loading) return <AppShell showNav><LoadingState message="Loading dashboard…" /></AppShell>;
+  if (!metrics) return null;
+
+  // ── derived values (computed after hooks — metrics is guaranteed non-null here)
+  const flow = metrics.flow;
+  const sprint = metrics.sprint;
+  const kanban = metrics.kanban as any;
+  const storyPoints = metrics.storyPoints;
+  const risk = metrics.risk;
+  const quarters = (metrics.quarters as any[]) || [];
+  const orphanCount = flowItems.filter(i => i.isOrphan).length;
+  const totalIssues = Math.max(metrics.totalIssues, 1);
+  const riskItems = (flow.critical || 0) + (flow.warning || 0);
+  const band = getHealthBand(metrics.healthScore);
+  const healthColor = HEALTH_COLORS[band];
+  const healthStatus = riskItems === 0 ? 'Healthy' : riskItems < 4 ? 'At Risk' : 'Urgent Attention';
+  const healthMessage = riskItems === 0 ? 'Delivery is stable' : `${riskItems} items require attention`;
+  const statusOptions = uniqueSorted(flowItems, 'status');
+  const sprintOptions = uniqueSorted(flowItems, 'sprint');
+  const assigneeOptions = uniqueSorted(flowItems, 'assignee');
+  const healthOptions = uniqueSorted(flowItems, 'health');
+  const topBlockers = flowItems.filter(i => norm(i.reason).includes('block')).slice(0, 5);
+  const topOverdue = flowItems.filter(i => Number(i.ageDays) > 10 && !DONE_STATUSES.includes(norm(i.status))).slice(0, 5);
+  const topOrphans = flowItems.filter(i => i.isOrphan).slice(0, 5);
 
   // scroll helper
   const scrollTo = (id: string) => {
