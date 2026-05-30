@@ -671,65 +671,7 @@ function DeliveryCircle({ flowItems, data, flow, storyPoints, orphanItems, total
   );
 }
 
-const DASHBOARD_SECTIONS = [
-  { id: 'dashboard-summary',          label: 'Summary',     color: '#2563eb' },
-  { id: 'section-attention',          label: 'Alerts',      color: '#f59e0b' },
-  { id: 'section-overview',           label: 'KPIs',        color: '#16a34a' },
-  { id: 'section-visuals',            label: 'Charts',      color: '#0891b2' },
-  { id: 'section-ratios',             label: 'Composition', color: '#7c3aed' },
-  { id: 'section-delivery-controls',  label: 'Delivery',    color: '#f97316' },
-  { id: 'section-quarters',           label: 'Quarters',    color: '#f97316' },
-  { id: 'section-kanban',             label: 'Kanban',      color: '#0f766e' },
-  { id: 'section-sprint',             label: 'Sprint',      color: '#7c3aed' },
-  { id: 'section-ownership',          label: 'Ownership',   color: '#0f766e' },
-  { id: 'section-labels',             label: 'Labels',      color: '#7c3aed' },
-  { id: 'section-relations',          label: 'Relations',   color: '#dc2626' },
-  { id: 'section-readiness',          label: 'Readiness',   color: '#dc2626' },
-  { id: 'flow-health-panel',          label: 'Flow Table',  color: '#2563eb' },
-];
-
-function SectionNav() {
-  const [active, setActive] = useState(DASHBOARD_SECTIONS[0].id);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible.length) setActive(visible[0].target.id);
-      },
-      { rootMargin: '-20% 0px -70% 0px', threshold: 0 }
-    );
-    DASHBOARD_SECTIONS.forEach(({ id }) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <nav className="section-nav" aria-label="Page sections">
-      {DASHBOARD_SECTIONS.map(({ id, label, color }) => (
-        <button
-          key={id}
-          type="button"
-          className={`section-nav-item${active === id ? ' active' : ''}`}
-          onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          aria-label={`Go to ${label}`}
-        >
-          <span
-            className="section-nav-dot"
-            style={active === id ? { background: color, boxShadow: `0 0 0 3px ${color}33` } : {}}
-          />
-          <span className="section-nav-label" style={active === id ? { color, fontWeight: 900 } : {}}>
-            {label}
-          </span>
-        </button>
-      ))}
-    </nav>
-  );
-}
+// Section navigator moved to AppHeader in App.js — no collision with page content
 
 function ScrollToTopFab() {
   const [visible, setVisible] = useState(false);
@@ -1172,15 +1114,15 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         <div className="summary-change-grid">
           <div className="summary-change-card">
             <span>Completion</span>
-            <strong>{summaryDelta.completion}</strong>
+            <strong>{data.completionRate || 0}%</strong>
           </div>
           <div className="summary-change-card">
-            <span>Risk</span>
-            <strong>{summaryDelta.risk}</strong>
+            <span>Critical</span>
+            <strong>{flow.critical || 0}</strong>
           </div>
           <div className="summary-change-card">
             <span>Cycle time</span>
-            <strong>{summaryDelta.cycleTime}</strong>
+            <strong>{flow.averageCycleTimeDays || 0}d</strong>
           </div>
           {data.prediction && !data.prediction.complete && data.prediction.daysRemaining !== null && (
             <div className="summary-change-card prediction-card">
@@ -1198,19 +1140,10 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
           )}
         </div>
         <div className="summary-actions">
-          <button type="button" className="secondary report-trigger-btn" onClick={() => setShowManagerReport(true)}>
-            📋 Quick Overview
-          </button>
-          <button type="button" className="secondary" onClick={() => openDetailPanel('High-risk review', 'Review the highest-risk items and assign mitigation tasks.', topBlockers)}>
-            Review high-risk items
-          </button>
           <button type="button" className="secondary" onClick={exportRiskReport}>
             Export risk report
           </button>
-          <button type="button" className="secondary" onClick={saveLayout}>
-            Save layout view
-          </button>
-          <div className="summary-status-message">{reportMessage || (layoutSaved ? 'Layout saved' : '')}</div>
+          {reportMessage && <div className="summary-status-message">{reportMessage}</div>}
         </div>
         <div className="summary-badges">
           {confidenceBadges.map((badge) => (
@@ -2148,7 +2081,6 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       )}
 
-      <SectionNav />
       <ScrollToTopFab />
     </main>
   );
