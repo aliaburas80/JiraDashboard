@@ -673,6 +673,44 @@ function DeliveryCircle({ flowItems, data, flow, storyPoints, orphanItems, total
 
 // Section navigator moved to AppHeader in App.js — no collision with page content
 
+function TierLabel({ icon, label, color }) {
+  return (
+    <div className="tier-label" style={{ '--tier-color': color }} aria-hidden="true">
+      <span className="tier-label-icon">{icon}</span>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function CollapsibleSection({ id, sectionKey, icon, title, chips = [], expandedSections, onToggle, accentColor, children }) {
+  const isOpen = expandedSections.has(sectionKey);
+  return (
+    <div id={id} className={`cs-section${isOpen ? ' cs-open' : ''}`}>
+      <button
+        type="button"
+        className="cs-header"
+        style={{ '--cs-accent': accentColor || '#2563eb' }}
+        onClick={() => onToggle(sectionKey)}
+        aria-expanded={isOpen}
+      >
+        <div className="cs-header-left">
+          <span className="cs-icon" aria-hidden="true">{icon}</span>
+          <span className="cs-title">{title}</span>
+          {chips.length > 0 && (
+            <div className="cs-chips">
+              {chips.map((c, i) => (
+                <span key={i} className={`cs-chip cs-chip-${c.type || 'neutral'}`}>{c.label}</span>
+              ))}
+            </div>
+          )}
+        </div>
+        <span className={`cs-toggle${isOpen ? ' open' : ''}`} aria-hidden="true">▾</span>
+      </button>
+      {isOpen && <div className="cs-content">{children}</div>}
+    </div>
+  );
+}
+
 function ScrollToTopFab() {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -724,6 +762,12 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
   const [hideStickyFilter, setHideStickyFilter] = useState(false);
   const [stickyTop, setStickyTop] = useState(0);
   const [showManagerReport, setShowManagerReport] = useState(false);
+  const [expandedSections, setExpandedSections] = useState(new Set(['delivery']));
+  const toggleSection = (key) => setExpandedSections(prev => {
+    const n = new Set(prev);
+    if (n.has(key)) n.delete(key); else n.add(key);
+    return n;
+  });
   const [labelFilter, setLabelFilter] = useState('');
   const [flowItemVisibleCount, setFlowItemVisibleCount] = useState(100);
 
@@ -1194,18 +1238,8 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
 
       <SmartActions actions={smartActions} onAction={handleSmartAction} />
 
-      <section className="dashboard-splash">
-        <div className="splash-copy">
-          <span>Explore in color</span>
-          <h3>Discover the story behind every Jira export</h3>
-          <p>Fast insight cards, vivid charts, and ordered panels guide you from <span className="keyword">completion</span> and <span className="keyword">risk</span> to a confident delivery narrative.</p>
-        </div>
-        <div className="splash-pill-grid">
-          <div className="splash-pill accent-red">High-risk work hot spots</div>
-          <div className="splash-pill accent-teal">Cycle time pressure</div>
-          <div className="splash-pill accent-amber">Open age and orphans</div>
-        </div>
-      </section>
+      {/* ── TIER 1 ─────────────────────────────────── */}
+      <div className="tier-sep tier-sep-1"><span className="tier-sep-icon">🚨</span>Priority Attention</div>
 
       <section id="section-attention" className="issue-highlight-strip">
         <div className="issue-highlight-card card-blockers">
@@ -1275,6 +1309,9 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
           )}
         </div>
       </section>
+
+      {/* ── TIER 2 ─────────────────────────────────── */}
+      <div className="tier-sep tier-sep-2"><span className="tier-sep-icon">📊</span>Primary Metrics</div>
 
       <section id="section-overview" className="dashboard-section section-overview">
         <SectionHeader
@@ -1395,7 +1432,16 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       </section>
 
-      <section id="section-delivery-controls" className="dashboard-section section-delivery">
+      {/* ── TIER 3 ─────────────────────────────────── */}
+      <div className="tier-sep tier-sep-3"><span className="tier-sep-icon">📋</span>Delivery Detail</div>
+
+      <button type="button" className="cs-trigger" style={{'--cs-accent':'#f97316'}} onClick={() => toggleSection('delivery')} aria-expanded={expandedSections.has('delivery')}>
+        <div className="cs-trigger-left"><span aria-hidden="true">🌊</span><span className="cs-trigger-title">Delivery Controls</span>
+          <div className="cs-chips"><span className={`cs-chip ${(flow.critical||0)>0?'cs-chip-critical':'cs-chip-good'}`}>{flow.critical||0} critical</span><span className="cs-chip cs-chip-neutral">{flow.averageCycleTimeDays||0}d avg cycle</span></div>
+        </div>
+        <span className={`cs-toggle${expandedSections.has('delivery')?' open':''}`} aria-hidden="true">▾</span>
+      </button>
+      <section id="section-delivery-controls" className={`dashboard-section section-delivery${expandedSections.has('delivery')?'':' cs-collapsed'}`}>
         <SectionHeader
           icon="🌊"
           kicker="Delivery controls"
@@ -1466,7 +1512,13 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         </div>
       </section>
 
-      <section id="section-quarters" className="dashboard-panel table-section panel-quarter">
+      <button type="button" className="cs-trigger" style={{'--cs-accent':'#f97316'}} onClick={() => toggleSection('quarters')} aria-expanded={expandedSections.has('quarters')}>
+        <div className="cs-trigger-left"><span aria-hidden="true">📅</span><span className="cs-trigger-title">Quarter Statistics</span>
+          <div className="cs-chips"><span className="cs-chip cs-chip-neutral">{(data.quarters||[]).filter(q=>q.quarter!=='No date').length} quarters</span></div>
+        </div>
+        <span className={`cs-toggle${expandedSections.has('quarters')?' open':''}`} aria-hidden="true">▾</span>
+      </button>
+      <section id="section-quarters" className={`dashboard-panel table-section panel-quarter${expandedSections.has('quarters')?'':' cs-collapsed'}`}>
         <PanelTitle helpTopic="quarters" onOpenHelp={onOpenHelp}>Quarter Statistics</PanelTitle>
         <MetricTable
           columns={[
@@ -1491,7 +1543,13 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       </section>
 
-      <section id="section-kanban" className="dashboard-panel table-section panel-kanban-detail">
+      <button type="button" className="cs-trigger" style={{'--cs-accent':'#0f766e'}} onClick={() => toggleSection('kanban')} aria-expanded={expandedSections.has('kanban')}>
+        <div className="cs-trigger-left"><span aria-hidden="true">🗃️</span><span className="cs-trigger-title">Kanban Status Health</span>
+          <div className="cs-chips"><span className="cs-chip cs-chip-neutral">{(data.kanban?.byStatus||[]).length} statuses</span><span className={`cs-chip ${(flow.critical||0)>0?'cs-chip-critical':'cs-chip-good'}`}>{flow.critical||0} critical</span></div>
+        </div>
+        <span className={`cs-toggle${expandedSections.has('kanban')?' open':''}`} aria-hidden="true">▾</span>
+      </button>
+      <section id="section-kanban" className={`dashboard-panel table-section panel-kanban-detail${expandedSections.has('kanban')?'':' cs-collapsed'}`}>
         <PanelTitle helpTopic="kanban" onOpenHelp={onOpenHelp}>Kanban Status Health</PanelTitle>
         <DistributionDonut title="Kanban Share" rows={kanban.byStatus?.slice(0, 6)} emptyMessage="No status data found." />
         <CompactBarChart rows={kanban.byStatus?.slice(0, 8)} emptyMessage="No status data found." />
@@ -1512,7 +1570,13 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       </section>
 
-      <section id="section-sprint" className="dashboard-panel table-section panel-sprint-detail">
+      <button type="button" className="cs-trigger" style={{'--cs-accent':'#7c3aed'}} onClick={() => toggleSection('sprint')} aria-expanded={expandedSections.has('sprint')}>
+        <div className="cs-trigger-left"><span aria-hidden="true">🏃</span><span className="cs-trigger-title">Sprint Status</span>
+          <div className="cs-chips"><span className="cs-chip cs-chip-neutral">{data.sprint?.sprintCount||0} sprints</span>{data.sprint?.sprints?.[0] && <span className={`cs-chip ${data.sprint.sprints[0].completionRate>=80?'cs-chip-good':data.sprint.sprints[0].completionRate>=60?'cs-chip-warning':'cs-chip-critical'}`}>{data.sprint.sprints[0].completionRate}% recent</span>}</div>
+        </div>
+        <span className={`cs-toggle${expandedSections.has('sprint')?' open':''}`} aria-hidden="true">▾</span>
+      </button>
+      <section id="section-sprint" className={`dashboard-panel table-section panel-sprint-detail${expandedSections.has('sprint')?'':' cs-collapsed'}`}>
         <PanelTitle helpTopic="sprint" onOpenHelp={onOpenHelp}>Sprint Status</PanelTitle>
         <DistributionDonut title="Sprint Share" rows={sprint.sprints?.slice(0, 6)} labelKey="name" valueKey="issues" emptyMessage="No sprint data found." />
         <MetricTable
@@ -1532,7 +1596,13 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       </section>
 
-      <section id="section-ownership" className="dashboard-section section-ownership">
+      <button type="button" className="cs-trigger" style={{'--cs-accent':'#0f766e'}} onClick={() => toggleSection('ownership')} aria-expanded={expandedSections.has('ownership')}>
+        <div className="cs-trigger-left"><span aria-hidden="true">👥</span><span className="cs-trigger-title">Ownership & Capacity</span>
+          <div className="cs-chips"><span className="cs-chip cs-chip-neutral">{(data.capacity||[]).length} assignees</span>{(data.capacity||[])[0] && <span className={`cs-chip ${(data.capacity[0].loadShare||0)>35?'cs-chip-critical':'cs-chip-good'}`}>{data.capacity[0].assignee}: {data.capacity[0].loadShare}%</span>}</div>
+        </div>
+        <span className={`cs-toggle${expandedSections.has('ownership')?' open':''}`} aria-hidden="true">▾</span>
+      </button>
+      <section id="section-ownership" className={`dashboard-section section-ownership${expandedSections.has('ownership')?'':' cs-collapsed'}`}>
         <SectionHeader
           icon="👥"
           kicker="Ownership"
@@ -1577,6 +1647,9 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         </section>
         </div>
       </section>
+
+      {/* ── TIER 4 ─────────────────────────────────── */}
+      <div className="tier-sep tier-sep-4"><span className="tier-sep-icon">🔍</span>Deep Dive</div>
 
       <section id="section-labels" className="dashboard-section section-labels">
         <SectionHeader
