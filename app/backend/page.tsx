@@ -90,15 +90,18 @@ function StatCard({
   );
 }
 
-function formatTimestamp(ts: string): string {
+function formatTimestamp(ts: string | null | undefined): string {
+  if (!ts) return '—';
   try {
-    return new Date(ts).toLocaleString(undefined, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    });
-  } catch {
-    return ts;
-  }
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return ts;
+    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch { return ts; }
+}
+
+function safeInt(n: number | null | undefined): string {
+  if (n === null || n === undefined || isNaN(Number(n))) return '—';
+  return Number(n).toLocaleString();
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -218,7 +221,7 @@ export default function BackendPage() {
                 label="Last Row Count"
                 value={
                   data.stats.lastRowCount !== null
-                    ? data.stats.lastRowCount.toLocaleString()
+                    ? safeInt(data.stats.lastRowCount)
                     : null
                 }
               />
@@ -317,7 +320,7 @@ export default function BackendPage() {
                           </code>
                         </td>
                         <td className="px-4 py-3 text-right text-slate-700 font-medium tabular-nums">
-                          {log.rowCount.toLocaleString()}
+                          {safeInt(log.rowCount)}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <StatusBadge status={log.status} />
