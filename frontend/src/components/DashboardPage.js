@@ -751,12 +751,15 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
   if (!storyPoints.totalStoryPoints) confidenceBadges.push('No story points');
   if (!confidenceBadges.length) confidenceBadges.push('Data complete');
 
-  // Scroll to a section while clearing the sticky header from the viewport
+  // Scroll to a section while clearing ALL sticky bars from the viewport
   const scrollToSection = (idOrEl) => {
     const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
     if (!el) return;
-    const header = document.querySelector('.app-header');
-    const offset = (header ? header.offsetHeight : 0) + 16;
+    const header    = document.querySelector('.app-header');
+    const filterBar = document.querySelector('.sticky-filter-bar');
+    let offset = (header ? header.offsetHeight : 0) + 16;
+    // Add filter bar height only when it is actually visible (offsetHeight > 0)
+    if (filterBar && filterBar.offsetHeight > 0) offset += filterBar.offsetHeight;
     window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
   };
 
