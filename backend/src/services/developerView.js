@@ -408,16 +408,16 @@ function renderDeveloperWiki() {
       <hr class="nav-divider" />
       <div class="nav-section-label">Developer Guide</div>
 
-      <a href="/developer/guide">
+      <a href="#quick-start">
         <span class="nav-num">G</span> Full Guide
       </a>
-      <a href="/developer/metrics">
+      <a href="#adding-metric">
         <span class="nav-num">M</span> Metrics Ref
       </a>
-      <a href="/developer/api">
+      <a href="#api-endpoints">
         <span class="nav-num">A</span> API Reference
       </a>
-      <a href="/developer/layout">
+      <a href="#layout-grid">
         <span class="nav-num">L</span> Layout Guide
       </a>
 

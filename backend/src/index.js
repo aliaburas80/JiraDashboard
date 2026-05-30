@@ -32,6 +32,11 @@ app.get('/developer', (req, res) => {
   res.type('html').send(renderDeveloperWiki());
 });
 
+// Catch any /developer/* sub-paths and redirect to the main wiki page
+app.get('/developer/*', (req, res) => {
+  res.redirect('/developer');
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'delivery-clarity-backend', version: '1.0.0' });
 });

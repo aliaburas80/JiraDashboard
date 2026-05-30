@@ -51,7 +51,20 @@ function SectionNavBar() {
           key={id}
           type="button"
           className={`section-nav-pill${active === id ? ' active' : ''}`}
-          style={active === id ? { background: color, borderColor: color } : {}}
+          style={
+            active === id
+              ? {
+                  background: color,
+                  borderColor: color,
+                  color: 'white',
+                  boxShadow: `0 4px 14px ${color}55`,
+                }
+              : {
+                  background: `${color}18`,
+                  borderColor: `${color}48`,
+                  color,
+                }
+          }
           onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
           aria-label={`Go to ${label}`}
           aria-current={active === id ? 'location' : undefined}
