@@ -591,7 +591,11 @@ export default function DeveloperPage() {
 
         {/* Sidebar */}
         <aside className={[
-          'fixed lg:relative inset-y-0 left-0 z-40 w-60 shrink-0',
+          // mobile: fixed, starts BELOW the 56px (h-14) app header so header is never covered
+          'fixed lg:sticky lg:top-0',
+          'top-14 bottom-0 left-0',
+          'z-30',                        // below header z-40
+          'w-60 shrink-0',
           'bg-slate-900 text-slate-200 overflow-y-auto',
           'px-2 py-4 flex flex-col gap-0.5',
           'transition-transform duration-200',
