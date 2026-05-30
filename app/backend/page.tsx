@@ -22,10 +22,12 @@ interface ApiEndpoint {
 }
 
 interface ImportLog {
-  timestamp: string;
-  filename: string;
-  rowCount: number;
-  status: 'success' | 'failed' | 'partial' | string;
+  timestamp: string | null;
+  filename: string | null;
+  rowCount: number | null;
+  status: string;
+  sheetName?: string | null;
+  filesize?: number | null;
 }
 
 interface BackendViewData {
@@ -294,32 +296,28 @@ export default function BackendPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 bg-slate-50">
-                      <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">
-                        Timestamp
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">
-                        Filename
-                      </th>
-                      <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-28">
-                        Row Count
-                      </th>
-                      <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-28">
-                        Status
-                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide whitespace-nowrap">Timestamp</th>
+                      <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Filename</th>
+                      <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Sheet</th>
+                      <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-24 whitespace-nowrap">Rows</th>
+                      <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-28">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {data.logs.map((log, i) => (
                       <tr key={i} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
+                        <td className="px-4 py-3 text-slate-500 whitespace-nowrap text-xs">
                           {formatTimestamp(log.timestamp)}
                         </td>
-                        <td className="px-4 py-3">
-                          <code className="font-mono text-xs bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded">
-                            {log.filename}
+                        <td className="px-4 py-3 max-w-xs">
+                          <code className="font-mono text-xs bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded break-all">
+                            {log.filename ?? '—'}
                           </code>
                         </td>
-                        <td className="px-4 py-3 text-right text-slate-700 font-medium tabular-nums">
+                        <td className="px-4 py-3 text-slate-500 text-xs hidden lg:table-cell">
+                          {log.sheetName ?? '—'}
+                        </td>
+                        <td className="px-4 py-3 text-right text-slate-700 font-semibold tabular-nums">
                           {safeInt(log.rowCount)}
                         </td>
                         <td className="px-4 py-3 text-center">

@@ -39,9 +39,19 @@ export async function GET() {
       lastRowCount,
     };
 
+    // Normalise log entries to a flat shape the frontend expects
+    const normalisedLogs = logs.slice(0, 10).map((log) => ({
+      timestamp: log.importedAt ?? log.timestamp ?? null,
+      filename:  log.file?.name ?? log.filename ?? null,
+      rowCount:  log.extraction?.rowCount ?? log.rowCount ?? null,
+      status:    log.status ?? 'unknown',
+      sheetName: log.extraction?.sheetName ?? log.sheetName ?? null,
+      filesize:  log.file?.sizeBytes ?? log.filesize ?? null,
+    }));
+
     return NextResponse.json({
       stats,
-      logs: logs.slice(0, 10),
+      logs: normalisedLogs,
       endpoints: ENDPOINTS,
     });
   } catch (error) {
