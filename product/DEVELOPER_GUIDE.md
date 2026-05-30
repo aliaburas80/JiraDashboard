@@ -1,5 +1,3 @@
-Now I have everything needed to write the complete, authoritative developer guide. Let me compose it.
-
 # Delivery Clarity — Developer Guide
 
 ## Document Control
