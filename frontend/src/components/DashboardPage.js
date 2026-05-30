@@ -1091,8 +1091,8 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
   <main className="dashboard-page" aria-hidden={detailPanel ? true : undefined}>
       <div className="dashboard-top">
         <div>
-          <button type="button" className="back-to-summary" onClick={() => navigate('/summary')}>
-            ← Back to Overview
+          <button type="button" className="back-to-summary" onClick={() => navigate('/charts')}>
+            ← Charts
           </button>
           <h2>Full Delivery Report</h2>
           <p>Flow, sprint, kanban, capacity, story point, and epic performance from the uploaded Jira export.</p>

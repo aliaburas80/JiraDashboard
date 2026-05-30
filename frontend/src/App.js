@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import UploadPage from './components/UploadPage';
 import SummaryPage from './components/SummaryPage';
+import ChartsPage from './components/ChartsPage';
 import DashboardPage from './components/DashboardPage';
 import HelpGuide from './components/HelpGuide';
 
@@ -168,6 +169,23 @@ export default function App() {
         }
       />
 
+      {/* Visual analytics charts */}
+      <Route
+        path="/charts"
+        element={
+          !dashboardData
+            ? <Navigate to="/" replace />
+            : (
+              <div className={`app shell ${theme}`}>
+                <AppHeader theme={theme} setTheme={setTheme} openHelp={openHelp} showNav={true} />
+                <ChartsPage data={dashboardData} onReset={handleReset} />
+                <AppFooter />
+              </div>
+            )
+        }
+      />
+
+      {/* Full report */}
       <Route
         path="/dashboard"
         element={
@@ -204,8 +222,9 @@ function AppHeader({ theme, setTheme, openHelp, showNav, showSectionNav }) {
         <div className="header-actions">
           {showNav && (
             <>
-              <Link to="/summary" className={`header-nav-link${location.pathname === '/summary' ? ' active' : ''}`}>Overview</Link>
-              <Link to="/dashboard" className={`header-nav-link${isDashboard ? ' active' : ''}`}>Full Report</Link>
+              <Link to="/summary"   className={`header-nav-link${location.pathname === '/summary'   ? ' active' : ''}`}>Overview</Link>
+              <Link to="/charts"    className={`header-nav-link${location.pathname === '/charts'    ? ' active' : ''}`}>Charts</Link>
+              <Link to="/dashboard" className={`header-nav-link${location.pathname === '/dashboard' ? ' active' : ''}`}>Full Report</Link>
             </>
           )}
           <button className="help-button" type="button" onClick={() => openHelp('welcome')}>

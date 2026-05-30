@@ -157,8 +157,8 @@ export default function SummaryPage({ data, onReset, openHelp }) {
         <button type="button" className="secondary" onClick={onReset}>
           Upload new file
         </button>
-        <button type="button" className="btn-view-report" onClick={() => navigate('/dashboard')}>
-          View Full Report →
+        <button type="button" className="btn-view-report" onClick={() => navigate('/charts')}>
+          View Charts →
         </button>
       </div>
     </main>
