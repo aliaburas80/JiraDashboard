@@ -1,8 +1,8 @@
-// @ts-nocheck
 'use client';
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import { saveMetrics } from '@/lib/storage';
 
 export default function HomePage() {
   const router = useRouter();
@@ -18,7 +18,7 @@ export default function HomePage() {
       const res = await fetch('/api/upload', { method: 'POST', body: form });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Upload failed'); return; }
-      sessionStorage.setItem('dc_metrics', JSON.stringify(data.metrics));
+      saveMetrics(data.metrics);
       router.push('/dashboard');
     } catch { setError('Upload failed. Please check the file and try again.'); }
     finally { setLoading(false); }

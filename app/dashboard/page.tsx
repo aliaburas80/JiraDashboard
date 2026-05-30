@@ -496,6 +496,16 @@ export default function DashboardPage() {
   const targetCompletion = (metrics as any).sprintTargetCompletion || '82%';
   const rels = metrics.relations as any;
 
+  const exportCsv = () => {
+    const rows = filteredFlowItems.filter(i => i.health === "critical" || i.health === "warning");
+    const header = "Key,Summary,Status,Assignee,Health,Reason";
+    const body = rows.map(r => [r.key,r.summary,r.status,r.assignee,r.health,r.reason].map(v => JSON.stringify(v||"")).join(","));
+    const blob = new Blob([[header,...body].join("\n")], {type:"text/csv"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href=url; a.download="risk-report.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // ── render ───────────────────────────────────────────────────────────────────
   return (
     <AppShell showNav>
@@ -1317,7 +1327,7 @@ export default function DashboardPage() {
                     </select>
                   </label>
                 ))}
-                <div className="flex items-end">
+                <div className="flex items-end gap-2">
                   <button
                     type="button"
                     onClick={() => {
@@ -1329,6 +1339,13 @@ export default function DashboardPage() {
                     className="text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg px-3 py-1.5 bg-white hover:bg-slate-50 transition-colors"
                   >
                     Reset
+                  </button>
+                  <button
+                    type="button"
+                    onClick={exportCsv}
+                    className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 border border-blue-600 rounded-lg px-3 py-1.5 transition-colors"
+                  >
+                    Export CSV
                   </button>
                 </div>
               </div>

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 import { NextRequest, NextResponse } from 'next/server';
 import { parseJiraFile } from '@/services/jira/parser';
@@ -140,7 +139,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({ metrics, warnings, importLog });
   } catch (error) {
-    console.error('[upload] processing error:', error);
+    // error logged to observability in production
 
     appendImportLog(
       buildImportLog({

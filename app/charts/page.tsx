@@ -1,11 +1,11 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
-// @ts-nocheck
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import type { DashboardMetrics } from '@/types/metrics';
+import { loadMetrics } from '@/lib/storage';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const DONE_ST   = ['done', 'closed', 'resolved'];
@@ -367,12 +367,12 @@ export default function ChartsPage() {
 
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem('dc_metrics');
-      if (!raw) {
+      const data = loadMetrics() as DashboardMetrics | null;
+      if (!data) {
         router.replace('/');
         return;
       }
-      setMetrics(JSON.parse(raw) as DashboardMetrics);
+      setMetrics(data);
     } catch {
       router.replace('/');
     } finally {

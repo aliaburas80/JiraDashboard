@@ -1,4 +1,3 @@
-// @ts-nocheck
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 import fs from 'fs';
 import path from 'path';

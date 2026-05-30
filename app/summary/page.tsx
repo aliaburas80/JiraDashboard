@@ -1,5 +1,4 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
-// @ts-nocheck
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -8,6 +7,7 @@ import AppShell from '@/components/layout/AppShell';
 import KpiCard from '@/components/ui/KpiCard';
 import LoadingState from '@/components/ui/LoadingState';
 import type { DashboardMetrics } from '@/types/metrics';
+import { loadMetrics } from '@/lib/storage';
 import { getHealthBand, HEALTH_COLORS, type HealthBand } from '@/lib/utils';
 
 const DONE_STATUSES = new Set(['done', 'closed', 'resolved']);
@@ -36,9 +36,9 @@ export default function SummaryPage() {
 
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem('dc_metrics');
-      if (!raw) { router.replace('/'); return; }
-      setMetrics(JSON.parse(raw) as DashboardMetrics);
+      const data = loadMetrics() as DashboardMetrics | null;
+      if (!data) { router.replace('/'); return; }
+      setMetrics(data);
     } catch {
       router.replace('/');
     } finally {
@@ -49,9 +49,9 @@ export default function SummaryPage() {
   if (loading) return <AppShell showNav><LoadingState message="Loading summary…" /></AppShell>;
   if (!metrics) return null;
 
-  const flow      = metrics.flow        ?? {};
-  const sp        = metrics.storyPoints ?? {};
-  const items     = flow.items          ?? [];
+  const flow      = (metrics.flow        ?? {}) as any;
+  const sp        = (metrics.storyPoints ?? {}) as any;
+  const items     = (flow.items          ?? []) as any[];
   const riskItems = (flow.critical ?? 0) + (flow.warning ?? 0);
   const band      = getHealthBand(metrics.healthScore ?? 0);
   const color     = HEALTH_COLORS[band];

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { NextResponse } from 'next/server';
 import { readImportLogs } from '@/services/imports/importLogs.service';
 export async function GET() {

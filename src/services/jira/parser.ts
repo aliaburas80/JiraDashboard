@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Migrated from backend/src/services/parser.js
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 import * as XLSX from 'xlsx';

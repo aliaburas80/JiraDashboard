@@ -1,4 +1,3 @@
-// @ts-nocheck
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 import { NextResponse } from 'next/server';
 import { readImportLogs } from '@/services/imports/importLogs.service';
@@ -40,7 +39,7 @@ export async function GET() {
     };
 
     // Normalise log entries to a flat shape the frontend expects
-    const normalisedLogs = logs.slice(0, 10).map((log) => ({
+    const normalisedLogs = logs.slice(0, 10).map((log: any) => ({
       timestamp: log.importedAt ?? log.timestamp ?? null,
       filename:  log.file?.name ?? log.filename ?? null,
       rowCount:  log.extraction?.rowCount ?? log.rowCount ?? null,
