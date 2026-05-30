@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+// Upload is intentionally excluded — it lives on the LEFT as a distinct restart button
 const NAV = [
-  { href: '/',          label: 'Upload'      },
   { href: '/summary',   label: 'Overview'    },
   { href: '/charts',    label: 'Charts'      },
   { href: '/dashboard', label: 'Full Report' },
@@ -13,34 +13,51 @@ const NAV = [
   { href: '/help',      label: 'Help'        },
 ];
 
-// Items shown on small screens (≤ sm breakpoint) — keep the most essential ones
-const NAV_SMALL = ['/', '/summary', '/dashboard', '/help'];
+const NAV_SMALL = ['/summary', '/dashboard', '/help'];
 
 export default function AppShell({ children, showNav }: { children: React.ReactNode; showNav?: boolean }) {
   const pathname = usePathname();
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14 gap-4">
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <span className="text-lg font-black text-slate-900 tracking-tight">Delivery Clarity</span>
-            <span className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5 hidden sm:inline">v2</span>
-          </Link>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-14 gap-3">
+
+          {/* ── Left cluster: logo + upload restart button ── */}
+          <div className="flex items-center gap-3 shrink-0">
+            <Link href="/" className="flex items-center gap-2">
+              <span className="text-lg font-black text-slate-900 tracking-tight">Delivery Clarity</span>
+              <span className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5 hidden sm:inline">v2</span>
+            </Link>
+
+            {/* Upload new file — shown only when inside the app (showNav = data loaded) */}
+            {showNav && (
+              <Link
+                href="/"
+                title="Upload a new file — resets current session"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors whitespace-nowrap
+                           bg-red-50 text-red-600 border-red-200 hover:bg-red-600 hover:text-white hover:border-red-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0L8 8m4-4l4 4" />
+                </svg>
+                <span className="hidden sm:inline">New Upload</span>
+              </Link>
+            )}
+          </div>
+
+          {/* ── Right cluster: page navigation ── */}
           {showNav && (
-            <nav className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
+            <nav className="flex items-center gap-0.5 overflow-x-auto scrollbar-none ml-auto">
               {NAV.map(n => {
                 const isActive = pathname === n.href;
-                // On small screens hide items not in NAV_SMALL
                 const hiddenOnSmall = !NAV_SMALL.includes(n.href);
                 return (
                   <Link
                     key={n.href}
                     href={n.href}
                     className={
-                      "px-2.5 py-1.5 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap " +
-                      (isActive
-                        ? 'bg-blue-600 text-white'
-                        : 'text-slate-600 hover:bg-slate-100') +
+                      'px-2.5 py-1.5 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ' +
+                      (isActive ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100') +
                       (hiddenOnSmall ? ' hidden sm:inline-flex' : ' inline-flex')
                     }
                   >
