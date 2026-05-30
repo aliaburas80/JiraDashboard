@@ -88,22 +88,20 @@ function SectionNavBar() {
   );
 }
 
-// ── Help full-page wrapper ────────────────────────────────────────────────────
-function HelpPage({ theme }) {
+// ── Help full-page content (no shell — shell provided by the route) ───────────
+function HelpPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const section = searchParams.get('section') || 'welcome';
 
   return (
-    <div className={`app shell ${theme}`}>
-      <div className="help-page-container">
-        <HelpGuide
-          open={true}
-          activeSection={section}
-          onClose={() => navigate(-1)}
-          pageMode={true}
-        />
-      </div>
+    <div className="help-page-container">
+      <HelpGuide
+        open={true}
+        activeSection={section}
+        onClose={() => navigate(-1)}
+        pageMode={true}
+      />
     </div>
   );
 }
@@ -201,7 +199,13 @@ export default function App() {
         }
       />
 
-      <Route path="/help" element={<HelpPage theme={theme} />} />
+      <Route path="/help" element={
+        <div className={`app shell ${theme}`}>
+          <AppHeader theme={theme} setTheme={setTheme} openHelp={openHelp} showNav={!!dashboardData} />
+          <HelpPage />
+          <AppFooter />
+        </div>
+      } />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
