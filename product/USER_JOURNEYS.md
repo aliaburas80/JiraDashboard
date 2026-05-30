@@ -1149,3 +1149,45 @@ A moment of truth is a point in the user journey where the product either wins o
 
 *End of User Journey Maps — Delivery Clarity v1.0*
 *Prepared: 2026-05-30 | Author: Ali Abu Ras*
+
+---
+
+## User Journey Updates — v1.1 (2026-05-30)
+
+### Change: Two-Step Post-Upload Flow
+
+All personas now experience a two-step flow after uploading:
+1. **Landing on /summary** — executive overview page (NEW)
+2. **Navigating to /dashboard** — full detailed report (existing)
+
+### Updated Phase: Post-Upload for All Personas
+
+**Old:** Upload → Full Dashboard (immediate overwhelm)
+**New:** Upload → Summary Page → [View Full Report →] → Full Dashboard
+
+#### Summary Page Experience
+| Step | User Action | System Response | Emotion |
+|---|---|---|---|
+| 1 | File uploads successfully | Browser navigates to /summary | Relief — clear, focused view |
+| 2 | Reads health score gauge | Coloured circle (green/amber/red) with 0–100 score visible | Confidence or concern |
+| 3 | Reads health banner | Status label + risk item count + completion % | Understanding |
+| 4 | Scans 6 KPI cards | Compact cards with values and threshold tracks | Quick comprehension |
+| 5 | Reads attention cards | Blockers / overdue / orphan counts with first example | Urgency awareness |
+| 6 | Reads insights | 4 plain-language sentences | Validation |
+| 7 | Clicks "View Full Report →" | Navigates to /dashboard | Purposeful transition |
+
+### Updated Touchpoint: Help Access
+
+**Old:** Click Help → Modal overlay opens
+**New:** Click Help → Navigates to /help full page; ? buttons navigate to /help?section=xxx
+
+#### Help Page Experience
+| Step | User Action | System Response | Emotion |
+|---|---|---|---|
+| 1 | Clicks Help or ? button | Browser navigates to /help or /help?section=xxx | Discovery |
+| 2 | Reads journey steps | Animated journey with progress bar | Engaged learning |
+| 3 | Clicks "← Back" | Returns to previous page | Seamless continuation |
+
+### Resolved Pain Point
+- **Before:** Landing directly on the 16-section full dashboard was overwhelming for first-time users and managers checking quickly
+- **After:** Summary page provides a focused, executive-friendly view. Full report is one click away but not forced

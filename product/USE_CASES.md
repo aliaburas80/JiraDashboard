@@ -1855,3 +1855,113 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 ---
 
 *Document prepared by Ali Abu Ras — Delivery Clarity v1.0 — 2026-05-30*
+
+---
+
+## New Use Cases — v1.1 (2026-05-30)
+
+### UC-041: View Summary Page After Upload
+
+- **ID:** UC-041
+- **Name:** View Summary Page After Upload
+- **Actor(s):** All authenticated users
+- **Trigger:** File upload completes successfully (POST /api/upload returns 200)
+- **Preconditions:** A valid Jira CSV or XLSX file has been uploaded and processed
+- **Postconditions:** User is viewing /summary with current data metrics
+- **Priority:** High
+- **Frequency:** Every upload
+
+**Main Success Scenario:**
+1. System processes uploaded file and calls navigate('/summary')
+2. Browser URL changes to /summary
+3. SummaryPage renders with health banner (score, band, status label)
+4. Six KPI cards render with correct values
+5. Attention section renders if blockers/overdue/orphans > 0
+6. Prediction chip shows estimated completion if velocity available
+7. Top 4 insights render
+8. CTA buttons render: "Upload new file" and "View Full Report →"
+
+**Alternative Flow A — All items complete:**
+- Health score is 95+, prediction chip shows "100% · All issues complete ✅"
+- No attention section visible
+
+**Alternative Flow B — No date data for prediction:**
+- Prediction chip is not rendered
+
+**Exception Flow X — dashboardData is null:**
+- User navigates directly to /summary URL
+- System redirects to / (upload page)
+
+---
+
+### UC-042: Navigate to Help Page
+
+- **ID:** UC-042
+- **Name:** Navigate to Help Page
+- **Actor(s):** Any user
+- **Trigger:** Clicks Help button in header OR clicks a ? context button in the dashboard
+- **Preconditions:** None — /help is unprotected
+- **Postconditions:** User is reading the help page at /help or /help?section=xxx
+- **Priority:** High
+- **Frequency:** Multiple times per session for new users
+
+**Main Success Scenario (Help button):**
+1. User clicks Help button in AppHeader
+2. App calls navigate('/help?section=welcome')
+3. Browser navigates to /help?section=welcome
+4. HelpPage reads section param via useSearchParams()
+5. HelpGuide renders in pageMode=true (no backdrop, no overlay)
+6. Welcome journey is shown as first section
+
+**Main Success Scenario (? context button):**
+1. User clicks ? button next to "KPIs" section heading
+2. App calls openHelp('kpis') → navigate('/help?section=kpis')
+3. Browser navigates to /help?section=kpis
+4. HelpGuide opens with KPIs tab selected and step 1 visible
+
+**Return flow:**
+1. User clicks "← Back"
+2. navigate(-1) returns to previous page
+3. Previous page context (scroll position may be lost)
+
+---
+
+### UC-043: Return from Full Report to Summary
+
+- **ID:** UC-043
+- **Name:** Return from Full Report to Summary
+- **Actor(s):** Engineering Manager, Scrum Master
+- **Trigger:** Clicks "← Back to Overview" breadcrumb in DashboardPage
+- **Preconditions:** User is on /dashboard with dashboardData loaded
+- **Postconditions:** User is on /summary; all data unchanged
+- **Priority:** Medium
+- **Frequency:** Several times per session
+
+**Main Success Scenario:**
+1. User is on /dashboard viewing the full report
+2. User clicks "← Back to Overview" button
+3. navigate('/summary') is called
+4. Browser navigates to /summary
+5. SummaryPage renders with the same data (no re-fetch needed)
+6. User can click "View Full Report →" to return to /dashboard
+
+---
+
+### UC-044: Direct URL Access to Protected Route Without Data
+
+- **ID:** UC-044
+- **Name:** Redirect When No Data Loaded
+- **Actor(s):** Any user
+- **Trigger:** User types /summary or /dashboard directly in browser address bar
+- **Preconditions:** dashboardData is null (no file has been uploaded in this session)
+- **Postconditions:** User is on / (upload page) with no error shown
+- **Priority:** High
+- **Frequency:** Occasional (bookmarked URLs, shared links)
+
+**Main Success Scenario:**
+1. User navigates to /summary or /dashboard directly
+2. React Router evaluates the route
+3. dashboardData is null → <Navigate to="/" replace /> executes
+4. Browser URL changes to /
+5. UploadPage renders with normal state
+6. No error message shown — just the upload UI

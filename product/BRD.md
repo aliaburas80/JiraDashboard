@@ -597,3 +597,23 @@ The following metrics define product success and will be measured at 30, 90, and
 ---
 
 *Document prepared by Ali Abu Ras · Delivery Clarity v1.0 · 2026-05-30*
+
+---
+
+## Revision Note — v1.1 (2026-05-30)
+
+### New Routes (Business Requirements Update)
+
+**BR-041 (Must):** On file upload success, the system MUST display the Summary page (/summary) as the first view. The full report (/dashboard) is a secondary page reached by explicit user action.
+
+**BR-042 (Must):** The Summary page (/summary) MUST display: delivery health score with band colour, health status banner, 6 KPI cards, attention indicators (blockers/overdue/orphans), top 4 plain-language insights, estimated completion chip, and a "View Full Report →" call-to-action button.
+
+**BR-043 (Must):** The Help guide MUST be accessible as a standalone page at /help with section-level deep-linking via ?section= URL parameter. All Help button and context ? buttons navigate to this route rather than opening a modal overlay.
+
+### Route Structure
+| Route | Component | Description |
+|---|---|---|
+| / | UploadPage | File upload landing; redirects to /summary if data loaded |
+| /summary | SummaryPage | **First page after upload** — executive overview |
+| /dashboard | DashboardPage | Full 16-section delivery report |
+| /help | HelpGuide (pageMode) | Full-page interactive help with section deep-links |

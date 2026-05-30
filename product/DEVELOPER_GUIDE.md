@@ -1797,3 +1797,112 @@ const uploadLimiter = rateLimit({
 });
 ```
 Do not commit this change. For automated tests, consider adding a `NODE_ENV !== 'test'` guard around the rate limiter middleware.
+
+---
+
+## 21. Routing Architecture (Added v1.1)
+
+### Route Structure
+
+| Path | Component | Protected | Description |
+|---|---|---|---|
+| / | UploadPage | No | File upload; auto-redirects to /summary when data loaded |
+| /summary | SummaryPage | Yes (→ /) | First page after upload — executive overview |
+| /dashboard | DashboardPage | Yes (→ /) | Full 16-section delivery report |
+| /help | HelpGuide (pageMode) | No | Full-page interactive help |
+
+"Protected" means: if dashboardData is null, redirect to /.
+
+### BrowserRouter Setup (index.js)
+
+```jsx
+import { BrowserRouter } from 'react-router-dom';
+root.render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+);
+```
+
+### Routes in App.js
+
+```jsx
+import { Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+
+// Inside App():
+const navigate = useNavigate();
+
+// After upload:
+const handleDataLoaded = (data) => {
+  setDashboardData(data);
+  navigate('/summary');   // ← goes to Summary first
+};
+
+// Help opens as a route:
+const openHelp = (section = 'welcome') => {
+  navigate(`/help?section=${encodeURIComponent(section)}`);
+};
+
+// Route definitions:
+<Routes>
+  <Route path="/" element={dashboardData ? <Navigate to="/summary" replace /> : <UploadPage ... />} />
+  <Route path="/summary" element={!dashboardData ? <Navigate to="/" replace /> : <SummaryPage ... />} />
+  <Route path="/dashboard" element={!dashboardData ? <Navigate to="/" replace /> : <DashboardPage ... />} />
+  <Route path="/help" element={<HelpPage theme={theme} />} />
+  <Route path="*" element={<Navigate to="/" replace />} />
+</Routes>
+```
+
+### Reading the /help section param (HelpPage)
+
+```jsx
+function HelpPage({ theme }) {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const section = searchParams.get('section') || 'welcome';
+  return (
+    <HelpGuide open={true} activeSection={section} onClose={() => navigate(-1)} pageMode={true} />
+  );
+}
+```
+
+### HelpGuide pageMode prop
+
+When pageMode=true:
+- No backdrop div rendered
+- No fixed overlay positioning
+- Renders inside .help-page-wrap (max-width: 1040px, auto margin)
+- .help-panel gets class .help-panel-page (position: static, max-height: none)
+- Close button label changes to "← Back"
+
+### How to add a new route
+
+1. Create the component file in frontend/src/components/MyPage.js
+2. Import it in App.js
+3. Add to the Routes block:
+   ```jsx
+   <Route path="/my-page" element={
+     !dashboardData ? <Navigate to="/" replace /> : <MyPage data={dashboardData} />
+   } />
+   ```
+4. Add a nav link in AppHeader if needed:
+   ```jsx
+   <Link to="/my-page" className="header-nav-link">My Page</Link>
+   ```
+5. Add a link from SummaryPage or DashboardPage using navigate('/my-page')
+
+### Header nav links CSS
+
+The header shows "Overview" and "Full Report" links using .header-nav-link:
+```css
+.header-nav-link {
+  border: 1px solid rgba(191,219,254,0.7);
+  border-radius: 8px;
+  background: rgba(239,246,255,0.85);
+  color: #1d4ed8;
+  padding: 8px 14px;
+  font-weight: 900;
+  text-decoration: none;
+}
+```
+To add a new link: add a <Link to="/route" className="header-nav-link">Label</Link> inside AppHeader's header-actions div.

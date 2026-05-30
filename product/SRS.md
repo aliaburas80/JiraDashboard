@@ -1493,3 +1493,34 @@ Rendered by `renderBackendHome()`. Provides: import history table, file statisti
 *End of Software Requirements Specification — Delivery Clarity v1.0.0*
 *Document prepared: 2026-05-30*
 *Author: Ali Abu Ras — aburasali80@gmail.com*
+
+---
+
+## SRS Additions — v1.1 (2026-05-30)
+
+### Updated Architecture: Routing
+
+react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps the application in index.js. The application has 4 routes:
+- / → UploadPage (protected: redirects to /summary if dashboardData exists)
+- /summary → SummaryPage (protected: redirects to / if no dashboardData)
+- /dashboard → DashboardPage (protected: redirects to / if no dashboardData)
+- /help → HelpGuide in pageMode=true (unprotected: always accessible)
+
+### New Functional Requirements
+
+**FR-200:** On successful file upload (/api/upload returns 200), the frontend MUST call navigate('/summary') to redirect the user to the Summary page.
+
+**FR-201:** The /summary route MUST render SummaryPage containing: (a) health score gauge with colour band matching the score tier, (b) health status banner showing scoreLabel and riskItems count, (c) prediction chip showing estimated days and date when velocity > 0 and items remain, (d) 6 KPI cards using the KpiCard component, (e) attention cards for blockers/overdue/orphans when counts > 0, (f) top 4 insights from data.insights[], (g) "Upload new file" and "View Full Report →" buttons.
+
+**FR-202:** The "View Full Report →" button on SummaryPage MUST navigate to /dashboard using useNavigate().
+
+**FR-203:** The /help route MUST render HelpGuide with pageMode=true, which renders without the backdrop overlay div and without fixed positioning, suitable for full-page display.
+
+**FR-204:** The Help button in AppHeader and all HelpButton (?) instances in DashboardPage MUST navigate to /help?section=${encodeURIComponent(section)} instead of opening a modal. The HelpPage component reads the section parameter via useSearchParams().
+
+**FR-205:** DashboardPage (/dashboard) MUST display a "← Back to Overview" button that calls navigate('/summary').
+
+**FR-206:** Any direct URL access to /summary or /dashboard when dashboardData is null MUST redirect to / (the upload page) using <Navigate to="/" replace />.
+
+### Updated Dependency
+- react-router-dom: ^7.16.0 (added to frontend/package.json)

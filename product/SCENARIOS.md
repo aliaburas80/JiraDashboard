@@ -438,4 +438,126 @@ All 10 acceptance scenarios pass when:
 
 ---
 
+---
+
+## New Scenarios — v1.1 (2026-05-30)
+
+### SC-031: First Impression — Summary Page as the Landing Experience
+
+- **ID:** SC-031
+- **Category:** F — Onboarding and Adoption
+- **Actor(s):** New team member (developer, unfamiliar with the tool)
+- **Business Context:** A developer was told by their engineering manager to check the team's delivery health before tomorrow's sprint review. They've never used Delivery Clarity before.
+
+**Trigger:** Developer exports Jira CSV and navigates to the app for the first time.
+
+**Pre-conditions:**
+- Delivery Clarity is running locally on http://localhost:3000
+- Developer has a valid Jira CSV export
+- No previous session data in the browser
+
+**Narrative:**
+You are Jamie, a backend developer who has been asked to pull up the sprint health before tomorrow's review meeting. Your manager sent you a link to Delivery Clarity. You've never used it before. You open the URL and see the upload screen. You drag your Jira export onto it and hit Upload.
+
+A moment later — you're not on a wall of charts. You're on a clean summary page. A large circle in the top left shows "74" with the word "Moderate" beneath it. You understand immediately: the project isn't great, but it's not in crisis. The banner beside it says "8 items need attention — 67% complete." That's the conversation you need to have tomorrow.
+
+Below the banner, six compact KPI cards show you the key numbers. Cycle time is 3.1 days — that's fast. But there are 5 critical items. The attention cards below show 2 blockers, 3 overdue items, and 12 orphans. You didn't know any of this five minutes ago.
+
+You read the four insights. One says: "3 critical and 5 warning items need attention based on age, overdue, blocked, priority, or cycle-time signals." That's your talking point for tomorrow. You click "View Full Report →" and explore the full dashboard.
+
+**Step-by-Step Walkthrough:**
+1. Opens http://localhost:3000 → UploadPage
+2. Uploads Jira CSV
+3. Lands on /summary (not the full 16-section dashboard)
+4. Reads health score: 74, Moderate
+5. Reads 6 KPI cards
+6. Notes 2 blockers in attention section
+7. Reads 4 insights
+8. Clicks "View Full Report →"
+9. Navigates to /dashboard
+
+**Expected Outcome:** Developer arrives at sprint review prepared with specific numbers and evidence.
+
+**Business Value:** Reduces time-to-value for new users from 15+ minutes to under 3 minutes.
+
+**Related Use Cases:** UC-041, UC-042 | **Related Test Cases:** TC-101, TC-102, TC-106
+
+---
+
+### SC-032: Mobile Executive Check — Summary as the 20-Second View
+
+- **ID:** SC-032
+- **Category:** C — Executive Reporting
+- **Actor(s):** Director of Engineering
+- **Business Context:** Director is in back-to-back meetings and receives a Slack message asking "what's the current delivery status?" She has 30 seconds before the next meeting starts.
+
+**Trigger:** Director opens Delivery Clarity on her phone mid-meeting.
+
+**Pre-conditions:**
+- Delivery Clarity is accessible on mobile (375px layout)
+- A recent upload was done by a scrum master earlier that morning
+- Director navigates to /summary on her phone
+
+**Narrative:**
+You are Diana, Director of Engineering. It's 10:58 AM, your next meeting is at 11:00, and someone just asked in Slack: "Do we know if the platform release is still on track?" You pull out your phone and open the team's Delivery Clarity dashboard.
+
+The Summary page loads. There's no scrolling past charts to find the number — the health score is right there, a large "82 — Good" in green. The banner says "3 items need attention — 84% complete." You read the prediction chip: "~6d · Jun 5." That's before the release date. You're on track.
+
+You type back in Slack: "84% complete, 3 items need attention, on track for Jun 5." You close the phone and walk into your meeting. Total time: 18 seconds.
+
+**Step-by-Step Walkthrough:**
+1. Opens /summary on mobile (375px)
+2. Summary page layout renders in single column (mobile CSS active)
+3. Health score circle and banner visible without scrolling
+4. Prediction chip visible
+5. Takes the information and communicates it verbally
+
+**Expected Outcome:** Director can give an accurate status update in under 30 seconds.
+
+**Business Value:** Reduces executive reporting friction to near-zero; increases leadership confidence.
+
+**Related Use Cases:** UC-041 | **Related Test Cases:** TC-101, TC-103
+
+---
+
+### SC-033: Quick Status Before Standup — Help Deep-Link for Team Education
+
+- **ID:** SC-033
+- **Category:** A — Sprint Review Preparation
+- **Actor(s):** Scrum Master, New Team Member
+- **Business Context:** Scrum master is running the daily standup. A new team member asks "what does 'blocked' mean in the attention card?" The scrum master uses the help deep-link to explain.
+
+**Trigger:** Scrum master clicks ? button on the Attention section heading.
+
+**Pre-conditions:**
+- Scrum master is viewing /dashboard
+- Attention cards show blockers
+- New team member is watching
+
+**Narrative:**
+You are Marcus, scrum master, running the daily standup over screen share. You're on the Delivery Clarity dashboard showing the team the 3 blockers in the Attention strip. A new team member asks: "What exactly counts as a blocker here? Does it have to be the Blocked Flag field or can it be anything?"
+
+You click the ? button next to the Attention heading. Instead of an overlay interrupting your screen share, the page navigates to /help?section=attention. The attention section of the help guide opens immediately, step 1 of 4. It shows the "Three spotlight cards" explanation.
+
+You click Next → "Top Blockers" step loads. It explains exactly: "An item appears as a blocker when its flow health reason contains block-related language — from Blocked Flag, priority signals, or dependency callouts." You read this aloud to the team. The new team member says "got it."
+
+You click "← Back" and you're back on the dashboard, right where you were.
+
+**Step-by-Step Walkthrough:**
+1. Marcus is on /dashboard with attention cards visible
+2. New team member asks about blocker classification
+3. Marcus clicks ? button next to Attention cards section
+4. Browser navigates to /help?section=attention
+5. Help guide opens in page mode, attention section active, step 1 visible
+6. Marcus clicks Next to reach "Top Blockers" step
+7. Reads explanation aloud
+8. Clicks "← Back"
+9. Returns to /dashboard
+
+**Expected Outcome:** Question answered with zero disruption to the dashboard view.
+
+**Business Value:** The help system actively reduces onboarding friction during team ceremonies.
+
+**Related Use Cases:** UC-042 | **Related Test Cases:** TC-108, TC-109
+
 *Document prepared by Ali Abu Ras · Delivery Clarity v1.0 · 2026-05-30*
