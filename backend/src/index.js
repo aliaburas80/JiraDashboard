@@ -5,6 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const uploadRouter = require('./routes/upload');
 const { renderBackendHome } = require('./services/backendView');
+const { renderDeveloperWiki } = require('./services/developerView');
 
 const app = express();
 
@@ -25,6 +26,10 @@ app.use('/api/upload', uploadRouter);
 
 app.get('/', (req, res) => {
   res.type('html').send(renderBackendHome());
+});
+
+app.get('/developer', (req, res) => {
+  res.type('html').send(renderDeveloperWiki());
 });
 
 app.get('/api/health', (req, res) => {
