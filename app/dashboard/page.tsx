@@ -628,6 +628,19 @@ export default function DashboardPage() {
               className="text-xs font-bold bg-blue-600 text-white rounded-full px-3 py-1 hover:bg-blue-700 transition-colors">
               Show filters
             </button>
+
+            {/* ── Export — always visible in sticky bar ── */}
+            <button
+              type="button"
+              onClick={exportRisk}
+              title="Download critical + warning items as CSV"
+              className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-3 py-1 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M7 10l5 5 5-5M12 4v11" />
+              </svg>
+              Export
+            </button>
           </div>
         </div>
 
