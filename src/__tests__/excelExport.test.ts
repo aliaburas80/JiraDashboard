@@ -92,6 +92,7 @@ function makeMetrics(overrides: Partial<DashboardMetrics> = {}): DashboardMetric
       checks: [], summary: 'Good data quality.', affectedMetrics: [],
       criticalCount: 0, highCount: 0,
     },
+    confidence: {} as any,
     ...overrides,
   };
   return base;

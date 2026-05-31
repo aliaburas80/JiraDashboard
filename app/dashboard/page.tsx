@@ -20,6 +20,7 @@ import KanbanThroughputPanel from '@/components/dashboard/KanbanThroughputPanel'
 import SprintComparePanel from '@/components/dashboard/SprintComparePanel';
 import DraggableMetricTable from '@/components/dashboard/DraggableMetricTable';
 import DataQualityCard from '@/components/dashboard/DataQualityCard';
+import MetricConfidenceBadge from '@/components/ui/MetricConfidenceBadge';
 
 // ─── accent map ───────────────────────────────────────────────────────────────
 const HEALTH_VARIANT: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'neutral'> = {
@@ -883,12 +884,12 @@ export default function DashboardPage() {
         {expandedSections.has('overview') && (
         <section id="section-overview" className="mb-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <KpiCard label="Completion" value={`${metrics.completionRate}%`} detail={`${metrics.doneIssues} of ${metrics.totalIssues} done`} accent="#16a34a" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
+            <KpiCard label="Completion" value={`${metrics.completionRate}%`} detail={`${metrics.doneIssues} of ${metrics.totalIssues} done`} accent="#16a34a" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.healthScore} />
             <KpiCard label="Health Alerts" value={(flow.critical || 0) + (flow.warning || 0)} detail={`${flow.critical || 0} critical · ${flow.warning || 0} warning`} accent="#dc2626" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
-            <KpiCard label="Active Work" value={metrics.activeIssues || 0} detail="In progress, review, QA, UAT" accent="#f59e0b" />
-            <KpiCard label="Lead Time" value={`${flow.averageLeadTimeDays || 0}d`} detail={`${flow.leadTimeSampleSize || 0} completed items`} accent="#2563eb" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
-            <KpiCard label="Cycle Time" value={`${flow.averageCycleTimeDays || 0}d`} detail={`${flow.cycleTimeSampleSize || 0} items w/ start dates`} accent="#0f766e" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
-            <KpiCard label="Story Points" value={storyPoints.totalStoryPoints || 0} detail={`${storyPoints.pointCompletionRate || 0}% complete`} accent="#7c3aed" />
+            <KpiCard label="Active Work" value={metrics.activeIssues || 0} detail="In progress, review, QA, UAT" accent="#f59e0b" confidence={metrics.confidence?.teamCapacity} />
+            <KpiCard label="Lead Time" value={`${flow.averageLeadTimeDays || 0}d`} detail={`${flow.leadTimeSampleSize || 0} completed items`} accent="#2563eb" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.leadTime} />
+            <KpiCard label="Cycle Time" value={`${flow.averageCycleTimeDays || 0}d`} detail={`${flow.cycleTimeSampleSize || 0} items w/ start dates`} accent="#0f766e" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.cycleTime} />
+            <KpiCard label="Story Points" value={storyPoints.totalStoryPoints || 0} detail={`${storyPoints.pointCompletionRate || 0}% complete`} accent="#7c3aed" confidence={metrics.confidence?.storyPoints} />
           </div>
         </section>
         )}
