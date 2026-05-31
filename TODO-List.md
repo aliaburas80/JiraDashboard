@@ -202,7 +202,7 @@
 | 8.7 | Compare two sprints side-by-side | P2 | ✅ Done — SprintComparePanel with delta indicators and win counter |
 | 8.8 | Shareable URL with filter state in query params | P2 | ✅ Done — URL syncs live, "Copy link" button in sticky bar |
 | 8.9 | Drag-and-drop column reordering in issue table | P3 | ✅ Done — DraggableMetricTable, persisted to localStorage, Reset button |
-| 8.10 | PR merged to main | — | ❌ Still on feat/enhancements |
+| 8.10 | PR merged to main | — | 🔧 PR open — https://github.com/aliaburas80/JiraDashboard/compare/main...feat/enhancements |
 | 8.11 | Create new user account via Register page (`/register`) — enable `ALLOW_OPEN_REGISTRATION=true` in `.env` | P1 | ❌ Not done |
 
 ---
