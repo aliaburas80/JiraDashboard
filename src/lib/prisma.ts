@@ -1,10 +1,14 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
-// Singleton Prisma client — activate after: npm install prisma @prisma/client && npx prisma generate
+// Singleton Prisma client — prevents connection pool exhaustion in Next.js dev.
 
-// Stub export for build compatibility until prisma is installed
-export const prisma: any = new Proxy({}, {
-  get: (_target, prop) => {
-    if (prop === 'then') return undefined; // not a Promise
-    return () => Promise.reject(new Error('Prisma is not installed. Run: npm install prisma @prisma/client && npx prisma generate'));
-  },
-});
+import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+
+export const prisma: PrismaClient =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+  });
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;

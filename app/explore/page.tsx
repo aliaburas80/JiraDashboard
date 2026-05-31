@@ -8,6 +8,7 @@ import LoadingState from '@/components/ui/LoadingState';
 import RelationStatsCards from '@/components/explore/RelationStatsCards';
 import RelationInsightPanel from '@/components/explore/RelationInsightPanel';
 import RelationDetailsTable from '@/components/explore/RelationDetailsTable';
+import RelationCharts from '@/components/explore/RelationCharts';
 import { loadMetrics } from '@/lib/storage';
 import { buildRelationGraph } from '@/services/relations/relationExplorer.service';
 import type { RelationGraph } from '@/types/relations';
@@ -185,7 +186,10 @@ export default function ExplorePage() {
               <RelationInsightPanel insights={graph.insights} />
             )}
 
-            {/* 3. KPI Stats */}
+            {/* 3. Charts */}
+            <RelationCharts nodes={graph.nodes} orphanNodes={graph.orphanNodes} />
+
+            {/* 4. KPI Stats */}
             <section aria-label="Relation statistics">
               <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">Key Metrics</h2>
               <RelationStatsCards stats={graph.stats} />

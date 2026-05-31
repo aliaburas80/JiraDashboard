@@ -4,6 +4,9 @@ import { parseJiraFile } from '@/services/jira/parser';
 import { validateIssueData } from '@/services/jira/validation';
 import { calculateDashboardMetrics } from '@/services/metrics/metrics.service';
 import { appendImportLog, buildImportLog } from '@/services/imports/importLogs.service';
+import { getIronSession } from 'iron-session';
+import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
+import { prisma } from '@/lib/prisma';
 
 // ---------------------------------------------------------------------------
 // Simple in-process rate limiter — 20 uploads per 15 minutes per IP
@@ -124,31 +127,41 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // --- Get session user (optional — works without auth too) ---
+  const sessionRes = new NextResponse();
+  const session    = await getIronSession<SessionData>(req, sessionRes, SESSION_OPTIONS);
+  const userId     = session.isLoggedIn ? session.userId : null;
+
   // --- Metrics + log ---
   try {
-    const metrics = calculateDashboardMetrics(issues);
+    const startTime = Date.now();
+    const metrics   = calculateDashboardMetrics(issues);
     const importLog = appendImportLog(
-      buildImportLog({
-        file: fileArg,
-        parseResult,
-        validation,
-        metrics,
-        status: 'success',
-      }),
+      buildImportLog({ file: fileArg, parseResult, validation, metrics, status: 'success' }),
     );
+
+    // Save to DB if user is logged in
+    if (userId) {
+      await prisma.importLog.create({ data: {
+        userId,
+        fileName:        originalname,
+        fileSize:        file.size,
+        fileType:        ext.replace('.', ''),
+        rowCount:        issues.length,
+        status:          'success',
+        warningsCount:   warnings.length,
+        totalIssues:     metrics.totalIssues ?? 0,
+        doneIssues:      metrics.doneIssues  ?? 0,
+        healthScore:     metrics.healthScore ?? 0,
+        processingTimeMs: Date.now() - startTime,
+      }}).catch(() => {}); // non-blocking — don't fail upload on DB error
+    }
 
     return NextResponse.json({ metrics, warnings, importLog });
   } catch (error) {
-    // error logged to observability in production
-
     appendImportLog(
-      buildImportLog({
-        file: fileArg,
-        status: 'failed',
-        error: error instanceof Error ? error.message : String(error),
-      }),
+      buildImportLog({ file: fileArg, status: 'failed', error: error instanceof Error ? error.message : String(error) }),
     );
-
     return NextResponse.json({ error: 'Unable to process Jira export file.' }, { status: 500 });
   }
 }

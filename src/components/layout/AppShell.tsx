@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { getInitialTheme, applyTheme } from '@/lib/theme';
+import UserMenu from '@/components/auth/UserMenu';
 
 // Upload is intentionally excluded — it lives on the LEFT as a distinct restart button
 const NAV = [
@@ -86,6 +87,9 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                 })}
               </nav>
             )}
+
+            {/* User menu */}
+            <UserMenu />
 
             {/* Theme toggle */}
             <button
