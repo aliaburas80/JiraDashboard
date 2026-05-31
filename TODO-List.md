@@ -15,6 +15,68 @@
 
 ---
 
+## Abbreviations & Legend
+
+### Priority Levels
+
+| Code | Full Name | Meaning |
+|------|-----------|---------|
+| P0 | Critical | Must be done first — blocks everything else |
+| P1 | High | Important — do right after P0s |
+| P2 | Medium | Valuable — do after all P1s are done |
+| P3 | Low | Nice to have — do when time allows |
+
+### Feature Codes
+
+| Code | Meaning |
+|------|---------|
+| F1 | Feature 1 — Throughput & Delivery Analytics |
+| F2 | Feature 2 — Work Item Explorer (`/explore`) |
+| F3 | Feature 3 — Authentication & Database |
+| F4 | Feature 4 — Smart Excel Export |
+
+### Metric & Domain Abbreviations
+
+| Abbreviation | Full Form |
+|-------------|-----------|
+| SP | Story Points — unit of effort estimation in Agile |
+| ST | Sprint — time-boxed delivery cycle (usually 2 weeks) |
+| WIP | Work In Progress — items actively being worked on |
+| SLA | Service Level Agreement — agreed delivery time target |
+| KPI | Key Performance Indicator — headline metric card |
+| P50 / P85 / P95 | Percentile — e.g. P85 means 85% of items finish within X days |
+
+### Document Reference Codes
+
+| Code | Full Form |
+|------|-----------|
+| FR | Functional Requirement — e.g. FR-207 |
+| UC | Use Case — e.g. UC-043 |
+| TC | Test Case — e.g. TC-T-01, TC-A-01, TC-X-01 |
+| TC-T | Test Case — Throughput formulas |
+| TC-E | Test Case — Explorer / relation graph |
+| TC-A | Test Case — Authentication |
+| TC-X | Test Case — Excel export |
+| SCN | Scenario — e.g. SCN-012 |
+| UJ | User Journey — e.g. UJ-010 |
+| BRD | Business Requirements Document |
+| SRS | Software Requirements Specification |
+
+### Tech Abbreviations
+
+| Abbreviation | Full Form |
+|-------------|-----------|
+| DB | Database (SQLite in this project) |
+| ORM | Object-Relational Mapper (Prisma in this project) |
+| API | Application Programming Interface |
+| JWT | JSON Web Token (not used — we use iron-session cookies) |
+| TTL | Time To Live — how long a session stays valid |
+| SSR | Server-Side Rendering |
+| CSV | Comma-Separated Values — Jira export format |
+| XLSX | Excel spreadsheet format |
+
+---
+
 ## Feature 1 — Throughput & Delivery Analytics
 
 | # | Task | Priority | Status |
