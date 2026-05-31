@@ -5,6 +5,7 @@ import { validateIssueData } from '@/services/jira/validation';
 import { calculateDashboardMetrics } from '@/services/metrics/metrics.service';
 import { appendImportLog, buildImportLog } from '@/services/imports/importLogs.service';
 import { getIronSession } from 'iron-session';
+import { cookies } from 'next/headers';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 
@@ -128,9 +129,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // --- Get session user (optional — works without auth too) ---
-  const sessionRes = new NextResponse();
-  const session    = await getIronSession<SessionData>(req, sessionRes, SESSION_OPTIONS);
-  const userId     = session.isLoggedIn ? session.userId : null;
+  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const userId  = session.isLoggedIn ? session.userId : null;
 
   // --- Metrics + log ---
   try {

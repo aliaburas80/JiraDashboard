@@ -5,6 +5,7 @@
 // - Unauthenticated     → file-based fallback (no user data)
 
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
@@ -30,8 +31,7 @@ const ENDPOINTS = [
 export async function GET(req: NextRequest): Promise<NextResponse> {
   // ── Session-aware DB path ─────────────────────────────────────────────────
   try {
-    const dummyRes = new NextResponse();
-    const session  = await getIronSession<SessionData>(req, dummyRes, SESSION_OPTIONS);
+    const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
 
     if (session.isLoggedIn) {
       const isAdmin = session.role === 'admin';

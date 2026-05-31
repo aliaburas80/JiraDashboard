@@ -3,16 +3,15 @@
 // Admins can pass ?all=true to see all users' logs.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { readImportLogs } from '@/services/imports/importLogs.service';
 
 export async function GET(req: NextRequest) {
-  // Try DB logs first (F3 auth)
   try {
-    const res     = new NextResponse();
-    const session = await getIronSession<SessionData>(req, res, SESSION_OPTIONS);
+    const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
 
     if (session.isLoggedIn) {
       const isAdmin = session.role === 'admin';
@@ -31,7 +30,6 @@ export async function GET(req: NextRequest) {
     // Prisma not configured — fall through to file-based logs
   }
 
-  // Fallback: file-based logs (works without auth)
   try {
     const logs = readImportLogs();
     return NextResponse.json({ logs, source: 'file' });
