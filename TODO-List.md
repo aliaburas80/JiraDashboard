@@ -278,6 +278,8 @@
 | 9.40 | Advanced theme customization | P3 | ❌ Not started |
 | 9.41 | Custom dashboard layout builder | P3 | ❌ Not started |
 | 9.42 | Advanced chart customization | P3 | ❌ Not started |
+| 9.43 | Add Register link in header UserMenu dropdown (when not logged in) | P1 | ✅ Done |
+| 9.44 | Show "Create new account" link on login page always | P1 | ✅ Done |
 
 ---
 
