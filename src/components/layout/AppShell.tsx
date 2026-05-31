@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { getInitialTheme, applyTheme } from '@/lib/theme';
 import UserMenu from '@/components/auth/UserMenu';
@@ -13,6 +14,7 @@ const NAV = [
   { href: '/explore',   label: 'Explore'     },
   { href: '/developer', label: 'Developer'   },
   { href: '/backend',   label: 'Backend'     },
+  { href: '/glossary',  label: 'Glossary'    },
   { href: '/help',      label: 'Help'        },
 ];
 
@@ -42,8 +44,24 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
           {/* ── Left cluster: logo + upload restart button ── */}
           <div className="flex items-center gap-3 shrink-0">
             <Link href="/" className="flex items-center gap-2">
-              <span className="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight">Delivery Clarity</span>
-              <span className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5 hidden sm:inline">v2</span>
+              {/* Horizontal logo on medium+ screens */}
+              <Image
+                src="/logo/delivery-clarity-logo-horizontal.svg"
+                alt="Delivery Clarity"
+                width={160}
+                height={32}
+                className="hidden sm:block h-8 w-auto dark:brightness-0 dark:invert"
+                priority
+              />
+              {/* Icon-only logo on small screens */}
+              <Image
+                src="/logo/delivery-clarity-logo-icon.svg"
+                alt="Delivery Clarity"
+                width={32}
+                height={32}
+                className="sm:hidden h-8 w-8"
+                priority
+              />
             </Link>
 
             {/* Upload new file — shown only when inside the app (showNav = data loaded) */}
