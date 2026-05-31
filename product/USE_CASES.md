@@ -1965,3 +1965,165 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 4. Browser URL changes to /
 5. UploadPage renders with normal state
 6. No error message shown — just the upload UI
+
+---
+
+## v3.0 Use Cases (2026-05-31)
+
+---
+
+### UC-043 — View Sprint Throughput Analytics
+
+**Actor:** Scrum Master, Engineering Manager  
+**Trigger:** User uploads a Jira export containing Sprint, Sprint Start, and Sprint End fields  
+**Precondition:** Metrics calculated, user on /dashboard  
+**Main Flow:**
+1. User scrolls to "Throughput & Delivery Analytics" section and expands it
+2. System displays SprintThroughputPanel with headline KPIs: avg throughput, avg completion %, trend direction
+3. User reads the sprint table showing each sprint: committed, done, completion %, mid-sprint %, goal outcome, blocked count, carryover count
+4. User identifies end-loaded or blocked sprints via pattern badges
+5. User reads trend indicator (Improving / Stable / Declining)
+
+**Alternate Flow A — No sprint date fields:**  
+3a. Sprint dates cannot be resolved → midSprintPct shows "—" for all sprints  
+3b. Pattern classification defaults to "Unknown"
+
+**Postcondition:** User understands team sprint performance and delivery trend  
+**Related FR:** FR-207 to FR-214
+
+---
+
+### UC-044 — View Mid-Sprint Delivery Patterns
+
+**Actor:** Scrum Master  
+**Trigger:** Sprint data with Sprint Start and Sprint End dates present  
+**Main Flow:**
+1. User expands "Throughput & Delivery Analytics" section
+2. MidSprintDeliveryPanel shows one card per sprint
+3. Each card displays: mid-sprint %, pattern badge, interpretation text, gauge bar
+4. User identifies end-loaded sprints (< 20% done by midpoint)
+5. User uses interpretation text to discuss in retrospective
+
+**Related FR:** FR-208, FR-209, FR-210
+
+---
+
+### UC-045 — View Kanban Flow Metrics
+
+**Actor:** Scrum Master, Engineering Manager  
+**Trigger:** Issues without Sprint field present in export  
+**Main Flow:**
+1. User expands "Throughput & Delivery Analytics" section
+2. KanbanThroughputPanel shows periods, throughput bars, flow efficiency, aging WIP, bottleneck status
+3. User identifies degraded flow periods (flow health = Degraded)
+4. User acts on aging WIP (items active > 14 days)
+
+**Related FR:** FR-213, FR-214
+
+---
+
+### UC-046 — Explore Issue Delivery Structure
+
+**Actor:** Scrum Master, Product Owner, Delivery Manager  
+**Trigger:** User navigates to /explore  
+**Main Flow:**
+1. User types an issue key (e.g. PROJ-221) in the search box
+2. User clicks "Explore Issue"
+3. System builds relation graph: focus node + parent + direct children
+4. React Flow graph renders with Dagre layout
+5. User reads node cards: type icon, key, summary, status, health
+6. User clicks a node → re-searches that issue key
+7. User reads charts section: completion donut, health distribution, types, assignee workload
+8. User reads KPI stats and filterable details table
+
+**Alternate Flow A — Issue not found:**  
+3a. buildRelationGraph returns null → "Issue key not found" error shown
+
+**Alternate Flow B — Orphan issue searched:**  
+4a. Focus node renders with dashed orange border and ORPHAN badge  
+4b. Insights panel notes: "This item is not connected to an Epic or Parent"
+
+**Postcondition:** User understands the delivery structure of the searched issue  
+**Related FR:** FR-216 to FR-225
+
+---
+
+### UC-047 — Sign In to Delivery Clarity
+
+**Actor:** Any user  
+**Trigger:** User navigates to any protected route without a session  
+**Main Flow:**
+1. Middleware redirects to /login?redirect=/dashboard
+2. User enters email and password
+3. System verifies credentials against bcrypt hash
+4. Session cookie set (HTTP-only, SameSite=strict)
+5. User redirected to original destination
+
+**Alternate Flow A — Wrong password:**  
+3a. verifyPassword returns false → generic "Invalid email or password" shown (no leak of which is wrong)
+
+**Alternate Flow B — Rate limited:**  
+2a. 6th login attempt within 60 seconds → HTTP 429 "Too many login attempts"
+
+**Alternate Flow C — Disabled account:**  
+3a. user.isActive = false → "Account is disabled" message, no session created
+
+**Postcondition:** User has an authenticated session valid for `SESSION_TTL_HOURS`  
+**Related FR:** FR-226 to FR-230
+
+---
+
+### UC-048 — Admin Views All Import Logs
+
+**Actor:** Admin user  
+**Trigger:** Admin navigates to /admin/logs  
+**Main Flow:**
+1. Middleware confirms session.role === 'admin'
+2. Page fetches `GET /api/imports?all=true`
+3. System returns all ImportLog rows with user name and email
+4. Admin reads table: user, file, issues, health score, status, upload time
+
+**Alternate Flow — Non-admin:**  
+1a. session.role === 'user' → middleware redirects to /dashboard
+
+**Related FR:** FR-227, FR-233
+
+---
+
+### UC-049 — Download Smart Excel Report
+
+**Actor:** Engineering Manager, Product Owner, Scrum Master  
+**Trigger:** User clicks Export → "Excel (all data)" in dashboard sticky bar  
+**Main Flow:**
+1. Browser calls `downloadInsightWorkbook(metrics)`
+2. System builds 17-sheet workbook using current metrics
+3. Recommendation engine evaluates 10+ rules against metrics
+4. Executive narrative auto-generated as a plain-English paragraph
+5. XLSX file downloads to user's machine
+6. User opens file — all 17 sheets readable without the app
+
+**Postcondition:** User has a self-contained statistical report usable in presentations  
+**Related FR:** FR-236 to FR-241
+
+---
+
+### UC-050 — Register New Account
+
+**Actor:** New user (when ALLOW_OPEN_REGISTRATION=true)  
+**Trigger:** User navigates to /register  
+**Main Flow:**
+1. User enters name, email, password
+2. System validates: password ≥ 8 chars, 1 uppercase, 1 number
+3. System checks email is not already taken
+4. Password hashed with bcryptjs (12 rounds)
+5. User record created with role = 'user'
+6. AuditEvent logged
+7. User redirected to /login with success message
+
+**Alternate Flow A — Registration closed:**  
+1a. ALLOW_OPEN_REGISTRATION=false → HTTP 403 "Registration is restricted"
+
+**Alternate Flow B — Email already exists:**  
+3a. HTTP 409 "An account with this email already exists"
+
+**Related FR:** FR-228, FR-235

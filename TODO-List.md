@@ -123,7 +123,7 @@
 | 7.7 | `CLAIM_CANDIDATE_MATRIX.md` — 7 patent claim candidates with strength ratings | P1 | ✅ Done |
 | 7.8 | `BRD.md` — updated with BR-050 to BR-069 for all v3.0 features | P2 | ✅ Done |
 | 7.9 | `TEST_CASES.md` — F1/F2/F3/F4 test case tables added | P2 | ✅ Done |
-| 7.10 | `SRS.md`, `USE_CASES.md`, `SCENARIOS.md`, `USER_JOURNEYS.md` — v3.0 updates | P2 | ❌ Not updated |
+| 7.10 | `SRS.md`, `USE_CASES.md`, `SCENARIOS.md`, `USER_JOURNEYS.md` — v3.0 updates | P2 | ✅ Done |
 
 ---
 
@@ -133,7 +133,7 @@
 |---|------|----------|--------|
 | 8.1 | Auth tests automated (TC-A-01 to TC-A-09) | P1 | ✅ Done — 17 passing |
 | 8.2 | Excel export tests automated (TC-X-01 to TC-X-06) | P1 | ✅ Done — 15 passing |
-| 8.3 | SRS, USE_CASES, SCENARIOS, USER_JOURNEYS updated for v3.0 | P2 | ❌ Not done |
+| 8.3 | SRS, USE_CASES, SCENARIOS, USER_JOURNEYS updated for v3.0 | P2 | ✅ Done |
 | 8.4 | Sprint velocity chart (story points over time) | P2 | ❌ Future |
 | 8.5 | Saved filter presets (bookmark a filter combination) | P2 | ❌ Future |
 | 8.6 | Multi-file upload (merge multiple Jira exports) | P2 | ❌ Future |

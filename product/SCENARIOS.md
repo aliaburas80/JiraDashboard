@@ -561,3 +561,94 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Related Use Cases:** UC-042 | **Related Test Cases:** TC-108, TC-109
 
 *Document prepared by Ali Abu Ras · Delivery Clarity v1.0 · 2026-05-30*
+
+---
+
+## v3.0 Scenarios (2026-05-31)
+
+---
+
+### SCN-012 — Scrum Master Reviews Sprint Throughput Before Retrospective
+
+**Persona:** Sarah, Scrum Master, 5 years experience  
+**Context:** Sprint 14 just ended. Sarah needs to present delivery performance in the retrospective.
+
+**Scenario:**
+1. Sarah uploads the Jira CSV export from Sprint 14
+2. She navigates to /dashboard and expands "Throughput & Delivery Analytics"
+3. SprintThroughputPanel shows Sprint 14: 10 committed, 7 completed, 70%, "Partially Met", mid-sprint 20%
+4. The pattern badge reads "End-Loaded Sprint" — Sarah notes this for the retro
+5. She sees the trend: "Declining" — last 3 sprints averaging 7.3 vs previous 3 averaging 9.1
+6. She exports the Excel report and shares Sheet 04 Sprint Throughput with the team
+
+**Outcome:** Sarah runs a data-backed retrospective focused on the end-loading pattern and velocity decline.
+
+---
+
+### SCN-013 — Product Owner Explores Epic Structure Before Sprint Planning
+
+**Persona:** James, Product Owner, preparing for next sprint planning  
+**Context:** EPIC-42 has 18 child stories. James wants to understand which are blocked and how far along they are.
+
+**Scenario:**
+1. James navigates to /explore
+2. He types "EPIC-42" and clicks "Explore Issue"
+3. The graph renders: EPIC-42 as root, 3 direct story children visible
+4. He clicks STORY-105 in the graph → the graph re-renders with STORY-105 as focus, showing its 4 tasks
+5. He sees one task with a red "Blocked" badge
+6. The insights panel reads: "1 blocked item is holding remaining work in this story"
+7. He reads the charts: 25% completion donut, assignee workload showing 3 tasks on one developer
+8. James decides to reassign the blocked task in sprint planning
+
+**Outcome:** Sprint planning is informed by live delivery structure, not stale status meetings.
+
+---
+
+### SCN-014 — Engineering Manager Spots Kanban Bottleneck
+
+**Persona:** Amir, Engineering Manager, running a Kanban team  
+**Context:** The team does not use sprints. Amir wants to understand flow health.
+
+**Scenario:**
+1. Amir uploads the Jira export — all issues have no Sprint field
+2. Dashboard shows KanbanThroughputPanel with 3 monthly periods
+3. March 2025 shows: flowEfficiency = 22%, bottleneckStatus = "Moderate", agingWipCount = 8
+4. April 2025 shows flowHealth = "Degraded"
+5. Amir exports Excel → Sheet 06 Kanban Flow shows the trend clearly
+6. He shares the report with the team to discuss WIP limits
+
+**Outcome:** Amir implements a WIP limit of 4 and monitors the next period for improvement.
+
+---
+
+### SCN-015 — First Login After Admin Setup
+
+**Persona:** Ali, administrator setting up Delivery Clarity for the team  
+**Context:** Ali has just run `npx ts-node prisma/seed.ts` and the admin account is created.
+
+**Scenario:**
+1. Ali navigates to /login
+2. Enters `admin@deliveryclarity.com` and `Admin@DC2025`
+3. Middleware was previously blocking /dashboard — now session is set and access granted
+4. Ali visits /profile — sees name "Administrator", role badge "Admin"
+5. Ali navigates to /admin/logs — sees all import logs across all users
+6. Ali changes the admin password via the profile page
+
+**Outcome:** Ali confirms auth is working and the team can begin uploading their Jira exports.
+
+---
+
+### SCN-016 — Manager Downloads Excel Report for Board Meeting
+
+**Persona:** Rachel, Delivery Director, preparing a board update  
+**Context:** Rachel needs to present project health to the board. She cannot share the web app in the meeting.
+
+**Scenario:**
+1. Rachel uploads the latest Jira export
+2. She clicks Export → "Excel (all data)"
+3. She opens Sheet 01 Executive Summary: health score 68, "Moderate", 3 critical recommendations
+4. Sheet 13 Recommendations shows: "Escalate 3 blocked items — evidence: 3 items have Blocked Flag = true"
+5. Sheet 11 Cycle & Lead Time shows P85 lead time of 18 days — she uses this as the team's delivery SLA
+6. Rachel pastes the executive narrative into her board slide
+
+**Outcome:** Rachel presents a data-backed delivery status without needing the app open.

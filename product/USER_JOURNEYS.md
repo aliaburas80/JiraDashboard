@@ -1191,3 +1191,103 @@ All personas now experience a two-step flow after uploading:
 ### Resolved Pain Point
 - **Before:** Landing directly on the 16-section full dashboard was overwhelming for first-time users and managers checking quickly
 - **After:** Summary page provides a focused, executive-friendly view. Full report is one click away but not forced
+
+---
+
+## v3.0 User Journeys (2026-05-31)
+
+---
+
+### UJ-010 — Sprint Throughput Review Journey
+
+**Persona:** Scrum Master  
+**Goal:** Understand sprint delivery performance before retrospective  
+**Entry point:** Upload page → /summary → /dashboard
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Uploads Jira CSV | Redirected to /summary with health score | Curious |
+| 2 | Clicks "View Full Report →" | /dashboard loads, most sections collapsed | Focused |
+| 3 | Scrolls to "Throughput & Delivery Analytics" | Section trigger visible with sprint count + trend chip | Engaged |
+| 4 | Clicks to expand | SprintThroughputPanel, MidSprintPanel, KanbanPanel render | Informed |
+| 5 | Reads mid-sprint pattern cards | Sees "End-Loaded Sprint" for 2 of 3 sprints | Concerned |
+| 6 | Clicks Export → Excel | 17-sheet workbook downloads | Confident |
+| 7 | Opens Sheet 04 Sprint Throughput | Clean table, all sprint data, no HTML | Satisfied |
+
+**Pain point resolved:** No more manual spreadsheet assembly before retrospectives.
+
+---
+
+### UJ-011 — Work Item Explorer Journey
+
+**Persona:** Product Owner  
+**Goal:** Understand the structure of a specific epic before sprint planning  
+**Entry point:** Dashboard header → "Explore"
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Clicks "Explore" in nav | /explore loads with empty search | Ready |
+| 2 | Types "EPIC-42", clicks "Explore Issue" | Graph renders with focus node + children | Impressed |
+| 3 | Reads node cards | Type icon, status badge, health dot visible at a glance | Informed |
+| 4 | Spots red "Blocked" badge | Immediately identifies the blocked task | Alert |
+| 5 | Reads insights panel | "1 blocked item is holding remaining work" | Understands risk |
+| 6 | Clicks blocked task node | Graph re-renders with that task as focus | Exploring |
+| 7 | Reads assignee workload chart | 3 of 4 tasks assigned to one person | Action-ready |
+
+**Pain point resolved:** No more manual Jira queries to understand epic structure before planning.
+
+---
+
+### UJ-012 — First-Time Login Journey
+
+**Persona:** New team member  
+**Goal:** Sign in and access the dashboard after admin creates their account  
+**Entry point:** Browser → localhost:3000/dashboard (before login)
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Types /dashboard in browser | Middleware redirects to /login?redirect=/dashboard | Neutral |
+| 2 | Enters email + password | POST /api/auth/login validates credentials | Waiting |
+| 3 | Credentials correct | Session cookie set, redirect to /dashboard | Relieved |
+| 4 | Dashboard loads | UserMenu in header shows their name + initials | Welcomed |
+| 5 | Clicks UserMenu | Sees Profile and Sign Out options | Comfortable |
+| 6 | Uploads Jira export | ImportLog saved to DB with their userId | Confident |
+
+**Pain point resolved:** Each user's import history is private and tracked — no shared anonymous logs.
+
+---
+
+### UJ-013 — Excel Report Sharing Journey
+
+**Persona:** Engineering Manager  
+**Goal:** Share delivery status with leadership without them needing app access  
+**Entry point:** /dashboard → Export menu
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Clicks Export dropdown in sticky bar | Three options: CSV, Excel, HTML | Clear choice |
+| 2 | Clicks "Excel (all data)" | 17-sheet workbook downloads in ~1 second | Efficient |
+| 3 | Opens Sheet 01 Executive Summary | Health score, recommendations, narrative visible | Ready to share |
+| 4 | Reads top recommendation | "Escalate 3 blocked items — evidence: 3 items blocked" | Trusts the data |
+| 5 | Opens Sheet 16 Metric Dictionary | Definitions for every metric in the workbook | Self-contained |
+| 6 | Emails workbook to director | Director opens in Excel, no app required | Goal achieved |
+
+**Pain point resolved:** Leadership can read the report anywhere — plane, board room, printed — without needing the web app.
+
+---
+
+### UJ-014 — Admin Monitoring Journey
+
+**Persona:** Administrator  
+**Goal:** Monitor team upload activity and ensure correct data quality  
+**Entry point:** /admin/logs
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Clicks profile menu → "Admin Logs" | /admin/logs loads with all import logs table | In control |
+| 2 | Reads table: user name, file, issues, health, status | All uploads visible with timestamps | Informed |
+| 3 | Spots a failed upload (status = "failed") | Row highlighted in red | Alert |
+| 4 | Contacts team member about the failed file | — | Proactive |
+| 5 | Sorts by health score | Identifies lowest-scoring imports | Strategic |
+
+**Pain point resolved:** Admin has full visibility into all team uploads without accessing individual accounts.
