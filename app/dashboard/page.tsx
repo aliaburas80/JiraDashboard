@@ -17,6 +17,7 @@ import { loadPresets, savePreset, deletePreset, type FilterPreset } from '@/lib/
 import SprintThroughputPanel from '@/components/dashboard/SprintThroughputPanel';
 import MidSprintDeliveryPanel from '@/components/dashboard/MidSprintDeliveryPanel';
 import KanbanThroughputPanel from '@/components/dashboard/KanbanThroughputPanel';
+import SprintComparePanel from '@/components/dashboard/SprintComparePanel';
 
 // ─── accent map ───────────────────────────────────────────────────────────────
 const HEALTH_VARIANT: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'neutral'> = {
@@ -1717,6 +1718,9 @@ export default function DashboardPage() {
             {expandedSections.has('throughput') && (
             <section id="section-throughput" className="mb-8 space-y-6">
               <SprintThroughputPanel summary={metrics.throughput.sprint} />
+              {metrics.throughput.sprint.totalSprints >= 2 && (
+                <SprintComparePanel summary={metrics.throughput.sprint} />
+              )}
               {metrics.throughput.midSprint.length > 0 && (
                 <MidSprintDeliveryPanel insights={metrics.throughput.midSprint} />
               )}
