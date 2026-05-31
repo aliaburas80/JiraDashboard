@@ -747,4 +747,71 @@ These are not part of the root `npm test` command and are retained for reference
 
 ---
 
-*Delivery Clarity v2.0 — © 2025 Ali Abu Ras — aburasali80@gmail.com*
+---
+
+## v3.0 Additions (F1/F2/F3/F4)
+
+### F1 — Throughput Analytics Setup
+
+No additional packages required. The three new services auto-run inside `calculateDashboardMetrics()`:
+
+```
+src/services/metrics/throughput.service.ts   — sprint throughput
+src/services/metrics/midSprint.service.ts    — mid-sprint patterns
+src/services/metrics/kanbanFlow.service.ts   — Kanban flow periods
+```
+
+### F2 — Work Item Explorer Setup
+
+```bash
+sudo chown -R $(whoami) ~/.npm   # fix npm cache if needed
+npm install reactflow @dagrejs/dagre
+# /explore route activates automatically
+```
+
+Key files:
+```
+src/services/relations/hierarchy.service.ts
+src/services/relations/orphanRelation.service.ts
+src/services/relations/relationExplorer.service.ts
+src/components/explore/WorkItemGraph.tsx        — React Flow canvas
+src/components/explore/RelationDetailsTable.tsx — filterable table
+app/explore/page.tsx
+```
+
+### F3 — Authentication Setup
+
+```bash
+sudo chown -R $(whoami) ~/.npm
+npm install prisma @prisma/client iron-session bcryptjs
+npm install --save-dev @types/bcryptjs
+npx prisma generate
+npx prisma migrate dev --name init
+npx prisma db seed
+
+# Then uncomment the middleware.ts route protection
+```
+
+Required environment variables (add to `.env.local`):
+```
+SESSION_SECRET=your-32-char-secret
+DATABASE_URL=file:./data/delivery_clarity.db
+ALLOW_OPEN_REGISTRATION=false
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=ChangeThisImmediately1
+ADMIN_NAME=Administrator
+```
+
+### F4 — Smart Excel Export
+
+No additional packages required (uses existing `xlsx`). The export button now calls `downloadInsightWorkbook()` which produces a 17-sheet statistical workbook.
+
+Key files:
+```
+src/services/export/excelInsightExport.service.ts   — orchestrator
+src/services/export/recommendationEngine.ts          — rule-based recs
+```
+
+---
+
+*Delivery Clarity v3.0 — © 2025 Ali Abu Ras — aburasali80@gmail.com*

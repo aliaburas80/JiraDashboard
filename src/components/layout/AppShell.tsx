@@ -9,12 +9,13 @@ const NAV = [
   { href: '/summary',   label: 'Overview'    },
   { href: '/charts',    label: 'Charts'      },
   { href: '/dashboard', label: 'Full Report' },
+  { href: '/explore',   label: 'Explore'     },
   { href: '/developer', label: 'Developer'   },
   { href: '/backend',   label: 'Backend'     },
   { href: '/help',      label: 'Help'        },
 ];
 
-const NAV_SMALL = ['/summary', '/dashboard', '/help'];
+const NAV_SMALL = ['/summary', '/dashboard', '/explore', '/help'];
 
 export default function AppShell({ children, showNav }: { children: React.ReactNode; showNav?: boolean }) {
   const pathname = usePathname();

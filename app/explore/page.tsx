@@ -1,0 +1,221 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+'use client';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+import dynamic from 'next/dynamic';
+import AppShell from '@/components/layout/AppShell';
+import LoadingState from '@/components/ui/LoadingState';
+import RelationStatsCards from '@/components/explore/RelationStatsCards';
+import RelationInsightPanel from '@/components/explore/RelationInsightPanel';
+import RelationDetailsTable from '@/components/explore/RelationDetailsTable';
+import { loadMetrics } from '@/lib/storage';
+import { buildRelationGraph } from '@/services/relations/relationExplorer.service';
+import type { RelationGraph } from '@/types/relations';
+import type { DashboardMetrics } from '@/types/metrics';
+
+// React Flow must be client-side only — no SSR
+const WorkItemGraph = dynamic(() => import('@/components/explore/WorkItemGraph'), { ssr: false, loading: () => <div className="h-[520px] flex items-center justify-center text-slate-400 text-sm animate-pulse bg-slate-50 rounded-2xl border border-slate-200">Rendering graph…</div> });
+
+const MAX_RECENT = 5;
+const RECENT_KEY = 'dc_explore_recent';
+
+function loadRecent(): string[] {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]'); } catch { return []; }
+}
+function saveRecent(key: string): void {
+  try {
+    const prev = loadRecent().filter(k => k !== key);
+    localStorage.setItem(RECENT_KEY, JSON.stringify([key, ...prev].slice(0, MAX_RECENT)));
+  } catch {}
+}
+
+export default function ExplorePage() {
+  const [metrics, setMetrics]     = useState<DashboardMetrics | null>(null);
+  const [query, setQuery]         = useState('');
+  const [graph, setGraph]         = useState<RelationGraph | null>(null);
+  const [error, setError]         = useState('');
+  const [loading, setLoading]     = useState(false);
+  const [focusedKey, setFocusedKey] = useState('');
+  const [recent, setRecent]       = useState<string[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const data = loadMetrics() as DashboardMetrics | null;
+    setMetrics(data);
+    setRecent(loadRecent());
+  }, []);
+
+  const explore = useCallback((key: string) => {
+    const trimmed = key.trim().toUpperCase();
+    if (!trimmed) { setError('Please enter an issue key.'); return; }
+    if (!metrics) { setError('No data loaded. Upload a Jira export first.'); return; }
+
+    const issues = (metrics.flow?.items ?? []) as any[];
+    if (!issues.length) { setError('No issues found in the loaded data.'); return; }
+
+    setLoading(true);
+    setError('');
+
+    // Use requestAnimationFrame to allow the UI to update before the computation
+    requestAnimationFrame(() => {
+      const result = buildRelationGraph(trimmed, issues);
+      setLoading(false);
+      if (!result) {
+        setError(`Issue key "${trimmed}" was not found in the current dataset. Check the key and try again.`);
+        return;
+      }
+      setGraph(result);
+      setFocusedKey(trimmed);
+      saveRecent(trimmed);
+      setRecent(loadRecent());
+    });
+  }, [metrics]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    explore(query);
+  };
+
+  const handleNodeFocus = useCallback((key: string) => {
+    setQuery(key);
+    explore(key);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [explore]);
+
+  const noData = !metrics;
+
+  return (
+    <AppShell showNav>
+      <div className="max-w-7xl mx-auto">
+
+        {/* ── Page Header ── */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Explore Delivery Structure</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Enter any Jira issue key to visualise its complete work hierarchy, relations, and delivery risk.
+          </p>
+        </div>
+
+        {/* ── Search Bar ── */}
+        <form onSubmit={handleSubmit} className="mb-6">
+          <div className="flex gap-3 items-center flex-wrap">
+            <div className="relative flex-1 min-w-[280px]">
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={e => setQuery(e.target.value.toUpperCase())}
+                placeholder="Enter Epic, Story, Task, Bug, or Sub-task key…"
+                className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-mono font-semibold text-slate-800 focus:outline-none focus:border-blue-500 bg-white shadow-sm"
+                autoFocus
+                disabled={noData}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading || noData || !query.trim()}
+              className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Exploring…' : 'Explore Issue'}
+            </button>
+          </div>
+
+          {/* Recent keys */}
+          {recent.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              <span className="text-xs text-slate-400 font-semibold">Recent:</span>
+              {recent.map(k => (
+                <button key={k} type="button"
+                  onClick={() => { setQuery(k); explore(k); }}
+                  className="text-xs font-mono font-bold bg-white border border-slate-200 rounded-full px-2.5 py-0.5 text-blue-700 hover:border-blue-400 transition-colors">
+                  {k}
+                </button>
+              ))}
+            </div>
+          )}
+        </form>
+
+        {/* ── No data state ── */}
+        {noData && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-sm text-amber-800 mb-6">
+            <strong>No data loaded.</strong> Upload a Jira export from the{' '}
+            <a href="/" className="underline font-bold">home page</a> first, then return here to explore.
+          </div>
+        )}
+
+        {/* ── Error ── */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-6">
+            {error}
+          </div>
+        )}
+
+        {/* ── Loading ── */}
+        {loading && <LoadingState message="Building relation graph…" />}
+
+        {/* ── Results ── */}
+        {graph && !loading && (
+          <div className="space-y-6">
+
+            {/* Focus label */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="font-mono text-lg font-black text-blue-700">{graph.focusKey}</span>
+              <span className="text-sm text-slate-500">·</span>
+              <span className="text-sm font-semibold text-slate-600">{graph.focusType}</span>
+              <span className="text-sm text-slate-500">·</span>
+              <span className="text-sm text-slate-500">{graph.nodes.length} connected items</span>
+              {graph.orphanNodes.length > 0 && (
+                <span className="text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200 rounded-full px-3 py-0.5">
+                  {graph.orphanNodes.length} orphan{graph.orphanNodes.length > 1 ? 's' : ''} detected
+                </span>
+              )}
+            </div>
+
+            {/* 1. Visual Map — primary, above the fold */}
+            <section aria-label="Work item relationship map">
+              <WorkItemGraph
+                graph={graph}
+                focusNodeId={focusedKey}
+                onNodeFocus={handleNodeFocus}
+              />
+            </section>
+
+            {/* 2. Insight panel */}
+            {graph.insights.length > 0 && (
+              <RelationInsightPanel insights={graph.insights} />
+            )}
+
+            {/* 3. KPI Stats */}
+            <section aria-label="Relation statistics">
+              <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">Key Metrics</h2>
+              <RelationStatsCards stats={graph.stats} />
+            </section>
+
+            {/* 4. Details Table */}
+            <section aria-label="Issue details">
+              <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">
+                Issue Details ({graph.nodes.length + graph.orphanNodes.length})
+              </h2>
+              <RelationDetailsTable
+                nodes={graph.nodes}
+                orphanNodes={graph.orphanNodes}
+                onFocusNode={handleNodeFocus}
+              />
+            </section>
+
+          </div>
+        )}
+
+        {/* ── Empty state ── */}
+        {!graph && !loading && !error && metrics && (
+          <div className="flex flex-col items-center justify-center py-20 text-center text-slate-400">
+            <span className="text-5xl mb-4">🔍</span>
+            <p className="text-base font-bold text-slate-600 mb-2">Enter an issue key to begin</p>
+            <p className="text-sm max-w-sm">Type any Epic, Story, Task, Bug, or Sub-task key from your Jira export. The visual map will show you its complete delivery structure.</p>
+          </div>
+        )}
+
+      </div>
+    </AppShell>
+  );
+}

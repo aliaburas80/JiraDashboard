@@ -11,6 +11,11 @@ import Badge from '@/components/ui/Badge';
 import LoadingState from '@/components/ui/LoadingState';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { getHealthBand, HEALTH_COLORS, formatDays, cn } from '@/lib/utils';
+import { exportToExcel, exportToHtml } from '@/lib/exportUtils';
+import { loadMetrics } from '@/lib/storage';
+import SprintThroughputPanel from '@/components/dashboard/SprintThroughputPanel';
+import MidSprintDeliveryPanel from '@/components/dashboard/MidSprintDeliveryPanel';
+import KanbanThroughputPanel from '@/components/dashboard/KanbanThroughputPanel';
 
 // ─── accent map ───────────────────────────────────────────────────────────────
 const HEALTH_VARIANT: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'neutral'> = {
@@ -254,17 +259,19 @@ export default function DashboardPage() {
   const [detailPanel, setDetailPanel] = useState<{ title: string; description: string; items: FlowItem[] } | null>(null);
   const detailPanelRef = useRef<HTMLDivElement>(null);
   const flowFiltersRef = useRef<HTMLDivElement>(null);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['delivery']));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['overview', 'attention', 'readiness']));
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
 
   const toggleSection = (key: string) =>
     setExpandedSections(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
 
-  // load metrics from sessionStorage
+  // load metrics from localStorage
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem('dc_metrics');
-      if (!raw) { router.replace('/'); return; }
-      setMetrics(JSON.parse(raw) as DashboardMetrics);
+      const data = loadMetrics() as DashboardMetrics | null;
+      if (!data) { router.replace('/'); return; }
+      setMetrics(data);
     } catch { router.replace('/'); }
     finally { setLoading(false); }
   }, [router]);
@@ -273,6 +280,20 @@ export default function DashboardPage() {
   useEffect(() => { setVisibleCount(100); },
     [keyFilter, summaryFilter, statusFilter, sprintFilter, assigneeFilter,
       leadMaxFilter, cycleMaxFilter, openAgeMaxFilter, healthFilter, reasonFilter, labelFilter]);
+
+  // close export menu on outside click or Escape
+  useEffect(() => {
+    if (!exportMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setExportMenuOpen(false); };
+    const onClick = (e: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+        setExportMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('mousedown', onClick);
+    return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('mousedown', onClick); };
+  }, [exportMenuOpen]);
 
   // detail panel focus trap
   useEffect(() => {
@@ -629,31 +650,71 @@ export default function DashboardPage() {
               Show filters
             </button>
 
-            {/* ── Export — always visible in sticky bar ── */}
-            <button
-              type="button"
-              onClick={exportRisk}
-              title="Download critical + warning items as CSV"
-              className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-3 py-1 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M7 10l5 5 5-5M12 4v11" />
-              </svg>
-              Export
-            </button>
+            {/* ── Export dropdown — always visible in sticky bar ── */}
+            <div ref={exportMenuRef} style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setExportMenuOpen(o => !o)}
+                title="Export report"
+                className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-3 py-1 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M7 10l5 5 5-5M12 4v11" />
+                </svg>
+                Export
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {exportMenuOpen && (
+                <div className="absolute right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1.5 min-w-[170px]">
+                  <button
+                    type="button"
+                    onClick={() => { exportRisk(); setExportMenuOpen(false); }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
+                  >
+                    <span className="text-base">📄</span> CSV (risk items)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (metrics) exportToExcel(metrics);
+                      setExportMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
+                  >
+                    <span className="text-base">📊</span> Excel (all data)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (metrics) exportToHtml(metrics);
+                      setExportMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
+                  >
+                    <span className="text-base">🌐</span> HTML report
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* ── 3. SMART RECOMMENDATIONS ────────────────────────────────────────── */}
         {smartActions.length > 0 && (
           <section className="mb-6" aria-label="Smart recommendations">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-black text-slate-700 uppercase tracking-wider">⚡ Smart Recommendations</h2>
-              <span className="text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5">
-                {smartActions.length} action{smartActions.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <CollapsibleTrigger
+              id="recommendations"
+              icon="⚡"
+              title="Smart Recommendations"
+              chips={[{ label: `${smartActions.length} action${smartActions.length !== 1 ? 's' : ''}`, type: smartActions.some(a => a.type === 'critical') ? 'danger' : 'warning' }]}
+              accent="#f59e0b"
+              expanded={expandedSections.has('recommendations')}
+              onToggle={() => toggleSection('recommendations')}
+            />
+            {expandedSections.has('recommendations') && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
               {smartActions.map((action, i) => (
                 <button
                   key={i}
@@ -680,6 +741,7 @@ export default function DashboardPage() {
                 </button>
               ))}
             </div>
+            )}
           </section>
         )}
 
@@ -687,6 +749,20 @@ export default function DashboardPage() {
         <TierSep icon="🚨" label="Priority Attention" tier={0} />
 
         {/* ── 4. TIER 1 — TOP 3 HIGHLIGHT CARDS ──────────────────────────────── */}
+        <CollapsibleTrigger
+          id="attention"
+          icon="🚨"
+          title="Priority Attention"
+          chips={[
+            ...(topBlockers.length ? [{ label: `${topBlockers.length} blocker${topBlockers.length !== 1 ? 's' : ''}`, type: 'danger' as const }] : []),
+            ...(topOverdue.length  ? [{ label: `${topOverdue.length} overdue`,  type: 'warning' as const }] : []),
+            ...(topOrphans.length  ? [{ label: `${topOrphans.length} orphan${topOrphans.length !== 1 ? 's' : ''}`, type: 'neutral' as const }] : []),
+          ]}
+          accent="#dc2626"
+          expanded={expandedSections.has('attention')}
+          onToggle={() => toggleSection('attention')}
+        />
+        {expandedSections.has('attention') && (
         <section id="section-attention" className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {[
             { id: 'blockers', title: 'Top Blockers', tag: 'Blockers', items: topBlockers, color: 'border-red-400 bg-red-50', tagCls: 'bg-red-100 text-red-700' },
@@ -714,16 +790,26 @@ export default function DashboardPage() {
             </div>
           ))}
         </section>
+        )}
 
         {/* ── TIER 2: PRIMARY METRICS ─────────────────────────────────────────── */}
         <TierSep icon="📊" label="Primary Metrics" tier={1} />
 
         {/* ── 5. TIER 2 — 6 KPI CARDS ─────────────────────────────────────────── */}
+        <CollapsibleTrigger
+          id="overview"
+          icon="📊"
+          title="Key Metrics"
+          chips={[
+            { label: `${metrics.completionRate}% done`, type: metrics.completionRate >= 80 ? 'good' : metrics.completionRate >= 60 ? 'warning' : 'danger' },
+            { label: `${metrics.totalIssues} issues`, type: 'neutral' },
+          ]}
+          accent="#2563eb"
+          expanded={expandedSections.has('overview')}
+          onToggle={() => toggleSection('overview')}
+        />
+        {expandedSections.has('overview') && (
         <section id="section-overview" className="mb-6">
-          <div className="mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Overview</span>
-            <h2 className="text-base font-black text-slate-800">Executive delivery snapshot</h2>
-          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <KpiCard label="Completion" value={`${metrics.completionRate}%`} detail={`${metrics.doneIssues} of ${metrics.totalIssues} done`} accent="#16a34a" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
             <KpiCard label="Health Alerts" value={(flow.critical || 0) + (flow.warning || 0)} detail={`${flow.critical || 0} critical · ${flow.warning || 0} warning`} accent="#dc2626" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
@@ -733,13 +819,20 @@ export default function DashboardPage() {
             <KpiCard label="Story Points" value={storyPoints.totalStoryPoints || 0} detail={`${storyPoints.pointCompletionRate || 0}% complete`} accent="#7c3aed" />
           </div>
         </section>
+        )}
 
         {/* ── 6. DELIVERY COMPOSITION RING ─────────────────────────────────────── */}
+        <CollapsibleTrigger
+          id="ratios"
+          icon="🍩"
+          title="Delivery Composition"
+          chips={[{ label: `${metrics.completionRate}% complete`, type: metrics.completionRate >= 80 ? 'good' : 'warning' }]}
+          accent="#16a34a"
+          expanded={expandedSections.has('ratios')}
+          onToggle={() => toggleSection('ratios')}
+        />
+        {expandedSections.has('ratios') && (
         <section id="section-ratios" className="mb-6">
-          <div className="mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ratios</span>
-            <h2 className="text-base font-black text-slate-800">Delivery composition at a glance</h2>
-          </div>
           <Card className="p-5 flex flex-col md:flex-row items-center gap-8">
             <div className="shrink-0 relative">
               <div
@@ -771,13 +864,20 @@ export default function DashboardPage() {
             </div>
           </Card>
         </section>
+        )}
 
         {/* ── 7. VISUAL INTELLIGENCE ───────────────────────────────────────────── */}
+        <CollapsibleTrigger
+          id="visuals"
+          icon="📈"
+          title="Visual Analytics"
+          chips={[{ label: 'Charts', type: 'neutral' }]}
+          accent="#7c3aed"
+          expanded={expandedSections.has('visuals')}
+          onToggle={() => toggleSection('visuals')}
+        />
+        {expandedSections.has('visuals') && (
         <section id="section-visuals" className="mb-6">
-          <div className="mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Visual Intelligence</span>
-            <h2 className="text-base font-black text-slate-800">Charts that explain the result</h2>
-          </div>
           {/* hero row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* health mix donut */}
@@ -842,6 +942,7 @@ export default function DashboardPage() {
             </Card>
           </div>
         </section>
+        )}
 
         {/* ── TIER 3: DELIVERY DETAIL ──────────────────────────────────────────── */}
         <TierSep icon="📋" label="Delivery Detail" tier={2} />
@@ -1050,11 +1151,17 @@ export default function DashboardPage() {
         <TierSep icon="🔍" label="Deep Dive" tier={3} />
 
         {/* ── 9a. CLASSIFICATION (LABELS + TYPES) ──────────────────────────────── */}
+        <CollapsibleTrigger
+          id="labels"
+          icon="🏷️"
+          title="Labels, Types & Projects"
+          chips={[{ label: 'Classification', type: 'neutral' }]}
+          accent="#0891b2"
+          expanded={expandedSections.has('labels')}
+          onToggle={() => toggleSection('labels')}
+        />
+        {expandedSections.has('labels') && (
         <section id="section-labels" className="mb-6">
-          <div className="mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Classification</span>
-            <h2 className="text-base font-black text-slate-800">Labels, types &amp; project breakdown</h2>
-          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <Card className="p-4">
               <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Label Distribution</h4>
@@ -1141,12 +1248,21 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+        )}
 
         {/* ── 9b. RELATIONS ────────────────────────────────────────────────────── */}
+        <CollapsibleTrigger
+          id="relations"
+          icon="🔗"
+          title="Linked Issues & Dependencies"
+          chips={rels?.hasLinks ? [{ label: `${rels.totalLinks} links`, type: 'info' as const }] : [{ label: 'No links found', type: 'neutral' as const }]}
+          accent="#0891b2"
+          expanded={expandedSections.has('relations')}
+          onToggle={() => toggleSection('relations')}
+        />
+        {expandedSections.has('relations') && (
         <section id="section-relations" className="mb-6">
           <div className="mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Relations</span>
-            <h2 className="text-base font-black text-slate-800">Linked issues &amp; dependency map</h2>
             <p className="text-sm text-slate-500 mt-0.5">
               {rels?.hasLinks
                 ? `${rels.totalLinks} link relationship${rels.totalLinks !== 1 ? 's' : ''} across ${rels.itemsWithLinks} item${rels.itemsWithLinks !== 1 ? 's' : ''} — ${rels.linkTypes} link type${rels.linkTypes !== 1 ? 's' : ''} detected.`
@@ -1202,6 +1318,7 @@ export default function DashboardPage() {
             </Card>
           )}
         </section>
+        )}
 
         {/* ── 9c. JUSTIFICATION ────────────────────────────────────────────────── */}
         {(metrics.insights || []).length > 0 && (
@@ -1219,11 +1336,20 @@ export default function DashboardPage() {
         )}
 
         {/* ── 9d. READINESS ────────────────────────────────────────────────────── */}
+        <CollapsibleTrigger
+          id="readiness"
+          icon="🚀"
+          title="Epic Health & Release Readiness"
+          chips={[
+            { label: `${epicReadiness.length} epics`, type: 'neutral' },
+            ...(epicReadiness.filter(e => e.risk === 'critical').length ? [{ label: `${epicReadiness.filter(e => e.risk === 'critical').length} critical`, type: 'danger' as const }] : []),
+          ]}
+          accent="#7c3aed"
+          expanded={expandedSections.has('readiness')}
+          onToggle={() => toggleSection('readiness')}
+        />
+        {expandedSections.has('readiness') && (
         <section id="section-readiness" className="mb-6">
-          <div className="mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Readiness</span>
-            <h2 className="text-base font-black text-slate-800">Epic health &amp; release readiness</h2>
-          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="p-4">
               <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Top At-Risk Epics</h4>
@@ -1275,6 +1401,7 @@ export default function DashboardPage() {
             </Card>
           </div>
         </section>
+        )}
 
         {/* ── 10. FLOW HEALTH PANEL ────────────────────────────────────────────── */}
         <section id="flow-health-panel" className="mb-8">
@@ -1465,6 +1592,34 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* ── 11. THROUGHPUT ANALYTICS ─────────────────────────────────────────── */}
+        {metrics.throughput && (
+          <>
+            <CollapsibleTrigger
+              id="throughput"
+              icon="⚡"
+              title="Throughput & Delivery Analytics"
+              chips={[
+                ...(metrics.throughput.sprint.totalSprints ? [{ label: `${metrics.throughput.sprint.totalSprints} sprints`, type: 'neutral' as const }] : []),
+                ...(metrics.throughput.kanban.hasKanbanData ? [{ label: 'Kanban', type: 'info' as const }] : []),
+                { label: `${metrics.throughput.sprint.trendDirection}`, type: metrics.throughput.sprint.trendDirection === 'Improving' ? 'good' : metrics.throughput.sprint.trendDirection === 'Declining' ? 'danger' : 'neutral' as const },
+              ]}
+              accent="#2563eb"
+              expanded={expandedSections.has('throughput')}
+              onToggle={() => toggleSection('throughput')}
+            />
+            {expandedSections.has('throughput') && (
+            <section id="section-throughput" className="mb-8 space-y-6">
+              <SprintThroughputPanel summary={metrics.throughput.sprint} />
+              {metrics.throughput.midSprint.length > 0 && (
+                <MidSprintDeliveryPanel insights={metrics.throughput.midSprint} />
+              )}
+              <KanbanThroughputPanel summary={metrics.throughput.kanban} />
+            </section>
+            )}
+          </>
         )}
 
       </div>

@@ -8,6 +8,7 @@ import KpiCard from '@/components/ui/KpiCard';
 import LoadingState from '@/components/ui/LoadingState';
 import type { DashboardMetrics } from '@/types/metrics';
 import { loadMetrics } from '@/lib/storage';
+import { exportToExcel, exportToHtml } from '@/lib/exportUtils';
 import { getHealthBand, HEALTH_COLORS, type HealthBand } from '@/lib/utils';
 
 const DONE_STATUSES = new Set(['done', 'closed', 'resolved']);
@@ -260,6 +261,20 @@ export default function SummaryPage() {
           className="px-5 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-600 hover:bg-slate-50 shadow-sm transition-colors"
         >
           Upload New File
+        </button>
+        <button
+          type="button"
+          onClick={() => metrics && exportToExcel(metrics)}
+          className="px-5 py-2.5 rounded-lg border border-emerald-600 bg-white text-sm font-bold text-emerald-700 hover:bg-emerald-50 shadow-sm transition-colors"
+        >
+          ↓ Export Excel
+        </button>
+        <button
+          type="button"
+          onClick={() => metrics && exportToHtml(metrics)}
+          className="px-5 py-2.5 rounded-lg border border-emerald-600 bg-emerald-600 text-sm font-bold text-white hover:bg-emerald-700 shadow-sm transition-colors"
+        >
+          ↓ Export HTML
         </button>
         <button
           type="button"

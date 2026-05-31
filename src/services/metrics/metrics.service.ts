@@ -1,5 +1,8 @@
 // Migrated from backend/src/services/metrics.js
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+import { calculateSprintThroughput } from './throughput.service';
+import { calculateMidSprintInsights } from './midSprint.service';
+import { calculateKanbanFlow } from './kanbanFlow.service';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -257,6 +260,7 @@ interface DashboardMetrics {
   healthScore: number;
   prediction: PredictionResult;
   insights: string[];
+  throughput: import('@/types/throughput').ThroughputMetrics;
 }
 
 // ---------------------------------------------------------------------------
@@ -1093,7 +1097,7 @@ function calculatePrediction(
 // Insights
 // ---------------------------------------------------------------------------
 
-function buildInsights(metrics: Omit<DashboardMetrics, 'healthScore' | 'prediction' | 'insights'>): string[] {
+function buildInsights(metrics: Omit<DashboardMetrics, 'healthScore' | 'prediction' | 'insights' | 'throughput'>): string[] {
   const insights: string[] = [];
 
   if (metrics.flow.leadTimeSampleSize) {
@@ -1240,12 +1244,21 @@ export function calculateDashboardMetrics(issues: JiraIssue[]): DashboardMetrics
   };
 
   const healthScore = calculateHealthScore(metrics);
-  const prediction = calculatePrediction(issues, doneIssues, totalIssues);
+  const prediction  = calculatePrediction(issues, doneIssues, totalIssues);
+
+  const sprintThroughput = calculateSprintThroughput(issues);
+  const kanbanFlow       = calculateKanbanFlow(issues);
+  const midSprintData    = calculateMidSprintInsights(sprintThroughput);
 
   return {
     ...metrics,
     healthScore,
     prediction,
     insights: buildInsights(metrics),
+    throughput: {
+      sprint:   sprintThroughput,
+      kanban:   kanbanFlow,
+      midSprint: midSprintData,
+    },
   };
 }

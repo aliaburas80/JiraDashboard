@@ -1,4 +1,5 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+import type { ThroughputMetrics } from './throughput';
 
 export type HealthStatus = 'good' | 'warning' | 'critical';
 
@@ -118,4 +119,5 @@ export interface DashboardMetrics {
   healthScore: number;
   prediction: PredictionResult;
   insights: string[];
+  throughput: ThroughputMetrics;
 }
