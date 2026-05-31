@@ -796,7 +796,7 @@ Required environment variables (add to `.env.local`):
 ```
 SESSION_SECRET=your-32-char-secret
 DATABASE_URL=file:./data/delivery_clarity.db
-ALLOW_OPEN_REGISTRATION=false
+ALLOW_OPEN_REGISTRATION=true
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=ChangeThisImmediately1
 ADMIN_NAME=Administrator
