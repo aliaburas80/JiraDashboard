@@ -28,12 +28,18 @@ interface ImportLog {
   status: string;
   sheetName?: string | null;
   filesize?: number | null;
+  healthScore?: number | null;
+  totalIssues?: number | null;
+  userName?: string | null;
+  userEmail?: string | null;
 }
 
 interface BackendViewData {
   stats: BackendStats;
   endpoints: ApiEndpoint[];
   logs: ImportLog[];
+  isAdmin: boolean;
+  currentUser: { name: string; email: string; role: string } | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -286,47 +292,86 @@ export default function BackendPage() {
 
           {/* ── 3. Recent Import Logs ── */}
           <section>
-            <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3">
-              Recent Import Logs
-            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">
+                {data.isAdmin ? 'All Import Logs' : 'My Import Logs'}
+              </h2>
+              <div className="flex items-center gap-2">
+                {data.currentUser && (
+                  <span className="text-xs text-slate-500">
+                    Signed in as <strong>{data.currentUser.name}</strong>
+                  </span>
+                )}
+                {data.isAdmin && (
+                  <span className="text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5">
+                    Admin — seeing all users
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
               {data.logs.length === 0 ? (
                 <p className="text-sm text-slate-400 text-center py-10">No import logs found.</p>
               ) : (
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50">
-                      <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide whitespace-nowrap">Timestamp</th>
-                      <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Filename</th>
-                      <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Sheet</th>
-                      <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-24 whitespace-nowrap">Rows</th>
-                      <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-28">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {data.logs.map((log, i) => (
-                      <tr key={i} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 text-slate-500 whitespace-nowrap text-xs">
-                          {formatTimestamp(log.timestamp)}
-                        </td>
-                        <td className="px-4 py-3 max-w-xs">
-                          <code className="font-mono text-xs bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded break-all">
-                            {log.filename ?? '—'}
-                          </code>
-                        </td>
-                        <td className="px-4 py-3 text-slate-500 text-xs hidden lg:table-cell">
-                          {log.sheetName ?? '—'}
-                        </td>
-                        <td className="px-4 py-3 text-right text-slate-700 font-semibold tabular-nums">
-                          {safeInt(log.rowCount)}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <StatusBadge status={log.status} />
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50">
+                        <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide whitespace-nowrap">Timestamp</th>
+                        <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Filename</th>
+                        {data.isAdmin && (
+                          <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide whitespace-nowrap">Uploaded By</th>
+                        )}
+                        <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-20 whitespace-nowrap">Issues</th>
+                        <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-20 whitespace-nowrap">Rows</th>
+                        <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-16">Health</th>
+                        <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-28">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {data.logs.map((log, i) => (
+                        <tr key={i} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-4 py-3 text-slate-500 whitespace-nowrap text-xs">
+                            {formatTimestamp(log.timestamp)}
+                          </td>
+                          <td className="px-4 py-3 max-w-xs">
+                            <code className="font-mono text-xs bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded break-all">
+                              {log.filename ?? '—'}
+                            </code>
+                          </td>
+                          {data.isAdmin && (
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <div className="flex flex-col">
+                                <span className="text-xs font-semibold text-slate-800">{log.userName ?? '—'}</span>
+                                <span className="text-[10px] text-slate-400">{log.userEmail ?? ''}</span>
+                              </div>
+                            </td>
+                          )}
+                          <td className="px-4 py-3 text-right text-slate-700 font-semibold tabular-nums">
+                            {log.totalIssues != null ? log.totalIssues : '—'}
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-700 font-semibold tabular-nums">
+                            {safeInt(log.rowCount)}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {log.healthScore != null ? (
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                                log.healthScore >= 75 ? 'bg-green-100 text-green-800' :
+                                log.healthScore >= 50 ? 'bg-amber-100 text-amber-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {log.healthScore}
+                              </span>
+                            ) : <span className="text-slate-300 text-xs">—</span>}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <StatusBadge status={log.status} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </section>
