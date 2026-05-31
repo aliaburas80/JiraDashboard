@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import type { DashboardMetrics } from '@/types/metrics';
 import { loadMetrics } from '@/lib/storage';
+import SprintVelocityChart from '@/components/charts/SprintVelocityChart';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const DONE_ST   = ['done', 'closed', 'resolved'];
@@ -685,6 +686,13 @@ export default function ChartsPage() {
             </p>
           )}
         </ChartWidget>
+
+        {/* 5b. Sprint Velocity — Story Points (full width) */}
+        {metrics.throughput?.sprint && (
+          <div className="col-span-1 md:col-span-3">
+            <SprintVelocityChart summary={metrics.throughput.sprint} />
+          </div>
+        )}
 
         {/* 6. Team Load — span 1 */}
         <ChartWidget title="Team Load" icon="👥" span={1}>
