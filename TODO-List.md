@@ -106,7 +106,7 @@
 | 6.1 | Throughput formula tests TC-T-01 to TC-T-10 (`throughput.test.ts`) | P1 | ✅ Done — 10 passing |
 | 6.2 | Work Item Explorer tests TC-E-01 to TC-E-08 (`relationExplorer.test.ts`) | P1 | ✅ Done — 8 passing |
 | 6.3 | Auth tests TC-A-01 to TC-A-09 | P1 | ✅ Done — 17 passing (`auth.test.ts`) |
-| 6.4 | Excel export tests TC-X-01 to TC-X-06 | P1 | ❌ Manual only — not automated |
+| 6.4 | Excel export tests TC-X-01 to TC-X-06 | P1 | ✅ Done — 15 passing (`excelExport.test.ts`) |
 
 ---
 
@@ -132,7 +132,7 @@
 | # | Task | Priority | Status |
 |---|------|----------|--------|
 | 8.1 | Auth tests automated (TC-A-01 to TC-A-09) | P1 | ✅ Done — 17 passing |
-| 8.2 | Excel export tests automated (TC-X-01 to TC-X-06) | P1 | ❌ Not done |
+| 8.2 | Excel export tests automated (TC-X-01 to TC-X-06) | P1 | ✅ Done — 15 passing |
 | 8.3 | SRS, USE_CASES, SCENARIOS, USER_JOURNEYS updated for v3.0 | P2 | ❌ Not done |
 | 8.4 | Sprint velocity chart (story points over time) | P2 | ❌ Future |
 | 8.5 | Saved filter presets (bookmark a filter combination) | P2 | ❌ Future |
