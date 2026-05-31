@@ -3,6 +3,7 @@
 import { calculateSprintThroughput } from './throughput.service';
 import { calculateMidSprintInsights } from './midSprint.service';
 import { calculateKanbanFlow } from './kanbanFlow.service';
+import { calculateDataQuality } from '../dataQuality/dataQuality.service';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -261,6 +262,7 @@ interface DashboardMetrics {
   prediction: PredictionResult;
   insights: string[];
   throughput: import('@/types/throughput').ThroughputMetrics;
+  dataQuality: import('@/types/dataQuality').DataQualityResult;
 }
 
 // ---------------------------------------------------------------------------
@@ -1097,7 +1099,7 @@ function calculatePrediction(
 // Insights
 // ---------------------------------------------------------------------------
 
-function buildInsights(metrics: Omit<DashboardMetrics, 'healthScore' | 'prediction' | 'insights' | 'throughput'>): string[] {
+function buildInsights(metrics: Omit<DashboardMetrics, 'healthScore' | 'prediction' | 'insights' | 'throughput' | 'dataQuality'>): string[] {
   const insights: string[] = [];
 
   if (metrics.flow.leadTimeSampleSize) {
@@ -1249,6 +1251,7 @@ export function calculateDashboardMetrics(issues: JiraIssue[]): DashboardMetrics
   const sprintThroughput = calculateSprintThroughput(issues);
   const kanbanFlow       = calculateKanbanFlow(issues);
   const midSprintData    = calculateMidSprintInsights(sprintThroughput);
+  const dataQuality      = calculateDataQuality(issues);
 
   return {
     ...metrics,
@@ -1256,9 +1259,10 @@ export function calculateDashboardMetrics(issues: JiraIssue[]): DashboardMetrics
     prediction,
     insights: buildInsights(metrics),
     throughput: {
-      sprint:   sprintThroughput,
-      kanban:   kanbanFlow,
+      sprint:    sprintThroughput,
+      kanban:    kanbanFlow,
       midSprint: midSprintData,
     },
+    dataQuality,
   };
 }

@@ -87,6 +87,11 @@ function makeMetrics(overrides: Partial<DashboardMetrics> = {}): DashboardMetric
       },
       midSprint: [],
     },
+    dataQuality: {
+      score: 85, band: 'Good' as const, totalIssues: 20,
+      checks: [], summary: 'Good data quality.', affectedMetrics: [],
+      criticalCount: 0, highCount: 0,
+    },
     ...overrides,
   };
   return base;

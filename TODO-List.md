@@ -207,4 +207,78 @@
 
 ---
 
+## Enhancement Suggestions — Next Product Improvement Backlog
+
+> **Rule:** Complete P0 items in order before moving to P1. Every item must include code + tests + docs + acceptance criteria.
+
+### P0 — Must Start First (Quality, Trust, Privacy)
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 9.1 | Data Quality Score after upload — 0–100% score, band, missing-field breakdown, actionable explanation | P0 | ✅ Done — 12 tests passing |
+| 9.2 | Metric Confidence Score per KPI — confidence badge + reason on every major metric | P0 | ❌ Not started |
+| 9.3 | Missing-column impact explanation — which fields are missing and which metrics they break | P0 | ❌ Not started |
+| 9.4 | Privacy and data-retention settings — admin controls: retention period, auto-delete, clear all | P0 | ❌ Not started |
+| 9.5 | Delete import history / delete dashboard snapshot — user deletes own data, admin deletes any | P0 | ❌ Not started |
+
+---
+
+### P1 — Start Only After All P0 Items Are Done
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 9.6  | Column-mapping preview before dashboard generation | P1 | ❌ Not started |
+| 9.7  | Sample/demo Jira dataset button | P1 | ❌ Not started |
+| 9.8  | First-time onboarding checklist | P1 | ❌ Not started |
+| 9.9  | Role-based dashboard views | P1 | ❌ Not started |
+| 9.10 | Customer View | P1 | ❌ Not started |
+| 9.11 | Saved dashboard snapshots | P1 | ❌ Not started |
+| 9.12 | Snapshot comparison | P1 | ❌ Not started |
+| 9.13 | Upload-to-upload trend analysis | P1 | ❌ Not started |
+| 9.14 | "What changed since last upload?" panel | P1 | ❌ Not started |
+| 9.15 | Configurable health thresholds | P1 | ❌ Not started |
+| 9.16 | Configurable orphan detection rules | P1 | ❌ Not started |
+| 9.17 | Recommendation mute/snooze option | P1 | ❌ Not started |
+| 9.18 | Work Item Explorer risk-path highlight | P1 | ❌ Not started |
+| 9.19 | Work Item Explorer largest unfinished branch insight | P1 | ❌ Not started |
+| 9.20 | Work Item Explorer blocked branch filter | P1 | ❌ Not started |
+| 9.21 | Release readiness checklist | P1 | ❌ Not started |
+| 9.22 | Database backup and restore | P1 | ❌ Not started |
+| 9.23 | Production security checklist page | P1 | ❌ Not started |
+| 9.24 | Dockerfile and docker-compose setup | P1 | ❌ Not started |
+| 9.25 | Mobile UX polish for `/explore` | P1 | ❌ Not started |
+| 9.26 | Performance profiling for 5,000+ issues | P1 | ❌ Not started |
+
+---
+
+### P2 — Future Product Value
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 9.27 | Recommendation feedback buttons | P2 | ❌ Not started |
+| 9.28 | Recommendation history | P2 | ❌ Not started |
+| 9.29 | Work Item Explorer export | P2 | ❌ Not started |
+| 9.30 | Release confidence trend | P2 | ❌ Not started |
+| 9.31 | Team-level health comparison | P2 | ❌ Not started |
+| 9.32 | Cross-team portfolio summary | P2 | ❌ Not started |
+| 9.33 | Executive one-page PDF export | P2 | ❌ Not started |
+| 9.34 | Action-owner assignment inside recommendations | P2 | ❌ Not started |
+| 9.35 | Deployment guide for Vercel / Docker / VPS | P2 | ❌ Not started |
+| 9.36 | System health/admin diagnostics page | P2 | ❌ Not started |
+| 9.37 | Branding integration across login, favicon, reports, and exports | P2 | ❌ Not started |
+| 9.38 | Landing page inside the app | P2 | ❌ Not started |
+
+---
+
+### P3 — Nice to Have
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 9.39 | Product tour animation | P3 | ❌ Not started |
+| 9.40 | Advanced theme customization | P3 | ❌ Not started |
+| 9.41 | Custom dashboard layout builder | P3 | ❌ Not started |
+| 9.42 | Advanced chart customization | P3 | ❌ Not started |
+
+---
+
 *Delivery Clarity v3.0 — © 2025 Ali Abu Ras — aburasali80@gmail.com*

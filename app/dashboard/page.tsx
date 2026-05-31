@@ -19,6 +19,7 @@ import MidSprintDeliveryPanel from '@/components/dashboard/MidSprintDeliveryPane
 import KanbanThroughputPanel from '@/components/dashboard/KanbanThroughputPanel';
 import SprintComparePanel from '@/components/dashboard/SprintComparePanel';
 import DraggableMetricTable from '@/components/dashboard/DraggableMetricTable';
+import DataQualityCard from '@/components/dashboard/DataQualityCard';
 
 // ─── accent map ───────────────────────────────────────────────────────────────
 const HEALTH_VARIANT: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'neutral'> = {
@@ -764,6 +765,13 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* ── DATA QUALITY CARD ────────────────────────────────────────────────── */}
+        {metrics.dataQuality && (
+          <div className="mb-5">
+            <DataQualityCard quality={metrics.dataQuality} />
+          </div>
+        )}
 
         {/* ── 3. SMART RECOMMENDATIONS ────────────────────────────────────────── */}
         {smartActions.length > 0 && (
