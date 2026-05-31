@@ -17,7 +17,7 @@ export default function KpiCard({ label, value, detail, accent='#2563eb', onClic
     <div
       onClick={onClick}
       className={cn(
-        'bg-white rounded-xl border border-slate-200/80 shadow-sm p-5 flex flex-col justify-between min-h-[110px] relative overflow-hidden',
+        'bg-white rounded-xl border border-slate-200/80 shadow-sm p-5 flex flex-col justify-between min-h-[110px] relative',
         onClick && 'cursor-pointer hover:shadow-md transition-shadow',
       )}
       style={{ borderLeft: '4px solid ' + accent }}
