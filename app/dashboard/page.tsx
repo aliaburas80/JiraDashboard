@@ -18,6 +18,7 @@ import SprintThroughputPanel from '@/components/dashboard/SprintThroughputPanel'
 import MidSprintDeliveryPanel from '@/components/dashboard/MidSprintDeliveryPanel';
 import KanbanThroughputPanel from '@/components/dashboard/KanbanThroughputPanel';
 import SprintComparePanel from '@/components/dashboard/SprintComparePanel';
+import DraggableMetricTable from '@/components/dashboard/DraggableMetricTable';
 
 // ─── accent map ───────────────────────────────────────────────────────────────
 const HEALTH_VARIANT: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'neutral'> = {
@@ -1669,8 +1670,9 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              {/* flow table */}
-              <MetricTable
+              {/* flow table — columns are drag-and-drop reorderable */}
+              <DraggableMetricTable
+                storageKey="flow-items"
                 columns={[
                   { key: 'key', label: 'Key' },
                   { key: 'summary', label: 'Story / Task' },
