@@ -13,6 +13,7 @@ import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { getHealthBand, HEALTH_COLORS, formatDays, cn } from '@/lib/utils';
 import { exportToExcel, exportToHtml } from '@/lib/exportUtils';
 import { loadMetrics } from '@/lib/storage';
+import { loadPresets, savePreset, deletePreset, type FilterPreset } from '@/lib/filterPresets';
 import SprintThroughputPanel from '@/components/dashboard/SprintThroughputPanel';
 import MidSprintDeliveryPanel from '@/components/dashboard/MidSprintDeliveryPanel';
 import KanbanThroughputPanel from '@/components/dashboard/KanbanThroughputPanel';
@@ -263,15 +264,21 @@ export default function DashboardPage() {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
 
+  // filter presets
+  const [presets, setPresets] = useState<FilterPreset[]>([]);
+  const [presetName, setPresetName] = useState('');
+  const [showPresetInput, setShowPresetInput] = useState(false);
+
   const toggleSection = (key: string) =>
     setExpandedSections(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
 
-  // load metrics from localStorage
+  // load metrics + presets from localStorage
   useEffect(() => {
     try {
       const data = loadMetrics() as DashboardMetrics | null;
       if (!data) { router.replace('/'); return; }
       setMetrics(data);
+      setPresets(loadPresets());
     } catch { router.replace('/'); }
     finally { setLoading(false); }
   }, [router]);
@@ -1488,6 +1495,103 @@ export default function DashboardPage() {
                     Export CSV
                   </button>
                 </div>
+              </div>
+
+              {/* ── Filter Presets ── */}
+              <div className="border-t border-slate-100 pt-4">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Saved Presets</span>
+
+                  {/* Saved preset chips */}
+                  {presets.map(preset => (
+                    <span key={preset.id} className="inline-flex items-center gap-1 bg-blue-50 border border-blue-200 rounded-full text-xs font-semibold text-blue-700 pl-3 pr-1.5 py-0.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const f = preset.filters;
+                          setKeyFilter(f.keyFilter); setSummaryFilter(f.summaryFilter);
+                          setStatusFilter(f.statusFilter); setSprintFilter(f.sprintFilter);
+                          setAssigneeFilter(f.assigneeFilter); setHealthFilter(f.healthFilter);
+                          setLeadMaxFilter(f.leadMaxFilter); setCycleMaxFilter(f.cycleMaxFilter);
+                          setOpenAgeMaxFilter(f.openAgeMaxFilter); setReasonFilter(f.reasonFilter);
+                          setLabelFilter(f.labelFilter); setActiveQuickFilter(f.activeQuickFilter);
+                        }}
+                      >
+                        {preset.name}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { deletePreset(preset.id); setPresets(loadPresets()); }}
+                        className="ml-0.5 text-blue-400 hover:text-red-500 font-black leading-none"
+                        title="Delete preset"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+
+                  {/* Save button / inline input */}
+                  {!showPresetInput ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowPresetInput(true)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 border border-dashed border-slate-300 rounded-full px-3 py-0.5 hover:border-blue-400 hover:text-blue-600 transition-colors"
+                    >
+                      + Save current filters
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5">
+                      <input
+                        autoFocus
+                        type="text"
+                        value={presetName}
+                        onChange={e => setPresetName(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && presetName.trim()) {
+                            savePreset(presetName, {
+                              keyFilter, summaryFilter, statusFilter, sprintFilter, assigneeFilter,
+                              healthFilter, leadMaxFilter, cycleMaxFilter, openAgeMaxFilter,
+                              reasonFilter, labelFilter, activeQuickFilter,
+                            });
+                            setPresets(loadPresets());
+                            setPresetName('');
+                            setShowPresetInput(false);
+                          }
+                          if (e.key === 'Escape') { setPresetName(''); setShowPresetInput(false); }
+                        }}
+                        placeholder="Preset name…"
+                        className="border border-blue-300 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300 w-36"
+                      />
+                      <button
+                        type="button"
+                        disabled={!presetName.trim()}
+                        onClick={() => {
+                          savePreset(presetName, {
+                            keyFilter, summaryFilter, statusFilter, sprintFilter, assigneeFilter,
+                            healthFilter, leadMaxFilter, cycleMaxFilter, openAgeMaxFilter,
+                            reasonFilter, labelFilter, activeQuickFilter,
+                          });
+                          setPresets(loadPresets());
+                          setPresetName('');
+                          setShowPresetInput(false);
+                        }}
+                        className="text-xs font-bold bg-blue-600 text-white rounded-lg px-2.5 py-1 hover:bg-blue-700 disabled:opacity-40 transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setPresetName(''); setShowPresetInput(false); }}
+                        className="text-xs text-slate-400 hover:text-slate-600"
+                      >
+                        Cancel
+                      </button>
+                    </span>
+                  )}
+                </div>
+                {presets.length === 0 && !showPresetInput && (
+                  <p className="text-xs text-slate-400 italic">Set your filters above then click "+ Save current filters" to bookmark them.</p>
+                )}
               </div>
 
               {/* status graph */}
