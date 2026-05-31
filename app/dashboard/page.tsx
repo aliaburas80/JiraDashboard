@@ -273,16 +273,56 @@ export default function DashboardPage() {
   const toggleSection = (key: string) =>
     setExpandedSections(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
 
-  // load metrics + presets from localStorage
+  // load metrics + presets + URL filter state from localStorage / query params
   useEffect(() => {
     try {
       const data = loadMetrics() as DashboardMetrics | null;
       if (!data) { router.replace('/'); return; }
       setMetrics(data);
       setPresets(loadPresets());
+
+      // Restore filters from URL query params
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('key'))      setKeyFilter(p.get('key')!);
+      if (p.get('summary'))  setSummaryFilter(p.get('summary')!);
+      if (p.get('status'))   setStatusFilter(p.get('status')!);
+      if (p.get('sprint'))   setSprintFilter(p.get('sprint')!);
+      if (p.get('assignee')) setAssigneeFilter(p.get('assignee')!);
+      if (p.get('health'))   setHealthFilter(p.get('health')!);
+      if (p.get('leadMax'))  setLeadMaxFilter(p.get('leadMax')!);
+      if (p.get('cycleMax')) setCycleMaxFilter(p.get('cycleMax')!);
+      if (p.get('ageMax'))   setOpenAgeMaxFilter(p.get('ageMax')!);
+      if (p.get('reason'))   setReasonFilter(p.get('reason')!);
+      if (p.get('label'))    setLabelFilter(p.get('label')!);
+      if (p.get('quick'))    setActiveQuickFilter(p.get('quick')!);
+      // Open filter panel if any filter was in URL
+      if ([...p.keys()].length > 0) setFlowPanelOpen(true);
     } catch { router.replace('/'); }
     finally { setLoading(false); }
-  }, [router]);
+  }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync filter state → URL query params (replaceState = no history entry)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const p = new URLSearchParams();
+    if (keyFilter)                      p.set('key',      keyFilter);
+    if (summaryFilter)                  p.set('summary',  summaryFilter);
+    if (statusFilter   !== 'all')       p.set('status',   statusFilter);
+    if (sprintFilter   !== 'all')       p.set('sprint',   sprintFilter);
+    if (assigneeFilter !== 'all')       p.set('assignee', assigneeFilter);
+    if (healthFilter   !== 'all')       p.set('health',   healthFilter);
+    if (leadMaxFilter)                  p.set('leadMax',  leadMaxFilter);
+    if (cycleMaxFilter)                 p.set('cycleMax', cycleMaxFilter);
+    if (openAgeMaxFilter)               p.set('ageMax',   openAgeMaxFilter);
+    if (reasonFilter)                   p.set('reason',   reasonFilter);
+    if (labelFilter)                    p.set('label',    labelFilter);
+    if (activeQuickFilter !== 'all')    p.set('quick',    activeQuickFilter);
+    const qs = p.toString();
+    const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    window.history.replaceState(null, '', newUrl);
+  }, [keyFilter, summaryFilter, statusFilter, sprintFilter, assigneeFilter,
+      healthFilter, leadMaxFilter, cycleMaxFilter, openAgeMaxFilter, reasonFilter,
+      labelFilter, activeQuickFilter]);
 
   // reset visible count on filter change
   useEffect(() => { setVisibleCount(100); },
@@ -657,6 +697,21 @@ export default function DashboardPage() {
               className="text-xs font-bold bg-blue-600 text-white rounded-full px-3 py-1 hover:bg-blue-700 transition-colors">
               Show filters
             </button>
+
+            {/* ── Copy shareable link ── */}
+            {activeFilterCount > 0 && (
+              <button
+                type="button"
+                onClick={() => copyToClipboard(window.location.href)}
+                title="Copy shareable link with current filters"
+                className="inline-flex items-center gap-1.5 text-xs font-bold bg-slate-700 hover:bg-slate-900 text-white rounded-full px-3 py-1 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                Copy link
+              </button>
+            )}
 
             {/* ── Export dropdown — always visible in sticky bar ── */}
             <div ref={exportMenuRef} style={{ position: 'relative' }}>

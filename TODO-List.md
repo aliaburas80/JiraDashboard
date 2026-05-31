@@ -200,7 +200,7 @@
 | 8.5 | Saved filter presets (bookmark a filter combination) | P2 | ✅ Done — name, save, apply, delete via localStorage |
 | 8.6 | Multi-file upload (merge multiple Jira exports) | P2 | ✅ Done — up to 10 files, dedup by Issue Key, merge stats shown |
 | 8.7 | Compare two sprints side-by-side | P2 | ✅ Done — SprintComparePanel with delta indicators and win counter |
-| 8.8 | Shareable URL with filter state in query params | P2 | ❌ Future |
+| 8.8 | Shareable URL with filter state in query params | P2 | ✅ Done — URL syncs live, "Copy link" button in sticky bar |
 | 8.9 | Drag-and-drop column reordering in issue table | P3 | ❌ Future |
 | 8.10 | PR merged to main | — | ❌ Still on feat/enhancements |
 | 8.11 | Create new user account via Register page (`/register`) — enable `ALLOW_OPEN_REGISTRATION=true` in `.env` | P1 | ❌ Not done |
