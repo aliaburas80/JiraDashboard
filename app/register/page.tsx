@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { hasMetrics } from '@/lib/storage';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -16,15 +17,33 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true); setError('');
     try {
+      // Step 1: Register
       const res  = await fetch('/api/auth/register', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? 'Registration failed.'); return; }
-      router.push('/login?registered=1');
-    } catch { setError('Network error. Please try again.'); }
-    finally { setLoading(false); }
+
+      // Step 2: Auto-login after registration
+      const loginRes = await fetch('/api/auth/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (loginRes.ok) {
+        // Logged in — go to upload if no data, dashboard if data exists
+        router.push(hasMetrics() ? '/dashboard' : '/');
+        router.refresh();
+      } else {
+        // Login failed for some reason — fall back to login page
+        router.push('/login?registered=1');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
