@@ -1,5 +1,6 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 import { useMemo, useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import KpiCard from './KpiCard';
 
 function ProgressBar({ value }) {
@@ -670,63 +671,43 @@ function DeliveryCircle({ flowItems, data, flow, storyPoints, orphanItems, total
   );
 }
 
-const DASHBOARD_SECTIONS = [
-  { id: 'dashboard-summary',          label: 'Summary',     color: '#2563eb' },
-  { id: 'section-attention',          label: 'Alerts',      color: '#f59e0b' },
-  { id: 'section-overview',           label: 'KPIs',        color: '#16a34a' },
-  { id: 'section-visuals',            label: 'Charts',      color: '#0891b2' },
-  { id: 'section-ratios',             label: 'Composition', color: '#7c3aed' },
-  { id: 'section-delivery-controls',  label: 'Delivery',    color: '#f97316' },
-  { id: 'section-quarters',           label: 'Quarters',    color: '#f97316' },
-  { id: 'section-kanban',             label: 'Kanban',      color: '#0f766e' },
-  { id: 'section-sprint',             label: 'Sprint',      color: '#7c3aed' },
-  { id: 'section-ownership',          label: 'Ownership',   color: '#0f766e' },
-  { id: 'section-labels',             label: 'Labels',      color: '#7c3aed' },
-  { id: 'section-relations',          label: 'Relations',   color: '#dc2626' },
-  { id: 'section-readiness',          label: 'Readiness',   color: '#dc2626' },
-  { id: 'flow-health-panel',          label: 'Flow Table',  color: '#2563eb' },
-];
+// Section navigator moved to AppHeader in App.js — no collision with page content
 
-function SectionNav() {
-  const [active, setActive] = useState(DASHBOARD_SECTIONS[0].id);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible.length) setActive(visible[0].target.id);
-      },
-      { rootMargin: '-20% 0px -70% 0px', threshold: 0 }
-    );
-    DASHBOARD_SECTIONS.forEach(({ id }) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, []);
-
+function TierLabel({ icon, label, color }) {
   return (
-    <nav className="section-nav" aria-label="Page sections">
-      {DASHBOARD_SECTIONS.map(({ id, label, color }) => (
-        <button
-          key={id}
-          type="button"
-          className={`section-nav-item${active === id ? ' active' : ''}`}
-          onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          aria-label={`Go to ${label}`}
-        >
-          <span
-            className="section-nav-dot"
-            style={active === id ? { background: color, boxShadow: `0 0 0 3px ${color}33` } : {}}
-          />
-          <span className="section-nav-label" style={active === id ? { color, fontWeight: 900 } : {}}>
-            {label}
-          </span>
-        </button>
-      ))}
-    </nav>
+    <div className="tier-label" style={{ '--tier-color': color }} aria-hidden="true">
+      <span className="tier-label-icon">{icon}</span>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function CollapsibleSection({ id, sectionKey, icon, title, chips = [], expandedSections, onToggle, accentColor, children }) {
+  const isOpen = expandedSections.has(sectionKey);
+  return (
+    <div id={id} className={`cs-section${isOpen ? ' cs-open' : ''}`}>
+      <button
+        type="button"
+        className="cs-header"
+        style={{ '--cs-accent': accentColor || '#2563eb' }}
+        onClick={() => onToggle(sectionKey)}
+        aria-expanded={isOpen}
+      >
+        <div className="cs-header-left">
+          <span className="cs-icon" aria-hidden="true">{icon}</span>
+          <span className="cs-title">{title}</span>
+          {chips.length > 0 && (
+            <div className="cs-chips">
+              {chips.map((c, i) => (
+                <span key={i} className={`cs-chip cs-chip-${c.type || 'neutral'}`}>{c.label}</span>
+              ))}
+            </div>
+          )}
+        </div>
+        <span className={`cs-toggle${isOpen ? ' open' : ''}`} aria-hidden="true">▾</span>
+      </button>
+      {isOpen && <div className="cs-content">{children}</div>}
+    </div>
   );
 }
 
@@ -751,6 +732,7 @@ function ScrollToTopFab() {
 }
 
 export default function DashboardPage({ data, onReset, onOpenHelp }) {
+  const navigate = useNavigate();
   const flow = data.flow || {};
   const sprint = data.sprint || {};
   const kanban = data.kanban || {};
@@ -780,6 +762,12 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
   const [hideStickyFilter, setHideStickyFilter] = useState(false);
   const [stickyTop, setStickyTop] = useState(0);
   const [showManagerReport, setShowManagerReport] = useState(false);
+  const [expandedSections, setExpandedSections] = useState(new Set(['delivery']));
+  const toggleSection = (key) => setExpandedSections(prev => {
+    const n = new Set(prev);
+    if (n.has(key)) n.delete(key); else n.add(key);
+    return n;
+  });
   const [labelFilter, setLabelFilter] = useState('');
   const [flowItemVisibleCount, setFlowItemVisibleCount] = useState(100);
 
@@ -807,19 +795,27 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
   if (!storyPoints.totalStoryPoints) confidenceBadges.push('No story points');
   if (!confidenceBadges.length) confidenceBadges.push('Data complete');
 
+  // Scroll to a section while clearing ALL sticky bars from the viewport
+  const scrollToSection = (idOrEl) => {
+    const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+    if (!el) return;
+    const header    = document.querySelector('.app-header');
+    const filterBar = document.querySelector('.sticky-filter-bar');
+    let offset = (header ? header.offsetHeight : 0) + 16;
+    // Add filter bar height only when it is actually visible (offsetHeight > 0)
+    if (filterBar && filterBar.offsetHeight > 0) offset += filterBar.offsetHeight;
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
+  };
+
   const handleKpiNavigation = (targetId) => {
     setIsFlowPanelOpen(true);
-    setTimeout(() => {
-      const target = document.getElementById(targetId);
-      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+    setTimeout(() => scrollToSection(targetId), 100);
   };
 
   const openFlowFilters = () => {
     setIsFlowPanelOpen(true);
     window.setTimeout(() => {
-      const target = flowFiltersRef.current || document.getElementById('flow-health-panel');
-      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollToSection(flowFiltersRef.current || 'flow-health-panel');
     }, 120);
   };
 
@@ -1124,7 +1120,7 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
       setHealthFilter('critical');
     }
     setTimeout(() => {
-      document.getElementById(action.navTarget)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollToSection(action.navTarget);
     }, 200);
   };
 
@@ -1139,7 +1135,10 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
   <main className="dashboard-page" aria-hidden={detailPanel ? true : undefined}>
       <div className="dashboard-top">
         <div>
-          <h2>Delivery Health Analysis</h2>
+          <button type="button" className="back-to-summary" onClick={() => navigate('/charts')}>
+            ← Charts
+          </button>
+          <h2>Full Delivery Report</h2>
           <p>Flow, sprint, kanban, capacity, story point, and epic performance from the uploaded Jira export.</p>
         </div>
         <div className="dashboard-top-right">
@@ -1167,15 +1166,15 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         <div className="summary-change-grid">
           <div className="summary-change-card">
             <span>Completion</span>
-            <strong>{summaryDelta.completion}</strong>
+            <strong>{data.completionRate || 0}%</strong>
           </div>
           <div className="summary-change-card">
-            <span>Risk</span>
-            <strong>{summaryDelta.risk}</strong>
+            <span>Critical</span>
+            <strong>{flow.critical || 0}</strong>
           </div>
           <div className="summary-change-card">
             <span>Cycle time</span>
-            <strong>{summaryDelta.cycleTime}</strong>
+            <strong>{flow.averageCycleTimeDays || 0}d</strong>
           </div>
           {data.prediction && !data.prediction.complete && data.prediction.daysRemaining !== null && (
             <div className="summary-change-card prediction-card">
@@ -1193,19 +1192,10 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
           )}
         </div>
         <div className="summary-actions">
-          <button type="button" className="secondary report-trigger-btn" onClick={() => setShowManagerReport(true)}>
-            📋 Quick Overview
-          </button>
-          <button type="button" className="secondary" onClick={() => openDetailPanel('High-risk review', 'Review the highest-risk items and assign mitigation tasks.', topBlockers)}>
-            Review high-risk items
-          </button>
           <button type="button" className="secondary" onClick={exportRiskReport}>
             Export risk report
           </button>
-          <button type="button" className="secondary" onClick={saveLayout}>
-            Save layout view
-          </button>
-          <div className="summary-status-message">{reportMessage || (layoutSaved ? 'Layout saved' : '')}</div>
+          {reportMessage && <div className="summary-status-message">{reportMessage}</div>}
         </div>
         <div className="summary-badges">
           {confidenceBadges.map((badge) => (
@@ -1248,18 +1238,8 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
 
       <SmartActions actions={smartActions} onAction={handleSmartAction} />
 
-      <section className="dashboard-splash">
-        <div className="splash-copy">
-          <span>Explore in color</span>
-          <h3>Discover the story behind every Jira export</h3>
-          <p>Fast insight cards, vivid charts, and ordered panels guide you from <span className="keyword">completion</span> and <span className="keyword">risk</span> to a confident delivery narrative.</p>
-        </div>
-        <div className="splash-pill-grid">
-          <div className="splash-pill accent-red">High-risk work hot spots</div>
-          <div className="splash-pill accent-teal">Cycle time pressure</div>
-          <div className="splash-pill accent-amber">Open age and orphans</div>
-        </div>
-      </section>
+      {/* ── TIER 1 ─────────────────────────────────── */}
+      <div className="tier-sep tier-sep-1"><span className="tier-sep-icon">🚨</span>Priority Attention</div>
 
       <section id="section-attention" className="issue-highlight-strip">
         <div className="issue-highlight-card card-blockers">
@@ -1329,6 +1309,9 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
           )}
         </div>
       </section>
+
+      {/* ── TIER 2 ─────────────────────────────────── */}
+      <div className="tier-sep tier-sep-2"><span className="tier-sep-icon">📊</span>Primary Metrics</div>
 
       <section id="section-overview" className="dashboard-section section-overview">
         <SectionHeader
@@ -1449,7 +1432,16 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       </section>
 
-      <section id="section-delivery-controls" className="dashboard-section section-delivery">
+      {/* ── TIER 3 ─────────────────────────────────── */}
+      <div className="tier-sep tier-sep-3"><span className="tier-sep-icon">📋</span>Delivery Detail</div>
+
+      <button type="button" className="cs-trigger" style={{'--cs-accent':'#f97316'}} onClick={() => toggleSection('delivery')} aria-expanded={expandedSections.has('delivery')}>
+        <div className="cs-trigger-left"><span aria-hidden="true">🌊</span><span className="cs-trigger-title">Delivery Controls</span>
+          <div className="cs-chips"><span className={`cs-chip ${(flow.critical||0)>0?'cs-chip-critical':'cs-chip-good'}`}>{flow.critical||0} critical</span><span className="cs-chip cs-chip-neutral">{flow.averageCycleTimeDays||0}d avg cycle</span></div>
+        </div>
+        <span className={`cs-toggle${expandedSections.has('delivery')?' open':''}`} aria-hidden="true">▾</span>
+      </button>
+      <section id="section-delivery-controls" className={`dashboard-section section-delivery${expandedSections.has('delivery')?'':' cs-collapsed'}`}>
         <SectionHeader
           icon="🌊"
           kicker="Delivery controls"
@@ -1520,7 +1512,13 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         </div>
       </section>
 
-      <section id="section-quarters" className="dashboard-panel table-section panel-quarter">
+      <button type="button" className="cs-trigger" style={{'--cs-accent':'#f97316'}} onClick={() => toggleSection('quarters')} aria-expanded={expandedSections.has('quarters')}>
+        <div className="cs-trigger-left"><span aria-hidden="true">📅</span><span className="cs-trigger-title">Quarter Statistics</span>
+          <div className="cs-chips"><span className="cs-chip cs-chip-neutral">{(data.quarters||[]).filter(q=>q.quarter!=='No date').length} quarters</span></div>
+        </div>
+        <span className={`cs-toggle${expandedSections.has('quarters')?' open':''}`} aria-hidden="true">▾</span>
+      </button>
+      <section id="section-quarters" className={`dashboard-panel table-section panel-quarter${expandedSections.has('quarters')?'':' cs-collapsed'}`}>
         <PanelTitle helpTopic="quarters" onOpenHelp={onOpenHelp}>Quarter Statistics</PanelTitle>
         <MetricTable
           columns={[
@@ -1545,7 +1543,13 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       </section>
 
-      <section id="section-kanban" className="dashboard-panel table-section panel-kanban-detail">
+      <button type="button" className="cs-trigger" style={{'--cs-accent':'#0f766e'}} onClick={() => toggleSection('kanban')} aria-expanded={expandedSections.has('kanban')}>
+        <div className="cs-trigger-left"><span aria-hidden="true">🗃️</span><span className="cs-trigger-title">Kanban Status Health</span>
+          <div className="cs-chips"><span className="cs-chip cs-chip-neutral">{(data.kanban?.byStatus||[]).length} statuses</span><span className={`cs-chip ${(flow.critical||0)>0?'cs-chip-critical':'cs-chip-good'}`}>{flow.critical||0} critical</span></div>
+        </div>
+        <span className={`cs-toggle${expandedSections.has('kanban')?' open':''}`} aria-hidden="true">▾</span>
+      </button>
+      <section id="section-kanban" className={`dashboard-panel table-section panel-kanban-detail${expandedSections.has('kanban')?'':' cs-collapsed'}`}>
         <PanelTitle helpTopic="kanban" onOpenHelp={onOpenHelp}>Kanban Status Health</PanelTitle>
         <DistributionDonut title="Kanban Share" rows={kanban.byStatus?.slice(0, 6)} emptyMessage="No status data found." />
         <CompactBarChart rows={kanban.byStatus?.slice(0, 8)} emptyMessage="No status data found." />
@@ -1566,7 +1570,13 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       </section>
 
-      <section id="section-sprint" className="dashboard-panel table-section panel-sprint-detail">
+      <button type="button" className="cs-trigger" style={{'--cs-accent':'#7c3aed'}} onClick={() => toggleSection('sprint')} aria-expanded={expandedSections.has('sprint')}>
+        <div className="cs-trigger-left"><span aria-hidden="true">🏃</span><span className="cs-trigger-title">Sprint Status</span>
+          <div className="cs-chips"><span className="cs-chip cs-chip-neutral">{data.sprint?.sprintCount||0} sprints</span>{data.sprint?.sprints?.[0] && <span className={`cs-chip ${data.sprint.sprints[0].completionRate>=80?'cs-chip-good':data.sprint.sprints[0].completionRate>=60?'cs-chip-warning':'cs-chip-critical'}`}>{data.sprint.sprints[0].completionRate}% recent</span>}</div>
+        </div>
+        <span className={`cs-toggle${expandedSections.has('sprint')?' open':''}`} aria-hidden="true">▾</span>
+      </button>
+      <section id="section-sprint" className={`dashboard-panel table-section panel-sprint-detail${expandedSections.has('sprint')?'':' cs-collapsed'}`}>
         <PanelTitle helpTopic="sprint" onOpenHelp={onOpenHelp}>Sprint Status</PanelTitle>
         <DistributionDonut title="Sprint Share" rows={sprint.sprints?.slice(0, 6)} labelKey="name" valueKey="issues" emptyMessage="No sprint data found." />
         <MetricTable
@@ -1586,7 +1596,13 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         />
       </section>
 
-      <section id="section-ownership" className="dashboard-section section-ownership">
+      <button type="button" className="cs-trigger" style={{'--cs-accent':'#0f766e'}} onClick={() => toggleSection('ownership')} aria-expanded={expandedSections.has('ownership')}>
+        <div className="cs-trigger-left"><span aria-hidden="true">👥</span><span className="cs-trigger-title">Ownership & Capacity</span>
+          <div className="cs-chips"><span className="cs-chip cs-chip-neutral">{(data.capacity||[]).length} assignees</span>{(data.capacity||[])[0] && <span className={`cs-chip ${(data.capacity[0].loadShare||0)>35?'cs-chip-critical':'cs-chip-good'}`}>{data.capacity[0].assignee}: {data.capacity[0].loadShare}%</span>}</div>
+        </div>
+        <span className={`cs-toggle${expandedSections.has('ownership')?' open':''}`} aria-hidden="true">▾</span>
+      </button>
+      <section id="section-ownership" className={`dashboard-section section-ownership${expandedSections.has('ownership')?'':' cs-collapsed'}`}>
         <SectionHeader
           icon="👥"
           kicker="Ownership"
@@ -1631,6 +1647,9 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
         </section>
         </div>
       </section>
+
+      {/* ── TIER 4 ─────────────────────────────────── */}
+      <div className="tier-sep tier-sep-4"><span className="tier-sep-icon">🔍</span>Deep Dive</div>
 
       <section id="section-labels" className="dashboard-section section-labels">
         <SectionHeader
@@ -2137,13 +2156,12 @@ export default function DashboardPage({ data, onReset, onOpenHelp }) {
               setActiveQuickFilter('high-risk');
             }
             setTimeout(() => {
-              document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              scrollToSection(sectionId);
             }, 200);
           }}
         />
       )}
 
-      <SectionNav />
       <ScrollToTopFab />
     </main>
   );

@@ -1493,3 +1493,116 @@ Rendered by `renderBackendHome()`. Provides: import history table, file statisti
 *End of Software Requirements Specification — Delivery Clarity v1.0.0*
 *Document prepared: 2026-05-30*
 *Author: Ali Abu Ras — aburasali80@gmail.com*
+
+---
+
+## SRS Additions — v1.1 (2026-05-30)
+
+### Updated Architecture: Routing
+
+react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps the application in index.js. The application has 4 routes:
+- / → UploadPage (protected: redirects to /summary if dashboardData exists)
+- /summary → SummaryPage (protected: redirects to / if no dashboardData)
+- /dashboard → DashboardPage (protected: redirects to / if no dashboardData)
+- /help → HelpGuide in pageMode=true (unprotected: always accessible)
+
+### New Functional Requirements
+
+**FR-200:** On successful file upload (/api/upload returns 200), the frontend MUST call navigate('/summary') to redirect the user to the Summary page.
+
+**FR-201:** The /summary route MUST render SummaryPage containing: (a) health score gauge with colour band matching the score tier, (b) health status banner showing scoreLabel and riskItems count, (c) prediction chip showing estimated days and date when velocity > 0 and items remain, (d) 6 KPI cards using the KpiCard component, (e) attention cards for blockers/overdue/orphans when counts > 0, (f) top 4 insights from data.insights[], (g) "Upload new file" and "View Full Report →" buttons.
+
+**FR-202:** The "View Full Report →" button on SummaryPage MUST navigate to /dashboard using useNavigate().
+
+**FR-203:** The /help route MUST render HelpGuide with pageMode=true, which renders without the backdrop overlay div and without fixed positioning, suitable for full-page display.
+
+**FR-204:** The Help button in AppHeader and all HelpButton (?) instances in DashboardPage MUST navigate to /help?section=${encodeURIComponent(section)} instead of opening a modal. The HelpPage component reads the section parameter via useSearchParams().
+
+**FR-205:** DashboardPage (/dashboard) MUST display a "← Back to Overview" button that calls navigate('/summary').
+
+**FR-206:** Any direct URL access to /summary or /dashboard when dashboardData is null MUST redirect to / (the upload page) using <Navigate to="/" replace />.
+
+### Updated Dependency
+- react-router-dom: ^7.16.0 (added to frontend/package.json)
+
+---
+
+## v3.0 Functional Requirements (2026-05-31)
+
+### F1 — Throughput & Delivery Analytics
+
+**FR-207:** The system MUST calculate `SprintThroughputSummary` for every sprint group in the export, including: committedCount, completedCount, committedPoints, completedPoints, completionPct, throughputByCount, throughputByPoints, midSprintDoneCount, midSprintPct, carryoverCount, addedScopeCount, blockedCount, goalOutcome, deliveryPattern, and deliveryConfidence.
+
+**FR-208:** Sprint dates MUST be resolved first from explicit `Sprint Start` / `Sprint End` fields; if absent, the system MUST derive dates from the minimum created date and maximum done date within the sprint group.
+
+**FR-209:** The system MUST compute sprint midpoint as `sprintStart + floor((sprintEnd - sprintStart) / 2)` and calculate mid-sprint delivery metrics against this date.
+
+**FR-210:** The system MUST classify every sprint into one of five delivery patterns: Healthy Early Progress (midSprintPct ≥ 50%), Late Delivery Risk (midSprintPct ≥ 30%), End-Loaded Sprint (default low), Scope Instability (addedScope > 20% committed), Blocked Sprint (blockedCount ≥ 2).
+
+**FR-211:** The system MUST calculate sprint goal outcome: Met (completionPct ≥ 90%), Partially Met (≥ 60%), Missed (< 60% past sprint end), At Risk (< 60% sprint still active).
+
+**FR-212:** The system MUST calculate delivery trend as the difference between the average throughput of the 3 most recent sprints and the 3 preceding sprints. Direction MUST be: Improving, Declining, or Stable (±5% threshold).
+
+**FR-213:** The system MUST calculate Kanban flow metrics for issues without sprint fields, grouped by monthly reporting period, including: completedCount, completedPoints, avgCycleTimeDays, avgLeadTimeDays, wipAverage, agingWipCount (active > 14 days), blockedCount, reopenedCount, flowEfficiencyPct (cycleTime / leadTime × 100), bottleneckStatus, flowHealth.
+
+**FR-214:** The dashboard MUST display SprintThroughputPanel, MidSprintDeliveryPanel, and KanbanThroughputPanel as collapsible sections.
+
+**FR-215:** All throughput data MUST be included in the DashboardMetrics response from `POST /api/upload` under a `throughput` field of type `ThroughputMetrics`.
+
+### F2 — Work Item Explorer
+
+**FR-216:** A route `/explore` MUST exist titled "Explore Delivery Structure" allowing users to enter any Jira issue key and retrieve its delivery structure.
+
+**FR-217:** The Explorer MUST show only the focus node, its immediate parent (one level up), and its direct children (one level down). Siblings, cousins, and unrelated orphans MUST NOT appear.
+
+**FR-218:** The system MUST reconstruct hierarchy using these signals in priority order: (1) explicit Parent Key field, (2) explicit Epic Link field, (3) key-prefix matching against known Epics. Each inferred link MUST carry a confidence score.
+
+**FR-219:** Orphan issues (no resolvable parent after all signals) MUST be classified as: MISSING_EPIC, MISSING_PARENT, DANGLING_LINK, or FULLY_ORPHANED. Each classification MUST carry a delivery impact statement and suggested fix.
+
+**FR-220:** The visual graph MUST use React Flow with Dagre hierarchical layout. Each node MUST display: issue key, summary (truncated), type icon, status badge, assignee, story points, and health indicator.
+
+**FR-221:** Each issue type MUST have a distinct visual style: Epic (purple, large), Story (blue, medium), Task (slate, medium), Sub-task (gray, small), Bug (red, medium), Spike (amber), Technical Debt (orange), Risk (dark red), Change Request (teal).
+
+**FR-222:** Orphan nodes MUST display a dashed orange border and an "ORPHAN" badge regardless of issue type.
+
+**FR-223:** The Explorer page MUST show after the visual graph: RelationCharts (6 chart cards), KPI stats (7 metric cards), and a filterable details table.
+
+**FR-224:** The details table MUST support filtering by type, status, and health, plus free-text search on key/summary/assignee. Clicking a row MUST trigger `onFocusNode` to re-search that issue.
+
+**FR-225:** The system MUST store the last 5 searched keys in localStorage key `dc_explore_recent` and display them as clickable chips below the search input.
+
+### F3 — Authentication & Database
+
+**FR-226:** All routes MUST be protected by Next.js middleware. Unauthenticated requests to `/dashboard`, `/summary`, `/charts`, `/explore`, `/backend`, `/profile`, or `/admin` MUST redirect to `/login?redirect=<originalPath>`.
+
+**FR-227:** The `/admin` prefix MUST be accessible only to users with `role = 'admin'`. Non-admin authenticated users MUST be redirected to `/dashboard`.
+
+**FR-228:** Passwords MUST be hashed using bcryptjs with a minimum of 12 salt rounds before storage. Plain-text passwords MUST never be stored, logged, or transmitted.
+
+**FR-229:** Sessions MUST use HTTP-only, SameSite=strict cookies managed by iron-session. Session TTL MUST be configurable via `SESSION_TTL_HOURS` environment variable (default: 8 hours).
+
+**FR-230:** Login attempts MUST be rate-limited to 5 per minute per IP address. Exceeding this MUST return HTTP 429.
+
+**FR-231:** Every successful login, logout, upload, and registration event MUST be recorded in the `AuditEvent` table with userId, eventType, timestamp, IP address, and user agent.
+
+**FR-232:** When a user is authenticated, every call to `POST /api/upload` MUST save an `ImportLog` record to the SQLite database with the authenticated userId, fileName, fileSize, fileType, totalIssues, doneIssues, healthScore, and processingTimeMs.
+
+**FR-233:** `GET /api/imports` MUST return only the authenticated user's import logs. Admin users calling with `?all=true` MUST receive all users' logs including the associated user name and email.
+
+**FR-234:** A UserMenu component MUST appear in the application header when the user is authenticated, displaying: user initials avatar, name, role badge (admin only), links to Profile and Admin Logs, and a Sign Out action.
+
+**FR-235:** The system MUST provide `/register` page when `ALLOW_OPEN_REGISTRATION=true`. When false, `POST /api/auth/register` MUST return HTTP 403.
+
+### F4 — Smart Excel Export
+
+**FR-236:** The Excel export MUST produce a workbook with exactly 17 named sheets in sequence: 01 Executive Summary through 17 Raw Data Reference.
+
+**FR-237:** Every sheet with tabular data MUST have: a frozen header row, auto-filter enabled on the header row, and column widths tuned to content.
+
+**FR-238:** The Executive Summary sheet MUST contain: health score, health band, completion rate, total/done/active/blocked issues, average lead time, average cycle time, top 5 recommendations with priority and suggested owner, and a plain-English executive narrative paragraph.
+
+**FR-239:** The Recommendations sheet MUST contain one row per recommendation with columns: Priority, Area, Recommendation, Evidence, Impact, Suggested Owner, Suggested Action. Every cell MUST contain plain text — no HTML, no JSON, no code.
+
+**FR-240:** The Metric Dictionary sheet MUST define every metric used in the workbook including: formula or source, unit, good range, and interpretation notes.
+
+**FR-241:** The workbook MUST NOT contain HTML markup, React JSX syntax, CSS class names, or `[object Object]` values in any cell.

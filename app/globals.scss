@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  --font-inter: 'Inter', sans-serif;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-border: rgba(203,213,225,0.7);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --radius-md: 12px;
+  --radius-lg: 18px;
+}
+
+@layer components {
+  .card { @apply bg-white rounded-xl border border-slate-200/80 shadow-sm; }
+  .badge { @apply inline-flex items-center text-xs font-bold rounded-full px-2.5 py-0.5 border; }
+  .badge-success { @apply bg-green-50 text-green-700 border-green-200; }
+  .badge-warning { @apply bg-amber-50 text-amber-700 border-amber-200; }
+  .badge-danger  { @apply bg-red-50   text-red-700   border-red-200; }
+  .badge-info    { @apply bg-blue-50  text-blue-700  border-blue-200; }
+  .badge-neutral { @apply bg-slate-100 text-slate-600 border-slate-200; }
+  .btn-primary   { @apply inline-flex items-center justify-center px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors; }
+  .btn-secondary { @apply inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white text-slate-700 text-sm font-bold border border-slate-200 hover:bg-slate-50 transition-colors; }
+}
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
+@keyframes spin { to { transform: rotate(360deg) } }
+.animate-fade-in { animation: fadeIn 0.3s ease both; }

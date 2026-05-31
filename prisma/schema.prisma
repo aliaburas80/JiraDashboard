@@ -1,0 +1,85 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("user") // "user" | "admin"
+  avatarUrl    String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLoginAt  DateTime?
+
+  sessions   Session[]
+  importLogs ImportLog[]
+  snapshots  DashboardSnapshot[]
+  auditEvents AuditEvent[]
+}
+
+model Session {
+  id               String   @id @default(cuid())
+  userId           String
+  sessionTokenHash String   @unique
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+  userAgent        String?
+  ipAddress        String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ImportLog {
+  id               String   @id @default(cuid())
+  userId           String
+  fileName         String
+  fileSize         Int
+  fileType         String
+  rowCount         Int      @default(0)
+  status           String   // "success" | "partial" | "failed" | "validation_failed"
+  warningsCount    Int      @default(0)
+  errorsCount      Int      @default(0)
+  totalIssues      Int      @default(0)
+  doneIssues       Int      @default(0)
+  healthScore      Float    @default(0)
+  uploadedAt       DateTime @default(now())
+  processingTimeMs Int      @default(0)
+  metadataJson     String?
+
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snapshots DashboardSnapshot[]
+}
+
+model DashboardSnapshot {
+  id           String   @id @default(cuid())
+  userId       String
+  importLogId  String?
+  snapshotName String
+  metricsJson  String
+  createdAt    DateTime @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  importLog ImportLog? @relation(fields: [importLogId], references: [id], onDelete: SetNull)
+}
+
+model AuditEvent {
+  id               String   @id @default(cuid())
+  userId           String?
+  eventType        String   // "login" | "logout" | "upload" | "export" | "register"
+  eventDescription String
+  createdAt        DateTime @default(now())
+  ipAddress        String?
+  userAgent        String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}

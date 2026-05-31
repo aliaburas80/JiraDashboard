@@ -15,6 +15,7 @@ function renderShell({ title, subtitle, active = 'home', actions = '', content }
     { id: 'json', label: 'JSON Logs', href: '/api/upload/logs' },
     { id: 'export', label: 'Export Excel', href: '/api/upload/logs/export' },
     { id: 'health', label: 'Health', href: '/api/health' },
+    { id: 'developer', label: 'Developer Wiki', href: '/developer' },
     { id: 'frontend', label: 'Frontend', href: 'http://localhost:3000' },
   ];
 
@@ -118,6 +119,7 @@ function renderBackendHome() {
     { title: 'JSON Logs', text: 'Raw import log API for debugging or integration work.', href: '/api/upload/logs', action: 'View JSON' },
     { title: 'Health Check', text: 'Confirm the backend service is up and responding.', href: '/api/health', action: 'Check health' },
     { title: 'Frontend App', text: 'Open the React dashboard used to upload Jira exports.', href: 'http://localhost:3000', action: 'Open frontend' },
+    { title: 'Developer Wiki', text: 'Interactive developer guide — adding metrics, sections, field aliases, layout changes, recipes, and full API reference.', href: '/developer', action: 'Open wiki' },
   ];
 
   const content = `

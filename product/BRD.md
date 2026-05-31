@@ -597,3 +597,81 @@ The following metrics define product success and will be measured at 30, 90, and
 ---
 
 *Document prepared by Ali Abu Ras · Delivery Clarity v1.0 · 2026-05-30*
+
+---
+
+## Revision Note — v1.1 (2026-05-30)
+
+### New Routes (Business Requirements Update)
+
+**BR-041 (Must):** On file upload success, the system MUST display the Summary page (/summary) as the first view. The full report (/dashboard) is a secondary page reached by explicit user action.
+
+**BR-042 (Must):** The Summary page (/summary) MUST display: delivery health score with band colour, health status banner, 6 KPI cards, attention indicators (blockers/overdue/orphans), top 4 plain-language insights, estimated completion chip, and a "View Full Report →" call-to-action button.
+
+**BR-043 (Must):** The Help guide MUST be accessible as a standalone page at /help with section-level deep-linking via ?section= URL parameter. All Help button and context ? buttons navigate to this route rather than opening a modal overlay.
+
+### Route Structure
+| Route | Component | Description |
+|---|---|---|
+| / | UploadPage | File upload landing; redirects to /summary if data loaded |
+| /summary | SummaryPage | **First page after upload** — executive overview |
+| /dashboard | DashboardPage | Full 16-section delivery report (all sections collapsible) |
+| /charts | ChartsPage | Visual analytics — donuts, bars, Gantt |
+| /explore | ExplorePage | Work Item Explorer — visual hierarchy map |
+| /login | LoginPage | Authentication — sign in |
+| /register | RegisterPage | Account creation (open registration optional) |
+| /profile | ProfilePage | User profile and sign out |
+| /admin/logs | AdminLogsPage | Admin view of all import logs |
+| /help | HelpGuide (pageMode) | Full-page interactive help with section deep-links |
+
+---
+
+## Revision Note — v3.0 (2026-05-31)
+
+### Feature 1 — Throughput & Delivery Analytics
+
+**BR-050 (Must):** The system MUST calculate sprint throughput (count and story points) for every sprint group found in the export.
+
+**BR-051 (Must):** The system MUST detect mid-sprint delivery patterns and classify each sprint as: Healthy Early Progress, End-Loaded Sprint, Late Delivery Risk, Scope Instability, or Blocked Sprint.
+
+**BR-052 (Must):** The system MUST calculate Kanban flow metrics (throughput per month, flow efficiency, aging WIP, bottleneck status) for issues without sprint fields.
+
+**BR-053 (Must):** Throughput data MUST be included in the DashboardMetrics response from the upload API.
+
+**BR-054 (Must):** The Full Report MUST display Sprint Throughput Panel, Mid-Sprint Delivery Panel, and Kanban Throughput Panel.
+
+### Feature 2 — Work Item Explorer
+
+**BR-055 (Must):** A `/explore` route MUST allow users to enter any issue key and visualise its immediate parent and direct children on an interactive graph.
+
+**BR-056 (Must):** The visual graph MUST use React Flow with Dagre layout, supporting pan, zoom, mini-map, and node click.
+
+**BR-057 (Must):** Orphan issues MUST be visually distinct — dashed orange border, "ORPHAN" badge.
+
+**BR-058 (Must):** The Explorer MUST show: visual graph, charts section, KPI stats, and detail table for the searched issue.
+
+**BR-059 (Must):** Each issue type MUST have its own node colour and icon (Epic=purple, Story=blue, Task=slate, Bug=red, etc.).
+
+### Feature 3 — Authentication
+
+**BR-060 (Must):** Users MUST authenticate with email and password before accessing /dashboard, /summary, /charts, /explore, /backend, /profile, or /admin.
+
+**BR-061 (Must):** Passwords MUST be hashed with bcryptjs (rounds=12) and never stored in plain text.
+
+**BR-062 (Must):** Sessions MUST use HTTP-only cookies via iron-session.
+
+**BR-063 (Must):** Each upload MUST be logged to the SQLite ImportLog table with the authenticated userId.
+
+**BR-064 (Should):** Admin users MUST see all users' import logs at /admin/logs. Regular users see only their own.
+
+**BR-065 (Must):** A UserMenu component MUST appear in the header showing the user's name, with Profile and Sign Out options.
+
+### Feature 4 — Smart Excel Export
+
+**BR-066 (Must):** The Excel export MUST produce a 17-sheet statistical workbook — not a copy of the UI.
+
+**BR-067 (Must):** The Executive Summary sheet MUST include a health score, top 5 recommendations with evidence, and an auto-generated executive narrative paragraph.
+
+**BR-068 (Must):** Every recommendation MUST carry: priority, area, text, evidence, impact, suggested owner, and suggested action.
+
+**BR-069 (Must):** The Metric Dictionary sheet MUST define every metric used in the workbook.

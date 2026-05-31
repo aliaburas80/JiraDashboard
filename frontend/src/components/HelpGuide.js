@@ -225,7 +225,7 @@ function Journey({ steps: stepList, finishLabel = 'Done ✓', onFinish }) {
 }
 
 // ─── main help guide ─────────────────────────────────────────────────────────
-export default function HelpGuide({ open, activeSection: requestedSection = 'welcome', onClose }) {
+export default function HelpGuide({ open, activeSection: requestedSection = 'welcome', onClose, pageMode = false }) {
   const [activeSection, setActiveSection] = useState(requestedSection);
 
   useEffect(() => {
@@ -241,7 +241,7 @@ export default function HelpGuide({ open, activeSection: requestedSection = 'wel
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, open]);
 
-  if (!open) return null;
+  if (!open && !pageMode) return null;
 
   const TAB_LABELS = {
     welcome: 'Welcome', summary: 'Summary', quickFilters: 'Filters',
@@ -255,17 +255,17 @@ export default function HelpGuide({ open, activeSection: requestedSection = 'wel
   const currentSteps = SECTION_STEPS[activeSection] || SECTION_STEPS.welcome;
   const isWelcome = activeSection === 'welcome';
 
-  return (
-    <div className="help-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title">
-      <div className="help-backdrop" onClick={onClose} />
-      <section className="help-panel">
+  const closeLabel = pageMode ? '← Back' : 'Close';
+
+  const inner = (
+    <section className={`help-panel${pageMode ? ' help-panel-page' : ''}`}>
         <header className="help-header">
           <div>
             <span className="help-eyebrow">Delivery Clarity — Guide</span>
             <h2 id="help-title">How to use Delivery Clarity</h2>
             <p>Every section is an interactive journey — use the arrow keys or tap Next to step through, and click any tab to jump to a topic.</p>
           </div>
-          <button className="help-close" type="button" onClick={onClose} aria-label="Close help">Close</button>
+          <button className="help-close" type="button" onClick={onClose} aria-label={closeLabel}>{closeLabel}</button>
         </header>
 
         <nav className="help-tabs" aria-label="Help sections">
@@ -291,6 +291,16 @@ export default function HelpGuide({ open, activeSection: requestedSection = 'wel
           © {new Date().getFullYear()} Ali Abu Ras · aburasali80@gmail.com · All rights reserved.
         </p>
       </section>
+  );
+
+  if (pageMode) {
+    return <div className="help-page-wrap">{inner}</div>;
+  }
+
+  return (
+    <div className="help-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title">
+      <div className="help-backdrop" onClick={onClose} />
+      {inner}
     </div>
   );
 }
