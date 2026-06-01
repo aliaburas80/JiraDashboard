@@ -7,6 +7,7 @@ import { calculateDataQuality } from '../dataQuality/dataQuality.service';
 import { calculateFieldImpacts } from '../dataQuality/missingFieldImpact.service';
 import { calculateMetricConfidence } from './metricConfidence.service';
 import { readThresholds } from '../settings/thresholds.service';
+import { readOrphanRules, isOrphanByRules } from '../settings/orphanRules.service';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -519,7 +520,7 @@ function getHealthFromIssue(issue: JiraIssue, today: Date = new Date()): FlowIte
     highLevelStatus: (issue['High Level Status'] as string) || '',
     sprint: getSprintName(issue),
     epic: (issue['Epic Link'] as string) || (issue['Parent Key'] as string) || '',
-    isOrphan: !(issue['Epic Link'] || issue['Parent Key']),
+    isOrphan: isOrphanByRules(issue, readOrphanRules()),
     assignee: (issue['Assignee'] as string) || 'Unassigned',
     priority: (issue['Priority'] as string) || '',
     storyPoints: round(getStoryPoints(issue)),

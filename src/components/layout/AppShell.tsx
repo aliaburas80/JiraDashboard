@@ -9,17 +9,17 @@ import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 
 // Upload is intentionally excluded — it lives on the LEFT as a distinct restart button
 const NAV = [
-  { href: '/summary',   label: 'Overview'    },
-  { href: '/charts',    label: 'Charts'      },
+  { href: '/summary', label: 'Overview' },
+  { href: '/customer', label: 'Customer' },
+  { href: '/trends', label: 'Trends' },
+  { href: '/charts', label: 'Charts' },
   { href: '/dashboard', label: 'Full Report' },
-  { href: '/explore',   label: 'Explore'     },
-  { href: '/developer', label: 'Developer'   },
-  { href: '/backend',   label: 'Backend'     },
-  { href: '/trends',    label: 'Trends'      },
-  { href: '/snapshots', label: 'Snapshots'   },
-  { href: '/customer',  label: 'Customer'    },
-  { href: '/glossary',  label: 'Glossary'    },
-  { href: '/help',      label: 'Help'        },
+  { href: '/explore', label: 'Explore' },
+  { href: '/snapshots', label: 'Snapshots' },
+  { href: '/backend', label: 'Backend' },
+  { href: '/glossary', label: 'Glossary' },
+  { href: '/developer', label: 'Developer' },
+  { href: '/help', label: 'Help' },
 ];
 
 const NAV_SMALL = ['/summary', '/dashboard', '/explore', '/help'];
