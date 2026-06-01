@@ -59,6 +59,8 @@ export default function HomePage() {
       const res  = await fetch('/samples/sample-jira-export.csv');
       const blob = await res.blob();
       const file = new File([blob], 'sample-jira-export.csv', { type: 'text/csv' });
+      // Track onboarding
+      try { const { markStepDone } = await import('@/lib/onboarding'); markStepDone('upload_file'); } catch {}
       await handleFile(file);
     } catch {
       setError('Failed to load sample data. Please try uploading your own file.');

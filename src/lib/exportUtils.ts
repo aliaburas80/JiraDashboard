@@ -7,6 +7,12 @@ import { downloadInsightWorkbook } from '@/services/export/excelInsightExport.se
 // ── Excel — Smart statistical workbook (17 sheets) ───────────────────────────
 export function exportToExcel(metrics: DashboardMetrics, filename = 'delivery-clarity-report.xlsx') {
   downloadInsightWorkbook(metrics, filename);
+  // Track onboarding step
+  try {
+    localStorage.setItem('dc_downloaded_report', '1');
+    const { markStepDone } = require('./onboarding');
+    markStepDone('download_report');
+  } catch {}
 }
 
 // ── Excel — Legacy basic export (kept for internal use/testing) ───────────────

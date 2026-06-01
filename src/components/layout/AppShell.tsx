@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { getInitialTheme, applyTheme } from '@/lib/theme';
 import UserMenu from '@/components/auth/UserMenu';
+import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 
 // Upload is intentionally excluded — it lives on the LEFT as a distinct restart button
 const NAV = [
@@ -105,6 +106,9 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                 })}
               </nav>
             )}
+
+            {/* Getting started progress chip */}
+            {showNav && <OnboardingChecklist compact />}
 
             {/* User menu */}
             <UserMenu />

@@ -1783,7 +1783,17 @@ export default function DashboardPage() {
               ]}
               accent="#2563eb"
               expanded={expandedSections.has('throughput')}
-              onToggle={() => toggleSection('throughput')}
+              onToggle={() => {
+                toggleSection('throughput');
+                // Track onboarding step on first expand
+                if (!expandedSections.has('throughput')) {
+                  try {
+                    localStorage.setItem('dc_viewed_sprints', '1');
+                    const { markStepDone } = require('@/lib/onboarding');
+                    markStepDone('review_sprints');
+                  } catch {}
+                }
+              }}
             />
             {expandedSections.has('throughput') && (
             <section id="section-throughput" className="mb-8 space-y-6">

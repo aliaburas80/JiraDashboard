@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { markStepDone } from '@/lib/onboarding';
 import dynamic from 'next/dynamic';
 import AppShell from '@/components/layout/AppShell';
 import LoadingState from '@/components/ui/LoadingState';
@@ -44,6 +45,9 @@ export default function ExplorePage() {
     const data = loadMetrics() as DashboardMetrics | null;
     setMetrics(data);
     setRecent(loadRecent());
+    // Track onboarding step
+    markStepDone('try_explorer');
+    try { localStorage.setItem('dc_visited_explore', '1'); } catch {}
   }, []);
 
   const explore = useCallback((key: string) => {

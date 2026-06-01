@@ -10,6 +10,7 @@ import type { DashboardMetrics } from '@/types/metrics';
 import { loadMetrics } from '@/lib/storage';
 import { exportToExcel, exportToHtml } from '@/lib/exportUtils';
 import { getHealthBand, HEALTH_COLORS, type HealthBand } from '@/lib/utils';
+import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 
 const DONE_STATUSES = new Set(['done', 'closed', 'resolved']);
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
@@ -32,8 +33,9 @@ const BAND_BG: Record<HealthBand, string> = {
 
 export default function SummaryPage() {
   const router = useRouter();
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics]   = useState<DashboardMetrics | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     try {
@@ -45,6 +47,10 @@ export default function SummaryPage() {
     } finally {
       setLoading(false);
     }
+    // Check login state for onboarding
+    fetch('/api/auth/me').then(r => r.ok ? r.json() : null).then(me => {
+      if (me?.userId) setIsLoggedIn(true);
+    }).catch(() => {});
   }, [router]);
 
   if (loading) return <AppShell showNav><LoadingState message="Loading summary…" /></AppShell>;
@@ -70,6 +76,9 @@ export default function SummaryPage() {
 
   return (
     <AppShell showNav>
+      {/* ── Onboarding checklist — shown to first-time users ── */}
+      <OnboardingChecklist isLoggedIn={isLoggedIn} />
+
       {/* ── Health banner ── */}
       <div
         className={`flex flex-wrap items-center gap-5 rounded-2xl border px-6 py-5 mb-7 shadow-sm ${BAND_BG[band]}`}
