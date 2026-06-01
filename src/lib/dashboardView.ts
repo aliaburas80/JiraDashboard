@@ -18,3 +18,7 @@ export function saveViewId(id: ViewId): void {
 export function getView(id: ViewId): DashboardView {
   return DASHBOARD_VIEWS.find(v => v.id === id) ?? DASHBOARD_VIEWS[0];
 }
+
+export function isTierHidden(view: DashboardView, tier: string): boolean {
+  return view.hideTiers.includes(tier);
+}

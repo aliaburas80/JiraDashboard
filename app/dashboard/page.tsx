@@ -23,7 +23,7 @@ import DataQualityCard from '@/components/dashboard/DataQualityCard';
 import MetricConfidenceBadge from '@/components/ui/MetricConfidenceBadge';
 import MissingFieldImpactPanel from '@/components/upload/MissingFieldImpactPanel';
 import DashboardViewSelector from '@/components/dashboard/DashboardViewSelector';
-import { getSavedViewId, saveViewId, getView } from '@/lib/dashboardView';
+import { getSavedViewId, saveViewId, getView, isTierHidden } from '@/lib/dashboardView';
 import type { ViewId } from '@/types/dashboardView';
 
 // ─── accent map ───────────────────────────────────────────────────────────────
@@ -290,7 +290,9 @@ export default function DashboardPage() {
   }
 
   const activeView = getView(activeViewId);
-  const isHidden   = (key: string) => activeView.hidden.includes(key);
+  const isHidden      = (key: string) => activeView.hidden.includes(key);
+  const isTierHid    = (tier: string) => isTierHidden(activeView, tier);
+  const hideFlowPanel = activeView.hideFlowPanel;
 
   // load metrics + presets + view + URL filter state from localStorage / query params
   useEffect(() => {
@@ -868,7 +870,7 @@ export default function DashboardPage() {
         )}
 
         {/* ── TIER 1: PRIORITY ATTENTION ──────────────────────────────────────── */}
-        <TierSep icon="🚨" label="Priority Attention" tier={0} />
+        {!isTierHid('attention') && <TierSep icon="🚨" label="Priority Attention" tier={0} />}
 
         {/* ── 4. TIER 1 — TOP 3 HIGHLIGHT CARDS ──────────────────────────────── */}
         <CollapsibleTrigger
@@ -916,7 +918,7 @@ export default function DashboardPage() {
         )}
 
         {/* ── TIER 2: PRIMARY METRICS ─────────────────────────────────────────── */}
-        <TierSep icon="📊" label="Primary Metrics" tier={1} />
+        {!isTierHid('primary') && <TierSep icon="📊" label="Primary Metrics" tier={1} />}
 
         {/* ── 5. TIER 2 — 6 KPI CARDS ─────────────────────────────────────────── */}
         <CollapsibleTrigger
@@ -1071,7 +1073,7 @@ export default function DashboardPage() {
         )}
 
         {/* ── TIER 3: DELIVERY DETAIL ──────────────────────────────────────────── */}
-        <TierSep icon="📋" label="Delivery Detail" tier={2} />
+        {!isTierHid('delivery') && <TierSep icon="📋" label="Delivery Detail" tier={2} />}
 
         {/* ── 8a. DELIVERY CONTROLS ────────────────────────────────────────────── */}
         <CollapsibleTrigger
@@ -1279,7 +1281,7 @@ export default function DashboardPage() {
         )}
 
         {/* ── TIER 4: DEEP DIVE ────────────────────────────────────────────────── */}
-        <TierSep icon="🔍" label="Deep Dive" tier={3} />
+        {!isTierHid('deepdive') && <TierSep icon="🔍" label="Deep Dive" tier={3} />}
 
         {/* ── 9a. CLASSIFICATION (LABELS + TYPES) ──────────────────────────────── */}
         <CollapsibleTrigger
@@ -1538,6 +1540,7 @@ export default function DashboardPage() {
         )}
 
         {/* ── 10. FLOW HEALTH PANEL ────────────────────────────────────────────── */}
+        {!hideFlowPanel && (
         <section id="flow-health-panel" className="mb-8">
           <button
             type="button"
@@ -1776,6 +1779,7 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+        )}
 
         {/* ── DETAIL MODAL ─────────────────────────────────────────────────────── */}
         {detailPanel && (
@@ -1825,6 +1829,7 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
 
         {/* ── 11. THROUGHPUT ANALYTICS ─────────────────────────────────────────── */}
         {metrics.throughput && (
