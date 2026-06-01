@@ -299,6 +299,13 @@ export default function SummaryPage() {
         >
           View Full Report →
         </button>
+        <button
+          type="button"
+          onClick={() => router.push('/customer')}
+          className="px-5 py-2.5 rounded-lg border border-teal-600 bg-teal-600 text-sm font-bold text-white hover:bg-teal-700 shadow-sm transition-colors"
+        >
+          👤 Customer View
+        </button>
       </div>
     </AppShell>
   );

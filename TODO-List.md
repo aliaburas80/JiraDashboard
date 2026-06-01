@@ -231,7 +231,7 @@
 | 9.7  | Sample/demo Jira dataset button | P1 | ✅ Done — 35-issue realistic demo dataset |
 | 9.8  | First-time onboarding checklist | P1 | ✅ Done — 10 tests passing |
 | 9.9  | Role-based dashboard views | P1 | ✅ Done — 5 views, 10 tests passing |
-| 9.10 | Customer View | P1 | ❌ Not started |
+| 9.10 | Customer View | P1 | ✅ Done — 8 tests passing |
 | 9.11 | Saved dashboard snapshots | P1 | ❌ Not started |
 | 9.12 | Snapshot comparison | P1 | ❌ Not started |
 | 9.13 | Upload-to-upload trend analysis | P1 | ❌ Not started |

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 
-const PROTECTED  = ['/dashboard', '/summary', '/charts', '/explore', '/backend', '/profile'];
+const PROTECTED  = ['/dashboard', '/summary', '/charts', '/explore', '/backend', '/profile', '/customer'];
 const ADMIN_ONLY = ['/admin'];
 
 export async function middleware(req: NextRequest) {
@@ -37,6 +37,6 @@ export const config = {
   matcher: [
     '/dashboard/:path*', '/summary/:path*', '/charts/:path*',
     '/explore/:path*',   '/backend/:path*', '/profile/:path*',
-    '/admin/:path*',
+    '/customer/:path*',  '/admin/:path*',
   ],
 };
