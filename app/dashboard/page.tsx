@@ -22,6 +22,9 @@ import DraggableMetricTable from '@/components/dashboard/DraggableMetricTable';
 import DataQualityCard from '@/components/dashboard/DataQualityCard';
 import MetricConfidenceBadge from '@/components/ui/MetricConfidenceBadge';
 import MissingFieldImpactPanel from '@/components/upload/MissingFieldImpactPanel';
+import DashboardViewSelector from '@/components/dashboard/DashboardViewSelector';
+import { getSavedViewId, saveViewId, getView } from '@/lib/dashboardView';
+import type { ViewId } from '@/types/dashboardView';
 
 // ─── accent map ───────────────────────────────────────────────────────────────
 const HEALTH_VARIANT: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'neutral'> = {
@@ -180,9 +183,10 @@ const CHIP_CLS: Record<string, string> = {
   info: 'bg-blue-50 text-blue-700 border border-blue-200',
   neutral: 'bg-slate-100 text-slate-600 border border-slate-200',
 };
-function CollapsibleTrigger({ id, icon, title, chips, accent, expanded, onToggle }: {
-  id: string; icon: string; title: string; chips: Chip[]; accent: string; expanded: boolean; onToggle: () => void;
+function CollapsibleTrigger({ id, icon, title, chips, accent, expanded, onToggle, hidden = false }: {
+  id: string; icon: string; title: string; chips: Chip[]; accent: string; expanded: boolean; onToggle: () => void; hidden?: boolean;
 }) {
+  if (hidden) return null;
   return (
     <button
       type="button"
@@ -268,6 +272,7 @@ export default function DashboardPage() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['overview', 'attention', 'readiness']));
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
+  const [activeViewId, setActiveViewId] = useState<ViewId>('full');
 
   // filter presets
   const [presets, setPresets] = useState<FilterPreset[]>([]);
@@ -277,8 +282,24 @@ export default function DashboardPage() {
   const toggleSection = (key: string) =>
     setExpandedSections(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
 
-  // load metrics + presets + URL filter state from localStorage / query params
+  function changeView(id: ViewId) {
+    const view = getView(id);
+    setActiveViewId(id);
+    saveViewId(id);
+    setExpandedSections(new Set(view.defaultOpen));
+  }
+
+  const activeView = getView(activeViewId);
+  const isHidden   = (key: string) => activeView.hidden.includes(key);
+
+  // load metrics + presets + view + URL filter state from localStorage / query params
   useEffect(() => {
+    // Restore saved view
+    const savedView = getSavedViewId();
+    setActiveViewId(savedView);
+    const view = getView(savedView);
+    setExpandedSections(new Set(view.defaultOpen));
+
     try {
       const data = loadMetrics() as DashboardMetrics | null;
       if (!data) { router.replace('/'); return; }
@@ -597,6 +618,8 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Full Delivery Report</h1>
             <p className="text-sm text-slate-500 mt-0.5">Flow, sprint, kanban, capacity, story points, and epic performance.</p>
           </div>
+          {/* View selector — top-right of header */}
+          <DashboardViewSelector activeViewId={activeViewId} onChange={changeView} />
           <div className="flex items-center gap-3">
             {metrics.healthScore !== undefined && (
               <div
@@ -624,6 +647,27 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
+
+        {/* ── VIEW BANNER — shown when not Full Report ── */}
+        {activeViewId !== 'full' && (
+          <div
+            className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-4 border"
+            style={{ background: activeView.accentColor + '10', borderColor: activeView.accentColor + '40' }}
+          >
+            <span className="text-lg">{activeView.icon}</span>
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-black" style={{ color: activeView.accentColor }}>{activeView.label} View</span>
+              <span className="text-xs text-slate-500 ml-2">{activeView.description}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => changeView('full')}
+              className="text-[10px] font-bold text-slate-500 hover:text-slate-700 border border-slate-200 rounded-full px-2.5 py-0.5 bg-white shrink-0"
+            >
+              Switch to Full Report
+            </button>
+          </div>
+        )}
 
         {/* ── 2. SUMMARY BAR ─────────────────────────────────────────────────── */}
         <Card id="dashboard-summary" className="px-5 py-4 mb-4">
@@ -783,6 +827,7 @@ export default function DashboardPage() {
           <section className="mb-6" aria-label="Smart recommendations">
             <CollapsibleTrigger
               id="recommendations"
+          hidden={isHidden('recommendations')}
               icon="⚡"
               title="Smart Recommendations"
               chips={[{ label: `${smartActions.length} action${smartActions.length !== 1 ? 's' : ''}`, type: smartActions.some(a => a.type === 'critical') ? 'danger' : 'warning' }]}
@@ -790,7 +835,7 @@ export default function DashboardPage() {
               expanded={expandedSections.has('recommendations')}
               onToggle={() => toggleSection('recommendations')}
             />
-            {expandedSections.has('recommendations') && (
+            {!isHidden('recommendations') && expandedSections.has('recommendations') && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
               {smartActions.map((action, i) => (
                 <button
@@ -828,6 +873,7 @@ export default function DashboardPage() {
         {/* ── 4. TIER 1 — TOP 3 HIGHLIGHT CARDS ──────────────────────────────── */}
         <CollapsibleTrigger
           id="attention"
+          hidden={isHidden('attention')}
           icon="🚨"
           title="Priority Attention"
           chips={[
@@ -839,7 +885,7 @@ export default function DashboardPage() {
           expanded={expandedSections.has('attention')}
           onToggle={() => toggleSection('attention')}
         />
-        {expandedSections.has('attention') && (
+        {!isHidden('attention') && expandedSections.has('attention') && (
         <section id="section-attention" className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {[
             { id: 'blockers', title: 'Top Blockers', tag: 'Blockers', items: topBlockers, color: 'border-red-400 bg-red-50', tagCls: 'bg-red-100 text-red-700' },
@@ -875,6 +921,7 @@ export default function DashboardPage() {
         {/* ── 5. TIER 2 — 6 KPI CARDS ─────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="overview"
+          hidden={isHidden('overview')}
           icon="📊"
           title="Key Metrics"
           chips={[
@@ -885,7 +932,7 @@ export default function DashboardPage() {
           expanded={expandedSections.has('overview')}
           onToggle={() => toggleSection('overview')}
         />
-        {expandedSections.has('overview') && (
+        {!isHidden('overview') && expandedSections.has('overview') && (
         <section id="section-overview" className="mb-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <KpiCard label="Completion" value={`${metrics.completionRate}%`} detail={`${metrics.doneIssues} of ${metrics.totalIssues} done`} accent="#16a34a" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.healthScore} />
@@ -901,6 +948,7 @@ export default function DashboardPage() {
         {/* ── 6. DELIVERY COMPOSITION RING ─────────────────────────────────────── */}
         <CollapsibleTrigger
           id="ratios"
+          hidden={isHidden('ratios')}
           icon="🍩"
           title="Delivery Composition"
           chips={[{ label: `${metrics.completionRate}% complete`, type: metrics.completionRate >= 80 ? 'good' : 'warning' }]}
@@ -908,7 +956,7 @@ export default function DashboardPage() {
           expanded={expandedSections.has('ratios')}
           onToggle={() => toggleSection('ratios')}
         />
-        {expandedSections.has('ratios') && (
+        {!isHidden('ratios') && expandedSections.has('ratios') && (
         <section id="section-ratios" className="mb-6">
           <Card className="p-5 flex flex-col md:flex-row items-center gap-8">
             <div className="shrink-0 relative">
@@ -946,6 +994,7 @@ export default function DashboardPage() {
         {/* ── 7. VISUAL INTELLIGENCE ───────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="visuals"
+          hidden={isHidden('visuals')}
           icon="📈"
           title="Visual Analytics"
           chips={[{ label: 'Charts', type: 'neutral' }]}
@@ -953,7 +1002,7 @@ export default function DashboardPage() {
           expanded={expandedSections.has('visuals')}
           onToggle={() => toggleSection('visuals')}
         />
-        {expandedSections.has('visuals') && (
+        {!isHidden('visuals') && expandedSections.has('visuals') && (
         <section id="section-visuals" className="mb-6">
           {/* hero row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -1027,6 +1076,7 @@ export default function DashboardPage() {
         {/* ── 8a. DELIVERY CONTROLS ────────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="delivery"
+          hidden={isHidden('delivery')}
           icon="🌊"
           title="Delivery Controls"
           chips={[
@@ -1037,7 +1087,7 @@ export default function DashboardPage() {
           expanded={expandedSections.has('delivery')}
           onToggle={() => toggleSection('delivery')}
         />
-        {expandedSections.has('delivery') && (
+        {!isHidden('delivery') && expandedSections.has('delivery') && (
           <section id="section-delivery-controls" className="mb-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
               <Card className="p-4">
@@ -1081,6 +1131,7 @@ export default function DashboardPage() {
         {/* ── 8b. QUARTER STATISTICS ───────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="quarters"
+          hidden={isHidden('quarters')}
           icon="📅"
           title="Quarter Statistics"
           chips={[{ label: `${quarters.filter((q: any) => q.quarter !== 'No date').length} quarters`, type: 'neutral' }]}
@@ -1088,7 +1139,7 @@ export default function DashboardPage() {
           expanded={expandedSections.has('quarters')}
           onToggle={() => toggleSection('quarters')}
         />
-        {expandedSections.has('quarters') && (
+        {!isHidden('quarters') && expandedSections.has('quarters') && (
           <section id="section-quarters" className="mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
             <MetricTable
               columns={[
@@ -1109,6 +1160,7 @@ export default function DashboardPage() {
         {/* ── 8c. KANBAN STATUS ────────────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="kanban"
+          hidden={isHidden('kanban')}
           icon="🗃️"
           title="Kanban Status Health"
           chips={[
@@ -1119,7 +1171,7 @@ export default function DashboardPage() {
           expanded={expandedSections.has('kanban')}
           onToggle={() => toggleSection('kanban')}
         />
-        {expandedSections.has('kanban') && (
+        {!isHidden('kanban') && expandedSections.has('kanban') && (
           <section id="section-kanban" className="mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
             <DistributionDonut title="Kanban Share" rows={(kanban?.byStatus || []).slice(0, 6)} emptyMessage="No status data." />
             <CompactBarChart rows={(kanban?.byStatus || []).slice(0, 8)} emptyMessage="No status data." />
@@ -1141,6 +1193,7 @@ export default function DashboardPage() {
         {/* ── 8d. SPRINT STATUS ────────────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="sprint"
+          hidden={isHidden('sprint')}
           icon="🏃"
           title="Sprint Status"
           chips={[
@@ -1151,7 +1204,7 @@ export default function DashboardPage() {
           expanded={expandedSections.has('sprint')}
           onToggle={() => toggleSection('sprint')}
         />
-        {expandedSections.has('sprint') && (
+        {!isHidden('sprint') && expandedSections.has('sprint') && (
           <section id="section-sprint" className="mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
             <DistributionDonut title="Sprint Share" rows={(sprint.sprints || []).slice(0, 6)} labelKey="name" valueKey="issues" emptyMessage="No sprint data." />
             <MetricTable
@@ -1172,6 +1225,7 @@ export default function DashboardPage() {
         {/* ── 8e. OWNERSHIP & CAPACITY ─────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="ownership"
+          hidden={isHidden('ownership')}
           icon="👥"
           title="Ownership & Capacity"
           chips={[
@@ -1182,7 +1236,7 @@ export default function DashboardPage() {
           expanded={expandedSections.has('ownership')}
           onToggle={() => toggleSection('ownership')}
         />
-        {expandedSections.has('ownership') && (
+        {!isHidden('ownership') && expandedSections.has('ownership') && (
           <section id="section-ownership" className="mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card id="capacity-section" className="p-4">
@@ -1230,6 +1284,7 @@ export default function DashboardPage() {
         {/* ── 9a. CLASSIFICATION (LABELS + TYPES) ──────────────────────────────── */}
         <CollapsibleTrigger
           id="labels"
+          hidden={isHidden('labels')}
           icon="🏷️"
           title="Labels, Types & Projects"
           chips={[{ label: 'Classification', type: 'neutral' }]}
@@ -1237,7 +1292,7 @@ export default function DashboardPage() {
           expanded={expandedSections.has('labels')}
           onToggle={() => toggleSection('labels')}
         />
-        {expandedSections.has('labels') && (
+        {!isHidden('labels') && expandedSections.has('labels') && (
         <section id="section-labels" className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <Card className="p-4">
@@ -1330,6 +1385,7 @@ export default function DashboardPage() {
         {/* ── 9b. RELATIONS ────────────────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="relations"
+          hidden={isHidden('relations')}
           icon="🔗"
           title="Linked Issues & Dependencies"
           chips={rels?.hasLinks ? [{ label: `${rels.totalLinks} links`, type: 'info' as const }] : [{ label: 'No links found', type: 'neutral' as const }]}
@@ -1337,7 +1393,7 @@ export default function DashboardPage() {
           expanded={expandedSections.has('relations')}
           onToggle={() => toggleSection('relations')}
         />
-        {expandedSections.has('relations') && (
+        {!isHidden('relations') && expandedSections.has('relations') && (
         <section id="section-relations" className="mb-6">
           <div className="mb-3">
             <p className="text-sm text-slate-500 mt-0.5">
@@ -1415,6 +1471,7 @@ export default function DashboardPage() {
         {/* ── 9d. READINESS ────────────────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="readiness"
+          hidden={isHidden('readiness')}
           icon="🚀"
           title="Epic Health & Release Readiness"
           chips={[
@@ -1425,7 +1482,7 @@ export default function DashboardPage() {
           expanded={expandedSections.has('readiness')}
           onToggle={() => toggleSection('readiness')}
         />
-        {expandedSections.has('readiness') && (
+        {!isHidden('readiness') && expandedSections.has('readiness') && (
         <section id="section-readiness" className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="p-4">
@@ -1774,6 +1831,7 @@ export default function DashboardPage() {
           <>
             <CollapsibleTrigger
               id="throughput"
+          hidden={isHidden('throughput')}
               icon="⚡"
               title="Throughput & Delivery Analytics"
               chips={[
@@ -1795,7 +1853,7 @@ export default function DashboardPage() {
                 }
               }}
             />
-            {expandedSections.has('throughput') && (
+            {!isHidden('throughput') && expandedSections.has('throughput') && (
             <section id="section-throughput" className="mb-8 space-y-6">
               <SprintThroughputPanel summary={metrics.throughput.sprint} />
               {metrics.throughput.sprint.totalSprints >= 2 && (
