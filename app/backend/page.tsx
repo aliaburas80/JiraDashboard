@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import AppShell from '@/components/layout/AppShell';
 import LoadingState from '@/components/ui/LoadingState';
+import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -22,16 +23,17 @@ interface ApiEndpoint {
 }
 
 interface ImportLog {
-  timestamp: string | null;
-  filename: string | null;
-  rowCount: number | null;
-  status: string;
-  sheetName?: string | null;
-  filesize?: number | null;
+  id?:         string | null;
+  timestamp:   string | null;
+  filename:    string | null;
+  rowCount:    number | null;
+  status:      string;
+  sheetName?:  string | null;
+  filesize?:   number | null;
   healthScore?: number | null;
   totalIssues?: number | null;
-  userName?: string | null;
-  userEmail?: string | null;
+  userName?:   string | null;
+  userEmail?:  string | null;
 }
 
 interface BackendViewData {
@@ -115,9 +117,13 @@ function safeInt(n: number | null | undefined): string {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function BackendPage() {
-  const [data, setData] = useState<BackendViewData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [data, setData]         = useState<BackendViewData | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; filename: string } | null>(null);
+  const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast]       = useState('');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -136,12 +142,67 @@ export default function BackendPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(''), 3000);
+  }
+
+  async function handleDeleteOne() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/imports/${deleteTarget.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Delete failed');
+      setData(d => d ? { ...d, logs: d.logs.filter(l => l.id !== deleteTarget.id) } : d);
+      showToast(`✓ Deleted "${deleteTarget.filename}"`);
+    } catch { showToast('Failed to delete log.'); }
+    finally { setDeleting(false); setDeleteTarget(null); }
+  }
+
+  async function handleDeleteAll() {
+    setDeleting(true);
+    try {
+      const res = await fetch('/api/imports/all', { method: 'DELETE' });
+      const json = await res.json();
+      if (!res.ok) throw new Error('Delete failed');
+      setData(d => d ? { ...d, logs: [], stats: { ...d.stats, totalImports: 0, successfulImports: 0, failedImports: 0 } } : d);
+      showToast(`✓ Deleted ${json.deleted} import log${json.deleted !== 1 ? 's' : ''}`);
+    } catch { showToast('Failed to delete logs.'); }
+    finally { setDeleting(false); setDeleteAllConfirm(false); }
+  }
 
   return (
     <AppShell showNav>
+      {/* ── Confirmation dialogs ── */}
+      {deleteTarget && (
+        <ConfirmDeleteDialog
+          title="Delete import log?"
+          message={`This will permanently remove the import log for "${deleteTarget.filename}". This cannot be undone.`}
+          onConfirm={handleDeleteOne}
+          onCancel={() => setDeleteTarget(null)}
+          loading={deleting}
+        />
+      )}
+      {deleteAllConfirm && (
+        <ConfirmDeleteDialog
+          title="Delete all import logs?"
+          message="This will permanently remove all your import logs. You will not lose your current dashboard data. This cannot be undone."
+          confirmLabel="Delete all logs"
+          onConfirm={handleDeleteAll}
+          onCancel={() => setDeleteAllConfirm(false)}
+          loading={deleting}
+        />
+      )}
+
+      {/* ── Toast ── */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg z-50">
+          {toast}
+        </div>
+      )}
+
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -296,6 +357,16 @@ export default function BackendPage() {
               <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">
                 {data.isAdmin ? 'All Import Logs' : 'My Import Logs'}
               </h2>
+              {/* delete-all button shown only for own logs (non-admin) */}
+              {!data.isAdmin && data.logs.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setDeleteAllConfirm(true)}
+                  className="text-xs font-semibold text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg px-3 py-1.5 transition-colors"
+                >
+                  Delete all my logs
+                </button>
+              )}
               <div className="flex items-center gap-2">
                 {data.currentUser && (
                   <span className="text-xs text-slate-500">
@@ -326,6 +397,7 @@ export default function BackendPage() {
                         <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-20 whitespace-nowrap">Rows</th>
                         <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-16">Health</th>
                         <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-28">Status</th>
+                        <th className="w-10 px-2 py-3" />
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -366,6 +438,19 @@ export default function BackendPage() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             <StatusBadge status={log.status} />
+                          </td>
+                          {/* Delete — only show when log has an id (DB-backed) */}
+                          <td className="px-2 py-3 text-center">
+                            {log.id && (
+                              <button
+                                type="button"
+                                title="Delete this log"
+                                onClick={() => setDeleteTarget({ id: log.id!, filename: log.filename ?? 'Unknown' })}
+                                className="w-6 h-6 rounded-full text-slate-300 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center justify-center text-sm font-black"
+                              >
+                                ×
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))}

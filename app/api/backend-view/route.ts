@@ -58,6 +58,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       };
 
       const logs = dbLogs.map(l => ({
+        id:          l.id,
         timestamp:   l.uploadedAt?.toISOString() ?? null,
         filename:    l.fileName,
         rowCount:    l.rowCount,

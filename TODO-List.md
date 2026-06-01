@@ -219,7 +219,7 @@
 | 9.2 | Metric Confidence Score per KPI — confidence badge + reason on every major metric | P0 | ✅ Done — 14 tests passing |
 | 9.3 | Missing-column impact explanation — which fields are missing and which metrics they break | P0 | ✅ Done — 12 tests passing |
 | 9.4 | Privacy and data-retention settings — admin controls: retention period, auto-delete, clear all | P0 | ✅ Done — 10 tests passing |
-| 9.5 | Delete import history / delete dashboard snapshot — user deletes own data, admin deletes any | P0 | ❌ Not started |
+| 9.5 | Delete import history / delete dashboard snapshot — user deletes own data, admin deletes any | P0 | ✅ Done — 10 tests passing |
 
 ---
 
