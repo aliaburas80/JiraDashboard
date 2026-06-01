@@ -6,6 +6,7 @@ import { calculateKanbanFlow } from './kanbanFlow.service';
 import { calculateDataQuality } from '../dataQuality/dataQuality.service';
 import { calculateFieldImpacts } from '../dataQuality/missingFieldImpact.service';
 import { calculateMetricConfidence } from './metricConfidence.service';
+import { readThresholds } from '../settings/thresholds.service';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -464,32 +465,33 @@ function getHealthFromIssue(issue: JiraIssue, today: Date = new Date()): FlowIte
   const isOverdue = dueDate && dueDate < today && !isDone(issue);
   const isHighPriority = ['High', 'Highest', 'Critical'].includes(issue['Priority'] as string);
 
+  const thresholds = readThresholds();
   const reasons: string[] = [];
   let health: HealthStatus = 'good';
 
   if (isDone(issue)) {
-    if (cycleTimeDays !== null && cycleTimeDays > 14) {
+    if (cycleTimeDays !== null && cycleTimeDays > thresholds.cycleTimeCriticalDays) {
       health = 'critical';
-      reasons.push('Cycle time is over 14 days.');
-    } else if (cycleTimeDays !== null && cycleTimeDays > 7) {
+      reasons.push(`Cycle time is over ${thresholds.cycleTimeCriticalDays} days.`);
+    } else if (cycleTimeDays !== null && cycleTimeDays > thresholds.cycleTimeWarningDays) {
       health = 'warning';
-      reasons.push('Cycle time is over 7 days.');
+      reasons.push(`Cycle time is over ${thresholds.cycleTimeWarningDays} days.`);
     } else {
       reasons.push('Completed within expected cycle time.');
     }
   } else if (isActive(issue)) {
-    if (activeAgeDays !== null && activeAgeDays > 14) {
+    if (activeAgeDays !== null && activeAgeDays > thresholds.activeAgeCriticalDays) {
       health = 'critical';
-      reasons.push('Active work has been in progress over 14 days.');
-    } else if (activeAgeDays !== null && activeAgeDays > 7) {
+      reasons.push(`Active work has been in progress over ${thresholds.activeAgeCriticalDays} days.`);
+    } else if (activeAgeDays !== null && activeAgeDays > thresholds.activeAgeWarningDays) {
       health = 'warning';
-      reasons.push('Active work has been in progress over 7 days.');
+      reasons.push(`Active work has been in progress over ${thresholds.activeAgeWarningDays} days.`);
     } else {
       reasons.push('Active work is within expected age.');
     }
-  } else if (ageDays !== null && ageDays > 30) {
+  } else if (ageDays !== null && ageDays > thresholds.openAgeWarningDays) {
     health = 'warning';
-    reasons.push('Item has waited over 30 days.');
+    reasons.push(`Item has waited over ${thresholds.openAgeWarningDays} days.`);
   } else {
     reasons.push('No flow risk detected from available dates.');
   }

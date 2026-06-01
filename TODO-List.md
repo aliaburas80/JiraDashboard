@@ -236,7 +236,7 @@
 | 9.12 | Snapshot comparison | P1 | ✅ Done — 8 tests passing |
 | 9.13 | Upload-to-upload trend analysis | P1 | ✅ Done — 10 tests passing |
 | 9.14 | "What changed since last upload?" panel | P1 | ✅ Done — 10 tests passing |
-| 9.15 | Configurable health thresholds | P1 | ❌ Not started |
+| 9.15 | Configurable health thresholds | P1 | ✅ Done — 10 tests passing |
 | 9.16 | Configurable orphan detection rules | P1 | ❌ Not started |
 | 9.17 | Recommendation mute/snooze option | P1 | ❌ Not started |
 | 9.18 | Work Item Explorer risk-path highlight | P1 | ❌ Not started |
