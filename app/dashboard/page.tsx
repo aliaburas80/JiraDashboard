@@ -23,6 +23,7 @@ import DataQualityCard from '@/components/dashboard/DataQualityCard';
 import MetricConfidenceBadge from '@/components/ui/MetricConfidenceBadge';
 import MissingFieldImpactPanel from '@/components/upload/MissingFieldImpactPanel';
 import DashboardViewSelector from '@/components/dashboard/DashboardViewSelector';
+import SaveSnapshotButton from '@/components/dashboard/SaveSnapshotButton';
 import { getSavedViewId, saveViewId, getView, isTierHidden } from '@/lib/dashboardView';
 import type { ViewId } from '@/types/dashboardView';
 
@@ -762,6 +763,9 @@ export default function DashboardPage() {
                 Copy link
               </button>
             )}
+
+            {/* ── Save Snapshot ── */}
+            <SaveSnapshotButton metrics={metrics} />
 
             {/* ── Export dropdown — always visible in sticky bar ── */}
             <div ref={exportMenuRef} style={{ position: 'relative' }}>
