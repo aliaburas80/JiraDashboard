@@ -164,6 +164,14 @@ export default function SnapshotComparePage() {
   const scoreB = b?.healthScore ?? 0;
   const overallDir = delta(scoreA, scoreB);
 
+  // Detect if both snapshots appear to be from the same data
+  const isSameData = a && b && (
+    a.healthScore    === b.healthScore &&
+    a.completionRate === b.completionRate &&
+    a.totalIssues    === b.totalIssues &&
+    a.doneIssues     === b.doneIssues
+  );
+
   return (
     <AppShell showNav>
       <div className="max-w-4xl mx-auto">
@@ -192,6 +200,11 @@ export default function SnapshotComparePage() {
 
         {canCompare && (
           <>
+            {/* Guidance */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-4 text-xs text-blue-800">
+              <strong>How it works:</strong> Save snapshots at <strong>different points in time</strong> — end of sprint, weekly review, before/after a release. Comparing snapshots from the same upload will show no change.
+            </div>
+
             {/* Snapshot selectors */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div>
@@ -229,6 +242,20 @@ export default function SnapshotComparePage() {
         {/* Results */}
         {a && b && snapA && snapB && (
           <>
+            {/* Same-data warning */}
+            {isSameData && (
+              <div className="bg-amber-50 border border-amber-300 rounded-2xl px-5 py-4 mb-5 flex items-start gap-3">
+                <span className="text-xl shrink-0">⚠️</span>
+                <div>
+                  <p className="text-sm font-black text-amber-900">These snapshots appear to contain the same data</p>
+                  <p className="text-xs text-amber-700 mt-1 leading-snug">
+                    Both snapshots have identical metrics — they were likely saved from the same Jira upload on the same day.
+                    For a meaningful comparison, save one snapshot now and another after uploading a newer Jira export (e.g. next sprint end).
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Win summary */}
             <div className={`flex items-center gap-4 rounded-2xl border px-6 py-4 mb-5 ${
               overallDir === 'better' ? 'bg-green-50 border-green-200' :
