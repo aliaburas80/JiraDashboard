@@ -5,7 +5,9 @@ import AppShell from '@/components/layout/AppShell';
 import { saveMetrics } from '@/lib/storage';
 import DataQualitySummary from '@/components/upload/DataQualitySummary';
 import MissingFieldImpactPanel from '@/components/upload/MissingFieldImpactPanel';
+import ColumnMappingPreview from '@/components/upload/ColumnMappingPreview';
 import type { DataQualityResult, FieldImpactReport } from '@/types/dataQuality';
+import type { ColumnMappingResult } from '@/types/columnMapping';
 
 interface MergeStats { fileCount: number; totalBeforeMerge: number; duplicatesRemoved: number; uniqueIssues: number }
 
@@ -18,33 +20,50 @@ export default function HomePage() {
   const [mergeStats, setMergeStats]     = useState<MergeStats | null>(null);
   const [dataQuality, setDataQuality]     = useState<DataQualityResult | null>(null);
   const [fieldImpacts, setFieldImpacts]   = useState<FieldImpactReport | null>(null);
+  const [columnMapping, setColumnMapping] = useState<ColumnMappingResult | null>(null);
+  const [pendingMetrics, setPendingMetrics] = useState<any>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
   const mergeRef  = useRef<HTMLInputElement>(null);
 
   // ── Single file upload (existing golden path) ─────────────────────────────
   async function handleFile(file: File) {
-    setLoading(true); setError(null); setMergeStats(null); setDataQuality(null); setFieldImpacts(null);
+    setLoading(true); setError(null); setMergeStats(null);
+    setDataQuality(null); setFieldImpacts(null); setColumnMapping(null); setPendingMetrics(null);
     try {
       const form = new FormData();
       form.append('file', file);
       const res  = await fetch('/api/upload', { method: 'POST', body: form });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Upload failed'); return; }
-      saveMetrics(data.metrics);
-      // Show quality score + field impacts briefly before redirecting
-      if (data.metrics?.dataQuality) {
-        setDataQuality(data.metrics.dataQuality);
-        setFieldImpacts(data.metrics.fieldImpacts ?? null);
-        const hasImpacts = data.metrics.fieldImpacts?.hasIssues;
-        const score = data.metrics.dataQuality.score;
-        await new Promise(r => setTimeout(r, (score < 60 || hasImpacts) ? 3000 : 1500));
+
+      // Show column mapping preview — user confirms before proceeding
+      if (data.columnMapping) {
+        setPendingMetrics(data.metrics);
+        setColumnMapping(data.columnMapping);
+        setDataQuality(data.metrics?.dataQuality ?? null);
+        setFieldImpacts(data.metrics?.fieldImpacts ?? null);
+        // Don't auto-redirect — wait for user to click Proceed
+      } else {
+        saveMetrics(data.metrics);
+        router.push('/dashboard');
       }
-      router.push('/dashboard');
     } catch { setError('Upload failed. Please check the file and try again.'); }
     finally { setLoading(false); }
   }
 
   // ── Multi-file merge ──────────────────────────────────────────────────────
+  function handleProceed() {
+    if (pendingMetrics) {
+      saveMetrics(pendingMetrics);
+      router.push('/dashboard');
+    }
+  }
+
+  function handleReupload() {
+    setColumnMapping(null); setPendingMetrics(null);
+    setDataQuality(null);   setFieldImpacts(null);
+  }
+
   function addMergeFile(file: File) {
     setMergeFiles(prev => prev.find(f => f.name === file.name) ? prev : [...prev, file]);
     setError(null);
@@ -201,10 +220,16 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Data Quality + Field Impact — shown briefly after single-file upload */}
-        {dataQuality && !mergeStats && (
-          <div className="w-full max-w-md space-y-3">
-            <DataQualitySummary quality={dataQuality} />
+        {/* Column Mapping Preview — user confirms before going to dashboard */}
+        {columnMapping && !mergeStats && (
+          <div className="w-full max-w-lg space-y-3">
+            <ColumnMappingPreview
+              mapping={columnMapping}
+              onProceed={handleProceed}
+              onReupload={handleReupload}
+              autoRedirectSecs={columnMapping.missingEssential.length > 0 ? 0 : 10}
+            />
+            {dataQuality && <DataQualitySummary quality={dataQuality} compact />}
             {fieldImpacts?.hasIssues && (
               <MissingFieldImpactPanel report={fieldImpacts} compact />
             )}

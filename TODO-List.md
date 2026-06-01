@@ -227,7 +227,7 @@
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| 9.6  | Column-mapping preview before dashboard generation | P1 | ❌ Not started |
+| 9.6  | Column-mapping preview before dashboard generation | P1 | ✅ Done — 10 tests passing |
 | 9.7  | Sample/demo Jira dataset button | P1 | ❌ Not started |
 | 9.8  | First-time onboarding checklist | P1 | ❌ Not started |
 | 9.9  | Role-based dashboard views | P1 | ❌ Not started |
@@ -280,6 +280,8 @@
 | 9.42 | Advanced chart customization | P3 | ❌ Not started |
 | 9.43 | Add Register link in header UserMenu dropdown (when not logged in) | P1 | ✅ Done |
 | 9.44 | Show "Create new account" link on login page always | P1 | ✅ Done |
+| 9.45 | Fix Charts page — Best Sprint chip shows abbreviated "S2" instead of full sprint name | P1 | ✅ Done |
+| 9.46 | Audit all Charts page KPI chips and truncated values — ensure full names shown in tooltips/titles | P2 | ❌ Not started |
 
 ---
 

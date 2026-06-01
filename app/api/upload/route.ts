@@ -157,7 +157,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }}).catch(() => {}); // non-blocking — don't fail upload on DB error
     }
 
-    return NextResponse.json({ metrics, warnings, importLog });
+    return NextResponse.json({ metrics, warnings, importLog, columnMapping: parseResult.columnMapping });
   } catch (error) {
     appendImportLog(
       buildImportLog({ file: fileArg, status: 'failed', error: error instanceof Error ? error.message : String(error) }),

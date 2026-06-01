@@ -126,10 +126,10 @@ export default function SprintVelocityChart({ summary }: Props) {
               {trendIcon} <span className="text-xs">{summary.trendDirection}</span>
             </p>
           </div>
-          <div className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-center">
+          <div className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-center min-w-[90px] max-w-[140px]">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Best Sprint</p>
-            <p className="text-xs font-black text-slate-700 leading-none truncate max-w-[80px]" title={summary.bestSprintName}>
-              {shortName(summary.bestSprintName)}
+            <p className="text-xs font-black text-slate-700 leading-none truncate" title={summary.bestSprintName}>
+              {summary.bestSprintName || '—'}
             </p>
           </div>
         </div>

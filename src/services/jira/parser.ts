@@ -1,6 +1,7 @@
 // Migrated from backend/src/services/parser.js
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 import * as XLSX from 'xlsx';
+import type { ColumnMappingResult, ColumnEntry, ColumnStatus } from '@/types/columnMapping';
 
 export const ESSENTIAL_FIELDS: string[] = ['Issue Key', 'Issue Type', 'Summary', 'Status'];
 
@@ -76,19 +77,88 @@ const normalizeRow = (row: Record<string, unknown>): Record<string, unknown> => 
   }, {});
 };
 
+// Fields that significantly affect dashboard quality
+const IMPORTANT_FIELDS = [
+  'In Progress Date', 'Done Date', 'Resolution Date', 'Story Points',
+  'Sprint', 'Epic Link', 'Created Date', 'Sprint Start', 'Sprint End',
+  'Assignee', 'Fix Version/s',
+];
+
+export function buildColumnMapping(
+  rawHeaders: string[],
+  canonicalHeaders: string[],
+  sheetName: string,
+): ColumnMappingResult {
+  const knownCanonical = new Set(OPTIONAL_FIELDS);
+  const columns: ColumnEntry[] = [];
+
+  rawHeaders.forEach((original, i) => {
+    const canonical = canonicalHeaders[i] ?? original;
+    const wasAliased = original !== canonical && FIELD_ALIASES[normalizeHeader(original).toLowerCase().replace(/\s+/g, ' ')] !== undefined;
+    const isKnown    = knownCanonical.has(canonical);
+
+    let status: ColumnStatus;
+    if (!isKnown)    status = 'unrecognised';
+    else if (wasAliased) status = 'aliased';
+    else                 status = 'mapped';
+
+    columns.push({
+      original,
+      canonical,
+      status,
+      isEssential:  ESSENTIAL_FIELDS.includes(canonical),
+      isImportant:  IMPORTANT_FIELDS.includes(canonical),
+    });
+  });
+
+  // Missing fields
+  const presentCanonical = new Set(canonicalHeaders);
+  const missingEssential = ESSENTIAL_FIELDS.filter(f => !presentCanonical.has(f));
+  const missingImportant = IMPORTANT_FIELDS.filter(f => !presentCanonical.has(f));
+
+  const totalMapped      = columns.filter(c => c.status === 'mapped').length;
+  const totalAliased     = columns.filter(c => c.status === 'aliased').length;
+  const totalUnrecognised = columns.filter(c => c.status === 'unrecognised').length;
+
+  // Score: penalise missing essentials heavily, missing importants moderately
+  const essentialScore = missingEssential.length === 0 ? 40 : Math.max(0, 40 - missingEssential.length * 10);
+  const importantScore = Math.max(0, 40 - missingImportant.length * 3);
+  const recognitionScore = rawHeaders.length > 0
+    ? Math.round(((totalMapped + totalAliased) / rawHeaders.length) * 20)
+    : 20;
+  const mappingScore = Math.min(100, essentialScore + importantScore + recognitionScore);
+
+  return {
+    totalInFile:      rawHeaders.length,
+    totalMapped,
+    totalAliased,
+    totalUnrecognised,
+    missingEssential,
+    missingImportant,
+    columns,
+    mappingScore,
+    sheetName,
+  };
+}
+
 export function parseJiraFile(file: { buffer: Buffer; originalname: string }): {
   issues: Record<string, unknown>[];
   warnings: string[];
   headers: string[];
+  rawHeaders: string[];
   sheetName: string;
+  columnMapping: ColumnMappingResult;
 } {
-  const buffer = file.buffer;
+  const buffer   = file.buffer;
   const workbook = XLSX.read(buffer, { type: 'buffer' });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
-  const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' });
-  const issues = rawRows.map(normalizeRow);
-  const headers = Object.keys(issues[0] || {});
+  const rawRows   = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' });
+
+  // Capture raw (pre-alias) headers
+  const rawHeaders   = Object.keys(rawRows[0] || {}).map(normalizeHeader);
+  const issues       = rawRows.map(normalizeRow);
+  const headers      = Object.keys(issues[0] || {});
   const warnings: string[] = [];
 
   const missingOptionalFields = OPTIONAL_FIELDS.filter(
@@ -98,5 +168,7 @@ export function parseJiraFile(file: { buffer: Buffer; originalname: string }): {
     warnings.push(`Missing optional fields: ${missingOptionalFields.join(', ')}`);
   }
 
-  return { issues, warnings, headers, sheetName };
+  const columnMapping = buildColumnMapping(rawHeaders, headers, sheetName);
+
+  return { issues, warnings, headers, rawHeaders, sheetName, columnMapping };
 }
