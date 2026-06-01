@@ -122,6 +122,7 @@ export interface DashboardMetrics {
   prediction: PredictionResult;
   insights: string[];
   throughput: ThroughputMetrics;
-  dataQuality: DataQualityResult;
-  confidence: MetricConfidenceMap;
+  dataQuality:  DataQualityResult;
+  fieldImpacts: import('./dataQuality').FieldImpactReport;
+  confidence:   MetricConfidenceMap;
 }

@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import { saveMetrics } from '@/lib/storage';
 import DataQualitySummary from '@/components/upload/DataQualitySummary';
-import type { DataQualityResult } from '@/types/dataQuality';
+import MissingFieldImpactPanel from '@/components/upload/MissingFieldImpactPanel';
+import type { DataQualityResult, FieldImpactReport } from '@/types/dataQuality';
 
 interface MergeStats { fileCount: number; totalBeforeMerge: number; duplicatesRemoved: number; uniqueIssues: number }
 
@@ -15,13 +16,14 @@ export default function HomePage() {
   const [mergeFiles, setMergeFiles]     = useState<File[]>([]);
   const [mergeOpen, setMergeOpen]       = useState(false);
   const [mergeStats, setMergeStats]     = useState<MergeStats | null>(null);
-  const [dataQuality, setDataQuality]   = useState<DataQualityResult | null>(null);
+  const [dataQuality, setDataQuality]     = useState<DataQualityResult | null>(null);
+  const [fieldImpacts, setFieldImpacts]   = useState<FieldImpactReport | null>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
   const mergeRef  = useRef<HTMLInputElement>(null);
 
   // ── Single file upload (existing golden path) ─────────────────────────────
   async function handleFile(file: File) {
-    setLoading(true); setError(null); setMergeStats(null); setDataQuality(null);
+    setLoading(true); setError(null); setMergeStats(null); setDataQuality(null); setFieldImpacts(null);
     try {
       const form = new FormData();
       form.append('file', file);
@@ -29,10 +31,13 @@ export default function HomePage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Upload failed'); return; }
       saveMetrics(data.metrics);
-      // Show quality score briefly before redirecting
+      // Show quality score + field impacts briefly before redirecting
       if (data.metrics?.dataQuality) {
         setDataQuality(data.metrics.dataQuality);
-        await new Promise(r => setTimeout(r, data.metrics.dataQuality.score < 60 ? 2500 : 1200));
+        setFieldImpacts(data.metrics.fieldImpacts ?? null);
+        const hasImpacts = data.metrics.fieldImpacts?.hasIssues;
+        const score = data.metrics.dataQuality.score;
+        await new Promise(r => setTimeout(r, (score < 60 || hasImpacts) ? 3000 : 1500));
       }
       router.push('/dashboard');
     } catch { setError('Upload failed. Please check the file and try again.'); }
@@ -196,10 +201,13 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Data Quality result — shown briefly after single-file upload */}
+        {/* Data Quality + Field Impact — shown briefly after single-file upload */}
         {dataQuality && !mergeStats && (
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md space-y-3">
             <DataQualitySummary quality={dataQuality} />
+            {fieldImpacts?.hasIssues && (
+              <MissingFieldImpactPanel report={fieldImpacts} compact />
+            )}
           </div>
         )}
 

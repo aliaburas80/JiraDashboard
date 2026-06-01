@@ -21,6 +21,7 @@ import SprintComparePanel from '@/components/dashboard/SprintComparePanel';
 import DraggableMetricTable from '@/components/dashboard/DraggableMetricTable';
 import DataQualityCard from '@/components/dashboard/DataQualityCard';
 import MetricConfidenceBadge from '@/components/ui/MetricConfidenceBadge';
+import MissingFieldImpactPanel from '@/components/upload/MissingFieldImpactPanel';
 
 // ─── accent map ───────────────────────────────────────────────────────────────
 const HEALTH_VARIANT: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'neutral'> = {
@@ -767,10 +768,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ── DATA QUALITY CARD ────────────────────────────────────────────────── */}
+        {/* ── DATA QUALITY + FIELD IMPACT ──────────────────────────────────────── */}
         {metrics.dataQuality && (
-          <div className="mb-5">
+          <div className="mb-5 space-y-3">
             <DataQualityCard quality={metrics.dataQuality} />
+            {metrics.fieldImpacts?.hasIssues && (
+              <MissingFieldImpactPanel report={metrics.fieldImpacts} />
+            )}
           </div>
         )}
 

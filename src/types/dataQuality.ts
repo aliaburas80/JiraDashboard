@@ -3,6 +3,33 @@
 export type DataQualityBand = 'Excellent' | 'Good' | 'Fair' | 'Weak' | 'Critical';
 export type CheckSeverity    = 'critical'  | 'high'  | 'medium' | 'low';
 
+// ── 9.3 — Missing-column field impact ─────────────────────────────────────────
+
+export interface FieldImpact {
+  field:              string;       // canonical Jira field name
+  label:              string;       // human-readable label
+  isColumnAbsent:     boolean;      // true = column not in export at all
+  missingCount:       number;
+  totalApplicable:    number;
+  missingPct:         number;
+  severity:           CheckSeverity;
+  whatYouSeeNow:      string;       // e.g. "Cycle Time shows 0d for 827 completed items"
+  whatYoullGain:      string;       // e.g. "Accurate cycle time for all 1075 done items"
+  dashboardLocations: string[];     // e.g. ["Full Report → Lead Time KPI", "Sprint Throughput"]
+  fallbackUsed:       string | null; // e.g. "Sprint Start Date used as fallback for 245 items"
+  suggestedFix:       string;
+}
+
+export interface FieldImpactReport {
+  hasIssues:      boolean;
+  critical:       FieldImpact[];
+  high:           FieldImpact[];
+  medium:         FieldImpact[];
+  low:            FieldImpact[];
+  all:            FieldImpact[];
+  topSummary:     string;            // 1–2 sentence plain-English overview
+}
+
 export interface DataQualityCheck {
   field:          string;         // canonical Jira field name
   label:          string;         // human-readable label
