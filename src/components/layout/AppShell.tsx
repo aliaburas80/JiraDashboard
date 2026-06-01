@@ -15,6 +15,7 @@ const NAV = [
   { href: '/explore',   label: 'Explore'     },
   { href: '/developer', label: 'Developer'   },
   { href: '/backend',   label: 'Backend'     },
+  { href: '/trends',    label: 'Trends'      },
   { href: '/snapshots', label: 'Snapshots'   },
   { href: '/customer',  label: 'Customer'    },
   { href: '/glossary',  label: 'Glossary'    },
