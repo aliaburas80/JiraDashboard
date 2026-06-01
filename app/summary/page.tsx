@@ -11,6 +11,7 @@ import { loadMetrics } from '@/lib/storage';
 import { exportToExcel, exportToHtml } from '@/lib/exportUtils';
 import { getHealthBand, HEALTH_COLORS, type HealthBand } from '@/lib/utils';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
+import WhatChangedPanel from '@/components/dashboard/WhatChangedPanel';
 
 const DONE_STATUSES = new Set(['done', 'closed', 'resolved']);
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
@@ -78,6 +79,9 @@ export default function SummaryPage() {
     <AppShell showNav>
       {/* ── Onboarding checklist — shown to first-time users ── */}
       <OnboardingChecklist isLoggedIn={isLoggedIn} />
+
+      {/* ── What changed since last upload ── */}
+      <WhatChangedPanel />
 
       {/* ── Health banner ── */}
       <div

@@ -10,14 +10,17 @@ import type { TrendPoint } from '@/types/trends';
 
 export type { TrendPoint };
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+
+  const url   = new URL(req.url);
+  const limit = Math.min(Number(url.searchParams.get('last') ?? 30), 30);
 
   const logs = await prisma.importLog.findMany({
     where:   { userId: session.userId, status: 'success' },
     orderBy: { uploadedAt: 'asc' },
-    take:    30,
+    take:    limit,
     select:  { id: true, fileName: true, uploadedAt: true, healthScore: true,
                 totalIssues: true, doneIssues: true, metadataJson: true },
   });
