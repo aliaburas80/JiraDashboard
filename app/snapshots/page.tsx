@@ -92,13 +92,24 @@ export default function SnapshotsPage() {
               {snapshots.length} snapshot{snapshots.length !== 1 ? 's' : ''} saved · max 20 per account
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors"
-          >
-            Go to Dashboard
-          </button>
+          <div className="flex gap-2">
+            {snapshots.length >= 2 && (
+              <button
+                type="button"
+                onClick={() => router.push('/snapshots/compare')}
+                className="px-4 py-2 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 text-sm font-bold hover:bg-purple-100 transition-colors"
+              >
+                ⚖️ Compare
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => router.push('/dashboard')}
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors"
+            >
+              Go to Dashboard
+            </button>
+          </div>
         </div>
 
         {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-4">{error}</div>}

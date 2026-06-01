@@ -233,7 +233,7 @@
 | 9.9  | Role-based dashboard views | P1 | ✅ Done — 5 views, 10 tests passing |
 | 9.10 | Customer View | P1 | ✅ Done — 8 tests passing |
 | 9.11 | Saved dashboard snapshots | P1 | ✅ Done — 8 tests passing |
-| 9.12 | Snapshot comparison | P1 | ❌ Not started |
+| 9.12 | Snapshot comparison | P1 | ✅ Done — 8 tests passing |
 | 9.13 | Upload-to-upload trend analysis | P1 | ❌ Not started |
 | 9.14 | "What changed since last upload?" panel | P1 | ❌ Not started |
 | 9.15 | Configurable health thresholds | P1 | ❌ Not started |
