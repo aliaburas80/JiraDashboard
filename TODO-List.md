@@ -228,7 +228,7 @@
 | # | Task | Priority | Status |
 |---|------|----------|--------|
 | 9.6  | Column-mapping preview before dashboard generation | P1 | ✅ Done — 10 tests passing |
-| 9.7  | Sample/demo Jira dataset button | P1 | ❌ Not started |
+| 9.7  | Sample/demo Jira dataset button | P1 | ✅ Done — 35-issue realistic demo dataset |
 | 9.8  | First-time onboarding checklist | P1 | ❌ Not started |
 | 9.9  | Role-based dashboard views | P1 | ❌ Not started |
 | 9.10 | Customer View | P1 | ❌ Not started |

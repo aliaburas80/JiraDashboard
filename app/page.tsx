@@ -20,8 +20,9 @@ export default function HomePage() {
   const [mergeStats, setMergeStats]     = useState<MergeStats | null>(null);
   const [dataQuality, setDataQuality]     = useState<DataQualityResult | null>(null);
   const [fieldImpacts, setFieldImpacts]   = useState<FieldImpactReport | null>(null);
-  const [columnMapping, setColumnMapping] = useState<ColumnMappingResult | null>(null);
+  const [columnMapping, setColumnMapping]   = useState<ColumnMappingResult | null>(null);
   const [pendingMetrics, setPendingMetrics] = useState<any>(null);
+  const [loadingSample, setLoadingSample]   = useState(false);
   const inputRef  = useRef<HTMLInputElement>(null);
   const mergeRef  = useRef<HTMLInputElement>(null);
 
@@ -52,6 +53,20 @@ export default function HomePage() {
   }
 
   // ── Multi-file merge ──────────────────────────────────────────────────────
+  async function handleSampleData() {
+    setLoadingSample(true); setError(null);
+    try {
+      const res  = await fetch('/samples/sample-jira-export.csv');
+      const blob = await res.blob();
+      const file = new File([blob], 'sample-jira-export.csv', { type: 'text/csv' });
+      await handleFile(file);
+    } catch {
+      setError('Failed to load sample data. Please try uploading your own file.');
+    } finally {
+      setLoadingSample(false);
+    }
+  }
+
   function handleProceed() {
     if (pendingMetrics) {
       saveMetrics(pendingMetrics);
@@ -241,6 +256,38 @@ export default function HomePage() {
           <p className="text-sm text-red-600 font-medium bg-red-50 border border-red-200 rounded-xl px-4 py-3 max-w-md w-full text-center">
             {error}
           </p>
+        )}
+
+        {/* ── Try with sample data ── */}
+        {!columnMapping && (
+          <div className="flex flex-col items-center gap-2 w-full max-w-md">
+            <div className="flex items-center gap-3 w-full">
+              <div className="flex-1 border-t border-slate-200" />
+              <span className="text-xs text-slate-400 font-semibold whitespace-nowrap">or try a demo first</span>
+              <div className="flex-1 border-t border-slate-200" />
+            </div>
+            <button
+              type="button"
+              onClick={handleSampleData}
+              disabled={loading || loadingSample}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-purple-300 text-sm font-bold text-purple-700 hover:bg-purple-50 hover:border-purple-400 transition-colors disabled:opacity-50"
+            >
+              {loadingSample ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-purple-300 border-t-purple-700 rounded-full animate-spin" />
+                  Loading sample data…
+                </>
+              ) : (
+                <>
+                  <span className="text-base">🎯</span>
+                  Try with 35-issue sample Jira export
+                </>
+              )}
+            </button>
+            <p className="text-[10px] text-slate-400 text-center">
+              A realistic demo dataset with 4 sprints, 3 epics, and multiple issue types — no real Jira account needed.
+            </p>
+          </div>
         )}
 
         {/* Feature chips */}
