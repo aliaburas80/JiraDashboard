@@ -6,11 +6,12 @@ import AppShell from '@/components/layout/AppShell';
 import DataRetentionSettings from '@/components/admin/DataRetentionSettings';
 import HealthThresholdSettings from '@/components/admin/HealthThresholdSettings';
 import OrphanRulesSettings from '@/components/admin/OrphanRulesSettings';
+import BackupRestoreSettings from '@/components/admin/BackupRestoreSettings';
 import type { RetentionSettings, RetentionStats } from '@/types/settings';
 import type { HealthThresholds } from '@/types/thresholds';
 import type { OrphanRules } from '@/types/orphanRules';
 
-type Tab = 'retention' | 'thresholds' | 'orphan';
+type Tab = 'retention' | 'thresholds' | 'orphan' | 'backup';
 
 export default function AdminSettingsPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function AdminSettingsPage() {
   const [stats, setStats]             = useState<RetentionStats | null>(null);
   const [thresholds, setThresholds]   = useState<HealthThresholds | null>(null);
   const [orphanRules, setOrphanRules]  = useState<OrphanRules | null>(null);
+  const [backupFiles, setBackupFiles]  = useState<any[]>([]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
 
@@ -31,15 +33,17 @@ export default function AdminSettingsPage() {
           fetch('/api/admin/settings').then(r => r.json()),
           fetch('/api/admin/thresholds').then(r => r.json()),
           fetch('/api/admin/orphan-rules').then(r => r.json()),
+          fetch('/api/admin/backup?info=true').then(r => r.json()),
         ]);
       })
       .then(results => {
         if (!results) return;
-        const [retData, thrData, orphData] = results;
+        const [retData, thrData, orphData, backData] = results;
         if (retData?.settings)  setSettings(retData.settings);
         if (retData?.stats)     setStats(retData.stats);
         if (thrData?.thresholds) setThresholds(thrData.thresholds);
         if (orphData?.rules) setOrphanRules(orphData.rules);
+        if (backData?.files) setBackupFiles(backData.files);
       })
       .catch(() => setError('Failed to load settings.'))
       .finally(() => setLoading(false));
@@ -93,7 +97,7 @@ export default function AdminSettingsPage() {
 
         {/* Tab bar */}
         <div className="flex gap-1 p-1 bg-slate-100 rounded-xl mb-6">
-          {([['retention', '🔒 Privacy & Retention'], ['thresholds', '⚡ Health Thresholds'], ['orphan', '👻 Orphan Rules']] as [Tab, string][]).map(([t, label]) => (
+          {([['retention', '🔒 Privacy & Retention'], ['thresholds', '⚡ Health Thresholds'], ['orphan', '👻 Orphan Rules'], ['backup', '💾 Backup & Restore']] as [Tab, string][]).map(([t, label]) => (
             <button key={t} type="button" onClick={() => setTab(t)}
               className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${tab === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
               {label}
@@ -109,6 +113,9 @@ export default function AdminSettingsPage() {
         )}
         {tab === 'orphan' && orphanRules && (
           <OrphanRulesSettings rules={orphanRules} onSave={handleSaveOrphanRules} />
+        )}
+        {tab === 'backup' && (
+          <BackupRestoreSettings files={backupFiles} />
         )}
       </div>
     </AppShell>

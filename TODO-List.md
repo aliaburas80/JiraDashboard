@@ -243,7 +243,7 @@
 | 9.19 | Work Item Explorer largest unfinished branch insight | P1 | ✅ Done — 8 tests passing |
 | 9.20 | Work Item Explorer blocked branch filter | P1 | ✅ Done — 8 tests passing |
 | 9.21 | Release readiness checklist | P1 | ✅ Done — 10 tests passing |
-| 9.22 | Database backup and restore | P1 | ❌ Not started |
+| 9.22 | Database backup and restore | P1 | ✅ Done — 8 tests passing |
 | 9.23 | Production security checklist page | P1 | ❌ Not started |
 | 9.24 | Dockerfile and docker-compose setup | P1 | ❌ Not started |
 | 9.25 | Mobile UX polish for `/explore` | P1 | ❌ Not started |
@@ -297,7 +297,7 @@
 | P1-04 | Calculation Reference in `product/DEVELOPER_GUIDE.md` + `ALGORITHM_SPEC.md` | P1 | ✅ Done (DEVELOPER_GUIDE) |
 | P1-05 | Production readiness checklist page | P1 | ❌ Not started |
 | P1-06 | Security checklist page (`/admin/security`) | P1 | ❌ Not started |
-| P1-07 | Database backup and restore planning | P1 | ❌ Not started |
+| P1-07 | Database backup and restore planning | P1 | ✅ Done — implemented in 9.22 |
 | P1-08 | Dockerfile and docker-compose setup | P1 | ❌ Not started |
 | P1-09 | Performance profiling for 5,000+ issues | P1 | ❌ Not started |
 | P1-10 | Arrange navigation with grouped sub-menus instead of flat list (Analytics / Delivery / Data / Reference) | P1 | ❌ Not started |
