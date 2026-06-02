@@ -242,7 +242,7 @@
 | 9.18 | Work Item Explorer risk-path highlight | P1 | ✅ Done — 8 tests passing |
 | 9.19 | Work Item Explorer largest unfinished branch insight | P1 | ✅ Done — 8 tests passing |
 | 9.20 | Work Item Explorer blocked branch filter | P1 | ✅ Done — 8 tests passing |
-| 9.21 | Release readiness checklist | P1 | ❌ Not started |
+| 9.21 | Release readiness checklist | P1 | ✅ Done — 10 tests passing |
 | 9.22 | Database backup and restore | P1 | ❌ Not started |
 | 9.23 | Production security checklist page | P1 | ❌ Not started |
 | 9.24 | Dockerfile and docker-compose setup | P1 | ❌ Not started |
