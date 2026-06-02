@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 
-const PROTECTED  = ['/dashboard', '/summary', '/charts', '/explore', '/backend', '/profile', '/customer', '/snapshots', '/trends', '/readiness'];
+const PROTECTED  = ['/dashboard', '/summary', '/charts', '/explore', '/backend', '/profile', '/customer', '/snapshots', '/trends', '/readiness', '/admin'];
 const ADMIN_ONLY = ['/admin'];
 
 export async function middleware(req: NextRequest) {

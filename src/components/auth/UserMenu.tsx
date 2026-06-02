@@ -86,6 +86,10 @@ export default function UserMenu() {
                 className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
                 <span>🗂️</span> Admin Logs
               </Link>
+              <Link href="/admin/security" onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                <span>🔒</span> Security Checklist
+              </Link>
               <Link href="/admin/settings" onClick={() => setOpen(false)}
                 className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
                 <span>🔒</span> Privacy & Retention
