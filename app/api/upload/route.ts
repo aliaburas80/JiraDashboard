@@ -29,7 +29,7 @@ function isRateLimited(ip: string): boolean {
 // ---------------------------------------------------------------------------
 // File validation helpers
 // ---------------------------------------------------------------------------
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 20 MB
 const ALLOWED_EXTENSIONS = ['.csv', '.xlsx', '.xls'];
 
 function getExtension(filename: string): string {
@@ -171,6 +171,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }}).catch(() => {});
     }
 
+    // Warn when items are capped due to large export
+    if ((metrics.flow as any).itemsCapped) {
+      warnings.push(`Large export: ${(metrics.flow as any).totalItemCount?.toLocaleString()} items detected. Dashboard shows top 5,000 highest-risk items. All aggregate metrics are accurate.`);
+    }
     return NextResponse.json({ metrics, warnings, importLog, columnMapping: parseResult.columnMapping });
   } catch (error) {
     appendImportLog(

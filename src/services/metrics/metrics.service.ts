@@ -88,6 +88,8 @@ interface StatusBreakdownItem extends FlowSummary {
 
 interface FlowMetrics extends FlowSummary {
   items: FlowItem[];
+  totalItemCount?: number;   // real total before any cap (for large exports)
+  itemsCapped?:    boolean;  // true when items array is truncated
 }
 
 interface SprintEntry extends FlowSummary {
@@ -609,18 +611,30 @@ function buildStatusBreakdown(
     .sort((a, b) => b.count - a.count);
 }
 
+// Maximum items stored in flow.items — keeps localStorage under ~4MB.
+// Aggregate metrics (counts, averages) are always calculated from ALL items.
+const FLOW_ITEMS_CAP = 5_000;
+
 function buildFlowMetrics(flowItems: FlowItem[]): FlowMetrics {
   const summary = summarizeFlowItems(flowItems);
 
+  // Sort: critical first, then warning, then good — within each group by age desc
+  const sorted = flowItems.slice().sort((a, b) => {
+    const healthOrder: Record<HealthStatus, number> = { critical: 0, warning: 1, good: 2 };
+    return (
+      healthOrder[a.health] - healthOrder[b.health] ||
+      (b.ageDays || 0) - (a.ageDays || 0)
+    );
+  });
+
+  const totalItemCount = sorted.length;
+  const capped         = totalItemCount > FLOW_ITEMS_CAP;
+
   return {
     ...summary,
-    items: flowItems.slice().sort((a, b) => {
-      const healthOrder: Record<HealthStatus, number> = { critical: 0, warning: 1, good: 2 };
-      return (
-        healthOrder[a.health] - healthOrder[b.health] ||
-        (b.ageDays || 0) - (a.ageDays || 0)
-      );
-    }),
+    items:          capped ? sorted.slice(0, FLOW_ITEMS_CAP) : sorted,
+    totalItemCount: capped ? totalItemCount : undefined,
+    itemsCapped:    capped || undefined,
   };
 }
 

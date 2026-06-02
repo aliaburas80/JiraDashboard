@@ -746,6 +746,18 @@ export default function DashboardPage() {
           </div>
         </Card>
 
+        {/* ── LARGE EXPORT BANNER (top) ───────────────────────────────────────── */}
+        {(flow as any).itemsCapped && (
+          <div className="bg-amber-50 border border-amber-300 rounded-xl px-5 py-3 mb-4 flex items-center gap-3">
+            <span className="text-xl shrink-0">⚡</span>
+            <p className="text-xs text-amber-800">
+              <strong>Large export:</strong> showing top 5,000 of{' '}
+              <strong>{(flow as any).totalItemCount?.toLocaleString()}</strong> items (sorted by risk).
+              All aggregate metrics are calculated from the full dataset.
+            </p>
+          </div>
+        )}
+
         {/* ── STICKY QUICK FILTERS ────────────────────────────────────────────── */}
         <div className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-slate-200 mb-4 -mx-4 px-4 py-2 flex flex-wrap items-center gap-2 shadow-sm">
           {(['all', 'high-risk', 'blocked', 'needs-review'] as const).map(f => (
@@ -838,6 +850,22 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* ── LARGE FILE WARNING BANNER ────────────────────────────────────────── */}
+        {(flow as any).itemsCapped && (
+          <div className="bg-amber-50 border border-amber-300 rounded-xl px-5 py-3 mb-3 flex items-center gap-3">
+            <span className="text-xl shrink-0">⚡</span>
+            <div>
+              <p className="text-sm font-black text-amber-900">Large export detected — showing top 5,000 items</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Your file contains <strong>{(flow as any).totalItemCount?.toLocaleString()} items</strong>.
+                Dashboard shows the 5,000 highest-risk items (critical → warning → good).
+                All aggregate metrics (health score, counts, throughput) are calculated from the full dataset.
+                For full item browsing, split your Jira export into smaller files.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ── DATA QUALITY + FIELD IMPACT ──────────────────────────────────────── */}
         {metrics.dataQuality && (

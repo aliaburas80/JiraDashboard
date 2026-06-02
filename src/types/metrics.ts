@@ -45,7 +45,9 @@ export interface FlowSummary {
 }
 
 export interface FlowMetrics extends FlowSummary {
-  items: FlowItem[];
+  items:           FlowItem[];
+  totalItemCount?: number;   // real total before any cap
+  itemsCapped?:    boolean;  // true when items array is truncated to 5,000
 }
 
 export interface SprintEntry extends FlowSummary {
