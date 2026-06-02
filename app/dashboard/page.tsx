@@ -764,17 +764,22 @@ export default function DashboardPage() {
         )}
 
         {/* ── STICKY QUICK FILTERS ────────────────────────────────────────────── */}
-        <div className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-slate-200 mb-4 -mx-4 px-4 py-2 flex flex-wrap items-center gap-2 shadow-sm">
-          {(['all', 'high-risk', 'blocked', 'needs-review'] as const).map(f => (
-            <button key={f} type="button"
-              onClick={() => applyQuickFilter(f)}
-              className={cn('text-xs font-bold rounded-full px-3 py-1 border transition-colors',
-                activeQuickFilter === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'
-              )}>
-              {f === 'all' ? 'All' : f === 'high-risk' ? 'High Risk' : f === 'blocked' ? 'Blocked' : 'Needs Review'}
-            </button>
-          ))}
-          <div className="flex items-center gap-2 ml-auto">
+        <div className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-slate-200 mb-4 -mx-4 px-4 py-2 shadow-sm space-y-1.5">
+          {/* Row 1: quick filter pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            {(['all', 'high-risk', 'blocked', 'needs-review'] as const).map(f => (
+              <button key={f} type="button"
+                onClick={() => applyQuickFilter(f)}
+                className={cn('text-xs font-bold rounded-full px-3 py-1 border transition-colors',
+                  activeQuickFilter === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'
+                )}>
+                {f === 'all' ? 'All' : f === 'high-risk' ? 'High Risk' : f === 'blocked' ? 'Blocked' : 'Needs Review'}
+              </button>
+            ))}
+          </div>
+
+          {/* Row 2: action buttons */}
+          <div className="flex flex-wrap items-center gap-2">
             {activeFilterCount > 0 && (
               <span className="text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5">{activeFilterCount} active</span>
             )}
@@ -798,7 +803,7 @@ export default function DashboardPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
-                Copy link
+                <span className="hidden sm:inline">Copy link</span>
               </button>
             )}
 
