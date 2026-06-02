@@ -403,7 +403,12 @@ export default function DashboardPage() {
   }, [detailPanel]);
 
   // ── useMemo hooks must be ABOVE all early returns (Rules of Hooks) ─────────
-  const flowItems: FlowItem[] = metrics?.flow?.items || [];
+  // Deduplicate by Jira key — large exports can contain duplicate rows
+  const flowItems: FlowItem[] = useMemo(() => {
+    const raw = metrics?.flow?.items || [];
+    const seen = new Set<string>();
+    return raw.filter(i => { if (seen.has(i.key)) return false; seen.add(i.key); return true; });
+  }, [metrics?.flow?.items]);
 
   const filteredFlowItems = useMemo(() => flowItems.filter(item =>
     matchText(item.key, keyFilter) &&
@@ -999,8 +1004,8 @@ export default function DashboardPage() {
               <h3 className="text-sm font-black text-slate-800 mb-2">{title}</h3>
               {items.length ? (
                 <ul className="space-y-1.5">
-                  {items.map(item => (
-                    <li key={item.key} className="flex items-start gap-2 text-xs">
+                  {items.map((item, idx) => (
+                    <li key={`${id}-${item.key ?? idx}`} className="flex items-start gap-2 text-xs">
                       <span className="font-mono font-bold text-blue-700 shrink-0">{item.key}</span>
                       <span className="text-slate-600 truncate">{item.summary || (item as any).reason || (item as any).epic || 'No epic'}</span>
                     </li>

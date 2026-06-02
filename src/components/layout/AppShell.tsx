@@ -56,6 +56,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                 width={160}
                 height={32}
                 className="hidden sm:block h-8 w-auto dark:brightness-0 dark:invert"
+                style={{ width: 'auto', height: '2rem' }}
                 priority
               />
               {/* Icon-only logo on small screens */}

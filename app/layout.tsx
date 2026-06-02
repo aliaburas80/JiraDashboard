@@ -4,6 +4,7 @@ import './globals.scss';
 export const metadata: Metadata = {
   title: 'Delivery Clarity — Jira Intelligence',
   description: 'Turn any Jira export into sprint health, flow efficiency, and delivery intelligence.',
+  icons: { icon: '/favicon.svg', shortcut: '/favicon.svg' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
