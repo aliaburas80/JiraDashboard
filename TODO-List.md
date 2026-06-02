@@ -309,10 +309,10 @@
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| P2-01 | Admin Storage & Backup — architecture design, storage provider interface, S3/Azure/GCP planning | P2 | ✅ Documented in DEVELOPER_GUIDE |
-| P2-02 | Optional Jira API Integration — read-only mode design, field mapping, JQL fetch | P2 | ✅ Documented in DEVELOPER_GUIDE |
-| P2-03 | Storage database tables design (`storage_settings`, `storage_objects`, etc.) | P2 | ❌ Design only |
-| P2-04 | Jira database tables design (`jira_connections`, `jira_field_mappings`, etc.) | P2 | ❌ Design only |
+| P2-01 | Admin Storage & Backup — architecture design, storage provider interface, S3/Azure/GCP planning | P2 | 📄 Planning documented — NO code written |
+| P2-02 | Optional Jira API Integration — read-only mode design, field mapping, JQL fetch | P2 | 📄 Planning documented — NO code written |
+| P2-03 | Storage database tables design (`storage_settings`, `storage_objects`, etc.) | P2 | 📄 Included in P2-01 docs — NO code written |
+| P2-04 | Jira database tables design (`jira_connections`, `jira_field_mappings`, etc.) | P2 | 📄 Included in P2-02 docs — NO code written |
 
 ---
 
@@ -336,8 +336,8 @@
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| P4-01 | Admin & System Notification Center — in-app notifications, admin-to-user, system-to-admin | P4 | ✅ Documented in DEVELOPER_GUIDE |
-| P4-02 | Maintenance Mode — admin-controlled, user maintenance screen, audit logs | P4 | ✅ Documented in DEVELOPER_GUIDE |
+| P4-01 | Admin & System Notification Center — in-app notifications, admin-to-user, system-to-admin | P4 | 📄 Planning documented — NO code written |
+| P4-02 | Maintenance Mode — admin-controlled, user maintenance screen, audit logs | P4 | 📄 Planning documented — NO code written |
 | P4-03 | Email notification channel | P4 | ❌ Planned |
 | P4-04 | Slack/Teams webhook notification channel | P4 | ❌ Planned |
 
