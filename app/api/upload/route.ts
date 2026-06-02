@@ -29,7 +29,7 @@ function isRateLimited(ip: string): boolean {
 // ---------------------------------------------------------------------------
 // File validation helpers
 // ---------------------------------------------------------------------------
-const MAX_FILE_SIZE = 200 * 1024 * 1024; // 20 MB
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 const ALLOWED_EXTENSIONS = ['.csv', '.xlsx', '.xls'];
 
 function getExtension(filename: string): string {
