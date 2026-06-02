@@ -34,11 +34,12 @@ function saveRecent(key: string): void {
 export default function ExplorePage() {
   const [metrics, setMetrics]     = useState<DashboardMetrics | null>(null);
   const [query, setQuery]         = useState('');
-  const [graph, setGraph]         = useState<RelationGraph | null>(null);
-  const [error, setError]         = useState('');
-  const [loading, setLoading]     = useState(false);
+  const [graph, setGraph]           = useState<RelationGraph | null>(null);
+  const [error, setError]           = useState('');
+  const [loading, setLoading]       = useState(false);
   const [focusedKey, setFocusedKey] = useState('');
-  const [recent, setRecent]       = useState<string[]>([]);
+  const [recent, setRecent]         = useState<string[]>([]);
+  const [blockedOnly, setBlockedOnly] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -162,19 +163,44 @@ export default function ExplorePage() {
         {graph && !loading && (
           <div className="space-y-6">
 
-            {/* Focus label */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="font-mono text-lg font-black text-blue-700">{graph.focusKey}</span>
-              <span className="text-sm text-slate-500">·</span>
-              <span className="text-sm font-semibold text-slate-600">{graph.focusType}</span>
-              <span className="text-sm text-slate-500">·</span>
-              <span className="text-sm text-slate-500">{graph.nodes.length} connected items</span>
-              {graph.orphanNodes.length > 0 && (
-                <span className="text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200 rounded-full px-3 py-0.5">
-                  {graph.orphanNodes.length} orphan{graph.orphanNodes.length > 1 ? 's' : ''} detected
-                </span>
-              )}
-            </div>
+            {/* Focus label + blocked filter toggle */}
+            {(() => {
+              const blockedCount = graph.nodes.filter(n => n.isBlocked || n.health === 'critical').length;
+              const riskPathCount = graph.nodes.filter(n => n.isOnRiskPath).length;
+              return (
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="font-mono text-lg font-black text-blue-700">{graph.focusKey}</span>
+                  <span className="text-sm text-slate-500">·</span>
+                  <span className="text-sm font-semibold text-slate-600">{graph.focusType}</span>
+                  <span className="text-sm text-slate-500">·</span>
+                  <span className="text-sm text-slate-500">{graph.nodes.length} connected items</span>
+                  {graph.orphanNodes.length > 0 && (
+                    <span className="text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200 rounded-full px-3 py-0.5">
+                      {graph.orphanNodes.length} orphan{graph.orphanNodes.length > 1 ? 's' : ''} detected
+                    </span>
+                  )}
+                  {/* Blocked branch filter toggle */}
+                  {blockedCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setBlockedOnly(v => !v)}
+                      className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border transition-colors ${
+                        blockedOnly
+                          ? 'bg-red-600 text-white border-red-600'
+                          : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                      }`}
+                    >
+                      🚫 {blockedOnly ? 'Show all' : `Show blocked branches (${blockedCount})`}
+                    </button>
+                  )}
+                  {blockedOnly && riskPathCount > 0 && (
+                    <span className="text-xs text-red-600 font-semibold">
+                      {riskPathCount} node{riskPathCount !== 1 ? 's' : ''} on risk path
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* 1. Visual Map — primary, above the fold */}
             <section aria-label="Work item relationship map">
@@ -182,6 +208,7 @@ export default function ExplorePage() {
                 graph={graph}
                 focusNodeId={focusedKey}
                 onNodeFocus={handleNodeFocus}
+                dimNonRiskPath={blockedOnly}
               />
             </section>
 
@@ -199,17 +226,39 @@ export default function ExplorePage() {
               <RelationStatsCards stats={graph.stats} />
             </section>
 
-            {/* 4. Details Table */}
-            <section aria-label="Issue details">
-              <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">
-                Issue Details ({graph.nodes.length + graph.orphanNodes.length})
-              </h2>
-              <RelationDetailsTable
-                nodes={graph.nodes}
-                orphanNodes={graph.orphanNodes}
-                onFocusNode={handleNodeFocus}
-              />
-            </section>
+            {/* 5. Details Table — filtered when blockedOnly is active */}
+            {(() => {
+              const filteredNodes  = blockedOnly
+                ? graph.nodes.filter(n => n.isOnRiskPath || n.isBlocked)
+                : graph.nodes;
+              const filteredOrphans = blockedOnly ? [] : graph.orphanNodes;
+              const totalShown = filteredNodes.length + filteredOrphans.length;
+              const totalAll   = graph.nodes.length + graph.orphanNodes.length;
+              return (
+                <section aria-label="Issue details">
+                  <div className="flex items-center gap-3 mb-3">
+                    <h2 className="text-xs font-black uppercase tracking-widest text-slate-500">
+                      Issue Details
+                    </h2>
+                    <span className="text-xs text-slate-400">
+                      {blockedOnly
+                        ? `${totalShown} on risk path (of ${totalAll})`
+                        : `${totalAll} total`}
+                    </span>
+                    {blockedOnly && (
+                      <span className="text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 rounded-full px-2 py-0.5">
+                        🚫 Blocked branches only
+                      </span>
+                    )}
+                  </div>
+                  <RelationDetailsTable
+                    nodes={filteredNodes}
+                    orphanNodes={filteredOrphans}
+                    onFocusNode={handleNodeFocus}
+                  />
+                </section>
+              );
+            })()}
 
           </div>
         )}

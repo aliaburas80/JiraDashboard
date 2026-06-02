@@ -151,15 +151,17 @@ const nodeTypes = { issueNode: IssueNodeCard };
 
 // ── Conversion helpers ────────────────────────────────────────────────────────
 
-function toRFNode(node: RelationNode, onToggle: (id: string) => void): Node {
+function toRFNode(node: RelationNode, onToggle: (id: string) => void, dimNonRisk = false): Node {
   const cfg = NODE_TYPE_CONFIG[node.type] ?? NODE_TYPE_CONFIG['Unknown'];
   const w   = cfg.size === 'lg' ? 240 : cfg.size === 'sm' ? 180 : 210;
   const h   = 110;
+  const shouldDim = dimNonRisk && !node.isOnRiskPath && !node.isFocusNode;
   return {
     id:       node.id,
     type:     'issueNode',
     data:     { ...node, _w: w, _h: h, onToggle },
     position: { x: 0, y: 0 },
+    style:    shouldDim ? { opacity: 0.2, filter: 'grayscale(1)' } : undefined,
   };
 }
 
@@ -186,9 +188,10 @@ interface Props {
   graph: RelationGraph;
   focusNodeId?: string;
   onNodeFocus?: (key: string) => void;
+  dimNonRiskPath?: boolean;  // when true, non-risk-path nodes appear faded
 }
 
-export default function WorkItemGraph({ graph, onNodeFocus }: Props) {
+export default function WorkItemGraph({ graph, onNodeFocus, dimNonRiskPath = false }: Props) {
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState([]);
   const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState([]);
   const prevFocusKey = useRef('');
@@ -200,20 +203,25 @@ export default function WorkItemGraph({ graph, onNodeFocus }: Props) {
   }, [setRfNodes]);
 
   useEffect(() => {
-    if (graph.focusKey === prevFocusKey.current) return;
     prevFocusKey.current = graph.focusKey;
 
     const nodes = [
-      ...graph.nodes.map(n  => toRFNode(n, handleToggle)),
-      ...graph.orphanNodes.map(n => toRFNode(n, handleToggle)),
+      ...graph.nodes.map(n  => toRFNode(n, handleToggle, dimNonRiskPath)),
+      ...graph.orphanNodes.map(n => toRFNode(n, handleToggle, dimNonRiskPath)),
     ];
-    const edges = graph.edges.map(toRFEdge);
+    const edges = graph.edges.map(e => {
+      const rf = toRFEdge(e);
+      if (dimNonRiskPath && !e.isOnRiskPath) {
+        return { ...rf, style: { ...rf.style, opacity: 0.1 }, animated: false };
+      }
+      return rf;
+    });
 
     applyDagreLayout(nodes, edges).then(({ nodes: ln, edges: le }) => {
       setRfNodes(ln);
       setRfEdges(le);
     });
-  }, [graph, handleToggle, setRfNodes, setRfEdges]);
+  }, [graph, dimNonRiskPath, handleToggle, setRfNodes, setRfEdges]);
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     onNodeFocus?.(node.data.issueKey);
