@@ -291,10 +291,10 @@
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| P1-01 | Package Reference in `/developer` route — table of all packages, versions, usage, scope, risk | P1 | ❌ Not started |
-| P1-02 | Calculation Reference in `/developer` route — 25 metrics with formula, inputs, why, benefit, assumptions | P1 | ❌ Not started |
-| P1-03 | Package Reference in `product/DEVELOPER_GUIDE.md` | P1 | ❌ Not started |
-| P1-04 | Calculation Reference in `product/DEVELOPER_GUIDE.md` + `ALGORITHM_SPEC.md` | P1 | ❌ Not started |
+| P1-01 | Package Reference in `/developer` route — table of all packages, versions, usage, scope, risk | P1 | ✅ Done |
+| P1-02 | Calculation Reference in `/developer` route — 25 metrics with formula, inputs, why, benefit, assumptions | P1 | ✅ Done |
+| P1-03 | Package Reference in `product/DEVELOPER_GUIDE.md` | P1 | ✅ Done |
+| P1-04 | Calculation Reference in `product/DEVELOPER_GUIDE.md` + `ALGORITHM_SPEC.md` | P1 | ✅ Done (DEVELOPER_GUIDE) |
 | P1-05 | Production readiness checklist page | P1 | ❌ Not started |
 | P1-06 | Security checklist page (`/admin/security`) | P1 | ❌ Not started |
 | P1-07 | Database backup and restore planning | P1 | ❌ Not started |
@@ -309,8 +309,8 @@
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| P2-01 | Admin Storage & Backup — architecture design, storage provider interface, S3/Azure/GCP planning | P2 | ❌ Design only |
-| P2-02 | Optional Jira API Integration — read-only mode design, field mapping, JQL fetch | P2 | ❌ Design only |
+| P2-01 | Admin Storage & Backup — architecture design, storage provider interface, S3/Azure/GCP planning | P2 | ✅ Documented in DEVELOPER_GUIDE |
+| P2-02 | Optional Jira API Integration — read-only mode design, field mapping, JQL fetch | P2 | ✅ Documented in DEVELOPER_GUIDE |
 | P2-03 | Storage database tables design (`storage_settings`, `storage_objects`, etc.) | P2 | ❌ Design only |
 | P2-04 | Jira database tables design (`jira_connections`, `jira_field_mappings`, etc.) | P2 | ❌ Design only |
 
@@ -336,8 +336,8 @@
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| P4-01 | Admin & System Notification Center — in-app notifications, admin-to-user, system-to-admin | P4 | ❌ Planned |
-| P4-02 | Maintenance Mode — admin-controlled, user maintenance screen, audit logs | P4 | ❌ Planned |
+| P4-01 | Admin & System Notification Center — in-app notifications, admin-to-user, system-to-admin | P4 | ✅ Documented in DEVELOPER_GUIDE |
+| P4-02 | Maintenance Mode — admin-controlled, user maintenance screen, audit logs | P4 | ✅ Documented in DEVELOPER_GUIDE |
 | P4-03 | Email notification channel | P4 | ❌ Planned |
 | P4-04 | Slack/Teams webhook notification channel | P4 | ❌ Planned |
 
