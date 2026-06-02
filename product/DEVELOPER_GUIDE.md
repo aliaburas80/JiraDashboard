@@ -815,3 +815,182 @@ src/services/export/recommendationEngine.ts          — rule-based recs
 ---
 
 *Delivery Clarity v3.0 — © 2025 Ali Abu Ras — aburasali80@gmail.com*
+
+---
+
+## Package Reference — Dependencies Used by Delivery Clarity
+
+Last verified: 2026-06-02
+
+| Package | Version | Used For | Feature / Area | Runtime Scope | Status | Risk if Removed |
+|---------|---------|----------|----------------|---------------|--------|-----------------|
+| `next` | 14.2.5 | App Router, SSR, API routes | Core Framework | Shared | Installed | Application fails completely |
+| `react` / `react-dom` | ^18.3.1 | UI rendering, hooks, state | Core Framework | Client | Installed | Application fails completely |
+| `typescript` | ^5.4.5 | Type safety, interfaces, strict mode | Core Framework | Dev-only | Installed | Type errors uncaught |
+| `tailwindcss` | ^3.4.4 | Utility-first CSS styling | UI/Styling | Client | Installed | All styling breaks |
+| `sass` | ^1.77.8 | globals.scss global stylesheet | UI/Styling | Client | Installed | Global styles break |
+| `xlsx` | ^0.18.5 | Parse Jira CSV/XLSX exports; generate Excel workbook | Upload + Export | Server | Installed | Upload and export completely broken |
+| `reactflow` | ^11.11.4 | Interactive hierarchy graph in Work Item Explorer | F2 Work Item Explorer | Client | Installed | Explorer graph fails to render |
+| `@dagrejs/dagre` | ^3.0.0 | Hierarchical layout algorithm for React Flow nodes | F2 Work Item Explorer | Client | Installed | Graph layout broken |
+| `prisma` | ^5.22.0 | ORM, schema, migrations, SQLite queries | F3 Authentication & Database | Server | Installed | No database access, auth fails |
+| `@prisma/client` | ^5.22.0 | Generated Prisma query client | F3 Authentication & Database | Server | Installed | Database queries fail |
+| `iron-session` | ^8.0.4 | HTTP-only cookie session management | F3 Authentication & Database | Server | Installed | Login/logout completely broken |
+| `bcryptjs` | ^3.0.3 | Password hashing (rounds=12) | F3 Authentication & Database | Server | Installed | Passwords stored in plaintext |
+| `@types/bcryptjs` | ^2.4.6 | TypeScript types for bcryptjs | F3 Authentication & Database | Dev-only | Installed | TypeScript errors in auth code |
+| `lucide-react` | ^0.427.0 | SVG icon components | UI/Icons | Client | Installed | Icons disappear (minor) |
+| `clsx` + `tailwind-merge` | ^2.1.1 / ^2.3.0 | Conditional className, conflict resolution | UI/Styling | Client | Installed | className logic errors |
+| `jest` + `ts-jest` | ^29.7.0 / ^29.2.2 | 253 automated tests across 21 test suites | Testing | Dev-only | Installed | No automated testing |
+
+### Planned Future Packages (Not Yet Installed)
+
+| Package | Purpose | Feature | Priority |
+|---------|---------|---------|---------|
+| `@aws-sdk/client-s3` | Amazon S3 cloud storage | P3 Cloud Storage | P3 |
+| `@azure/storage-blob` | Azure Blob Storage | P3 Cloud Storage | P3 |
+| `@google-cloud/storage` | Google Cloud Storage | P3 Cloud Storage | P3 |
+| Jira API client (TBD) | Jira REST API integration | P3 Jira Integration | P3 |
+| `nodemailer` (TBD) | Email notification channel | P4 Notifications | P4 |
+
+---
+
+## P2 — Admin Storage & Backup (Architecture Design Only)
+
+**Status:** Design and backlog planning only. Do NOT implement full cloud storage until explicitly instructed.
+
+### Goal
+Save uploaded Jira files, parsed data, import logs, dashboard snapshots, Excel exports, and processing metadata to local or cloud storage.
+
+### Storage Provider Interface (Planned)
+```typescript
+interface StorageProvider {
+  name: string;
+  type: 'local' | 's3' | 'azure' | 'gcp' | 's3-compatible';
+  save(key: string, data: Buffer, metadata?: object): Promise<string>;
+  get(key: string): Promise<Buffer>;
+  delete(key: string): Promise<void>;
+  exists(key: string): Promise<boolean>;
+  list(prefix: string): Promise<string[]>;
+}
+```
+
+### Storage Object Types (Planned)
+- `Original Upload` — raw Jira CSV/XLSX file
+- `Normalised Data` — parsed JiraIssue[] JSON
+- `Dashboard Snapshot` — full DashboardMetrics JSON
+- `Excel Export` — generated .xlsx workbook
+- `Import Log` — processing metadata
+- `Error Report` — failed upload diagnostics
+
+### Storage Status Values (Planned)
+`Pending | Saving | Success | Failed | Retrying | Synced | Permanent Failure | Skipped`
+
+### Future Database Tables (Planned)
+- `storage_settings` — provider config, credentials (encrypted), enabled flag
+- `storage_objects` — each stored object with key, type, status, size
+- `storage_events` — audit log of all storage operations
+- `storage_retry_queue` — failed saves queued for retry
+
+### Future Storage Events (Planned)
+`STORAGE_SETTINGS_UPDATED | STORAGE_CONNECTION_TEST_STARTED | STORAGE_CONNECTION_TEST_SUCCESS | STORAGE_CONNECTION_TEST_FAILED | STORAGE_SAVE_STARTED | STORAGE_SAVE_SUCCESS | STORAGE_SAVE_FAILED | STORAGE_LOCAL_FALLBACK_USED | STORAGE_RETRY_QUEUED | STORAGE_RETRY_STARTED | STORAGE_RETRY_SUCCESS | STORAGE_RETRY_FAILED | STORAGE_RETRY_LIMIT_REACHED | STORAGE_SYNC_COMPLETED`
+
+---
+
+## P2/P3 — Optional Jira API Integration (Architecture Design Only)
+
+**Status:** Design and backlog planning only. Export-first model remains default.
+
+### Product Positioning
+Delivery Clarity is export-first and zero-credential by default. Jira API integration is optional — it must not replace the upload model.
+
+### Future Modes
+1. **Export Mode** — default, zero-credential
+2. **Connected Jira Mode** — optional API integration
+3. **Hybrid Mode** — API fetch + export fallback
+
+### Required Architecture Rule
+Future Jira API data MUST flow through the existing analytics pipeline:
+```
+Jira API response → Jira API adapter → Normalised JiraIssue[] → Existing metrics services → Dashboard
+```
+
+### Future Database Tables (Planned)
+- `jira_connections` — connection config, URL, credentials (encrypted), test status
+- `jira_field_mappings` — canonical field → Jira field mapping per project
+- `jira_sync_logs` — sync history, status, issue count
+- `jira_suggested_tickets` — recommendations converted to Jira ticket suggestions
+- `jira_events` — audit log of all Jira operations
+
+### Write-Back Safety Rules (When Implemented)
+- Write-back disabled by default
+- Admin must explicitly enable write-back
+- User must approve before ticket creation
+- No automatic ticket creation
+- Preview before send required
+- Dry-run mode supported
+- Duplicate prevention required
+- Never expose Jira credentials to frontend
+
+### Future Jira Events (Planned)
+`JIRA_CONNECTION_TEST_STARTED | JIRA_CONNECTION_TEST_SUCCESS | JIRA_CONNECTION_TEST_FAILED | JIRA_SYNC_STARTED | JIRA_SYNC_SUCCESS | JIRA_SYNC_FAILED | JIRA_FIELD_MAPPING_UPDATED | JIRA_TICKET_SUGGESTION_CREATED | JIRA_TICKET_SUGGESTION_APPROVED | JIRA_TICKET_SUGGESTION_REJECTED | JIRA_TICKET_CREATE_STARTED | JIRA_TICKET_CREATE_SUCCESS | JIRA_TICKET_CREATE_FAILED | JIRA_PERMISSION_DENIED`
+
+---
+
+## P4 — Admin & System Notification Center (Planned)
+
+**Status:** Future planning only. Do NOT implement during P0 stabilisation.
+
+### Goal
+In-app notification system for admin announcements, system alerts, errors, warnings, and security events.
+
+### Notification Types (Planned)
+Admin Announcement, System Alert, Error, Warning, Security Threat, Storage Failure, Jira Integration Failure, Failed Upload, Failed Export, Failed Login Attempt, Data Quality Warning, Maintenance Notice, Release Notice, Action Required, Information
+
+### Notification Severity
+`Info | Success | Warning | Error | Critical | Security`
+
+### Notification Audience
+`All Users | Admins Only | Specific User | Specific Role | Users Linked to Import`
+
+### Notification Status
+`Unread | Read | Acknowledged | Dismissed | Expired`
+
+### Future Database Tables (Planned)
+- `notifications` — id, title, message, severity, type, audience, created_by_user_id, requires_acknowledgement, expires_at
+- `notification_recipients` — notification_id, user_id, status, read_at, acknowledged_at, dismissed_at
+- `notification_events` — notification_id, user_id, event_type, metadata_json
+
+### Suggested UI Routes (Planned)
+- `app/notifications/page.tsx`
+- `app/admin/notifications/page.tsx`
+- `src/components/notifications/NotificationBell.tsx`
+- `src/components/notifications/NotificationDropdown.tsx`
+
+---
+
+## P4 — Maintenance Mode (Planned)
+
+**Status:** Future planning only. Part of P4 Communication / Governance Layer.
+
+### Goal
+Admin-controlled feature to temporarily prevent normal user access while system upgrades, migrations, or security handling is in progress.
+
+### Behavior When Active
+- Normal users redirected to `/maintenance` page
+- Admin users retain access if `allowAdminAccess = true`
+- Upload, export, sync, write-back operations blocked
+- API routes return `503 Service Unavailable` with JSON body
+
+### API Response During Maintenance (Planned)
+```json
+{ "status": "maintenance", "message": "Delivery Clarity is currently under maintenance.", "expectedReturnAt": "2026-06-02T18:00:00+03:00" }
+```
+
+### Future Database Tables (Planned)
+- `maintenance_settings` — is_enabled, title, message, expected_return_at, allow_admin_access, enabled_by_user_id
+- `maintenance_events` — event_type, user_id, metadata_json
+
+### Maintenance Events (Planned)
+`MAINTENANCE_MODE_ENABLED | MAINTENANCE_MODE_DISABLED | MAINTENANCE_SETTINGS_UPDATED | MAINTENANCE_USER_REDIRECTED | MAINTENANCE_ADMIN_ACCESS_GRANTED | MAINTENANCE_UPLOAD_BLOCKED`
+
+### Maintenance Status Values (Planned)
+`Enabled | Disabled | Scheduled | Expired`

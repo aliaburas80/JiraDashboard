@@ -285,4 +285,63 @@
 
 ---
 
-*Delivery Clarity v3.0 — © 2025 Ali Abu Ras — aburasali80@gmail.com*
+---
+
+## P1 — Foundation / Explainability (Next Priority)
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| P1-01 | Package Reference in `/developer` route — table of all packages, versions, usage, scope, risk | P1 | ❌ Not started |
+| P1-02 | Calculation Reference in `/developer` route — 25 metrics with formula, inputs, why, benefit, assumptions | P1 | ❌ Not started |
+| P1-03 | Package Reference in `product/DEVELOPER_GUIDE.md` | P1 | ❌ Not started |
+| P1-04 | Calculation Reference in `product/DEVELOPER_GUIDE.md` + `ALGORITHM_SPEC.md` | P1 | ❌ Not started |
+| P1-05 | Production readiness checklist page | P1 | ❌ Not started |
+| P1-06 | Security checklist page (`/admin/security`) | P1 | ❌ Not started |
+| P1-07 | Database backup and restore planning | P1 | ❌ Not started |
+| P1-08 | Dockerfile and docker-compose setup | P1 | ❌ Not started |
+| P1-09 | Performance profiling for 5,000+ issues | P1 | ❌ Not started |
+
+---
+
+## P2 — Future Architecture / Backlog Design Only
+
+> Document and plan only. Do NOT implement full cloud or full Jira integration now.
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| P2-01 | Admin Storage & Backup — architecture design, storage provider interface, S3/Azure/GCP planning | P2 | ❌ Design only |
+| P2-02 | Optional Jira API Integration — read-only mode design, field mapping, JQL fetch | P2 | ❌ Design only |
+| P2-03 | Storage database tables design (`storage_settings`, `storage_objects`, etc.) | P2 | ❌ Design only |
+| P2-04 | Jira database tables design (`jira_connections`, `jira_field_mappings`, etc.) | P2 | ❌ Design only |
+
+---
+
+## P3 — Full Implementation (After P2 design complete)
+
+> Do NOT start until P2 design is documented and reviewed.
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| P3-01 | Full S3/Azure/GCP cloud storage implementation | P3 | ❌ Not started |
+| P3-02 | Full Jira API read integration | P3 | ❌ Not started |
+| P3-03 | Jira write-back (ticket creation from recommendations) | P3 | ❌ Not started |
+| P3-04 | Jira OAuth support | P3 | ❌ Not started |
+| P3-05 | Multi-provider cloud backup | P3 | ❌ Not started |
+
+---
+
+## P4 — Future Communication / Governance Layer
+
+> Do NOT implement during P0 stabilisation. Plan and document only.
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| P4-01 | Admin & System Notification Center — in-app notifications, admin-to-user, system-to-admin | P4 | ❌ Planned |
+| P4-02 | Maintenance Mode — admin-controlled, user maintenance screen, audit logs | P4 | ❌ Planned |
+| P4-03 | Email notification channel | P4 | ❌ Planned |
+| P4-04 | Slack/Teams webhook notification channel | P4 | ❌ Planned |
+
+---
+
+*Delivery Clarity v4.0 (in progress) — Ali Delivery Intelligence — © 2025 Ali Abu Ras — aburasali80@gmail.com*  
+*Slogan: From messy boards to measurable delivery confidence*

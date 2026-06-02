@@ -1,102 +1,108 @@
 # Delivery Clarity — Release Notes
 
----
-
-## v3.0 — Intelligence Layer (In Progress)
-
-### Feature 1: Advanced Throughput & Delivery Analytics ✅
-
-- **Sprint Throughput Engine** (`src/services/metrics/throughput.service.ts`)
-  - Per-sprint: committed, completed, carryover, added scope, goal outcome, delivery confidence
-  - Delivery patterns: Healthy Early Progress, End-Loaded, Scope Instability, Blocked Sprint, Late Delivery Risk
-  - Cross-sprint: average throughput, average completion %, trend direction (Improving / Declining / Stable)
-- **Mid-Sprint Delivery Analysis** (`src/services/metrics/midSprint.service.ts`)
-  - Mid-sprint completion % for each sprint
-  - Pattern detection and plain-English interpretation
-- **Kanban Flow Analytics** (`src/services/metrics/kanbanFlow.service.ts`)
-  - Monthly reporting periods for non-sprint issues
-  - Flow efficiency (cycle time / lead time × 100)
-  - Aging WIP, bottleneck status, flow health classification
-- **Dashboard Panels**
-  - `SprintThroughputPanel` — sprint table with goal badges, completion bars, trend indicator
-  - `MidSprintDeliveryPanel` — per-sprint pattern cards with gauge
-  - `KanbanThroughputPanel` — period table with flow health, aging WIP, bottleneck
-- **TypeScript Types** (`src/types/throughput.ts`) — full type safety across all throughput data
-- **`DashboardMetrics`** — extended with `throughput: ThroughputMetrics` field
-- **Bug fix**: Upload → dashboard redirect was broken (sessionStorage vs localStorage key mismatch) — fixed
+**Brand:** Ali Delivery Intelligence  
+**Slogan:** From messy boards to measurable delivery confidence
 
 ---
 
-### Feature 4: Smart Excel Export — Statistical Workbook ✅
+## v4.0 — Quality & Trust Layer (In Progress)
 
-- **17-sheet statistical Excel workbook** replacing basic data dump
-  - 01 Executive Summary — health score, KPIs, top risks, recommendations, narrative
-  - 02 Project Health — metric scoring table with interpretation
-  - 03 Team Performance — per-assignee delivery metrics
-  - 04 Sprint Throughput — full sprint analytics table
-  - 05 Mid-Sprint Delivery — pattern analysis per sprint
-  - 06 Kanban Flow — period-by-period flow metrics
-  - 07 Risks and Blockers — prioritised risk item list
-  - 08 Orphan & Data Quality — orphan classification with delivery impact
-  - 09 Assignee Workload — load share, bugs, SP per person
-  - 10 Story Points Analysis — distribution, velocity forecast, missing SP
-  - 11 Cycle & Lead Time — percentile analysis (P50, P75, P85, P95)
-  - 12 Throughput Trends — sprint-by-sprint and period-by-period delta
-  - 13 Recommendations — rule-based, fully evidenced action list
-  - 14 Release Readiness — Go / Conditional Go / No-Go per fix version
-  - 15 Dependencies — linked issue analysis
-  - 16 Metric Dictionary — plain-English definition for every metric
-  - 17 Raw Data Reference — normalised issue data without PII summaries
-- **Recommendation Engine** (`src/services/export/recommendationEngine.ts`)
-  - 12 detection rules with evidence, impact, suggested owner, suggested action
-  - Executive narrative paragraph auto-generated from metrics
-- **Export button** — now downloads the 17-sheet statistical workbook
+**Branch:** `feat/enhancements`  
+**Status:** Active development — not yet merged to main
 
----
+### P0 Stabilisation (Completed)
+- 253 automated tests passing across 21 test suites
+- Build verified clean — all routes compile without errors
+- All packages installed and Prisma client generated
+- Documentation baseline aligned with code
 
-### Feature 2: Work Item Explorer (`/explore`) 🔧 Awaiting `npm install reactflow @dagrejs/dagre`
+### P1 — Data Quality & Trust
+- **9.1** Data Quality Score — 0–100% score, 10-field check, band (Excellent→Critical), plain-English summary, 12 tests
+- **9.2** Metric Confidence Score — per-KPI badge (High/Medium/Low/Unreliable/N/A), tooltip with reason + missing fields, 14 tests
+- **9.3** Missing-column impact — field-by-field dashboard impact: what you see now, what you'd gain, affected locations, 12 tests
+- **9.4** Privacy & data-retention settings — admin controls: 7/30/90/365/forever retention, auto-delete, clear all, 10 tests
+- **9.5** Delete import history & snapshots — user deletes own data, admin deletes any, 2-click confirm, 10 tests
 
-- **Route**: `/explore` — "Explore Delivery Structure"
-- **Hierarchy reconstruction** (`src/services/relations/hierarchy.service.ts`)
-  - Multi-signal: Parent Key (explicit) → Epic Link (explicit) → Key prefix (inferred, 0.8 confidence)
-  - Full ancestor chain and descendant BFS traversal
-- **Orphan risk detection** (`src/services/relations/orphanRelation.service.ts`)
-  - Classifications: MISSING_EPIC, MISSING_PARENT, FULLY_ORPHANED, DANGLING_LINK
-  - Delivery impact and suggested fix per orphan
-- **Relation graph builder** (`src/services/relations/relationExplorer.service.ts`)
-  - Builds RelationGraph: focus node + ancestors + descendants + siblings + orphans
-  - Auto-generated plain-English insights
-- **Visual graph** (`src/components/explore/WorkItemGraph.tsx`)
-  - React Flow canvas with Dagre hierarchical layout
-  - Custom IssueNodeCard per node (type, key, summary, status, assignee, SP, health)
-  - Orphan nodes: dashed orange border + "ORPHAN" badge
-  - Blocked nodes: red badge
-  - Edge styles: parent-child (solid), epic-link (purple), blocks (red animated), orphan (orange dashed)
-  - Controls: zoom, fit-view, mini-map
-- **Supporting components**: RelationLegend, RelationStatsCards, RelationInsightPanel, RelationDetailsTable
-- **Navigation**: "Explore" added to app header
+### P1 — User Experience
+- **9.6** Column-mapping preview — shows before dashboard redirect: mapped/aliased/unrecognised columns, score, missing essentials, 10-second auto-proceed, 10 tests
+- **9.7** Sample/demo dataset — 35-issue realistic Jira export, 4 sprints, 3 epics, accessible from upload page
+- **9.8** First-time onboarding checklist — 8 steps auto-tracked, compact header chip, dismissible, 10 tests
+- **9.9** Role-based dashboard views — 5 views (Full/Executive/Scrum Master/Product Owner/Eng Manager), section hiding, TierSep/Flow Panel hiding, 10 tests
+- **9.10** Customer View (`/customer`) — clean stakeholder summary, no technical detail, print/PDF, 8 tests
+
+### P1 — Analytics & History
+- **9.11** Saved dashboard snapshots — name, save, list, load, delete, max 20/user, 8 tests
+- **9.12** Snapshot comparison — side-by-side 12 metric delta table, ↑↓→ chips, insights, same-data detection, 8 tests
+- **9.13** Upload-to-upload trend analysis — SVG line charts for 8 metrics over 30 uploads, timeline, table, 10 tests
+- **9.14** "What changed since last upload?" panel — auto delta vs previous upload, 9 metric comparisons, narrative, 10 tests
+
+### P1 — Configuration
+- **9.15** Configurable health thresholds — 9 thresholds (cycle, lead, active age, open age, blocked ratio), admin UI, JSON-persisted, 10 tests
+- **9.16** Configurable orphan detection rules — parent link fields, exempt types, sub-task flag, risk thresholds, 11 tests
+- **9.17** Recommendation mute/snooze — per-card × button, 💤 dropdown (7d/30d/permanent), restore all, 10 tests
 
 ---
 
-### Feature 3: Authentication & Database 🔧 Awaiting `npm install prisma @prisma/client iron-session bcryptjs`
+## v3.0 — Intelligence Layer (Merged)
 
-- **Database schema** (`prisma/schema.prisma`) — SQLite via Prisma ORM
-  - Tables: User, Session, ImportLog, DashboardSnapshot, AuditEvent
-- **Auth library** (`src/lib/auth.ts`) — bcryptjs password hashing (rounds=12)
-- **Session library** (`src/lib/session.ts`) — iron-session, HTTP-only secure cookies
-- **Prisma client** (`src/lib/prisma.ts`) — singleton to prevent dev hot-reload connection leaks
-- **API routes**: `/api/auth/login`, `/api/auth/logout`, `/api/auth/register`, `/api/auth/me`
-- **Login page** (`app/login/page.tsx`) — clean, accessible login form
-- **Middleware** (`middleware.ts`) — route protection skeleton (activate after packages installed)
-- **Rate limiting** — 5 login attempts per minute per IP
+### Feature 1 — Throughput & Delivery Analytics
+- Sprint throughput engine (committed/completed/carryover/goal outcome/delivery pattern)
+- Mid-sprint pattern detection (5 patterns: Healthy/End-Loaded/Blocked/Scope Instability/Late)
+- Kanban flow analytics (monthly periods, flow efficiency, aging WIP, bottleneck, flow health)
+- SprintThroughputPanel, MidSprintDeliveryPanel, KanbanThroughputPanel on dashboard
+- Sprint Velocity Chart (story points over time) on Charts page
+- Sprint Comparison Panel (15-metric side-by-side with delta indicators)
+- `src/types/throughput.ts` — full TypeScript coverage
+
+### Feature 2 — Work Item Explorer (`/explore`)
+- Hierarchy reconstruction (multi-signal: parent key, epic link, key prefix)
+- Orphan risk detection — 4-class classification with delivery impact statements
+- React Flow visual graph with Dagre layout, custom node cards, pan/zoom, minimap
+- RelationCharts — 6 chart cards per issue (completion, health, types, assignee, sprint, orphan)
+- Bug fix: field format compatibility (FlowItem and raw JiraIssue)
+
+### Feature 3 — Authentication & Database
+- SQLite via Prisma 5 (`data/delivery_clarity.db`)
+- Auth API: login (bcrypt, iron-session, rate-limit 5/min), logout, register, me
+- Login, Register, Profile, Admin/logs pages
+- UserMenu in header (avatar, name, role badge, sign out)
+- Middleware route protection (all app routes guarded)
+- Upload API saves ImportLog with userId to SQLite
+- Admin sees all users' logs; regular user sees only own logs
+- **Package note:** `reactflow`, `@dagrejs/dagre`, `prisma`, `@prisma/client`, `iron-session`, `bcryptjs` — all installed and active
+
+### Feature 4 — Smart Excel Export (17 sheets)
+- Recommendation engine (10+ rules, evidence + impact + owner + action per rec)
+- Executive Summary, Project Health, Team Performance, Sprint Throughput, Mid-Sprint,
+  Kanban Flow, Risks & Blockers, Orphan & Data Quality, Assignee Workload, Story Points,
+  Cycle & Lead Time, Throughput Trends, Recommendations, Release Readiness,
+  Dependencies, Metric Dictionary, Raw Data Reference
+- Export button in dashboard sticky bar and summary page
+
+### Dashboard UX
+- All dashboard sections collapsible (same pattern as Quarter Statistics)
+- Saved filter presets (name, save, apply, delete via localStorage)
+- Shareable URL — filter state in query params, "Copy link" button
+- Drag-and-drop column reordering in issue table (DraggableMetricTable, localStorage-persisted)
+- Multi-file upload — merge up to 10 exports, deduplicate by Issue Key
+- Upload → dashboard redirect bug fixed (sessionStorage vs localStorage key mismatch)
+- Role-based dashboard view selector (5 views, localStorage-persisted)
+
+### New Routes (v3.0)
+- `/explore` — Work Item Explorer
+- `/login`, `/register`, `/profile` — Authentication
+- `/admin/logs`, `/admin/settings` — Admin management
+- `/glossary` — Abbreviations and metric glossary
+- `/customer` — Customer-facing delivery summary
+- `/snapshots`, `/snapshots/compare` — Snapshot management
+- `/trends` — Upload-to-upload trend analysis
 
 ---
 
 ## v2.0 — Previous Release
 
 - Dark mode, error pages, 40 tests, TypeScript cleanup
-- CSV + HTML + Excel export from dashboard sticky bar and summary page
-- Export HTML report redesigned: charts, KPIs, insights — no raw issue table
+- CSV + HTML + Excel export
 - Developer documentation portal
 - Upload restart button in header
 
@@ -109,3 +115,18 @@
 - Charts page: visual analytics
 - Summary page: health overview
 - Backend/import log page
+
+---
+
+## Planned — P2/P3/P4 (Not Yet Implemented)
+
+- **P2** Admin Storage & Backup (S3, Azure, GCP) — architecture design only
+- **P2/P3** Optional Jira API Integration — export-first model remains default
+- **P4** Admin & System Notification Center
+- **P4** Maintenance Mode
+- **P1** Package Reference in `/developer` route
+- **P1** Calculation Reference in `/developer` route
+- **P1** Production security checklist page
+- **P1** Database backup and restore
+- **P1** Dockerfile and docker-compose setup
+- **P1** Performance profiling for 5,000+ issues
