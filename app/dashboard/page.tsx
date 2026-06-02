@@ -14,6 +14,7 @@ import { getHealthBand, HEALTH_COLORS, formatDays, cn } from '@/lib/utils';
 import { exportToExcel, exportToHtml } from '@/lib/exportUtils';
 import { loadMetrics } from '@/lib/storage';
 import { loadPresets, savePreset, deletePreset, type FilterPreset } from '@/lib/filterPresets';
+import { recKey, isMuted, muteRec, snoozeRec, restoreAll, getActiveMuted, type MutedRec } from '@/lib/mutedRecommendations';
 import SprintThroughputPanel from '@/components/dashboard/SprintThroughputPanel';
 import MidSprintDeliveryPanel from '@/components/dashboard/MidSprintDeliveryPanel';
 import KanbanThroughputPanel from '@/components/dashboard/KanbanThroughputPanel';
@@ -279,6 +280,9 @@ export default function DashboardPage() {
   const [presets, setPresets] = useState<FilterPreset[]>([]);
   const [presetName, setPresetName] = useState('');
   const [showPresetInput, setShowPresetInput] = useState(false);
+  const [mutedRecs, setMutedRecs]         = useState<MutedRec[]>([]);
+  const [snoozeMenuKey, setSnoozeMenuKey] = useState<string | null>(null);
+  const [showMuted, setShowMuted]         = useState(false);
 
   const toggleSection = (key: string) =>
     setExpandedSections(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
@@ -308,6 +312,7 @@ export default function DashboardPage() {
       if (!data) { router.replace('/'); return; }
       setMetrics(data);
       setPresets(loadPresets());
+      setMutedRecs(getActiveMuted());
 
       // Restore filters from URL query params
       const p = new URLSearchParams(window.location.search);
@@ -841,35 +846,79 @@ export default function DashboardPage() {
               expanded={expandedSections.has('recommendations')}
               onToggle={() => toggleSection('recommendations')}
             />
-            {!isHidden('recommendations') && expandedSections.has('recommendations') && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
-              {smartActions.map((action, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => handleSmartAction(action)}
-                  className={cn(
-                    'text-left rounded-xl border p-4 shadow-sm hover:shadow-md transition-shadow',
-                    action.type === 'critical' ? 'border-red-200 bg-red-50' :
-                      action.type === 'warning' ? 'border-amber-200 bg-amber-50' : 'border-blue-200 bg-blue-50'
-                  )}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg" aria-hidden="true">{action.icon}</span>
-                    <span className={cn('text-xs font-black uppercase tracking-wider rounded-full px-2 py-0.5 border',
-                      action.type === 'critical' ? 'text-red-700 bg-red-100 border-red-200' :
-                        action.type === 'warning' ? 'text-amber-700 bg-amber-100 border-amber-200' :
-                          'text-blue-700 bg-blue-100 border-blue-200'
-                    )}>{action.type}</span>
-                    <span className="text-xs text-slate-400 ml-auto">#{i + 1}</span>
+            {!isHidden('recommendations') && expandedSections.has('recommendations') && (() => {
+              const mutedCount = smartActions.filter(a => isMuted(recKey(a.type, a.title))).length;
+              const visibleActions = smartActions.filter(a => showMuted || !isMuted(recKey(a.type, a.title)));
+              return (
+              <div className="mt-3 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {visibleActions.map((action, i) => {
+                    const key = recKey(action.type, action.title);
+                    const muted = isMuted(key);
+                    const menuOpen = snoozeMenuKey === key;
+                    return (
+                      <div key={i} className="relative group">
+                        <button type="button" onClick={() => { if (!muted) handleSmartAction(action); }}
+                          className={cn('w-full text-left rounded-xl border p-4 shadow-sm hover:shadow-md transition-shadow',
+                            muted ? 'opacity-40 grayscale' :
+                              action.type === 'critical' ? 'border-red-200 bg-red-50' :
+                              action.type === 'warning'  ? 'border-amber-200 bg-amber-50' : 'border-blue-200 bg-blue-50')}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg" aria-hidden="true">{action.icon}</span>
+                            <span className={cn('text-xs font-black uppercase tracking-wider rounded-full px-2 py-0.5 border',
+                              action.type === 'critical' ? 'text-red-700 bg-red-100 border-red-200' :
+                                action.type === 'warning' ? 'text-amber-700 bg-amber-100 border-amber-200' :
+                                  'text-blue-700 bg-blue-100 border-blue-200')}>{action.type}</span>
+                            {muted && <span className="text-[10px] text-slate-400 font-semibold ml-1">muted</span>}
+                            <span className="text-xs text-slate-400 ml-auto">#{i + 1}</span>
+                          </div>
+                          <p className="text-sm font-bold text-slate-800 mb-1">{action.title}</p>
+                          <p className="text-xs text-slate-600 mb-2">{action.detail}</p>
+                          {!muted && <p className="text-xs font-bold text-blue-600">Go to details →</p>}
+                        </button>
+                        {/* Mute / snooze controls — revealed on hover */}
+                        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          {muted ? (
+                            <button type="button" onClick={() => { const { restoreRec } = require('@/lib/mutedRecommendations'); restoreRec(key); setMutedRecs(getActiveMuted()); }}
+                              className="text-[10px] font-bold bg-white border border-slate-200 rounded px-1.5 py-0.5 text-slate-600 hover:bg-slate-50 shadow-sm">Restore</button>
+                          ) : (<>
+                            <div className="relative">
+                              <button type="button" onClick={e => { e.stopPropagation(); setSnoozeMenuKey(menuOpen ? null : key); }}
+                                className="text-[10px] font-bold bg-white border border-slate-200 rounded px-1.5 py-0.5 text-slate-600 hover:bg-slate-50 shadow-sm" title="Snooze">💤</button>
+                              {menuOpen && (
+                                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 min-w-[130px]">
+                                  {([['7 days', 7], ['30 days', 30]] as [string, number][]).map(([label, days]) => (
+                                    <button key={label} type="button" onClick={() => { snoozeRec(key, action.title, days); setMutedRecs(getActiveMuted()); setSnoozeMenuKey(null); }}
+                                      className="w-full text-left px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">Snooze {label}</button>
+                                  ))}
+                                  <div className="border-t border-slate-100 mt-1 pt-1">
+                                    <button type="button" onClick={() => { muteRec(key, action.title); setMutedRecs(getActiveMuted()); setSnoozeMenuKey(null); }}
+                                      className="w-full text-left px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50">Mute permanently</button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <button type="button" onClick={e => { e.stopPropagation(); muteRec(key, action.title); setMutedRecs(getActiveMuted()); }}
+                              className="text-[10px] font-black bg-white border border-slate-200 rounded px-1.5 py-0.5 text-slate-400 hover:text-red-600 hover:border-red-200 shadow-sm" title="Mute">×</button>
+                          </>)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {mutedCount > 0 && (
+                  <div className="flex items-center gap-3 pt-1">
+                    <button type="button" onClick={() => setShowMuted(v => !v)}
+                      className="text-xs text-slate-400 hover:text-slate-600 font-semibold">
+                      {showMuted ? 'Hide muted' : `${mutedCount} recommendation${mutedCount !== 1 ? 's' : ''} muted`}
+                    </button>
+                    <button type="button" onClick={() => { restoreAll(); setMutedRecs([]); setShowMuted(false); }}
+                      className="text-xs font-bold text-blue-600 hover:underline">Restore all</button>
                   </div>
-                  <p className="text-sm font-bold text-slate-800 mb-1">{action.title}</p>
-                  <p className="text-xs text-slate-600 mb-2">{action.detail}</p>
-                  <p className="text-xs font-bold text-blue-600">Go to details →</p>
-                </button>
-              ))}
-            </div>
-            )}
+                )}
+              </div>
+              );
+            })()}
           </section>
         )}
 
@@ -1688,6 +1737,7 @@ export default function DashboardPage() {
                               reasonFilter, labelFilter, activeQuickFilter,
                             });
                             setPresets(loadPresets());
+      setMutedRecs(getActiveMuted());
                             setPresetName('');
                             setShowPresetInput(false);
                           }
@@ -1706,6 +1756,7 @@ export default function DashboardPage() {
                             reasonFilter, labelFilter, activeQuickFilter,
                           });
                           setPresets(loadPresets());
+      setMutedRecs(getActiveMuted());
                           setPresetName('');
                           setShowPresetInput(false);
                         }}
