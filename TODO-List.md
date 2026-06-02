@@ -248,7 +248,7 @@
 | 9.24 | Dockerfile and docker-compose setup | P1 | ✅ Done — Dockerfile + docker-compose.yml |
 | 9.25 | Large export white screen fix | P0 | ✅ Done — FLOW_ITEMS_CAP=5,000; QuotaExceeded handling; dashboard warning banner |
 | 9.26 | Mobile UX polish for `/explore` | P1 | ✅ Done — search stacks on mobile, graph shorter + no MiniMap, table → card list |
-| 9.27 | Performance profiling for 5,000+ issues | P1 | ❌ Not started |
+| 9.27 | Performance profiling for 5,000+ issues | P1 | ✅ Done — parseDate memo cache, flowItemByKey Map replaces O(n×groups) filter scans, hoisted today, timing log |
 
 ---
 
