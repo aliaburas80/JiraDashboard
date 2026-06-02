@@ -55,7 +55,7 @@ export default function RelationDetailsTable({ nodes, orphanNodes, onFocusNode }
           placeholder="Search key, summary, assignee…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm flex-1 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-300"
+          className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm flex-1 min-w-[160px] focus:outline-none focus:ring-2 focus:ring-blue-300"
         />
         <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
           className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 focus:outline-none">
@@ -70,8 +70,48 @@ export default function RelationDetailsTable({ nodes, orphanNodes, onFocusNode }
         <span className="text-xs text-slate-400 ml-auto">{filtered.length} items</span>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Mobile card list */}
+      <div className="md:hidden divide-y divide-slate-100">
+        {filtered.map(node => {
+          const cfg = NODE_TYPE_CONFIG[node.type] ?? NODE_TYPE_CONFIG['Unknown'];
+          return (
+            <div key={node.id}
+              className={`p-4 cursor-pointer active:bg-slate-50 ${node.isFocusNode ? 'bg-blue-50' : ''}`}
+              onClick={() => onFocusNode?.(node.issueKey)}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="font-mono text-xs font-bold shrink-0" style={{ color: cfg.color }}>{node.issueKey}</span>
+                  {node.isFocusNode && <span className="text-[9px] bg-blue-600 text-white px-1.5 py-0.5 rounded shrink-0">focus</span>}
+                  {node.isOrphan && <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200 shrink-0">Orphan</span>}
+                </div>
+                <HealthBadge health={node.health} />
+              </div>
+              <p className="text-xs text-slate-700 mt-1 line-clamp-2">{node.summary}</p>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
+                <span className="text-xs font-semibold" style={{ color: cfg.color }}>{cfg.icon} {node.type}</span>
+                <span className="text-xs text-slate-500">{node.status}</span>
+                {node.assignee && node.assignee !== 'Unassigned' && (
+                  <span className="text-xs text-slate-400">👤 {node.assignee}</span>
+                )}
+                {(node.storyPoints ?? 0) > 0 && (
+                  <span className="text-xs text-violet-600 font-semibold">{node.storyPoints}pt</span>
+                )}
+              </div>
+              <button
+                className="mt-2 text-xs text-blue-600 font-semibold hover:underline"
+                onClick={e => { e.stopPropagation(); onFocusNode?.(node.issueKey); }}>
+                Focus →
+              </button>
+            </div>
+          );
+        })}
+        {!filtered.length && (
+          <p className="py-8 text-center text-sm text-slate-400 italic">No items match the current filters.</p>
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-left">

@@ -104,8 +104,8 @@ export default function ExplorePage() {
 
         {/* ── Search Bar ── */}
         <form onSubmit={handleSubmit} className="mb-6">
-          <div className="flex gap-3 items-center flex-wrap">
-            <div className="relative flex-1 min-w-[280px]">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
               <input
                 ref={inputRef}
                 type="text"
@@ -120,7 +120,7 @@ export default function ExplorePage() {
             <button
               type="submit"
               disabled={loading || noData || !query.trim()}
-              className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? 'Exploring…' : 'Explore Issue'}
             </button>

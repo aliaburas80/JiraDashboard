@@ -1,7 +1,7 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -195,6 +195,14 @@ export default function WorkItemGraph({ graph, onNodeFocus, dimNonRiskPath = fal
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState([]);
   const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState([]);
   const prevFocusKey = useRef('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const handleToggle = useCallback((id: string) => {
     setRfNodes(prev =>
@@ -228,7 +236,7 @@ export default function WorkItemGraph({ graph, onNodeFocus, dimNonRiskPath = fal
   }, [onNodeFocus]);
 
   return (
-    <div className="relative w-full" style={{ height: 540, background: '#f8fafc', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+    <div className="relative w-full" style={{ height: isMobile ? 380 : 540, background: '#f8fafc', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
       <ReactFlow
         nodes={rfNodes}
         edges={rfEdges}
@@ -244,13 +252,15 @@ export default function WorkItemGraph({ graph, onNodeFocus, dimNonRiskPath = fal
       >
         <Background color="#e2e8f0" gap={20} />
         <Controls showInteractive={false} />
-        <MiniMap
-          nodeColor={n => {
-            const cfg = NODE_TYPE_CONFIG[n.data?.type as keyof typeof NODE_TYPE_CONFIG];
-            return cfg?.color ?? '#94a3b8';
-          }}
-          maskColor="rgba(248,250,252,0.7)"
-        />
+        {!isMobile && (
+          <MiniMap
+            nodeColor={n => {
+              const cfg = NODE_TYPE_CONFIG[n.data?.type as keyof typeof NODE_TYPE_CONFIG];
+              return cfg?.color ?? '#94a3b8';
+            }}
+            maskColor="rgba(248,250,252,0.7)"
+          />
+        )}
       </ReactFlow>
       <RelationLegend />
     </div>
