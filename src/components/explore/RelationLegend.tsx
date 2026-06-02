@@ -59,6 +59,7 @@ export default function RelationLegend() {
             { color: 'bg-red-100 border-red-300', label: 'Critical / Blocked' },
             { color: 'bg-amber-100 border-amber-300', label: 'Warning / At Risk' },
             { color: 'border-orange-400 border-dashed', label: 'Orphan Issue' },
+            { color: 'bg-red-50 border-red-600 border-2', label: '⚠ Risk Path — chain to root' },
           ].map(({ color, label }) => (
             <div key={label} className="flex items-center gap-2 mb-1">
               <span className={`w-4 h-4 rounded border ${color} shrink-0`} />

@@ -47,17 +47,24 @@ async function applyDagreLayout(
 function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number; onToggle?: (id: string) => void } }) {
   const cfg      = NODE_TYPE_CONFIG[data.type] ?? NODE_TYPE_CONFIG['Unknown'];
   const isOrphan = data.isOrphan;
+  const isRiskPath = data.isOnRiskPath && !data.isFocusNode;
   const border   = isOrphan
     ? `2px dashed ${ORPHAN_STYLE.badgeColor}`
+    : isRiskPath && !data.isDone
+    ? `2px solid #dc2626`
     : `2px solid ${data.isFocusNode ? cfg.color : cfg.border}`;
-  const bg = isOrphan ? ORPHAN_STYLE.bg : cfg.bg;
+  const bg = isOrphan ? ORPHAN_STYLE.bg : isRiskPath && !data.isDone ? '#fff5f5' : cfg.bg;
   const w  = data._w;
 
   return (
     <div style={{
       width: w, border, background: bg, borderRadius: 12,
       padding: '10px 12px', cursor: 'pointer',
-      boxShadow: data.isFocusNode ? `0 0 0 3px ${cfg.color}40, 0 2px 8px rgba(0,0,0,.12)` : '0 1px 4px rgba(0,0,0,.08)',
+      boxShadow: data.isFocusNode
+        ? `0 0 0 3px ${cfg.color}40, 0 2px 8px rgba(0,0,0,.12)`
+        : isRiskPath && !data.isDone
+        ? '0 0 0 3px rgba(220,38,38,0.15), 0 2px 8px rgba(220,38,38,0.10)'
+        : '0 1px 4px rgba(0,0,0,.08)',
     }}>
       {/* Type + badges */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5, flexWrap: 'wrap' }}>
@@ -67,6 +74,9 @@ function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number
         </span>
         {data.isFocusNode && (
           <span style={{ fontSize: 9, background: cfg.color, color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>FOCUS</span>
+        )}
+        {isRiskPath && !data.isDone && !data.isFocusNode && (
+          <span style={{ fontSize: 9, background: '#dc2626', color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>⚠ RISK PATH</span>
         )}
         {isOrphan && (
           <span style={{ fontSize: 9, background: ORPHAN_STYLE.badgeColor, color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>ORPHAN</span>
@@ -146,14 +156,18 @@ function toRFNode(node: RelationNode, onToggle: (id: string) => void): Node {
 
 function toRFEdge(edge: RelationEdge): Edge {
   const cfg = EDGE_TYPE_CONFIG[edge.type] ?? EDGE_TYPE_CONFIG['relates-to'];
+  // Risk-path edges: thicker red, animated
+  const isRisk = edge.isOnRiskPath && edge.type !== 'blocks';
+  const strokeColor = isRisk ? '#dc2626' : cfg.strokeColor;
+  const strokeWidth = isRisk ? Math.max(cfg.strokeWidth, 2.5) : cfg.strokeWidth;
   return {
     id:        edge.id,
     source:    edge.sourceId,
     target:    edge.targetId,
     label:     edge.label,
-    animated:  cfg.animated,
-    style:     { stroke: cfg.strokeColor, strokeWidth: cfg.strokeWidth, strokeDasharray: cfg.strokeDasharray ?? '0' },
-    markerEnd: { type: MarkerType.ArrowClosed, color: cfg.strokeColor },
+    animated:  isRisk ? true : cfg.animated,
+    style:     { stroke: strokeColor, strokeWidth, strokeDasharray: isRisk ? '0' : (cfg.strokeDasharray ?? '0') },
+    markerEnd: { type: MarkerType.ArrowClosed, color: strokeColor },
   };
 }
 

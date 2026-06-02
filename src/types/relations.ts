@@ -38,6 +38,7 @@ export interface RelationNode {
   childCount: number;
   isExpanded: boolean;
   isFocusNode: boolean;
+  isOnRiskPath: boolean;   // true when this node is on the path from a risky node to the root
 }
 
 export interface RelationEdge {
@@ -45,6 +46,7 @@ export interface RelationEdge {
   sourceId: string;
   targetId: string;
   type: RelationEdgeType;
+  isOnRiskPath?: boolean;   // true when both endpoints are on the risk path
   label?: string;
 }
 

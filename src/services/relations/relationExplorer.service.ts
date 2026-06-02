@@ -97,7 +97,55 @@ function buildNode(
     childCount,
     isExpanded:     depth < 2,  // default: expand first 2 levels
     isFocusNode:    isFocus,
+    isOnRiskPath:   false, // set after buildNode calls, once risk paths are computed
   };
+}
+
+// ── Risk path computation ─────────────────────────────────────────────────────
+// For every blocked or critical node, walk up the edge tree to the root,
+// marking every node (and connecting edge) on that path.
+
+function computeRiskPaths(nodes: RelationNode[], edges: RelationEdge[]): {
+  riskNodeIds: Set<string>;
+  riskEdgeIds: Set<string>;
+} {
+  // Build child → parent lookup from hierarchy edges
+  const parentOf = new Map<string, string>();
+  edges.forEach(e => {
+    if (e.type === 'parent-child' || e.type === 'epic-link') {
+      parentOf.set(e.targetId, e.sourceId);
+    }
+  });
+
+  // Edge lookup: (source, target) → edge id
+  const edgeKey = (s: string, t: string) => `${s}→${t}`;
+  const edgeById = new Map<string, string>();
+  edges.forEach(e => {
+    edgeById.set(edgeKey(e.sourceId, e.targetId), e.id);
+    edgeById.set(edgeKey(e.targetId, e.sourceId), e.id); // bidirectional lookup
+  });
+
+  const riskNodeIds = new Set<string>();
+  const riskEdgeIds = new Set<string>();
+
+  // Source nodes: blocked OR critical (but not done — done critical is historical)
+  const riskyNodes = nodes.filter(n => (n.isBlocked || n.health === 'critical') && !n.isDone);
+
+  riskyNodes.forEach(node => {
+    let current = node.id;
+    riskNodeIds.add(current);
+    // Walk up to root
+    while (parentOf.has(current)) {
+      const parent = parentOf.get(current)!;
+      riskNodeIds.add(parent);
+      // Mark the edge connecting them
+      const eid = edgeById.get(edgeKey(parent, current)) ?? edgeById.get(edgeKey(current, parent));
+      if (eid) riskEdgeIds.add(eid);
+      current = parent;
+    }
+  });
+
+  return { riskNodeIds, riskEdgeIds };
 }
 
 // ── Edge helpers ──────────────────────────────────────────────────────────────
@@ -235,5 +283,10 @@ export function buildRelationGraph(focusKey: string, allIssues: JiraIssue[]): Re
   const stats    = computeStats(nodes, edges);
   const insights = generateInsights(nodes, stats, focusKey);
 
-  return { focusKey, focusType, nodes, edges, orphanNodes, stats, insights };
+  // Compute and apply risk paths
+  const { riskNodeIds, riskEdgeIds } = computeRiskPaths(nodes, edges);
+  const nodesWithRisk = nodes.map(n => ({ ...n, isOnRiskPath: riskNodeIds.has(n.id) }));
+  const edgesWithRisk = edges.map(e => ({ ...e, isOnRiskPath: riskEdgeIds.has(e.id) }));
+
+  return { focusKey, focusType, nodes: nodesWithRisk, edges: edgesWithRisk, orphanNodes, stats, insights };
 }
