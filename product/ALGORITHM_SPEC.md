@@ -276,3 +276,46 @@ FUNCTION percentile(values: number[], p: number): number
 ---
 
 *© 2025 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity*
+
+---
+
+## Risk-Path Computation Algorithm (9.18)
+
+```
+INPUT: nodes[] — all RelationNodes in current graph
+       edges[] — all RelationEdges in current graph
+
+STEP 1 — Build parent lookup:
+  For each edge of type parent-child or epic-link:
+    parentOf[edge.targetId] = edge.sourceId
+
+STEP 2 — Identify risky source nodes:
+  riskyNodes = nodes.filter(n =>
+    (n.isBlocked OR n.health === 'critical') AND NOT n.isDone
+  )
+  NOTE: done=critical is historical data, not active risk.
+
+STEP 3 — Walk ancestors and collect risk path:
+  riskNodeIds = new Set()
+  riskEdgeIds = new Set()
+  For each riskyNode:
+    current = riskyNode.id
+    riskNodeIds.add(current)
+    WHILE parentOf[current] exists:
+      parent = parentOf[current]
+      riskNodeIds.add(parent)
+      eid = edge connecting parent ↔ current
+      IF eid: riskEdgeIds.add(eid)
+      current = parent
+
+OUTPUT:
+  nodes with isOnRiskPath = riskNodeIds.has(node.id)
+  edges with isOnRiskPath = riskEdgeIds.has(edge.id)
+```
+
+**Visual treatment:**
+- Risk-path nodes: red border (#dc2626), red-tinted bg (#fff5f5), red glow, ⚠ RISK PATH badge
+- Risk-path edges: red stroke, thicker (≥2.5px), animated (flowing particles)
+- Done nodes excluded regardless of health status
+
+**Implementation:** `src/services/relations/relationExplorer.service.ts — computeRiskPaths()`

@@ -96,9 +96,74 @@ function buildNode(
     depth,
     childCount,
     isExpanded:     depth < 2,  // default: expand first 2 levels
-    isFocusNode:    isFocus,
-    isOnRiskPath:   false, // set after buildNode calls, once risk paths are computed
+    isFocusNode:      isFocus,
+    isOnRiskPath:     false, // set after risk path computation
+    isLargestBranch:  false, // set after largest branch computation
   };
+}
+
+// ── Largest unfinished branch computation ─────────────────────────────────────
+// Finds which direct child of the focus node has the most open (non-done) items
+// in its sub-tree. Helps users know where to concentrate their effort.
+
+function computeLargestUnfinishedBranch(
+  nodes: RelationNode[],
+  edges: RelationEdge[],
+  focusKey: string,
+): { largestBranch: import('@/types/relations').LargestBranch | null; branchNodeIds: Set<string> } {
+  // Build parent→children map
+  const children = new Map<string, string[]>();
+  edges.forEach(e => {
+    if (e.type === 'parent-child' || e.type === 'epic-link') {
+      if (!children.has(e.sourceId)) children.set(e.sourceId, []);
+      children.get(e.sourceId)!.push(e.targetId);
+    }
+  });
+
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+
+  // BFS to collect all descendants of a given root
+  function getSubtree(rootId: string): string[] {
+    const result: string[] = [];
+    const queue = [rootId];
+    const visited = new Set<string>();
+    while (queue.length) {
+      const cur = queue.shift()!;
+      if (visited.has(cur)) continue;
+      visited.add(cur);
+      result.push(cur);
+      (children.get(cur) ?? []).forEach(c => queue.push(c));
+    }
+    return result;
+  }
+
+  // Get direct children of focus
+  const directChildren = (children.get(focusKey) ?? []).filter(id => id !== focusKey);
+  if (!directChildren.length) return { largestBranch: null, branchNodeIds: new Set() };
+
+  let best: import('@/types/relations').LargestBranch | null = null;
+  let bestSubtreeIds: string[] = [];
+
+  directChildren.forEach(childId => {
+    const subtreeIds = getSubtree(childId);
+    const subtreeNodes = subtreeIds.map(id => nodeMap.get(id)).filter(Boolean) as RelationNode[];
+    const total = subtreeNodes.length;
+    const open  = subtreeNodes.filter(n => !n.isDone).length;
+    if (open === 0) return;
+    if (!best || open > best.openCount) {
+      const childNode = nodeMap.get(childId);
+      best = {
+        rootKey:  childId,
+        rootLabel: childNode ? `${childNode.issueKey} — ${childNode.summary.slice(0, 40)}` : childId,
+        openCount: open,
+        totalCount: total,
+        completionPct: total > 0 ? Math.round(((total - open) / total) * 100) : 0,
+      };
+      bestSubtreeIds = subtreeIds;
+    }
+  });
+
+  return { largestBranch: best, branchNodeIds: new Set(bestSubtreeIds) };
 }
 
 // ── Risk path computation ─────────────────────────────────────────────────────
@@ -184,6 +249,7 @@ function computeStats(nodes: RelationNode[], edges: RelationEdge[]): RelationSta
     completionPct: compPct, blockedRatio: blockedR,
     dependencyCount: deps, orphanCount: orphans,
     deliveryConfidence: Math.round(confidence),
+    largestUnfinishedBranch: null, // set after computeLargestUnfinishedBranch
   };
 }
 
@@ -285,8 +351,26 @@ export function buildRelationGraph(focusKey: string, allIssues: JiraIssue[]): Re
 
   // Compute and apply risk paths
   const { riskNodeIds, riskEdgeIds } = computeRiskPaths(nodes, edges);
-  const nodesWithRisk = nodes.map(n => ({ ...n, isOnRiskPath: riskNodeIds.has(n.id) }));
+
+  // Compute largest unfinished branch
+  const { largestBranch, branchNodeIds } = computeLargestUnfinishedBranch(nodes, edges, focusKey);
+
+  const statsWithBranch = { ...stats, largestUnfinishedBranch: largestBranch };
+
+  const nodesWithFlags = nodes.map(n => ({
+    ...n,
+    isOnRiskPath:    riskNodeIds.has(n.id),
+    isLargestBranch: branchNodeIds.has(n.id) && !n.isDone,
+  }));
   const edgesWithRisk = edges.map(e => ({ ...e, isOnRiskPath: riskEdgeIds.has(e.id) }));
 
-  return { focusKey, focusType, nodes: nodesWithRisk, edges: edgesWithRisk, orphanNodes, stats, insights };
+  // Add insight about largest unfinished branch
+  const branchInsights = insights.slice();
+  if (largestBranch && largestBranch.openCount >= 1) {
+    branchInsights.push(
+      `The largest unfinished branch is ${largestBranch.rootLabel} with ${largestBranch.openCount} open item${largestBranch.openCount !== 1 ? 's' : ''} (${largestBranch.completionPct}% complete). Focus here to maximise delivery progress.`
+    );
+  }
+
+  return { focusKey, focusType, nodes: nodesWithFlags, edges: edgesWithRisk, orphanNodes, stats: statsWithBranch, insights: branchInsights };
 }

@@ -240,7 +240,7 @@
 | 9.16 | Configurable orphan detection rules | P1 | ✅ Done — 11 tests passing |
 | 9.17 | Recommendation mute/snooze option | P1 | ✅ Done — 10 tests passing |
 | 9.18 | Work Item Explorer risk-path highlight | P1 | ✅ Done — 8 tests passing |
-| 9.19 | Work Item Explorer largest unfinished branch insight | P1 | ❌ Not started |
+| 9.19 | Work Item Explorer largest unfinished branch insight | P1 | ✅ Done — 8 tests passing |
 | 9.20 | Work Item Explorer blocked branch filter | P1 | ❌ Not started |
 | 9.21 | Release readiness checklist | P1 | ❌ Not started |
 | 9.22 | Database backup and restore | P1 | ❌ Not started |

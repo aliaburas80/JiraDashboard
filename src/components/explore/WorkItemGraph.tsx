@@ -47,13 +47,19 @@ async function applyDagreLayout(
 function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number; onToggle?: (id: string) => void } }) {
   const cfg      = NODE_TYPE_CONFIG[data.type] ?? NODE_TYPE_CONFIG['Unknown'];
   const isOrphan = data.isOrphan;
-  const isRiskPath = data.isOnRiskPath && !data.isFocusNode;
+  const isRiskPath    = data.isOnRiskPath && !data.isFocusNode;
+  const isBranchRoot  = data.isLargestBranch && !data.isOnRiskPath && !data.isFocusNode && !data.isDone;
   const border   = isOrphan
     ? `2px dashed ${ORPHAN_STYLE.badgeColor}`
     : isRiskPath && !data.isDone
     ? `2px solid #dc2626`
+    : isBranchRoot
+    ? `2px solid #7c3aed`
     : `2px solid ${data.isFocusNode ? cfg.color : cfg.border}`;
-  const bg = isOrphan ? ORPHAN_STYLE.bg : isRiskPath && !data.isDone ? '#fff5f5' : cfg.bg;
+  const bg = isOrphan ? ORPHAN_STYLE.bg
+    : isRiskPath && !data.isDone ? '#fff5f5'
+    : isBranchRoot ? '#faf5ff'
+    : cfg.bg;
   const w  = data._w;
 
   return (
@@ -77,6 +83,9 @@ function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number
         )}
         {isRiskPath && !data.isDone && !data.isFocusNode && (
           <span style={{ fontSize: 9, background: '#dc2626', color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>⚠ RISK PATH</span>
+        )}
+        {isBranchRoot && (
+          <span style={{ fontSize: 9, background: '#7c3aed', color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>📊 MOST WORK</span>
         )}
         {isOrphan && (
           <span style={{ fontSize: 9, background: ORPHAN_STYLE.badgeColor, color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>ORPHAN</span>
