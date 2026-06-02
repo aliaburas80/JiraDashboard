@@ -1,0 +1,45 @@
+# © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+# Delivery Clarity — docker-compose for self-hosted deployment
+
+version: '3.8'
+
+services:
+  delivery-clarity:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: delivery-clarity:latest
+    container_name: delivery-clarity
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      # Required — change these before production
+      NODE_ENV:                    production
+      SESSION_SECRET:              "${SESSION_SECRET:-CHANGE_THIS_32_CHAR_SECRET_NOW}"
+      SESSION_TTL_HOURS:           "${SESSION_TTL_HOURS:-8}"
+
+      # Database — persisted via volume mount
+      DATABASE_URL:                "file:./data/delivery_clarity.db"
+
+      # Registration
+      ALLOW_OPEN_REGISTRATION:     "${ALLOW_OPEN_REGISTRATION:-false}"
+      NEXT_PUBLIC_ALLOW_REGISTER:  "${NEXT_PUBLIC_ALLOW_REGISTER:-false}"
+
+      # First admin account (used by seed script on first run)
+      ADMIN_EMAIL:    "${ADMIN_EMAIL:-admin@deliveryclarity.com}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-CHANGE_THIS_PASSWORD}"
+      ADMIN_NAME:     "${ADMIN_NAME:-Administrator}"
+    volumes:
+      # Persist database, config files, and Jira uploads between restarts
+      - delivery_data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout:  10s
+      retries:  3
+      start_period: 60s
+
+volumes:
+  delivery_data:
+    driver: local

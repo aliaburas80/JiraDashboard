@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
-import { saveMetrics } from '@/lib/storage';
+import { saveMetrics, clearMetrics } from '@/lib/storage';
 import DataQualitySummary from '@/components/upload/DataQualitySummary';
 import MissingFieldImpactPanel from '@/components/upload/MissingFieldImpactPanel';
 import ColumnMappingPreview from '@/components/upload/ColumnMappingPreview';
@@ -71,8 +71,9 @@ export default function HomePage() {
 
   function handleProceed() {
     if (pendingMetrics) {
+      clearMetrics(); // ensure old data is fully removed before saving new
       saveMetrics(pendingMetrics);
-      router.push('/dashboard');
+      router.push('/dashboard?fresh=1');
     }
   }
 

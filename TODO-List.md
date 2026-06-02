@@ -245,7 +245,7 @@
 | 9.21 | Release readiness checklist | P1 | ✅ Done — 10 tests passing |
 | 9.22 | Database backup and restore | P1 | ✅ Done — 8 tests passing |
 | 9.23 | Production security checklist page | P1 | ✅ Done — 8 tests passing |
-| 9.24 | Dockerfile and docker-compose setup | P1 | ❌ Not started |
+| 9.24 | Dockerfile and docker-compose setup | P1 | ✅ Done — Dockerfile + docker-compose.yml |
 | 9.25 | Mobile UX polish for `/explore` | P1 | ❌ Not started |
 | 9.26 | Performance profiling for 5,000+ issues | P1 | ❌ Not started |
 

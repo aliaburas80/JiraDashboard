@@ -1,0 +1,18 @@
+# Delivery Clarity — .dockerignore
+node_modules
+.next
+.git
+.gitignore
+*.md
+.env
+.env.local
+.env.*.local
+data/
+frontend/
+backend/
+product/
+public/samples/
+TODO-List.md
+Dockerfile
+docker-compose.yml
+.claude/

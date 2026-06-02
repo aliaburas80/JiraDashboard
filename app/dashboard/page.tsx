@@ -314,22 +314,38 @@ export default function DashboardPage() {
       setPresets(loadPresets());
       setMutedRecs(getActiveMuted());
 
-      // Restore filters from URL query params
+      // Detect fresh upload (?fresh=1) — reset all filters and clear the param
       const p = new URLSearchParams(window.location.search);
-      if (p.get('key'))      setKeyFilter(p.get('key')!);
-      if (p.get('summary'))  setSummaryFilter(p.get('summary')!);
-      if (p.get('status'))   setStatusFilter(p.get('status')!);
-      if (p.get('sprint'))   setSprintFilter(p.get('sprint')!);
-      if (p.get('assignee')) setAssigneeFilter(p.get('assignee')!);
-      if (p.get('health'))   setHealthFilter(p.get('health')!);
-      if (p.get('leadMax'))  setLeadMaxFilter(p.get('leadMax')!);
-      if (p.get('cycleMax')) setCycleMaxFilter(p.get('cycleMax')!);
-      if (p.get('ageMax'))   setOpenAgeMaxFilter(p.get('ageMax')!);
-      if (p.get('reason'))   setReasonFilter(p.get('reason')!);
-      if (p.get('label'))    setLabelFilter(p.get('label')!);
-      if (p.get('quick'))    setActiveQuickFilter(p.get('quick')!);
-      // Open filter panel if any filter was in URL
-      if ([...p.keys()].length > 0) setFlowPanelOpen(true);
+      const isFreshUpload = p.get('fresh') === '1';
+
+      if (isFreshUpload) {
+        // New upload — reset all filters, collapsed sections, URL params
+        setKeyFilter(''); setSummaryFilter(''); setStatusFilter('all');
+        setSprintFilter('all'); setAssigneeFilter('all'); setHealthFilter('all');
+        setLeadMaxFilter(''); setCycleMaxFilter(''); setOpenAgeMaxFilter('');
+        setReasonFilter(''); setLabelFilter(''); setActiveQuickFilter('all');
+        setFlowPanelOpen(false);
+        setShowMuted(false);
+        // Clean the ?fresh=1 from the URL immediately
+        window.history.replaceState(null, '', window.location.pathname);
+      } else {
+        // Restore filters from URL query params (existing behaviour)
+        if (p.get('key'))      setKeyFilter(p.get('key')!);
+        if (p.get('summary'))  setSummaryFilter(p.get('summary')!);
+        if (p.get('status'))   setStatusFilter(p.get('status')!);
+        if (p.get('sprint'))   setSprintFilter(p.get('sprint')!);
+        if (p.get('assignee')) setAssigneeFilter(p.get('assignee')!);
+        if (p.get('health'))   setHealthFilter(p.get('health')!);
+        if (p.get('leadMax'))  setLeadMaxFilter(p.get('leadMax')!);
+        if (p.get('cycleMax')) setCycleMaxFilter(p.get('cycleMax')!);
+        if (p.get('ageMax'))   setOpenAgeMaxFilter(p.get('ageMax')!);
+        if (p.get('reason'))   setReasonFilter(p.get('reason')!);
+        if (p.get('label'))    setLabelFilter(p.get('label')!);
+        if (p.get('quick'))    setActiveQuickFilter(p.get('quick')!);
+        // Open filter panel if any filter was in URL
+        const nonFreshKeys = [...p.keys()].filter(k => k !== 'fresh');
+        if (nonFreshKeys.length > 0) setFlowPanelOpen(true);
+      }
     } catch { router.replace('/'); }
     finally { setLoading(false); }
   }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
