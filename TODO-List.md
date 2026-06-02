@@ -296,12 +296,12 @@
 | P1-02 | Calculation Reference in `/developer` route — 25 metrics with formula, inputs, why, benefit, assumptions | P1 | ✅ Done |
 | P1-03 | Package Reference in `product/DEVELOPER_GUIDE.md` | P1 | ✅ Done |
 | P1-04 | Calculation Reference in `product/DEVELOPER_GUIDE.md` + `ALGORITHM_SPEC.md` | P1 | ✅ Done (DEVELOPER_GUIDE) |
-| P1-05 | Production readiness checklist page | P1 | ❌ Not started |
+| P1-05 | Production readiness checklist page | P1 | ✅ Done — implemented as 9.23 `/admin/security` + 9.21 `/readiness` |
 | P1-06 | Security checklist page (`/admin/security`) | P1 | ✅ Done — implemented in 9.23 |
 | P1-07 | Database backup and restore planning | P1 | ✅ Done — implemented in 9.22 |
-| P1-08 | Dockerfile and docker-compose setup | P1 | ❌ Not started |
-| P1-09 | Performance profiling for 5,000+ issues | P1 | ❌ Not started |
-| P1-10 | Arrange navigation with grouped sub-menus instead of flat list (Analytics / Delivery / Data / Reference) | P1 | ❌ Not started |
+| P1-08 | Dockerfile and docker-compose setup | P1 | ✅ Done — implemented as 9.24 |
+| P1-09 | Performance profiling for 5,000+ issues | P1 | ✅ Done — FLOW_ITEMS_CAP=5,000 + deduplication (9.25) |
+| P1-10 | Arrange navigation with grouped sub-menus instead of flat list (Analytics / Delivery / Data / Reference) | P1 | ✅ Done — dropdown groups + mobile hamburger panel |
 
 ---
 
