@@ -1,12 +1,18 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { hasMetrics } from '@/lib/storage';
 
 export default function RegisterPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_ALLOW_REGISTER !== 'true') {
+      router.replace('/login');
+    }
+  }, [router]);
   const [name, setName]         = useState('');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');

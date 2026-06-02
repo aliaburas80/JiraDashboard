@@ -85,10 +85,12 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-xs text-slate-500 mt-4">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-blue-600 font-semibold hover:underline">Create one</Link>
-        </p>
+        {process.env.NEXT_PUBLIC_ALLOW_REGISTER === 'true' && (
+          <p className="text-center text-xs text-slate-500 mt-4">
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="text-blue-600 font-semibold hover:underline">Create one</Link>
+          </p>
+        )}
       </div>
     </div>
   );

@@ -203,7 +203,7 @@
 | 8.8 | Shareable URL with filter state in query params | P2 | ✅ Done — URL syncs live, "Copy link" button in sticky bar |
 | 8.9 | Drag-and-drop column reordering in issue table | P3 | ✅ Done — DraggableMetricTable, persisted to localStorage, Reset button |
 | 8.10 | PR merged to main | — | ✅ Done — merged to main 2026-05-31 |
-| 8.11 | Create new user account via Register page (`/register`) — enable `ALLOW_OPEN_REGISTRATION=true` in `.env` | P1 | ❌ Not done |
+| 8.11 | Create new user account via Register page (`/register`) — enable `ALLOW_OPEN_REGISTRATION=true` in `.env` | P1 | ✅ Done — NEXT_PUBLIC_ALLOW_REGISTER wired to login link + register page guard |
 
 ---
 
