@@ -47,7 +47,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
   const [theme, setTheme]         = useState<'light' | 'dark'>('light');
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const navRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const initial = getInitialTheme();
@@ -85,7 +85,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 dark:text-slate-100 flex flex-col">
-      <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700 shadow-sm">
+      <header ref={navRef} className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-14 gap-3">
 
           {/* ── Left: logo + upload restart button ── */}
@@ -126,7 +126,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
           </div>
 
           {/* ── Right: grouped nav + controls ── */}
-          <div className="flex items-center gap-1 ml-auto" ref={navRef}>
+          <div className="flex items-center gap-1 ml-auto">
             {showNav && (
               <>
                 {/* Desktop grouped nav */}

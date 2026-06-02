@@ -1,7 +1,7 @@
 # Delivery Clarity — Developer Guide
 
 ## Document Control
-Version 2.0 | 2026-05-30 | Author: Ali Abu Ras
+Version 4.0 | 2026-06-02 | Author: Ali Abu Ras
 
 ---
 
@@ -34,9 +34,7 @@ Version 2.0 | 2026-05-30 | Author: Ali Abu Ras
 | Class merging | clsx + tailwind-merge | 2.x | Via `cn()` helper in `src/lib/utils.ts` |
 | Testing | Jest + ts-jest | 29.x | Node environment; no browser testing |
 
-There is no separate backend process in v2. Everything runs inside Next.js Route Handlers (`app/api/*/route.ts`). Import logs are persisted to `data/import-logs.json` on the local filesystem (or the server filesystem in production).
-
-The legacy CRA + Express stack lives under `frontend/` and `backend/` and is kept for reference only. It is not used at runtime in v2.
+There is no separate backend process. Everything runs inside Next.js Route Handlers (`app/api/*/route.ts`). Import logs and user accounts are persisted to `data/delivery_clarity.db` (SQLite via Prisma 5). Metrics are cached in `localStorage` under the key `dc_metrics_v2` with a 5,000-item cap on `flow.items`.
 
 ---
 
@@ -71,18 +69,28 @@ npm test
 
 There are no required environment variables for local development. The app runs entirely on the Next.js dev server.
 
-For production deployment set `NEXT_PUBLIC_*` variables as needed (none are currently required). The import log file path is derived from `process.cwd()` inside `importLogs.service.ts` and writes to `data/import-logs.json` relative to the server working directory.
+For production deployment, set these environment variables:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `SESSION_SECRET` | `dev-secret-change-me` | iron-session cookie signing key — **change in production** |
+| `ALLOW_OPEN_REGISTRATION` | `false` | Set `true` to allow public registration |
+| `DATABASE_URL` | `file:./data/delivery_clarity.db` | SQLite DB path (Prisma) |
+
+Run `npx prisma generate && npx prisma migrate deploy` after first install to create the database.
 
 ### Data flow in a single upload
 
 1. User drops a `.xlsx` / `.csv` file on the home page (`app/page.tsx`).
-2. Browser `POST`s the file to `/api/upload`.
-3. `parseJiraFile` (parser service) converts the buffer to typed rows and canonicalises column headers.
-4. `validateIssueData` (validation service) confirms required fields are present.
-5. `calculateDashboardMetrics` (metrics service) computes all KPIs.
-6. The route handler writes an import log entry and returns `{ metrics, warnings, importLog }`.
-7. The browser stores `metrics` in `sessionStorage` under the key `dc_metrics`.
-8. The router pushes to `/dashboard`.
+2. `clearMetrics()` is called to wipe any previous session from `localStorage`.
+3. Browser `POST`s the file to `POST /api/upload`.
+4. `parseJiraFile` (parser service) converts the buffer to typed rows and canonicalises column headers.
+5. `validateIssueData` (validation service) confirms required fields are present.
+6. `buildColumnMapping` produces the column-mapping preview.
+7. `calculateDashboardMetrics` (metrics service) computes all KPIs. `buildFlowMetrics()` caps `flow.items` at 5,000 (sorted critical-first); `totalItemCount` and `itemsCapped` flags are set when the cap fires.
+8. The route handler saves an `ImportLog` to SQLite (with `userId`) and returns `{ metrics, warnings, importLog, columnMapping }`.
+9. The browser calls `saveMetrics(metrics)` (writes to `localStorage` key `dc_metrics_v2`). If `QuotaExceededError` fires it trims to 5,000 items, then falls back to clearing storage.
+10. The router pushes to `/dashboard?fresh=1`. On load, the `?fresh=1` param resets all 12 filters.
 
 ---
 
@@ -92,63 +100,103 @@ For production deployment set `NEXT_PUBLIC_*` variables as needed (none are curr
 JiraDashboard/
 │
 ├── app/                          # Next.js App Router root
-│   ├── layout.tsx                # Root layout — sets <html>, <body>, global font
+│   ├── layout.tsx                # Root layout — sets <html>, <body>, favicon metadata
+│   ├── icon.png                  # App favicon (auto-detected by Next.js)
 │   ├── globals.scss              # Global styles (Tailwind base + custom)
 │   ├── page.tsx                  # / — Upload page (home)
 │   ├── summary/page.tsx          # /summary — Health overview
-│   ├── charts/page.tsx           # /charts  — Visual analytics
+│   ├── charts/page.tsx           # /charts — Visual analytics
 │   ├── dashboard/page.tsx        # /dashboard — Full delivery report
+│   ├── trends/page.tsx           # /trends — Upload-to-upload trend analysis
+│   ├── explore/page.tsx          # /explore — Work Item Explorer (React Flow)
+│   ├── readiness/page.tsx        # /readiness — Release readiness checklist
+│   ├── customer/page.tsx         # /customer — Customer-facing summary
+│   ├── snapshots/page.tsx        # /snapshots — Saved metric snapshots
+│   ├── backend/page.tsx          # /backend — Import logs & backend status
+│   ├── glossary/page.tsx         # /glossary — Abbreviations & metric guide
 │   ├── developer/page.tsx        # /developer — Developer wiki UI
-│   ├── backend/page.tsx          # /backend — Backend status UI
 │   ├── help/page.tsx             # /help — FAQ / help guide
+│   ├── login/page.tsx            # /login — Authentication
+│   ├── register/page.tsx         # /register — New account
+│   ├── profile/page.tsx          # /profile — User settings
+│   ├── admin/
+│   │   ├── logs/page.tsx         # /admin/logs — Import log management
+│   │   ├── settings/page.tsx     # /admin/settings — Backup, restore, thresholds
+│   │   └── security/page.tsx     # /admin/security — Production security checklist
 │   └── api/
-│       ├── upload/route.ts       # POST /api/upload
-│       ├── imports/route.ts      # GET  /api/imports
-│       ├── metrics/route.ts      # GET  /api/metrics
-│       ├── dashboard/route.ts    # GET  /api/dashboard
-│       ├── health/route.ts       # GET  /api/health
-│       ├── backend-view/route.ts # GET  /api/backend-view
-│       └── developer-view/route.ts # GET /api/developer-view
+│       ├── upload/route.ts       # POST /api/upload — parse + metrics + save log
+│       ├── imports/route.ts      # GET  /api/imports — logs (user-scoped or all for admin)
+│       ├── snapshots/route.ts    # GET/POST /api/snapshots
+│       ├── snapshots/[id]/route.ts # DELETE /api/snapshots/:id
+│       ├── auth/login/route.ts   # POST /api/auth/login
+│       ├── auth/logout/route.ts  # POST /api/auth/logout
+│       ├── auth/register/route.ts # POST /api/auth/register
+│       ├── auth/me/route.ts      # GET  /api/auth/me
+│       ├── admin/backup/route.ts # GET  /api/admin/backup
+│       ├── admin/restore/route.ts # POST /api/admin/restore
+│       └── settings/*/route.ts   # GET/POST various admin settings
 │
 ├── src/
 │   ├── components/
 │   │   ├── layout/
-│   │   │   └── AppShell.tsx      # Sticky header + nav + footer wrapper
+│   │   │   └── AppShell.tsx      # Sticky header with 4-group dropdown nav + mobile hamburger
+│   │   ├── auth/
+│   │   │   └── UserMenu.tsx      # Avatar dropdown (name, role badge, sign out)
+│   │   ├── admin/
+│   │   │   └── BackupRestoreSettings.tsx
+│   │   ├── onboarding/
+│   │   │   └── OnboardingChecklist.tsx
+│   │   ├── readiness/
+│   │   │   └── ReleaseReadinessCard.tsx
 │   │   └── ui/
-│   │       ├── Badge.tsx         # Status / health badge pill
-│   │       ├── Card.tsx          # White rounded card container
-│   │       ├── KpiCard.tsx       # Metric card with accent border
-│   │       └── LoadingState.tsx  # Spinner / loading message
+│   │       ├── Badge.tsx / Card.tsx / KpiCard.tsx / LoadingState.tsx
+│   │       └── DraggableMetricTable.tsx
 │   ├── lib/
-│   │   └── utils.ts              # cn(), formatDays(), getHealthBand(), HEALTH_COLORS
+│   │   ├── utils.ts              # cn(), formatDays(), getHealthBand()
+│   │   ├── storage.ts            # saveMetrics(), loadMetrics(), clearMetrics() — localStorage dc_metrics_v2
+│   │   ├── theme.ts              # getInitialTheme(), applyTheme() — dark mode
+│   │   └── session.ts            # iron-session config (SESSION_SECRET, cookie options)
 │   ├── services/
 │   │   ├── jira/
 │   │   │   ├── parser.ts         # parseJiraFile(), FIELD_ALIASES, OPTIONAL_FIELDS
 │   │   │   └── validation.ts     # validateIssueData()
-│   │   ├── imports/
-│   │   │   └── importLogs.service.ts  # read/write/build import log entries
-│   │   └── metrics/
-│   │       └── metrics.service.ts     # calculateDashboardMetrics() — core engine
+│   │   ├── metrics/
+│   │   │   ├── metrics.service.ts      # calculateDashboardMetrics() — core engine; FLOW_ITEMS_CAP=5,000
+│   │   │   ├── releaseReadiness.service.ts # calculateReleaseReadiness() — Go/No-Go per Fix Version
+│   │   │   ├── trendAnalysis.service.ts
+│   │   │   ├── snapshotComparison.service.ts
+│   │   │   └── relationGraph.service.ts    # buildRelationGraph() — Work Item Explorer
+│   │   └── settings/
+│   │       ├── backup.service.ts       # createBackup(), restoreBackup()
+│   │       ├── securityCheck.service.ts # runSecurityChecks() — 8 auto + 5 manual
+│   │       └── healthThresholds.service.ts
 │   ├── types/
-│   │   ├── jira.ts               # JiraIssue, ESSENTIAL_FIELDS, OPTIONAL_FIELDS, status constants
-│   │   ├── metrics.ts            # DashboardMetrics, FlowMetrics, SprintMetrics, etc.
-│   │   └── api.ts                # UploadResponse, ImportLogEntry, ApiError
-│   └── __tests__/
-│       └── metrics.test.ts       # Jest unit tests for calculateDashboardMetrics
+│   │   ├── jira.ts               # JiraIssue, ESSENTIAL_FIELDS, status constants
+│   │   ├── metrics.ts            # DashboardMetrics, FlowMetrics (itemsCapped, totalItemCount), etc.
+│   │   ├── relations.ts          # RelationNode (isOnRiskPath, isLargestBranch), RelationEdge, RelationStats
+│   │   ├── releaseReadiness.ts   # ReleaseReadinessResult, ReleaseReadinessSummary
+│   │   └── throughput.ts         # ThroughputMetrics, SprintEntry, etc.
+│   └── __tests__/                # Jest test suites (280+ tests across 22 files)
 │
 ├── data/
-│   └── import-logs.json          # Persisted import history (up to 200 entries)
+│   └── delivery_clarity.db       # SQLite database (users, sessions, import logs, snapshots)
 │
-├── frontend/                     # Legacy CRA frontend (reference only, not used in v2)
-├── backend/                      # Legacy Express backend (reference only, not used in v2)
+├── prisma/
+│   └── schema.prisma             # User, ImportLog, DashboardSnapshot, AuditEvent models
 │
-├── product/                      # Product documentation
-│   ├── DEVELOPER_GUIDE.md        # This file
-│   ├── BRD.md
-│   ├── SRS.md
-│   └── ...
+├── public/
+│   ├── favicon.ico               # Multi-resolution ICO (9 sizes)
+│   ├── favicon.svg               # SVG fallback
+│   └── logo/
+│       ├── delivery-clarity-logo-horizontal.svg  # Header logo (desktop)
+│       ├── delivery-clarity-logo-icon.svg        # Header logo (mobile)
+│       └── delivery_clarity_mark_128.png         # 128×128 PNG mark
 │
-├── package.json                  # Root package — Next.js v2 app
+├── product/                      # Product documentation (private — do not expose publicly)
+├── Dockerfile                    # Multi-stage build (node:20-alpine, non-root)
+├── docker-compose.yml            # Volume mount for data/, healthcheck
+├── .dockerignore
+├── package.json
 ├── tailwind.config.ts
 ├── tsconfig.json
 └── jest.config.js
@@ -158,14 +206,25 @@ JiraDashboard/
 
 ## 4. Routing Architecture — Pages
 
-All pages are React Client Components (`'use client'`). They read `dc_metrics` from `sessionStorage` on mount. If the key is missing the router redirects to `/` (upload).
+All pages are React Client Components (`'use client'`). They read metrics from `localStorage` via `loadMetrics()` (`dc_metrics_v2`). If the key is missing the router redirects to `/` (upload).
+
+### Navigation structure
+
+The `AppShell` header renders 4 dropdown groups:
+- **Analytics**: `/summary`, `/dashboard`, `/charts`, `/trends`
+- **Delivery**: `/readiness`, `/explore`, `/customer`
+- **Data**: `/snapshots`, `/backend`
+- **Reference**: `/glossary`, `/developer`, `/help`
+
+Mobile: hamburger button opens a 2-column grid panel below the header.
 
 ### `app/page.tsx` — Upload (`/`)
 
 Entry point. Renders a drag-and-drop file zone. On file selection:
+- Calls `clearMetrics()` to wipe any previous session
 - Calls `POST /api/upload` with `FormData`
-- Stores returned `metrics` in `sessionStorage.setItem('dc_metrics', JSON.stringify(data.metrics))`
-- Navigates to `/summary`
+- Stores returned `metrics` via `saveMetrics()` → `localStorage` key `dc_metrics_v2`
+- Navigates to `/dashboard?fresh=1`
 
 No nav bar is shown here (`showNav={false}`).
 
@@ -223,6 +282,34 @@ Fetches `/api/backend-view` and renders live import statistics, endpoint table, 
 ### `app/help/page.tsx` — Help (`/help`)
 
 Static FAQ accordion. Three sections: Getting Started, Metrics Explained, Health Classification. No API calls.
+
+### `app/readiness/page.tsx` — Release Readiness (`/readiness`)
+
+Groups `flow.items` by Fix Version. For each version runs a 7-item checklist (completion ≥90%, no blockers, no open bugs, etc.) and assigns a Go / Conditional Go / No-Go verdict. Summary chips at top. Falls back gracefully when no Fix Version column is present.
+
+### `app/explore/page.tsx` — Work Item Explorer (`/explore`)
+
+Search for any issue key → loads React Flow graph (focus node + parent + direct children). Highlights risk path (red) and largest unfinished branch (amber). "Blocked only" toggle filters graph and table. Uses `buildRelationGraph()` service.
+
+### `app/snapshots/page.tsx` — Snapshots (`/snapshots`)
+
+Save current metrics as a named snapshot (max 20/user). Load or delete saved snapshots. Compare two snapshots side-by-side with 12-metric delta table.
+
+### `app/trends/page.tsx` — Trends (`/trends`)
+
+SVG line charts for 8 metrics (health score, issues, done, lead time, cycle time, blocked, throughput, data quality) over up to 30 uploads. Timeline table with deltas.
+
+### `app/customer/page.tsx` — Customer View (`/customer`)
+
+Clean stakeholder summary — completion ring, key milestones, top risks. No technical detail. Print / PDF optimised.
+
+### `app/admin/security/page.tsx` — Security Checklist (`/admin/security`)
+
+Runs `runSecurityChecks()` — 8 automated checks (SESSION_SECRET, HTTPS, DB permissions, etc.) + 5 manual items. 0–100 score, production-ready flag.
+
+### `app/admin/settings/page.tsx` — Admin Settings (`/admin/settings`)
+
+Tabs: Health Thresholds, Orphan Rules, Privacy & Retention, Backup & Restore.
 
 ---
 

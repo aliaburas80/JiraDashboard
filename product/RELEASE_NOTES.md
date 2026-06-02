@@ -41,6 +41,30 @@
 - **9.16** Configurable orphan detection rules — parent link fields, exempt types, sub-task flag, risk thresholds, 11 tests
 - **9.17** Recommendation mute/snooze — per-card × button, 💤 dropdown (7d/30d/permanent), restore all, 10 tests
 
+### P1 — Work Item Explorer Enhancements
+- **9.18** Risk-path highlight — nodes and edges on the path from a risky item to the root turn red in the graph
+- **9.19** Largest unfinished branch — the branch with the most open items is highlighted amber; stats card shows root key, open count, completion %
+- **9.20** Blocked branch filter — "Blocked only" toggle in Explore; hides all non-blocked items from graph and table, 8 tests
+
+### P1 — Operations & Reliability
+- **9.21** Release readiness checklist (`/readiness`) — Go / Conditional Go / No-Go verdict per Fix Version; 7-item checklist; summary chips; 10 tests
+- **9.22** Database backup & restore — admin tab: one-click JSON backup (DB + config files), restore with `.bak` safety copy, security allow-list, 8 tests
+- **9.23** Production security checklist (`/admin/security`) — 8 automated checks + 5 manual, 0–100 score, production-ready flag, 8 tests
+- **9.24** Docker deployment — multi-stage `Dockerfile` (node:20-alpine, non-root user), `docker-compose.yml` with volume mount + healthcheck, `.dockerignore`, `output: 'standalone'` in next.config.js
+
+### P0 — Critical Bug Fixes
+- **9.25** Large export white screen fix — `FLOW_ITEMS_CAP = 5,000`; `flow.items` sorted critical-first before cap; `QuotaExceededError` handling in `saveMetrics()` (trim → clear → log); amber warning banner on dashboard when items are capped; `MAX_FILE_SIZE` corrected to 20 MB; upload API warns in response
+- Duplicate React key fix — `flowItems` deduplicated by Jira key before rendering; list keys use compound `section-issueKey` pattern
+- Favicon 404 fix — `public/favicon.ico` (9-resolution ICO) added; `app/icon.png` removed
+
+### P1 — Navigation
+- **P1-10** Grouped sub-menu navigation — flat nav replaced with 4 dropdown groups:
+  - **Analytics**: Overview, Full Report, Charts, Trends
+  - **Delivery**: Readiness, Explore, Customer
+  - **Data**: Snapshots, Backend
+  - **Reference**: Glossary, Developer, Help
+  - Active group stays blue; each dropdown shows page name + description; mobile hamburger expands a 2-column grid panel
+
 ---
 
 ## v3.0 — Intelligence Layer (Merged)
