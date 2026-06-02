@@ -300,6 +300,7 @@
 | P1-07 | Database backup and restore planning | P1 | ❌ Not started |
 | P1-08 | Dockerfile and docker-compose setup | P1 | ❌ Not started |
 | P1-09 | Performance profiling for 5,000+ issues | P1 | ❌ Not started |
+| P1-10 | Arrange navigation with grouped sub-menus instead of flat list (Analytics / Delivery / Data / Reference) | P1 | ❌ Not started |
 
 ---
 
