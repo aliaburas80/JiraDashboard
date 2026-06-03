@@ -192,7 +192,7 @@ export default function SnapshotComparePage() {
             <p className="text-base font-black text-amber-800 mb-2">Need at least 2 snapshots</p>
             <p className="text-sm text-amber-700 mb-4">Save a few named snapshots from the dashboard first, then come back to compare them.</p>
             <button type="button" onClick={() => router.push('/dashboard')}
-              className="px-5 py-2.5 rounded-lg bg-amber-600 text-white text-sm font-bold hover:bg-amber-700">
+              className="btn-primary px-5 py-2.5 bg-amber-600 hover:bg-amber-700">
               Go to Dashboard →
             </button>
           </div>
@@ -233,7 +233,7 @@ export default function SnapshotComparePage() {
             {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">{error}</p>}
 
             <button type="button" onClick={handleCompare} disabled={comparing || idA === idB}
-              className="w-full py-3 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-40 transition-colors mb-6">
+              className="w-full btn-primary py-3 mb-6 disabled:opacity-40">
               {comparing ? 'Comparing…' : 'Compare Snapshots →'}
             </button>
           </>

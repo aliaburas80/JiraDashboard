@@ -257,36 +257,36 @@
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| UX-06 | Add Clear Local Data option in Admin window / Admin settings | P1 | ❌ Not started |
-| UX-07 | Add Clear Local Data button on Upload/Landing page — only when stored browser data exists | P1 | ❌ Not started |
-| UX-08 | Detect stored Delivery Clarity browser data on Upload/Landing page (localStorage/sessionStorage keys) | P1 | ❌ Not started |
-| UX-09 | Show detection message: "Stored Delivery Clarity data was found in this browser." | P1 | ❌ Not started |
-| UX-10 | Confirmation modal with title "Clear Local Data?", warning about session end, Yes/Cancel buttons | P1 | ❌ Not started |
-| UX-11 | Warning: "This will remove local data and may end your current session. You may need to log in again." | P1 | ❌ Not started |
-| UX-12 | Clear only Delivery Clarity keys — do not touch unrelated browser data | P1 | ❌ Not started |
-| UX-13 | After clearing: show success message, redirect to clean upload page | P1 | ❌ Not started |
-| UX-14 | Do not delete server-side import logs unless user explicitly uses server-side delete | P1 | ❌ Not started |
-| UX-15 | Add tests for clear data detection, confirmation, and clearing behaviour | P1 | ❌ Not started |
+| UX-06 | Add Clear Local Data option in Admin window / Admin settings | P1 | ✅ Done — `ClearLocalDataPanel` in admin settings Browser Data tab |
+| UX-07 | Add Clear Local Data button on Upload/Landing page — only when stored browser data exists | P1 | ✅ Done — "Clear Local Data" button in amber detection banner |
+| UX-08 | Detect stored Delivery Clarity browser data on Upload/Landing page (localStorage/sessionStorage keys) | P1 | ✅ Done — `hasLocalData()` in `clearLocalData.ts`, called on mount |
+| UX-09 | Show detection message: "Stored Delivery Clarity data was found in this browser." | P1 | ✅ Done — amber banner on upload page and admin panel |
+| UX-10 | Confirmation modal with title "Clear Local Data?", warning about session end, Yes/Cancel buttons | P1 | ✅ Done — reuses `ConfirmDeleteDialog` with custom title + label |
+| UX-11 | Warning: "This will remove local data and may end your current session. You may need to log in again." | P1 | ✅ Done — exact warning text in `ConfirmDeleteDialog` message prop |
+| UX-12 | Clear only Delivery Clarity keys — do not touch unrelated browser data | P1 | ✅ Done — `clearLocalData()` only removes `dc_*` / `dc-*` keys |
+| UX-13 | After clearing: show success message, redirect to clean upload page | P1 | ✅ Done — green success banner; redirects after 1.8 s |
+| UX-14 | Do not delete server-side import logs unless user explicitly uses server-side delete | P1 | ✅ Done — client-only operation; no API calls in clear path |
+| UX-15 | Add tests for clear data detection, confirmation, and clearing behaviour | P1 | ✅ Done — 10 passing tests in `clearLocalData.test.ts` |
 
 ### P1.3 — Dashboard Section Show/Hide, Smooth Scroll, and Animation
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| UX-16 | Add Dashboard Section controls at top of dashboard page immediately after main Overview section | P1 | ❌ Not started |
-| UX-17 | Section buttons/tabs for all major sections: Overview, Sprints, Kanban, Flow, Risks, Data Quality, Confidence, Work Items, Trends, Snapshots, Recommendations, Readiness | P1 | ❌ Not started |
-| UX-18 | Default view: show Overview only, hide heavy/detail sections | P1 | ❌ Not started |
-| UX-19 | Overview mode — shows health score, key KPIs, top risks, data quality, confidence, recommendations summary | P1 | ❌ Not started |
-| UX-20 | Single section mode — click a button: show only that section, hide others | P1 | ❌ Not started |
-| UX-21 | Full View mode — show all sections (button: "Show Full Dashboard") | P1 | ❌ Not started |
-| UX-22 | Smooth scroll to selected section (`scrollIntoView({ behavior: 'smooth' })`) | P1 | ❌ Not started |
-| UX-23 | CSS animation: selected section fades in + slides up; hidden sections fade out/collapse | P1 | ❌ Not started |
-| UX-24 | Reduced-motion support (`@media (prefers-reduced-motion: reduce)`) | P1 | ❌ Not started |
-| UX-25 | Active section button highlighted | P1 | ❌ Not started |
-| UX-26 | Each large section has its own hide/collapse button | P1 | ❌ Not started |
-| UX-27 | Role-based views remain compatible with section show/hide | P1 | ❌ Not started |
-| UX-28 | Mobile layout remains clean and usable with section controls | P1 | ❌ Not started |
-| UX-29 | Print/customer view remains clean (section controls not printed) | P1 | ❌ Not started |
-| UX-30 | Add tests for section switcher, scroll, animation states | P1 | ❌ Not started |
+| UX-16 | Add Dashboard Section controls at top of dashboard page immediately after main Overview section | P1 | ✅ Done — `DashboardSectionSwitcher` in sticky bar as Row 0 |
+| UX-17 | Section buttons/tabs for all major sections: Overview, Sprints, Kanban, Flow, Risks, Data Quality, Confidence, Work Items, Trends, Snapshots, Recommendations, Readiness | P1 | ✅ Done — 14 section buttons in `DASHBOARD_SECTIONS` array |
+| UX-18 | Default view: show Overview only, hide heavy/detail sections | P1 | ✅ Done — "Overview" button mode shows only overview + attention + recommendations |
+| UX-19 | Overview mode — shows health score, key KPIs, top risks, data quality, confidence, recommendations summary | P1 | ✅ Done — OVERVIEW_KEYS = {overview, attention, recommendations} |
+| UX-20 | Single section mode — click a button: show only that section, hide others | P1 | ✅ Done — `sectionMode = key` hides all other sections via `sectionVisible()` |
+| UX-21 | Full View mode — show all sections (button: "Show Full Dashboard") | P1 | ✅ Done — "Full Dashboard" button resets `sectionMode` to `'full'` |
+| UX-22 | Smooth scroll to selected section (`scrollIntoView({ behavior: 'smooth' })`) | P1 | ✅ Done — `focusSection()` calls `scrollIntoView({ behavior: 'smooth' })` |
+| UX-23 | CSS animation: selected section fades in + slides up; hidden sections fade out/collapse | P1 | ✅ Done — `animate-slide-up` class on all 14 `<section>` elements |
+| UX-24 | Reduced-motion support (`@media (prefers-reduced-motion: reduce)`) | P1 | ✅ Done — `globals.scss` media query disables `animate-fade-in` and `animate-slide-up` |
+| UX-25 | Active section button highlighted | P1 | ✅ Done — active button gets `bg-blue-600 text-white`; "Full Dashboard" gets `bg-slate-900 text-white` |
+| UX-26 | Each large section has its own hide/collapse button | P1 | ✅ Done — existing `CollapsibleTrigger` on every section provides collapse/expand per section |
+| UX-27 | Role-based views remain compatible with section show/hide | P1 | ✅ Done — `sectionHeaderVisible` + `sectionVisible` both check `isHidden(key)` first |
+| UX-28 | Mobile layout remains clean and usable with section controls | P1 | ✅ Done — switcher row uses `overflow-x-auto` horizontal scroll on mobile |
+| UX-29 | Print/customer view remains clean (section controls not printed) | P1 | ✅ Done — `print:hidden` on the sticky bar; SectionNav wrapped in `print:hidden` |
+| UX-30 | Add tests for section switcher, scroll, animation states | P1 | ✅ Done — 10 passing tests in `dashboardSectionSwitcher.test.ts` |
 
 ### P1 Documentation Updates (after UX features done)
 

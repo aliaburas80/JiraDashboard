@@ -7,11 +7,12 @@ import DataRetentionSettings from '@/components/admin/DataRetentionSettings';
 import HealthThresholdSettings from '@/components/admin/HealthThresholdSettings';
 import OrphanRulesSettings from '@/components/admin/OrphanRulesSettings';
 import BackupRestoreSettings from '@/components/admin/BackupRestoreSettings';
+import ClearLocalDataPanel from '@/components/admin/ClearLocalDataPanel';
 import type { RetentionSettings, RetentionStats } from '@/types/settings';
 import type { HealthThresholds } from '@/types/thresholds';
 import type { OrphanRules } from '@/types/orphanRules';
 
-type Tab = 'retention' | 'thresholds' | 'orphan' | 'backup';
+type Tab = 'retention' | 'thresholds' | 'orphan' | 'backup' | 'browser';
 
 export default function AdminSettingsPage() {
   const router = useRouter();
@@ -96,8 +97,8 @@ export default function AdminSettingsPage() {
         {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-6">{error}</div>}
 
         {/* Tab bar */}
-        <div className="flex gap-1 p-1 bg-slate-100 rounded-xl mb-6">
-          {([['retention', '🔒 Privacy & Retention'], ['thresholds', '⚡ Health Thresholds'], ['orphan', '👻 Orphan Rules'], ['backup', '💾 Backup & Restore']] as [Tab, string][]).map(([t, label]) => (
+        <div className="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-xl mb-6">
+          {([['retention', '🔒 Privacy & Retention'], ['thresholds', '⚡ Health Thresholds'], ['orphan', '👻 Orphan Rules'], ['backup', '💾 Backup & Restore'], ['browser', '🗑️ Browser Data']] as [Tab, string][]).map(([t, label]) => (
             <button key={t} type="button" onClick={() => setTab(t)}
               className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${tab === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
               {label}
@@ -116,6 +117,9 @@ export default function AdminSettingsPage() {
         )}
         {tab === 'backup' && (
           <BackupRestoreSettings files={backupFiles} />
+        )}
+        {tab === 'browser' && (
+          <ClearLocalDataPanel />
         )}
       </div>
     </AppShell>

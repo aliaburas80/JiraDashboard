@@ -37,10 +37,8 @@ function ChipSelect({ label, description, all, selected, onChange }: {
       <div className="flex flex-wrap gap-2">
         {all.map(val => (
           <button key={val} type="button" onClick={() => toggle(val)}
-            className={`text-xs font-semibold px-3 py-1 rounded-full border transition-colors ${
-              selected.includes(val)
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'
+            className={`text-xs font-semibold px-3 py-1 transition-colors ${
+              selected.includes(val) ? 'btn-primary' : 'btn-secondary'
             }`}>
             {val}
           </button>
@@ -146,11 +144,11 @@ export default function OrphanRulesSettings({ rules, onSave }: Props) {
       {/* Actions */}
       <div className="flex items-center gap-3">
         <button type="button" onClick={handleSave} disabled={saving || form.parentLinkFields.length === 0}
-          className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-colors">
+          className="btn-primary px-5 py-2.5 disabled:opacity-50">
           {saving ? 'Saving…' : 'Save Rules'}
         </button>
         <button type="button" onClick={handleReset}
-          className="px-4 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+          className="btn-secondary px-4 py-2.5">
           Reset to defaults
         </button>
         {msg && <span className={`text-xs font-semibold ${msg.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>{msg}</span>}

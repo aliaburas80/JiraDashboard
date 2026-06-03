@@ -1,8 +1,10 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import { saveMetrics, clearMetrics } from '@/lib/storage';
+import { hasLocalData, clearLocalData } from '@/lib/clearLocalData';
+import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import DataQualitySummary from '@/components/upload/DataQualitySummary';
 import MissingFieldImpactPanel from '@/components/upload/MissingFieldImpactPanel';
 import ColumnMappingPreview from '@/components/upload/ColumnMappingPreview';
@@ -23,8 +25,13 @@ export default function HomePage() {
   const [columnMapping, setColumnMapping]   = useState<ColumnMappingResult | null>(null);
   const [pendingMetrics, setPendingMetrics] = useState<any>(null);
   const [loadingSample, setLoadingSample]   = useState(false);
+  const [storedDataFound, setStoredDataFound] = useState(false);
+  const [confirmClear, setConfirmClear]       = useState(false);
+  const [clearSuccess, setClearSuccess]       = useState(false);
   const inputRef  = useRef<HTMLInputElement>(null);
   const mergeRef  = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { setStoredDataFound(hasLocalData()); }, []);
 
   // ── Single file upload (existing golden path) ─────────────────────────────
   async function handleFile(file: File) {
@@ -82,6 +89,13 @@ export default function HomePage() {
     setDataQuality(null);   setFieldImpacts(null);
   }
 
+  function handleClearConfirm() {
+    clearLocalData();
+    setConfirmClear(false);
+    setStoredDataFound(false);
+    setClearSuccess(true);
+  }
+
   function addMergeFile(file: File) {
     setMergeFiles(prev => prev.find(f => f.name === file.name) ? prev : [...prev, file]);
     setError(null);
@@ -113,6 +127,32 @@ export default function HomePage() {
   return (
     <AppShell showNav={false}>
       <div className="min-h-[calc(100vh-10rem)] flex flex-col items-center justify-center gap-8 py-12">
+
+        {/* Stored data detection banner */}
+        {clearSuccess && (
+          <div className="w-full max-w-md flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-800 font-semibold animate-fade-in">
+            <span className="text-lg">✅</span>
+            Local data cleared. Upload a new file to start fresh.
+          </div>
+        )}
+        {storedDataFound && !clearSuccess && (
+          <div className="w-full max-w-md flex items-start justify-between gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 animate-fade-in">
+            <div className="flex items-start gap-2 text-sm text-amber-800">
+              <span className="text-base shrink-0">⚠️</span>
+              <p className="leading-snug">
+                <strong>Stored Delivery Clarity data was found in this browser.</strong>
+                <br />You can upload a new file or clear the existing data.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setConfirmClear(true)}
+              className="btn-outline-danger btn-sm"
+            >
+              Clear Local Data
+            </button>
+          </div>
+        )}
 
         {/* Hero */}
         <div className="text-center max-w-2xl animate-fade-in">
@@ -147,7 +187,7 @@ export default function HomePage() {
               <span className="text-4xl">📥</span>
               <p className="font-bold text-slate-700">Drop your Jira export here</p>
               <p className="text-sm text-slate-500">or click to browse — CSV, XLSX, XLS · Max 20 MB</p>
-              <span className="mt-2 inline-block bg-blue-600 text-white text-sm font-bold px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <span className="btn-primary px-6 py-2">
                 Choose file
               </span>
             </div>
@@ -222,7 +262,7 @@ export default function HomePage() {
                 type="button"
                 disabled={mergeFiles.length < 2 || loading}
                 onClick={handleMerge}
-                className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full btn-primary py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -301,6 +341,16 @@ export default function HomePage() {
         </div>
 
       </div>
+
+      {confirmClear && (
+        <ConfirmDeleteDialog
+          title="Clear Local Data?"
+          message="This will remove local data and may end your current session. You may need to log in again."
+          confirmLabel="Yes, clear it"
+          onConfirm={handleClearConfirm}
+          onCancel={() => setConfirmClear(false)}
+        />
+      )}
     </AppShell>
   );
 }

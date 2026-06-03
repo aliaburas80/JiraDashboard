@@ -126,8 +126,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="border-t border-slate-100 pt-4 flex justify-end">
-            <button onClick={logout}
-              className="px-5 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm font-bold hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors">
+            <button onClick={logout} className="btn-outline-danger">
               Sign out
             </button>
           </div>
@@ -141,7 +140,7 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setDeleteAllConfirm(true)}
-                className="text-xs font-semibold text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg px-3 py-1 transition-colors"
+                className="btn-outline-danger btn-sm"
               >
                 Delete all history
               </button>

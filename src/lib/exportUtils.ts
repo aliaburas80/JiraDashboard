@@ -1,22 +1,22 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
-import * as XLSX from 'xlsx';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { getHealthBand, HEALTH_COLORS } from './utils';
-import { downloadInsightWorkbook } from '@/services/export/excelInsightExport.service';
 
 // ── Excel — Smart statistical workbook (17 sheets) ───────────────────────────
-export function exportToExcel(metrics: DashboardMetrics, filename = 'delivery-clarity-report.xlsx') {
+export async function exportToExcel(metrics: DashboardMetrics, filename = 'delivery-clarity-report.xlsx') {
+  const { downloadInsightWorkbook } = await import('@/services/export/excelInsightExport.service');
   downloadInsightWorkbook(metrics, filename);
   // Track onboarding step
   try {
     localStorage.setItem('dc_downloaded_report', '1');
-    const { markStepDone } = require('./onboarding');
+    const { markStepDone } = await import('./onboarding');
     markStepDone('download_report');
   } catch {}
 }
 
 // ── Excel — Legacy basic export (kept for internal use/testing) ───────────────
-export function exportToExcelBasic(metrics: DashboardMetrics, filename = 'jira-report.xlsx') {
+export async function exportToExcelBasic(metrics: DashboardMetrics, filename = 'jira-report.xlsx') {
+  const XLSX = await import('xlsx');
   const wb = XLSX.utils.book_new();
   const items: FlowItem[] = (metrics.flow?.items ?? []) as FlowItem[];
 

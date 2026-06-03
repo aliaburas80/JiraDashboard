@@ -92,7 +92,7 @@ export default function BackupRestoreSettings({ files }: Props) {
           Store it somewhere safe outside the server.
         </p>
         <button type="button" onClick={handleBackup} disabled={creating}
-          className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-colors">
+          className="btn-primary px-5 py-2.5 disabled:opacity-50">
           {creating ? '⏳ Creating backup…' : '⬇ Download Backup'}
         </button>
       </div>
@@ -110,7 +110,7 @@ export default function BackupRestoreSettings({ files }: Props) {
         <input ref={fileRef} type="file" accept=".json" className="hidden"
           onChange={e => { const f = e.target.files?.[0]; if (f) handleRestore(f); }} />
         <button type="button" disabled={restoring} onClick={() => fileRef.current?.click()}
-          className="px-5 py-2.5 rounded-lg bg-amber-600 text-white text-sm font-bold hover:bg-amber-700 disabled:opacity-50 transition-colors">
+          className="btn-warning disabled:opacity-50">
           {restoring ? '⏳ Restoring…' : '⬆ Choose Backup File'}
         </button>
 

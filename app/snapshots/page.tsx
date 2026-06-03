@@ -97,7 +97,7 @@ export default function SnapshotsPage() {
               <button
                 type="button"
                 onClick={() => router.push('/snapshots/compare')}
-                className="px-4 py-2 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 text-sm font-bold hover:bg-purple-100 transition-colors"
+                className="btn-secondary px-4 py-2 text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100"
               >
                 ⚖️ Compare
               </button>
@@ -105,7 +105,7 @@ export default function SnapshotsPage() {
             <button
               type="button"
               onClick={() => router.push('/dashboard')}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors"
+              className="btn-primary px-4 py-2"
             >
               Go to Dashboard
             </button>
@@ -124,7 +124,7 @@ export default function SnapshotsPage() {
             <button
               type="button"
               onClick={() => router.push('/dashboard')}
-              className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors"
+              className="btn-primary px-5 py-2.5"
             >
               Open Full Report →
             </button>
@@ -151,14 +151,14 @@ export default function SnapshotsPage() {
                       type="button"
                       onClick={() => handleLoad(snap)}
                       disabled={loadingId === snap.id}
-                      className="px-4 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 disabled:opacity-50 transition-colors"
+                      className="btn-secondary text-xs px-4 py-1.5 text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100 disabled:opacity-50"
                     >
                       {loadingId === snap.id ? 'Loading…' : 'Load →'}
                     </button>
                     <button
                       type="button"
                       onClick={() => setDeleteTarget({ id: snap.id, name: snap.snapshotName })}
-                      className="w-7 h-7 rounded-full text-slate-300 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-base font-black"
+                      className="w-7 h-7 rounded-xl text-slate-300 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-base font-black"
                     >
                       ×
                     </button>

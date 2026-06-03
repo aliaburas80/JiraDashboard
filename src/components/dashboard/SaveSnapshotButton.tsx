@@ -48,7 +48,7 @@ export default function SaveSnapshotButton({ metrics }: Props) {
       <button
         type="button"
         onClick={handleOpen}
-        className="inline-flex items-center gap-1.5 text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-full px-3 py-1 transition-colors shadow-sm"
+        className="btn-secondary btn-sm gap-1.5"
         title="Save current dashboard as a named snapshot"
       >
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -90,7 +90,7 @@ export default function SaveSnapshotButton({ metrics }: Props) {
               <div className="flex flex-wrap gap-1.5 mb-3">
                 {['End of Sprint', 'Bi-weekly Review', 'Release Checkpoint', 'Q2 Snapshot'].map(s => (
                   <button key={s} type="button" onClick={() => setName(s)}
-                    className="text-[10px] font-semibold bg-slate-50 border border-slate-200 rounded-full px-2 py-0.5 text-slate-600 hover:border-blue-300 hover:text-blue-700 transition-colors">
+                    className="text-[10px] font-semibold bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 text-slate-600 hover:border-blue-300 hover:text-blue-700 transition-colors">
                     {s}
                   </button>
                 ))}
@@ -100,12 +100,12 @@ export default function SaveSnapshotButton({ metrics }: Props) {
                   type="button"
                   onClick={handleSave}
                   disabled={!name.trim() || saving}
-                  className="flex-1 py-2 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 disabled:opacity-40 transition-colors"
+                  className="flex-1 py-2 btn-primary text-xs"
                 >
                   {saving ? 'Saving…' : 'Save snapshot'}
                 </button>
                 <button type="button" onClick={() => setOpen(false)}
-                  className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50 transition-colors">
+                  className="btn-ghost text-xs px-3 py-2">
                   Cancel
                 </button>
               </div>

@@ -29,7 +29,7 @@ export default function DashboardViewSelector({ activeViewId, onChange }: Props)
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:border-slate-300 shadow-sm transition-colors"
+        className="btn-secondary text-xs px-3 py-1.5 gap-2"
         style={{ borderLeftColor: active.accentColor, borderLeftWidth: 3 }}
       >
         <span>{active.icon}</span>

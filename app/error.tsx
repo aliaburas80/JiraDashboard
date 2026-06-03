@@ -47,13 +47,13 @@ export default function Error({
         <div className="flex gap-3">
           <button
             onClick={reset}
-            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-150"
+            className="flex-1 btn-danger py-2 px-4"
           >
             Try again
           </button>
           <button
             onClick={() => router.push("/")}
-            className="flex-1 bg-white hover:bg-gray-100 text-red-600 font-medium py-2 px-4 rounded-lg border border-red-300 transition-colors duration-150"
+            className="flex-1 btn-outline-danger py-2 px-4"
           >
             Go home
           </button>

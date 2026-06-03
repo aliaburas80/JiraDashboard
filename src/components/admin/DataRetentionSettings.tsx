@@ -139,10 +139,10 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
                 key={p.value}
                 type="button"
                 onClick={() => setForm(f => ({ ...f, retentionDays: p.value }))}
-                className={`px-4 py-2 rounded-lg text-xs font-bold border transition-colors ${
+                className={`text-xs font-bold transition-colors ${
                   form.retentionDays === p.value
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'
+                    ? 'btn-primary px-4 py-2'
+                    : 'btn-secondary px-4 py-2'
                 }`}
               >
                 {p.label}
@@ -162,7 +162,7 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="btn-primary px-5 py-2 disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save Settings'}
           </button>
@@ -179,7 +179,7 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
             type="button"
             onClick={handleCleanup}
             disabled={cleaning || form.retentionDays === -1}
-            className="px-5 py-2 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-sm font-bold hover:bg-amber-100 disabled:opacity-40 transition-colors"
+            className="btn-warning disabled:opacity-40"
           >
             {cleaning ? 'Running…' : `Apply Retention Policy (${period.label})`}
           </button>
@@ -188,17 +188,13 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
             type="button"
             onClick={handleClearAll}
             disabled={clearing}
-            className={`px-5 py-2 rounded-lg text-sm font-bold transition-colors ${
-              confirmClear
-                ? 'bg-red-600 text-white border-red-600 hover:bg-red-700'
-                : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
-            }`}
+            className={confirmClear ? 'btn-danger' : 'btn-outline-danger'}
           >
             {clearing ? 'Clearing…' : confirmClear ? '⚠ Confirm — Delete ALL data' : 'Clear All Data'}
           </button>
           {confirmClear && (
             <button type="button" onClick={() => setConfirmClear(false)}
-              className="text-xs text-slate-500 hover:text-slate-700 font-semibold">
+              className="btn-ghost text-xs">
               Cancel
             </button>
           )}

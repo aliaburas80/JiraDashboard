@@ -101,7 +101,7 @@ export default function TrendsPage() {
             </p>
             <p className="text-xs text-slate-400 mb-6">Each upload is automatically recorded with its metrics.</p>
             <button type="button" onClick={() => router.push('/')}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors">
+              className="btn-primary px-5 py-2.5">
               Upload Jira Export →
             </button>
           </div>

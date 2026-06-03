@@ -214,7 +214,7 @@ export default function BackendPage() {
         <button
           onClick={fetchData}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-semibold shadow-sm transition-colors"
+          className="btn-primary px-4 py-2 disabled:opacity-50"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -362,7 +362,7 @@ export default function BackendPage() {
                 <button
                   type="button"
                   onClick={() => setDeleteAllConfirm(true)}
-                  className="text-xs font-semibold text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg px-3 py-1.5 transition-colors"
+                  className="btn-outline-danger btn-sm"
                 >
                   Delete all my logs
                 </button>

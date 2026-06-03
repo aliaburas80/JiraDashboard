@@ -22,7 +22,8 @@ export const HEALTH_COLORS: Record<HealthBand, string> = {
 export function scrollToSection(id: string): void {
   const el = document.getElementById(id);
   if (!el) return;
-  const header = document.querySelector('header') as HTMLElement | null;
-  const offset = (header ? header.offsetHeight : 0) + 16;
+  const header     = document.querySelector('header') as HTMLElement | null;
+  const stickyBar  = document.getElementById('dashboard-sticky-bar') as HTMLElement | null;
+  const offset = (header?.offsetHeight ?? 0) + (stickyBar?.offsetHeight ?? 0) + 16;
   window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
 }

@@ -120,7 +120,7 @@ export default function ExplorePage() {
             <button
               type="submit"
               disabled={loading || noData || !query.trim()}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="btn-primary w-full sm:w-auto px-6 py-3 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? 'Exploring…' : 'Explore Issue'}
             </button>
@@ -133,7 +133,7 @@ export default function ExplorePage() {
               {recent.map(k => (
                 <button key={k} type="button"
                   onClick={() => { setQuery(k); explore(k); }}
-                  className="text-xs font-mono font-bold bg-white border border-slate-200 rounded-full px-2.5 py-0.5 text-blue-700 hover:border-blue-400 transition-colors">
+                  className="text-xs font-mono font-bold bg-white border border-slate-200 rounded-xl px-2.5 py-0.5 text-blue-700 hover:border-blue-400 transition-colors">
                   {k}
                 </button>
               ))}
@@ -184,7 +184,7 @@ export default function ExplorePage() {
                     <button
                       type="button"
                       onClick={() => setBlockedOnly(v => !v)}
-                      className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border transition-colors ${
+                      className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-xl border transition-colors ${
                         blockedOnly
                           ? 'bg-red-600 text-white border-red-600'
                           : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'

@@ -44,7 +44,7 @@ export default function ReadinessPage() {
               In Jira: Columns → add "Fix Version" then re-export.
             </p>
             <button type="button" onClick={() => router.push('/')}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors">
+              className="btn-primary px-5 py-2.5">
               Upload New Export →
             </button>
           </div>
