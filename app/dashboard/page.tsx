@@ -16,6 +16,7 @@ import { loadMetrics } from '@/lib/storage';
 import { loadPresets, savePreset, deletePreset, type FilterPreset } from '@/lib/filterPresets';
 import { recKey, isMuted, muteRec, snoozeRec, restoreAll, getActiveMuted, type MutedRec } from '@/lib/mutedRecommendations';
 import { getVote, castVote, type FeedbackVote } from '@/lib/recFeedback';
+import { saveRecSnapshot, getRecHistory, getNewTitles, getResolvedRecs, type RecHistoryEntry } from '@/lib/recHistory';
 import SprintThroughputPanel from '@/components/dashboard/SprintThroughputPanel';
 import MidSprintDeliveryPanel from '@/components/dashboard/MidSprintDeliveryPanel';
 import KanbanThroughputPanel from '@/components/dashboard/KanbanThroughputPanel';
@@ -296,6 +297,10 @@ export default function DashboardPage() {
     setFeedbackTick(t => t + 1);
   }
 
+  // rec history
+  const [recHistory, setRecHistory]       = useState<RecHistoryEntry[]>([]);
+  const [showHistory, setShowHistory]     = useState(false);
+
   const toggleSection = (key: string) =>
     setExpandedSections(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
 
@@ -397,6 +402,15 @@ export default function DashboardPage() {
     } catch { router.replace('/'); }
     finally { setLoading(false); }
   }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save recommendation snapshot and load history when smartActions settle
+  useEffect(() => {
+    if (!metrics || smartActions.length === 0) return;
+    saveRecSnapshot(metrics.healthScore ?? 0, smartActions.map(a => ({
+      type: a.type, icon: a.icon, title: a.title, detail: a.detail,
+    })));
+    setRecHistory(getRecHistory());
+  }, [smartActions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync filter state → URL query params (replaceState = no history entry)
   useEffect(() => {
@@ -993,8 +1007,11 @@ export default function DashboardPage() {
               onToggle={() => toggleSection('recommendations')}
             />
             {sectionVisible('recommendations') && (() => {
-              const mutedCount = smartActions.filter(a => isMuted(recKey(a.type, a.title))).length;
+              const mutedCount    = smartActions.filter(a => isMuted(recKey(a.type, a.title))).length;
               const visibleActions = smartActions.filter(a => showMuted || !isMuted(recKey(a.type, a.title)));
+              const currentTitles  = smartActions.map(a => a.title);
+              const newTitles      = recHistory.length > 0 ? getNewTitles(currentTitles) : new Set<string>();
+              const resolvedRecs   = recHistory.length > 0 ? getResolvedRecs(currentTitles) : [];
               return (
               <div className="mt-3 space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1002,6 +1019,7 @@ export default function DashboardPage() {
                     const key = recKey(action.type, action.title);
                     const muted = isMuted(key);
                     const menuOpen = snoozeMenuKey === key;
+                    const isNew = newTitles.has(action.title);
                     return (
                       <div key={i} className="relative group">
                         <button type="button" onClick={() => { if (!muted) handleSmartAction(action); }}
@@ -1016,6 +1034,9 @@ export default function DashboardPage() {
                                 action.type === 'warning' ? 'text-amber-700 bg-amber-100 border-amber-200' :
                                   'text-blue-700 bg-blue-100 border-blue-200')}>{action.type}</span>
                             {muted && <span className="text-[10px] text-slate-400 font-semibold ml-1">muted</span>}
+                            {isNew && !muted && (
+                              <span className="text-[10px] font-black bg-blue-100 text-blue-700 border border-blue-200 rounded-full px-1.5 py-0.5 ml-1">NEW</span>
+                            )}
                             <span className="text-xs text-slate-400 ml-auto">#{i + 1}</span>
                           </div>
                           <p className="text-sm font-bold text-slate-800 mb-1">{action.title}</p>
@@ -1093,6 +1114,76 @@ export default function DashboardPage() {
                     </button>
                     <button type="button" onClick={() => { restoreAll(); setMutedRecs([]); setShowMuted(false); }}
                       className="text-xs font-bold text-blue-600 hover:underline">Restore all</button>
+                  </div>
+                )}
+
+                {/* ── Resolved since last upload ── */}
+                {resolvedRecs.length > 0 && (
+                  <div className="mt-2 pt-3 border-t border-slate-100">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-green-600 mb-2">
+                      ✅ Resolved since last upload ({resolvedRecs.length})
+                    </p>
+                    <div className="space-y-1.5">
+                      {resolvedRecs.map((r, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs text-slate-500">
+                          <span>{r.icon}</span>
+                          <span className="line-through">{r.title}</span>
+                          <span className="text-green-600 font-semibold text-[10px] ml-auto shrink-0">resolved</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── History toggle ── */}
+                {recHistory.length > 1 && (
+                  <div className="mt-2 pt-3 border-t border-slate-100">
+                    <button type="button"
+                      onClick={() => setShowHistory(v => !v)}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-700 transition-colors">
+                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
+                        <path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.96L6.6 18.4A9 9 0 1 0 13 3Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"/>
+                      </svg>
+                      {showHistory ? 'Hide history' : `View history (${recHistory.length - 1} previous snapshot${recHistory.length > 2 ? 's' : ''})`}
+                      <span className={cn('text-slate-400 transition-transform duration-200', showHistory && 'rotate-180')}>▾</span>
+                    </button>
+
+                    {showHistory && (
+                      <div className="mt-2 space-y-3">
+                        {recHistory.slice(1).map((entry, ei) => (
+                          <div key={entry.id} className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                                {new Date(entry.savedAt).toLocaleString()}
+                              </p>
+                              <span className={cn('text-[10px] font-black px-2 py-0.5 rounded-full',
+                                entry.healthScore >= 75 ? 'bg-green-100 text-green-700'
+                                  : entry.healthScore >= 50 ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-red-100 text-red-700'
+                              )}>
+                                Health {entry.healthScore}
+                              </span>
+                            </div>
+                            {entry.recommendations.length === 0 ? (
+                              <p className="text-xs text-slate-400 italic">No recommendations at this point</p>
+                            ) : (
+                              <ul className="space-y-1">
+                                {entry.recommendations.map((r, ri) => (
+                                  <li key={ri} className="flex items-center gap-2 text-xs text-slate-600">
+                                    <span className={cn('text-[10px] font-black px-1.5 py-0.5 rounded-full shrink-0',
+                                      r.type === 'critical' ? 'bg-red-100 text-red-700'
+                                        : r.type === 'warning' ? 'bg-amber-100 text-amber-700'
+                                        : 'bg-blue-100 text-blue-700'
+                                    )}>{r.type}</span>
+                                    <span className="truncate">{r.title}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
