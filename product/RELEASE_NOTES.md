@@ -8,7 +8,8 @@
 ## v4.0 — Quality & Trust Layer (In Progress)
 
 **Branch:** `feat/enhancements`  
-**Status:** Active development — not yet merged to main
+**Last updated:** 2026-06-03  
+**Status:** Active development — all P0/P1 features complete; P1 UX improvements (Calculation Reference nav, Clear Local Data, Dashboard Section Switcher) queued next; documentation alignment in progress
 
 ### P0 Stabilisation (Completed)
 - 253 automated tests passing across 21 test suites
@@ -142,15 +143,23 @@
 
 ---
 
+### P1 — UX & Mobile (2026-06-03, Completed)
+- **9.26** Mobile UX polish for `/explore` — search bar stacks on mobile, graph height 380px + MiniMap hidden, table replaced with card list below md breakpoint
+- **9.27** Performance optimisation for 5,000+ issues — `parseDate` memo cache (Map, reset per request), `flowItemByKey` Map replaces O(n×groups) filter scans in 7 builder functions, hoisted `today`, timing log on every upload
+- **8.11** Register page guard — `NEXT_PUBLIC_ALLOW_REGISTER` wired to login link visibility and register page redirect; `.env` and `.env.example` aligned
+- **fix** Dashboard horizontal scroll eliminated — `overflow-x-hidden` on `<body>`, sticky filter bar restructured into 2 flex-wrap rows
+- **fix** Upload route `MAX_FILE_SIZE` corrected from 200 MB to 20 MB
+
+### P1 — In Queue (Not Yet Started)
+- **P1.1** Calculation Reference clearly visible as own item in `/developer` blue side menu
+- **P1.2** Clear Local Data — Admin window + Upload/Landing page (with detection, warning, confirmation)
+- **P1.3** Dashboard Section Show/Hide controls — Overview/Single/Full modes, smooth scroll, CSS animation, reduced-motion support
+
+---
+
 ## Planned — P2/P3/P4 (Not Yet Implemented)
 
 - **P2** Admin Storage & Backup (S3, Azure, GCP) — architecture design only
 - **P2/P3** Optional Jira API Integration — export-first model remains default
 - **P4** Admin & System Notification Center
 - **P4** Maintenance Mode
-- **P1** Package Reference in `/developer` route
-- **P1** Calculation Reference in `/developer` route
-- **P1** Production security checklist page
-- **P1** Database backup and restore
-- **P1** Dockerfile and docker-compose setup
-- **P1** Performance profiling for 5,000+ issues

@@ -1,7 +1,9 @@
 # Delivery Clarity — TODO List
 
-**Last updated:** 2026-05-31  
-**Branch:** feat/enhancements
+**Last updated:** 2026-06-03  
+**Branch:** feat/enhancements  
+**Version:** v4.0 (in progress — not yet merged to main)  
+**Release status:** All P0/P1 features done. P0 documentation alignment in progress. New P1 UX items queued.
 
 ---
 
@@ -12,6 +14,9 @@
 | ✅ | Done — committed and pushed |
 | 🔧 | In progress |
 | ❌ | Not started |
+| 🚫 | Blocked — waiting on dependency |
+| 🔍 | Needs verification |
+| 📄 | Planning documented only — no code written |
 
 ---
 
@@ -207,6 +212,97 @@
 
 ---
 
+---
+
+## P0 — Documentation Alignment (2026-06-03)
+
+> Product documentation must never be behind the code. Complete before any new feature work.
+
+| # | Document | What is behind | Priority | Status |
+|---|----------|----------------|----------|--------|
+| DOC-01 | `product/SRS.md` | Says auth out of scope — auth is fully implemented. Missing all v4 features, routes, Prisma, Docker. | P0 | 🔧 In progress |
+| DOC-02 | `product/BRD.md` | Missing v4 Quality & Trust Layer, Calculation Reference, Clear Data, Dashboard sections, roadmap | P0 | ❌ Not started |
+| DOC-03 | `product/README.md` | Says v2 throughout. Missing 15+ routes. Old arch diagram. Express backend instructions outdated. | P0 | ❌ Not started |
+| DOC-04 | `TODO-List.md` | Missing new P1 items, stale date | P0 | 🔧 In progress (this update) |
+| DOC-05 | `product/USE_CASES.md` | Missing auth, data quality, snapshots, customer view, dashboard sections, clear data UCs | P1 | ❌ Not started |
+| DOC-06 | `product/USER_JOURNEYS.md` | Missing onboarding, clear data, section switcher, snapshot journeys | P1 | ❌ Not started |
+| DOC-07 | `product/SCENARIOS.md` | Missing v4 scenarios | P1 | ❌ Not started |
+| DOC-08 | `product/TEST_CASES.md` | Test count stale; missing P1 test plans for new features | P1 | ❌ Not started |
+| DOC-09 | `product/DEVELOPER_GUIDE.md` | v4.0, mostly current. Needs Calculation Reference nav note. | P1 | 🔍 Needs review |
+| DOC-10 | `product/RELEASE_NOTES.md` | Still lists 9.27 perf, mobile polish, register guard as Planned — all are Done | P0 | ❌ Not started |
+| DOC-11 | `product/TECHNICAL_METHOD.md` | Missing: data quality, confidence, clear data, dashboard sections methods | P1 | ❌ Not started |
+| DOC-12 | `product/ALGORITHM_SPEC.md` | Missing: Data Quality Score, Metric Confidence, parseDate memo, flowItemByKey algorithms | P1 | ❌ Not started |
+| DOC-13 | `product/APPENDIX.md` | Missing 15+ new terms: P4, Data Quality Score, Metric Confidence, Clear Local Data, localStorage, Dashboard Section Switcher, etc. | P1 | ❌ Not started |
+| DOC-14 | `product/PATENT_DISCLOSURE.md` | Review after P0 docs done | P2 | 📄 Deferred |
+| DOC-15 | `product/CLAIM_CANDIDATE_MATRIX.md` | Review after P0 docs done | P2 | 📄 Deferred |
+| DOC-16 | `product/PRIOR_ART_COMPARISON.md` | Review after P0 docs done | P2 | 📄 Deferred |
+
+---
+
+## P1 — New UX Features (2026-06-03)
+
+> Start only after P0 documentation alignment is complete.
+
+### P1.1 — Calculation Reference visibility in `/developer` blue side menu
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| UX-01 | Verify Calculation Reference exists in `/developer` blue side menu as its own clearly labelled item | P1 | ❌ Not started |
+| UX-02 | If not visible, add `Calculation Reference` as distinct menu item (not buried under Help or Metrics) | P1 | ❌ Not started |
+| UX-03 | Active state styling when Calculation Reference is selected | P1 | ❌ Not started |
+| UX-04 | Each calculation must explain: what it is, data source, why used, formula, benefit, alternatives, assumptions, limitations, related code, related doc | P1 | ❌ Not started |
+| UX-05 | Ensure Calculation Reference is visually separate from Package Reference | P1 | ❌ Not started |
+
+### P1.2 — Clear Local Data
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| UX-06 | Add Clear Local Data option in Admin window / Admin settings | P1 | ❌ Not started |
+| UX-07 | Add Clear Local Data button on Upload/Landing page — only when stored browser data exists | P1 | ❌ Not started |
+| UX-08 | Detect stored Delivery Clarity browser data on Upload/Landing page (localStorage/sessionStorage keys) | P1 | ❌ Not started |
+| UX-09 | Show detection message: "Stored Delivery Clarity data was found in this browser." | P1 | ❌ Not started |
+| UX-10 | Confirmation modal with title "Clear Local Data?", warning about session end, Yes/Cancel buttons | P1 | ❌ Not started |
+| UX-11 | Warning: "This will remove local data and may end your current session. You may need to log in again." | P1 | ❌ Not started |
+| UX-12 | Clear only Delivery Clarity keys — do not touch unrelated browser data | P1 | ❌ Not started |
+| UX-13 | After clearing: show success message, redirect to clean upload page | P1 | ❌ Not started |
+| UX-14 | Do not delete server-side import logs unless user explicitly uses server-side delete | P1 | ❌ Not started |
+| UX-15 | Add tests for clear data detection, confirmation, and clearing behaviour | P1 | ❌ Not started |
+
+### P1.3 — Dashboard Section Show/Hide, Smooth Scroll, and Animation
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| UX-16 | Add Dashboard Section controls at top of dashboard page immediately after main Overview section | P1 | ❌ Not started |
+| UX-17 | Section buttons/tabs for all major sections: Overview, Sprints, Kanban, Flow, Risks, Data Quality, Confidence, Work Items, Trends, Snapshots, Recommendations, Readiness | P1 | ❌ Not started |
+| UX-18 | Default view: show Overview only, hide heavy/detail sections | P1 | ❌ Not started |
+| UX-19 | Overview mode — shows health score, key KPIs, top risks, data quality, confidence, recommendations summary | P1 | ❌ Not started |
+| UX-20 | Single section mode — click a button: show only that section, hide others | P1 | ❌ Not started |
+| UX-21 | Full View mode — show all sections (button: "Show Full Dashboard") | P1 | ❌ Not started |
+| UX-22 | Smooth scroll to selected section (`scrollIntoView({ behavior: 'smooth' })`) | P1 | ❌ Not started |
+| UX-23 | CSS animation: selected section fades in + slides up; hidden sections fade out/collapse | P1 | ❌ Not started |
+| UX-24 | Reduced-motion support (`@media (prefers-reduced-motion: reduce)`) | P1 | ❌ Not started |
+| UX-25 | Active section button highlighted | P1 | ❌ Not started |
+| UX-26 | Each large section has its own hide/collapse button | P1 | ❌ Not started |
+| UX-27 | Role-based views remain compatible with section show/hide | P1 | ❌ Not started |
+| UX-28 | Mobile layout remains clean and usable with section controls | P1 | ❌ Not started |
+| UX-29 | Print/customer view remains clean (section controls not printed) | P1 | ❌ Not started |
+| UX-30 | Add tests for section switcher, scroll, animation states | P1 | ❌ Not started |
+
+### P1 Documentation Updates (after UX features done)
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| UX-31 | Update `product/SRS.md` for P1.1, P1.2, P1.3 | P1 | ❌ Not started |
+| UX-32 | Update `product/BRD.md` for P1.1, P1.2, P1.3 | P1 | ❌ Not started |
+| UX-33 | Update `product/USE_CASES.md` for P1.2 and P1.3 | P1 | ❌ Not started |
+| UX-34 | Update `product/USER_JOURNEYS.md` for P1.2 and P1.3 | P1 | ❌ Not started |
+| UX-35 | Update `product/SCENARIOS.md` for P1.2 and P1.3 | P1 | ❌ Not started |
+| UX-36 | Update `product/TEST_CASES.md` for P1.1, P1.2, P1.3 | P1 | ❌ Not started |
+| UX-37 | Update `product/TECHNICAL_METHOD.md` for P1.2 and P1.3 methods | P1 | ❌ Not started |
+| UX-38 | Update `product/RELEASE_NOTES.md` when P1.1, P1.2, P1.3 are done | P1 | ❌ Not started |
+
+---
+
 ## Enhancement Suggestions — Next Product Improvement Backlog
 
 > **Rule:** Complete P0 items in order before moving to P1. Every item must include code + tests + docs + acceptance criteria.
@@ -256,8 +352,8 @@
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| 9.27 | Recommendation feedback buttons | P2 | ❌ Not started |
-| 9.28 | Recommendation history | P2 | ❌ Not started |
+| 9.28 | Recommendation feedback buttons | P2 | ❌ Not started |
+| 9.29b | Recommendation history | P2 | ❌ Not started |
 | 9.29 | Work Item Explorer export | P2 | ❌ Not started |
 | 9.30 | Release confidence trend | P2 | ❌ Not started |
 | 9.31 | Team-level health comparison | P2 | ❌ Not started |

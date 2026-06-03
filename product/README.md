@@ -1,64 +1,131 @@
-# Product Documentation — Delivery Clarity v2
+# Product Documentation — Delivery Clarity v4.0
 
-This folder contains all living product documentation for Delivery Clarity v2.
+**Brand:** Ali Delivery Intelligence  
+**Slogan:** From messy boards to measurable delivery confidence  
+**Author:** Ali Abu Ras (aburasali80@gmail.com)  
+**Last updated:** 2026-06-03  
+**Branch:** feat/enhancements  
 
-| Document | Description | Version |
+---
+
+## Document Index
+
+| Document | Description | Status |
 |---|---|---|
-| [BRD.md](./BRD.md) | Business Requirements Document — objectives, stakeholders, 30+ BRs, personas, risk register | 1.0 |
-| [SRS.md](./SRS.md) | Software Requirements Specification — 100+ FRs, API spec, data model, acceptance criteria | 1.0 |
-| [USER_JOURNEYS.md](./USER_JOURNEYS.md) | User Journey Maps — 4 persona journeys, emotional arcs, touchpoints, moments of truth | 1.0 |
-| [USE_CASES.md](./USE_CASES.md) | Use Cases — 40+ use cases (UC-001–UC-040+) with full flows, actors, exceptions | 1.0 |
-| [TEST_CASES.md](./TEST_CASES.md) | Test Cases — 100 test cases (TC-001–TC-100) covering all FRs | 1.0 |
-| [SCENARIOS.md](./SCENARIOS.md) | Business Scenarios — 30 real-world scenarios with walkthroughs | 1.0 |
-| [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | Developer Guide — code-level how-tos for every modification, recipe cookbook | 1.0 |
+| [BRD.md](./BRD.md) | Business Requirements Document — objectives, stakeholders, BRs, personas, risk register | Needs v4 update |
+| [SRS.md](./SRS.md) | Software Requirements Specification — FRs, API spec, data model, acceptance criteria | Needs v4 update |
+| [USER_JOURNEYS.md](./USER_JOURNEYS.md) | User Journey Maps — persona journeys, emotional arcs, touchpoints, moments of truth | Needs v4 update |
+| [USE_CASES.md](./USE_CASES.md) | Use Cases — 40+ use cases with full flows, actors, exceptions | Needs v4 update |
+| [TEST_CASES.md](./TEST_CASES.md) | Test Cases — covering all FRs and automated test suites | Needs v4 update |
+| [SCENARIOS.md](./SCENARIOS.md) | Business Scenarios — real-world scenarios with walkthroughs | Needs v4 update |
+| [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) | Developer Guide — code how-tos, Package Reference, Calculation Reference | v4.0 — current |
+| [RELEASE_NOTES.md](./RELEASE_NOTES.md) | Release Notes — full changelog v1–v4 | v4.0 — mostly current |
+| [ALGORITHM_SPEC.md](./ALGORITHM_SPEC.md) | Algorithm Specification — pseudocode for all major algorithms | Needs v4 update |
+| [TECHNICAL_METHOD.md](./TECHNICAL_METHOD.md) | Technical Method Description — 8+ technical methods | Needs v4 update |
+| [APPENDIX.md](./APPENDIX.md) | Glossary and Abbreviations | Needs v4 terms |
+| [PATENT_DISCLOSURE.md](./PATENT_DISCLOSURE.md) | Patent Disclosure — novel technical methods | Deferred review |
+| [PRIOR_ART_COMPARISON.md](./PRIOR_ART_COMPARISON.md) | Prior Art Comparison — vs Jira, LinearB, Jira Align, Tableau | Deferred review |
+| [CLAIM_CANDIDATE_MATRIX.md](./CLAIM_CANDIDATE_MATRIX.md) | Patent Claim Candidates — strength ratings | Deferred review |
 
 ---
 
 ## Quick Start
 
 ```bash
-npm install && npm run dev
+# 1. Install dependencies
+npm install
+
+# 2. Set up environment
+cp .env.example .env
+# Edit .env — set SESSION_SECRET (32+ chars), ALLOW_OPEN_REGISTRATION, etc.
+
+# 3. Set up database (first time only)
+npx prisma migrate dev
+npx prisma db seed
+
+# 4. Start development server
+npm run dev
 ```
 
-The Next.js frontend starts on **http://localhost:3000**.
+App runs at **http://localhost:3000**
 
-To also run the standalone Express backend (optional, for import-log persistence and legacy developer wiki):
+**Default admin account** (created by seed):
+- Email: `admin@deliveryclarity.com`
+- Password: `Admin@DC2025`
+- ⚠️ Change immediately after first login
 
+**Docker (optional):**
 ```bash
-cd backend && npm install && npm run dev
+docker-compose up --build
 ```
-
-The backend starts on **http://localhost:4000**.
 
 ---
 
-## Application Pages
+## Application Routes
 
+### Public (no authentication required)
 | Path | Description |
 |---|---|
-| `/` | Upload page — drag-and-drop or browse for a Jira `.csv`, `.xlsx`, or `.xls` export |
-| `/summary` | Overview — high-level KPI cards and sprint health snapshot after a file is loaded |
-| `/charts` | Charts — visual analytics: velocity, cycle time, issue-type breakdown, and more |
-| `/dashboard` | Full Report — all dashboard sections (Alerts, KPIs, Quarters, Kanban, Sprint, Ownership, Labels, Relations, Readiness, Flow) with section navigation |
-| `/developer` | Developer wiki — live, interactive guide covering data flow, adding metrics, field aliases, health thresholds, layout grid, dark mode, and copy-paste recipes |
-| `/backend` | Backend status page — shows service health and import-log summary |
-| `/help` | Help guide — animated, searchable help covering every metric and dashboard section |
+| `/login` | Sign in page |
+| `/register` | Create account (requires `ALLOW_OPEN_REGISTRATION=true` in `.env`) |
+
+### Authenticated (all users)
+| Path | Description |
+|---|---|
+| `/` | Upload page — drag-and-drop Jira `.csv`, `.xlsx`, or `.xls` export |
+| `/summary` | Overview — health score, KPI cards, sprint health snapshot |
+| `/dashboard` | Full Report — all metrics, filters, snapshots, export |
+| `/charts` | Charts — velocity, cycle time, issue-type breakdown, sprint comparison |
+| `/trends` | Trends — upload-to-upload trend analysis (8 metrics over 30 uploads) |
+| `/explore` | Work Item Explorer — visual hierarchy graph, orphan detection, relation charts |
+| `/readiness` | Release Readiness — Go / Conditional Go / No-Go per Fix Version |
+| `/customer` | Customer View — clean stakeholder summary (no technical detail) |
+| `/snapshots` | Saved Snapshots — list, load, compare saved metric snapshots |
+| `/snapshots/compare` | Snapshot Comparison — side-by-side delta table |
+| `/profile` | User Profile — name, email, role |
+| `/glossary` | Glossary — all metric abbreviations and definitions |
+| `/developer` | Developer Portal — Package Reference, Calculation Reference, API docs |
+| `/help` | Help Guide — animated, searchable guide covering every metric |
+| `/backend` | Backend Status — import log summary and service health |
+
+### Admin Only
+| Path | Description |
+|---|---|
+| `/admin/logs` | Import Logs — all users' uploads (admin) or own uploads (user) |
+| `/admin/settings` | Admin Settings — data retention, orphan rules, health thresholds |
+| `/admin/security` | Security Checklist — automated + manual production readiness checks |
 
 ---
 
 ## API Routes
 
-All routes are served by the Next.js App Router under `/api/`.
-
 | Method | Route | Description |
 |---|---|---|
-| `POST` | `/api/upload` | Accept a Jira file upload (`.csv`/`.xlsx`/`.xls`, max 20 MB); parse issues, validate, compute metrics, and return `{ issues, warnings, metrics, importLog }` |
-| `GET` | `/api/dashboard` | Return the cached dashboard metrics for the current session |
-| `GET` | `/api/metrics` | Return the full metrics object (sprint, flow, readiness, KPIs, etc.) |
-| `GET` | `/api/imports` | Return the import-log history as JSON |
-| `GET` | `/api/health` | Health check — returns `{ status: "ok", service, version }` |
-| `GET` | `/api/backend-view` | Render the backend status HTML page |
-| `GET` | `/api/developer-view` | Render the developer wiki HTML page |
+| `POST` | `/api/auth/login` | Login with email + password |
+| `POST` | `/api/auth/logout` | Invalidate session |
+| `POST` | `/api/auth/register` | Create account (requires `ALLOW_OPEN_REGISTRATION=true`) |
+| `GET` | `/api/auth/me` | Get current session user |
+| `POST` | `/api/upload` | Parse Jira file, compute metrics, save ImportLog |
+| `POST` | `/api/upload/merge` | Merge multiple Jira exports (up to 10 files) |
+| `GET` | `/api/dashboard` | Return cached dashboard metrics |
+| `GET` | `/api/metrics` | Return full metrics object |
+| `GET` | `/api/health` | Health check — `{ status: "ok", version }` |
+| `GET` | `/api/imports` | Import log history (user-scoped; admin sees all with `?all=true`) |
+| `GET` | `/api/imports/all` | All import logs (admin only) |
+| `DELETE` | `/api/imports/[id]` | Delete import log entry |
+| `GET` | `/api/snapshots` | List saved snapshots |
+| `POST` | `/api/snapshots` | Save new snapshot |
+| `DELETE` | `/api/snapshots/[id]` | Delete snapshot |
+| `GET` | `/api/trends` | Upload-to-upload trend data |
+| `GET` | `/api/docs` | Developer documentation content |
+| `GET` | `/api/backend-view` | Backend status page content |
+| `GET` | `/api/admin/security` | Run security checks |
+| `GET/POST` | `/api/admin/settings` | Read/write admin settings |
+| `GET/POST` | `/api/admin/thresholds` | Read/write health thresholds |
+| `GET/POST` | `/api/admin/orphan-rules` | Read/write orphan detection rules |
+| `POST` | `/api/admin/backup` | Trigger database backup |
+| `POST` | `/api/admin/restore` | Restore from backup |
+| `POST` | `/api/admin/cleanup` | Delete expired import logs |
 
 ---
 
@@ -66,67 +133,95 @@ All routes are served by the Next.js App Router under `/api/`.
 
 ```
 JiraDashboard/
-├── app/                    # Next.js 14 App Router
-│   ├── page.tsx            # Upload page (/)
-│   ├── summary/page.tsx    # /summary
-│   ├── charts/page.tsx     # /charts
-│   ├── dashboard/page.tsx  # /dashboard
-│   ├── developer/page.tsx  # /developer
-│   ├── backend/page.tsx    # /backend
-│   ├── help/page.tsx       # /help
-│   └── api/                # API route handlers (Next.js Route Handlers)
-│       ├── upload/         # POST /api/upload
-│       ├── dashboard/      # GET  /api/dashboard
-│       ├── metrics/        # GET  /api/metrics
-│       ├── imports/        # GET  /api/imports
-│       ├── health/         # GET  /api/health
-│       ├── backend-view/   # GET  /api/backend-view
-│       └── developer-view/ # GET  /api/developer-view
-├── frontend/               # Legacy CRA frontend (v1 reference — not used in production)
-│   └── src/
-│       ├── App.js
-│       ├── components/     # UploadPage, SummaryPage, ChartsPage, DashboardPage, HelpGuide, KpiCard
-│       └── styles.css
-├── backend/                # Standalone Express backend (v1 reference / optional dev tool)
-│   └── src/
-│       ├── index.js        # Express server on port 4000
-│       ├── routes/upload.js
-│       └── services/       # parser, metrics, importLogs, backendView, developerView
-├── src/                    # Shared Next.js utilities
-│   ├── components/
-│   ├── lib/
-│   ├── services/
-│   └── types/
-├── product/                # Living product documentation (this folder)
-└── data/                   # Sample Jira exports for local development
+├── app/                          # Next.js 14 App Router (all production code)
+│   ├── page.tsx                  # Upload page (/)
+│   ├── summary/page.tsx
+│   ├── charts/page.tsx
+│   ├── dashboard/page.tsx
+│   ├── trends/page.tsx
+│   ├── explore/page.tsx
+│   ├── readiness/page.tsx
+│   ├── customer/page.tsx
+│   ├── snapshots/                # /snapshots + /snapshots/compare
+│   ├── login/page.tsx
+│   ├── register/page.tsx
+│   ├── profile/page.tsx
+│   ├── glossary/page.tsx
+│   ├── developer/page.tsx
+│   ├── help/page.tsx
+│   ├── backend/page.tsx
+│   ├── admin/                    # /admin/logs, /admin/settings, /admin/security
+│   ├── not-found.tsx
+│   ├── error.tsx
+│   ├── layout.tsx
+│   └── api/                      # All API route handlers
+├── src/
+│   ├── components/               # React components
+│   │   ├── layout/AppShell.tsx   # Navigation, header, footer
+│   │   ├── dashboard/            # Dashboard panels (Sprint, Kanban, Snapshots, etc.)
+│   │   ├── explore/              # Work Item Explorer components
+│   │   ├── charts/               # Chart components
+│   │   ├── upload/               # Column mapping, data quality summary
+│   │   ├── auth/                 # UserMenu
+│   │   ├── admin/                # Admin settings panels
+│   │   ├── readiness/            # Release readiness card
+│   │   ├── trends/               # Trend chart
+│   │   ├── onboarding/           # Onboarding checklist
+│   │   └── ui/                   # Shared UI primitives
+│   ├── services/                 # Business logic services
+│   │   ├── metrics/              # Core metrics (metrics.service.ts, throughput, kanban, etc.)
+│   │   ├── jira/                 # Parser and validation
+│   │   ├── relations/            # Explorer / hierarchy / orphan detection
+│   │   ├── dataQuality/          # Data Quality Score + Missing Field Impact
+│   │   ├── export/               # Excel export + recommendation engine
+│   │   ├── imports/              # Import log service
+│   │   └── settings/             # Thresholds, orphan rules, backup, security check
+│   ├── types/                    # TypeScript type definitions
+│   └── lib/                      # Utilities (auth, storage, session, theme, onboarding)
+├── prisma/
+│   ├── schema.prisma             # User, ImportLog, DashboardSnapshot, AuditEvent
+│   ├── migrations/
+│   └── seed.ts                   # First admin user
+├── data/                         # Runtime data (SQLite DB, config JSON, backups)
+│   └── delivery_clarity.db
+├── public/                       # Static assets (favicon, logo SVGs)
+├── product/                      # Living product documentation (this folder)
+├── src/__tests__/                # Jest test suites (253+ tests across 21 suites)
+├── Dockerfile                    # Multi-stage production Docker image
+├── docker-compose.yml            # Docker Compose with volume + healthcheck
+├── middleware.ts                 # Route protection — all routes require auth
+├── next.config.js                # Next.js config (standalone output)
+└── .env / .env.example           # Environment configuration
 ```
 
-**Key data flow (v2):**
-1. User uploads a Jira export on `/`.
-2. `POST /api/upload` parses the file, validates issues, computes metrics, and stores the result in the session/cache.
-3. The frontend navigates to `/summary`, `/charts`, or `/dashboard` and fetches data via `GET /api/metrics` or `GET /api/dashboard`.
-4. All rendering is client-side React within the Next.js shell; no page reload is required between views.
+**Key data flow:**
+1. User uploads a Jira CSV/XLSX export on `/`.
+2. `POST /api/upload` parses the file, computes all metrics via `calculateDashboardMetrics()`, saves an `ImportLog` to SQLite, returns metrics + warnings.
+3. Computed metrics are stored in browser `localStorage` for fast page-to-page access.
+4. All dashboard pages load metrics from `localStorage` via `loadMetrics()`.
+5. `middleware.ts` enforces auth on all routes — unauthenticated users are redirected to `/login`.
 
-**Tech stack:** Next.js 14 (App Router) · React 18 · TypeScript · Recharts · Tailwind CSS · XLSX · Node.js
+**Tech stack:** Next.js 14 (App Router) · React 18 · TypeScript · Tailwind CSS · Prisma 5 · SQLite · iron-session · bcryptjs · ReactFlow · @dagrejs/dagre · XLSX · Recharts
 
 ---
 
-## v1 Reference
+## Legacy Reference
 
-The `frontend/` and `backend/` directories contain the original v1 implementation (Create React App + standalone Express). They are preserved as a reference and are not used in the production Next.js v2 build. The standalone backend (`backend/`) can still be run independently for import-log inspection or developer-wiki access during local development.
+The `frontend/` and `backend/` directories contain the original v1 implementation (Create React App + standalone Express). They are **not used in the production build** and exist for historical reference only.
 
 ---
 
 ## How to Keep These Docs Updated
 
-All documents are **living documents**. Update them when:
+All documents are **living documents**. The rule is: **no code change is complete until the affected product documents are updated.**
 
-- A new feature is requested or built — add BRs, FRs, test cases, use cases, scenarios, and developer recipes.
-- A requirement changes — update the affected document and bump the version.
-- A bug is found and fixed — add a regression test case.
-- A new pattern is established — add a recipe to DEVELOPER_GUIDE.md.
+Update when:
+- A new feature is built — add FRs, test cases, use cases, scenarios
+- A requirement changes — update affected doc and bump version
+- A bug is found — add regression test case
+- A new architectural pattern is established — add to DEVELOPER_GUIDE.md
 
-Bump the version number in each document's Document Control section when making significant changes.
+**Product documentation must never be behind the code.**
 
 ---
 

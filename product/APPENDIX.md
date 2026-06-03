@@ -13,6 +13,7 @@
 | **P1** | Priority One — High | Important. Do right after all P0s are done. |
 | **P2** | Priority Two — Medium | Valuable but not urgent. Do after all P1s. |
 | **P3** | Priority Three — Low | Nice to have. Do when time allows. |
+| **P4** | Priority Four — Future Communication & Governance | Future features: in-app notifications, Maintenance Mode, email/Slack channels. Do NOT implement until explicitly authorised. |
 
 ---
 
@@ -150,8 +151,49 @@
 | Role | Access |
 |------|--------|
 | **user** | Can upload files, view their own dashboards, see their own import logs. |
-| **admin** | All user access plus: see all users' import logs, access `/admin/logs`, see "Uploaded By" column in Backend page. |
+| **admin** | All user access plus: see all users' import logs, access `/admin/logs`, `/admin/settings`, `/admin/security`, manage retention, run backup/restore. |
 
 ---
 
-*© 2025 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity*
+## K — v4.0 Quality & Trust Terms
+
+| Term | Meaning |
+|------|---------|
+| **Data Quality Score** | A 0–100% score calculated from 10 field checks after upload. Bands: Excellent (≥90), Good (≥75), Fair (≥50), Poor (≥25), Critical (<25). Tells users how reliable their Jira export data is. |
+| **Metric Confidence Score** | Per-KPI badge (High / Medium / Low / Unreliable / N/A) that shows how much to trust a specific calculated metric based on data completeness. Each badge explains which fields are missing and why they matter. |
+| **Missing-column Impact** | An explanation of which Jira fields are absent from the export and which dashboard metrics are degraded as a result. Shown on the column-mapping preview and in the Data Quality section. |
+| **Calculation Reference** | A section in `/developer` that documents every metric formula: what it is, where the data comes from, why it is used, the formula, assumptions, limitations, related code, and related documentation. |
+| **Package Reference** | A section in `/developer` that lists all npm packages used, their versions, purpose, and risk level. |
+| **Snapshot** | A saved copy of the current dashboard metrics, named and timestamped by the user. Up to 20 per user. |
+| **Snapshot Comparison** | Side-by-side view of two saved snapshots showing delta values for 12 key metrics with ↑↓→ indicators. |
+| **Retention Policy** | Admin-configurable rule that automatically deletes import logs older than a set number of days (7/30/90/365/never). |
+| **Customer View** | A clean, stakeholder-facing summary page (`/customer`) that shows only high-level delivery health without technical detail. Designed for non-technical stakeholders. |
+| **Role-based View** | One of five selectable dashboard presets (Full Report / Executive / Scrum Master / Product Owner / Engineering Manager) that show or hide dashboard sections based on the user's role. |
+| **Dashboard Section Switcher** | A planned UX component that lets users show/hide/navigate dashboard sections, replacing the always-expanded view with a cleaner Overview + Section + Full View pattern. |
+| **Clear Local Data** | A planned action that removes Delivery Clarity's browser-stored data (localStorage, sessionStorage, cookies) without touching server-side database records. Available in Admin settings and on the Upload page when stored data is detected. |
+
+---
+
+## L — Browser Storage
+
+| Term | Meaning |
+|------|---------|
+| **localStorage** | Browser storage that persists after the browser is closed. Delivery Clarity stores computed metrics, filter presets, view preferences, and onboarding state here. Keyed with `dc_` prefix. |
+| **sessionStorage** | Browser storage that clears when the tab is closed. Used for temporary upload flow state. |
+| **Cookie** | A small piece of data stored in the browser and sent with every request. Delivery Clarity uses an HTTP-only, SameSite=strict cookie for session authentication (iron-session). |
+| **FLOW_ITEMS_CAP** | The maximum number of issues stored in `localStorage` (5,000). When an export exceeds this, only the top 5,000 highest-risk items are stored; all aggregate metrics still use the full dataset. |
+
+---
+
+## M — Planned Features (Not Yet Implemented)
+
+| Term | Meaning |
+|------|---------|
+| **Notification Center** | A planned P4 feature: in-app notifications from admin to users and from the system to admin (e.g. storage warnings, large imports). |
+| **Maintenance Mode** | A planned P4 feature: admin-controlled mode that shows a maintenance screen to users while the system is being updated. |
+| **S3 / Azure / GCP Storage** | A planned P3 feature: cloud storage integration for database and backup files. The current model uses local file storage. |
+| **Jira API Integration** | A planned P3 feature: direct read-only connection to Jira via API. The current model remains export-based (zero-credential). |
+
+---
+
+*© 2026 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity v4.0*
