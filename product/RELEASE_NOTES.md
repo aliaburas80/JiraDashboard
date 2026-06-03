@@ -215,3 +215,17 @@
 - **P2/P3** Optional Jira API Integration — export-first model remains default
 - **P4** Admin & System Notification Center
 - **P4** Maintenance Mode
+
+
+---
+
+## v4.1 — Recommendation Feedback (9.28, 2026-06-04)
+
+### P2 — Recommendation Feedback Buttons
+- **9.28** 👍/👎 feedback buttons on every Smart Recommendation card
+  - "Helpful? Yes 👍 / No 👎" shown at the card footer
+  - Voting the same option twice toggles it off
+  - Votes persisted in `dc_rec_feedback` localStorage key
+  - Visual state: active vote = solid filled pill (green/red); inactive = outlined
+  - `castVote`, `getVote`, `clearVote`, `clearAllFeedback`, `getFeedbackSummary` API in `src/lib/recFeedback.ts`
+  - 8 automated tests passing (TC-RF-01–08)
