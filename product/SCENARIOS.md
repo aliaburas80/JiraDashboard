@@ -560,7 +560,7 @@ You click "← Back" and you're back on the dashboard, right where you were.
 
 **Related Use Cases:** UC-042 | **Related Test Cases:** TC-108, TC-109
 
-*Document prepared by Ali Abu Ras · Delivery Clarity v1.0 · 2026-05-30*
+*Document prepared by Ali Abu Ras · Delivery Clarity v4.0 · 2026-06-03*
 
 ---
 
@@ -652,3 +652,127 @@ You click "← Back" and you're back on the dashboard, right where you were.
 6. Rachel pastes the executive narrative into her board slide
 
 **Outcome:** Rachel presents a data-backed delivery status without needing the app open.
+
+---
+
+## v4.0 Scenarios (2026-06-03)
+
+---
+
+### SCN-017 — Scrum Master Reviews Data Quality Score Before Trusting Metrics
+
+**Persona:** Marcus, Scrum Master  
+**Context:** Marcus notices that some KPI cards show "Low Confidence" badges. He wants to understand why before presenting the dashboard to leadership.
+
+**Scenario:**
+1. Marcus uploads the latest sprint export
+2. On the column-mapping preview, he sees the Data Quality Score: 61% — Fair
+3. The preview shows: "Missing fields: In Progress Date (impacts Cycle Time), Done Date (impacts Lead Time)"
+4. He opens the dashboard and notices Cycle Time card has a yellow "Low" confidence badge
+5. He hovers the badge: "Cycle Time requires In Progress Date. Only 12% of issues have this field."
+6. Marcus shares the dashboard with a note: "Cycle Time data is unreliable this sprint — Jira In Progress Date not being set consistently."
+7. He creates a team action item to update the Jira workflow to capture transition dates
+
+**Outcome:** Marcus avoids presenting misleading metrics and creates a corrective action to improve data quality.
+
+---
+
+### SCN-018 — Admin Clears Local Browser Data Before Support Session
+
+**Persona:** Admin user troubleshooting a stale dashboard for a team member  
+**Context:** A team member reports seeing last week's data in their dashboard despite uploading a new file.
+
+**Scenario (Planned — P1.2):**
+1. The admin navigates to `/admin/settings`
+2. In the "Local Data & Browser Session" section, they see a "Clear Local Data" button
+3. Admin clicks "Clear Local Data"
+4. A modal appears: "Warning: This will remove Delivery Clarity local data stored in this browser, including cached dashboard/session data and local preferences. It may also end your current session. You may need to log in again."
+5. Admin reads: "Are you sure you want to clear local data and reset this browser session?"
+6. Admin clicks "Yes, Clear Local Data"
+7. All dc_ localStorage and sessionStorage keys are removed
+8. The session cookie is cleared; the user is redirected to /login
+9. On re-login and re-upload, the dashboard shows fresh data
+
+**Outcome:** Stale data issue resolved without touching server-side records.
+
+---
+
+### SCN-019 — Returning User Sees Stored-Data Notice on Upload Page
+
+**Persona:** Sarah, Engineering Manager  
+**Context:** Sarah returns to the app two weeks after her last upload. She wants to upload a fresh Jira export.
+
+**Scenario (Planned — P1.2):**
+1. Sarah opens the app at `/`
+2. The upload page detects stored data: `hasMetrics()` returns true
+3. A notice appears: "Stored Delivery Clarity data was found in this browser."
+4. Below the upload area, a secondary button reads "Clear stored data"
+5. Sarah clicks "Clear stored data"
+6. Confirmation modal: "This will remove cached dashboard data. Are you sure?"
+7. Sarah confirms; data is cleared
+8. She proceeds to upload her new Jira export
+9. Dashboard loads with only the new data
+
+**Outcome:** Sarah avoids confusion between old and new data without manual browser clearing.
+
+---
+
+### SCN-020 — Engineering Manager Uses Dashboard Section Switcher
+
+**Persona:** Sarah, Engineering Manager  
+**Context:** Sarah opens the Full Report dashboard. She finds the page overwhelming with all sections open and wants to focus just on sprint metrics.
+
+**Scenario (Planned — P1.3):**
+1. Sarah opens `/dashboard` after uploading
+2. She sees the Overview section at the top, then a row of section buttons: Overview | Sprints | Kanban | Flow | Risks | Data Quality | ...
+3. Default view shows only the top Overview (health score, KPIs, top risks, data quality summary)
+4. Sarah clicks "Sprints"
+5. The page smooth-scrolls to the Sprint section
+6. The sprint panel fades in with a 180ms animation
+7. All other heavy sections are hidden
+8. The "Sprints" button has a highlighted active state
+9. Sarah reviews sprint throughput, mid-sprint pattern, and sprint comparison
+10. She clicks "Full Dashboard" to restore the full view
+
+**Outcome:** Sarah gets a focused, clean view of sprint health without scrolling past irrelevant sections.
+
+---
+
+### SCN-021 — Engineering Manager Compares Two Snapshots Across Quarters
+
+**Persona:** Sarah, Engineering Manager  
+**Context:** Sarah saved a snapshot after the Q1 sprint and wants to compare it against the end-of-Q2 state.
+
+**Scenario:**
+1. Sarah navigates to `/snapshots`
+2. She sees two saved snapshots: "Q1 End — Mar 2026" and "Q2 End — Jun 2026"
+3. She selects both and clicks "Compare"
+4. The comparison page shows a 12-metric delta table: Health Score ↑ +12, Completion Rate ↑ +8%, Blocked ↓ -3, Critical ↓ -5, Avg Cycle Time ↓ -1.4d
+5. Positive deltas are green, negative risk deltas are green, worsened risk metrics are red
+6. An insights paragraph reads: "Significant improvement in Q2: health score up 12 points, critical items reduced by 5, and cycle time shortened by 1.4 days."
+7. Sarah copies the insights text into her quarterly business review presentation
+
+**Outcome:** Sarah demonstrates measurable delivery improvement to leadership with data evidence.
+
+---
+
+### SCN-022 — Developer Checks Calculation Reference for Cycle Time Formula
+
+**Persona:** Developer integrating Delivery Clarity into a CI pipeline  
+**Context:** The developer wants to verify exactly how Cycle Time is calculated before building a downstream alerting system.
+
+**Scenario (Planned — P1.1 — Calculation Reference in /developer):**
+1. Developer navigates to `/developer`
+2. In the blue side menu, they see a clear item: "Calculation Reference"
+3. They click it; the page smooth-scrolls to the Calculation Reference section
+4. They find "Cycle Time" with the following documented:
+   - **What it is:** Elapsed days from when work started to when it was completed
+   - **Formula:** `(doneDate - startedDate) / 86400000` in days, rounded to 1 decimal
+   - **Data source:** `In Progress Date` field (or `Sprint Start` as fallback), `Done Date` (or `Resolution Date`)
+   - **Why used:** Measures execution speed rather than total wait time (which Lead Time captures)
+   - **Assumptions:** Issue must have both startedDate and doneDate; values > 3,650 days are discarded as data errors
+   - **Limitations:** Does not account for time paused in waiting states (that's Flow Efficiency)
+   - **Related code:** `src/services/metrics/metrics.service.ts — getHealthFromIssue(), daysBetween()`
+5. Developer uses the formula in their alerting system
+
+**Outcome:** Developer builds a correct integration without guessing at calculation details.

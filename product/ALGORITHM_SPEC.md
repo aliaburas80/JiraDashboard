@@ -1,6 +1,6 @@
 # Delivery Clarity — Algorithm Specification
 
-**Author:** Ali Abu Ras | **Date:** 2026-05-31
+**Author:** Ali Abu Ras | **Date:** 2026-06-03 | **Version:** 4.0
 
 ---
 
@@ -319,3 +319,197 @@ OUTPUT:
 - Done nodes excluded regardless of health status
 
 **Implementation:** `src/services/relations/relationExplorer.service.ts — computeRiskPaths()`
+
+---
+
+## Data Quality Score Algorithm (9.1 — v4.0)
+
+```
+INPUT: issues[] — full parsed JiraIssue array
+
+FIELD_CHECKS = [
+  { field: 'Created Date',       weight: 12, critical: true  },
+  { field: 'Done Date',          weight: 12, critical: true  },
+  { field: 'Story Points',       weight: 10, critical: false },
+  { field: 'Sprint',             weight: 10, critical: false },
+  { field: 'Assignee',           weight: 10, critical: false },
+  { field: 'Epic Link/Parent',   weight: 10, critical: false },
+  { field: 'In Progress Date',   weight: 10, critical: false },
+  { field: 'Due Date',           weight: 9,  critical: false },
+  { field: 'Priority',           weight: 9,  critical: false },
+  { field: 'Labels',             weight: 8,  critical: false },
+]
+
+FOR each check IN FIELD_CHECKS:
+  presentCount = issues.filter(i => i[check.field] is non-empty).length
+  fillRate = presentCount / issues.length
+  check.score = fillRate × check.weight
+
+rawScore = SUM(check.score for check in FIELD_CHECKS)
+maxScore = SUM(check.weight for check in FIELD_CHECKS)  // = 100
+normalised = Math.round((rawScore / maxScore) × 100)
+
+band =
+  IF normalised >= 90: 'Excellent'
+  IF normalised >= 75: 'Good'
+  IF normalised >= 50: 'Fair'
+  IF normalised >= 25: 'Poor'
+  ELSE:               'Critical'
+
+OUTPUT: { score: normalised, band, fieldBreakdown[], summary }
+```
+
+**Implementation:** `src/services/dataQuality/dataQuality.service.ts — calculateDataQuality()`
+
+---
+
+## Metric Confidence Algorithm (9.2 — v4.0)
+
+```
+INPUT: issues[] — full parsed JiraIssue array
+
+FOR each KPI in [SprintThroughput, KanbanFlow, CycleTime, LeadTime, ...]:
+  requiredFields = CONFIDENCE_RULES[KPI].requiredFields
+  presentFields  = requiredFields.filter(f => issues.some(i => i[f]))
+  coverage       = issues.filter(i => isRelevantFor(KPI, i)).length / issues.length
+  sampleSize     = issues.filter(i => hasDataFor(KPI, i)).length
+
+  IF presentFields.length === requiredFields.length AND sampleSize >= MIN_SAMPLE[KPI]:
+    confidence = 'High'
+  ELSE IF presentFields.length >= requiredFields.length × 0.7:
+    confidence = 'Medium'
+  ELSE IF sampleSize > 0:
+    confidence = 'Low'
+  ELSE IF presentFields.length === 0:
+    confidence = 'Unreliable'
+  ELSE:
+    confidence = 'N/A'
+
+  missingFields = requiredFields.filter(f => NOT presentField(f))
+  reason = generateReason(confidence, missingFields)
+
+OUTPUT: Map<KPI, { confidence, reason, missingFields[] }>
+```
+
+**Implementation:** `src/services/metrics/metricConfidence.service.ts — calculateMetricConfidence()`
+
+---
+
+## parseDate Memoisation Algorithm (9.27 — v4.0)
+
+```
+// Module-level cache — reset per calculateDashboardMetrics call
+_parseDateCache: Map<string, Date | null> | null = null
+
+FUNCTION parseDate(value: unknown): Date | null
+  IF value is null/undefined/empty: RETURN null
+  IF value instanceof Date AND valid: RETURN value
+
+  text = String(value).trim()
+  IF text is empty: RETURN null
+
+  // Cache lookup — O(1)
+  IF _parseDateCache:
+    hit = _parseDateCache.get(text)
+    IF hit !== undefined: RETURN hit  // cache hit
+
+  result = null
+
+  // Try numeric (Excel serial):
+  IF isFiniteNumber(text) AND 20000 < text < 80000:
+    result = excelEpoch + (text × 86400000)
+  // Try Jira format (15/Jan/2024):
+  ELSE IF matches /^(\d{1,2})\/([A-Za-z]{3})\/(\d{2,4})/:
+    result = buildDate(...)
+  // Try numeric date (15/01/2024 or 01-15-2024):
+  ELSE IF matches /^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/:
+    result = buildDate(...)
+  // Try ISO (2024-01-15):
+  ELSE IF matches /^(\d{4})-(\d{1,2})-(\d{1,2})/:
+    result = buildDate(...)
+  ELSE:
+    result = new Date(text) — null if invalid
+
+  // Cache set — O(1)
+  IF _parseDateCache: _parseDateCache.set(text, result)
+  RETURN result
+
+// Called from calculateDashboardMetrics:
+  _parseDateCache = new Map()          // reset
+  ... compute all metrics ...
+  _parseDateCache = null               // free
+```
+
+**Benefit:** Jira exports repeat the same date strings heavily (same sprint dates, same creation dates for bulk imports). Memoisation reduces ~40,000 regex operations for a 5,000-issue export to ~1,000 unique parses.
+
+**Implementation:** `src/services/metrics/metrics.service.ts` — `parseDate()`, `_parseDateCache`, `calculateDashboardMetrics()`
+
+---
+
+## flowItemByKey Map Algorithm (9.27 — v4.0)
+
+```
+// PROBLEM: 7 builder functions each call:
+//   flowItems.filter(fi => issueKeySet.has(fi.key))  — O(n) per group
+// For 5,000 issues with 50 epics = 250,000 iterations.
+
+// SOLUTION: Build Map once, O(1) lookup per item
+
+// In calculateDashboardMetrics():
+flowItemByKey = new Map(flowItems.map(fi => [fi.key, fi]))
+// Cost: O(n) once
+
+// In each builder function (buildEpicMetrics, buildSprintMetrics, etc.):
+// BEFORE:
+  issueKeys = new Set(items.map(i => i['Issue Key']))
+  matchingFlowItems = flowItems.filter(fi => issueKeys.has(fi.key))  // O(n)
+// AFTER:
+  matchingFlowItems = items
+    .map(i => flowItemByKey.get(i['Issue Key']))
+    .filter(fi => fi !== undefined)  // O(group_size)
+
+// Total cost: O(n) once for Map creation + O(group_size) per group
+// vs. O(n × num_groups) before
+```
+
+**Affected functions:** `buildSprintMetrics`, `buildEpicMetrics`, `buildQuarterMetrics`, `buildLabelMetrics`, `buildTypeMetrics`, `buildProjectMetrics`, `buildParentMetrics`
+
+**Implementation:** `src/services/metrics/metrics.service.ts`
+
+---
+
+## Snapshot Comparison Algorithm (9.12 — v4.0)
+
+```
+INPUT: snapshotA — saved DashboardMetrics object (older)
+       snapshotB — saved DashboardMetrics object (newer)
+
+COMPARISON_METRICS = [
+  { key: 'healthScore',       label: 'Health Score',      higherIsBetter: true  },
+  { key: 'completionRate',    label: 'Completion Rate',   higherIsBetter: true  },
+  { key: 'totalIssues',       label: 'Total Issues',      higherIsBetter: null  },
+  { key: 'doneIssues',        label: 'Done',              higherIsBetter: true  },
+  { key: 'activeIssues',      label: 'Active',            higherIsBetter: null  },
+  { key: 'blockedIssues',     label: 'Blocked',           higherIsBetter: false },
+  { key: 'flow.critical',     label: 'Critical',          higherIsBetter: false },
+  { key: 'flow.averageCycle', label: 'Avg Cycle Time',    higherIsBetter: false },
+  { key: 'flow.averageLead',  label: 'Avg Lead Time',     higherIsBetter: false },
+  { key: 'storyPoints.total', label: 'Story Points Done', higherIsBetter: true  },
+  { key: 'orphanRatio',       label: 'Orphan Ratio',      higherIsBetter: false },
+  { key: 'blockedRatio',      label: 'Blocked Ratio',     higherIsBetter: false },
+]
+
+FOR each metric IN COMPARISON_METRICS:
+  valA = get(snapshotA, metric.key)
+  valB = get(snapshotB, metric.key)
+  delta = valB - valA
+  direction = delta > 0 ? '↑' : delta < 0 ? '↓' : '→'
+  positive = (metric.higherIsBetter === true AND delta > 0)
+          OR (metric.higherIsBetter === false AND delta < 0)
+
+OUTPUT: ComparisonRow[] with { label, valueA, valueB, delta, direction, positive }
+        + insights[] — plain-English narrative of most significant changes
+        + sameDataFlag — true if snapshotA.uploadedAt === snapshotB.uploadedAt
+```
+
+**Implementation:** `src/services/imports/importLogs.service.ts`, `app/snapshots/compare/page.tsx`

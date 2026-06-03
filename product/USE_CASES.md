@@ -5,12 +5,12 @@
 | Field | Detail |
 |---|---|
 | **Document Title** | Delivery Clarity — Use Cases |
-| **Version** | 1.0 |
-| **Date** | 2026-05-30 |
+| **Version** | 4.0 |
+| **Date** | 2026-06-03 |
 | **Author** | Ali Abu Ras |
-| **Status** | Approved |
+| **Status** | Active |
 | **Classification** | Internal |
-| **Derived From** | BRD v1.0, SRS v1.0.0 |
+| **Derived From** | BRD v4.0, SRS v4.0.0 |
 
 ### Revision History
 
@@ -18,6 +18,7 @@
 |---|---|---|---|
 | 0.1 | 2026-05-30 | Ali Abu Ras | Initial draft — all 40 use cases, actors, diagrams |
 | 1.0 | 2026-05-30 | Ali Abu Ras | Final review — approved as baseline |
+| 4.0 | 2026-06-03 | Ali Abu Ras | v4 addendum: UC-051–059 — data quality, confidence, snapshots, thresholds, clear data, section switcher, calculation reference |
 
 ---
 
@@ -2127,3 +2128,142 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 3a. HTTP 409 "An account with this email already exists"
 
 **Related FR:** FR-228, FR-235
+
+---
+
+## v4.0 Use Cases (2026-06-03)
+
+### UC-051 — Review Data Quality Score After Upload
+
+**Actor:** Engineering Manager, Scrum Master  
+**Trigger:** Column-mapping preview shown after file upload  
+**Precondition:** File parsed successfully; `calculateDataQuality()` run  
+**Main Flow:**
+1. Column-mapping preview displays Data Quality Score (0–100%) and band
+2. User reads plain-English summary explaining score and top improvements
+3. User reviews field breakdown: fill rates per field
+4. User proceeds to dashboard (immediately or after 10-second auto-proceed)
+
+**Alternate Flow A — Poor/Critical score:**  
+2a. User notes missing fields and plans Jira data improvement actions  
+
+**Related FR:** FR-242–FR-245, FR-275
+
+---
+
+### UC-052 — Interpret Metric Confidence Badge
+
+**Actor:** Engineering Manager  
+**Trigger:** User views a KPI card on the dashboard  
+**Precondition:** Dashboard loaded; confidence scores computed  
+**Main Flow:**
+1. User sees a "Low" confidence badge on Cycle Time KPI card
+2. User hovers/clicks badge → tooltip: reason + missing fields list
+3. User understands metric is unreliable; notes action to fix Jira workflow
+
+**Related FR:** FR-246–FR-248
+
+---
+
+### UC-053 — Save and Load Dashboard Snapshot
+
+**Actor:** Authenticated user  
+**Trigger:** User clicks "Save snapshot" in dashboard sticky bar  
+**Main Flow:**
+1. User enters snapshot name
+2. System saves DashboardSnapshot record to SQLite
+3. User later navigates to /snapshots, selects the snapshot, and loads it
+
+**Alternate Flow A — Max 20 snapshots reached:**  
+2a. Error: "Maximum 20 snapshots reached. Delete one first."  
+
+**Related FR:** FR-255–FR-256
+
+---
+
+### UC-054 — Compare Two Snapshots
+
+**Actor:** Engineering Manager  
+**Trigger:** User selects two snapshots and clicks "Compare"  
+**Main Flow:**
+1. User selects two snapshots on /snapshots
+2. /snapshots/compare shows 12-metric delta table with ↑↓→ indicators
+3. Insights paragraph summarises most significant changes
+4. User copies insights to report or presentation
+
+**Alternate Flow A — Same data:**  
+3a. "Same data detected" notice shown  
+
+**Related FR:** FR-257
+
+---
+
+### UC-055 — Configure Health Thresholds (Admin)
+
+**Actor:** Admin user  
+**Trigger:** Admin opens Health Thresholds panel in /admin/settings  
+**Main Flow:**
+1. Admin adjusts threshold values (cycle time critical days, blocked ratio warning %, etc.)
+2. Admin saves; config written to data/health-thresholds.json
+3. Cache invalidated; next upload uses new thresholds
+
+**Related FR:** FR-260–FR-261
+
+---
+
+### UC-056 — Clear Local Delivery Data from Upload Page (Planned P1.2)
+
+**Actor:** Any authenticated user  
+**Trigger:** Upload page detects stored dc_ keys in localStorage  
+**Main Flow:**
+1. Upload page shows: "Stored Delivery Clarity data was found in this browser"
+2. User clicks "Clear stored data"
+3. Confirmation modal with session-end warning shown
+4. User confirms → all dc_ keys cleared; redirect to /login if session cleared
+
+**Exception:** User cancels → no data changed  
+
+**Related FR:** FR-284
+
+---
+
+### UC-057 — Clear Local Data from Admin Settings (Planned P1.2)
+
+**Actor:** Admin user  
+**Trigger:** Admin opens "Local Data & Browser Session" in /admin/settings  
+**Main Flow:**
+1. Admin clicks "Clear Local Data"
+2. Confirmation modal shown
+3. Admin confirms → dc_ keys cleared; server-side records NOT deleted
+
+**Related FR:** FR-284, FR-286
+
+---
+
+### UC-058 — Use Dashboard Section Switcher (Planned P1.3)
+
+**Actor:** Engineering Manager, Scrum Master  
+**Trigger:** User opens /dashboard  
+**Main Flow:**
+1. Default view: Overview mode (health score, KPIs, top risks, quality summary)
+2. User clicks a section button (e.g., "Sprints")
+3. Page smooth-scrolls to Sprint section with fade-in animation
+4. Other heavy sections hidden
+5. "Full Dashboard" button restores all sections
+
+**Reduced-motion:** No animations; instant scroll and show/hide  
+
+**Related FR:** FR-285, BR-088–BR-090
+
+---
+
+### UC-059 — Use Calculation Reference in Developer Portal (Planned P1.1)
+
+**Actor:** Developer, Technical Lead  
+**Trigger:** User navigates to /developer  
+**Main Flow:**
+1. "Calculation Reference" visible as distinct item in blue side menu
+2. User clicks → navigates/scrolls to Calculation Reference section
+3. User finds a metric, reads: formula, data source, why used, assumptions, limitations, related code
+
+**Related FR:** FR-283, BR-085

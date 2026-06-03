@@ -1,7 +1,7 @@
 # Delivery Clarity — User Journey Maps
 
-**Version:** 1.0
-**Date:** 2026-05-30
+**Version:** 4.0
+**Date:** 2026-06-03
 **Author:** Ali Abu Ras
 **Status:** Approved
 **Classification:** Internal
@@ -1291,3 +1291,93 @@ All personas now experience a two-step flow after uploading:
 | 5 | Sorts by health score | Identifies lowest-scoring imports | Strategic |
 
 **Pain point resolved:** Admin has full visibility into all team uploads without accessing individual accounts.
+
+---
+
+## v4.0 Journey Maps (2026-06-03)
+
+---
+
+### UJ-015 — Scrum Master: Using Data Quality and Confidence Scores to Build Trust
+
+**Persona:** Marcus, Scrum Master  
+**Goal:** Present delivery metrics confidently, knowing data gaps are explained  
+**Entry point:** Upload page
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Uploads latest sprint export | Column-mapping preview: Data Quality Score 71% — Good | Hopeful |
+| 2 | Reads missing fields: In Progress Date, Done Date | Impact: "Cycle Time will be estimated only" | Aware |
+| 3 | Proceeds to dashboard | Cycle Time KPI shows "Low" confidence badge | Informed |
+| 4 | Hovers badge | Tooltip: reason + missing fields | Transparent |
+| 5 | Notes in sprint review: "Cycle Time estimated" | — | Honest |
+| 6 | Acts on recommendation to set transition dates in Jira | — | Proactive |
+
+**Pain point resolved:** Metrics are presented with explicit reliability context — no more presenting numbers without knowing their trustworthiness.
+
+---
+
+### UJ-016 — Engineering Manager: Comparing Performance Using Snapshots
+
+**Persona:** Sarah, Engineering Manager  
+**Goal:** Show measurable improvement over a quarter  
+**Entry point:** /snapshots
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens /snapshots, selects Q1 and Q2 snapshots | Two snapshots checked | Focused |
+| 2 | Clicks "Compare" | 12-metric delta table: Health ↑+14, Critical ↓-6, Cycle ↓-2.1d | Proud |
+| 3 | Reads auto-generated insight paragraph | Improvement quantified | Satisfied |
+| 4 | Copies insights into quarterly review slide | — | Ready |
+
+**Pain point resolved:** Quarterly improvement shown in seconds, not manual spreadsheet work.
+
+---
+
+### UJ-017 — Returning User: Clearing Stale Browser Data (Planned P1.2)
+
+**Persona:** Marcus, Scrum Master  
+**Goal:** Start fresh with a new sprint's data  
+**Entry point:** Upload page (/)
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens app after 2 weeks | "Stored Delivery Clarity data was found in this browser" notice | Slightly confused |
+| 2 | Clicks "Clear stored data" | Confirmation modal with session-end warning | Cautious |
+| 3 | Confirms | All dc_ keys removed; page refreshes | Reassured |
+| 4 | Uploads new export | Fresh dashboard with only new data | Relieved |
+
+**Pain point resolved:** Clear, guided reset without needing browser developer tools knowledge.
+
+---
+
+### UJ-018 — Admin: Managing Data Retention for Compliance
+
+**Persona:** Admin user  
+**Goal:** Auto-delete import logs older than 90 days  
+**Entry point:** /admin/settings
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens Data Retention panel | Current setting: Never | Concerned |
+| 2 | Changes to "90 days", saves | Config written to database | In control |
+| 3 | Returns the next week | Old logs auto-deleted | Confident |
+
+**Pain point resolved:** Compliance data minimisation met without manual record deletion.
+
+---
+
+### UJ-019 — Engineering Manager: Focused Dashboard Review Using Section Switcher (Planned P1.3)
+
+**Persona:** Sarah, Engineering Manager  
+**Goal:** Check sprint health quickly without the full dashboard  
+**Entry point:** /dashboard
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens /dashboard | Default: Overview mode — health, KPIs, top risks | Oriented |
+| 2 | Clicks "Sprints" in section control row | Smooth scroll; Sprint section fades in; button highlighted | Focused |
+| 3 | Reviews SprintThroughputPanel and MidSprintDeliveryPanel | Other sections hidden | Efficient |
+| 4 | Clicks "Full Dashboard" | All sections visible | Complete |
+
+**Pain point resolved:** Direct, clean access to sprint data without scrolling past 15 sections.
