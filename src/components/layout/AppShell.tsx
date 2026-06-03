@@ -11,33 +11,33 @@ const NAV_GROUPS = [
   {
     label: 'Analytics',
     items: [
-      { href: '/summary',   label: 'Overview',     desc: 'Health at a glance'       },
-      { href: '/dashboard', label: 'Full Report',  desc: 'All metrics & filters'    },
-      { href: '/charts',    label: 'Charts',       desc: 'Visual breakdowns'        },
-      { href: '/trends',    label: 'Trends',       desc: 'Upload-over-upload change' },
+      { href: '/summary',   label: 'Overview',    icon: '📊', desc: 'Health at a glance'        },
+      { href: '/dashboard', label: 'Full Report', icon: '📋', desc: 'All metrics & filters'     },
+      { href: '/charts',    label: 'Charts',      icon: '📈', desc: 'Visual breakdowns'         },
+      { href: '/trends',    label: 'Trends',      icon: '📉', desc: 'Upload-over-upload change'  },
     ],
   },
   {
     label: 'Delivery',
     items: [
-      { href: '/readiness', label: 'Readiness',  desc: 'Go / No-Go per release'    },
-      { href: '/explore',   label: 'Explore',    desc: 'Work item dependency graph' },
-      { href: '/customer',  label: 'Customer',   desc: 'Customer-visible progress'  },
+      { href: '/readiness', label: 'Readiness', icon: '🚀', desc: 'Go / No-Go per release'     },
+      { href: '/explore',   label: 'Explore',   icon: '🔗', desc: 'Work item dependency graph'  },
+      { href: '/customer',  label: 'Customer',  icon: '👤', desc: 'Customer-visible progress'   },
     ],
   },
   {
     label: 'Data',
     items: [
-      { href: '/snapshots', label: 'Snapshots', desc: 'Saved metric snapshots'     },
-      { href: '/backend',   label: 'Backend',   desc: 'Import logs & raw data'     },
+      { href: '/snapshots', label: 'Snapshots', icon: '📸', desc: 'Saved metric snapshots'  },
+      { href: '/backend',   label: 'Backend',   icon: '⚙️', desc: 'Import logs & raw data'  },
     ],
   },
   {
     label: 'Reference',
     items: [
-      { href: '/glossary',  label: 'Glossary',  desc: 'Term & abbreviation guide'  },
-      { href: '/developer', label: 'Developer', desc: 'API & technical docs'       },
-      { href: '/help',      label: 'Help',      desc: 'How to use this app'        },
+      { href: '/glossary',  label: 'Glossary',  icon: '📖', desc: 'Term & abbreviation guide' },
+      { href: '/developer', label: 'Developer', icon: '💻', desc: 'API & technical docs'      },
+      { href: '/help',      label: 'Help',      icon: '❓', desc: 'How to use this app'        },
     ],
   },
 ];
@@ -153,24 +153,40 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                         </button>
 
                         {open && (
-                          <div className="absolute top-full left-0 mt-1.5 w-52 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1.5 z-50">
+                          <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg p-1.5 z-50 min-w-[200px]">
                             {group.items.map(item => {
                               const itemActive = pathname === item.href;
                               return (
                                 <Link
                                   key={item.href}
                                   href={item.href}
-                                  className={
-                                    'flex flex-col px-4 py-2.5 transition-colors ' +
-                                    (itemActive
-                                      ? 'bg-blue-50 dark:bg-blue-900/30'
-                                      : 'hover:bg-slate-50 dark:hover:bg-slate-700/50')
-                                  }
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    padding: '8px 10px',
+                                    borderRadius: 10,
+                                    fontSize: 13,
+                                    fontWeight: 700,
+                                    textDecoration: 'none',
+                                    position: 'relative',
+                                    transition: 'background 150ms, color 150ms',
+                                    background: itemActive
+                                      ? 'linear-gradient(180deg, rgba(239,246,255,0.95), rgba(241,245,249,0.72))'
+                                      : 'transparent',
+                                    color: itemActive ? '#2563eb' : '#334155',
+                                  }}
+                                  onMouseEnter={e => { if (!itemActive) (e.currentTarget as HTMLElement).style.background = 'rgba(241,245,249,0.8)'; }}
+                                  onMouseLeave={e => { if (!itemActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                                 >
-                                  <span className={`text-sm font-bold ${itemActive ? 'text-blue-700 dark:text-blue-400' : 'text-slate-800 dark:text-slate-200'}`}>
-                                    {item.label}
-                                  </span>
-                                  <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{item.desc}</span>
+                                  <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>{item.icon}</span>
+                                  <span style={{ flex: 1 }}>{item.label}</span>
+                                  {itemActive && (
+                                    <span style={{
+                                      width: 6, height: 6, borderRadius: '50%',
+                                      background: '#2563eb', flexShrink: 0,
+                                    }} aria-hidden="true" />
+                                  )}
                                 </Link>
                               );
                             })}
@@ -239,12 +255,13 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                         key={item.href}
                         href={item.href}
                         className={
-                          'px-3 py-2 rounded-lg text-sm font-semibold transition-colors ' +
+                          'inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ' +
                           (itemActive
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-blue-50 text-blue-700'
                             : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800')
                         }
                       >
+                        <span>{item.icon}</span>
                         {item.label}
                       </Link>
                     );

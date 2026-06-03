@@ -901,12 +901,25 @@ export default function ChartsPage() {
 
       {/* CTA */}
       <div className="flex flex-wrap items-center justify-center gap-3 pb-4">
-        <button type="button" onClick={() => router.push('/')} className="btn-secondary px-5 py-2.5">Upload new file</button>
-        <button type="button" onClick={() => router.push('/summary')} className="btn-secondary px-5 py-2.5">← Overview</button>
+
+        <button type="button" onClick={() => router.push('/')} className="btn-secondary px-5 py-2.5">
+          Upload new file
+        </button>
+
+        <button type="button" onClick={() => router.push('/summary')} className="btn-secondary px-5 py-2.5">
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2Z"/>
+          </svg>
+          Overview
+        </button>
+
         <button type="button" onClick={() => router.push('/dashboard')} className="btn-primary px-5 py-2.5">
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/></svg>
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+            <path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/>
+          </svg>
           View Full Report
         </button>
+
       </div>
     </AppShell>
   );

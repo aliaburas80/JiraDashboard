@@ -99,7 +99,10 @@ export default function SnapshotsPage() {
                 onClick={() => router.push('/snapshots/compare')}
                 className="btn-secondary px-4 py-2 text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100"
               >
-                ⚖️ Compare
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+                  <path d="M16 3h5v5h-2V5h-3V3ZM3 3h5v2H5v3H3V3Zm13 16v-2h3v-3h2v5h-5ZM3 16h2v3h3v2H3v-5Zm7-12h4v2h-4V4Zm-2 2H6v4H4V6h4Zm10 0h2v4h-2V6Zm-4 8h4v4h-2v-2h-2v-2Zm-6 0v2H6v2H4v-4h4Z"/>
+                </svg>
+                Compare
               </button>
             )}
             <button
@@ -107,6 +110,9 @@ export default function SnapshotsPage() {
               onClick={() => router.push('/dashboard')}
               className="btn-primary px-4 py-2"
             >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+                <path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/>
+              </svg>
               Go to Dashboard
             </button>
           </div>
@@ -126,7 +132,10 @@ export default function SnapshotsPage() {
               onClick={() => router.push('/dashboard')}
               className="btn-primary px-5 py-2.5"
             >
-              Open Full Report →
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+                <path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/>
+              </svg>
+              Open Full Report
             </button>
           </div>
         ) : (
@@ -151,14 +160,21 @@ export default function SnapshotsPage() {
                       type="button"
                       onClick={() => handleLoad(snap)}
                       disabled={loadingId === snap.id}
-                      className="btn-secondary text-xs px-4 py-1.5 text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100 disabled:opacity-50"
+                      className="btn-secondary btn-sm text-blue-700 border-blue-200 bg-blue-50 hover:bg-blue-100 disabled:opacity-50 gap-1"
                     >
-                      {loadingId === snap.id ? 'Loading…' : 'Load →'}
+                      {loadingId === snap.id ? 'Loading…' : (
+                        <>
+                          Load
+                          <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current">
+                            <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8Z"/>
+                          </svg>
+                        </>
+                      )}
                     </button>
                     <button
                       type="button"
                       onClick={() => setDeleteTarget({ id: snap.id, name: snap.snapshotName })}
-                      className="w-7 h-7 rounded-xl text-slate-300 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-base font-black"
+                      className="w-7 h-7 rounded-full text-slate-300 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-base font-black"
                     >
                       ×
                     </button>

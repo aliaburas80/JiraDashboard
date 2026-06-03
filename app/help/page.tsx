@@ -1,7 +1,7 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AppShell from '@/components/layout/AppShell';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -702,7 +702,39 @@ function SectionAccordion({ section }: { section: Section }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function HelpPage() {
-  const [search, setSearch] = useState('');
+  const [search, setSearch]   = useState('');
+  const [activeId, setActiveId] = useState<string>(SECTIONS[0].id);
+
+  // Track active section via IntersectionObserver
+  useEffect(() => {
+    if (search.trim()) return;
+    const observer = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveId(entry.target.id.replace('section-', ''));
+            break;
+          }
+        }
+      },
+      { rootMargin: '-20% 0px -65% 0px' },
+    );
+    SECTIONS.forEach(s => {
+      const el = document.getElementById(`section-${s.id}`);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [search]);
+
+  // Smooth scroll accounting for app header + sticky bars
+  function goTo(id: string) {
+    const el     = document.getElementById(`section-${id}`);
+    if (!el) return;
+    const header = document.querySelector('header') as HTMLElement | null;
+    const nav    = document.getElementById('help-nav') as HTMLElement | null;
+    const offset = (header?.offsetHeight ?? 56) + (nav?.offsetHeight ?? 48) + 12;
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
+  }
 
   const filteredSections = search.trim()
     ? SECTIONS.map((s) => ({
@@ -718,8 +750,9 @@ export default function HelpPage() {
   return (
     <AppShell showNav>
       <div className="max-w-3xl mx-auto">
+
         {/* Page header */}
-        <div className="mb-6">
+        <div className="mb-5">
           <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-1">
             Help &amp; Documentation
           </h1>
@@ -728,35 +761,75 @@ export default function HelpPage() {
           </p>
         </div>
 
-        {/* Search */}
-        <div className="mb-5">
-          <input
-            type="search"
-            placeholder="Search help topics..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-          />
-        </div>
-
-        {/* Quick-jump chips */}
-        {!search && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {SECTIONS.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => {
-                  const el = document.getElementById(`section-${s.id}`);
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }}
-                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 hover:border-blue-200 transition-colors"
-              >
-                <span aria-hidden>{s.icon}</span>
-                {s.title.split(' — ')[0].replace(/^[^ ]+ /, '')}
-              </button>
-            ))}
+        {/* ── Sticky section nav ── */}
+        <div
+          id="help-nav"
+          className="sticky top-14 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 mb-6 print:hidden"
+          style={{
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(14px)',
+            borderBottom: '1px solid rgba(198,210,226,0.7)',
+            boxShadow: '0 4px 16px rgba(24,43,77,0.07)',
+          }}
+        >
+          {/* Search inside sticky bar */}
+          <div className="pt-2 pb-1">
+            <input
+              type="search"
+              placeholder="Search help topics…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+            />
           </div>
-        )}
+
+          {/* Section tabs — shown only when not searching */}
+          {!search && (
+            <div className="flex flex-wrap items-end gap-0.5 py-0.5">
+              {SECTIONS.map(s => {
+                const active = activeId === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => goTo(s.id)}
+                    style={{
+                      position: 'relative',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      padding: '7px 9px 9px',
+                      borderRadius: 12,
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: 11.5,
+                      fontWeight: 700,
+                      fontFamily: 'inherit',
+                      whiteSpace: 'nowrap',
+                      background: active
+                        ? 'linear-gradient(180deg, rgba(239,246,255,0.95), rgba(241,245,249,0.72))'
+                        : 'transparent',
+                      color: active ? '#2563eb' : '#64748b',
+                      transition: 'background 150ms, color 150ms',
+                    }}
+                  >
+                    <span style={{ fontSize: 12, lineHeight: 1 }}>{s.icon}</span>
+                    {s.title.split(' — ')[0].replace(/^\S+\s/, '')}
+                    {active && (
+                      <span style={{
+                        position: 'absolute',
+                        left: 9, right: 9, bottom: 2,
+                        height: 3, borderRadius: 999,
+                        background: '#2563eb',
+                        boxShadow: '0 0 0 4px rgba(37,99,235,0.10)',
+                      }} aria-hidden="true" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* No results */}
         {filteredSections.length === 0 && (
@@ -775,7 +848,7 @@ export default function HelpPage() {
               <div
                 key={section.id}
                 id={`section-${section.id}`}
-                className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden"
+                className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden scroll-mt-32"
               >
                 <div className="px-5 py-3 flex items-center gap-3 border-b border-slate-100 bg-slate-50">
                   <span className="text-xl" aria-hidden>{section.icon}</span>
@@ -788,17 +861,29 @@ export default function HelpPage() {
                 </div>
               </div>
             ) : (
-              <div key={section.id} id={`section-${section.id}`}>
+              <div key={section.id} id={`section-${section.id}`} className="scroll-mt-32">
                 <SectionAccordion section={section} />
               </div>
             )
           )}
         </div>
 
-        {/* Footer credit */}
-        <p className="text-center text-xs text-slate-400 mt-10 pb-4">
-          Delivery Clarity v2 &nbsp;&middot;&nbsp; © 2025 Ali Abu Ras &nbsp;&middot;&nbsp; aburasali80@gmail.com
-        </p>
+        {/* Footer */}
+        <div className="text-center mt-10 pb-4 space-y-3 border-t border-slate-200 pt-8">
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="btn-primary px-6 py-2.5"
+          >
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
+              <path d="M12 4 4 12h5v8h6v-8h5L12 4Z" />
+            </svg>
+            Back to Top
+          </button>
+          <p className="text-xs text-slate-400">
+            Delivery Clarity v2 &nbsp;&middot;&nbsp; © 2025 Ali Abu Ras &nbsp;&middot;&nbsp; aburasali80@gmail.com
+          </p>
+        </div>
       </div>
     </AppShell>
   );

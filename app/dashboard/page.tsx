@@ -573,8 +573,11 @@ export default function DashboardPage() {
     if (type === 'high-risk') setHealthFilter('critical');
     if (type === 'needs-review') setStatusFilter('in progress');
     if (type === 'blocked') setReasonFilter('block');
-    setFlowPanelOpen(true);
-    setTimeout(() => scrollTo('flow-health-panel'), 120);
+    // Only open and scroll to the flow panel if it is visible for the active view
+    if (!hideFlowPanel) {
+      setFlowPanelOpen(true);
+      setTimeout(() => scrollTo('flow-health-panel'), 120);
+    }
   };
 
   const clearFilters = () => {
@@ -826,7 +829,8 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* ── Gradient separator ── */}
+          {/* ── Gradient separator + filter row — hidden for views that hide the flow panel ── */}
+          {!hideFlowPanel && <>
           <div aria-hidden="true" style={{ height: 2, background: 'linear-gradient(90deg, rgba(37,99,235,0.45), rgba(139,92,246,0.32), rgba(20,184,166,0.32))' }} />
 
           {/* ── Single action row: filter pills + tools ── */}
@@ -834,87 +838,51 @@ export default function DashboardPage() {
 
             {/* ── Filter tabs — same style as section nav items above ── */}
             {([
-              { f: 'all',          label: 'All',          color: '#2563eb', bg: 'rgba(239,246,255,0.95)', iconPath: 'M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z' },
-              { f: 'high-risk',    label: 'High Risk',    color: '#ef4444', bg: 'rgba(254,242,242,0.95)', iconPath: 'M12 2 4 5.5v6.1c0 5 3.4 9.6 8 10.8 4.6-1.2 8-5.8 8-10.8V5.5L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V7h2v5Z' },
-              { f: 'blocked',      label: 'Blocked',      color: '#f97316', bg: 'rgba(255,247,237,0.95)', iconPath: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM7 11h10v2H7v-2Z' },
-              { f: 'needs-review', label: 'Needs Review', color: '#8b5cf6', bg: 'rgba(245,243,255,0.95)', iconPath: 'M12 5C7 5 3.2 8.1 1.6 12c1.6 3.9 5.4 7 10.4 7s8.8-3.1 10.4-7C20.8 8.1 17 5 12 5Zm0 10.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z' },
-            ] as const).map(({ f, label, color, bg, iconPath }) => {
+              { f: 'all',          label: 'All',          iconPath: 'M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z',                              activeCls: 'btn-primary',  inactiveCls: 'btn-secondary' },
+              { f: 'high-risk',    label: 'High Risk',    iconPath: 'M12 2 4 5.5v6.1c0 5 3.4 9.6 8 10.8 4.6-1.2 8-5.8 8-10.8V5.5L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V7h2v5Z',  activeCls: 'btn-danger',   inactiveCls: 'btn-secondary text-red-600 border-red-200 bg-red-50 hover:bg-red-100' },
+              { f: 'blocked',      label: 'Blocked',      iconPath: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM7 11h10v2H7v-2Z',                               activeCls: 'btn-secondary bg-orange-500 text-white border-orange-500 hover:bg-orange-600', inactiveCls: 'btn-secondary text-orange-600 border-orange-200 bg-orange-50 hover:bg-orange-100' },
+              { f: 'needs-review', label: 'Needs Review', iconPath: 'M12 5C7 5 3.2 8.1 1.6 12c1.6 3.9 5.4 7 10.4 7s8.8-3.1 10.4-7C20.8 8.1 17 5 12 5Zm0 10.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z', activeCls: 'btn-secondary bg-purple-600 text-white border-purple-600 hover:bg-purple-700',  inactiveCls: 'btn-secondary text-purple-600 border-purple-200 bg-purple-50 hover:bg-purple-100' },
+            ] as const).map(({ f, label, iconPath, activeCls, inactiveCls }) => {
               const isActive = activeQuickFilter === f;
               return (
                 <button key={f} type="button" onClick={() => applyQuickFilter(f)}
-                  style={{
-                    position: 'relative', display: 'inline-flex', alignItems: 'center',
-                    gap: 5, padding: '6px 10px', borderRadius: 12, border: 'none',
-                    cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
-                    minHeight: 44, whiteSpace: 'nowrap',
-                    transition: 'background 180ms, color 180ms',
-                    background: isActive ? `linear-gradient(180deg, ${bg}, rgba(241,245,249,0.72))` : 'transparent',
-                    color: isActive ? color : '#334155',
-                  }}>
-                  <svg viewBox="0 0 24 24" style={{ width: 12, height: 12, fill: isActive ? color : '#64748b', flexShrink: 0 }} aria-hidden="true">
+                  className={`${cn('inline-flex items-center gap-1.5 btn-sm', isActive ? activeCls : inactiveCls)}`}>
+                  <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current flex-shrink-0" aria-hidden="true">
                     <path d={iconPath} />
                   </svg>
                   {label}
-                  {isActive && (
-                    <span style={{
-                      position: 'absolute', left: 10, right: 10, bottom: -4,
-                      height: 3, borderRadius: 999, background: color,
-                      boxShadow: `0 0 0 4px ${color}1a`,
-                    }} aria-hidden="true" />
-                  )}
                 </button>
               );
             })}
 
             {/* Active count badge */}
             {activeFilterCount > 0 && (
-              <span style={{
-                fontSize: 10, fontWeight: 800, background: 'rgba(251,191,36,0.15)',
-                color: '#b45309', border: '1px solid rgba(180,83,9,0.25)',
-                borderRadius: 999, padding: '2px 8px', marginLeft: 4,
-              }}>{activeFilterCount} active</span>
+              <span className="btn-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 font-black">{activeFilterCount} active</span>
             )}
 
             {/* Divider */}
-            <span style={{ width: 1, height: 20, background: '#e2e8f0', margin: '0 6px', flexShrink: 0 }} aria-hidden="true" />
+            <span className="w-px h-5 bg-slate-200 mx-1 shrink-0" aria-hidden="true" />
 
             {/* Clear */}
-            <button type="button" onClick={clearFilters}
-              style={{
-                position: 'relative', display: 'inline-flex', alignItems: 'center',
-                gap: 5, padding: '6px 10px', borderRadius: 12, border: 'none',
-                cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
-                minHeight: 44, background: 'transparent', color: '#64748b', whiteSpace: 'nowrap',
-                transition: 'color 150ms',
-              }}>
-              <svg viewBox="0 0 24 24" style={{ width: 12, height: 12, fill: '#64748b' }} aria-hidden="true"><path d="m19 6.4-1.4-1.4L12 10.6 6.4 5 5 6.4l5.6 5.6L5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4Z" /></svg>
+            <button type="button" onClick={clearFilters} className="btn-secondary btn-sm gap-1.5">
+              <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current" aria-hidden="true"><path d="m19 6.4-1.4-1.4L12 10.6 6.4 5 5 6.4l5.6 5.6L5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4Z" /></svg>
               Clear
             </button>
 
-            {/* Show filters — highlighted like Actions tab */}
-            <button type="button" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 120); }}
-              style={{
-                position: 'relative', display: 'inline-flex', alignItems: 'center',
-                gap: 5, padding: '6px 10px', borderRadius: 12, border: 'none',
-                cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
-                minHeight: 44, whiteSpace: 'nowrap',
-                background: 'radial-gradient(circle at center, rgba(37,99,235,0.08), rgba(255,255,255,0))',
-                color: '#2563eb', transition: 'background 150ms',
-              }}>
-              <svg viewBox="0 0 24 24" style={{ width: 12, height: 12, fill: '#2563eb' }} aria-hidden="true"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5Zm4.4 2 4.6 5.2L16.6 7H7.4Z" /></svg>
-              Show filters
-            </button>
+            {/* Show filters — hidden when the flow panel is not available for this view */}
+            {!hideFlowPanel && (
+              <button type="button" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 120); }}
+                className="btn-primary btn-sm gap-1.5">
+                <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current" aria-hidden="true"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5Zm4.4 2 4.6 5.2L16.6 7H7.4Z" /></svg>
+                Show filters
+              </button>
+            )}
 
             {/* Copy link — only when filters active */}
             {activeFilterCount > 0 && (
-              <button type="button" onClick={() => copyToClipboard(window.location.href)} title="Copy shareable link"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 5,
-                  padding: '6px 10px', borderRadius: 12, border: 'none',
-                  cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
-                  minHeight: 44, background: 'transparent', color: '#334155', whiteSpace: 'nowrap',
-                }}>
-                <svg viewBox="0 0 24 24" style={{ width: 12, height: 12, fill: '#64748b' }} aria-hidden="true"><path d="M13.8 10.2a4 4 0 0 0-5.6 0l-4 4a4 4 0 1 0 5.6 5.6l1.1-1.1-1.4-1.4-1.1 1.1a2 2 0 1 1-2.8-2.8l4-4a2 2 0 0 1 2.8 2.8l-.8.8 1.4 1.4.8-.8a4 4 0 0 0 0-5.6Z" /></svg>
+              <button type="button" onClick={() => copyToClipboard(window.location.href)}
+                title="Copy shareable link" className="btn-secondary btn-sm gap-1.5">
+                <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current" aria-hidden="true"><path d="M13.8 10.2a4 4 0 0 0-5.6 0l-4 4a4 4 0 1 0 5.6 5.6l1.1-1.1-1.4-1.4-1.1 1.1a2 2 0 1 1-2.8-2.8l4-4a2 2 0 0 1 2.8 2.8l-.8.8 1.4 1.4.8-.8a4 4 0 0 0 0-5.6Z" /></svg>
                 <span className="hidden sm:inline">Copy link</span>
               </button>
             )}
@@ -974,6 +942,7 @@ export default function DashboardPage() {
               )}
             </div>
           </div>{/* /single action row */}
+          </>}{/* /hideFlowPanel guard */}
         </div>{/* /dashboard-sticky-bar */}
 
         {/* ── LARGE FILE WARNING BANNER ────────────────────────────────────────── */}
@@ -1159,11 +1128,11 @@ export default function DashboardPage() {
         {sectionVisible('overview') && (
         <section id="section-overview" className="dashboard-section mb-6 animate-slide-up">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <KpiCard label="Completion" value={`${metrics.completionRate}%`} detail={`${metrics.doneIssues} of ${metrics.totalIssues} done`} accent="#16a34a" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.healthScore} />
-            <KpiCard label="Health Alerts" value={(flow.critical || 0) + (flow.warning || 0)} detail={`${flow.critical || 0} critical · ${flow.warning || 0} warning`} accent="#dc2626" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
+            <KpiCard label="Completion" value={`${metrics.completionRate}%`} detail={`${metrics.doneIssues} of ${metrics.totalIssues} done`} accent="#16a34a" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.healthScore} />
+            <KpiCard label="Health Alerts" value={(flow.critical || 0) + (flow.warning || 0)} detail={`${flow.critical || 0} critical · ${flow.warning || 0} warning`} accent="#dc2626" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
             <KpiCard label="Active Work" value={metrics.activeIssues || 0} detail="In progress, review, QA, UAT" accent="#f59e0b" confidence={metrics.confidence?.teamCapacity} />
-            <KpiCard label="Lead Time" value={`${flow.averageLeadTimeDays || 0}d`} detail={`${flow.leadTimeSampleSize || 0} completed items`} accent="#2563eb" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.leadTime} />
-            <KpiCard label="Cycle Time" value={`${flow.averageCycleTimeDays || 0}d`} detail={`${flow.cycleTimeSampleSize || 0} items w/ start dates`} accent="#0f766e" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.cycleTime} />
+            <KpiCard label="Lead Time" value={`${flow.averageLeadTimeDays || 0}d`} detail={`${flow.leadTimeSampleSize || 0} completed items`} accent="#2563eb" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.leadTime} />
+            <KpiCard label="Cycle Time" value={`${flow.averageCycleTimeDays || 0}d`} detail={`${flow.cycleTimeSampleSize || 0} items w/ start dates`} accent="#0f766e" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.cycleTime} />
             <KpiCard label="Story Points" value={storyPoints.totalStoryPoints || 0} detail={`${storyPoints.pointCompletionRate || 0}% complete`} accent="#7c3aed" confidence={metrics.confidence?.storyPoints} />
           </div>
         </section>

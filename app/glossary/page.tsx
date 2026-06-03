@@ -1,5 +1,6 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
+import { useState, useEffect } from 'react';
 import AppShell from '@/components/layout/AppShell';
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -166,7 +167,7 @@ const SECTIONS = [
 
 function Section({ section }: { section: typeof SECTIONS[0] }) {
   return (
-    <section id={section.id} className="mb-10 scroll-mt-20">
+    <section id={section.id} className="mb-10 scroll-mt-32">
       <div className="flex items-center gap-3 mb-4">
         <span className="text-2xl">{section.icon}</span>
         <div>
@@ -210,12 +211,41 @@ function Section({ section }: { section: typeof SECTIONS[0] }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function GlossaryPage() {
+  const [activeId, setActiveId] = useState<string>(SECTIONS[0].id);
+
+  // Track which section is in view
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) { setActiveId(entry.target.id); break; }
+        }
+      },
+      { rootMargin: '-20% 0px -65% 0px' },
+    );
+    SECTIONS.forEach(s => {
+      const el = document.getElementById(s.id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  // Smooth scroll accounting for app header + sticky nav
+  function goTo(id: string) {
+    const el        = document.getElementById(id);
+    if (!el) return;
+    const header    = document.querySelector('header') as HTMLElement | null;
+    const nav       = document.getElementById('glossary-nav') as HTMLElement | null;
+    const offset    = (header?.offsetHeight ?? 56) + (nav?.offsetHeight ?? 48) + 12;
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
+  }
+
   return (
     <AppShell showNav>
       <div className="max-w-4xl mx-auto">
 
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-full px-3 py-1 text-xs font-bold text-blue-700 mb-3">
             📖 Reference
           </div>
@@ -225,28 +255,80 @@ export default function GlossaryPage() {
           </p>
         </div>
 
-        {/* Jump links */}
-        <div className="flex flex-wrap gap-2 mb-8 p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
-          <span className="text-xs font-black text-slate-400 uppercase tracking-wider self-center mr-2">Jump to:</span>
-          {SECTIONS.map(s => (
-            <a key={s.id} href={`#${s.id}`}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-full px-3 py-1 text-slate-600 hover:border-blue-400 hover:text-blue-700 transition-colors">
-              <span>{s.icon}</span>
-              {s.title.split(' — ')[1]}
-            </a>
-          ))}
+        {/* ── Sticky section nav ── */}
+        <div
+          id="glossary-nav"
+          className="sticky top-14 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 mb-8 print:hidden"
+          style={{
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(14px)',
+            borderBottom: '1px solid rgba(198,210,226,0.7)',
+            boxShadow: '0 4px 16px rgba(24,43,77,0.07)',
+          }}
+        >
+          <div className="flex flex-wrap items-end gap-0.5 py-1">
+            {SECTIONS.map(s => {
+              const active = activeId === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => goTo(s.id)}
+                  style={{
+                    position: 'relative',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '8px 10px 10px',
+                    borderRadius: 12,
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    fontFamily: 'inherit',
+                    whiteSpace: 'nowrap',
+                    background: active
+                      ? 'linear-gradient(180deg, rgba(239,246,255,0.95), rgba(241,245,249,0.72))'
+                      : 'transparent',
+                    color: active ? '#2563eb' : '#64748b',
+                    transition: 'background 150ms, color 150ms',
+                  }}
+                >
+                  <span style={{ fontSize: 13, lineHeight: 1 }}>{s.icon}</span>
+                  {s.title.split(' — ')[1]}
+                  {active && (
+                    <span style={{
+                      position: 'absolute',
+                      left: 10, right: 10, bottom: 2,
+                      height: 3, borderRadius: 999,
+                      background: '#2563eb',
+                      boxShadow: '0 0 0 4px rgba(37,99,235,0.10)',
+                    }} aria-hidden="true" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Sections */}
         {SECTIONS.map(s => <Section key={s.id} section={s} />)}
 
-        {/* Footer note */}
-        <div className="text-center py-8 border-t border-slate-200 mt-4">
-          <p className="text-xs text-slate-400">
-            © 2025 Ali Abu Ras · aburasali80@gmail.com · Delivery Clarity v3.0
-          </p>
-          <p className="text-xs text-slate-300 mt-1">
-            This glossary is also available as <code className="font-mono">product/APPENDIX.md</code> in the repository.
+        {/* Footer */}
+        <div className="text-center py-8 border-t border-slate-200 mt-4 space-y-4">
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="btn-primary px-6 py-2.5"
+          >
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
+              <path d="M12 4 4 12h5v8h6v-8h5L12 4Z" />
+            </svg>
+            Back to Top
+          </button>
+          <p className="text-xs text-slate-400">© 2025 Ali Abu Ras · aburasali80@gmail.com · Delivery Clarity v3.0</p>
+          <p className="text-xs text-slate-300">
+            Also available as <code className="font-mono">product/APPENDIX.md</code> in the repository.
           </p>
         </div>
 

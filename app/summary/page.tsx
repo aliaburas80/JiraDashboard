@@ -268,32 +268,55 @@ export default function SummaryPage() {
 
       {/* ── CTA buttons ── */}
       <div className="flex flex-wrap items-center justify-center gap-3 pt-2 pb-6">
+
+        {/* Upload */}
         <button type="button" onClick={() => router.push('/')} className="btn-secondary px-5 py-2.5">
           Upload New File
         </button>
-        <button type="button" onClick={async () => { if (metrics) await exportToExcel(metrics); }} className="btn-green px-5 py-2.5">
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M11 3h2v10.2l3.6-3.6L18 11l-6 6-6-6 1.4-1.4 3.6 3.6V3ZM5 19h14v2H5v-2Z"/></svg>
+
+        {/* Export Excel — dark emerald */}
+        <button type="button" onClick={async () => { if (metrics) await exportToExcel(metrics); }}
+          className="btn-green px-5 py-2.5" style={{ background: '#059669' }}>
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+            <path d="M11 3h2v10.2l3.6-3.6L18 11l-6 6-6-6 1.4-1.4 3.6 3.6V3ZM5 19h14v2H5v-2Z"/>
+          </svg>
           Export Excel
         </button>
-        <button type="button" onClick={() => metrics && exportToHtml(metrics)} className="btn-green px-5 py-2.5">
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M4 19h16v2H2V3h2v16Zm3-2 4-5 3 3.5L19 8l1.7 1.1-6.5 9.8-3.1-3.6L8.5 18 7 17Z"/></svg>
+
+        {/* Export HTML — lighter sea-green with globe icon */}
+        <button type="button" onClick={() => metrics && exportToHtml(metrics)}
+          className="btn-green px-5 py-2.5" style={{ background: '#10b981' }}>
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+            <path d="M4.5 11h3.03L6 7.5h2l1.5 3.5H13l-1.5-3.5H13l4.5 3.5-4.5 3.5h-1.5l1.5-3.5H9.5L8 14.5H6l1.53-3.5H4.5V11ZM12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z"/>
+          </svg>
           Export HTML
         </button>
+
+        {/* View Charts — blue */}
         <button type="button" onClick={() => router.push('/charts')} className="btn-primary px-5 py-2.5">
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M4 19h16v2H2V3h2v16Zm3-2 4-5 3 3.5L19 8l1.7 1.1-6.5 9.8-3.1-3.6L8.5 18 7 17Z"/></svg>
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+            <path d="M4 20h16v2H2V2h2v18Zm4-2V8h3v10H8Zm5 0V4h3v14h-3Zm5 0v-6h3v6h-3Z"/>
+          </svg>
           View Charts
         </button>
+
+        {/* View Full Report — near-black */}
         <button type="button" onClick={() => router.push('/dashboard')} className="btn-dark px-5 py-2.5">
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/></svg>
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+            <path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/>
+          </svg>
           View Full Report
         </button>
-        <button
-          type="button"
-          onClick={() => router.push('/customer')}
-          className="btn-primary px-5 py-2.5 bg-teal-600 hover:bg-teal-700"
-        >
-          👤 Customer View
+
+        {/* Customer View — teal with person icon */}
+        <button type="button" onClick={() => router.push('/customer')}
+          className="btn-green px-5 py-2.5" style={{ background: '#0d9488' }}>
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+            <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4Z"/>
+          </svg>
+          Customer View
         </button>
+
       </div>
     </AppShell>
   );
