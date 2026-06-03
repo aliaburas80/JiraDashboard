@@ -403,15 +403,6 @@ export default function DashboardPage() {
     finally { setLoading(false); }
   }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Save recommendation snapshot and load history when smartActions settle
-  useEffect(() => {
-    if (!metrics || smartActions.length === 0) return;
-    saveRecSnapshot(metrics.healthScore ?? 0, smartActions.map(a => ({
-      type: a.type, icon: a.icon, title: a.title, detail: a.detail,
-    })));
-    setRecHistory(getRecHistory());
-  }, [smartActions]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Sync filter state → URL query params (replaceState = no history entry)
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -545,6 +536,15 @@ export default function DashboardPage() {
         detail: `${rels.blockedItems[0].key} is blocked by ${rels.blockedItems[0].blockedBy}` });
     return acts.slice(0, 5);
   }, [flowItems, metrics?.capacity, metrics?.relations, epicReadiness]);
+
+  // Save recommendation snapshot and load history — must be after smartActions useMemo
+  useEffect(() => {
+    if (!metrics || smartActions.length === 0) return;
+    saveRecSnapshot(metrics.healthScore ?? 0, smartActions.map(a => ({
+      type: a.type, icon: a.icon, title: a.title, detail: a.detail,
+    })));
+    setRecHistory(getRecHistory());
+  }, [smartActions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── All hooks are now above this line. Early returns are safe here. ─────────
   if (loading) return <AppShell showNav><LoadingState message="Loading dashboard…" /></AppShell>;
