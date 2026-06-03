@@ -300,15 +300,18 @@ SORT recommendations: Critical → High → Medium → Low
 
 **Problem:** Computed metrics are stored in `localStorage` under `dc_` prefixed keys. When users return to the app, stale data from a previous upload persists. Users need a safe, guided way to clear this data without accidentally clearing unrelated browser data or deleting server records.
 
-**How it works (planned — P1.2):**
-1. On the Upload/Landing page, the app calls `hasMetrics()` (checks for `dc_metrics` key) on mount.
-2. If stored data is detected, a "Stored data found" notice is shown with a "Clear stored data" button.
-3. The clear action shows a confirmation modal warning that the action may end the current session.
-4. On confirm, a `clearDeliveryData()` function removes all keys matching the `dc_` prefix from both `localStorage` and `sessionStorage`. If session cookies are cleared, the user is redirected to `/login`.
-5. The action does NOT delete server-side import logs or database records.
-6. The same action is available in Admin settings for administrators.
+**How it works (implemented — P1.2):**
+1. On mount, `app/page.tsx` calls `hasLocalData()` from `src/lib/clearLocalData.ts`. This checks all 11 fixed `DC_FIXED_KEYS` plus any dynamic `dc_col_order_*` keys in `localStorage`.
+2. If stored data is found, an amber banner appears: "Stored Delivery Clarity data was found in this browser."
+3. User clicks "Clear Local Data" → `ConfirmDeleteDialog` opens with title "Clear Local Data?" and warning: "This will remove local data and may end your current session."
+4. On confirm, `clearLocalData()` removes each key individually (never uses `localStorage.clear()`) — only `dc_*` keys are touched.
+5. `sessionStorage` `dc_*` keys are also cleared.
+6. The action does NOT call any API endpoint — server-side import logs and database records are unaffected.
+7. The same `ClearLocalDataPanel` component is available in Admin Settings → Browser Data tab.
 
-**Implementation:** Planned — `src/lib/storage.ts` — `clearDeliveryData()`; `app/page.tsx` (detection + button); `app/admin/settings/page.tsx` (admin panel)
+**Key invariant:** `clearLocalData()` uses an explicit allowlist (`DC_FIXED_KEYS`) plus a prefix scan (`dc_col_order_`). Any key not matching is guaranteed to be preserved.
+
+**Implementation:** `src/lib/clearLocalData.ts` — `hasLocalData()`, `clearLocalData()`, `DC_FIXED_KEYS`; `src/components/admin/ClearLocalDataPanel.tsx`; `app/page.tsx` (detection banner + modal)
 
 ---
 
@@ -316,18 +319,38 @@ SORT recommendations: Critical → High → Medium → Low
 
 **Problem:** The dashboard shows all sections simultaneously, creating visual overwhelm for users who only need one area of information at a time (e.g., a Scrum Master looking only at sprint health).
 
-**How it works (planned — P1.3):**
-1. A `DashboardSectionSwitcher` component is placed at the top of the dashboard, immediately after the main Overview section.
-2. It maintains state: `viewMode` (overview | single-section | full) and `activeSection` (one of the section keys).
-3. In overview mode (default): the full top summary is visible; heavy detail sections are hidden.
-4. In single-section mode: only the selected section is visible; all others are hidden.
-5. In full mode: all sections are visible (existing behaviour).
-6. Section visibility changes are animated using CSS transitions (opacity 0→1, transform translateY 8px→0, 180ms ease).
-7. When `prefers-reduced-motion: reduce` is detected, transitions are disabled (instant show/hide).
-8. Clicking a section button triggers `scrollIntoView({ behavior: 'smooth', block: 'start' })` — instant scroll if reduced motion is active.
+**How it works (implemented — P1.3):**
+1. `DashboardSectionSwitcher` renders as a sticky tab bar (`sticky top-14 z-30`) with a gradient lightning-bolt brand mark, 14 named section tabs, and Full / Overview mode buttons.
+2. Dashboard state holds `sectionMode: 'full' | 'overview' | string`. Three helper functions derive visibility:
+   - `isModeVisible(key)` — returns `true` if `key` should be shown for the current mode
+   - `sectionHeaderVisible(key)` — `!isHidden(key) && isModeVisible(key)` — controls `CollapsibleTrigger` rendering
+   - `sectionVisible(key)` — `!isHidden(key) && isModeVisible(key)` (in non-full modes, sections auto-expand)
+3. `OVERVIEW_KEYS = { overview, attention, recommendations }` — these three sections show in Overview mode.
+4. Section tab clicks call `focusSection(key)`: sets `sectionMode`, ensures section is in `expandedSections`, then calls `window.scrollTo` with offset = `header.offsetHeight + stickyBar.offsetHeight + 12px` measured dynamically.
+5. All 14 `<section>` elements carry `className="dashboard-section animate-slide-up"`. The `animate-slide-up` keyframe is `{ from: opacity:0; transform:translateY(16px) }`. `@media (prefers-reduced-motion: reduce)` disables the animation.
+6. `SectionNav` (right-side dot sidebar) uses `IntersectionObserver` with `rootMargin: "-20% 0px -70% 0px"` to track which section is most visible and highlights the corresponding dot.
+7. Role-based view `isHidden(key)` always takes priority over `sectionMode` — a section hidden by the Executive view cannot be revealed by the switcher.
+8. The entire sticky bar (switcher + filter row) has `print:hidden`; `SectionNav` is wrapped in `print:hidden`.
 
-**Implementation:** Planned — `src/components/dashboard/DashboardSectionSwitcher.tsx`; `app/dashboard/page.tsx`
+**Implementation:** `src/lib/dashboardSections.ts`; `src/components/dashboard/DashboardSectionSwitcher.tsx`; `src/components/ui/SectionNav.tsx`; `app/dashboard/page.tsx` — `sectionMode` state, `focusSection()`, `sectionHeaderVisible()`, `sectionVisible()`
 
 ---
 
-*© 2026 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity v4.0*
+## Method 14: Pill Button Design System
+
+**Problem:** Pre-v4.1, buttons across the app used inconsistent shape (mix of `rounded-full`, `rounded-lg`, `rounded-xl`), inconsistent colour semantics, and no shared baseline — each page styled buttons independently.
+
+**How it works (implemented — v4.1):**
+1. Nine utility classes are defined in `app/globals.scss` under `@layer components`, all using `border-radius: 9999px` (fully rounded pill):
+   - `btn-primary` (blue `#2563eb` filled), `btn-secondary` (white outlined), `btn-ghost` (transparent)
+   - `btn-danger` (red filled), `btn-outline-danger` (red outlined → fills on hover)
+   - `btn-green` (emerald filled), `btn-dark` (slate-900 filled), `btn-warning` (amber outlined)
+   - `btn-sm` / `btn-xs` size modifiers
+2. Every `<button>` and `<a>` acting as a button in the app uses one of these classes. No custom padding/colour/radius outside these classes.
+3. For colour overrides within a variant (e.g. teal Customer View), inline `style={{ background: "#hex" }}` is used — the pill shape and font weight are still inherited from the base class.
+
+**Implementation:** `app/globals.scss` — 9 classes; applied across all pages and components
+
+---
+
+*© 2026 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity v4.1*

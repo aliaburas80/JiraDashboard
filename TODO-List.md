@@ -292,14 +292,14 @@
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| UX-31 | Update `product/SRS.md` for P1.1, P1.2, P1.3 | P1 | ❌ Not started |
-| UX-32 | Update `product/BRD.md` for P1.1, P1.2, P1.3 | P1 | ❌ Not started |
-| UX-33 | Update `product/USE_CASES.md` for P1.2 and P1.3 | P1 | ❌ Not started |
-| UX-34 | Update `product/USER_JOURNEYS.md` for P1.2 and P1.3 | P1 | ❌ Not started |
-| UX-35 | Update `product/SCENARIOS.md` for P1.2 and P1.3 | P1 | ❌ Not started |
-| UX-36 | Update `product/TEST_CASES.md` for P1.1, P1.2, P1.3 | P1 | ❌ Not started |
-| UX-37 | Update `product/TECHNICAL_METHOD.md` for P1.2 and P1.3 methods | P1 | ❌ Not started |
-| UX-38 | Update `product/RELEASE_NOTES.md` when P1.1, P1.2, P1.3 are done | P1 | ❌ Not started |
+| UX-31 | Update `product/SRS.md` for P1.1, P1.2, P1.3 | P1 | ✅ Done — FR-286–289 + A.19/A.20 added |
+| UX-32 | Update `product/BRD.md` for P1.1, P1.2, P1.3 | P1 | ✅ Done — BR-091–094 added |
+| UX-33 | Update `product/USE_CASES.md` for P1.2 and P1.3 | P1 | ✅ Done — UC-060–062 added |
+| UX-34 | Update `product/USER_JOURNEYS.md` for P1.2 and P1.3 | P1 | ✅ Done — UJ-020–021 added |
+| UX-35 | Update `product/SCENARIOS.md` for P1.2 and P1.3 | P1 | ✅ Done — SCN-023 (Clear Local Data), SCN-024 (Executive view), SCN-025 (Section Switcher) added |
+| UX-36 | Update `product/TEST_CASES.md` for P1.1, P1.2, P1.3 | P1 | ✅ Done — TC-CLD, TC-DS, TC-GH, TC-EV added |
+| UX-37 | Update `product/TECHNICAL_METHOD.md` for P1.2 and P1.3 methods | P1 | ✅ Done — Methods 12/13 updated to reflect actual implementation; Method 14 (Pill Button System) added |
+| UX-38 | Update `product/RELEASE_NOTES.md` when P1.1, P1.2, P1.3 are done | P1 | ✅ Done — v4.1 section added |
 
 ---
 

@@ -776,3 +776,63 @@ You click "← Back" and you're back on the dashboard, right where you were.
 5. Developer uses the formula in their alerting system
 
 **Outcome:** Developer builds a correct integration without guessing at calculation details.
+
+
+---
+
+### SCN-023 — User Clears Stale Browser Data Before New Upload
+
+**Persona:** Jordan, Scrum Master  
+**Context:** Jordan uploaded a sprint file last week. Today they return to upload a new file but the dashboard is showing old data.
+
+**Scenario:**
+1. Jordan navigates to the Upload page (`/`)
+2. An amber banner appears: **"Stored Delivery Clarity data was found in this browser."**
+3. Jordan clicks "Clear Local Data" — a confirmation modal opens:
+   - Title: "Clear Local Data?"
+   - Warning: "This will remove local data and may end your current session. You may need to log in again."
+4. Jordan clicks "Yes, clear it"
+5. All `dc_*` localStorage/sessionStorage keys are removed
+6. A green banner appears: "Local data cleared. Upload a new file to start fresh."
+7. Jordan uploads the new sprint file; the dashboard shows current data
+
+**Outcome:** Jordan eliminates stale cached data without needing DevTools or IT support.
+
+---
+
+### SCN-024 — C-Level Executive Reviews Dashboard Without Technical Noise
+
+**Persona:** Emma, VP of Engineering  
+**Context:** Emma needs to present delivery health at a board meeting. She does not need to see the issue-level flow table or sprint filters.
+
+**Scenario:**
+1. Emma opens `/dashboard` — full view loads with all technical sections
+2. She selects "Executive" from the view selector
+3. The sticky bar filter row (All / High Risk / Blocked / Needs Review / Clear / Show filters) disappears
+4. The Story / Task Flow Health section disappears
+5. Only visible: health score, key KPIs, Smart Recommendations, Priority Attention, Delivery Mix, Epic Readiness
+6. Emma selects "Readiness" in the section switcher — page smooth-scrolls to Epic Health & Release Readiness
+7. She exports the Excel report for the board
+
+**Outcome:** Emma gets a clean executive view with no technical clutter, appropriate for board-level communication.
+
+---
+
+### SCN-025 — Engineering Manager Uses Section Switcher for Focused Review
+
+**Persona:** Carlos, Engineering Manager  
+**Context:** Carlos wants to review only sprint performance without scrolling through the entire dashboard.
+
+**Scenario:**
+1. Carlos opens `/dashboard` in Full mode
+2. He clicks "Sprints" in the sticky section tab bar
+3. The page smooth-scrolls to the Sprint Status section; all other sections are hidden
+4. The active "Sprints" tab shows a blue underline indicator
+5. Carlos reviews SprintThroughputPanel and MidSprintDeliveryPanel
+6. He clicks "Full" to restore the complete dashboard view
+
+**Outcome:** Carlos focuses on exactly what he needs in seconds, without manual scrolling or collapsing unrelated sections.
+
+---
+
+*© 2026 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity v4.1*
