@@ -352,7 +352,7 @@
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| 9.28 | Recommendation feedback buttons | P2 | ❌ Not started |
+| 9.28 | Recommendation feedback buttons | P2 | ✅ Done — 👍/👎 buttons on each rec card, toggle behaviour, localStorage persistence, 8 tests passing |
 | 9.29b | Recommendation history | P2 | ❌ Not started |
 | 9.29 | Work Item Explorer export | P2 | ❌ Not started |
 | 9.30 | Release confidence trend | P2 | ❌ Not started |

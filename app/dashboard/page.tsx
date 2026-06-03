@@ -15,6 +15,7 @@ import { exportToExcel, exportToHtml } from '@/lib/exportUtils';
 import { loadMetrics } from '@/lib/storage';
 import { loadPresets, savePreset, deletePreset, type FilterPreset } from '@/lib/filterPresets';
 import { recKey, isMuted, muteRec, snoozeRec, restoreAll, getActiveMuted, type MutedRec } from '@/lib/mutedRecommendations';
+import { getVote, castVote, type FeedbackVote } from '@/lib/recFeedback';
 import SprintThroughputPanel from '@/components/dashboard/SprintThroughputPanel';
 import MidSprintDeliveryPanel from '@/components/dashboard/MidSprintDeliveryPanel';
 import KanbanThroughputPanel from '@/components/dashboard/KanbanThroughputPanel';
@@ -287,6 +288,13 @@ export default function DashboardPage() {
   const [mutedRecs, setMutedRecs]         = useState<MutedRec[]>([]);
   const [snoozeMenuKey, setSnoozeMenuKey] = useState<string | null>(null);
   const [showMuted, setShowMuted]         = useState(false);
+  // rec feedback votes — keyed by recKey; re-render on change via counter
+  const [feedbackTick, setFeedbackTick]   = useState(0);
+  const getRecVote = (key: string) => getVote(key);
+  function handleFeedback(key: string, title: string, vote: FeedbackVote) {
+    castVote(key, title, vote);
+    setFeedbackTick(t => t + 1);
+  }
 
   const toggleSection = (key: string) =>
     setExpandedSections(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
@@ -1013,6 +1021,39 @@ export default function DashboardPage() {
                           <p className="text-sm font-bold text-slate-800 mb-1">{action.title}</p>
                           <p className="text-xs text-slate-600 mb-2">{action.detail}</p>
                           {!muted && <p className="text-xs font-bold text-blue-600">Go to details →</p>}
+                          {/* Feedback buttons */}
+                          {(() => {
+                            const vote = getRecVote(key);
+                            return (
+                              <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-200/60" onClick={e => e.stopPropagation()}>
+                                <span className="text-[10px] text-slate-400 font-semibold mr-1">Helpful?</span>
+                                <button
+                                  type="button"
+                                  title="Mark as helpful"
+                                  onClick={() => handleFeedback(key, action.title, 'helpful')}
+                                  className={cn('inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border transition-colors',
+                                    vote === 'helpful'
+                                      ? 'bg-green-600 text-white border-green-600'
+                                      : 'bg-white text-slate-500 border-slate-200 hover:border-green-400 hover:text-green-600'
+                                  )}
+                                >
+                                  👍 {vote === 'helpful' ? 'Thanks!' : 'Yes'}
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Mark as not helpful"
+                                  onClick={() => handleFeedback(key, action.title, 'not_helpful')}
+                                  className={cn('inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border transition-colors',
+                                    vote === 'not_helpful'
+                                      ? 'bg-red-600 text-white border-red-600'
+                                      : 'bg-white text-slate-500 border-slate-200 hover:border-red-400 hover:text-red-600'
+                                  )}
+                                >
+                                  👎 No
+                                </button>
+                              </div>
+                            );
+                          })()}
                         </button>
                         {/* Mute / snooze controls — revealed on hover */}
                         <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
