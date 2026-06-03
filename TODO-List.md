@@ -247,11 +247,11 @@
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| UX-01 | Verify Calculation Reference exists in `/developer` blue side menu as its own clearly labelled item | P1 | ❌ Not started |
-| UX-02 | If not visible, add `Calculation Reference` as distinct menu item (not buried under Help or Metrics) | P1 | ❌ Not started |
-| UX-03 | Active state styling when Calculation Reference is selected | P1 | ❌ Not started |
-| UX-04 | Each calculation must explain: what it is, data source, why used, formula, benefit, alternatives, assumptions, limitations, related code, related doc | P1 | ❌ Not started |
-| UX-05 | Ensure Calculation Reference is visually separate from Package Reference | P1 | ❌ Not started |
+| UX-01 | Verify Calculation Reference exists in `/developer` blue side menu as its own clearly labelled item | P1 | ✅ Done — confirmed: `🧮 Calculation Reference` in Reference group |
+| UX-02 | If not visible, add `Calculation Reference` as distinct menu item (not buried under Help or Metrics) | P1 | ✅ Done — already present, no action needed |
+| UX-03 | Active state styling when Calculation Reference is selected | P1 | ✅ Done — blue bg-blue-600 active state already implemented |
+| UX-04 | Each calculation must explain: what it is, data source, why used, formula, benefit, alternatives, assumptions, limitations, related code, related doc | P1 | ✅ Done — added `usedIn` + `alternatives` fields to all 24 calculations; render updated to 7-field grid |
+| UX-05 | Ensure Calculation Reference is visually separate from Package Reference | P1 | ✅ Done — separate buttons in same Reference group, visually distinct |
 
 ### P1.2 — Clear Local Data
 
