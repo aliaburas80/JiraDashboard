@@ -763,3 +763,5 @@ The following metrics define product success and will be measured at 30, 90, and
 **BR-093 (Must):** The `/glossary` and `/help` pages MUST each include a sticky section navigation bar that tracks the active section and supports keyboard-accessible smooth scrolling. A "Back to Top" button MUST appear at the page footer. This reduces scrolling friction on long reference pages.
 
 **BR-094 (Must):** Dashboard filter row and flow panel entry points MUST be hidden for views that restrict flow panel access (Executive, Product Owner). C-level and product users MUST NOT see the technical issue-level table. This is a role-based information access requirement.
+
+**BR-095 (Should — P2):** The Smart Recommendations section MUST maintain a history of up to 10 recommendation snapshots. Users MUST be able to see which recommendations are new since their last upload, which have been resolved, and browse the full history. This supports continuous improvement tracking over time.

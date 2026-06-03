@@ -2306,3 +2306,15 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 3. Filter row (All/High Risk/Blocked), Show filters button, and Flow Health Panel are hidden
 4. Executive cannot accidentally navigate to issue-level technical detail
 **Related FR:** FR-289, BR-094
+
+### UC-063 — User Tracks Recommendation Progress Over Multiple Uploads
+
+**Actor:** Scrum Master  
+**Trigger:** User uploads a new Jira export after addressing some issues  
+**Main Flow:**
+1. New metrics load; dashboard shows Smart Recommendations
+2. Resolved section shows: "✅ Resolved since last upload (2)" — items fixed since previous export
+3. NEW badges appear on newly detected issues
+4. User clicks "View history (3 previous snapshots)" to see full timeline
+5. Each past snapshot shows date, health score, and recommendation list
+**Related FR:** FR-289

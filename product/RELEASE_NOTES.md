@@ -229,3 +229,12 @@
   - Visual state: active vote = solid filled pill (green/red); inactive = outlined
   - `castVote`, `getVote`, `clearVote`, `clearAllFeedback`, `getFeedbackSummary` API in `src/lib/recFeedback.ts`
   - 8 automated tests passing (TC-RF-01–08)
+
+### P2 — Recommendation History (9.29b)
+- Snapshots saved to `dc_rec_history` (max 10) each time recommendations change
+- Deduplication: identical rec titles do not create a new snapshot
+- **NEW badge** on recommendation cards that appeared since the previous upload
+- **Resolved section**: strikethrough list of recs fixed since the last upload
+- **History panel**: collapsible, shows up to 9 past snapshots with date, health score, and rec list
+- `saveRecSnapshot`, `getRecHistory`, `getNewTitles`, `getResolvedRecs`, `clearRecHistory` in `src/lib/recHistory.ts`
+- 8 automated tests passing (TC-RH-01–08)
