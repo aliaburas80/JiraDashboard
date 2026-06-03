@@ -7,8 +7,8 @@
 | Field | Detail |
 |---|---|
 | **Document Title** | Delivery Clarity — Business Requirements Document |
-| **Version** | 1.0 |
-| **Date** | 2026-05-30 |
+| **Version** | 4.0 |
+| **Date** | 2026-06-03 |
 | **Author** | Ali Abu Ras |
 | **Status** | Approved |
 | **Classification** | Internal |
@@ -22,6 +22,7 @@
 | 0.3 | 2026-05-12 | Ali Abu Ras | Expanded dashboard sections, business rules, risk register |
 | 0.4 | 2026-05-22 | Ali Abu Ras | Incorporated roadmap items into Future Scope; added glossary |
 | 1.0 | 2026-05-30 | Ali Abu Ras | Final review, all sections complete — approved for development baseline |
+| 4.0 | 2026-06-03 | Ali Abu Ras | v4 Quality & Trust Layer; scope updated; auth and database now in scope; BR-070–BR-090 added |
 
 ---
 
@@ -157,34 +158,58 @@ The following capabilities are in scope for the current v1.0 release of Delivery
 - Quick filter bar with five preset filter modes
 - Export risk report as CSV download
 
-### Out of Scope (Current)
+### In Scope (v4.0 — Current)
 
-The following capabilities are explicitly not included in v1.0:
+The following capabilities are implemented and in scope as of v4.0:
 
-- Real-time Jira API integration or OAuth authentication with Jira Cloud or Server
-- User authentication, login, or session management within the application itself
-- Multi-user workspaces, team separation, or role-based access control
-- Persistent storage of dashboard state between sessions (browser refresh clears state)
-- Historical comparison across multiple uploads (sprint-over-sprint trending)
-- Scheduled or automated report delivery via email or messaging platforms
+- File upload and parsing (CSV/XLSX/XLS, max 20 MB, multi-file merge up to 10 files)
+- Metrics calculation pipeline covering all delivery dimensions
+- Delivery Health Score (0–100), smart recommendations, executive summary
+- **User authentication** — login, register, profile, role management (user/admin)
+- **Multi-user sessions** — iron-session HTTP-only cookies, session TTL configurable
+- **SQLite database persistence** via Prisma 5 — User, ImportLog, DashboardSnapshot, AuditEvent
+- **Role-based access control** — admin users see all import logs, access admin pages
+- **Data Quality Score** and Metric Confidence Score
+- **Missing-column impact explanation**
+- **Column-mapping preview** before dashboard generation
+- **Saved dashboard snapshots** and **snapshot comparison**
+- **Upload-to-upload trend analysis** and "What changed?" panel
+- **Configurable health thresholds** and orphan detection rules
+- **Recommendation mute/snooze**
+- **Customer View** (`/customer`) — stakeholder-facing summary
+- **Role-based dashboard views** — 5 curated presets
+- **Release Readiness checklist** (`/readiness`)
+- **Database backup and restore**
+- **Production security checklist** (`/admin/security`)
+- **Docker deployment** — Dockerfile + docker-compose
+- **Privacy and data-retention controls**
+- F1 Throughput Analytics, F2 Work Item Explorer, F3 Auth & Database, F4 Smart Excel Export
+- Mobile responsiveness including `/explore` mobile polish
+- Performance optimised for 5,000+ issues
+
+### Out of Scope (v4.0 — Not Yet Implemented)
+
+- Real-time Jira API integration or OAuth authentication with Jira (P3 roadmap)
+- Scheduled email or Slack report delivery (P4 roadmap)
 - Native mobile application (iOS or Android)
-- Custom health threshold configuration per project or team
-- AI-generated delivery narrative (planned for future roadmap)
-- SQLite or relational database persistence of import logs
-- Multi-file or multi-project comparative analysis within a single session
+- S3 / Azure / GCP cloud storage (P3 roadmap)
+- In-app Notification Center (P4 roadmap)
+- Maintenance Mode (P4 roadmap)
+- Jira write-back or ticket creation (P3 roadmap)
+- AI-generated narrative via external LLM API (unscheduled)
 
-### Future Scope (Roadmap Items)
+### Planned P1 (Queued — Not Yet Started)
 
-The following items are identified in the product roadmap for consideration in post-v1.0 releases:
+- Calculation Reference clearly visible in `/developer` blue side menu (P1.1)
+- Clear Local Data — Admin window + Upload page with detection, warning, confirmation (P1.2)
+- Dashboard Section Show/Hide controls — Overview/Single/Full modes, smooth scroll, animation (P1.3)
 
-- **Jira OAuth / API token direct connection** — eliminate the manual export step; auto-refresh dashboard from live Jira data
-- **Historical comparison** — sprint-over-sprint and period-over-period health trending with visualised delta charts
-- **User authentication and project workspaces** — support for team-level workspaces with separated import history and saved configurations
-- **Scheduled email / Slack reports** — automated delivery of Manager Quick Overview to nominated recipients on a defined schedule
-- **Custom health thresholds per project** — allow teams to configure their own warning/critical thresholds for cycle time, age, and load
-- **SQLite persistence** — replace the flat JSON import log with a proper SQLite store to support concurrent uploads and historical querying
-- **Component refactor** — split `DashboardPage.js` into focused, independently testable sub-components
-- **AI-generated delivery narrative** — integrate with the Claude API to produce a plain-language delivery narrative from all health signals
+### Future Scope (P2/P3/P4 Roadmap)
+
+- **P2** Admin Storage & Backup (S3, Azure, GCP) — architecture design only at this stage
+- **P2/P3** Optional Jira API Integration — read-only; export-first model remains default
+- **P4** Admin & System Notification Center — in-app notifications, admin-to-user messaging
+- **P4** Maintenance Mode — admin-controlled maintenance screen with audit log
 
 ---
 
@@ -675,3 +700,53 @@ The following metrics define product success and will be measured at 30, 90, and
 **BR-068 (Must):** Every recommendation MUST carry: priority, area, text, evidence, impact, suggested owner, and suggested action.
 
 **BR-069 (Must):** The Metric Dictionary sheet MUST define every metric used in the workbook.
+
+---
+
+## Revision Note — v4.0 (2026-06-03)
+
+### v4 — Quality & Trust Layer (Implemented)
+
+**BR-070 (Must):** The system MUST calculate and display a Data Quality Score (0–100%) after every upload based on 10 data completeness checks. This is a business capability: it enables teams to understand the reliability of their delivery data before acting on it.
+
+**BR-071 (Must):** The system MUST display a per-KPI Metric Confidence badge (High / Medium / Low / Unreliable / N/A) explaining which fields are missing and how that affects the metric. This is a trust feature: it prevents users from making decisions based on misleading numbers.
+
+**BR-072 (Must):** The system MUST explain, per missing field, which dashboard metrics are degraded and what the user would gain by improving their Jira data. This is an explainability feature: it gives users a clear, prioritised action plan.
+
+**BR-073 (Must):** Admin users MUST be able to configure data retention period for import logs. This is a compliance and governance feature enabling organisations to meet data minimisation requirements.
+
+**BR-074 (Must):** Users MUST be able to save, load, and delete named dashboard snapshots. This enables sprint-over-sprint and quarter-over-quarter comparison without requiring re-upload.
+
+**BR-075 (Must):** The snapshot comparison view MUST show delta values for 12 key metrics between any two snapshots. This enables engineering managers to demonstrate delivery improvement to stakeholders.
+
+**BR-076 (Must):** The system MUST provide upload-to-upload trend charts for 8 metrics over the last 30 uploads. This is a historical performance visibility feature.
+
+**BR-077 (Must):** The "What changed since last upload?" panel MUST automatically compare current and previous uploads and generate a plain-English narrative. This replaces manual sprint review preparation.
+
+**BR-078 (Should):** Scrum Masters and Engineering Managers MUST be able to configure health thresholds (cycle time, lead time, active age, orphan ratio) via the admin settings UI. This is an adaptability requirement: different teams have different delivery norms.
+
+**BR-079 (Should):** Users MUST be able to mute or snooze individual recommendations for 7 days, 30 days, or permanently. This prevents recommendation fatigue and ensures high-signal recommendations stay visible.
+
+**BR-080 (Must):** A Role-based View selector MUST allow users to switch between 5 curated dashboard presets: Full Report, Executive, Scrum Master, Product Owner, Engineering Manager. This is a stakeholder communication feature.
+
+**BR-081 (Must):** A Customer View page (`/customer`) MUST present delivery health in a format suitable for non-technical stakeholders with print/PDF capability. This is an executive reporting feature.
+
+**BR-082 (Must):** A Release Readiness checklist (`/readiness`) MUST evaluate Go/Conditional Go/No-Go per Fix Version using a 7-item checklist. This is a release governance feature.
+
+**BR-083 (Should):** The production security checklist (`/admin/security`) MUST provide a 0–100 security score and production-ready flag to help self-hosters verify their deployment is safe.
+
+**BR-084 (Should):** A Dockerfile and docker-compose configuration MUST be provided to enable one-command deployment for teams without Node.js server expertise.
+
+### v4 — Planned P1 UX Improvements (BR-085–BR-090)
+
+**BR-085 (Must — P1.1):** The Calculation Reference in `/developer` MUST be clearly visible as its own labelled item in the blue side menu. Each calculation must document its formula, data source, why it is used, business benefit, assumptions, and limitations. This is a product transparency and trust feature.
+
+**BR-086 (Must — P1.2):** A "Clear Local Data" action MUST appear in Admin settings and on the Upload/Landing page (when stored data is detected). It MUST clear Delivery Clarity browser data with a session-end warning and confirmation. This is a data privacy and troubleshooting feature.
+
+**BR-087 (Must — P1.2):** The Upload/Landing page MUST detect stored Delivery Clarity browser data and show a clear option to reset it. This helps users who return to the app and see stale data from a previous upload.
+
+**BR-088 (Must — P1.3):** The dashboard MUST provide a Section Switcher control placed after the main Overview section. It MUST support Overview mode (default — high-level only), Single Section mode, and Full View mode. This prevents dashboard overwhelm and supports focused review.
+
+**BR-089 (Must — P1.3):** Section visibility changes MUST animate smoothly (CSS opacity + transform transitions, 180ms). Reduced-motion users MUST receive instant transitions. This is a professional UX quality requirement.
+
+**BR-090 (Must — P1.3):** Clicking a section button MUST smooth-scroll to that section. This is a navigation clarity requirement.

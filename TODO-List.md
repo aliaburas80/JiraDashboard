@@ -220,19 +220,19 @@
 
 | # | Document | What is behind | Priority | Status |
 |---|----------|----------------|----------|--------|
-| DOC-01 | `product/SRS.md` | Says auth out of scope — auth is fully implemented. Missing all v4 features, routes, Prisma, Docker. | P0 | 🔧 In progress |
-| DOC-02 | `product/BRD.md` | Missing v4 Quality & Trust Layer, Calculation Reference, Clear Data, Dashboard sections, roadmap | P0 | ❌ Not started |
-| DOC-03 | `product/README.md` | Says v2 throughout. Missing 15+ routes. Old arch diagram. Express backend instructions outdated. | P0 | ❌ Not started |
-| DOC-04 | `TODO-List.md` | Missing new P1 items, stale date | P0 | 🔧 In progress (this update) |
+| DOC-01 | `product/SRS.md` | Says auth out of scope — auth is fully implemented. Missing all v4 features, routes, Prisma, Docker. | P0 | ✅ Done — v4.0 doc control, scope, constraints, arch, data model, FR-242–285, Addendum A |
+| DOC-02 | `product/BRD.md` | Missing v4 Quality & Trust Layer, Calculation Reference, Clear Data, Dashboard sections, roadmap | P0 | ✅ Done — v4.0 doc control, scope rewritten, BR-070–090 added |
+| DOC-03 | `product/README.md` | Says v2 throughout. Missing 15+ routes. Old arch diagram. Express backend instructions outdated. | P0 | ✅ Done — full v4 rewrite |
+| DOC-04 | `TODO-List.md` | Missing new P1 items, stale date | P0 | ✅ Done |
 | DOC-05 | `product/USE_CASES.md` | Missing auth, data quality, snapshots, customer view, dashboard sections, clear data UCs | P1 | ❌ Not started |
 | DOC-06 | `product/USER_JOURNEYS.md` | Missing onboarding, clear data, section switcher, snapshot journeys | P1 | ❌ Not started |
 | DOC-07 | `product/SCENARIOS.md` | Missing v4 scenarios | P1 | ❌ Not started |
 | DOC-08 | `product/TEST_CASES.md` | Test count stale; missing P1 test plans for new features | P1 | ❌ Not started |
 | DOC-09 | `product/DEVELOPER_GUIDE.md` | v4.0, mostly current. Needs Calculation Reference nav note. | P1 | 🔍 Needs review |
-| DOC-10 | `product/RELEASE_NOTES.md` | Still lists 9.27 perf, mobile polish, register guard as Planned — all are Done | P0 | ❌ Not started |
+| DOC-10 | `product/RELEASE_NOTES.md` | Still lists 9.27 perf, mobile polish, register guard as Planned — all are Done | P0 | ✅ Done — completed items moved from Planned to Done; P1 UX queue added |
 | DOC-11 | `product/TECHNICAL_METHOD.md` | Missing: data quality, confidence, clear data, dashboard sections methods | P1 | ❌ Not started |
 | DOC-12 | `product/ALGORITHM_SPEC.md` | Missing: Data Quality Score, Metric Confidence, parseDate memo, flowItemByKey algorithms | P1 | ❌ Not started |
-| DOC-13 | `product/APPENDIX.md` | Missing 15+ new terms: P4, Data Quality Score, Metric Confidence, Clear Local Data, localStorage, Dashboard Section Switcher, etc. | P1 | ❌ Not started |
+| DOC-13 | `product/APPENDIX.md` | Missing 15+ new terms: P4, Data Quality Score, Metric Confidence, Clear Local Data, localStorage, Dashboard Section Switcher, etc. | P1 | ✅ Done — added P4 level, sections K/L/M with 20+ new terms |
 | DOC-14 | `product/PATENT_DISCLOSURE.md` | Review after P0 docs done | P2 | 📄 Deferred |
 | DOC-15 | `product/CLAIM_CANDIDATE_MATRIX.md` | Review after P0 docs done | P2 | 📄 Deferred |
 | DOC-16 | `product/PRIOR_ART_COMPARISON.md` | Review after P0 docs done | P2 | 📄 Deferred |

@@ -1,5 +1,3 @@
-Now I have all the information needed to write the comprehensive SRS. Let me compose it:
-
 # Delivery Clarity — Software Requirements Specification
 
 ---
@@ -9,12 +7,12 @@ Now I have all the information needed to write the comprehensive SRS. Let me com
 | Field | Value |
 |---|---|
 | **Document Title** | Software Requirements Specification — Delivery Clarity |
-| **Version** | 1.0.0 |
-| **Date** | 2026-05-30 |
+| **Version** | 4.0.0 |
+| **Date** | 2026-06-03 |
 | **Author** | Ali Abu Ras (aburasali80@gmail.com) |
-| **Status** | Draft — Approved for Development |
+| **Status** | Active — v4.0 in progress on feat/enhancements branch |
 | **Repository** | https://github.com/aliaburas80/JiraDashboard |
-| **Branch** | feat/dashboard-visuals |
+| **Branch** | feat/enhancements |
 
 ### Revision History
 
@@ -24,7 +22,10 @@ Now I have all the information needed to write the comprehensive SRS. Let me com
 | 0.2 | 2025-Q4 | Ali Abu Ras | Sprint metrics, KPI cards, Help Guide |
 | 0.3 | 2026-Q1 | Ali Abu Ras | Manager Report, Smart Recommendations, DeliveryCircle |
 | 0.4 | 2026-Q2 | Ali Abu Ras | Visual polish, dark mode, detail panel, accessibility |
-| 1.0 | 2026-05-30 | Ali Abu Ras | First formal SRS release |
+| 1.0 | 2026-05-30 | Ali Abu Ras | First formal SRS release (v1 architecture — Express/CRA) |
+| 2.0 | 2026-05-30 | Ali Abu Ras | v2 migration to Next.js App Router; all routes updated |
+| 3.0 | 2026-05-31 | Ali Abu Ras | F1 Throughput, F2 Explorer, F3 Auth/Database, F4 Excel Export |
+| 4.0 | 2026-06-03 | Ali Abu Ras | v4 Quality & Trust Layer; see Section 4.12–4.15 and Addendum A |
 
 ---
 
@@ -38,23 +39,57 @@ This Software Requirements Specification (SRS) defines the complete functional, 
 
 Delivery Clarity accepts Jira CSV or Excel exports and produces a real-time, multi-dimensional delivery health dashboard. The system requires no Jira credentials or network access to Jira at runtime; all computation is performed against the uploaded file. The platform is intended for self-hosting by engineering teams and is accessed via a web browser.
 
-**In scope:**
-- File upload, parsing, and validation
-- Metric computation across all delivery dimensions
-- Interactive dashboard with 14 named sections
-- Manager Quick Overview report
-- Smart Recommendations engine
-- Interactive Help Guide (17 sections)
-- Story/Task Flow Health table with 11 filters
-- Import audit log with four read endpoints
-- Dark mode, print mode, and mobile responsiveness
+**In scope (v4.0 — current):**
+- File upload, parsing, and validation (CSV/XLSX/XLS, max 20 MB, multi-file merge up to 10 files)
+- Metric computation across all delivery dimensions (`calculateDashboardMetrics`)
+- Interactive dashboard with all named sections, collapsible, role-based views
+- Manager Quick Overview report and Smart Recommendations engine
+- Interactive Help Guide (17+ sections)
+- Story/Task Flow Health table with 11 filters, column reorder, saved presets, shareable URL
+- **User authentication and multi-user sessions** — login, register, profile, iron-session cookies
+- **SQLite database persistence** via Prisma 5 — User, ImportLog, DashboardSnapshot, AuditEvent
+- **Role-based access** — `user` and `admin` roles; admin sees all import logs
+- **Data Quality Score** — 0–100% score, 10-field check, plain-English summary
+- **Metric Confidence Score** — per-KPI confidence badge with reason and missing-field explanation
+- **Missing-column impact explanation** — field-by-field dashboard impact
+- **Column-mapping preview** before dashboard generation
+- **Sample/demo Jira dataset** — 35-issue realistic export
+- **First-time onboarding checklist** — 8 steps auto-tracked
+- **Role-based dashboard views** — 5 curated presets
+- **Customer View** (`/customer`) — clean stakeholder summary
+- **Saved dashboard snapshots** — save, list, load, delete (max 20/user)
+- **Snapshot comparison** — side-by-side delta for 12 metrics
+- **Upload-to-upload trend analysis** — 8 metrics over 30 uploads
+- **"What changed since last upload?" panel**
+- **Configurable health thresholds** — 9 thresholds, admin UI, JSON-persisted
+- **Configurable orphan detection rules** — parent fields, exempt types, sub-task flag
+- **Recommendation mute/snooze** — per-card, 7d/30d/permanent
+- **Work Item Explorer risk-path highlight**, largest unfinished branch, blocked branch filter
+- **Release Readiness checklist** (`/readiness`) — Go/Conditional Go/No-Go per Fix Version
+- **Database backup and restore** — one-click JSON backup, restore with `.bak` safety
+- **Production security checklist** (`/admin/security`) — 8 automated + 5 manual checks
+- **Docker deployment** — multi-stage Dockerfile + docker-compose with volume and healthcheck
+- **Privacy and data-retention settings** — admin-controlled retention period and auto-delete
+- **Delete import history and snapshots**
+- **F1 Throughput analytics**, **F2 Work Item Explorer**, **F3 Authentication & Database**, **F4 Smart Excel Export (17 sheets)**
+- Dark mode, print mode, mobile responsiveness (including `/explore` mobile polish)
+- Performance optimised for 5,000+ issues (parseDate memo cache, flowItemByKey Map)
 
-**Out of scope:**
-- Jira OAuth or API token direct connection (roadmap item)
-- User authentication or multi-user workspaces (roadmap item)
-- Scheduled email or Slack reports (roadmap item)
-- Persistent per-session state across browser refreshes
-- Real-time Jira data polling
+**Out of scope (v4.0 — not yet implemented):**
+- Jira OAuth or API token direct connection (roadmap P3)
+- Real-time Jira data polling (roadmap P3)
+- Scheduled email or Slack reports (roadmap P4)
+- S3 / Azure / GCP cloud storage (roadmap P3)
+- In-app Notification Center (roadmap P4)
+- Maintenance Mode (roadmap P4)
+- Jira write-back / ticket creation (roadmap P3)
+- AI-generated delivery narrative (roadmap, unscheduled)
+- Native mobile application (not planned)
+
+**Planned P1 (queued — not yet started):**
+- Calculation Reference as clearly visible item in `/developer` blue side menu (P1.1)
+- Clear Local Data — Admin window + Upload/Landing page with detection, warning, confirmation (P1.2)
+- Dashboard Section Show/Hide controls — Overview/Single/Full modes, smooth scroll, CSS animation (P1.3)
 
 ### 1.3 Definitions and Acronyms
 
@@ -199,14 +234,16 @@ At the highest level, Delivery Clarity performs the following functions:
 
 ### 2.5 Design and Implementation Constraints
 
-1. No database — all metrics computed in-memory on each upload; import history stored in a flat JSON file.
-2. No authentication layer in the core product — teams requiring access control must deploy an upstream auth proxy.
-3. File processing is synchronous within the Express request lifecycle; the server is single-threaded; large files (>3,000 rows) may briefly block the event loop.
-4. The `xlsx` library (v0.18.5) is used for all file reading; it handles `.csv`, `.xlsx`, and `.xls` formats.
-5. The frontend is a single-page application with no routing library; navigation is entirely scroll-based with anchor IDs.
-6. `DashboardPage.js` is a monolithic ~2,150-line file; component refactoring is a known roadmap item.
-7. The import log at `backend/data/import-logs.json` is written synchronously and is not race-condition-safe under concurrent uploads.
-8. All uploaded file bytes are held in RAM (multer `memoryStorage`) and discarded after the response is sent; no file is written to disk.
+1. **Database:** SQLite via Prisma 5 at `data/delivery_clarity.db`. Stores User, ImportLog, DashboardSnapshot, AuditEvent. Import history is no longer a flat JSON file.
+2. **Authentication:** Full auth layer implemented via iron-session (HTTP-only, SameSite=strict cookies). All routes protected by `middleware.ts`. User and admin roles enforced.
+3. **File processing:** Synchronous within the Next.js API route lifecycle. For datasets ≤ 5,000 issues, processing completes in < 500ms (optimised with parseDate memo cache and flowItemByKey Map). For exports > 5,000 issues, the top 5,000 highest-risk items are stored; all aggregate metrics use the full dataset.
+4. The `xlsx` package (SheetJS) is used for all file reading; handles `.csv`, `.xlsx`, and `.xls` formats.
+5. The application is a Next.js 14 App Router multi-page application. Pages are separate routes with server and client components.
+6. Computed metrics are stored in browser `localStorage` (key prefix `dc_`) for fast cross-page access. The `FLOW_ITEMS_CAP` is 5,000 items.
+7. All uploaded file bytes are processed in memory and discarded after the response is sent. No file is written to disk.
+8. The standalone Express backend (`backend/`) is a v1 legacy artifact. It is not used in the production v4 Next.js build.
+9. Session TTL is configurable via `SESSION_TTL_HOURS` environment variable (default: 8 hours).
+10. Rate limit: 5 login attempts per minute per IP; 20 upload requests per 15-minute window per IP.
 
 ### 2.6 Assumptions
 
@@ -221,149 +258,119 @@ At the highest level, Delivery Clarity performs the following functions:
 
 ## 3. System Architecture
 
-### 3.1 Architecture Diagram
+### 3.1 Architecture Diagram (v4.0)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Delivery Clarity                        │
-│                                                                 │
-│  ┌─────────────────────────┐  POST /api/upload  ┌───────────┐  │
-│  │   React Frontend         │ ─────────────────► │  Node.js  │  │
-│  │   (port 3000 / static)   │ ◄───────────────── │  Express  │  │
-│  │                          │   JSON metrics     │  Backend  │  │
-│  │  App.js                  │                    │ (port 4000│  │
-│  │  ├── UploadPage          │                    │           │  │
-│  │  ├── DashboardPage       │  GET /api/upload/  │  parser.js│  │
-│  │  │   ├── SmartActions    │        logs        │  metrics  │  │
-│  │  │   ├── ManagerReport   │ ◄────────────────  │  import   │  │
-│  │  │   ├── DeliveryCircle  │                    │  Logs     │  │
-│  │  │   ├── SectionNav      │  GET /api/health   │  backend  │  │
-│  │  │   ├── KpiCard (×6)    │ ◄────────────────  │  View     │  │
-│  │  │   └── HelpGuide       │                    │  valid-   │  │
-│  │  └── styles.css          │                    │  ation.js │  │
-│  └─────────────────────────┘                    └───────────┘  │
-│                                                                 │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │   Persistence (flat JSON)                                 │  │
-│  │   backend/data/import-logs.json                           │  │
-│  └───────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│                     Delivery Clarity v4.0                          │
+│                                                                    │
+│  Browser                     Next.js 14 App Router (port 3000)     │
+│  ┌────────────────────┐      ┌─────────────────────────────────┐   │
+│  │  React Client       │ ──► │  app/ pages (SSR + Client)      │   │
+│  │  (localStorage)     │ ◄── │  middleware.ts (auth guard)      │   │
+│  │  - dashboard data   │      │  app/api/ (Route Handlers)      │   │
+│  │  - filter prefs     │      │  ├── auth/login, logout, me     │   │
+│  │  - view state       │      │  ├── upload (POST)              │   │
+│  └────────────────────┘      │  ├── snapshots (CRUD)           │   │
+│                               │  ├── imports (CRUD)             │   │
+│                               │  └── admin/* (admin only)       │   │
+│                               └────────────┬────────────────────┘   │
+│                                            │                        │
+│                               ┌────────────▼────────────────────┐   │
+│                               │  src/services/                   │   │
+│                               │  ├── metrics/ (calculation)      │   │
+│                               │  ├── jira/ (parser, validation)  │   │
+│                               │  ├── relations/ (explorer)       │   │
+│                               │  ├── dataQuality/ (DQ + impact)  │   │
+│                               │  ├── export/ (Excel, recs)       │   │
+│                               │  └── settings/ (thresholds etc.) │   │
+│                               └────────────┬────────────────────┘   │
+│                                            │                        │
+│                               ┌────────────▼────────────────────┐   │
+│                               │  Prisma 5 / SQLite               │   │
+│                               │  data/delivery_clarity.db        │   │
+│                               │  User, ImportLog, Snapshot,      │   │
+│                               │  AuditEvent                      │   │
+│                               └────────────────────────────────── ┘  │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 Frontend — React 18 / Create React App
+> **Note:** The `frontend/` (Create React App) and `backend/` (Express) directories are v1 legacy artifacts preserved for historical reference. They are NOT used in the production v4 Next.js build.
 
-**Entry point:** `frontend/src/index.js` → mounts `<App />` into `document.getElementById('root')`.
+### 3.2 Frontend — Next.js 14 App Router (v4.0)
 
-**`App.js`** manages three top-level state variables:
-- `dashboardData` — null (shows UploadPage) or the full API response object (shows DashboardPage)
-- `theme` — `'light'` | `'dark'`, initialised from `window.matchMedia('(prefers-color-scheme: dark)')`, updated by manual toggle and OS-level media query change events
-- `helpOpen` / `helpSection` — control HelpGuide visibility and the active section
+All pages are Next.js App Router routes under `app/`. Client components are marked `'use client'`. Server components handle data fetching and rendering.
 
-**`DashboardPage.js`** (~2,150 lines) renders the entire analytics dashboard. All sub-components are defined within the file. State is managed via React `useState` and derived values via `useMemo`. No external state management library (Redux, Zustand, etc.) is used.
+**`src/components/layout/AppShell.tsx`** — navigation header with grouped dropdown nav (4 groups: Analytics / Delivery / Data / Reference), hamburger mobile menu, UserMenu, theme toggle.
 
-**`KpiCard.js`** — standalone component for the six KPI metric cards with threshold track rendering.
+**`app/dashboard/page.tsx`** — Full Report dashboard. All metrics loaded from `localStorage` via `loadMetrics()`. State: 15+ filter controls, role-based view selector, export menu, snapshot save, filter presets, shareable URL sync.
 
-**`HelpGuide.js`** — standalone component for the 17-section animated help guide with keyboard arrow navigation.
+**`src/lib/storage.ts`** — `saveMetrics()`, `loadMetrics()`, `hasMetrics()`. Handles `QuotaExceededError` gracefully. All keys prefixed `dc_`.
 
-**`UploadPage.js`** — standalone component for the file upload landing page, calling `api.js` to POST the file.
+**`middleware.ts`** — Next.js middleware protecting all app routes. Redirects unauthenticated users to `/login?redirect=<path>`. Admin routes redirect non-admin users.
 
-**`services/api.js`** — single function wrapping the `fetch` call to `POST /api/upload`.
+### 3.3 Service Layer — src/services/ (v4.0)
 
-**`styles.css`** (~3,200 lines) — all CSS including CSS custom properties for theming, dark mode overrides via `.dark` class on the root element, print-media queries, and mobile breakpoints.
+**`src/services/metrics/metrics.service.ts`** — `calculateDashboardMetrics(issues)`: synchronous orchestrator. Optimised with `_parseDateCache` (Map memo, reset per call) and `flowItemByKey` (Map for O(1) group lookups). Emits timing log.
 
-### 3.3 Backend — Node.js / Express
+**`src/services/jira/parser.ts`** — `parseJiraFile(file)`: reads buffer with SheetJS, normalises headers via `FIELD_ALIASES`, returns `{ issues, warnings, headers, sheetName }`.
 
-**Entry point:** `backend/src/index.js`
+**`src/services/dataQuality/dataQuality.service.ts`** — `calculateDataQuality(issues)`: 10-field check, 0–100 score, band, plain-English summary.
 
-- Loads environment variables via `dotenv`
-- Configures CORS: `process.env.ALLOWED_ORIGIN` → comma-split origin whitelist; defaults to `true` (all origins) if unset
-- Allowed methods: `GET`, `POST`; allowed headers: `Content-Type`
-- Mounts `uploadRouter` at `/api/upload`
-- Serves the backend control center HTML at `GET /`
-- Exposes `GET /api/health`
+**`src/services/dataQuality/missingFieldImpact.service.ts`** — `calculateFieldImpacts(issues)`: per-field impact analysis.
 
-**`routes/upload.js`** — defines the four endpoints, applies `uploadLimiter` (express-rate-limit) and multer middleware to `POST /`.
+**`src/services/metrics/metricConfidence.service.ts`** — `calculateMetricConfidence(issues)`: per-KPI confidence badge with reason.
 
-**`services/parser.js`** — `parseJiraFile(file)`: reads buffer with xlsx, normalises headers via `canonicalizeHeader`, returns `{ issues, warnings, headers, sheetName }`.
+**`src/services/export/excelInsightExport.service.ts`** — 17-sheet Excel workbook.
 
-**`services/metrics.js`** — `calculateDashboardMetrics(issues)`: synchronous orchestrator calling all builder functions; returns the full metrics object.
+**`src/services/export/recommendationEngine.ts`** — 10+ recommendation rules.
 
-**`services/importLogs.js`** — manages reading and appending to `backend/data/import-logs.json`.
+**`src/services/relations/relationExplorer.service.ts`** — `buildRelationGraph(key, issues)`: hierarchy reconstruction, orphan classification, relation graph.
 
-**`services/backendView.js`** — `renderBackendHome()`: generates the HTML for the backend control center page.
+**`src/services/settings/thresholds.service.ts`** — file-based config at `data/health-thresholds.json`, in-memory cached.
 
-**`utils/validation.js`** — `validateIssueData(issues)`: checks presence of ESSENTIAL_FIELDS; returns `{ isValid, errors }`.
+**`src/services/settings/orphanRules.service.ts`** — file-based config at `data/orphan-rules.json`, in-memory cached.
 
-### 3.4 Data Flow
+**`src/services/settings/backup.service.ts`** — database + config JSON backup and restore.
+
+**`src/services/settings/securityCheck.service.ts`** — 8 automated security checks.
+
+### 3.4 Data Flow (v4.0)
 
 ```
-1. User selects .csv / .xlsx / .xls file in UploadPage
-2. Browser POSTs multipart/form-data to POST /api/upload
-3. Express applies uploadLimiter (rate check) → 429 if exceeded
-4. multer.single('file') checks extension and size:
-     - unsupported extension → 400
-     - size > 20 MB → 413
-5. parser.js:
-     - xlsx reads buffer as workbook
-     - First sheet converted to JSON rows
-     - canonicalizeHeader: BOM-strip, trim, alias lookup
-     - Returns { issues[], warnings[], headers[], sheetName }
-6. validation.js:
-     - Checks Issue Key, Issue Type, Summary, Status present in at least one row
-     - If invalid → 422 + importLog written with status=error
-7. metrics.js:
-     - calculateDashboardMetrics(issues) → full metrics JSON
-     - ~50ms for 500 issues
-8. importLogs.js:
-     - Appends log entry { id, importedAt, status, file, extraction, statistics }
-9. Backend returns 200:
-     { metrics, issues, warnings, importLog }
-10. React receives response, calls setDashboardData(response)
-11. App switches from UploadPage to DashboardPage
-12. DashboardPage destructures metrics, issues, warnings
-13. getHealthFromIssue applied client-side to produce flowItems
-14. All useMemos derive filtered/grouped data from flowItems
-15. Sections render synchronously from flowItems and metrics
+1. User logs in via POST /api/auth/login → iron-session cookie set
+2. middleware.ts allows authenticated requests through
+3. User selects file on Upload page (/)
+4. Browser POSTs multipart/form-data to POST /api/upload
+5. Rate limiter: 20 req/15min per IP → 429 if exceeded
+6. Extension + size check: unsupported → 400; > 20 MB → 413
+7. parser.ts reads buffer, normalises headers, returns { issues[], warnings[] }
+8. validation.ts checks ESSENTIAL_FIELDS → 422 if missing
+9. calculateDashboardMetrics(issues):
+     - _parseDateCache = new Map() — reset memo
+     - today = new Date() — hoisted
+     - flowItems = issues.map(getHealthFromIssue)
+     - flowItemByKey = new Map(flowItems) — O(1) lookups
+     - All 12+ builder functions run against flowItemByKey
+     - Elapsed time logged: "[metrics] calculateDashboardMetrics: Xms for N issues"
+10. calculateDataQuality, calculateFieldImpacts, calculateMetricConfidence run
+11. ImportLog saved to SQLite via Prisma with userId, fileName, healthScore, etc.
+12. AuditEvent saved to SQLite
+13. Response: { metrics, warnings, importLog }
+14. Client stores metrics in localStorage via saveMetrics()
+15. Client navigates to /dashboard (or /summary if first upload)
+16. Dashboard page loads metrics from localStorage via loadMetrics()
+17. All dashboard sections render from metrics
 ```
 
-### 3.5 State Management — All useState in DashboardPage
+### 3.5 Data Model — Prisma Schema (v4.0)
 
-The following table lists every `useState` declaration in `DashboardPage.js`:
-
-| Variable | Setter | Initial Value | Purpose |
-|---|---|---|---|
-| `keyFilter` | `setKeyFilter` | `''` | Flow table text filter — issue key |
-| `summaryFilter` | `setSummaryFilter` | `''` | Flow table text filter — summary |
-| `statusFilter` | `setStatusFilter` | `'all'` | Flow table select filter — status |
-| `sprintFilter` | `setSprintFilter` | `'all'` | Flow table select filter — sprint |
-| `assigneeFilter` | `setAssigneeFilter` | `'all'` | Flow table select filter — assignee |
-| `leadMaxFilter` | `setLeadMaxFilter` | `''` | Flow table numeric filter — max lead days |
-| `cycleMaxFilter` | `setCycleMaxFilter` | `''` | Flow table numeric filter — max cycle days |
-| `openAgeMaxFilter` | `setOpenAgeMaxFilter` | `''` | Flow table numeric filter — max open age days |
-| `healthFilter` | `setHealthFilter` | `'all'` | Flow table select filter — health value |
-| `reasonFilter` | `setReasonFilter` | `''` | Flow table text filter — reason string |
-| `labelFilter` | `setLabelFilter` | `''` | Flow table text filter — label |
-| `activeQuickFilter` | `setActiveQuickFilter` | `'all'` | Quick filter bar active mode |
-| `isFlowPanelOpen` | `setIsFlowPanelOpen` | — | Collapsible flow panel toggle |
-| `detailPanel` | `setDetailPanel` | `null` | Detail modal content object |
-| `layoutSaved` | `setLayoutSaved` | — | "Layout saved" feedback state |
-| `reportMessage` | `setReportMessage` | — | Status message text display |
-| `hideStickyFilter` | `setHideStickyFilter` | — | Hides sticky bar when filter panel visible |
-| `stickyTop` | `setStickyTop` | — | Sticky bar top offset in px |
-| `showManagerReport` | `setShowManagerReport` | `false` | Manager report modal visibility |
-| `flowItemVisibleCount` | `setFlowItemVisibleCount` | `100` | Pagination row count for flow table |
-
-**useMemo derivations:**
-
-| Derived Value | Dependencies |
+| Model | Key fields |
 |---|---|
-| `statusOptions` | `[flowItems]` |
-| `sprintOptions` | `[flowItems]` |
-| `assigneeOptions` | `[flowItems]` |
-| `healthOptions` | `[flowItems]` |
-| `filteredFlowItems` | `[assigneeFilter, cycleMaxFilter, flowItems, healthFilter, keyFilter, labelFilter, leadMaxFilter, openAgeMaxFilter, reasonFilter, sprintFilter, statusFilter, summaryFilter]` |
-| `epicReadiness` | `[data.epics, flowItems]` |
-| `smartActions` | `[flowItems, data.capacity, data.relations, epicReadiness]` |
+| `User` | id, name, email (unique), passwordHash, role (user/admin), createdAt |
+| `ImportLog` | id, userId, fileName, fileSize, fileType, totalIssues, doneIssues, healthScore, processingTimeMs, createdAt |
+| `DashboardSnapshot` | id, userId, name, metrics (JSON), createdAt |
+| `AuditEvent` | id, userId, eventType, eventDescription, ipAddress, userAgent, createdAt |
 
 ---
 
@@ -1606,3 +1613,133 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 **FR-240:** The Metric Dictionary sheet MUST define every metric used in the workbook including: formula or source, unit, good range, and interpretation notes.
 
 **FR-241:** The workbook MUST NOT contain HTML markup, React JSX syntax, CSS class names, or `[object Object]` values in any cell.
+
+---
+
+## Addendum A — v4.0 Quality & Trust Layer Requirements (2026-06-03)
+
+### A.1 — Data Quality Score
+
+**FR-242:** After every file upload, the system MUST compute a Data Quality Score (0–100%) based on 10 field checks. Fields checked: Created Date, Done Date, Story Points, Sprint, Assignee, Epic Link/Parent Key, In Progress Date, Due Date, Priority, Labels.
+
+**FR-243:** The Data Quality Score MUST be categorised into five bands: Excellent (≥90%), Good (≥75%), Fair (≥50%), Poor (≥25%), Critical (<25%).
+
+**FR-244:** The Data Quality Score and band MUST be displayed on the upload column-mapping preview page and on the dashboard.
+
+**FR-245:** A plain-English summary MUST be shown explaining what the score means and which fields are most impactful to improve.
+
+### A.2 — Metric Confidence Score
+
+**FR-246:** The system MUST calculate a Metric Confidence Score for each major KPI: Sprint Throughput, Kanban Flow, Cycle Time, Lead Time, Velocity, and others.
+
+**FR-247:** Confidence levels are: High (all required fields present and populated), Medium (some fields missing but metric is estimable), Low (significant data gaps), Unreliable (critical fields absent), N/A (metric not applicable to this dataset).
+
+**FR-248:** Each KPI card MUST display a confidence badge. Clicking/hovering the badge MUST show the reason and which fields are missing.
+
+### A.3 — Missing-Column Impact
+
+**FR-249:** The column-mapping preview MUST show each field as: Mapped (present and recognised), Aliased (matched via alias), or Unrecognised (not matched).
+
+**FR-250:** For each missing optional field, the system MUST explain: which dashboard metrics are degraded, what the user would gain by adding the field, and which dashboard sections are affected.
+
+### A.4 — Privacy and Data Retention
+
+**FR-251:** Admin users MUST be able to configure a data retention period for import logs: 7 / 30 / 90 / 365 days or never-delete.
+
+**FR-252:** The system MUST support auto-delete of import logs older than the configured retention period.
+
+**FR-253:** Admin users MUST be able to trigger a manual "Clear All" of all import logs.
+
+**FR-254:** Users MUST be able to delete their own import logs and snapshots with a 2-click confirmation.
+
+### A.5 — Saved Snapshots and Comparison
+
+**FR-255:** Authenticated users MUST be able to save the current dashboard metrics as a named snapshot. Maximum 20 snapshots per user.
+
+**FR-256:** The `/snapshots` page MUST list all saved snapshots with name, date, and health score.
+
+**FR-257:** The `/snapshots/compare` page MUST show a side-by-side comparison of two selected snapshots, displaying delta values for 12 key metrics with ↑↓→ direction indicators and an insights summary.
+
+### A.6 — Upload-to-Upload Trend Analysis
+
+**FR-258:** The `/trends` page MUST show trend charts for 8 metrics across the user's last 30 uploads: Health Score, Completion Rate, Critical Count, Cycle Time, Lead Time, Blocked Ratio, Story Points Completed, Orphan Count.
+
+**FR-259:** The "What changed since last upload?" panel on the dashboard MUST automatically compare the current upload against the previous upload and display delta values with direction and narrative.
+
+### A.7 — Configurable Thresholds and Rules
+
+**FR-260:** Admin users MUST be able to configure 9 health thresholds via `/admin/settings`: cycle time critical/warning days, lead time critical/warning days, active age critical/warning days, open age warning days, blocked ratio warning %, orphan ratio warning %.
+
+**FR-261:** Thresholds MUST be persisted to `data/health-thresholds.json` and applied to all future uploads.
+
+**FR-262:** Admin users MUST be able to configure orphan detection rules: which fields are treated as parent link fields, which issue types are exempt, whether sub-tasks without parents are flagged, and risk thresholds.
+
+**FR-263:** Orphan rules MUST be persisted to `data/orphan-rules.json`.
+
+### A.8 — Recommendation Mute/Snooze
+
+**FR-264:** Users MUST be able to mute or snooze individual recommendation cards using a × button and a snooze dropdown (7 days / 30 days / permanently).
+
+**FR-265:** Muted/snoozed recommendations MUST persist to `localStorage` and not appear on future dashboard visits until the snooze period expires or the user restores them.
+
+**FR-266:** A "Restore all muted" action MUST be available.
+
+### A.9 — Release Readiness
+
+**FR-267:** The `/readiness` page MUST evaluate release readiness per Fix Version using a 7-item checklist and produce a verdict: Go (all checks pass), Conditional Go (minor issues), or No-Go (critical issues).
+
+### A.10 — Database Backup and Restore
+
+**FR-268:** Admin users MUST be able to trigger a one-click backup of `data/delivery_clarity.db` and all config JSON files as a single JSON archive.
+
+**FR-269:** Admin users MUST be able to restore from a previous backup. A `.bak` safety copy MUST be created before any restore operation.
+
+### A.11 — Production Security Checklist
+
+**FR-270:** The `/admin/security` page MUST run 8 automated security checks (session secret strength, open registration status, admin password default, HTTPS status, rate limiting, database existence, backup existence, cookie security) and allow 5 manual checks, producing a 0–100 security score and a production-ready flag.
+
+### A.12 — Role-Based Dashboard Views
+
+**FR-271:** The dashboard MUST support 5 selectable view presets: Full Report, Executive, Scrum Master, Product Owner, Engineering Manager.
+
+**FR-272:** Each view MUST show/hide dashboard sections and panels appropriate to the selected role. The selected view MUST persist to `localStorage`.
+
+### A.13 — Customer View
+
+**FR-273:** The `/customer` page MUST display a clean, stakeholder-facing summary of delivery health without technical detail: health score, completion rate, top highlights, key risks, and a print/PDF action.
+
+### A.14 — Onboarding Checklist
+
+**FR-274:** A first-time onboarding checklist with 8 steps MUST be displayed for users who have not completed it. Steps are auto-tracked in `localStorage`. The checklist MUST be dismissible and accessible via a compact header chip.
+
+### A.15 — Column-Mapping Preview
+
+**FR-275:** After upload, before redirecting to the dashboard, the system MUST display a column-mapping preview page showing: mapped fields, aliased fields, unrecognised columns, the Data Quality Score, missing essential fields, and a 10-second auto-proceed timer. The user MAY proceed immediately or wait.
+
+### A.16 — Performance Requirements (v4.0)
+
+**FR-276:** For datasets of 5,000 issues, `calculateDashboardMetrics` MUST complete in under 1,000ms on commodity server hardware (Node.js 20, 2 vCPU, 2 GB RAM).
+
+**FR-277:** The `parseDate` function MUST use a per-request Map memo cache to avoid duplicate regex parsing of repeated date strings. The cache MUST be reset at the start of each `calculateDashboardMetrics` call and freed at the end.
+
+**FR-278:** Group lookups within `buildSprintMetrics`, `buildEpicMetrics`, `buildQuarterMetrics`, `buildLabelMetrics`, `buildTypeMetrics`, `buildProjectMetrics`, and `buildParentMetrics` MUST use an O(1) `flowItemByKey` Map rather than O(n) array scans.
+
+### A.17 — Navigation
+
+**FR-279:** The application navigation MUST use grouped dropdown sub-menus with 4 groups: Analytics (Overview, Full Report, Charts, Trends), Delivery (Readiness, Explore, Customer), Data (Snapshots, Backend), Reference (Glossary, Developer, Help).
+
+**FR-280:** On mobile, navigation MUST collapse to a hamburger menu that expands a 2-column grid panel below the header.
+
+### A.18 — Mobile Responsiveness (v4.0)
+
+**FR-281:** The `/explore` page MUST be fully usable on mobile: search bar stacks vertically (button full-width below input), graph height reduces to 380px (vs 540px desktop), MiniMap is hidden below 640px, the details table switches to a card list below 768px.
+
+**FR-282:** The dashboard sticky filter bar MUST NOT cause horizontal scroll on any viewport. Filter pills and action buttons MUST each wrap independently on narrow screens.
+
+### A.19 — Planned P1 Features (Not Yet Implemented — 2026-06-03)
+
+**FR-283 (P1.1 — planned):** The `/developer` page blue side menu MUST include a clearly labelled `Calculation Reference` item that scrolls or navigates to a section documenting all metric formulas with: what the calculation is, data source, why used, formula, benefit, alternatives, assumptions, limitations, related code, and related documentation.
+
+**FR-284 (P1.2 — planned):** A "Clear Local Data" action MUST be available in the Admin settings window and on the Upload/Landing page (only when stored browser data is detected). It MUST clear all Delivery Clarity `localStorage`, `sessionStorage`, and session cookie keys. A confirmation dialog with a session-end warning MUST be shown before clearing. The action MUST NOT delete server-side import logs.
+
+**FR-285 (P1.3 — planned):** The dashboard MUST support a Section Switcher control placed immediately after the main Overview section. The control MUST offer: Overview mode (shows health score, top risks, KPIs, quality summary), Single Section mode (shows one selected section, hides others), and Full View mode (shows all sections). Switching sections MUST use smooth scroll. Section visibility changes MUST animate with CSS transitions (opacity + transform, 180ms). Reduced-motion users MUST receive instant transitions (`@media (prefers-reduced-motion: reduce)`).
