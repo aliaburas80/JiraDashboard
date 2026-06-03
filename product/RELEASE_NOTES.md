@@ -5,11 +5,63 @@
 
 ---
 
+## v4.1 — UX Design System & Navigation (In Progress)
+
+**Branch:** `feat/ux-design-system`  
+**Last updated:** 2026-06-04  
+**Status:** Active development — pill button design system, dashboard section switcher, clear local data, sticky page nav, nav menu icons, flow panel access control
+
+### P1.2 — Clear Local Data
+- Detection banner on upload page when stored browser data found
+- Confirmation modal ("Clear Local Data?") with session-end warning
+- Clears only Delivery Clarity keys (`dc_*`) — never touches unrelated browser data
+- "Browser Data" tab in Admin Settings with key inventory panel
+- 10 automated tests (TC-CLD-01–10)
+
+### P1.3 — Dashboard Section Switcher
+- Sticky tab bar below app header with 14 section navigation tabs
+- Mode toggle: Full Dashboard / Overview / single-section focus
+- Smooth scroll with dynamic offset (header + sticky bar height)
+- IntersectionObserver dot sidebar (SectionNav) tracks active section
+- CSS `animate-slide-up` for section entrance with `@media (prefers-reduced-motion)` support
+- `scroll-margin-top: 14rem` on all sections for CSS anchor fallback
+- Role-based views remain compatible — switcher respects `isHidden()` per view
+- Print-clean: all switcher controls hidden in `@media print`
+- 10 automated tests (TC-DS-01–10)
+
+### UX — App-wide Pill Button Design System
+- 9 pill button classes in `globals.scss` (all `rounded-full`):
+  `btn-primary`, `btn-secondary`, `btn-ghost`, `btn-danger`, `btn-outline-danger`,
+  `btn-green`, `btn-dark`, `btn-warning`, `btn-sm` / `btn-xs`
+- Applied consistently across every page and component
+- Icons added to all action buttons (SVG, not emoji)
+
+### UX — Sticky Section Navigation
+- `/glossary` — sticky tab bar with active tracking, section scroll, Back to Top button
+- `/help` — search bar embedded in sticky nav, section tabs hidden while searching, Back to Top button
+
+### UX — Navigation Menu
+- Icons added to all 12 nav items (Analytics, Delivery, Data, Reference groups)
+- Dropdown items use tab-button style: icon + label, active indicator dot
+
+### UX — Dashboard Filter Row
+- Filter pills (All/High Risk/Blocked/Needs Review) use solid filled pill style:
+  active = solid color fill (blue/red/orange/purple), inactive = color-tinted outlined pill
+- Entire filter row (pills + actions) hidden when Executive or Product Owner view selected
+- Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
+  scroll all suppressed when `hideFlowPanel: true`
+
+### Performance
+- `xlsx` (~500 KB) now lazy-loaded on first export click — removed from dashboard bundle
+- `excelInsightExport.service` loaded dynamically on demand
+
+---
+
 ## v4.0 — Quality & Trust Layer (In Progress)
 
 **Branch:** `feat/enhancements`  
 **Last updated:** 2026-06-03  
-**Status:** Active development — all P0/P1 features complete; P1 UX improvements (Calculation Reference nav, Clear Local Data, Dashboard Section Switcher) queued next; documentation alignment in progress
+**Status:** Complete — all P0/P1 features shipped; documentation aligned
 
 ### P0 Stabilisation (Completed)
 - 253 automated tests passing across 21 test suites

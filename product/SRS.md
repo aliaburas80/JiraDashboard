@@ -1736,10 +1736,20 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-282:** The dashboard sticky filter bar MUST NOT cause horizontal scroll on any viewport. Filter pills and action buttons MUST each wrap independently on narrow screens.
 
-### A.19 — Planned P1 Features (Not Yet Implemented — 2026-06-03)
+### A.19 — P1 Features — Implemented (2026-06-04)
 
-**FR-283 (P1.1 — planned):** The `/developer` page blue side menu MUST include a clearly labelled `Calculation Reference` item that scrolls or navigates to a section documenting all metric formulas with: what the calculation is, data source, why used, formula, benefit, alternatives, assumptions, limitations, related code, and related documentation.
+**FR-283 (P1.1 — Done):** The `/developer` page blue side menu includes `🧮 Calculation Reference` as a distinct item in the Reference group. All 24 calculations are documented with: what, data source, why, formula, benefit, alternatives, assumptions, limitations, `usedIn`, and related doc references.
 
-**FR-284 (P1.2 — planned):** A "Clear Local Data" action MUST be available in the Admin settings window and on the Upload/Landing page (only when stored browser data is detected). It MUST clear all Delivery Clarity `localStorage`, `sessionStorage`, and session cookie keys. A confirmation dialog with a session-end warning MUST be shown before clearing. The action MUST NOT delete server-side import logs.
+**FR-284 (P1.2 — Done):** "Clear Local Data" is available in Admin Settings (Browser Data tab) and on the Upload page (amber detection banner). Clears all `dc_*` `localStorage`/`sessionStorage` keys after confirmation dialog. Does not touch server-side logs.
 
-**FR-285 (P1.3 — planned):** The dashboard MUST support a Section Switcher control placed immediately after the main Overview section. The control MUST offer: Overview mode (shows health score, top risks, KPIs, quality summary), Single Section mode (shows one selected section, hides others), and Full View mode (shows all sections). Switching sections MUST use smooth scroll. Section visibility changes MUST animate with CSS transitions (opacity + transform, 180ms). Reduced-motion users MUST receive instant transitions (`@media (prefers-reduced-motion: reduce)`).
+**FR-285 (P1.3 — Done):** Dashboard Section Switcher is a sticky tab bar (`DashboardSectionSwitcher`) placed after the main Overview. Supports Full / Overview / single-section modes. Uses `window.scrollTo` with dynamic header+bar offset. `animate-slide-up` + `@media (prefers-reduced-motion)` applied.
+
+### A.20 — v4.1 UX Design System (2026-06-04)
+
+**FR-286:** All interactive buttons throughout the application MUST use the pill button design system defined in `globals.scss`. Primary actions use `btn-primary` (blue, `rounded-full`); secondary/outlined use `btn-secondary`; destructive use `btn-danger` or `btn-outline-danger`; success actions use `btn-green`; low-emphasis use `btn-ghost`.
+
+**FR-287:** Navigation dropdown menus MUST display items with an icon and label in tab-button style. Each item MUST show its icon on the left, label text, and a blue dot indicator when it is the current active page.
+
+**FR-288:** The `/glossary` and `/help` pages MUST each include a sticky section navigation bar (`sticky top-14`) that tracks the active section via `IntersectionObserver` and highlights the corresponding tab. Clicking a tab MUST smooth-scroll to that section with dynamic offset. A "Back to Top" button MUST appear at the page footer.
+
+**FR-289:** The dashboard filter row (All / High Risk / Blocked / Needs Review / Clear / Show filters / Export) MUST be hidden completely when the active dashboard view has `hideFlowPanel: true`. This includes the Executive and Product Owner views. KPI cards that previously linked to the flow panel MUST remove their click handlers when the panel is hidden.

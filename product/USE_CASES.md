@@ -2267,3 +2267,42 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 3. User finds a metric, reads: formula, data source, why used, assumptions, limitations, related code
 
 **Related FR:** FR-283, BR-085
+
+
+---
+
+## v4.1 — UX Design System (2026-06-04)
+
+### UC-060 — Clear Local Browser Data
+
+**Actor:** Any logged-in user  
+**Trigger:** User visits Upload page and sees stored data banner, or navigates to Admin Settings → Browser Data tab  
+**Main Flow:**
+1. Banner on upload page shows "Stored Delivery Clarity data was found"
+2. User clicks "Clear Local Data"
+3. Confirmation modal warns about session end
+4. User confirms → `clearLocalData()` removes all `dc_*` keys
+5. Success message shown; page redirects to clean upload page
+**Related FR:** FR-284, BR-086–BR-087
+
+### UC-061 — Navigate Dashboard Sections via Section Switcher
+
+**Actor:** Dashboard user  
+**Trigger:** User wants to focus on one section without scrolling  
+**Main Flow:**
+1. User sees sticky section tab bar with 14 section tabs + Full / Overview modes
+2. User clicks "Kanban" tab → only Kanban section visible, page scrolls to it
+3. Blue underline highlights active tab via IntersectionObserver
+4. User clicks "Full" to restore all sections
+**Related FR:** FR-285, BR-088–BR-090
+
+### UC-062 — Executive Accesses Dashboard Without Flow Detail
+
+**Actor:** C-level executive  
+**Trigger:** Executive opens dashboard and selects Executive view  
+**Main Flow:**
+1. Executive selects "Executive" from view selector
+2. Dashboard shows: health score, key KPIs, risks, recommendations only
+3. Filter row (All/High Risk/Blocked), Show filters button, and Flow Health Panel are hidden
+4. Executive cannot accidentally navigate to issue-level technical detail
+**Related FR:** FR-289, BR-094

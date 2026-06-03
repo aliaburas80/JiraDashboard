@@ -750,3 +750,16 @@ The following metrics define product success and will be measured at 30, 90, and
 **BR-089 (Must — P1.3):** Section visibility changes MUST animate smoothly (CSS opacity + transform transitions, 180ms). Reduced-motion users MUST receive instant transitions. This is a professional UX quality requirement.
 
 **BR-090 (Must — P1.3):** Clicking a section button MUST smooth-scroll to that section. This is a navigation clarity requirement.
+
+
+---
+
+## v4.1 — UX Design System & Navigation (2026-06-04)
+
+**BR-091 (Must):** All interactive buttons throughout the application MUST follow the pill button design system (`rounded-full`, semantic colour classes). This is a visual consistency and brand quality requirement.
+
+**BR-092 (Must):** Navigation dropdown items MUST display an icon and label in tab-button style. Active item MUST show a blue indicator. This improves navigation clarity and reduces user disorientation.
+
+**BR-093 (Must):** The `/glossary` and `/help` pages MUST each include a sticky section navigation bar that tracks the active section and supports keyboard-accessible smooth scrolling. A "Back to Top" button MUST appear at the page footer. This reduces scrolling friction on long reference pages.
+
+**BR-094 (Must):** Dashboard filter row and flow panel entry points MUST be hidden for views that restrict flow panel access (Executive, Product Owner). C-level and product users MUST NOT see the technical issue-level table. This is a role-based information access requirement.

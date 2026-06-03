@@ -1081,3 +1081,66 @@ Admin-controlled feature to temporarily prevent normal user access while system 
 
 ### Maintenance Status Values (Planned)
 `Enabled | Disabled | Scheduled | Expired`
+
+
+---
+
+## v4.1 — UX Design System Developer Notes (2026-06-04)
+
+### Pill Button System
+
+All buttons use `globals.scss` utility classes. Do not use `rounded-lg` or `rounded-xl` on buttons.
+
+```scss
+// Use these — all rounded-full
+.btn-primary    // blue filled
+.btn-secondary  // white outlined
+.btn-ghost      // transparent
+.btn-danger     // red filled
+.btn-outline-danger  // red outlined → fills on hover
+.btn-green      // green filled
+.btn-dark       // slate-900 filled
+.btn-warning    // amber outlined
+.btn-sm         // size modifier: px-3 py-1 text-xs
+.btn-xs         // size modifier: px-2.5 py-0.5 text-[10px]
+```
+
+For colour overrides on `btn-primary` or `btn-green` use inline `style={{ background: "#hex" }}`.
+
+### Dashboard Section Switcher
+
+**Files:**
+- `src/lib/dashboardSections.ts` — `DASHBOARD_SECTIONS` array (14 entries), `OVERVIEW_KEYS`, `SectionMode` type
+- `src/components/dashboard/DashboardSectionSwitcher.tsx` — the sticky tab bar component
+
+**Adding a new section:**
+1. Add a section to `DASHBOARD_SECTIONS` in `dashboardSections.ts`
+2. Add `<section id="section-{key}">` with `className="dashboard-section ..."` in `dashboard/page.tsx`
+3. Add a `CollapsibleTrigger id="{key}"` above the section
+4. Add the key to the appropriate `SECTION_GROUPS` array in `DashboardSectionSwitcher`
+
+### Clear Local Data
+
+**Files:**
+- `src/lib/clearLocalData.ts` — `hasLocalData()`, `clearLocalData()`, `DC_FIXED_KEYS`
+- `src/components/admin/ClearLocalDataPanel.tsx` — admin settings panel
+
+To add a new localStorage key owned by the app: add it to `DC_FIXED_KEYS` in `clearLocalData.ts`.
+
+### Flow Panel Access Control
+
+Set `hideFlowPanel: true` on a `DashboardView` in `src/types/dashboardView.ts` to:
+- Hide the entire `<section id="flow-health-panel">`
+- Hide the filter row (All / High Risk / Blocked / Needs Review / Clear / Show filters)
+- Disable KPI card onClick handlers that open the flow panel
+- Skip `setFlowPanelOpen(true)` in `applyQuickFilter`
+
+### Dynamic Imports for Heavy Libraries
+
+`xlsx` and `excelInsightExport.service` are lazy-loaded. Do NOT add static `import * as XLSX from "xlsx"` in any client-side file. Instead:
+
+```typescript
+// Inside an async function triggered by user action:
+const XLSX = await import("xlsx");
+const { downloadInsightWorkbook } = await import("@/services/export/excelInsightExport.service");
+```

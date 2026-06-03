@@ -197,3 +197,19 @@
 ---
 
 *© 2026 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity v4.0*
+
+## N — v4.1 UX Design System Terms
+
+| Term | Meaning |
+|------|---------|
+| **Pill Button** | A button with fully rounded corners (`border-radius: 9999px`). The app-wide button standard from v4.1. Variants: `btn-primary`, `btn-secondary`, `btn-ghost`, `btn-danger`, `btn-outline-danger`, `btn-green`, `btn-dark`, `btn-warning`. |
+| **Section Switcher** | The sticky tab bar on the dashboard that lets users focus on one section (single-section mode), see a summary (Overview mode), or view everything (Full Dashboard mode). |
+| **SectionMode** | The state that controls which dashboard sections are visible: `full` \| `overview` \| `<sectionKey>`. |
+| **OVERVIEW_KEYS** | The three section keys shown in Overview mode: `overview`, `attention`, `recommendations`. |
+| **DashboardSectionSwitcher** | The React component rendering the 14-tab sticky nav bar on the dashboard with brand mark icon and active underline indicator. |
+| **SectionNav** | The right-side dot navigation sidebar on the dashboard. Each dot represents a section and is tracked by IntersectionObserver. |
+| **hideFlowPanel** | A `DashboardView` property (`boolean`). When `true`, the Story/Task Flow Health section, filter row, and all entry points to it are hidden. Set to `true` for Executive and Product Owner views. |
+| **Clear Local Data** | A user-initiated action that removes all `dc_*` localStorage and sessionStorage keys. Does not affect server-side import logs. Available in Admin Settings (Browser Data tab) and on the Upload page. |
+| **dc_* keys** | The set of localStorage/sessionStorage keys owned by Delivery Clarity: `dc_metrics_v2`, `dc_onboarding_completed`, `dc_onboarding_dismissed`, `dc_filter_presets`, `dc_dashboard_view`, `dc-theme`, `dc_muted_recs`, `dc_downloaded_report`, `dc_visited_explore`, `dc_viewed_sprints`, `dc_explore_recent`, `dc_col_order_*` (dynamic). |
+| **Sticky Section Nav** | The `sticky top-14 z-30` tab bar on `/glossary` and `/help` that tracks the active section via IntersectionObserver and allows direct navigation to any section. |
+| **Dynamic Import** | A JavaScript `import()` call inside a function body, so the module only loads when the function is first called. Used for `xlsx` and `excelInsightExport.service` to keep the dashboard bundle small. |

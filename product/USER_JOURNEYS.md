@@ -1381,3 +1381,39 @@ All personas now experience a two-step flow after uploading:
 | 4 | Clicks "Full Dashboard" | All sections visible | Complete |
 
 **Pain point resolved:** Direct, clean access to sprint data without scrolling past 15 sections.
+
+
+---
+
+## v4.1 — UX Design System User Journeys (2026-06-04)
+
+### UJ-020 — Admin Clears Browser Data for Troubleshooting
+
+**Persona:** Ahmed, System Admin  
+**Goal:** Clear stale browser data for a user experiencing display issues  
+**Entry point:** /admin/settings → Browser Data tab
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|------------------|
+| 1 | Navigates to Admin Settings | Settings page with 5 tabs | Confident |
+| 2 | Clicks "Browser Data" tab | Panel shows detected DC keys + key inventory | Informed |
+| 3 | Sees amber banner: "Stored Delivery Clarity data was found" | Clear Local Data button visible | Ready |
+| 4 | Clicks "Clear Local Data" | Confirmation modal: session-end warning | Cautious |
+| 5 | Clicks "Yes, clear it" | Data cleared; green success banner; redirect to /  | Relieved |
+
+**Pain point resolved:** No need to manually clear browser storage via DevTools.
+
+### UJ-021 — Executive Views Dashboard Without Technical Noise
+
+**Persona:** Emma, VP of Product  
+**Goal:** Get a health summary without seeing issue-level filters and tables  
+**Entry point:** /dashboard
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|------------------|
+| 1 | Opens /dashboard | Full view loaded | Overwhelmed |
+| 2 | Selects "Executive" from view selector | Filter row and flow panel hidden; only health/KPIs/risks/readiness visible | Focused |
+| 3 | Reads health score, recommendations, risks | Clean, no-noise view | Confident |
+| 4 | Exports Excel report for board meeting | Smart 17-sheet workbook downloaded | Satisfied |
+
+**Pain point resolved:** No accidental exposure to raw issue-level data inappropriate for C-level audience.
