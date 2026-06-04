@@ -712,7 +712,24 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 27. Branding
+  // 27. About / Landing Page
+  {
+    id: 'about',
+    icon: '🏠',
+    title: 'About / Feature Overview',
+    items: [
+      {
+        q: 'What is the About (Landing) page?',
+        a: 'The /landing page is an in-app product showcase. It shows all 12 major features with clickable cards (each linking directly to that feature), a "How it works" section, key product stats, and a branded CTA footer. Access it via Reference → About in the nav, or click "See all 12 features →" on the upload page.',
+      },
+      {
+        q: 'Which features are shown on the landing page?',
+        a: 'Sprint Throughput, Work Item Explorer, Upload-to-Upload Trends, Team Health, Portfolio Summary, Release Readiness, Visual Analytics, Customer View, Smart Export Suite, Dashboard Snapshots, Data Quality Score, and Admin Diagnostics.',
+      },
+    ],
+  },
+
+  // 28. Branding
   {
     id: 'branding',
     icon: '🎨',

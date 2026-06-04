@@ -165,6 +165,9 @@ export default function HomePage() {
           <p className="text-slate-500 text-base leading-relaxed">
             Upload any Jira CSV or Excel export and get sprint health, flow efficiency, risk signals, capacity, and epic readiness in seconds.
           </p>
+          <a href="/landing" className="inline-block mt-3 text-xs font-bold text-blue-600 hover:underline">
+            See all 12 features →
+          </a>
         </div>
 
         {/* ── Single file drop zone ── */}

@@ -1009,3 +1009,20 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Outcome:** Professional delivery report with consistent branding — no manual formatting needed.
 
 **Related:** UC-076, FR-300
+
+### SCN-036 — New Team Member Discovers Work Item Explorer via Landing Page
+
+**Persona:** David, new Scrum Master joining the team
+**Context:** The team uses Delivery Clarity. David has been given an account but doesn't know what features exist.
+
+**Scenario:**
+1. David logs in → sees the upload page → clicks "See all 12 features →"
+2. /landing opens — branded hero, "From messy boards to measurable delivery confidence"
+3. David reads "How it works" (3 steps) — understands the zero-credential approach
+4. He scans the feature grid — "Work Item Explorer" catches his eye (dependency graph)
+5. He clicks the card → /explore opens → he enters an epic key → graph loads
+6. He returns to /landing and clicks "Release Readiness" → /readiness opens
+
+**Outcome:** David discovers two features he wouldn't have found from the dashboard alone, in under 5 minutes.
+
+**Related:** UC-077, FR-301

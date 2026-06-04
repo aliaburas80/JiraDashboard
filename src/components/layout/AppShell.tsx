@@ -38,6 +38,7 @@ const NAV_GROUPS = [
   {
     label: 'Reference',
     items: [
+      { href: '/landing',   label: 'About',     icon: '🏠', desc: 'Product overview & features' },
       { href: '/glossary',  label: 'Glossary',  icon: '📖', desc: 'Term & abbreviation guide' },
       { href: '/developer', label: 'Developer', icon: '💻', desc: 'API & technical docs'      },
       { href: '/help',      label: 'Help',      icon: '❓', desc: 'How to use this app'        },

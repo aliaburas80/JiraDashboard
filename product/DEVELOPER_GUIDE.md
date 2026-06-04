@@ -212,6 +212,7 @@ All pages are React Client Components (`'use client'`). They read metrics from `
 
 The `AppShell` header renders 4 dropdown groups:
 - **Analytics**: `/summary`, `/dashboard`, `/charts`, `/trends`, `/teams`, `/portfolio`
+- **Reference**: `/landing` (About), `/glossary`, `/developer`, `/help`
 - **Delivery**: `/readiness`, `/explore`, `/customer`
 - **Data**: `/snapshots`, `/backend`
 - **Reference**: `/glossary`, `/developer`, `/help`

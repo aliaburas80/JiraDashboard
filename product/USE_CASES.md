@@ -2470,3 +2470,25 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 3. Footer shows "Delivery Clarity v4.1 · Ali Abu Ras · aliaburas80@gmail.com"
 4. Browser tab shows branded favicon and title "Delivery Clarity — Jira Intelligence"
 **Related FR:** FR-300, BR-105
+
+### UC-077 — New Team Member Discovers Features via Landing Page
+
+**Actor:** New team member / onboarding user
+**Trigger:** User has just been given access but doesn't know what the tool can do
+**Main Flow:**
+1. User clicks "About" in the Reference nav group → /landing opens
+2. Hero section explains the value proposition with headline and CTAs
+3. User reads the "How it works" 3-step section
+4. User scans the 12 feature cards — clicks "Work Item Explorer" → /explore opens
+5. User explores the feature, then returns to /landing to try another
+**Related FR:** FR-301, BR-106
+
+### UC-078 — User Shares Landing Page with Stakeholder
+
+**Actor:** Engineering Manager
+**Trigger:** Manager wants to introduce a stakeholder to the tool before they log in
+**Main Flow:**
+1. Manager copies the /landing URL and shares it with a stakeholder
+2. Stakeholder opens the page — sees the branded hero, stats, how-it-works, and feature grid
+3. Stakeholder clicks "Upload Jira Export" and starts onboarding
+**Related FR:** FR-301, BR-106

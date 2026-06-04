@@ -51,6 +51,16 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### P2 — In-App Landing Page (9.38)
+- New **`/landing`** page — full product showcase accessible from the nav (Reference → About)
+- **Hero**: Delivery Clarity logo + headline "From messy boards to measurable delivery confidence" + Upload and Dashboard CTAs
+- **Stats strip**: 4 cards — 28+ metrics, 17 Excel sheets, 14 dashboard sections, 310+ tests
+- **How it works**: 3-step process — Export from Jira → Upload in seconds → Act on insights
+- **Feature grid**: 12 clickable feature cards (Sprint Throughput, Work Item Explorer, Trends, Team Health, Portfolio, Release Readiness, Visual Analytics, Customer View, Smart Export, Snapshots, Data Quality, Admin Diagnostics) — each links directly to its page
+- **CTA footer**: Dark gradient section with brand mark, upload button, developer portal link
+- **"See all 12 features →"** link added below the upload page hero description
+- **"About"** (🏠) added to Reference nav group
+
 ### P2 — Branding Integration (9.37)
 - **Login & Register pages**: `<Image>` logo SVG replaces plain text "Delivery Clarity" heading — shows `delivery-clarity-logo-horizontal.svg` (200×62)
 - **app/layout.tsx metadata**: Added full metadata — `icons` (favicon.svg, favicon.ico, apple-touch-icon), `themeColor: #2563eb`, `openGraph` (title, description, image), `twitter` card
