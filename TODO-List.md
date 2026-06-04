@@ -378,7 +378,7 @@
 | 9.43 | Add Register link in header UserMenu dropdown (when not logged in) | P1 | ✅ Done |
 | 9.44 | Show "Create new account" link on login page always | P1 | ✅ Done |
 | 9.45 | Fix Charts page — Best Sprint chip shows abbreviated "S2" instead of full sprint name | P1 | ✅ Done |
-| 9.46 | Audit all Charts page KPI chips and truncated values — ensure full names shown in tooltips/titles | P2 | ❌ Not started |
+| 9.46 | Audit all Charts page KPI chips and truncated values — ensure full names shown in tooltips/titles | P2 | ✅ Done — removed JS truncation from Sprint Velocity VertBar (was >9), Team Load HorizBar (was >14), Kanban Status HorizBar (was >16), GanttChart labels (was .slice(0,32)); SprintVelocityChart: shortName() kept for display but fullName prop added so tooltip shows full sprint name |
 
 ---
 

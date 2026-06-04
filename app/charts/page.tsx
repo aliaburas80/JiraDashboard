@@ -247,7 +247,7 @@ function GanttChart({
 
   const rows: GanttRow[] = (epics as any[]).length
     ? (epics as any[]).slice(0, 12).map((e) => ({
-        label: (e.epic || 'No epic').slice(0, 32),
+        label: e.epic || 'No epic',
         pct:   e.progress    || 0,
         done:  e.completedIssues || 0,
         total: e.issues      || 0,
@@ -259,7 +259,7 @@ function GanttChart({
             : 'good',
       }))
     : (sprints as any[]).slice(0, 10).map((s) => ({
-        label: (s.name || 'Sprint').slice(0, 32),
+        label: s.name || 'Sprint',
         pct:   s.completionRate || 0,
         done:  s.completedIssues || 0,
         total: s.issues          || 0,
@@ -651,7 +651,7 @@ export default function ChartsPage() {
                 {sprints.map((s: any) => (
                   <VertBar
                     key={s.name}
-                    label={s.name?.length > 9 ? s.name.slice(0, 9) + '…' : s.name}
+                    label={s.name || 'Sprint'}
                     value={s.issues}
                     maxValue={maxSprint}
                     color={
@@ -701,7 +701,7 @@ export default function ChartsPage() {
               {capacity.map((c: any) => (
                 <HorizBar
                   key={c.assignee}
-                  label={c.assignee?.length > 14 ? c.assignee.slice(0, 14) + '…' : c.assignee}
+                  label={c.assignee || '(unassigned)'}
                   value={c.loadShare}
                   maxValue={maxLoad}
                   color={
@@ -775,7 +775,7 @@ export default function ChartsPage() {
               {kanbanTop.map((k: any) => (
                 <HorizBar
                   key={k.name}
-                  label={k.name?.length > 16 ? k.name.slice(0, 16) + '…' : k.name}
+                  label={k.name || '?'}
                   value={k.count}
                   maxValue={maxKanban}
                   color={

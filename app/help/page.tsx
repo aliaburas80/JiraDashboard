@@ -712,7 +712,80 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 27. About / Landing Page
+  // 27. Export Sheets Reference
+  {
+    id: 'export-sheets',
+    icon: '📋',
+    title: 'Export Sheets Reference',
+    items: [
+      {
+        q: 'What sheets are included in the main Excel export (17 sheets)?',
+        a: (
+          <div className="space-y-1 text-xs">
+            <p className="font-bold text-slate-700 mb-2">Main workbook — triggered from the Export button or Overview page:</p>
+            <ol className="space-y-0.5 list-none">
+              {[
+                ['01 Executive Summary',    'Health score, completion rate, velocity, top 5 recommendations, executive narrative'],
+                ['02 Project Health',       '9 health metrics with scores and interpretation'],
+                ['03 Team Performance',     'Per-assignee: issues, done, active, blocked, load %, SP, bug count'],
+                ['04 Sprint Throughput',    'Per-sprint: committed vs completed, carryover, scope changes, goal outcome'],
+                ['05 Mid-Sprint Delivery',  'Mid-sprint delivery patterns (healthy, end-loaded, blocked, scope instability)'],
+                ['06 Kanban Flow',          'Kanban periods: throughput, cycle time, lead time, flow efficiency, aging WIP'],
+                ['07 Risks and Blockers',   'All blocked, critical, overdue, and orphan items with reasons'],
+                ['08 Orphan & Data Quality','Orphan items + data quality score, field breakdown, missing-field impact'],
+                ['09 Assignee Workload',    'Per-assignee capacity: issues, story points, load share %'],
+                ['10 Story Points Analysis','SP distribution, completion %, velocity, breakdown by type'],
+                ['11 Cycle & Lead Time',    'P50/P75/P85/P95 percentiles for cycle and lead time'],
+                ['12 Throughput Trends',    'Sprint-over-sprint delivery trend with direction indicator'],
+                ['13 Recommendations',      'All smart recommendations: priority, evidence, suggested owner, action'],
+                ['14 Release Readiness',    'Per-version Go/No-Go verdict, checklist, completion %'],
+                ['15 Dependencies',         'Issue dependency links and blocked-by relationships'],
+                ['16 Metric Dictionary',    'Formula for every metric in the workbook — the "how it\'s calculated" reference'],
+                ['17 Raw Data Reference',   'Complete issue-level data export with all fields'],
+              ].map(([sheet, desc]) => (
+                <li key={sheet} className="flex gap-2">
+                  <span className="font-mono font-bold text-slate-600 shrink-0 w-44">{sheet}</span>
+                  <span className="text-slate-500">{desc}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ),
+      },
+      {
+        q: 'What sheets are in the Work Item Explorer Excel export (5 sheets)?',
+        a: (
+          <div className="space-y-1 text-xs">
+            <p className="font-bold text-slate-700 mb-2">Explorer workbook — triggered from the Export button on /explore after a graph is loaded:</p>
+            <ol className="space-y-0.5 list-none">
+              {[
+                ['01 Summary',    'Focus key, delivery stats, confidence score, largest unfinished branch, insights'],
+                ['02 All Issues', 'All connected nodes + orphans with 17 columns: key, summary, type, status, health, blocked, risk-path, role'],
+                ['03 Risk Items', 'Filtered to blocked, critical, or on-risk-path items only'],
+                ['04 Orphans',    'Orphan items only (no epic or parent link)'],
+                ['05 Insights',   'Generated insight bullets for the explored issue'],
+              ].map(([sheet, desc]) => (
+                <li key={sheet} className="flex gap-2">
+                  <span className="font-mono font-bold text-slate-600 shrink-0 w-28">{sheet}</span>
+                  <span className="text-slate-500">{desc}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ),
+      },
+      {
+        q: 'What does the Executive PDF export contain?',
+        a: 'A single A4 landscape page (downloaded as .html, printed as PDF from the browser) with: health score circle + band label, 6 KPI cards (completion, total issues, done, active, blocked, story points), top 5 epic progress bars, top 4 team capacity bars, key insights, and top 3 recommendations with priority dots.',
+      },
+      {
+        q: 'What does the HTML report export contain?',
+        a: 'A self-contained HTML file with: header (health score + band), key metrics grid, delivery composition donut, health mix donut, issue types donut, story points donut, team capacity bars, epic/sprint progress, status distribution, label distribution, and flow metrics. Fully printable with @media print styles.',
+      },
+    ],
+  },
+
+  // 28. About / Landing Page
   {
     id: 'about',
     icon: '🏠',

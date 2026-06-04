@@ -51,6 +51,21 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### P2 — Charts KPI Chip & Truncation Audit (9.46)
+- Removed JS string truncation from 4 chart label sites — CSS `truncate` + `title` attribute now handle display and tooltip correctly:
+  - **Sprint Velocity VertBar**: was `s.name.slice(0, 9) + '…'` → passes full sprint name; tooltip shows it
+  - **Team Load HorizBar**: was `c.assignee.slice(0, 14) + '…'` → passes full assignee name
+  - **Kanban Status HorizBar**: was `k.name.slice(0, 16) + '…'` → passes full status name
+  - **GanttChart labels**: was `(e.epic || label).slice(0, 32)` → passes full name; `title={r.label}` now shows the complete epic/sprint name
+- **SprintVelocityChart**: `shortName()` ("S14") kept for bar display; added `fullName` prop so `title` shows the complete sprint name on hover (e.g. "Sprint 14" not "S14")
+
+### Help — Export Sheets Reference
+- New **"Export Sheets Reference"** section added to `/help` listing all export outputs:
+  - 17-sheet main Excel workbook — all sheet names, descriptions, and content
+  - 5-sheet Work Item Explorer Excel — all sheet names and content
+  - Executive PDF — layout description
+  - HTML report — section descriptions
+
 ### P2 — In-App Landing Page (9.38)
 - New **`/landing`** page — full product showcase accessible from the nav (Reference → About)
 - **Hero**: Delivery Clarity logo + headline "From messy boards to measurable delivery confidence" + Upload and Dashboard CTAs
