@@ -766,4 +766,6 @@ The following metrics define product success and will be measured at 30, 90, and
 
 **BR-095 (Should — P2):** The Smart Recommendations section MUST maintain a history of up to 10 recommendation snapshots. Users MUST be able to see which recommendations are new since their last upload, which have been resolved, and browse the full history. This supports continuous improvement tracking over time.
 
+**BR-097 (Should — P2 — Done):** The system MUST track release confidence as a trend over multiple uploads. Teams need to see whether their release readiness is improving or degrading sprint-over-sprint — not just a one-time snapshot. This is a continuous improvement visibility requirement.
+
 **BR-096 (Should — P2 — Done):** The Work Item Explorer (`/explore`) MUST allow users to export the current graph as an Excel workbook or CSV. This is a reporting and stakeholder-sharing requirement — users need to take explorer findings offline or embed them in delivery reports without re-entering data manually.

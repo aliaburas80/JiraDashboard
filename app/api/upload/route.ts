@@ -4,6 +4,7 @@ import { parseJiraFile } from '@/services/jira/parser';
 import { validateIssueData } from '@/services/jira/validation';
 import { calculateDashboardMetrics } from '@/services/metrics/metrics.service';
 import { appendImportLog, buildImportLog } from '@/services/imports/importLogs.service';
+import { computeReleaseConfidence } from '@/lib/releaseConfidence';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
@@ -143,6 +144,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Save to DB if user is logged in — include trend metrics in metadataJson
     if (userId) {
       const flow = (metrics.flow ?? {}) as any;
+      const releaseConfidenceScore = computeReleaseConfidence({
+        completionRate: metrics.completionRate  ?? 0,
+        blockedIssues:  metrics.blockedIssues   ?? 0,
+        criticalCount:  flow.critical           ?? 0,
+        openDefects:    metrics.openDefects     ?? 0,
+        totalIssues:    metrics.totalIssues     ?? 0,
+      });
       await prisma.importLog.create({ data: {
         userId,
         fileName:        originalname,
@@ -156,17 +164,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         healthScore:     metrics.healthScore ?? 0,
         processingTimeMs: Date.now() - startTime,
         metadataJson: JSON.stringify({
-          completionRate:      metrics.completionRate       ?? 0,
-          blockedIssues:       metrics.blockedIssues        ?? 0,
-          activeIssues:        metrics.activeIssues         ?? 0,
-          openDefects:         metrics.openDefects          ?? 0,
-          avgLeadTimeDays:     flow.averageLeadTimeDays     ?? 0,
-          avgCycleTimeDays:    flow.averageCycleTimeDays    ?? 0,
-          criticalCount:       flow.critical               ?? 0,
-          warningCount:        flow.warning                ?? 0,
-          dataQualityScore:    metrics.dataQuality?.score  ?? null,
-          avgSprintThroughput: metrics.throughput?.sprint?.averageThroughputCount ?? null,
-          trendDirection:      metrics.throughput?.sprint?.trendDirection ?? null,
+          completionRate:          metrics.completionRate       ?? 0,
+          blockedIssues:           metrics.blockedIssues        ?? 0,
+          activeIssues:            metrics.activeIssues         ?? 0,
+          openDefects:             metrics.openDefects          ?? 0,
+          avgLeadTimeDays:         flow.averageLeadTimeDays     ?? 0,
+          avgCycleTimeDays:        flow.averageCycleTimeDays    ?? 0,
+          criticalCount:           flow.critical               ?? 0,
+          warningCount:            flow.warning                ?? 0,
+          dataQualityScore:        metrics.dataQuality?.score  ?? null,
+          avgSprintThroughput:     metrics.throughput?.sprint?.averageThroughputCount ?? null,
+          trendDirection:          metrics.throughput?.sprint?.trendDirection ?? null,
+          releaseConfidenceScore,
         }),
       }}).catch(() => {});
     }

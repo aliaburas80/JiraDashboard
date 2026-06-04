@@ -355,7 +355,7 @@
 | 9.28 | Recommendation feedback buttons | P2 | ✅ Done — 👍/👎 buttons on each rec card, toggle behaviour, localStorage persistence, 8 tests passing |
 | 9.29b | Recommendation history | P2 | ✅ Done — snapshots in dc_rec_history (max 10), NEW badge, Resolved section, collapsible history panel; 8 tests passing |
 | 9.29 | Work Item Explorer export | P2 | ✅ Done — Excel (5 sheets: Summary, All Issues, Risk Items, Orphans, Insights) + CSV; Export dropdown on /explore; 11 tests passing |
-| 9.30 | Release confidence trend | P2 | ❌ Not started |
+| 9.30 | Release confidence trend | P2 | ✅ Done — 0–100 score per upload (completion 55%, blockers 25%, critical 12%, defects 8%); stored in metadataJson; chart + stat card + log column on /trends; 10 tests passing |
 | 9.31 | Team-level health comparison | P2 | ❌ Not started |
 | 9.32 | Cross-team portfolio summary | P2 | ❌ Not started |
 | 9.33 | Executive one-page PDF export | P2 | ❌ Not started |

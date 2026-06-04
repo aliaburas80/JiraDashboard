@@ -110,11 +110,14 @@ export default function TrendsPage() {
         {hasData && (
           <>
             {/* Summary row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              <StatCard label="Health Score"  first={first.healthScore}    last={last.healthScore}    unit="/100" />
-              <StatCard label="Completion"    first={first.completionRate} last={last.completionRate} unit="%"    />
-              <StatCard label="Blocked Items" first={first.blockedIssues}  last={last.blockedIssues}  unit=""     higherIsBetter={false} />
-              <StatCard label="Avg Lead Time" first={first.avgLeadTimeDays} last={last.avgLeadTimeDays} unit="d"  higherIsBetter={false} />
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+              <StatCard label="Health Score"        first={first.healthScore}             last={last.healthScore}             unit="/100" />
+              <StatCard label="Completion"          first={first.completionRate}          last={last.completionRate}          unit="%"    />
+              <StatCard label="Blocked Items"       first={first.blockedIssues}           last={last.blockedIssues}           unit=""     higherIsBetter={false} />
+              <StatCard label="Avg Lead Time"       first={first.avgLeadTimeDays}         last={last.avgLeadTimeDays}         unit="d"    higherIsBetter={false} />
+              {first.releaseConfidenceScore != null && last.releaseConfidenceScore != null && (
+                <StatCard label="Release Confidence" first={first.releaseConfidenceScore} last={last.releaseConfidenceScore} unit="%"    />
+              )}
             </div>
 
             {/* Upload timeline */}
@@ -202,6 +205,15 @@ export default function TrendsPage() {
                   yMin={0} yMax={100}
                 />
               )}
+              {points.some(p => p.releaseConfidenceScore !== null) && (
+                <TrendChart
+                  title="Release Confidence"
+                  unit="%"
+                  color="#7c3aed"
+                  data={toChartData(points, 'releaseConfidenceScore')}
+                  yMin={0} yMax={100}
+                />
+              )}
             </div>
 
             {/* Raw upload log table */}
@@ -213,7 +225,7 @@ export default function TrendsPage() {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-left">
-                      {['Date', 'File', 'Health', 'Completion', 'Done/Total', 'Blocked', 'Lead Time', 'Cycle Time', 'Data Quality'].map(h => (
+                      {['Date', 'File', 'Health', 'Completion', 'Done/Total', 'Blocked', 'Lead Time', 'Cycle Time', 'Data Quality', 'Rel. Confidence'].map(h => (
                         <th key={h} className="py-2.5 px-3 text-[10px] font-black uppercase tracking-wider text-slate-500 whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -230,6 +242,9 @@ export default function TrendsPage() {
                         <td className="py-2 px-3 text-slate-600">{p.avgLeadTimeDays > 0 ? `${p.avgLeadTimeDays}d` : '—'}</td>
                         <td className="py-2 px-3 text-slate-600">{p.avgCycleTimeDays > 0 ? `${p.avgCycleTimeDays}d` : '—'}</td>
                         <td className="py-2 px-3 text-slate-600">{p.dataQualityScore != null ? `${p.dataQualityScore}%` : '—'}</td>
+                        <td className="py-2 px-3 font-semibold" style={{ color: p.releaseConfidenceScore == null ? '#94a3b8' : p.releaseConfidenceScore >= 80 ? '#16a34a' : p.releaseConfidenceScore >= 60 ? '#f59e0b' : '#dc2626' }}>
+                          {p.releaseConfidenceScore != null ? `${p.releaseConfidenceScore}%` : '—'}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

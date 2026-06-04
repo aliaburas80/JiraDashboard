@@ -1754,4 +1754,6 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-289:** The dashboard filter row (All / High Risk / Blocked / Needs Review / Clear / Show filters / Export) MUST be hidden completely when the active dashboard view has `hideFlowPanel: true`. This includes the Executive and Product Owner views. KPI cards that previously linked to the flow panel MUST remove their click handlers when the panel is hidden.
 
+**FR-291 (P2 — Done):** On every successful upload the system MUST compute a Release Confidence Score (0–100) using the formula: completion rate × 0.55 + (1 − blocked/total) × 25 + (1 − critical/total) × 12 + max(0, 8 − defects × 2). The score MUST be persisted in `ImportLog.metadataJson` as `releaseConfidenceScore` and returned by `GET /api/trends`. The `/trends` page MUST display it as a trend chart, a summary stat card, and a column in the upload log table.
+
 **FR-290 (P2 — Done):** The `/explore` Work Item Explorer MUST provide an Export dropdown button once a graph is loaded. It MUST offer two formats: (1) Excel (.xlsx) — 5-sheet workbook: Summary (focus stats + insights + largest branch), All Issues (all connected nodes + orphans), Risk Items (blocked/critical/risk-path only), Orphans, and Insights; (2) CSV — flat table of all nodes. Files MUST be named `explorer-{key}-{date}.xlsx / .csv`.

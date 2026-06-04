@@ -51,6 +51,14 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### P2 — Release Confidence Trend (9.30)
+- New **Release Confidence Score** (0–100) computed on every upload: completion rate (55 pts) + no-blockers (25 pts) + no-critical (12 pts) + no-defects (8 pts)
+- Score stored in `ImportLog.metadataJson` as `releaseConfidenceScore`
+- `/trends` page gains: Release Confidence **trend chart** (purple, yMin=0 yMax=100), **stat card** in summary row, and **Rel. Confidence** column in upload log table — all gated on `releaseConfidenceScore != null` so old uploads show `—` gracefully
+- Band helper: High ≥ 80 / Medium ≥ 60 / Low ≥ 40 / Critical < 40
+- Formula lives in `src/lib/releaseConfidence.ts` — pure, testable, reusable
+- 10 automated tests (TC-RC-01–10)
+
 ### P2 — Work Item Explorer Export (9.29)
 - **Export dropdown** on `/explore` results view (visible once a graph is loaded)
 - **Excel export** — 5-sheet workbook:
