@@ -866,24 +866,52 @@ export default function DashboardPage() {
           {!hideFlowPanel && <>
           <div aria-hidden="true" style={{ height: 2, background: 'linear-gradient(90deg, rgba(37,99,235,0.45), rgba(139,92,246,0.32), rgba(20,184,166,0.32))' }} />
 
-          {/* ── Single action row: filter pills + tools ── */}
-          <div className="px-4 py-2 flex flex-wrap items-center" style={{ gap: 2 }}>
+          {/* ── Single action row: filter tabs + tools (NavItem tab style — matches section switcher) ── */}
+          <div className="px-4 flex flex-wrap items-center" style={{ gap: 2, paddingTop: 6, paddingBottom: 6 }}>
 
-            {/* ── Filter tabs — same style as section nav items above ── */}
+            {/* ── Filter tabs — no border, underline indicator for active ── */}
             {([
-              { f: 'all',          label: 'All',          iconPath: 'M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z',                              activeCls: 'btn-primary',  inactiveCls: 'btn-secondary' },
-              { f: 'high-risk',    label: 'High Risk',    iconPath: 'M12 2 4 5.5v6.1c0 5 3.4 9.6 8 10.8 4.6-1.2 8-5.8 8-10.8V5.5L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V7h2v5Z',  activeCls: 'btn-danger',   inactiveCls: 'btn-secondary text-red-600 border-red-200 bg-red-50 hover:bg-red-100' },
-              { f: 'blocked',      label: 'Blocked',      iconPath: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM7 11h10v2H7v-2Z',                               activeCls: 'btn-secondary bg-orange-500 text-white border-orange-500 hover:bg-orange-600', inactiveCls: 'btn-secondary text-orange-600 border-orange-200 bg-orange-50 hover:bg-orange-100' },
-              { f: 'needs-review', label: 'Needs Review', iconPath: 'M12 5C7 5 3.2 8.1 1.6 12c1.6 3.9 5.4 7 10.4 7s8.8-3.1 10.4-7C20.8 8.1 17 5 12 5Zm0 10.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z', activeCls: 'btn-secondary bg-purple-600 text-white border-purple-600 hover:bg-purple-700',  inactiveCls: 'btn-secondary text-purple-600 border-purple-200 bg-purple-50 hover:bg-purple-100' },
-            ] as const).map(({ f, label, iconPath, activeCls, inactiveCls }) => {
+              { f: 'all',          label: 'All',          activeColor: '#2563eb', activeShadow: 'rgba(37,99,235,0.10)',   iconPath: 'M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z',  dot: false },
+              { f: 'high-risk',    label: 'High Risk',    activeColor: '#dc2626', activeShadow: 'rgba(220,38,38,0.10)',   iconPath: 'M12 2 4 5.5v6.1c0 5 3.4 9.6 8 10.8 4.6-1.2 8-5.8 8-10.8V5.5L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V7h2v5Z', dot: ((metrics?.blockedIssues ?? 0) + ((metrics?.flow as any)?.critical ?? 0)) > 0 },
+              { f: 'blocked',      label: 'Blocked',      activeColor: '#ea580c', activeShadow: 'rgba(234,88,12,0.10)',  iconPath: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM7 11h10v2H7v-2Z', dot: false },
+              { f: 'needs-review', label: 'Needs Review', activeColor: '#8b5cf6', activeShadow: 'rgba(139,92,246,0.10)', iconPath: 'M12 5C7 5 3.2 8.1 1.6 12c1.6 3.9 5.4 7 10.4 7s8.8-3.1 10.4-7C20.8 8.1 17 5 12 5Zm0 10.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z', dot: false },
+            ] as const).map(({ f, label, activeColor, activeShadow, iconPath, dot }) => {
               const isActive = activeQuickFilter === f;
               return (
                 <button key={f} type="button" onClick={() => applyQuickFilter(f)}
-                  className={`${cn('inline-flex items-center gap-1.5 btn-sm', isActive ? activeCls : inactiveCls)}`}>
-                  <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current flex-shrink-0" aria-hidden="true">
+                  style={{
+                    position: 'relative',
+                    display: 'inline-flex',
+                    minWidth: 'max-content',
+                    minHeight: 44,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 5,
+                    padding: '6px 10px',
+                    borderRadius: 12,
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    fontFamily: 'inherit',
+                    transition: 'background 180ms ease, color 180ms ease',
+                    color: isActive ? activeColor : '#334155',
+                    background: isActive
+                      ? 'linear-gradient(180deg, rgba(239,246,255,0.95), rgba(241,245,249,0.72))'
+                      : 'transparent',
+                  }}
+                >
+                  {dot && activeQuickFilter !== f && (
+                    <span style={{ position: 'absolute', top: 6, right: 6, width: 7, height: 7, borderRadius: '50%', background: '#ef4444' }} aria-hidden="true" />
+                  )}
+                  <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: isActive ? activeColor : '#64748b', flexShrink: 0 }}>
                     <path d={iconPath} />
                   </svg>
-                  {label}
+                  <span>{label}</span>
+                  {isActive && (
+                    <span style={{ position: 'absolute', left: 10, right: 10, bottom: -4, height: 3, borderRadius: 999, background: activeColor, boxShadow: `0 0 0 4px ${activeShadow}` }} aria-hidden="true" />
+                  )}
                 </button>
               );
             })}
@@ -896,26 +924,27 @@ export default function DashboardPage() {
             {/* Divider */}
             <span className="w-px h-5 bg-slate-200 mx-1 shrink-0" aria-hidden="true" />
 
-            {/* Clear */}
-            <button type="button" onClick={clearFilters} className="btn-secondary btn-sm gap-1.5">
-              <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current" aria-hidden="true"><path d="m19 6.4-1.4-1.4L12 10.6 6.4 5 5 6.4l5.6 5.6L5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4Z" /></svg>
+            {/* Clear — tab style */}
+            <button type="button" onClick={clearFilters}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, minWidth: 'max-content', padding: '6px 10px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, lineHeight: 1, fontFamily: 'inherit', color: '#334155', background: 'transparent', transition: 'background 180ms ease' }}>
+              <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: '#64748b', flexShrink: 0 }}><path d="m19 6.4-1.4-1.4L12 10.6 6.4 5 5 6.4l5.6 5.6L5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4Z" /></svg>
               Clear
             </button>
 
-            {/* Show filters — hidden when the flow panel is not available for this view */}
+            {/* Show filters — tab style, blue accent */}
             {!hideFlowPanel && (
               <button type="button" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 120); }}
-                className="btn-primary btn-sm gap-1.5">
-                <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current" aria-hidden="true"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5Zm4.4 2 4.6 5.2L16.6 7H7.4Z" /></svg>
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, minWidth: 'max-content', padding: '6px 10px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, lineHeight: 1, fontFamily: 'inherit', color: '#2563eb', background: 'transparent', transition: 'background 180ms ease' }}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: '#2563eb', flexShrink: 0 }}><path d="M3 5h18l-7 8v5l-4 2v-7L3 5Zm4.4 2 4.6 5.2L16.6 7H7.4Z" /></svg>
                 Show filters
               </button>
             )}
 
-            {/* Copy link — only when filters active */}
+            {/* Copy link — tab style (only when filters active) */}
             {activeFilterCount > 0 && (
-              <button type="button" onClick={() => copyToClipboard(window.location.href)}
-                title="Copy shareable link" className="btn-secondary btn-sm gap-1.5">
-                <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current" aria-hidden="true"><path d="M13.8 10.2a4 4 0 0 0-5.6 0l-4 4a4 4 0 1 0 5.6 5.6l1.1-1.1-1.4-1.4-1.1 1.1a2 2 0 1 1-2.8-2.8l4-4a2 2 0 0 1 2.8 2.8l-.8.8 1.4 1.4.8-.8a4 4 0 0 0 0-5.6Z" /></svg>
+              <button type="button" onClick={() => copyToClipboard(window.location.href)} title="Copy shareable link"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, minWidth: 'max-content', padding: '6px 10px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, lineHeight: 1, fontFamily: 'inherit', color: '#334155', background: 'transparent', transition: 'background 180ms ease' }}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: '#64748b', flexShrink: 0 }}><path d="M13.8 10.2a4 4 0 0 0-5.6 0l-4 4a4 4 0 1 0 5.6 5.6l1.1-1.1-1.4-1.4-1.1 1.1a2 2 0 1 1-2.8-2.8l4-4a2 2 0 0 1 2.8 2.8l-.8.8 1.4 1.4.8-.8a4 4 0 0 0 0-5.6Z" /></svg>
                 <span className="hidden sm:inline">Copy link</span>
               </button>
             )}

@@ -48,10 +48,18 @@ export default function SaveSnapshotButton({ metrics }: Props) {
       <button
         type="button"
         onClick={handleOpen}
-        className="btn-secondary btn-sm gap-1.5"
         title="Save current dashboard as a named snapshot"
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 5,
+          minHeight: 44, minWidth: 'max-content',
+          padding: '6px 10px', borderRadius: 12,
+          border: 'none', cursor: 'pointer',
+          fontSize: 12, fontWeight: 700, lineHeight: 1, fontFamily: 'inherit',
+          color: '#334155', background: 'transparent',
+          transition: 'background 180ms ease',
+        }}
       >
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: 'none', stroke: '#64748b', strokeWidth: 2.5, flexShrink: 0 }}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
         </svg>
         Save snapshot

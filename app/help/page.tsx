@@ -666,7 +666,28 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 26. Deployment
+  // 26. Filter Bar
+  {
+    id: 'filter-bar',
+    icon: '🔍',
+    title: 'Filter Bar',
+    items: [
+      {
+        q: 'What do the filter tabs at the top of the dashboard do?',
+        a: 'The filter bar has four quick-filter tabs: All (show everything), High Risk (critical and warning items), Blocked (items with blocked flag), Needs Review (items needing attention). The active tab shows a coloured underline — blue for All, red for High Risk, orange for Blocked, purple for Needs Review.',
+      },
+      {
+        q: 'What does the red dot on "High Risk" mean?',
+        a: 'A red dot badge on the High Risk tab means there are currently blocked or critical items in your data. It disappears when no high-risk items exist.',
+      },
+      {
+        q: 'What do Clear, Show filters, Copy link, and Save snapshot do?',
+        a: '"Clear" resets all active filters to show all items. "Show filters" opens the advanced filter panel for detailed filtering (status, assignee, sprint, health, etc.). "Copy link" copies a shareable URL with your current filter state. "Save snapshot" saves the current dashboard metrics as a named point-in-time report.',
+      },
+    ],
+  },
+
+  // 27. Deployment
   {
     id: 'deployment',
     icon: '🚢',

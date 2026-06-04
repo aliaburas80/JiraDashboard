@@ -51,6 +51,15 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### UX — Filter Bar Redesign (Tab Style)
+- Filter bar buttons (All, High Risk, Blocked, Needs Review) redesigned to match the **section switcher tab style** — no border, no pill/background, icon + label, **coloured underline indicator** for the active filter
+- Active state: light blue gradient background + coloured bottom pill (blue / red / orange / purple per filter)
+- Inactive state: transparent background, dark slate text, coloured icon on hover
+- Red dot badge on "High Risk" when blocked or critical items exist
+- Tool buttons (Clear, Show filters, Copy link, Save snapshot) also converted to tab style — no border, just icon + text
+- Export button retains green gradient (primary CTA distinction)
+- All buttons use `minHeight: 44` for touch accessibility
+
 ### P2 — Deployment Guide (9.35)
 - New **`product/DEPLOYMENT_GUIDE.md`** — 12-section comprehensive deployment guide
 - **Option A — Docker** (recommended): multi-stage Dockerfile + docker-compose walkthrough, volume persistence, healthcheck, useful commands, update procedure
