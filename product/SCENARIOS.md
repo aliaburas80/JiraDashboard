@@ -1026,3 +1026,20 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Outcome:** David discovers two features he wouldn't have found from the dashboard alone, in under 5 minutes.
 
 **Related:** UC-077, FR-301
+
+### SCN-037 — New Team Member Discovers Smart Recommendations via Tour
+
+**Persona:** Marcus, new Scrum Master joining the team
+**Context:** Marcus has just uploaded his first Jira export and landed on the Overview page.
+
+**Scenario:**
+1. Overview page loads — after 800ms, a dark tour popover appears: "Welcome to Delivery Clarity 👋"
+2. Marcus clicks "Start tour" → dashboard loads
+3. Tour Step 2: pulsing ring around the section switcher tabs. Marcus sees he can click "Sprints" to focus only on sprint data
+4. Tour Step 5: ring highlights Smart Recommendations section. Popover explains he can assign owners and give feedback
+5. Tour Step 7: "Open Explorer →" — Marcus clicks, navigates to /explore
+6. Tour marks complete; Marcus opens the explorer and traces EPIC-42
+
+**Outcome:** Marcus discovers both the section switcher and the explorer in 3 minutes — features he wouldn't have found independently.
+
+**Related:** UC-079, TC-PT-01–08

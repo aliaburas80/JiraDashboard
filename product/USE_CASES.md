@@ -2492,3 +2492,25 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 2. Stakeholder opens the page — sees the branded hero, stats, how-it-works, and feature grid
 3. Stakeholder clicks "Upload Jira Export" and starts onboarding
 **Related FR:** FR-301, BR-106
+
+### UC-079 — New User Completes Guided Tour on First Visit
+
+**Actor:** New user (just uploaded first Jira export)
+**Trigger:** User lands on /summary — tour auto-starts after 800ms delay
+**Main Flow:**
+1. User sees dark popover: "Welcome to Delivery Clarity 👋" with "Start tour" CTA
+2. User clicks "Start tour" → redirected to /dashboard
+3. Tour highlights Section Switcher → Health Score → Attention Items → Recommendations → Sprint Throughput
+4. Final step offers "Open Explorer →" navigation
+5. User completes tour → dc_tour_completed saved to localStorage
+**Related FR:** FR-303, BR-107
+
+### UC-080 — Returning User Replays Tour from Dashboard
+
+**Actor:** Any logged-in user
+**Trigger:** User wants to re-explore features
+**Main Flow:**
+1. User clicks the ℹ️ "Tour" button in the dashboard header card
+2. Tour starts from Step 1 (Welcome) regardless of previous completion
+3. User navigates with ← → arrow keys or buttons, presses Esc to exit
+**Related FR:** FR-303, BR-107

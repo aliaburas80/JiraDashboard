@@ -12,6 +12,8 @@ import { exportToExcel, exportToHtml, exportExecutivePdf } from '@/lib/exportUti
 import { getHealthBand, HEALTH_COLORS, type HealthBand } from '@/lib/utils';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import WhatChangedPanel from '@/components/dashboard/WhatChangedPanel';
+import dynamic from 'next/dynamic';
+const ProductTour = dynamic(() => import('@/components/tour/ProductTour'), { ssr: false });
 
 const DONE_STATUSES = new Set(['done', 'closed', 'resolved']);
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
@@ -274,6 +276,14 @@ export default function SummaryPage() {
           Upload New File
         </button>
 
+        {/* Take a tour */}
+        <button type="button"
+          onClick={() => { router.push('/dashboard'); setTimeout(() => window.dispatchEvent(new CustomEvent('dc:start-tour')), 600); }}
+          className="btn-secondary px-5 py-2.5 gap-2">
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>
+          Take a tour
+        </button>
+
         {/* Export Excel — dark emerald */}
         <button type="button" onClick={async () => { if (metrics) await exportToExcel(metrics); }}
           className="btn-green px-5 py-2.5" style={{ background: '#059669' }}>
@@ -327,6 +337,8 @@ export default function SummaryPage() {
         </button>
 
       </div>
+      {/* Tour auto-starts on first visit; fires when user navigates to dashboard */}
+      <ProductTour />
     </AppShell>
   );
 }

@@ -712,7 +712,32 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 27. Export Sheets Reference
+  // 27. Product Tour
+  {
+    id: 'product-tour',
+    icon: '🎯',
+    title: 'Product Tour',
+    items: [
+      {
+        q: 'How do I start the guided tour?',
+        a: 'Two ways: (1) On the Overview (/summary) page, click the "Take a tour" button in the CTA row — it navigates to the dashboard and starts the tour automatically. (2) On the Dashboard (/dashboard), click the small "Tour" (ℹ️) button in the top-right of the header card.',
+      },
+      {
+        q: 'What does the tour cover?',
+        a: '8 steps: Welcome → Section Switcher (tab navigation) → Health Score & Key Metrics → Priority Attention (blockers/overdue) → Smart Recommendations (action cards) → Sprint Throughput → Work Item Explorer (opens /explore) → Done.',
+      },
+      {
+        q: 'How do I navigate the tour?',
+        a: 'Click "Next →" and "← Back" buttons, or use arrow keys (→ Next, ← Back). Press Esc or click "Skip tour" at any time to exit.',
+      },
+      {
+        q: 'How do I replay the tour after completing it?',
+        a: 'Click the "Tour" button on the dashboard at any time — it always restarts from Step 1. Or run resetTour() in the browser console to fully clear the completed state.',
+      },
+    ],
+  },
+
+  // 28. Export Sheets Reference
   {
     id: 'export-sheets',
     icon: '📋',

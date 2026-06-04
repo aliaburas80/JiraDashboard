@@ -1200,3 +1200,22 @@ Set `client_max_body_size 25M;` in the nginx site config. Without this, Jira CSV
 2. Visit `/admin/security` and aim for score ≥ 80
 3. Test file upload with a real Jira export
 4. Set up cron backups (see DEPLOYMENT_GUIDE.md §11)
+
+### Product Tour
+
+**Library:** None — pure React + CSS animations.
+
+**State:** `src/lib/tour.ts` — `dismissTour()`, `completeTour()`, `resetTour()`, `TOUR_STEPS[]`; persisted to `dc_tour_dismissed` / `dc_tour_completed` in localStorage.
+
+**Component:** `src/components/tour/ProductTour.tsx` — lazy-loaded via `dynamic(() => import(...), { ssr: false })`.
+- `HighlightRing`: `position:fixed` pulsing border ring around the target element (tracked by `requestAnimationFrame`)
+- `TourPopover`: dark `position:fixed` card with progress dots, navigation buttons, keyboard handler
+- `Backdrop`: semi-transparent overlay, click to dismiss
+- Injects `@keyframes dc-tour-pulse` and `dc-tour-fadein` once via `<style>` tag
+
+**Tour triggers:**
+- `/summary` — "Take a tour" button fires `router.push('/dashboard')` then `dc:start-tour` event after 600ms
+- `/dashboard` — "Tour" button dispatches `window.dispatchEvent(new CustomEvent('dc:start-tour'))`
+- `ProductTour` listens for `dc:start-tour` and sets `active = true`
+
+**Reset for development:** Run `resetTour()` from the browser console, or clear `dc_tour_dismissed` and `dc_tour_completed` from localStorage.

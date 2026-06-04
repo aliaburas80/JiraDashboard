@@ -371,7 +371,7 @@
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| 9.39 | Product tour animation | P3 | ❌ Not started |
+| 9.39 | Product tour animation | P3 | ✅ Done — 8-step guided tour: pulsing highlight ring + dark popover, progress dots, Back/Next/Skip, keyboard nav (←/→/Esc); no external library; autoStart on summary page; "Tour" button on dashboard; "Take a tour" on summary; dc_tour_dismissed/completed in localStorage; reduced-motion support; 8 tests passing |
 | 9.40 | Advanced theme customization | P3 | ❌ Not started |
 | 9.41 | Custom dashboard layout builder | P3 | ❌ Not started |
 | 9.42 | Advanced chart customization | P3 | ❌ Not started |

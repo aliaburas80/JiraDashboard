@@ -51,6 +51,18 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### P3 — Product Tour Animation (9.39)
+- **8-step guided tour** — no external library (no Shepherd.js, Intro.js, etc.); pure React + CSS
+- **Pulsing highlight ring**: `position:fixed` ring with `box-shadow` pulse animation around the target dashboard section
+- **Dark popover**: animated card with progress dots, step counter, title, description, Back / Next / Skip / Finish buttons
+- **Tour steps**: Welcome → Section Switcher → Health Score → Priority Attention → Smart Recommendations → Sprint Throughput → Work Item Explorer (CTA navigates) → Done
+- **Triggers**: "Tour" button (info icon) on `/dashboard` header card; "Take a tour" button on `/summary` CTA row; auto-starts via `dc:start-tour` custom event
+- **Keyboard**: ← Back, → Next, Esc = Skip
+- **State**: `dc_tour_dismissed` + `dc_tour_completed` in localStorage; `resetTour()` available for testing
+- **Accessibility**: `role="dialog"` on popover, `aria-label` with step info, `@media (prefers-reduced-motion)` disables animations
+- **Lazy-loaded** via Next.js `dynamic()` — zero bundle cost until first use
+- 8 automated tests (TC-PT-01–08)
+
 ### P2 — Charts KPI Chip & Truncation Audit (9.46)
 - Removed JS string truncation from 4 chart label sites — CSS `truncate` + `title` attribute now handle display and tooltip correctly:
   - **Sprint Velocity VertBar**: was `s.name.slice(0, 9) + '…'` → passes full sprint name; tooltip shows it

@@ -766,6 +766,8 @@ The following metrics define product success and will be measured at 30, 90, and
 
 **BR-095 (Should — P2):** The Smart Recommendations section MUST maintain a history of up to 10 recommendation snapshots. Users MUST be able to see which recommendations are new since their last upload, which have been resolved, and browse the full history. This supports continuous improvement tracking over time.
 
+**BR-107 (Should — P3 — Done):** New users landing on the dashboard for the first time face a steep learning curve — 14 sections, complex filtering, and 28+ metrics. A guided tour reduces time-to-value by directing attention to the 5–6 most impactful features in sequence. Without a tour, new team members typically need a 30-minute walkthrough from an existing user.
+
 **BR-106 (Should — P2 — Done):** Users who are already inside the app (logged in, data loaded) need a way to discover features they haven't used yet. A new team member should be able to navigate to a single page that shows everything the product can do, with direct links to each feature. This reduces the "I didn't know that existed" discovery gap.
 
 **BR-105 (Should — P2 — Done):** Every user-facing surface of the product — login, register, reports, exports, browser tab, social sharing — MUST present consistent branding. Inconsistent branding (logo on some pages, plain text on others; wrong version numbers; different email addresses) undermines the product's professional credibility and trust.

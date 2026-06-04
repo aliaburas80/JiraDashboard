@@ -33,6 +33,8 @@ import SectionNav from '@/components/ui/SectionNav';
 import SaveSnapshotButton from '@/components/dashboard/SaveSnapshotButton';
 import { getSavedViewId, saveViewId, getView, isTierHidden } from '@/lib/dashboardView';
 import type { ViewId } from '@/types/dashboardView';
+import dynamic from 'next/dynamic';
+const ProductTour = dynamic(() => import('@/components/tour/ProductTour'), { ssr: false });
 
 // ─── accent map ───────────────────────────────────────────────────────────────
 const HEALTH_VARIANT: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'neutral'> = {
@@ -782,6 +784,18 @@ export default function DashboardPage() {
         {/* ── 2. SUMMARY BAR ─────────────────────────────────────────────────── */}
         <Card id="dashboard-summary" className="px-5 py-4 mb-4">
           <div className="flex flex-wrap items-center gap-4 mb-3">
+            {/* Tour trigger — only shows when tour not yet dismissed */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('dc:start-tour'))}
+              className="ml-auto btn-secondary btn-xs gap-1 print:hidden"
+              title="Take a guided tour of the dashboard"
+            >
+              <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>
+              Tour
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-4 mb-3">
             <div className={cn(
               'flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold border',
               riskItems === 0 ? 'bg-green-50 text-green-700 border-green-200'
@@ -1035,7 +1049,7 @@ export default function DashboardPage() {
 
         {/* ── 3. SMART RECOMMENDATIONS ────────────────────────────────────────── */}
         {smartActions.length > 0 && (
-          <section className="mb-6" aria-label="Smart recommendations">
+          <section id="section-recommendations" className="mb-6" aria-label="Smart recommendations">
             <CollapsibleTrigger
               id="recommendations"
           hidden={!sectionHeaderVisible('recommendations')}
@@ -2293,6 +2307,7 @@ export default function DashboardPage() {
 
       </div>
       <ScrollToTopFab />
+      <ProductTour />
     </AppShell>
   );
 }
