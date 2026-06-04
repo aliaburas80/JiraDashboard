@@ -80,7 +80,7 @@ export function buildExecutivePdfHtml(metrics: DashboardMetrics): string {
     <div style="display:flex;gap:6px;margin-bottom:6px;align-items:flex-start;">
       <span style="width:6px;height:6px;border-radius:50%;background:${dot};flex-shrink:0;margin-top:3px;"></span>
       <div>
-        <div style="font-size:9px;font-weight:700;color:#1e293b;">${esc(r.title)}</div>
+        <div style="font-size:9px;font-weight:700;color:#1e293b;">${esc(r.text)}</div>
         <div style="font-size:8px;color:#64748b;margin-top:1px;">${esc(r.evidence.slice(0, 80))}</div>
       </div>
     </div>`;
