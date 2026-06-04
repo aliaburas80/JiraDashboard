@@ -712,7 +712,32 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 27. Chart Customization
+  // 27. Cloud Storage
+  {
+    id: 'cloud-storage',
+    icon: '☁️',
+    title: 'Cloud Storage',
+    items: [
+      {
+        q: 'What is the Cloud Storage feature?',
+        a: 'The Cloud Storage tab in /admin/settings allows admins to configure a cloud provider (AWS S3, Azure Blob, or Google Cloud Storage) to receive automatic backup files. This protects your database and config files in case of server failure.',
+      },
+      {
+        q: 'Which providers are supported?',
+        a: 'Four options: (1) Local — saves to data/cloud-backups/ on the server, no credentials needed. (2) AWS S3 — also compatible with MinIO, Backblaze B2, Cloudflare R2. (3) Azure Blob Storage. (4) Google Cloud Storage. Each requires its SDK: @aws-sdk/client-s3, @azure/storage-blob, @google-cloud/storage.',
+      },
+      {
+        q: 'How do I configure a cloud provider?',
+        a: 'Go to /admin/settings → Cloud Storage tab → select a provider → fill in credentials → click "Save settings" → click "Test connection" → if successful, click "Upload backup now" to push the first backup.',
+      },
+      {
+        q: 'Are credentials stored securely?',
+        a: 'Credentials are stored in data/storage-settings.json on the server and are never sent to the browser. API responses show only whether credentials are present (not their values).',
+      },
+    ],
+  },
+
+  // 28. Chart Customization
   {
     id: 'chart-customization',
     icon: '📊',

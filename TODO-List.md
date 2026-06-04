@@ -420,7 +420,7 @@
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| P3-01 | Full S3/Azure/GCP cloud storage implementation | P3 | ❌ Not started |
+| P3-01 | Full S3/Azure/GCP cloud storage implementation | P3 | ✅ Done — StorageProvider interface; LocalProvider (data/cloud-backups/); S3Provider (@aws-sdk/client-s3, dynamic import); AzureProvider (@azure/storage-blob); GcpProvider (@google-cloud/storage); storageProvider.ts factory + read/write/uploadBackupToCloud/listCloudBackups; GET/POST /api/admin/storage (settings, test, upload); Cloud Storage tab in /admin/settings with provider picker, credential forms, test/upload buttons, backup list; 8 tests passing |
 | P3-02 | Full Jira API read integration | P3 | ❌ Not started |
 | P3-03 | Jira write-back (ticket creation from recommendations) | P3 | ❌ Not started |
 | P3-04 | Jira OAuth support | P3 | ❌ Not started |

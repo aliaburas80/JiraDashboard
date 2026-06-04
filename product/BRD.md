@@ -766,6 +766,8 @@ The following metrics define product success and will be measured at 30, 90, and
 
 **BR-095 (Should — P2):** The Smart Recommendations section MUST maintain a history of up to 10 recommendation snapshots. Users MUST be able to see which recommendations are new since their last upload, which have been resolved, and browse the full history. This supports continuous improvement tracking over time.
 
+**BR-111 (Must — P3 — Done):** Delivery Clarity stores critical data (user accounts, import logs, snapshots) in a local SQLite database. Self-hosted teams MUST be able to back up this data to a cloud storage provider (S3, Azure, GCP) so backups survive server failures. The backup destination MUST be configurable by admins without code changes.
+
 **BR-110 (Should — P3 — Done):** Different users prioritise different charts — a Scrum Master needs Sprint Velocity front and centre; a Director needs the Timeline and Label Distribution. Allowing per-user chart customisation (which charts to show, how wide each one is) personalises the analytics view without requiring a separate page or configuration by an admin.
 
 **BR-109 (Should — P3 — Done):** Different users have different needs from the dashboard. A Scrum Master cares about Sprint and Risks; a Director cares about Readiness and Throughput. Allowing each user to reorder and hide sections puts their most important data first without requiring a separate role-based view to be configured by an admin.

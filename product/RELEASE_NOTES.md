@@ -59,6 +59,19 @@
 - Hover: icon-colored tint background + text changes to icon color; smooth 150ms transition
 - No colored backgrounds on any button — color lives only in the icon SVG
 
+### P3 — Cloud Storage Integration (P3-01)
+- New **`StorageProvider` interface** — `upload()`, `download()`, `list()`, `delete()`, `test()` — cleanly abstracted from provider
+- **4 providers** (all use dynamic imports so SDKs are optional at runtime):
+  - `LocalStorageProvider` — `data/cloud-backups/` directory (no credentials needed)
+  - `S3StorageProvider` — AWS S3 + S3-compatible (MinIO, Backblaze B2, Cloudflare R2) via `@aws-sdk/client-s3`
+  - `AzureStorageProvider` — Azure Blob Storage via `@azure/storage-blob`
+  - `GcpStorageProvider` — Google Cloud Storage via `@google-cloud/storage`
+- **`storageProvider.ts` factory** — `getActiveProvider()`, `createProvider()`, `uploadBackupToCloud()`, `listCloudBackups()`; settings in `data/storage-settings.json`
+- **`GET /api/admin/storage`** — returns settings (credentials redacted), provider info, cloud backup list
+- **`POST /api/admin/storage`** — update active provider + credentials; `?action=test` tests connectivity; `?action=upload` creates and uploads a backup
+- **☁️ Cloud Storage tab** in `/admin/settings` — provider picker (4 cards), per-provider credential forms, SDK install hint, Test Connection / Upload Backup Now buttons, cloud backup list table
+- 8 automated tests (TC-CS-01–08)
+
 ### P3 — Advanced Chart Customization (9.42)
 - New **"Customise"** button in the `/charts` page header opens a **Chart Customizer panel**
 - **Toggle visibility** — show/hide any of the 11 charts individually
