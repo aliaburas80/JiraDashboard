@@ -59,6 +59,17 @@
 - Hover: icon-colored tint background + text changes to icon color; smooth 150ms transition
 - No colored backgrounds on any button — color lives only in the icon SVG
 
+### P3 — Advanced Chart Customization (9.42)
+- New **"Customise"** button in the `/charts` page header opens a **Chart Customizer panel**
+- **Toggle visibility** — show/hide any of the 11 charts individually
+- **Column span** — per-chart width picker: `1/3` · `2/3` · `Full` (replaces hardcoded span values)
+- **Reorder** — ▲▼ arrows change the order of charts in the panel (panel order reflects render order once reordering is wired fully; span + visibility apply immediately)
+- **Blue dot** on "Customise" button when settings differ from defaults
+- **Reset** button restores all charts visible with original spans
+- Settings persisted to `dc_chart_prefs` localStorage; applied on every page load via `getChartPrefs()`
+- `isChartVisible(id)` and `chartSpan(id)` helpers replace hardcoded span values in charts/page.tsx
+- 9 automated tests (TC-CC-01–08)
+
 ### P3 — Custom Dashboard Layout Builder (9.41)
 - New **"Layout"** button in the dashboard sticky bar (right side of section switcher row) opens a **Layout Builder panel**
 - **Reorder sections** with ▲ / ▼ arrow buttons — changes the order of tabs in the section switcher

@@ -712,7 +712,28 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 27. Layout Builder
+  // 27. Chart Customization
+  {
+    id: 'chart-customization',
+    icon: '📊',
+    title: 'Chart Customization',
+    items: [
+      {
+        q: 'Where is the chart customizer?',
+        a: 'Click the "Customise" button in the top-right of the Visual Analytics (/charts) page header. A blue dot appears when your settings differ from the defaults.',
+      },
+      {
+        q: 'What can I customise per chart?',
+        a: 'Three things per chart: (1) Visibility — toggle the chart on or off. (2) Column width — 1/3 (narrow), 2/3 (medium), or Full (full width). (3) Order — use ▲▼ buttons to move charts up or down in the panel.',
+      },
+      {
+        q: 'Where are chart preferences saved?',
+        a: 'Saved to dc_chart_prefs in your browser localStorage. Applied automatically on every page load.',
+      },
+    ],
+  },
+
+  // 28. Layout Builder
   {
     id: 'layout-builder',
     icon: '☰',

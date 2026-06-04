@@ -374,7 +374,7 @@
 | 9.39 | Product tour animation | P3 | ✅ Done — 8-step guided tour: pulsing highlight ring + dark popover, progress dots, Back/Next/Skip, keyboard nav (←/→/Esc); no external library; autoStart on summary page; "Tour" button on dashboard; "Take a tour" on summary; dc_tour_dismissed/completed in localStorage; reduced-motion support; 8 tests passing |
 | 9.40 | Advanced theme customization | P3 | ✅ Done — palette panel in AppShell header: 7 accent colours (blue/purple/teal/orange/indigo/rose/slate) via --dc-accent CSS vars; 3 radius presets (sharp/default/rounded) via --radius-md/lg; 3 font sizes (sm/md/lg) on html root; settings in dc_theme_custom localStorage; btn-primary wired to CSS vars; 8 tests passing |
 | 9.41 | Custom dashboard layout builder | P3 | ✅ Done — "Layout" button in dashboard sticky bar opens panel: 14 sections with ▲▼ reorder buttons + toggle switches; saves order+visibility to dc_section_layout localStorage; DashboardSectionSwitcher reads custom order/hidden; isHidden() checks both view AND layout prefs; blue dot when layout differs from default; 9 tests passing |
-| 9.42 | Advanced chart customization | P3 | ❌ Not started |
+| 9.42 | Advanced chart customization | P3 | ✅ Done — "Customise" button on /charts page opens panel: 11 charts with ▲▼ reorder, toggle visibility, width picker (1/3 · 2/3 · Full); spans applied from prefs via CSS span class; saved to dc_chart_prefs localStorage; blue dot when non-default; 9 tests passing |
 | 9.43 | Add Register link in header UserMenu dropdown (when not logged in) | P1 | ✅ Done |
 | 9.44 | Show "Create new account" link on login page always | P1 | ✅ Done |
 | 9.45 | Fix Charts page — Best Sprint chip shows abbreviated "S2" instead of full sprint name | P1 | ✅ Done |
