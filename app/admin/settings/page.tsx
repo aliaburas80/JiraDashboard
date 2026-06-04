@@ -13,6 +13,146 @@ import type { HealthThresholds } from '@/types/thresholds';
 import type { OrphanRules } from '@/types/orphanRules';
 import type { StorageProviderType } from '@/types/storage';
 
+// ── Connection guide — step-by-step per provider ─────────────────────────────
+
+const CONNECTION_GUIDES: Record<string, { title: string; steps: { heading: string; body: string; code?: string }[] }> = {
+  s3: {
+    title: 'How to connect to AWS S3',
+    steps: [
+      {
+        heading: '1. Create an S3 Bucket',
+        body: 'Log in to the AWS Console → S3 → Create bucket. Choose a unique name and region closest to your server. Keep "Block all public access" enabled.',
+      },
+      {
+        heading: '2. Create an IAM User',
+        body: 'Go to IAM → Users → Create user. Attach the policy below (or AmazonS3FullAccess for quick setup). Generate an Access Key — copy both the Key ID and Secret.',
+        code: `{
+  "Effect": "Allow",
+  "Action": ["s3:PutObject","s3:GetObject","s3:ListBucket","s3:DeleteObject"],
+  "Resource": ["arn:aws:s3:::YOUR-BUCKET","arn:aws:s3:::YOUR-BUCKET/*"]
+}`,
+      },
+      {
+        heading: '3. Enter credentials above',
+        body: 'Paste the Bucket name, Region (e.g. us-east-1), Access Key ID, and Secret Access Key into the form. Leave Endpoint empty for standard AWS S3.',
+      },
+      {
+        heading: '4. S3-compatible providers (MinIO / Backblaze / Cloudflare R2)',
+        body: 'Fill in the same fields. Set the Custom Endpoint to your provider\'s S3-compatible URL (e.g. https://s3.eu-central-003.backblazeb2.com or https://<account>.r2.cloudflarestorage.com).',
+      },
+      {
+        heading: '5. Test and save',
+        body: 'Click Save settings → Test connection. A green "Connection successful" confirms the credentials are correct. Then click Upload backup now to push the first backup.',
+      },
+    ],
+  },
+  azure: {
+    title: 'How to connect to Azure Blob Storage',
+    steps: [
+      {
+        heading: '1. Create a Storage Account',
+        body: 'Azure Portal → Storage accounts → Create. Choose a region, select Standard / LRS. Note the storage account name.',
+      },
+      {
+        heading: '2. Create a Container',
+        body: 'Inside the storage account → Containers → + Container. Give it a name (e.g. delivery-clarity-backups). Set access level to Private.',
+      },
+      {
+        heading: '3. Get the Connection String',
+        body: 'Storage account → Access keys → key1 → Connection string → Copy. This single string contains all credentials — paste it into the Connection String field above.',
+      },
+      {
+        heading: '4. Install the Azure SDK on your server',
+        code: 'npm install @azure/storage-blob',
+        body: 'Run this on the server where Delivery Clarity is hosted, then restart the app.',
+      },
+      {
+        heading: '5. Test and save',
+        body: 'Enter the Container name and Connection string above → Save settings → Test connection → Upload backup now.',
+      },
+    ],
+  },
+  gcp: {
+    title: 'How to connect to Google Cloud Storage',
+    steps: [
+      {
+        heading: '1. Create a GCS Bucket',
+        body: 'Google Cloud Console → Cloud Storage → Buckets → Create. Choose a name, region, and Standard storage class.',
+      },
+      {
+        heading: '2. Create a Service Account',
+        body: 'IAM & Admin → Service Accounts → Create. Give it a name. Grant the role Storage Object Admin (or Storage Object Creator + Viewer for least privilege).',
+      },
+      {
+        heading: '3. Download the Service Account JSON key',
+        body: 'Service Account → Keys → Add Key → Create new key → JSON. This downloads a .json file. Open it and paste the entire contents into the Service Account JSON field above.',
+      },
+      {
+        heading: '4. Install the GCP SDK on your server',
+        code: 'npm install @google-cloud/storage',
+        body: 'Run this on the server where Delivery Clarity is hosted, then restart the app.',
+      },
+      {
+        heading: '5. Test and save',
+        body: 'Enter Bucket name, Project ID, paste the Service Account JSON → Save → Test connection → Upload backup now.',
+      },
+    ],
+  },
+};
+
+function ConnectionGuide({ provider, installCmd }: { provider: string; installCmd: string }) {
+  const [open, setOpen] = useState(false);
+  const guide = CONNECTION_GUIDES[provider];
+  if (!guide) return null;
+
+  return (
+    <div className="border border-blue-200 rounded-xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-base">📋</span>
+          <span className="text-xs font-black text-blue-800">{guide.title}</span>
+        </div>
+        <svg viewBox="0 0 24 24" className={`w-4 h-4 fill-current text-blue-600 transition-transform ${open ? 'rotate-180' : ''}`}>
+          <path d="m7 9 5 5 5-5 1.4 1.4L12 16.8 5.6 10.4 7 9Z"/>
+        </svg>
+      </button>
+
+      {open && (
+        <div className="bg-white border-t border-blue-100 px-5 py-4 space-y-4">
+          {installCmd && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-[10px] font-black text-amber-800 uppercase tracking-wider mb-1">SDK required — run on your server first</p>
+              <code className="text-xs font-mono text-amber-700 block">{installCmd}</code>
+            </div>
+          )}
+          {guide.steps.map((step, i) => (
+            <div key={i}>
+              <p className="text-xs font-black text-slate-800 mb-1">{step.heading}</p>
+              <p className="text-xs text-slate-600 leading-relaxed">{step.body}</p>
+              {step.code && (
+                <pre className="mt-2 text-[10px] font-mono bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 overflow-x-auto text-slate-700 whitespace-pre-wrap">{step.code}</pre>
+              )}
+            </div>
+          ))}
+          <a
+            href={provider === 's3' ? 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/GetStartedWithS3.html'
+              : provider === 'azure' ? 'https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction'
+              : 'https://cloud.google.com/storage/docs/introduction'}
+            target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline"
+          >
+            Official documentation →
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Cloud Storage Settings panel ──────────────────────────────────────────────
 
 function CloudStorageSettings() {
@@ -162,14 +302,8 @@ function CloudStorageSettings() {
         </div>
       )}
 
-      {/* SDK install hint */}
-      {active !== 'local' && data?.providers?.[active]?.installCmd && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <p className="text-xs font-bold text-amber-800 mb-1">SDK required</p>
-          <p className="text-xs text-amber-700">Install the SDK on your server before using this provider:</p>
-          <code className="block mt-1 text-xs font-mono bg-amber-100 rounded px-2 py-1">{data.providers[active].installCmd}</code>
-        </div>
-      )}
+      {/* ── How to connect — per-provider step-by-step guide ── */}
+      {active !== 'local' && <ConnectionGuide provider={active} installCmd={data?.providers?.[active]?.installCmd ?? ''} />}
 
       {/* Actions */}
       <div className="flex flex-wrap gap-3">
