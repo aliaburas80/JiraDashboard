@@ -765,3 +765,5 @@ The following metrics define product success and will be measured at 30, 90, and
 **BR-094 (Must):** Dashboard filter row and flow panel entry points MUST be hidden for views that restrict flow panel access (Executive, Product Owner). C-level and product users MUST NOT see the technical issue-level table. This is a role-based information access requirement.
 
 **BR-095 (Should — P2):** The Smart Recommendations section MUST maintain a history of up to 10 recommendation snapshots. Users MUST be able to see which recommendations are new since their last upload, which have been resolved, and browse the full history. This supports continuous improvement tracking over time.
+
+**BR-096 (Should — P2 — Done):** The Work Item Explorer (`/explore`) MUST allow users to export the current graph as an Excel workbook or CSV. This is a reporting and stakeholder-sharing requirement — users need to take explorer findings offline or embed them in delivery reports without re-entering data manually.

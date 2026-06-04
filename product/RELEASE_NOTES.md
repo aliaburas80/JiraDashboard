@@ -51,6 +51,18 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### P2 — Work Item Explorer Export (9.29)
+- **Export dropdown** on `/explore` results view (visible once a graph is loaded)
+- **Excel export** — 5-sheet workbook:
+  - `01 Summary` — focus key, delivery stats, confidence, insights, largest unfinished branch
+  - `02 All Issues` — all connected nodes + orphans with health, blocked, risk-path, role columns
+  - `03 Risk Items` — filtered to blocked / critical / on-risk-path nodes only
+  - `04 Orphans` — orphan nodes only
+  - `05 Insights` — generated insight bullets
+- **CSV export** — flat table of all issues (same columns as All Issues sheet)
+- File named `explorer-{key}-{date}.xlsx / .csv` for easy archiving
+- 11 automated tests (TC-EX-01–08)
+
 ### Performance
 - `xlsx` (~500 KB) now lazy-loaded on first export click — removed from dashboard bundle
 - `excelInsightExport.service` loaded dynamically on demand

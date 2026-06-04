@@ -12,6 +12,7 @@ import RelationDetailsTable from '@/components/explore/RelationDetailsTable';
 import RelationCharts from '@/components/explore/RelationCharts';
 import { loadMetrics } from '@/lib/storage';
 import { buildRelationGraph } from '@/services/relations/relationExplorer.service';
+import { exportExplorerToExcel, exportExplorerToCsv } from '@/services/export/explorerExport.service';
 import type { RelationGraph } from '@/types/relations';
 import type { DashboardMetrics } from '@/types/metrics';
 
@@ -40,6 +41,7 @@ export default function ExplorePage() {
   const [focusedKey, setFocusedKey] = useState('');
   const [recent, setRecent]         = useState<string[]>([]);
   const [blockedOnly, setBlockedOnly] = useState(false);
+  const [exportOpen, setExportOpen]   = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -198,6 +200,35 @@ export default function ExplorePage() {
                       {riskPathCount} node{riskPathCount !== 1 ? 's' : ''} on risk path
                     </span>
                   )}
+
+                  {/* Export dropdown */}
+                  <div className="relative ml-auto">
+                    <button
+                      type="button"
+                      onClick={() => setExportOpen(v => !v)}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-xl border border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:text-blue-700 transition-colors shadow-sm"
+                    >
+                      ↓ Export
+                    </button>
+                    {exportOpen && (
+                      <div className="absolute right-0 top-8 z-30 bg-white border border-slate-200 rounded-xl shadow-lg min-w-[160px] py-1">
+                        <button
+                          type="button"
+                          onClick={() => { exportExplorerToExcel(graph); setExportOpen(false); }}
+                          className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        >
+                          Export to Excel (.xlsx)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { exportExplorerToCsv(graph); setExportOpen(false); }}
+                          className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        >
+                          Export to CSV (.csv)
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })()}
