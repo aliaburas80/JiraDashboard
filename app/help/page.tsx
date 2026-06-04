@@ -712,7 +712,32 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 27. Product Tour
+  // 27. Theme Customization
+  {
+    id: 'theme-customization',
+    icon: '🎨',
+    title: 'Theme Customization',
+    items: [
+      {
+        q: 'Where is the theme customizer?',
+        a: 'Click the 🎨 palette icon in the top-right of the header, next to the dark/light mode toggle. The panel opens inline.',
+      },
+      {
+        q: 'What can I customise?',
+        a: 'Three settings: (1) Accent colour — 7 presets (Blue, Purple, Teal, Orange, Indigo, Rose, Slate) that change all primary action buttons and focus elements. (2) Corner radius — Sharp (4px), Default (12px), or Rounded (18px). (3) Text size — Small (13px), Medium (14px), or Large (16px).',
+      },
+      {
+        q: 'Where are my theme settings saved?',
+        a: 'Settings are saved to your browser localStorage (dc_theme_custom) and applied automatically on every page load. They are browser-specific — other users keep their own settings.',
+      },
+      {
+        q: 'How do I reset to the default theme?',
+        a: 'Click "Reset" in the theme customizer panel. This restores Blue accent, Default radius, and Medium font size.',
+      },
+    ],
+  },
+
+  // 28. Product Tour
   {
     id: 'product-tour',
     icon: '🎯',

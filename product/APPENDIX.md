@@ -259,3 +259,6 @@
 | **Product Tour** | Guided Product Tour | An 8-step walkthrough of the dashboard. No external library. Pulsing ring highlights each section; dark popover shows navigation. State stored in dc_tour_dismissed and dc_tour_completed (localStorage). |
 | **dc_tour_dismissed** | — | localStorage flag set when user skips or completes the product tour. Prevents auto-start on subsequent visits. |
 | **dc_tour_completed** | — | localStorage flag set when user reaches the final "Done" step of the product tour. |
+| **Theme Customizer** | Advanced Theme Customization | Panel accessed via 🎨 icon in AppShell. Allows per-user customisation of accent colour (7 presets), corner radius (3 presets), and font size (3 presets) without code changes. Settings in dc_theme_custom (localStorage). |
+| **--dc-accent** | Accent CSS Variable | CSS custom property on <html>: controls btn-primary and other accent-coloured elements. Set by the theme customizer. Default: #2563eb (blue). |
+| **dc_theme_custom** | — | localStorage key storing the user's theme customisation (accent, radius, fontSize). Loaded and applied on every page mount via initThemeCustom(). |

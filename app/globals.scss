@@ -13,10 +13,15 @@
   --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
   --radius-md: 12px;
   --radius-lg: 18px;
+  --radius-full: 9999px;
+  /* Advanced theme customization — overridden by themeCustomizer.ts */
+  --dc-accent:        #2563eb;
+  --dc-accent-hover:  #1d4ed8;
+  --dc-accent-shadow: rgba(37,99,235,0.25);
 }
 
 @layer components {
-  .card { @apply bg-white rounded-xl border border-slate-200/80 shadow-sm; }
+  .card { @apply bg-white border border-slate-200/80 shadow-sm; border-radius: var(--radius-md, 12px); }
   .badge { @apply inline-flex items-center text-xs font-bold rounded-full px-2.5 py-0.5 border; }
   .badge-success { @apply bg-green-50 text-green-700 border-green-200; }
   .badge-warning { @apply bg-amber-50 text-amber-700 border-amber-200; }
@@ -31,10 +36,12 @@
     line-height: 1;
     white-space: nowrap;
   }
-  /* Filled — Primary blue */
+  /* Filled — Primary (accent colour via CSS variable) */
   .btn-primary {
-    @apply btn-base px-5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700;
-    box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+    @apply btn-base px-5 py-2 text-sm font-bold text-white;
+    background-color: var(--dc-accent, #2563eb);
+    box-shadow: 0 2px 8px var(--dc-accent-shadow, rgba(37,99,235,0.25));
+    &:hover { background-color: var(--dc-accent-hover, #1d4ed8); }
   }
   /* Outlined — secondary white */
   .btn-secondary {

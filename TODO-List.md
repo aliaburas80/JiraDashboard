@@ -372,7 +372,7 @@
 | # | Task | Priority | Status |
 |---|------|----------|--------|
 | 9.39 | Product tour animation | P3 | ✅ Done — 8-step guided tour: pulsing highlight ring + dark popover, progress dots, Back/Next/Skip, keyboard nav (←/→/Esc); no external library; autoStart on summary page; "Tour" button on dashboard; "Take a tour" on summary; dc_tour_dismissed/completed in localStorage; reduced-motion support; 8 tests passing |
-| 9.40 | Advanced theme customization | P3 | ❌ Not started |
+| 9.40 | Advanced theme customization | P3 | ✅ Done — palette panel in AppShell header: 7 accent colours (blue/purple/teal/orange/indigo/rose/slate) via --dc-accent CSS vars; 3 radius presets (sharp/default/rounded) via --radius-md/lg; 3 font sizes (sm/md/lg) on html root; settings in dc_theme_custom localStorage; btn-primary wired to CSS vars; 8 tests passing |
 | 9.41 | Custom dashboard layout builder | P3 | ❌ Not started |
 | 9.42 | Advanced chart customization | P3 | ❌ Not started |
 | 9.43 | Add Register link in header UserMenu dropdown (when not logged in) | P1 | ✅ Done |

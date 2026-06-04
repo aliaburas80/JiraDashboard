@@ -4,8 +4,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { getInitialTheme, applyTheme } from '@/lib/theme';
+import { initThemeCustom } from '@/lib/themeCustomizer';
 import UserMenu from '@/components/auth/UserMenu';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
+import ThemeCustomizerPanel from '@/components/ui/ThemeCustomizerPanel';
 
 const NAV_GROUPS = [
   {
@@ -57,6 +59,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
     const initial = getInitialTheme();
     setTheme(initial);
     applyTheme(initial);
+    initThemeCustom();
   }, []);
 
   // Close dropdowns on outside click
@@ -223,6 +226,8 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
 
             {showNav && <OnboardingChecklist compact />}
             <UserMenu />
+
+            <ThemeCustomizerPanel />
 
             <button
               onClick={toggleTheme}

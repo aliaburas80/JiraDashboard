@@ -2514,3 +2514,16 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 2. Tour starts from Step 1 (Welcome) regardless of previous completion
 3. User navigates with ← → arrow keys or buttons, presses Esc to exit
 **Related FR:** FR-303, BR-107
+
+### UC-081 — User Customises Theme Accent Colour
+
+**Actor:** Any logged-in user
+**Trigger:** User wants the UI to match their team colour or personal preference
+**Main Flow:**
+1. User clicks the 🎨 palette icon in the AppShell header (next to dark mode toggle)
+2. Theme Customizer panel opens — shows 7 accent colour swatches
+3. User clicks "Purple" swatch → all primary buttons turn purple immediately
+4. User adjusts "Rounded" radius → all cards and buttons get more rounded corners
+5. User selects "Large" text size → font scales up throughout the app
+6. Panel closes on outside click; settings persist across page refreshes
+**Related FR:** FR-304, BR-108

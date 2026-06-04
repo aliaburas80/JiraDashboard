@@ -59,6 +59,18 @@
 - Hover: icon-colored tint background + text changes to icon color; smooth 150ms transition
 - No colored backgrounds on any button — color lives only in the icon SVG
 
+### P3 — Advanced Theme Customization (9.40)
+- New **palette icon (🎨)** in the AppShell header (next to dark mode toggle) opens a **Theme Customizer panel**
+- **Accent colour** — 7 presets via circular swatches: Blue (default) · Purple · Teal · Orange · Indigo · Rose · Slate
+  - Applied via `--dc-accent`, `--dc-accent-hover`, `--dc-accent-shadow` CSS variables on `<html>`
+  - `btn-primary` wired to these variables — all primary action buttons change colour immediately
+- **Corner radius** — 3 presets: Sharp (6/10px) · Default (12/18px) · Rounded (18/24px)
+  - Applied via `--radius-md` and `--radius-lg` CSS variables (already used in `.card` and layout)
+- **Text size** — 3 presets: Small (13px) · Medium (14px) · Large (16px) — set on `html` root, scales all `rem` units
+- **Reset** button restores all defaults; settings persist to `dc_theme_custom` in localStorage
+- Initialised on every page load via `initThemeCustom()` in AppShell `useEffect`
+- 8 automated tests (TC-TC-01–08)
+
 ### P3 — Product Tour Animation (9.39)
 - **8-step guided tour** — no external library (no Shepherd.js, Intro.js, etc.); pure React + CSS
 - **Pulsing highlight ring**: `position:fixed` ring with `box-shadow` pulse animation around the target dashboard section
