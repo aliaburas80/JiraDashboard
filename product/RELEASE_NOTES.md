@@ -59,6 +59,17 @@
 - Hover: icon-colored tint background + text changes to icon color; smooth 150ms transition
 - No colored backgrounds on any button — color lives only in the icon SVG
 
+### P3 — Custom Dashboard Layout Builder (9.41)
+- New **"Layout"** button in the dashboard sticky bar (right side of section switcher row) opens a **Layout Builder panel**
+- **Reorder sections** with ▲ / ▼ arrow buttons — changes the order of tabs in the section switcher
+- **Toggle visibility** per section with a toggle switch — hidden sections disappear from the switcher and the dashboard (slide-out hidden)
+- **Blue dot** on the "Layout" button indicates a custom (non-default) layout is active
+- **Reset** button restores default order and visibility
+- Layout persisted to `dc_section_layout` in localStorage; survives page reloads
+- `DashboardSectionSwitcher` accepts new `orderedKeys` prop for custom tab order
+- `isHidden()` checks both the role-based view AND the user's layout prefs
+- 9 automated tests (TC-LB2-01–08)
+
 ### P3 — Advanced Theme Customization (9.40)
 - New **palette icon (🎨)** in the AppShell header (next to dark mode toggle) opens a **Theme Customizer panel**
 - **Accent colour** — 7 presets via circular swatches: Blue (default) · Purple · Teal · Orange · Indigo · Rose · Slate

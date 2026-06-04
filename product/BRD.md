@@ -766,6 +766,8 @@ The following metrics define product success and will be measured at 30, 90, and
 
 **BR-095 (Should — P2):** The Smart Recommendations section MUST maintain a history of up to 10 recommendation snapshots. Users MUST be able to see which recommendations are new since their last upload, which have been resolved, and browse the full history. This supports continuous improvement tracking over time.
 
+**BR-109 (Should — P3 — Done):** Different users have different needs from the dashboard. A Scrum Master cares about Sprint and Risks; a Director cares about Readiness and Throughput. Allowing each user to reorder and hide sections puts their most important data first without requiring a separate role-based view to be configured by an admin.
+
 **BR-108 (Should — P3 — Done):** Teams using Delivery Clarity across different departments or brands want the tool to feel like their own. Advanced theme customization — accent colour, border radius, and font size — gives each team/individual a personalised experience without requiring a code change or rebuild.
 
 **BR-107 (Should — P3 — Done):** New users landing on the dashboard for the first time face a steep learning curve — 14 sections, complex filtering, and 28+ metrics. A guided tour reduces time-to-value by directing attention to the 5–6 most impactful features in sequence. Without a tour, new team members typically need a 30-minute walkthrough from an existing user.

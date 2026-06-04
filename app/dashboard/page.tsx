@@ -35,6 +35,8 @@ import { getSavedViewId, saveViewId, getView, isTierHidden } from '@/lib/dashboa
 import type { ViewId } from '@/types/dashboardView';
 import dynamic from 'next/dynamic';
 const ProductTour = dynamic(() => import('@/components/tour/ProductTour'), { ssr: false });
+import LayoutBuilderPanel from '@/components/dashboard/LayoutBuilderPanel';
+import { getLayoutPrefs, getOrderedVisibleSections, getHiddenKeys, type SectionPref } from '@/lib/layoutBuilder';
 
 // ─── accent map ───────────────────────────────────────────────────────────────
 const HEALTH_VARIANT: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'neutral'> = {
@@ -295,6 +297,7 @@ export default function DashboardPage() {
   const [ownerEditKey, setOwnerEditKey]     = useState<string | null>(null);
   const [ownerDraft,   setOwnerDraft]       = useState('');
   const [recOwners,    setRecOwners]        = useState<Record<string, string>>({});
+  const [layoutPrefs,  setLayoutPrefs]      = useState<SectionPref[]>([]);
   // rec feedback votes — keyed by recKey; re-render on change via counter
   const [feedbackTick, setFeedbackTick]   = useState(0);
   const getRecVote = (key: string) => getVote(key);
@@ -319,7 +322,8 @@ export default function DashboardPage() {
   }
 
   const activeView    = getView(activeViewId);
-  const isHidden      = (key: string) => activeView.hidden.includes(key);
+  const layoutHidden  = layoutPrefs.length ? getHiddenKeys(layoutPrefs) : new Set<string>();
+  const isHidden      = (key: string) => activeView.hidden.includes(key) || layoutHidden.has(key);
   const isTierHid    = (tier: string) => isTierHidden(activeView, tier);
   const hideFlowPanel = activeView.hideFlowPanel;
 
@@ -373,6 +377,7 @@ export default function DashboardPage() {
       setPresets(loadPresets());
       setMutedRecs(getActiveMuted());
       setRecOwners(getAllRecOwners());
+      setLayoutPrefs(getLayoutPrefs());
 
       // Detect fresh upload (?fresh=1) — reset all filters and clear the param
       const p = new URLSearchParams(window.location.search);
@@ -862,18 +867,24 @@ export default function DashboardPage() {
         <div id="dashboard-sticky-bar" className="sticky top-14 z-30 mb-4 -mx-4 print:hidden"
           style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(14px)', borderBottom: '1px solid rgba(198,210,226,0.7)', boxShadow: '0 4px 16px rgba(24,43,77,0.07)' }}>
           {/* ── Section nav row ── */}
-          <div className="px-5">
-            <DashboardSectionSwitcher
-              mode={sectionMode}
-              hiddenKeys={new Set(activeView.hidden)}
-              alertKeys={new Set([
-                ...(topBlockers.length  ? ['attention'] : []),
-                ...(topOverdue.length   ? ['attention'] : []),
-                ...((metrics?.healthScore ?? 100) < 60 ? ['overview'] : []),
-              ])}
-              onMode={setSectionMode}
-              onFocusSection={focusSection}
-            />
+          <div className="px-5 flex items-center gap-2">
+            <div className="flex-1 min-w-0">
+              <DashboardSectionSwitcher
+                mode={sectionMode}
+                hiddenKeys={new Set([...activeView.hidden, ...getHiddenKeys(layoutPrefs)])}
+                orderedKeys={layoutPrefs.length ? getOrderedVisibleSections(layoutPrefs).map(s => s.key) : undefined}
+                alertKeys={new Set([
+                  ...(topBlockers.length  ? ['attention'] : []),
+                  ...(topOverdue.length   ? ['attention'] : []),
+                  ...((metrics?.healthScore ?? 100) < 60 ? ['overview'] : []),
+                ])}
+                onMode={setSectionMode}
+                onFocusSection={focusSection}
+              />
+            </div>
+            <div className="shrink-0 pb-2">
+              <LayoutBuilderPanel onLayoutChange={setLayoutPrefs} />
+            </div>
           </div>
 
           {/* ── Gradient separator + filter row — hidden for views that hide the flow panel ── */}

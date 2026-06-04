@@ -262,3 +262,5 @@
 | **Theme Customizer** | Advanced Theme Customization | Panel accessed via 🎨 icon in AppShell. Allows per-user customisation of accent colour (7 presets), corner radius (3 presets), and font size (3 presets) without code changes. Settings in dc_theme_custom (localStorage). |
 | **--dc-accent** | Accent CSS Variable | CSS custom property on <html>: controls btn-primary and other accent-coloured elements. Set by the theme customizer. Default: #2563eb (blue). |
 | **dc_theme_custom** | — | localStorage key storing the user's theme customisation (accent, radius, fontSize). Loaded and applied on every page mount via initThemeCustom(). |
+| **Layout Builder** | Dashboard Layout Builder | Panel accessed via the "Layout" button (☰) in the dashboard sticky bar. Lets users reorder (▲▼) and toggle visibility of the 14 dashboard sections. Changes reflected in section switcher tabs. Saved to dc_section_layout (localStorage). |
+| **dc_section_layout** | — | localStorage key storing the user's custom dashboard layout: an ordered array of { key, visible } pairs. Applied on every dashboard load. |

@@ -712,7 +712,32 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 27. Theme Customization
+  // 27. Layout Builder
+  {
+    id: 'layout-builder',
+    icon: '☰',
+    title: 'Layout Builder',
+    items: [
+      {
+        q: 'Where is the Layout Builder?',
+        a: 'Click the "Layout" button (☰) on the right side of the section switcher bar at the top of the Dashboard (/dashboard). A blue dot appears on the button when your layout differs from the default.',
+      },
+      {
+        q: 'What can I customise in the Layout Builder?',
+        a: 'Two things: (1) Section order — use the ▲ and ▼ arrow buttons to move any of the 14 dashboard sections up or down. This changes their order in the section switcher tabs. (2) Section visibility — toggle each section on or off. Hidden sections disappear from both the switcher and the dashboard body.',
+      },
+      {
+        q: 'Where is my layout saved?',
+        a: 'Layout preferences are saved to your browser\'s localStorage (dc_section_layout). They persist across page reloads and are specific to your browser.',
+      },
+      {
+        q: 'How do I reset to the default layout?',
+        a: 'Click "Reset" inside the Layout Builder panel. This restores all 14 sections in the original default order, all visible.',
+      },
+    ],
+  },
+
+  // 28. Theme Customization
   {
     id: 'theme-customization',
     icon: '🎨',

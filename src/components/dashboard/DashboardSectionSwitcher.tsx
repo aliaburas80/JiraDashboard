@@ -42,6 +42,7 @@ interface Props {
   mode:           SectionMode;
   hiddenKeys:     Set<string>;
   alertKeys?:     Set<string>;
+  orderedKeys?:   string[];   // custom section order from layout builder
   onMode:         (mode: SectionMode) => void;
   onFocusSection: (key: string) => void;
 }
@@ -112,14 +113,15 @@ function NavItem({
 }
 
 export default function DashboardSectionSwitcher({
-  mode, hiddenKeys, alertKeys = new Set(), onMode, onFocusSection,
+  mode, hiddenKeys, alertKeys = new Set(), orderedKeys, onMode, onFocusSection,
 }: Props) {
   function handleSection(key: string) {
     onMode(key);
     onFocusSection(key);
   }
 
-  const visibleKeys = SECTION_KEYS.filter(k => !hiddenKeys.has(k));
+  const baseKeys   = orderedKeys ?? SECTION_KEYS;
+  const visibleKeys = baseKeys.filter(k => !hiddenKeys.has(k));
 
   return (
     <div

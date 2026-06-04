@@ -2527,3 +2527,16 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 5. User selects "Large" text size → font scales up throughout the app
 6. Panel closes on outside click; settings persist across page refreshes
 **Related FR:** FR-304, BR-108
+
+### UC-082 — User Builds Custom Dashboard Layout
+
+**Actor:** Any dashboard user (Scrum Master, Engineering Manager, etc.)
+**Trigger:** User wants the most important sections first without using a pre-built role view
+**Main Flow:**
+1. User opens /dashboard → clicks "Layout" button in the sticky section switcher bar
+2. Layout Builder panel opens — 14 sections listed with ▲▼ arrows and toggle switches
+3. User moves "Sprints" to position 1 using ▲ arrow
+4. User toggles off "Labels" and "Work Items" (low priority for them)
+5. Panel closes — section switcher now shows Sprints first; Labels/Work Items are gone
+6. Settings persist on refresh; blue dot on "Layout" button indicates custom layout is active
+**Related FR:** FR-305, BR-109
