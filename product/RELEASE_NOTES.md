@@ -51,6 +51,14 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### UX — Summary Page CTA Toolbar Redesign
+- Replaced 8 scattered colored pill buttons with a single **action toolbar** — white card, `border-radius: 9999px`, subtle shadow, 3 logical groups separated by thin dividers
+- **Group 1 (Utility)**: Upload · Take tour — neutral icon color (#64748b)
+- **Group 2 (Export)**: Excel (green) · Exec PDF (purple) · HTML (teal) — icon color only, no background fill
+- **Group 3 (Navigate)**: Charts (blue) · Full Report (dark) · Customer (teal) — same pattern
+- Hover: icon-colored tint background + text changes to icon color; smooth 150ms transition
+- No colored backgrounds on any button — color lives only in the icon SVG
+
 ### P3 — Product Tour Animation (9.39)
 - **8-step guided tour** — no external library (no Shepherd.js, Intro.js, etc.); pure React + CSS
 - **Pulsing highlight ring**: `position:fixed` ring with `box-shadow` pulse animation around the target dashboard section

@@ -34,6 +34,36 @@ const BAND_BG: Record<HealthBand, string> = {
   critical:  'bg-red-50    border-red-200',
 };
 
+// ── Action toolbar helpers ────────────────────────────────────────────────────
+
+function CtaBtn({ label, color, icon, onClick }: { label: string; color: string; icon: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        padding: '8px 14px', borderRadius: 9999, border: 'none',
+        cursor: 'pointer', background: 'transparent',
+        fontSize: 13, fontWeight: 700, color: '#334155',
+        fontFamily: 'inherit', whiteSpace: 'nowrap',
+        transition: 'background 150ms ease, color 150ms ease',
+      }}
+      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = `${color}14`; (e.currentTarget as HTMLButtonElement).style.color = color; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#334155'; }}
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 15, height: 15, fill: color, flexShrink: 0 }}>
+        <path d={icon} />
+      </svg>
+      {label}
+    </button>
+  );
+}
+
+function Divider() {
+  return <span aria-hidden="true" style={{ width: 1, height: 22, background: '#e2e8f0', flexShrink: 0, margin: '0 3px' }} />;
+}
+
 export default function SummaryPage() {
   const router = useRouter();
   const [metrics, setMetrics]   = useState<DashboardMetrics | null>(null);
@@ -268,74 +298,51 @@ export default function SummaryPage() {
         </section>
       )}
 
-      {/* ── CTA buttons ── */}
-      <div className="flex flex-wrap items-center justify-center gap-3 pt-2 pb-6">
+      {/* ── CTA action toolbar ── */}
+      <div className="flex justify-center pt-2 pb-6">
+        <div
+          className="overflow-x-auto"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            background: '#fff',
+            border: '1px solid #e2e8f0',
+            borderRadius: 9999,
+            padding: '5px',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
+            gap: 2,
+          }}
+        >
+          {/* ── Group 1: Utility ── */}
+          {[
+            { label: 'Upload',    color: '#64748b', icon: 'M11 3h2v10.2l3.6-3.6L18 11l-6 6-6-6 1.4-1.4 3.6 3.6V3ZM5 19h14v2H5v-2Z', onClick: () => router.push('/') },
+            { label: 'Take tour', color: '#64748b', icon: 'M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z', onClick: () => { router.push('/dashboard'); setTimeout(() => window.dispatchEvent(new CustomEvent('dc:start-tour')), 600); } },
+          ].map(btn => (
+            <CtaBtn key={btn.label} {...btn} />
+          ))}
 
-        {/* Upload */}
-        <button type="button" onClick={() => router.push('/')} className="btn-secondary px-5 py-2.5">
-          Upload New File
-        </button>
+          <Divider />
 
-        {/* Take a tour */}
-        <button type="button"
-          onClick={() => { router.push('/dashboard'); setTimeout(() => window.dispatchEvent(new CustomEvent('dc:start-tour')), 600); }}
-          className="btn-secondary px-5 py-2.5 gap-2">
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>
-          Take a tour
-        </button>
+          {/* ── Group 2: Export ── */}
+          {[
+            { label: 'Excel',     color: '#059669', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm1 2 3 3h-3V4ZM8 11h8v1.5H8V11Zm0 3h8v1.5H8V14Zm0 3h5v1.5H8V17Z', onClick: async () => { if (metrics) await exportToExcel(metrics); } },
+            { label: 'Exec PDF',  color: '#7c3aed', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm4 18H6V4h7v5h5v11ZM8 15h8v1.5H8V15Zm0-3h8v1.5H8V12Zm0-3h5v1.5H8V9Z', onClick: async () => { if (metrics) await exportExecutivePdf(metrics); } },
+            { label: 'HTML',      color: '#10b981', icon: 'M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z', onClick: () => metrics && exportToHtml(metrics) },
+          ].map(btn => (
+            <CtaBtn key={btn.label} {...btn} />
+          ))}
 
-        {/* Export Excel — dark emerald */}
-        <button type="button" onClick={async () => { if (metrics) await exportToExcel(metrics); }}
-          className="btn-green px-5 py-2.5" style={{ background: '#059669' }}>
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-            <path d="M11 3h2v10.2l3.6-3.6L18 11l-6 6-6-6 1.4-1.4 3.6 3.6V3ZM5 19h14v2H5v-2Z"/>
-          </svg>
-          Export Excel
-        </button>
+          <Divider />
 
-        {/* Executive PDF — purple */}
-        <button type="button" onClick={async () => { if (metrics) await exportExecutivePdf(metrics); }}
-          className="btn-primary px-5 py-2.5" style={{ background: '#7c3aed' }}>
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm4 18H6V4h7v5h5v11ZM8 15h8v1.5H8V15Zm0-3h8v1.5H8V12Zm0-3h5v1.5H8V9Z"/>
-          </svg>
-          Executive PDF
-        </button>
-
-        {/* Export HTML — lighter sea-green with globe icon */}
-        <button type="button" onClick={() => metrics && exportToHtml(metrics)}
-          className="btn-green px-5 py-2.5" style={{ background: '#10b981' }}>
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-            <path d="M4.5 11h3.03L6 7.5h2l1.5 3.5H13l-1.5-3.5H13l4.5 3.5-4.5 3.5h-1.5l1.5-3.5H9.5L8 14.5H6l1.53-3.5H4.5V11ZM12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z"/>
-          </svg>
-          Export HTML
-        </button>
-
-        {/* View Charts — blue */}
-        <button type="button" onClick={() => router.push('/charts')} className="btn-primary px-5 py-2.5">
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-            <path d="M4 20h16v2H2V2h2v18Zm4-2V8h3v10H8Zm5 0V4h3v14h-3Zm5 0v-6h3v6h-3Z"/>
-          </svg>
-          View Charts
-        </button>
-
-        {/* View Full Report — near-black */}
-        <button type="button" onClick={() => router.push('/dashboard')} className="btn-dark px-5 py-2.5">
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-            <path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/>
-          </svg>
-          View Full Report
-        </button>
-
-        {/* Customer View — teal with person icon */}
-        <button type="button" onClick={() => router.push('/customer')}
-          className="btn-green px-5 py-2.5" style={{ background: '#0d9488' }}>
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-            <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4Z"/>
-          </svg>
-          Customer View
-        </button>
-
+          {/* ── Group 3: Navigate ── */}
+          {[
+            { label: 'Charts',      color: '#2563eb', icon: 'M4 20h16v2H2V2h2v18Zm4-2V8h3v10H8Zm5 0V4h3v14h-3Zm5 0v-6h3v6h-3Z', onClick: () => router.push('/charts') },
+            { label: 'Full Report', color: '#0f172a', icon: 'M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z', onClick: () => router.push('/dashboard') },
+            { label: 'Customer',    color: '#0d9488', icon: 'M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4Z', onClick: () => router.push('/customer') },
+          ].map(btn => (
+            <CtaBtn key={btn.label} {...btn} />
+          ))}
+        </div>
       </div>
       {/* Tour auto-starts on first visit; fires when user navigates to dashboard */}
       <ProductTour />
