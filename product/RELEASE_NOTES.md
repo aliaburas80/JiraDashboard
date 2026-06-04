@@ -51,6 +51,15 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### P2 — Branding Integration (9.37)
+- **Login & Register pages**: `<Image>` logo SVG replaces plain text "Delivery Clarity" heading — shows `delivery-clarity-logo-horizontal.svg` (200×62)
+- **app/layout.tsx metadata**: Added full metadata — `icons` (favicon.svg, favicon.ico, apple-touch-icon), `themeColor: #2563eb`, `openGraph` (title, description, image), `twitter` card
+- **HTML report export**: Lightning bolt brand mark (gradient square + SVG) added to header alongside "Delivery Report" title; footer updated to "Delivery Clarity v4.1 · Ali Abu Ras · aliaburas80@gmail.com"
+- **Executive PDF export**: Same brand mark added to header; footer updated with version and email
+- **Excel workbook** (17 sheets): Added slogan "From messy boards to measurable delivery confidence" and author row to Executive Summary sheet
+- **Version consistency**: AppShell footer `v2.0` → `v4.1`; Glossary footer `v3.0` → `v4.1`
+- **Email consistency**: All UI and export footers now use `aliaburas80@gmail.com`
+
 ### P2 — System Health / Admin Diagnostics (9.36)
 - New **`/admin/diagnostics`** page — live system health snapshot, admin-only
 - **Ops Health Score (0–100)**: SESSION_SECRET set (−30), NODE_ENV production (−10), registration locked (−10), failed imports (−1 each, capped −10), active sessions (−5 if zero)

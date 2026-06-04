@@ -712,7 +712,28 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 27. Deployment
+  // 27. Branding
+  {
+    id: 'branding',
+    icon: '🎨',
+    title: 'Branding',
+    items: [
+      {
+        q: 'Why do the login and register pages show a logo instead of text?',
+        a: 'The login and register pages now display the Delivery Clarity horizontal logo SVG instead of plain text, for consistent visual branding across all user-facing pages.',
+      },
+      {
+        q: 'Does the product have a favicon?',
+        a: 'Yes — the browser tab shows a Delivery Clarity lightning bolt favicon (SVG + ICO fallback). On iOS/Android home screens, the 128×128 PNG icon is used as the apple-touch-icon.',
+      },
+      {
+        q: 'What branding appears in exported reports?',
+        a: 'HTML reports and Executive PDF files include the lightning bolt brand mark in the header alongside the report title. Footers show "Delivery Clarity v4.1 · Ali Abu Ras · aliaburas80@gmail.com". Excel workbooks include the product name, slogan, and author in the Executive Summary sheet.',
+      },
+    ],
+  },
+
+  // 28. Deployment
   {
     id: 'deployment',
     icon: '🚢',

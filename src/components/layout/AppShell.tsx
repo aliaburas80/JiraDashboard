@@ -280,7 +280,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
 
       <footer className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
         <p className="max-w-7xl mx-auto px-4 sm:px-6 py-3 text-xs text-slate-400 dark:text-slate-500 text-center">
-          © 2026 Ali Abu Ras · aburasali80@gmail.com · Delivery Clarity v2.0
+          © 2026 Ali Abu Ras · aliaburas80@gmail.com · Delivery Clarity v4.1
         </p>
       </footer>
     </div>

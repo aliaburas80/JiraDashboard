@@ -2449,3 +2449,24 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 4. Admin clicks "Import Logs" quick link → reviews failed logs
 5. Identifies the cause (file encoding issue) and fixes it
 **Related FR:** FR-299, BR-104
+
+### UC-075 — User Sees Branded Login Page
+
+**Actor:** Any user (new or returning)
+**Trigger:** User navigates to /login
+**Main Flow:**
+1. User opens /login
+2. The Delivery Clarity logo SVG (horizontal variant) is displayed at the top of the card
+3. User logs in and proceeds to the dashboard
+**Related FR:** FR-300, BR-105
+
+### UC-076 — Stakeholder Opens Exported Report — Sees Branding
+
+**Actor:** Stakeholder / Manager (receiving a report)
+**Trigger:** A report (HTML, Excel, PDF) is shared with a stakeholder
+**Main Flow:**
+1. Stakeholder opens the HTML or PDF report
+2. Header shows the Delivery Clarity lightning bolt brand mark + "Delivery Report" / "Executive Summary"
+3. Footer shows "Delivery Clarity v4.1 · Ali Abu Ras · aliaburas80@gmail.com"
+4. Browser tab shows branded favicon and title "Delivery Clarity — Jira Intelligence"
+**Related FR:** FR-300, BR-105

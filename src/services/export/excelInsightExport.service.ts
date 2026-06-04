@@ -48,7 +48,9 @@ function sheetExecutiveSummary(m: DashboardMetrics, recs: ReturnType<typeof gene
 
   const rows: unknown[][] = [
     ['DELIVERY CLARITY — EXECUTIVE REPORT'],
+    ['From messy boards to measurable delivery confidence'],
     ['Generated:', new Date().toLocaleString()],
+    ['Author:', 'Ali Abu Ras · aliaburas80@gmail.com · Delivery Clarity v4.1'],
     [],
     ['DELIVERY HEALTH'],
     ['Health Score', m.healthScore ?? 0, 'out of 100'],

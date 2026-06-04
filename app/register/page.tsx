@@ -2,6 +2,7 @@
 'use client';
 import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { hasMetrics } from '@/lib/storage';
 
@@ -56,8 +57,16 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Delivery Clarity</h1>
-          <p className="text-sm text-slate-500 mt-1">Create your account</p>
+          <div className="flex justify-center mb-3">
+            <Image
+              src="/logo/delivery-clarity-logo-horizontal.svg"
+              alt="Delivery Clarity"
+              width={200}
+              height={62}
+              priority
+            />
+          </div>
+          <p className="text-sm text-slate-500">Create your account</p>
         </div>
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{error}</div>}

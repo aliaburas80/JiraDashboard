@@ -183,6 +183,9 @@ const SECTIONS = [
       { term: 'Underline Indicator', full: 'Active Tab Underline', meaning: 'The 3px pill at the bottom of an active tab button. Colour matches the semantic role: blue=All, red=High Risk, orange=Blocked, purple=Needs Review.' },
       { term: 'Ops Score', full: 'Operational Health Score', meaning: 'A 0-100 admin metric on /admin/diagnostics. Penalties: missing SESSION_SECRET (-30), non-production NODE_ENV (-10), open registration (-10), failed imports (-1 each, cap -10), zero active sessions (-5).' },
       { term: 'Admin Diagnostics', full: '/admin/diagnostics', meaning: 'Live system health page for admins: ops score, DB counts (users/sessions/imports/snapshots), import success rate, env checks, recent audit events, system info.' },
+      { term: 'Brand Mark', full: 'Delivery Clarity Brand Mark', meaning: 'The lightning bolt icon in a blue-to-teal gradient square. Used in the HTML report and Executive PDF export headers, and as the section switcher button.' },
+      { term: 'themeColor', full: 'Browser Theme Color', meaning: '#2563eb (blue). Set in app/layout.tsx metadata — colours the browser address bar and PWA title bar on mobile.' },
+      { term: 'Open Graph', full: 'Open Graph Protocol', meaning: 'Metadata tags (og:title, og:description, og:image) that control how the page appears when shared on social platforms like LinkedIn or Slack.' },
       { term: 'Docker', full: '—', meaning: 'Container platform. The recommended deployment target for Delivery Clarity. Uses a multi-stage Dockerfile + docker-compose.yml. Run: docker compose up -d --build.' },
       { term: 'VPS', full: 'Virtual Private Server', meaning: 'A cloud server running the app directly on the OS (not Docker). Delivery Clarity uses Node 20 + PM2 + nginx for VPS deployments.' },
       { term: 'PM2', full: 'Process Manager 2', meaning: 'Node.js process manager for VPS deployments. Keeps the app running after crashes and enables autostart on server reboot.' },
@@ -357,7 +360,7 @@ export default function GlossaryPage() {
             </svg>
             Back to Top
           </button>
-          <p className="text-xs text-slate-400">© 2025 Ali Abu Ras · aburasali80@gmail.com · Delivery Clarity v3.0</p>
+          <p className="text-xs text-slate-400">© 2026 Ali Abu Ras · aliaburas80@gmail.com · Delivery Clarity v4.1</p>
           <p className="text-xs text-slate-300">
             Also available as <code className="font-mono">product/APPENDIX.md</code> in the repository.
           </p>

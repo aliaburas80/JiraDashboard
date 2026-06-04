@@ -362,7 +362,7 @@
 | 9.34 | Action-owner assignment inside recommendations | P2 | ✅ Done — "Assign" button on each rec card (suggested owner shown as placeholder, custom name saved to dc_rec_owners in localStorage, edit/clear); 8 tests passing |
 | 9.35 | Deployment guide for Vercel / Docker / VPS | P2 | ✅ Done — product/DEPLOYMENT_GUIDE.md: 12-section guide covering Docker (recommended), VPS/PM2, Vercel (preview only), nginx reverse proxy, SSL/Let's Encrypt, env var reference, backup/restore, post-deploy checklist, troubleshooting |
 | 9.36 | System health/admin diagnostics page | P2 | ✅ Done — /admin/diagnostics: ops score (0-100), DB overview (users/sessions/snapshots), import health (success rate/avg score/processing time), env checks (5 variables), recent audit log, system info (Node/uptime/platform); nav item in Data group; 8 tests passing |
-| 9.37 | Branding integration across login, favicon, reports, and exports | P2 | ❌ Not started |
+| 9.37 | Branding integration across login, favicon, reports, and exports | P2 | ✅ Done — logo SVG on login/register (was plain text); full metadata in layout.tsx (icons, OG, theme-color, twitter); lightning bolt brand mark in HTML report + Executive PDF headers; Excel slogan + author row; AppShell footer v2.0→v4.1; glossary footer v3.0→v4.1; email standardized to aliaburas80@gmail.com |
 | 9.38 | Landing page inside the app | P2 | ❌ Not started |
 
 ---
