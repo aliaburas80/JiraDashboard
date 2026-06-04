@@ -179,6 +179,13 @@ const SECTIONS = [
       { term: 'Action Owner', full: 'Recommendation Action Owner', meaning: 'A team member name assigned to a Smart Recommendation card. Stored in dc_rec_owners (localStorage). Displayed as a blue badge on the card with edit/clear controls.' },
       { term: 'suggestedOwner', full: 'Suggested Owner', meaning: 'Default role shown as a hint on the owner assignment input for each recommendation (e.g., "Scrum Master / Delivery Manager" for blocker recommendations).' },
       { term: 'Portal Search', full: 'Developer Portal Global Search', meaning: 'A search box in the /developer sidebar that searches across all calculations, packages, and section labels simultaneously. Results grouped by type.' },
+      { term: 'Docker', full: '—', meaning: 'Container platform. The recommended deployment target for Delivery Clarity. Uses a multi-stage Dockerfile + docker-compose.yml. Run: docker compose up -d --build.' },
+      { term: 'VPS', full: 'Virtual Private Server', meaning: 'A cloud server running the app directly on the OS (not Docker). Delivery Clarity uses Node 20 + PM2 + nginx for VPS deployments.' },
+      { term: 'PM2', full: 'Process Manager 2', meaning: 'Node.js process manager for VPS deployments. Keeps the app running after crashes and enables autostart on server reboot.' },
+      { term: 'nginx', full: '—', meaning: 'High-performance web server used as a reverse proxy. Terminates SSL and forwards requests to the Next.js app on port 3000. Requires client_max_body_size 25M for Jira uploads.' },
+      { term: 'SESSION_SECRET', full: '—', meaning: 'A ≥ 32-character random string used to sign iron-session cookies. Required for production. Generate with: openssl rand -hex 32.' },
+      { term: 'Certbot', full: '—', meaning: 'CLI tool that automates SSL certificate issuance and renewal via Let\'s Encrypt. Used for HTTPS setup on VPS/Docker deployments.' },
+      { term: 'prisma migrate deploy', full: '—', meaning: 'Prisma CLI command that applies pending schema migrations. Runs automatically in the Docker container start command. Must be run manually on VPS after updates.' },
     ],
   },
 ];

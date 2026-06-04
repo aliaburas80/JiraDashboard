@@ -535,6 +535,7 @@ const SECTIONS = [
   { id: 'test-cases',    label: '✅ Test Cases',             group: 'Product Docs'    },
   { id: 'user-journeys', label: '🗺️ User Journeys',          group: 'Product Docs'    },
   { id: 'dev-guide',     label: '📖 Developer Guide',        group: 'Product Docs'    },
+  { id: 'deployment',   label: '🚢 Deployment Guide',        group: 'Product Docs'    },
 ];
 
 // ── Package Reference data ────────────────────────────────────────────────────
@@ -939,7 +940,7 @@ const CALCULATIONS = [
 type CalcCategory = typeof CALCULATIONS[0]['category'];
 const CALC_CATEGORIES = [...new Set(CALCULATIONS.map(c => c.category))] as CalcCategory[];
 
-const DOC_SLUGS = new Set(['brd','srs','use-cases','scenarios','test-cases','user-journeys','dev-guide']);
+const DOC_SLUGS = new Set(['brd','srs','use-cases','scenarios','test-cases','user-journeys','dev-guide','deployment']);
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 

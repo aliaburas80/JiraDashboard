@@ -1153,3 +1153,45 @@ Set `hideFlowPanel: true` on a `DashboardView` in `src/types/dashboardView.ts` t
 const XLSX = await import("xlsx");
 const { downloadInsightWorkbook } = await import("@/services/export/excelInsightExport.service");
 ```
+---
+
+## 12. Deployment
+
+See **`product/DEPLOYMENT_GUIDE.md`** for the full guide. Summary:
+
+### Deployment targets
+
+| Target | Command | Persistence | Recommended |
+|--------|---------|------------|-------------|
+| **Docker** | `docker compose up -d --build` | Volume mount | ✅ Production |
+| **VPS / PM2** | `pm2 start npm -- start` | Local filesystem | ✅ Production |
+| **Vercel** | `git push` → auto-deploy | ❌ Ephemeral | Demo only |
+
+### Key files
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile` | Multi-stage build (deps → builder → runner), non-root user |
+| `docker-compose.yml` | Service definition, volume mount, healthcheck, env vars |
+| `.env.example` | Template for all environment variables |
+| `product/DEPLOYMENT_GUIDE.md` | Full 12-section deployment manual |
+
+### Minimum production env vars
+
+```bash
+SESSION_SECRET=<openssl rand -hex 32>   # REQUIRED — 32+ chars
+DATABASE_URL=file:./data/delivery_clarity.db
+ADMIN_EMAIL=admin@yourdomain.com
+ADMIN_PASSWORD=<strong password>
+```
+
+### nginx upload size
+
+Set `client_max_body_size 25M;` in the nginx site config. Without this, Jira CSV exports > 1 MB will fail with a 413 error.
+
+### Post-deploy
+
+1. Log in and **change the admin password** immediately
+2. Visit `/admin/security` and aim for score ≥ 80
+3. Test file upload with a real Jira export
+4. Set up cron backups (see DEPLOYMENT_GUIDE.md §11)

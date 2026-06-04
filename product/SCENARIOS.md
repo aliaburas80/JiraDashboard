@@ -956,3 +956,21 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Outcome:** Retro action items are immediately owner-assigned in the tool, removing the need for a separate action tracker.
 
 **Related:** UC-070, TC-AO-01–08
+
+### SCN-033 — DevOps Engineer Self-Hosts via Docker in 10 Minutes
+
+**Persona:** Alex, DevOps Engineer
+**Context:** The team wants Delivery Clarity running on their internal server before the sprint review tomorrow.
+
+**Scenario:**
+1. Alex clones the repo to `/opt/delivery-clarity` on an Ubuntu 22.04 VPS
+2. Copies `.env.example` to `.env`, sets `SESSION_SECRET` and a strong `ADMIN_PASSWORD`
+3. Runs `docker compose up -d --build` — Docker pulls Node 20 alpine, builds two stages, starts the container
+4. `docker compose ps` shows "healthy" after ~60 seconds
+5. Alex visits `http://192.168.1.50:3000`, logs in, uploads a Jira CSV, confirms dashboard works
+6. Follows Section 7 to configure nginx on port 80 → uploads the Jira file successfully (25M limit set)
+7. Follows Section 8 to set up SSL via Certbot → site is live at `https://delivery.team.internal`
+
+**Outcome:** The team has a production Delivery Clarity instance in under 30 minutes with persistent SQLite storage, nginx, and HTTPS.
+
+**Related:** UC-071, DEPLOYMENT_GUIDE.md §4, §7, §8

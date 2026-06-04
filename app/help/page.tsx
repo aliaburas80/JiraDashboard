@@ -666,7 +666,40 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 26. Recommendation Owner Assignment
+  // 26. Deployment
+  {
+    id: 'deployment',
+    icon: '🚢',
+    title: 'Deployment',
+    items: [
+      {
+        q: 'What is the recommended way to deploy Delivery Clarity?',
+        a: 'Docker is the recommended deployment method for production. Clone the repo, copy .env.example to .env, set SESSION_SECRET (openssl rand -hex 32) and ADMIN_PASSWORD, then run: docker compose up -d --build. The app will be available on port 3000. Full instructions are in product/DEPLOYMENT_GUIDE.md and the Developer Portal → Deployment Guide.',
+      },
+      {
+        q: 'Can I deploy on Vercel?',
+        a: 'Vercel works for demos and previews but is NOT recommended for production. Vercel\'s serverless functions have no persistent filesystem, so SQLite data (user accounts, import logs, sessions) is lost between cold starts. The CSV-upload → dashboard flow works on Vercel since it uses localStorage.',
+      },
+      {
+        q: 'How do I deploy on a VPS without Docker?',
+        a: 'Install Node.js 20 and PM2. Clone the repo, copy .env.example to .env.local, set the required environment variables. Run: npm ci → npx prisma generate → npx prisma migrate deploy → npm run build → pm2 start npm --name "delivery-clarity" -- start. Then run pm2 save and pm2 startup to enable autostart.',
+      },
+      {
+        q: 'File uploads fail with a 413 error',
+        a: 'This is an nginx upload size limit. Add client_max_body_size 25M; inside the server {} block of your nginx site config. Jira CSV/XLSX exports can exceed the nginx default of 1 MB.',
+      },
+      {
+        q: 'How do I set up HTTPS?',
+        a: 'Use Certbot with Let\'s Encrypt: sudo apt install certbot python3-certbot-nginx → sudo certbot --nginx -d your-domain.com. Certbot updates the nginx config and sets up auto-renewal. Full instructions are in product/DEPLOYMENT_GUIDE.md §8.',
+      },
+      {
+        q: 'What environment variables are required?',
+        a: 'Required: SESSION_SECRET (≥ 32 chars, use: openssl rand -hex 32), DATABASE_URL (SQLite file path), ADMIN_EMAIL, ADMIN_PASSWORD. Optional: SESSION_TTL_HOURS (default 8), ALLOW_OPEN_REGISTRATION / NEXT_PUBLIC_ALLOW_REGISTER (default false), PORT (default 3000).',
+      },
+    ],
+  },
+
+  // 27. Recommendation Owner Assignment
   {
     id: 'rec-owners',
     icon: '👤',

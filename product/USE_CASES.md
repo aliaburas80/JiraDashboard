@@ -2400,3 +2400,27 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 4. Types "Sarah Chen" → presses Enter → blue "Sarah Chen" pill appears on the card
 5. Owner persists across page reloads (stored in dc_rec_owners localStorage)
 **Related FR:** FR-295, BR-101
+
+### UC-071 — DevOps Engineer Deploys Delivery Clarity via Docker
+
+**Actor:** DevOps Engineer / System Administrator
+**Trigger:** Team wants to self-host Delivery Clarity in their infrastructure
+**Main Flow:**
+1. Engineer clones the repo, copies `.env.example` to `.env`
+2. Sets `SESSION_SECRET` (openssl rand -hex 32) and `ADMIN_PASSWORD`
+3. Runs `docker compose up -d --build`
+4. Visits `http://server-ip:3000`, logs in with the seed admin credentials
+5. Changes admin password, runs security checklist at `/admin/security`
+6. (Optional) Configures nginx reverse proxy and SSL via Let's Encrypt
+**Related FR:** FR-297, BR-103
+
+### UC-072 — Admin Consults Deployment Guide Before Going to Production
+
+**Actor:** Engineering Manager / DevOps
+**Trigger:** Team is preparing to go from development to production
+**Main Flow:**
+1. Admin opens `product/DEPLOYMENT_GUIDE.md` (or `/developer` → Deployment)
+2. Reviews post-deploy checklist (Section 9) — confirms SESSION_SECRET, password change, security score
+3. Follows the troubleshooting table when the first upload returns a 413 error
+4. Adds nginx `client_max_body_size 25M` → re-uploads successfully
+**Related FR:** FR-297, BR-103

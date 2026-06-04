@@ -766,6 +766,8 @@ The following metrics define product success and will be measured at 30, 90, and
 
 **BR-095 (Should — P2):** The Smart Recommendations section MUST maintain a history of up to 10 recommendation snapshots. Users MUST be able to see which recommendations are new since their last upload, which have been resolved, and browse the full history. This supports continuous improvement tracking over time.
 
+**BR-103 (Should — P2 — Done):** Any team that wants to run Delivery Clarity in their own environment MUST have a clear, step-by-step deployment guide for all realistic targets (Docker, VPS, Vercel). Without this, self-hosting requires trial-and-error that blocks adoption. The guide MUST be part of the product repository so it stays in sync with the code.
+
 **BR-102 (Should — P2 — Done):** Developers navigating the Developer Portal need a way to find specific calculations, packages, or sections without knowing which subsection to open. A global search eliminates multi-click navigation for common queries like "lead time formula" or "prisma package".
 
 **BR-101 (Should — P2 — Done):** Smart Recommendations are only actionable if someone owns the action. A recommendation without an assigned owner is advice, not a task. Action-owner assignment turns each recommendation into an accountable delivery task without requiring a separate project management tool.

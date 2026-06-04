@@ -1754,6 +1754,8 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-289:** The dashboard filter row (All / High Risk / Blocked / Needs Review / Clear / Show filters / Export) MUST be hidden completely when the active dashboard view has `hideFlowPanel: true`. This includes the Executive and Product Owner views. KPI cards that previously linked to the flow panel MUST remove their click handlers when the panel is hidden.
 
+**FR-297 (P2 — Done):** The product MUST include a `product/DEPLOYMENT_GUIDE.md` covering all three deployment targets: Docker (recommended, with docker-compose), VPS/bare-metal (with PM2), and Vercel (preview only). The guide MUST include: environment variable reference, nginx reverse proxy config, SSL setup, post-deploy checklist, backup/restore procedures, and a troubleshooting table. The guide MUST be accessible from the `/developer` in-app page.
+
 **FR-296 (P2 — Done):** The Developer Portal (`/developer`) MUST provide a global search input in the blue sidebar that searches across all calculation names/formulas/descriptions, all package names/descriptions, and all section labels simultaneously. Results MUST be grouped by type (Sections, Calculations, Packages) and clicking a result MUST navigate to the corresponding section and expand/filter the matching item.
 
 **FR-295 (P2 — Done):** Each Smart Recommendation card MUST display an action-owner assignment control. It MUST show a suggested owner (role name from the recommendation engine) as a placeholder. The user MUST be able to assign a custom owner name that is persisted to `localStorage` (`dc_rec_owners`). The assigned owner MUST be displayed as a badge with edit and clear controls. Clearing the field removes the assignment.

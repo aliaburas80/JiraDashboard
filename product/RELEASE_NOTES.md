@@ -51,6 +51,19 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### P2 — Deployment Guide (9.35)
+- New **`product/DEPLOYMENT_GUIDE.md`** — 12-section comprehensive deployment guide
+- **Option A — Docker** (recommended): multi-stage Dockerfile + docker-compose walkthrough, volume persistence, healthcheck, useful commands, update procedure
+- **Option B — VPS / Bare Metal**: Ubuntu 22.04 steps — Node 20, PM2, Prisma migrate, build, autostart, update procedure
+- **Option C — Vercel** (preview/demo only): limitations table explains why SQLite doesn't persist on serverless
+- **nginx reverse proxy** config with `client_max_body_size 25M` (required for Jira CSV uploads)
+- **SSL / Let's Encrypt** with Certbot + auto-renewal
+- **Environment variable reference** table — all 9 variables with required/default/description
+- **Post-deploy checklist** — 8-item checklist including security score, password change, backup setup
+- **Backup & restore** — Docker volume backup, VPS cron backup, in-app backup tool
+- **Troubleshooting table** — 9 common problems with causes and fixes
+- Also surfaced in `/developer` (new "Deployment" section), `/help` (new section), `/glossary` (new deployment terms)
+
 ### Developer Portal — Global Search
 - **Search input** added to the Developer Portal blue sidebar (below the "Developer Portal" header)
 - Searches across all three data sources simultaneously: **Calculations** (name, formula, why, usedIn, file, category) · **Packages** (name, usedFor, feature) · **Section labels**

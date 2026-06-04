@@ -205,6 +205,25 @@
 
 ---
 
+## O — Deployment Terms
+
+| Term | Full Form | Meaning |
+|------|-----------|---------|
+| **Docker** | — | Container platform. The recommended deployment target for Delivery Clarity. Uses a multi-stage Dockerfile and docker-compose.yml. |
+| **docker-compose** | Docker Compose | Tool for defining and running multi-container Docker apps. Used to start Delivery Clarity with one command (`docker compose up -d`). |
+| **VPS** | Virtual Private Server | A cloud server (e.g. DigitalOcean Droplet, Hetzner VPS, AWS EC2) where the app runs directly on the OS without Docker. |
+| **PM2** | Process Manager 2 | Node.js process manager used in VPS deployments. Keeps the app running after crashes and enables autostart on boot. |
+| **nginx** | — | High-performance web server used as a reverse proxy in front of the Next.js app. Terminates SSL and forwards requests to port 3000. |
+| **reverse proxy** | — | A server that sits in front of the app, forwarding requests and handling SSL, compression, and rate limiting. nginx is used for this role. |
+| **Let's Encrypt** | — | Free SSL certificate authority. Used with Certbot to issue and auto-renew HTTPS certificates. |
+| **Certbot** | — | CLI tool that automates SSL certificate issuance and renewal with Let's Encrypt. |
+| **SESSION_SECRET** | — | A secret string (≥ 32 chars) used to sign iron-session cookies. Must be set before production deployment. Generate with: `openssl rand -hex 32`. |
+| **prisma migrate deploy** | — | Prisma CLI command that applies pending schema migrations to the database. Run after every deploy that includes schema changes. |
+| **standalone output** | Next.js standalone | `output: 'standalone'` in next.config.js tells Next.js to bundle all dependencies into `.next/standalone/` for minimal Docker images. |
+| **client_max_body_size** | — | nginx directive controlling the maximum upload size. Must be set to `25M` to allow Jira CSV/XLSX exports to upload successfully. |
+
+---
+
 ## M — Planned Features (Not Yet Implemented)
 
 | Term | Meaning |
