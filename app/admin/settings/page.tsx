@@ -33,8 +33,8 @@ const CONNECTION_GUIDES: Record<string, { title: string; steps: { heading: strin
 }`,
       },
       {
-        heading: '3. Enter credentials above',
-        body: 'Paste the Bucket name, Region (e.g. us-east-1), Access Key ID, and Secret Access Key into the form. Leave Endpoint empty for standard AWS S3.',
+        heading: '3. Enter credentials — or skip them entirely',
+        body: 'Paste the Bucket name and Region (e.g. us-east-1). For the Access Key ID and Secret: you can leave them EMPTY if your server already has AWS credentials configured via environment variables (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY), a shared credentials file (~/.aws/credentials), or an IAM instance role (EC2/ECS). The SDK will find them automatically. Only enter keys here if you want to use a specific IAM user.',
       },
       {
         heading: '4. S3-compatible providers (MinIO / Backblaze / Cloudflare R2)',
@@ -253,8 +253,18 @@ function CloudStorageSettings() {
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
             </div>
           ))}
-          {!data?.settings?.s3?.hasCredentials && <p className="text-[10px] text-amber-600 font-semibold">⚠ No credentials saved yet. Enter Access Key ID and Secret to enable uploads.</p>}
-          {data?.settings?.s3?.hasCredentials && <p className="text-[10px] text-green-600 font-semibold">✓ Credentials are saved (masked for security).</p>}
+          {!data?.settings?.s3?.hasCredentials && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-[10px] font-bold text-blue-800 mb-1">✓ Connecting without explicit credentials</p>
+              <p className="text-[10px] text-blue-700 leading-relaxed">
+                Leave Access Key ID and Secret empty to use the <strong>AWS default credential chain</strong> automatically:
+                environment variables (<code className="font-mono">AWS_ACCESS_KEY_ID</code> / <code className="font-mono">AWS_SECRET_ACCESS_KEY</code>),
+                shared credentials file (<code className="font-mono">~/.aws/credentials</code>),
+                or an IAM role attached to your server (EC2 / ECS / Lambda).
+              </p>
+            </div>
+          )}
+          {data?.settings?.s3?.hasCredentials && <p className="text-[10px] text-green-600 font-semibold">✓ Explicit credentials saved (masked for security).</p>}
         </div>
       )}
 

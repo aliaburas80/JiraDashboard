@@ -18,9 +18,14 @@ export class S3StorageProvider implements StorageProvider {
     const { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, DeleteObjectCommand } =
       await import('@aws-sdk/client-s3');
 
+    // Only pass explicit credentials when both fields are non-empty.
+    // When empty, the SDK falls back to the default credential chain:
+    //   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY env vars → ~/.aws/credentials → IAM role
+    const hasExplicitCreds = !!(this.config.accessKeyId?.trim() && this.config.secretAccessKey?.trim());
+
     const client = new S3Client({
-      region:      this.config.region,
-      credentials: { accessKeyId: this.config.accessKeyId, secretAccessKey: this.config.secretAccessKey },
+      region: this.config.region || 'us-east-1',
+      ...(hasExplicitCreds ? { credentials: { accessKeyId: this.config.accessKeyId, secretAccessKey: this.config.secretAccessKey } } : {}),
       ...(this.config.endpoint ? { endpoint: this.config.endpoint, forcePathStyle: true } : {}),
     });
 
