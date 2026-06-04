@@ -15,6 +15,7 @@ const NAV_GROUPS = [
       { href: '/dashboard', label: 'Full Report', icon: '📋', desc: 'All metrics & filters'     },
       { href: '/charts',    label: 'Charts',      icon: '📈', desc: 'Visual breakdowns'         },
       { href: '/trends',    label: 'Trends',      icon: '📉', desc: 'Upload-over-upload change'  },
+      { href: '/teams',     label: 'Teams',       icon: '👥', desc: 'Team health comparison'      },
     ],
   },
   {

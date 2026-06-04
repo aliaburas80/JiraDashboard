@@ -51,6 +51,16 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### P2 — Team-Level Health Comparison (9.31)
+- New **`/teams`** page — side-by-side health comparison for all team members (top 10 by workload)
+- **Team Health Score (0–100)** per assignee: completion (50 pts) + no-critical (30 pts) + no-blocked (20 pts); bands: Healthy ≥ 70 / At Risk ≥ 40 / Critical < 40
+- **Member Scorecards** grid (3 cols): avatar, health score badge, completion bar, issue/done/blocked/critical stats, health distribution pills, load%, avg open age
+- **Comparison Charts** (4): Health Score · Completion % · Workload Share · Blocked+Critical — all with colour thresholds
+- **Detail Table**: all members with sortable columns (score, band, done%, active, blocked, critical, SP, load, avg age)
+- **"Teams"** added to Analytics nav group
+- Formula lives in `src/lib/teamHealth.ts` — pure, testable
+- 10 automated tests (TC-TH-01–10)
+
 ### P2 — Release Confidence Trend (9.30)
 - New **Release Confidence Score** (0–100) computed on every upload: completion rate (55 pts) + no-blockers (25 pts) + no-critical (12 pts) + no-defects (8 pts)
 - Score stored in `ImportLog.metadataJson` as `releaseConfidenceScore`
