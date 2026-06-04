@@ -354,3 +354,67 @@ SORT recommendations: Critical → High → Medium → Low
 ---
 
 *© 2026 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity v4.1*
+
+---
+
+## Method 15: Release Confidence Scoring (9.30 — v4.1)
+
+**Problem:** Upload-to-upload health score trends don't isolate release-gate signals. Teams need a metric specifically tracking whether the product is safe to release, not just generally healthy.
+
+**How it works:**
+1. At every successful upload, four release-gate inputs are extracted from the computed `DashboardMetrics`: `completionRate`, `blockedIssues`, `criticalCount` (from `flow.critical`), `openDefects`, `totalIssues`.
+2. `computeReleaseConfidence()` applies the weighted formula: completion (55 pts) + no-blockers (25 pts) + no-critical (12 pts) + no-defects (8 pts), clamped 0–100.
+3. The score is stored in `ImportLog.metadataJson` as `releaseConfidenceScore`.
+4. `GET /api/trends` reads it back and includes it in each `TrendPoint`.
+5. `/trends` page renders a purple trend chart, stat card, and log column — all gated on `!= null` so old uploads degrade gracefully.
+
+**Implementation:** `src/lib/releaseConfidence.ts`, `app/api/upload/route.ts`, `app/api/trends/route.ts`, `app/trends/page.tsx`
+
+---
+
+## Method 16: Team Health Scoring (9.31 — v4.1)
+
+**Problem:** `metrics.capacity[]` provides raw counts per assignee but no comparable health signal. Managers reviewing team performance in retrospectives need a single score to rank and compare team members.
+
+**How it works:**
+1. `computeTeamHealth()` joins `capacity[]` (workload counts) with `flow.items[]` (per-item health + reason) by assignee name.
+2. Per assignee, it counts: `criticalCount` (open items where `health === 'critical'`), `blockedCount` (open items where `reason` contains "block"), `warningCount`, `goodCount`.
+3. It also computes `avgOpenAgeDays` from the `ageDays` of all non-done items — done items are excluded.
+4. The health score formula: completion (50 pts) + no-critical (30 pts) + no-blocked (20 pts), clamped 0–100.
+5. Results are sorted by `healthScore` descending and rendered on `/teams` as scorecards, 4 comparison charts, and a detail table.
+
+**Implementation:** `src/lib/teamHealth.ts`, `app/teams/page.tsx`
+
+---
+
+## Method 17: Portfolio Aggregation Scoring (9.32 — v4.1)
+
+**Problem:** No single view shows the health of the entire delivery portfolio — epics, projects, sprints, and quarters — in one place. Programme leads need to assess cross-team delivery at a glance.
+
+**How it works:**
+1. `computePortfolioSummary()` reads `metrics.epics[]`, `metrics.projects[]`, `metrics.quarters[]`, and `metrics.throughput.sprint` from the loaded `DashboardMetrics`.
+2. It computes a weighted-average completion rate for epics and projects (each weighted by issue count).
+3. Sprint performance comes from `throughput.sprint.averageCompletionPct`; data quality from `metrics.dataQuality.score`.
+4. The portfolio score formula: epics×40 + projects×30 + sprint×20 + dataQuality×10, clamped 0–100.
+5. Epic health is derived from critical/warning counts: `critical > 0 → critical`, `warning > 0 → warning`, else `good`. Project health is derived from `completionRate`: ≥70 → good, ≥40 → warning, else critical.
+6. "No date" quarters are filtered from the display.
+7. Insights are generated based on atRiskEpics, atRiskProjects, blocked items, and score band.
+
+**Implementation:** `src/lib/portfolioHealth.ts`, `app/portfolio/page.tsx`
+
+---
+
+## Method 18: Executive One-Page PDF Generation (9.33 — v4.1)
+
+**Problem:** Executives and stakeholders need a shareable, printable one-page summary that can be produced in seconds without manual aggregation from multiple dashboard pages.
+
+**How it works:**
+1. User clicks "Executive PDF" on `/summary` — triggers `exportExecutivePdf()` via lazy import.
+2. `buildExecutivePdfHtml(metrics)` assembles a self-contained HTML document from `DashboardMetrics`.
+3. The document uses a 3-column CSS grid: KPIs + insights | Epics + team capacity | Top 3 recommendations.
+4. All user-supplied strings (epic names, assignee names, insights) are sanitised via `esc()` (HTML entity encoding) before injection into the template literal.
+5. Print CSS sets `@page { size: A4 landscape; margin: 10mm }` and `-webkit-print-color-adjust: exact` to preserve colours.
+6. The HTML is wrapped in a `Blob` and downloaded as `executive-summary-{date}.html`.
+7. User opens the file and uses the browser's print dialog (Ctrl/Cmd+P → Save as PDF) — no external PDF library required.
+
+**Implementation:** `src/lib/executivePdf.ts`, `src/lib/exportUtils.ts — exportExecutivePdf()`, `app/summary/page.tsx`

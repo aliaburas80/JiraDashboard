@@ -2,6 +2,12 @@
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { getHealthBand, HEALTH_COLORS } from './utils';
 
+// ── Executive PDF — one-page print-optimised summary ─────────────────────────
+export async function exportExecutivePdf(metrics: DashboardMetrics): Promise<void> {
+  const { downloadExecutivePdf } = await import('@/lib/executivePdf');
+  downloadExecutivePdf(metrics);
+}
+
 // ── Excel — Smart statistical workbook (17 sheets) ───────────────────────────
 export async function exportToExcel(metrics: DashboardMetrics, filename = 'delivery-clarity-report.xlsx') {
   const { downloadInsightWorkbook } = await import('@/services/export/excelInsightExport.service');

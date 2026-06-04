@@ -211,7 +211,7 @@ All pages are React Client Components (`'use client'`). They read metrics from `
 ### Navigation structure
 
 The `AppShell` header renders 4 dropdown groups:
-- **Analytics**: `/summary`, `/dashboard`, `/charts`, `/trends`
+- **Analytics**: `/summary`, `/dashboard`, `/charts`, `/trends`, `/teams`, `/portfolio`
 - **Delivery**: `/readiness`, `/explore`, `/customer`
 - **Data**: `/snapshots`, `/backend`
 - **Reference**: `/glossary`, `/developer`, `/help`
@@ -234,6 +234,7 @@ Executive one-page summary. Renders:
 - Health score banner (score circle, band label, prediction chip)
 - Six KPI cards: Completion, Health Alerts, Active Work, Lead Time, Cycle Time, Story Points
 - Attention section: blockers, overdue items, orphan count
+- Export buttons: Excel, **Executive PDF** (purple — `exportExecutivePdf()` → `src/lib/executivePdf.ts`), HTML
 - Key insights list (from `metrics.insights`)
 - CTA buttons to Charts and Full Report
 
@@ -297,7 +298,15 @@ Save current metrics as a named snapshot (max 20/user). Load or delete saved sna
 
 ### `app/trends/page.tsx` — Trends (`/trends`)
 
-SVG line charts for 8 metrics (health score, issues, done, lead time, cycle time, blocked, throughput, data quality) over up to 30 uploads. Timeline table with deltas.
+SVG line charts for 9 metrics (health score, issues, done, lead time, cycle time, blocked, throughput, data quality, **release confidence**) over up to 30 uploads. Timeline table with deltas. Release Confidence Score is computed at upload time via `src/lib/releaseConfidence.ts` and stored in `ImportLog.metadataJson`.
+
+### `app/teams/page.tsx` — Team Health Comparison (`/teams`)
+
+Per-assignee health comparison sourced from `metrics.capacity[]` and `metrics.flow.items[]`. Computes `TeamHealthEntry[]` via `src/lib/teamHealth.ts` (score = completion×50 + no-critical×30 + no-blocked×20). Renders: member scorecards grid, 4 comparison charts, detail table. Sorted by health score descending.
+
+### `app/portfolio/page.tsx` — Portfolio Summary (`/portfolio`)
+
+Cross-team portfolio aggregation from `metrics.epics[]`, `metrics.projects[]`, `metrics.quarters[]`, and sprint throughput. Computes `PortfolioSummary` via `src/lib/portfolioHealth.ts` (score = epicCompletion×40 + projectCompletion×30 + sprintPerformance×20 + dataQuality×10). Renders: score banner, 6 KPI cards, epic progress panel, project cards, quarter bars, epic detail table.
 
 ### `app/customer/page.tsx` — Customer View (`/customer`)
 

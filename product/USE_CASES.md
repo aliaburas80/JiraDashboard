@@ -2318,3 +2318,62 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 4. User clicks "View history (3 previous snapshots)" to see full timeline
 5. Each past snapshot shows date, health score, and recommendation list
 **Related FR:** FR-289
+### UC-064 — User Exports Work Item Explorer Graph
+
+**Actor:** Scrum Master / Engineering Manager
+**Trigger:** User has explored an issue key on `/explore` and wants to share findings
+**Main Flow:**
+1. User enters an issue key and the graph loads
+2. User clicks "↓ Export" dropdown → selects "Export to Excel (.xlsx)"
+3. System generates a 5-sheet workbook: Summary, All Issues, Risk Items, Orphans, Insights
+4. File downloads as `explorer-{key}-{date}.xlsx`
+5. Alternatively, user selects "Export to CSV (.csv)" for a flat table
+**Related FR:** FR-290, BR-096
+
+### UC-065 — User Monitors Release Confidence Trend Over Uploads
+
+**Actor:** Engineering Manager / Release Manager
+**Trigger:** User navigates to `/trends` after multiple uploads
+**Main Flow:**
+1. User opens `/trends` — requires 2+ uploads
+2. "Release Confidence" stat card shows delta vs first upload
+3. Purple trend chart shows score trajectory over all uploads
+4. Upload log table shows "Rel. Confidence" column per row, colour-coded green/amber/red
+**Related FR:** FR-291, BR-097
+
+### UC-066 — Manager Compares Team Member Health
+
+**Actor:** Engineering Manager / Scrum Master
+**Trigger:** Pre-retro or sprint review — manager wants to see who is healthy vs at risk
+**Main Flow:**
+1. User navigates to `/teams` from Analytics nav
+2. Member scorecards show each assignee's health score, completion bar, blocked/critical counts
+3. Four comparison charts rank all members by health, completion, workload, and risk
+4. Detail table shows all members with sortable columns
+5. Manager identifies who needs support before the retro
+**Related FR:** FR-292, BR-098
+
+### UC-067 — Programme Lead Reviews Cross-Team Portfolio
+
+**Actor:** Director of Engineering / Programme Manager
+**Trigger:** Weekly programme review or steering committee preparation
+**Main Flow:**
+1. User navigates to `/portfolio` from Analytics nav
+2. Portfolio Score banner shows 0–100 score with band label and key insights
+3. Epic Progress panel shows all epics with completion bars, health dots, and critical/warning counts
+4. Project cards show per-project completion and health band
+5. Quarter throughput bars show historical delivery by quarter
+6. Epic detail table enables deep-dive per epic
+**Related FR:** FR-293, BR-099
+
+### UC-068 — User Exports Executive One-Page PDF
+
+**Actor:** Director of Engineering / Engineering Manager
+**Trigger:** User needs a one-page executive summary for a steering committee or stakeholder meeting
+**Main Flow:**
+1. User navigates to `/summary` (Overview page)
+2. User clicks "Executive PDF" button (purple, document icon)
+3. System generates a print-optimised HTML file with: health score, 6 KPIs, top 5 epics, team capacity, insights, top 3 recommendations
+4. File downloads as `executive-summary-{date}.html`
+5. User opens the file and prints it (Ctrl/Cmd+P → Save as PDF) — one A4 landscape page
+**Related FR:** FR-294, BR-100

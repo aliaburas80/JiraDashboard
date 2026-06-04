@@ -574,7 +574,120 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 21. Troubleshooting
+  // 22. Explorer Export
+  {
+    id: 'explorer-export',
+    icon: '📥',
+    title: 'Explorer Export',
+    items: [
+      {
+        q: 'How do I export from the Work Item Explorer?',
+        a: 'After exploring any issue key on the /explore page, an "↓ Export" dropdown button appears in the results header. Choose "Export to Excel (.xlsx)" for a 5-sheet workbook (Summary, All Issues, Risk Items, Orphans, Insights) or "Export to CSV (.csv)" for a flat table. The file is named explorer-{key}-{date}.',
+      },
+      {
+        q: 'What is included in the Excel workbook?',
+        a: 'Sheet 1 (Summary): focus issue key, delivery stats, confidence score, largest unfinished branch, and insights. Sheet 2 (All Issues): all connected nodes and orphans with health, risk-path, blocked, and role columns. Sheet 3 (Risk Items): only blocked, critical, or on-risk-path items. Sheet 4 (Orphans): orphan items only. Sheet 5 (Insights): generated insight text bullets.',
+      },
+      {
+        q: 'Why is the Export button not showing?',
+        a: 'The Export dropdown only appears after a graph has been loaded — enter an issue key and click "Explore Issue" first.',
+      },
+    ],
+  },
+
+  // 23. Teams Page
+  {
+    id: 'teams',
+    icon: '👥',
+    title: 'Teams',
+    items: [
+      {
+        q: 'What is the Teams page?',
+        a: 'The /teams page shows a side-by-side health comparison for each team member (assignee) in your Jira data. It computes a Team Health Score (0–100) per person based on their completion rate, critical items, and blocked items.',
+      },
+      {
+        q: 'How is the Team Health Score calculated?',
+        a: 'Score = (done/total) × 50 + (1 − critical/total) × 30 + (1 − blocked/total) × 20, clamped 0–100. Bands: Healthy ≥ 70 / At Risk ≥ 40 / Critical < 40.',
+      },
+      {
+        q: 'What do the four comparison charts show?',
+        a: 'Health Score (ranked by score, colour-coded by band) · Completion % (ranked by completion) · Workload Share (load%, red > 35%, amber > 20%) · Blocked + Critical Items (ranked by total risk count).',
+      },
+      {
+        q: 'The Teams page shows "No team data available"',
+        a: 'This means no assignee data was found in the uploaded Jira export. Ensure your Jira export includes the Assignee column and has been uploaded from the home page.',
+      },
+    ],
+  },
+
+  // 24. Portfolio Page
+  {
+    id: 'portfolio',
+    icon: '🗂️',
+    title: 'Portfolio',
+    items: [
+      {
+        q: 'What is the Portfolio page?',
+        a: 'The /portfolio page aggregates all epics, projects, sprints, and quarters into a single Portfolio Score (0–100) and health view. It is designed for programme leads and directors who need a cross-team delivery snapshot.',
+      },
+      {
+        q: 'How is the Portfolio Score calculated?',
+        a: 'Score = epic completion × 40% + project completion × 30% + sprint performance × 20% + data quality × 10%, weighted by issue count. Bands: Excellent ≥ 85 / Good ≥ 70 / Moderate ≥ 55 / At Risk ≥ 35 / Critical < 35.',
+      },
+      {
+        q: 'What does the Epic Progress panel show?',
+        a: 'A scrollable list of all epics with health dots (green/amber/red), completion bars, percentage, issue counts, and critical/warning counts. Sorted by the order they appear in your Jira data.',
+      },
+      {
+        q: 'What do the Quarter Throughput bars show?',
+        a: 'Bar height represents total issues per quarter. Bar colour represents completion rate: green ≥ 70%, amber 40–69%, red < 40%. Bars are capped to the last 8 quarters. "No date" quarters are excluded.',
+      },
+    ],
+  },
+
+  // 25. Release Confidence Trend
+  {
+    id: 'release-confidence',
+    icon: '📉',
+    title: 'Release Confidence Trend',
+    items: [
+      {
+        q: 'What is the Release Confidence Score?',
+        a: 'A 0–100 score computed on every upload that specifically measures release readiness — not just general health. It weights completion (55 pts), absence of blockers (25 pts), absence of critical items (12 pts), and absence of open defects (8 pts).',
+      },
+      {
+        q: 'Where do I see the Release Confidence Trend?',
+        a: 'On the /trends page (requires 2+ uploads while logged in): a purple "Release Confidence" chart, a stat card in the summary row, and a "Rel. Confidence" column in the upload log table — colour-coded green ≥ 80%, amber ≥ 60%, red < 60%.',
+      },
+      {
+        q: 'Why does the Release Confidence column show "—" for some uploads?',
+        a: 'Uploads made before this feature was added (v4.1) do not have a stored score. Only uploads from v4.1 onwards will show a value.',
+      },
+    ],
+  },
+
+  // 26. Executive PDF
+  {
+    id: 'executive-pdf',
+    icon: '📄',
+    title: 'Executive PDF',
+    items: [
+      {
+        q: 'What is the Executive PDF export?',
+        a: 'The "Executive PDF" button on the Overview (/summary) page generates a print-optimised single-page HTML file designed to fit on one A4 landscape page. It contains: health score, 6 KPI cards, top 5 epic progress bars, top 4 team capacity bars, insights, and the top 3 recommendations.',
+      },
+      {
+        q: 'How do I save it as a PDF?',
+        a: 'After clicking "Executive PDF", a file named executive-summary-{date}.html downloads. Open it in your browser, then press Ctrl+P (Windows) or Cmd+P (Mac) → change destination to "Save as PDF" → Print. The layout is optimised to fit one page in landscape orientation.',
+      },
+      {
+        q: 'Why is it downloaded as .html instead of .pdf?',
+        a: 'No external PDF library is needed — your browser already contains a high-quality PDF rendering engine. Downloading as .html and printing to PDF produces a better, smaller file than any JavaScript PDF library could generate.',
+      },
+    ],
+  },
+
+  // 27. Troubleshooting
   {
     id: 'troubleshooting',
     icon: '🛠️',

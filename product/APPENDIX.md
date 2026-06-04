@@ -185,6 +185,22 @@
 
 ---
 
+## L — P2 Analytics Scores (v4.1)
+
+| Term | Full Form | Meaning |
+|------|-----------|---------|
+| **Release Confidence Score** | — | A 0–100 score computed per upload representing readiness to release. Weighted formula: completion (55 pts) + no-blockers (25 pts) + no-critical (12 pts) + no-defects (8 pts). Shown on /trends as a trend line. |
+| **RC Band** | Release Confidence Band | High ≥ 80 / Medium ≥ 60 / Low ≥ 40 / Critical < 40 |
+| **Team Health Score** | — | A 0–100 score per assignee: completion (50 pts) + no-critical (30 pts) + no-blocked (20 pts). Shown on /teams. |
+| **Team Band** | Team Health Band | Healthy ≥ 70 / At Risk ≥ 40 / Critical < 40 |
+| **Portfolio Score** | — | A 0–100 score aggregating epics (40%), projects (30%), sprint performance (20%), data quality (10%). Shown on /portfolio. |
+| **Portfolio Band** | — | Excellent ≥ 85 / Good ≥ 70 / Moderate ≥ 55 / At Risk ≥ 35 / Critical < 35 |
+| **Explorer Export** | Work Item Explorer Export | Excel (.xlsx, 5 sheets) or CSV (.csv) download of the current Work Item Explorer graph from /explore. |
+| **avgOpenAgeDays** | Average Open Age (days) | Mean number of days open items have been open per assignee. Computed from `ageDays` of non-done FlowItems. Red when > 14 days. |
+| **Executive PDF** | Executive One-Page PDF Export | A print-optimised single-page HTML file (A4 landscape) downloaded from /summary. Contains health score, KPIs, epic progress, team capacity, insights, top 3 recommendations. Printed via browser print dialog — no external library. |
+
+---
+
 ## M — Planned Features (Not Yet Implemented)
 
 | Term | Meaning |

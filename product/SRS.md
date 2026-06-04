@@ -1754,6 +1754,8 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-289:** The dashboard filter row (All / High Risk / Blocked / Needs Review / Clear / Show filters / Export) MUST be hidden completely when the active dashboard view has `hideFlowPanel: true`. This includes the Executive and Product Owner views. KPI cards that previously linked to the flow panel MUST remove their click handlers when the panel is hidden.
 
+**FR-294 (P2 — Done):** The `/summary` page MUST provide an "Executive PDF" button that generates and downloads a print-optimised single-page HTML file (`executive-summary-{date}.html`). The document MUST use A4 landscape layout with 3 columns: (1) health score + KPIs + insights, (2) epic progress + team capacity, (3) top 3 recommendations. All user data MUST be HTML-escaped. No external PDF library is required — the browser print engine is used.
+
 **FR-293 (P2 — Done):** The system MUST provide a `/portfolio` page that aggregates all epics, projects, quarters, and sprint data into a single Portfolio Score (0–100) using the formula: epicAvgCompletion × 0.40 + projectAvgCompletion × 0.30 + sprintAvgCompletion × 0.20 + dataQualityScore × 0.10. The page MUST display: score banner, 6 KPI cards, epic progress panel, project cards, quarter throughput bars, and an epic detail table.
 
 **FR-292 (P2 — Done):** The system MUST provide a `/teams` page that computes and displays a Team Health Score (0–100) per assignee using the formula: (doneIssues/total)×50 + (1−criticalCount/total)×30 + (1−blockedCount/total)×20. The page MUST display: member scorecards, four comparison charts (health score, completion, workload, blocked+critical), and a full detail table. It MUST be accessible from the Analytics nav group.

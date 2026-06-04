@@ -51,6 +51,15 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### P2 — Executive One-Page PDF Export (9.33)
+- New **"Executive PDF"** button (purple) on the `/summary` page
+- Generates a **print-optimised single-page HTML** (`executive-summary-{date}.html`) designed to print as one A4 landscape page from any browser (no external PDF library)
+- **Layout (3 columns)**: Left — health score header + 6 KPI cards + insights · Centre — top 5 epic progress bars + top 4 team capacity bars · Right — top 3 recommendations with priority dots
+- **Print CSS**: `@page { size: A4 landscape; margin: 10mm; }` · `-webkit-print-color-adjust: exact` · `.no-print` on browser hint text
+- **XSS-safe**: all user data escaped via `esc()` helper
+- Formula lives in `src/lib/executivePdf.ts` — pure, testable; lazy-loaded via `exportUtils.ts`
+- 8 automated tests (TC-EP-01–08)
+
 ### P2 — Cross-Team Portfolio Summary (9.32)
 - New **`/portfolio`** page — single unified view of the entire delivery portfolio
 - **Portfolio Score (0–100)**: weighted formula — epic completion (40%) + project completion (30%) + sprint performance (20%) + data quality (10%)

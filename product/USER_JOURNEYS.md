@@ -1417,3 +1417,30 @@ All personas now experience a two-step flow after uploading:
 | 4 | Exports Excel report for board meeting | Smart 17-sheet workbook downloaded | Satisfied |
 
 **Pain point resolved:** No accidental exposure to raw issue-level data inappropriate for C-level audience.
+## v4.1 — P2 Analytics Feature Journeys (2026-06-04)
+
+### UJ-022 — Engineering Manager — Team Health Review
+
+| Step | User Action | System Response | Emotion |
+|------|-------------|-----------------|---------|
+| 1 | Opens Analytics nav → Teams | `/teams` loads, member scorecards visible | + |
+| 2 | Scans scorecards — spots "David: 34/100 Critical" | Scorecard shows red health score, 3 blocked | - |
+| 3 | Checks Workload Share chart | David bar is red (42% load), Alice bar green (18%) | ~ |
+| 4 | Notes avgOpenAgeDays: 18d for David | Red text "18d" confirms long-running open items | - |
+| 5 | Takes screenshot, raises in retro | — | + |
+
+**Emotional arc:** Neutral → concern (David's score) → action (retro discussion)
+
+---
+
+### UJ-023 — Programme Lead — Portfolio Review
+
+| Step | User Action | System Response | Emotion |
+|------|-------------|-----------------|---------|
+| 1 | Opens Analytics nav → Portfolio | Score banner: 71/100 "Good" | + |
+| 2 | Reads insights bullet: "1 epic has critical items" | Blue bullet list gives specific context | ~ |
+| 3 | Scrolls to Epic Progress panel | Payments v2: red dot, 30%, 2 critical | - |
+| 4 | Checks Quarter Throughput bars | Q2 bar shorter than Q1 — delivery dipped | - |
+| 5 | Exports report, shares with stakeholders | Standard export from export button | + |
+
+**Emotional arc:** Positive open → concern (critical epic) → informed action

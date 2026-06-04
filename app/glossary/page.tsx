@@ -161,6 +161,23 @@ const SECTIONS = [
       { term: 'admin', full: 'Administrator', meaning: 'All user access plus: see all users\' import logs, access /admin/logs, see "Uploaded By" column.' },
     ],
   },
+  {
+    id: 'p2-scores',
+    title: 'K — P2 Analytics Scores',
+    icon: '📊',
+    description: 'Composite scores and bands introduced in v4.1 P2 features.',
+    rows: [
+      { term: 'Release Confidence Score', full: '0–100', meaning: 'Per-upload score tracking release readiness: completion (55 pts) + no-blockers (25 pts) + no-critical (12 pts) + no-defects (8 pts). Shown as a trend on /trends.' },
+      { term: 'RC Band', full: 'Release Confidence Band', meaning: 'High ≥ 80 / Medium ≥ 60 / Low ≥ 40 / Critical < 40.' },
+      { term: 'Team Health Score', full: '0–100', meaning: 'Per-assignee score: completion (50 pts) + no-critical (30 pts) + no-blocked (20 pts). Shown on /teams.' },
+      { term: 'Team Band', full: 'Team Health Band', meaning: 'Healthy ≥ 70 / At Risk ≥ 40 / Critical < 40.' },
+      { term: 'Portfolio Score', full: '0–100', meaning: 'Cross-team aggregate: epic completion (40%) + project completion (30%) + sprint performance (20%) + data quality (10%). Shown on /portfolio.' },
+      { term: 'Portfolio Band', full: '—', meaning: 'Excellent ≥ 85 / Good ≥ 70 / Moderate ≥ 55 / At Risk ≥ 35 / Critical < 35.' },
+      { term: 'Explorer Export', full: 'Work Item Explorer Export', meaning: 'Excel (5-sheet workbook) or CSV download of the current /explore graph. Includes: Summary, All Issues, Risk Items, Orphans, Insights.' },
+      { term: 'avgOpenAgeDays', full: 'Average Open Age (days)', meaning: 'Mean age in days of all non-done items per assignee. Red when > 14 days on the /teams page.' },
+      { term: 'Executive PDF', full: 'Executive One-Page PDF Export', meaning: 'A print-optimised single-page HTML (A4 landscape) generated from /summary. Contains health score, KPIs, epics, team capacity, insights, top 3 recommendations. Downloaded as .html, printed as PDF via browser.' },
+    ],
+  },
 ];
 
 // ── Components ────────────────────────────────────────────────────────────────

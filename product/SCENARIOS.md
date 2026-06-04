@@ -836,3 +836,89 @@ You click "← Back" and you're back on the dashboard, right where you were.
 ---
 
 *© 2026 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity v4.1*
+### SCN-026 — Scrum Master Exports Explorer Graph for Offline Review
+
+**Persona:** Marcus, Scrum Master
+**Context:** Marcus has traced a blocked epic in Work Item Explorer and wants to share the risk analysis with a stakeholder who doesn't have app access.
+
+**Scenario:**
+1. Marcus navigates to `/explore` and enters `EPIC-14`
+2. The graph loads: 12 connected items, 3 on the risk path, 1 orphan
+3. Marcus clicks "↓ Export" → "Export to Excel (.xlsx)"
+4. A 5-sheet workbook downloads: Summary (delivery confidence 62%), All Issues (12 rows), Risk Items (3 rows), Orphans (1 row), Insights
+5. Marcus emails the workbook to the product owner before the sprint review
+
+**Outcome:** Stakeholder has a complete offline snapshot of the delivery structure without needing app access.
+
+**Related:** UC-064, TC-EX-01–08
+
+---
+
+### SCN-027 — Release Manager Watches Confidence Score Improve Sprint-Over-Sprint
+
+**Persona:** Rachel, Director of Engineering
+**Context:** After blocking issues were resolved over two sprints, Rachel wants to confirm release confidence is trending up.
+
+**Scenario:**
+1. Rachel navigates to `/trends`
+2. The Release Confidence chart shows: Sprint 3 → 48%, Sprint 4 → 67%, Sprint 5 → 84%
+3. The stat card shows "+36% vs first upload" in green
+4. The upload log table shows the Rel. Confidence column improving row by row
+
+**Outcome:** Rachel can objectively demonstrate to the steering committee that release confidence improved, backed by trend data rather than anecdote.
+
+**Related:** UC-065, TC-RC-01–10
+
+---
+
+### SCN-028 — Engineering Manager Identifies Overloaded Team Member Before Retro
+
+**Persona:** Carlos, Engineering Manager
+**Context:** Sprint 6 retrospective is tomorrow. Carlos wants data to support the conversation about uneven workload distribution.
+
+**Scenario:**
+1. Carlos opens `/teams` from the Analytics nav
+2. He sees 6 team member scorecards; "David: 34/100 Critical" stands out
+3. The Workload Share chart shows David at 42% load share (red bar, > 35%)
+4. The Blocked + Critical chart confirms David has 3 blocked items
+5. Carlos notes David's avgOpenAgeDays is 18d (red)
+6. He uses this data to open the retro discussion on workload balancing
+
+**Outcome:** Retro conversation is data-driven. Team agrees to redistribute 2 issues from David to Alice (Healthy, 68/100, 18% load).
+
+**Related:** UC-066, TC-TH-01–10
+
+---
+
+### SCN-029 — Programme Lead Prepares Steering Committee Deck from Portfolio Page
+
+**Persona:** Rachel, Director of Engineering
+**Context:** Weekly steering committee in 30 minutes. Rachel needs a portfolio health summary.
+
+**Scenario:**
+1. Rachel navigates to `/portfolio`
+2. Portfolio Score is 71 (Good) — score banner confirms "Portfolio is in a strong position"
+3. Epic Progress panel shows 4 epics: 3 healthy (green), 1 critical (red — "Payments v2, 30% complete, 2 critical")
+4. Project cards: PROJ-A healthy, PROJ-B at risk (50%)
+5. Quarter throughput bars: Q1 80% → Q2 65% — slight dip noted
+6. Rachel screenshots the score banner and epic panel for her deck
+
+**Outcome:** Steering committee gets a coherent portfolio view in under 5 minutes, no manual aggregation needed.
+
+**Related:** UC-067, TC-PF-01–10
+
+### SCN-030 — Director Prepares One-Page Executive PDF Before Steering Committee
+
+**Persona:** Rachel, Director of Engineering
+**Context:** 15 minutes before a steering committee, Rachel needs a one-page printed summary.
+
+**Scenario:**
+1. Rachel navigates to `/summary`
+2. She clicks "Executive PDF" (purple button)
+3. A file `executive-summary-2026-06-04.html` downloads instantly
+4. She opens it in Chrome → Ctrl+P → "Save as PDF" → one A4 landscape page renders
+5. She prints it and walks into the meeting
+
+**Outcome:** In 60 seconds, Rachel has a professional one-page delivery summary — no manual copy-paste from multiple pages, no formatting work.
+
+**Related:** UC-068, TC-EP-01–08

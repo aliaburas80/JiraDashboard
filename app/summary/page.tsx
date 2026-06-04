@@ -8,7 +8,7 @@ import KpiCard from '@/components/ui/KpiCard';
 import LoadingState from '@/components/ui/LoadingState';
 import type { DashboardMetrics } from '@/types/metrics';
 import { loadMetrics } from '@/lib/storage';
-import { exportToExcel, exportToHtml } from '@/lib/exportUtils';
+import { exportToExcel, exportToHtml, exportExecutivePdf } from '@/lib/exportUtils';
 import { getHealthBand, HEALTH_COLORS, type HealthBand } from '@/lib/utils';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import WhatChangedPanel from '@/components/dashboard/WhatChangedPanel';
@@ -281,6 +281,15 @@ export default function SummaryPage() {
             <path d="M11 3h2v10.2l3.6-3.6L18 11l-6 6-6-6 1.4-1.4 3.6 3.6V3ZM5 19h14v2H5v-2Z"/>
           </svg>
           Export Excel
+        </button>
+
+        {/* Executive PDF — purple */}
+        <button type="button" onClick={async () => { if (metrics) await exportExecutivePdf(metrics); }}
+          className="btn-primary px-5 py-2.5" style={{ background: '#7c3aed' }}>
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm4 18H6V4h7v5h5v11ZM8 15h8v1.5H8V15Zm0-3h8v1.5H8V12Zm0-3h5v1.5H8V9Z"/>
+          </svg>
+          Executive PDF
         </button>
 
         {/* Export HTML — lighter sea-green with globe icon */}

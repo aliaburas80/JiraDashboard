@@ -513,3 +513,87 @@ OUTPUT: ComparisonRow[] with { label, valueA, valueB, delta, direction, positive
 ```
 
 **Implementation:** `src/services/imports/importLogs.service.ts`, `app/snapshots/compare/page.tsx`
+
+---
+
+## Release Confidence Score Algorithm (9.30 — v4.1)
+
+**Problem:** A single health score cannot distinguish between "slow team" and "blocked-before-release" scenarios. A release-gate-specific signal is needed to trend over uploads.
+
+**Formula:**
+```
+score = clamp(0, 100,
+  (completionRate / 100) × 55 +
+  (1 − min(blockedIssues / max(totalIssues, 1), 1)) × 25 +
+  (1 − min(criticalCount / max(totalIssues, 1), 1)) × 12 +
+  max(0, 8 − openDefects × 2)
+)
+```
+
+**Weights:** Completion (55 pts) · no-blockers (25 pts) · no-critical (12 pts) · no-defects (8 pts)
+
+**Band thresholds:** High ≥ 80 · Medium ≥ 60 · Low ≥ 40 · Critical < 40
+
+**Storage:** Score is computed at upload time and persisted in `ImportLog.metadataJson` as `releaseConfidenceScore`. Returned by `GET /api/trends`.
+
+**Implementation:** `src/lib/releaseConfidence.ts — computeReleaseConfidence()`, `app/api/upload/route.ts`
+
+---
+
+## Team Health Score Algorithm (9.31 — v4.1)
+
+**Problem:** `metrics.capacity[]` gives workload counts but no comparable health signal. Managers need a single score per assignee that factors in completion, critical items, and blocked items.
+
+**Formula (per assignee):**
+```
+healthScore = clamp(0, 100,
+  (doneIssues / max(totalIssues, 1)) × 50 +
+  (1 − min(criticalCount / max(totalIssues, 1), 1)) × 30 +
+  (1 − min(blockedCount  / max(totalIssues, 1), 1)) × 20
+)
+```
+Where `criticalCount` and `blockedCount` count only open (non-done) items.
+
+**Band thresholds:** Healthy ≥ 70 · At Risk ≥ 40 · Critical < 40
+
+**Sort:** Results sorted by `healthScore` descending.
+
+**Implementation:** `src/lib/teamHealth.ts — computeTeamHealth()`, `app/teams/page.tsx`
+
+---
+
+## Portfolio Score Algorithm (9.32 — v4.1)
+
+**Problem:** Individual metrics (health score, sprint completion, epic progress) each tell part of the story. A unified portfolio score is needed for programme-level reporting.
+
+**Formula:**
+```
+portfolioScore = clamp(0, 100,
+  weightedAvg(epics, e.progress)    × 0.40 +
+  weightedAvg(projects, p.completionRate) × 0.30 +
+  sprint.averageCompletionPct       × 0.20 +
+  (dataQuality.score / 100)         × 10
+)
+```
+Where `weightedAvg` weights each entry by its `issues` count. Falls back to `metrics.completionRate` when epics or projects are absent.
+
+**Band thresholds:** Excellent ≥ 85 · Good ≥ 70 · Moderate ≥ 55 · At Risk ≥ 35 · Critical < 35
+
+**Implementation:** `src/lib/portfolioHealth.ts — computePortfolioSummary()`, `app/portfolio/page.tsx`
+
+---
+
+## Executive PDF Layout Algorithm (9.33 — v4.1)
+
+**Problem:** The full HTML export is multi-page and data-dense. Executives and steering committees need a single-page snapshot — formatted, printable, ready in seconds.
+
+**Layout rules:**
+1. A4 landscape (`@page { size: A4 landscape; margin: 10mm; }`), 3-column grid
+2. Column 1: health score header + 6 KPI cards (2×3 grid) + insights bullets
+3. Column 2: top 5 epics with progress bars (colour-coded by health) + top 4 assignees with capacity bars
+4. Column 3: top 3 recommendations with priority dots + evidence text
+5. All user data escaped via `esc()` before injection into HTML template literals
+6. `print-color-adjust: exact` preserves background colours in print output
+7. `.no-print` class hides the browser hint text from printed output
+
+**Implementation:** `src/lib/executivePdf.ts — buildExecutivePdfHtml()`, `src/lib/exportUtils.ts — exportExecutivePdf()`, `app/summary/page.tsx`
