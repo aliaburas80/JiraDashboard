@@ -14,9 +14,11 @@ export class AzureStorageProvider implements StorageProvider {
   }
 
   private async getClient() {
-    const { BlobServiceClient } = await import('@azure/storage-blob').catch(() => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore — optional peer dependency; installed separately when Azure is used
+    const { BlobServiceClient } = await import(/* webpackIgnore: true */ '@azure/storage-blob' as string).catch(() => {
       throw new Error('Azure SDK not installed. Run: npm install @azure/storage-blob');
-    });
+    }) as any;
     const service   = BlobServiceClient.fromConnectionString(this.config.connectionString);
     const container = service.getContainerClient(this.config.containerName);
     return { container, BlobServiceClient };

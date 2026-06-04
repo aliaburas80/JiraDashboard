@@ -14,9 +14,11 @@ export class GcpStorageProvider implements StorageProvider {
   }
 
   private async getBucket() {
-    const { Storage } = await import('@google-cloud/storage').catch(() => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore — optional peer dependency; installed separately when GCP is used
+    const { Storage } = await import(/* webpackIgnore: true */ '@google-cloud/storage' as string).catch(() => {
       throw new Error('GCP SDK not installed. Run: npm install @google-cloud/storage');
-    });
+    }) as any;
 
     const storageOpts: Record<string, unknown> = { projectId: this.config.projectId };
     if (this.config.keyFilename) storageOpts.keyFilename = this.config.keyFilename;

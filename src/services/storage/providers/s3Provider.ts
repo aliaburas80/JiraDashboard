@@ -15,10 +15,12 @@ export class S3StorageProvider implements StorageProvider {
 
   private async getClient() {
     // Dynamic import — S3 SDK only loaded when this provider is active
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore — optional peer dependency; installed separately when S3 is used
     const { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, DeleteObjectCommand } =
-      await import('@aws-sdk/client-s3').catch(() => {
+      await import(/* webpackIgnore: true */ '@aws-sdk/client-s3' as string).catch(() => {
         throw new Error('AWS SDK not installed. Run: npm install @aws-sdk/client-s3');
-      });
+      }) as any;
 
     const client = new S3Client({
       region:      this.config.region,
