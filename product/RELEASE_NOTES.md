@@ -51,6 +51,15 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### P2 — Cross-Team Portfolio Summary (9.32)
+- New **`/portfolio`** page — single unified view of the entire delivery portfolio
+- **Portfolio Score (0–100)**: weighted formula — epic completion (40%) + project completion (30%) + sprint performance (20%) + data quality (10%)
+- **Portfolio bands**: Excellent ≥ 85 / Good ≥ 70 / Moderate ≥ 55 / At Risk ≥ 35 / Critical < 35
+- **Sections**: Score banner + insights · KPI strip (6 cards) · Epic Progress panel (scrollable, colour-coded) · Project cards grid · Quarter throughput bars · Epic detail table
+- **"Portfolio"** added to Analytics nav group
+- Formula lives in `src/lib/portfolioHealth.ts` — pure, testable
+- 10 automated tests (TC-PF-01–10)
+
 ### P2 — Team-Level Health Comparison (9.31)
 - New **`/teams`** page — side-by-side health comparison for all team members (top 10 by workload)
 - **Team Health Score (0–100)** per assignee: completion (50 pts) + no-critical (30 pts) + no-blocked (20 pts); bands: Healthy ≥ 70 / At Risk ≥ 40 / Critical < 40

@@ -766,6 +766,8 @@ The following metrics define product success and will be measured at 30, 90, and
 
 **BR-095 (Should — P2):** The Smart Recommendations section MUST maintain a history of up to 10 recommendation snapshots. Users MUST be able to see which recommendations are new since their last upload, which have been resolved, and browse the full history. This supports continuous improvement tracking over time.
 
+**BR-099 (Should — P2 — Done):** The system MUST provide a cross-team portfolio view that aggregates epics, projects, sprints, and quarters into a single dashboard. Delivery managers and programme leads need to assess the entire portfolio's health at a glance without switching between multiple views or exports.
+
 **BR-098 (Should — P2 — Done):** The system MUST enable team-level health comparison so managers can see at a glance which team members are healthy, at risk, or overloaded. Teams are often the unit of delivery retrospectives — having individual health scores makes those conversations data-driven rather than anecdotal.
 
 **BR-097 (Should — P2 — Done):** The system MUST track release confidence as a trend over multiple uploads. Teams need to see whether their release readiness is improving or degrading sprint-over-sprint — not just a one-time snapshot. This is a continuous improvement visibility requirement.

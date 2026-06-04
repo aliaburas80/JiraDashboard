@@ -16,6 +16,7 @@ const NAV_GROUPS = [
       { href: '/charts',    label: 'Charts',      icon: '📈', desc: 'Visual breakdowns'         },
       { href: '/trends',    label: 'Trends',      icon: '📉', desc: 'Upload-over-upload change'  },
       { href: '/teams',     label: 'Teams',       icon: '👥', desc: 'Team health comparison'      },
+      { href: '/portfolio', label: 'Portfolio',   icon: '🗂️', desc: 'Cross-team portfolio summary' },
     ],
   },
   {
