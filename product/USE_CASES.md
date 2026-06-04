@@ -2424,3 +2424,28 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 3. Follows the troubleshooting table when the first upload returns a 413 error
 4. Adds nginx `client_max_body_size 25M` → re-uploads successfully
 **Related FR:** FR-297, BR-103
+
+### UC-073 — Admin Reviews System Health Before Production Go-Live
+
+**Actor:** System Administrator / DevOps Engineer
+**Trigger:** Pre-production checklist — admin wants to confirm system is healthy before announcing to users
+**Main Flow:**
+1. Admin navigates to Data → Diagnostics (`/admin/diagnostics`)
+2. Ops Score shows 85/100 — Healthy
+3. Environment checks: SESSION_SECRET ✓, NODE_ENV production ✓, registration locked ✓
+4. Import health: 100% success rate, avg health score 78
+5. Recent audit events confirm normal login/upload activity
+6. Admin clicks "Security Report →" to check security score (separate concern)
+**Related FR:** FR-299, BR-104
+
+### UC-074 — Admin Investigates Failed Import Spike
+
+**Actor:** System Administrator
+**Trigger:** Users report dashboard errors — admin suspects import failures
+**Main Flow:**
+1. Admin opens `/admin/diagnostics`
+2. Import Health card shows: Success Rate 60%, Failed: 4 imports
+3. Ops Score shows 96 (−4 from failed imports)
+4. Admin clicks "Import Logs" quick link → reviews failed logs
+5. Identifies the cause (file encoding issue) and fixes it
+**Related FR:** FR-299, BR-104

@@ -974,3 +974,22 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Outcome:** The team has a production Delivery Clarity instance in under 30 minutes with persistent SQLite storage, nginx, and HTTPS.
 
 **Related:** UC-071, DEPLOYMENT_GUIDE.md §4, §7, §8
+
+### SCN-034 — Admin Runs Pre-Production Health Check
+
+**Persona:** Alex, DevOps Engineer
+**Context:** The team is about to announce Delivery Clarity to 50 users. Alex wants to confirm the system is production-ready.
+
+**Scenario:**
+1. Alex opens `/admin/diagnostics`
+2. Ops Score: 90/100 — Healthy
+3. Environment: SESSION_SECRET ✓, NODE_ENV production ✓, registration locked ✓, DB URL ✓
+4. One check fails: NEXT_PUBLIC_APP_URL not set (−5 not in score, just flagged)
+5. Import health: 100% success rate, 3 successful imports so far
+6. 2 active sessions (Alex + test user)
+7. Alex clicks "Security Report →" — score 88/100, production ready
+8. Alex sets NEXT_PUBLIC_APP_URL in .env and restarts → refreshes diagnostics → all green
+
+**Outcome:** Alex confirms the system is production-ready in under 3 minutes, using a single admin page.
+
+**Related:** UC-073, TC-SD-01–08

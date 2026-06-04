@@ -1,0 +1,125 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// GET /api/admin/diagnostics — system health snapshot (admin only)
+
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getIronSession } from 'iron-session';
+import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
+import { prisma } from '@/lib/prisma';
+
+export async function GET() {
+  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  if (!session.isLoggedIn)      return NextResponse.json({ error: 'Not authenticated.' },       { status: 401 });
+  if (session.role !== 'admin') return NextResponse.json({ error: 'Admin access required.' },   { status: 403 });
+
+  const now = new Date();
+
+  const [
+    totalUsers,
+    activeUsers,
+    adminUsers,
+    lastLogin,
+    totalSessions,
+    activeSessions,
+    totalImports,
+    successImports,
+    failedImports,
+    avgHealthScore,
+    avgProcessingMs,
+    lastImport,
+    totalSnapshots,
+    totalAuditEvents,
+    recentEvents,
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.user.count({ where: { isActive: true } }),
+    prisma.user.count({ where: { role: 'admin' } }),
+    prisma.user.findFirst({ orderBy: { lastLoginAt: 'desc' }, select: { lastLoginAt: true, email: true } }),
+    prisma.session.count(),
+    prisma.session.count({ where: { expiresAt: { gt: now } } }),
+    prisma.importLog.count(),
+    prisma.importLog.count({ where: { status: 'success' } }),
+    prisma.importLog.count({ where: { status: { in: ['failed', 'validation_failed'] } } }),
+    prisma.importLog.aggregate({ _avg: { healthScore: true }, where: { status: 'success' } }),
+    prisma.importLog.aggregate({ _avg: { processingTimeMs: true }, where: { status: 'success' } }),
+    prisma.importLog.findFirst({ orderBy: { uploadedAt: 'desc' }, select: { uploadedAt: true, fileName: true, healthScore: true, status: true } }),
+    prisma.dashboardSnapshot.count(),
+    prisma.auditEvent.count(),
+    prisma.auditEvent.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 8,
+      select: { id: true, eventType: true, eventDescription: true, createdAt: true, ipAddress: true, userId: true },
+    }),
+  ]);
+
+  // Environment checks (presence only — never expose values)
+  const envChecks = {
+    sessionSecretSet:  (process.env.SESSION_SECRET ?? '').length >= 32,
+    nodeEnvProduction: process.env.NODE_ENV === 'production',
+    dbUrlSet:          !!process.env.DATABASE_URL,
+    registrationLocked: process.env.ALLOW_OPEN_REGISTRATION !== 'true',
+    publicUrlSet:      !!process.env.NEXT_PUBLIC_APP_URL,
+  };
+
+  const successRate = totalImports > 0
+    ? Math.round((successImports / totalImports) * 100)
+    : 0;
+
+  // Simple ops health score (separate from security score)
+  let opsScore = 100;
+  if (!envChecks.sessionSecretSet)    opsScore -= 30;
+  if (!envChecks.nodeEnvProduction)   opsScore -= 10;
+  if (!envChecks.registrationLocked)  opsScore -= 10;
+  if (failedImports > 0)              opsScore -= Math.min(10, failedImports);
+  if (activeSessions === 0 && totalUsers > 0) opsScore -= 5;
+  opsScore = Math.max(0, opsScore);
+
+  return NextResponse.json({
+    generatedAt: now.toISOString(),
+    opsScore,
+    users: {
+      total:       totalUsers,
+      active:      activeUsers,
+      admins:      adminUsers,
+      lastLoginAt: lastLogin?.lastLoginAt ?? null,
+      lastLoginBy: lastLogin?.email ?? null,
+    },
+    sessions: {
+      total:  totalSessions,
+      active: activeSessions,
+    },
+    imports: {
+      total:           totalImports,
+      successful:      successImports,
+      failed:          failedImports,
+      successRate,
+      avgHealthScore:  Math.round((avgHealthScore._avg.healthScore ?? 0) * 10) / 10,
+      avgProcessingMs: Math.round(avgProcessingMs._avg.processingTimeMs ?? 0),
+      lastAt:          lastImport?.uploadedAt ?? null,
+      lastFileName:    lastImport?.fileName   ?? null,
+      lastHealthScore: lastImport?.healthScore ?? null,
+      lastStatus:      lastImport?.status     ?? null,
+    },
+    snapshots: {
+      total: totalSnapshots,
+    },
+    auditEvents: {
+      total:  totalAuditEvents,
+      recent: recentEvents.map(e => ({
+        id:          e.id,
+        type:        e.eventType,
+        description: e.eventDescription,
+        at:          e.createdAt.toISOString(),
+        ip:          e.ipAddress ?? null,
+      })),
+    },
+    env: envChecks,
+    system: {
+      nodeVersion:  process.version,
+      platform:     process.platform,
+      uptimeSeconds: Math.round(process.uptime()),
+    },
+  });
+}
+
+export const dynamic = 'force-dynamic';

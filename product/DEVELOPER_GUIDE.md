@@ -316,6 +316,10 @@ Clean stakeholder summary — completion ring, key milestones, top risks. No tec
 
 Runs `runSecurityChecks()` — 8 automated checks (SESSION_SECRET, HTTPS, DB permissions, etc.) + 5 manual items. 0–100 score, production-ready flag.
 
+### `app/admin/diagnostics/page.tsx` — System Diagnostics (`/admin/diagnostics`)
+
+Admin-only live health dashboard. Fetches `GET /api/admin/diagnostics` — aggregates DB row counts, import success rates, env var presence, system info, recent audit events, and computes an Ops Health Score (0–100). Refresh button for live re-fetch; quick links to all other admin pages.
+
 ### `app/admin/settings/page.tsx` — Admin Settings (`/admin/settings`)
 
 Tabs: Health Thresholds, Orphan Rules, Privacy & Retention, Backup & Restore.

@@ -244,6 +244,8 @@
 | **Pill Button** | A button with fully rounded corners (`border-radius: 9999px`). The app-wide button standard from v4.1. Variants: `btn-primary`, `btn-secondary`, `btn-ghost`, `btn-danger`, `btn-outline-danger`, `btn-green`, `btn-dark`, `btn-warning`. |
 | **Tab Button** | A borderless, backgroundless button with icon + label. Active state shown by a coloured 3px bottom underline pill. Used in the section switcher and (from v4.1) the dashboard filter bar. |
 | **Underline Indicator** | The 3px pill at the bottom of an active tab button (`position: absolute; bottom: -4px; height: 3px; border-radius: 999px`). Colour matches the button's semantic role. |
+| **Ops Score** | Operational Health Score | A 0–100 admin metric shown on /admin/diagnostics. Penalties: missing SESSION_SECRET (−30), non-production NODE_ENV (−10), open registration (−10), failed imports (−1 each, capped at −10), zero active sessions (−5). |
+| **Admin Diagnostics** | — | The /admin/diagnostics page: live system health snapshot including ops score, DB row counts, import stats, env checks, recent audit events, and system info. Admin-only. |
 | **Section Switcher** | The sticky tab bar on the dashboard that lets users focus on one section (single-section mode), see a summary (Overview mode), or view everything (Full Dashboard mode). |
 | **SectionMode** | The state that controls which dashboard sections are visible: `full` \| `overview` \| `<sectionKey>`. |
 | **OVERVIEW_KEYS** | The three section keys shown in Overview mode: `overview`, `attention`, `recommendations`. |

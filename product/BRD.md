@@ -766,6 +766,8 @@ The following metrics define product success and will be measured at 30, 90, and
 
 **BR-095 (Should — P2):** The Smart Recommendations section MUST maintain a history of up to 10 recommendation snapshots. Users MUST be able to see which recommendations are new since their last upload, which have been resolved, and browse the full history. This supports continuous improvement tracking over time.
 
+**BR-104 (Should — P2 — Done):** Admins MUST have a single page that shows the system's operational health at a glance — database row counts, import success rates, env var completeness, active sessions, and recent audit activity. Without this, identifying operational issues requires querying the database manually or correlating multiple admin pages.
+
 **BR-103 (Should — P2 — Done):** Any team that wants to run Delivery Clarity in their own environment MUST have a clear, step-by-step deployment guide for all realistic targets (Docker, VPS, Vercel). Without this, self-hosting requires trial-and-error that blocks adoption. The guide MUST be part of the product repository so it stays in sync with the code.
 
 **BR-102 (Should — P2 — Done):** Developers navigating the Developer Portal need a way to find specific calculations, packages, or sections without knowing which subsection to open. A global search eliminates multi-click navigation for common queries like "lead time formula" or "prisma package".

@@ -361,7 +361,7 @@
 | 9.33 | Executive one-page PDF export | P2 | ✅ Done — print-optimised single-page HTML (A4 landscape): health score, KPIs, epics, team capacity, top recommendations, insights; "Executive PDF" button on /summary; 8 tests passing |
 | 9.34 | Action-owner assignment inside recommendations | P2 | ✅ Done — "Assign" button on each rec card (suggested owner shown as placeholder, custom name saved to dc_rec_owners in localStorage, edit/clear); 8 tests passing |
 | 9.35 | Deployment guide for Vercel / Docker / VPS | P2 | ✅ Done — product/DEPLOYMENT_GUIDE.md: 12-section guide covering Docker (recommended), VPS/PM2, Vercel (preview only), nginx reverse proxy, SSL/Let's Encrypt, env var reference, backup/restore, post-deploy checklist, troubleshooting |
-| 9.36 | System health/admin diagnostics page | P2 | ❌ Not started |
+| 9.36 | System health/admin diagnostics page | P2 | ✅ Done — /admin/diagnostics: ops score (0-100), DB overview (users/sessions/snapshots), import health (success rate/avg score/processing time), env checks (5 variables), recent audit log, system info (Node/uptime/platform); nav item in Data group; 8 tests passing |
 | 9.37 | Branding integration across login, favicon, reports, and exports | P2 | ❌ Not started |
 | 9.38 | Landing page inside the app | P2 | ❌ Not started |
 

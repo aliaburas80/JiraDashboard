@@ -51,6 +51,15 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### P2 — System Health / Admin Diagnostics (9.36)
+- New **`/admin/diagnostics`** page — live system health snapshot, admin-only
+- **Ops Health Score (0–100)**: SESSION_SECRET set (−30), NODE_ENV production (−10), registration locked (−10), failed imports (−1 each, capped −10), active sessions (−5 if zero)
+- **Sections**: Score banner · DB Overview (users/active/sessions/snapshots KPI cards) · Import Health (success rate, avg health score, avg processing time, last import) · Environment checks (5 vars with pass/fail) · System info (Node version, platform, uptime) · Recent audit events (last 8) · Quick links to other admin pages
+- **API**: `GET /api/admin/diagnostics` — admin-only; aggregates DB counts, import stats, env checks, recent audit log
+- **Refresh** button for live re-fetch; "Security Report →" shortcut to full security page
+- **"Diagnostics"** added to Data nav group (🩺 icon)
+- 8 automated tests (TC-SD-01–08)
+
 ### UX — Filter Bar Redesign (Tab Style)
 - Filter bar buttons (All, High Risk, Blocked, Needs Review) redesigned to match the **section switcher tab style** — no border, no pill/background, icon + label, **coloured underline indicator** for the active filter
 - Active state: light blue gradient background + coloured bottom pill (blue / red / orange / purple per filter)

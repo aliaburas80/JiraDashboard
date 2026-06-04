@@ -30,8 +30,9 @@ const NAV_GROUPS = [
   {
     label: 'Data',
     items: [
-      { href: '/snapshots', label: 'Snapshots', icon: '📸', desc: 'Saved metric snapshots'  },
-      { href: '/backend',   label: 'Backend',   icon: '⚙️', desc: 'Import logs & raw data'  },
+      { href: '/snapshots',          label: 'Snapshots',    icon: '📸', desc: 'Saved metric snapshots'        },
+      { href: '/backend',            label: 'Backend',      icon: '⚙️', desc: 'Import logs & raw data'        },
+      { href: '/admin/diagnostics',  label: 'Diagnostics',  icon: '🩺', desc: 'System health & admin stats'   },
     ],
   },
   {

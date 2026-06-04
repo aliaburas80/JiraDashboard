@@ -666,7 +666,32 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 26. Filter Bar
+  // 26. System Diagnostics
+  {
+    id: 'diagnostics',
+    icon: '🩺',
+    title: 'System Diagnostics',
+    items: [
+      {
+        q: 'What is the System Diagnostics page?',
+        a: 'The /admin/diagnostics page (admin-only) shows a live system health snapshot including: an Ops Health Score (0–100), database row counts (users, sessions, imports, snapshots), import success rate and average health score, environment variable checks, system info (Node version, uptime), and the last 8 audit events.',
+      },
+      {
+        q: 'How is the Ops Health Score calculated?',
+        a: 'Score starts at 100 and loses points for: missing SESSION_SECRET (−30), non-production NODE_ENV (−10), open registration enabled (−10), failed imports (−1 each, max −10), and zero active sessions when users exist (−5). Score is clamped to 0–100.',
+      },
+      {
+        q: 'What do the environment checks show?',
+        a: 'Five checks with pass/fail indicators: SESSION_SECRET set (≥32 chars), NODE_ENV=production, DATABASE_URL configured, ALLOW_OPEN_REGISTRATION=false (registration locked), and NEXT_PUBLIC_APP_URL set. Values are never shown — only presence/validity is checked.',
+      },
+      {
+        q: 'How do I access the System Diagnostics page?',
+        a: 'Navigate to Data → Diagnostics in the nav menu, or go directly to /admin/diagnostics. Requires admin role — regular users are redirected to the dashboard.',
+      },
+    ],
+  },
+
+  // 27. Filter Bar
   {
     id: 'filter-bar',
     icon: '🔍',

@@ -935,6 +935,19 @@ const CALCULATIONS = [
     file:'src/lib/executivePdf.ts — buildExecutivePdfHtml()',
     ref:'ALGORITHM_SPEC.md §Executive PDF Layout Algorithm; TECHNICAL_METHOD.md §Method 18', status:'Implemented',
   },
+  {
+    name:'Ops Health Score', category:'Risk Metrics',
+    formula:'clamp(0,100, 100 − (sessionSecretSet?0:30) − (nodeEnvProd?0:10) − (regLocked?0:10) − min(failedImports,10) − (activeSessions===0&&users>0?5:0))',
+    inputs:'sessionSecretSet (bool), nodeEnvProduction (bool), registrationLocked (bool), failedImports (count), activeSessions (count), totalUsers (count)',
+    why:'Security score covers auth config. Ops score covers operational readiness — import reliability, session activity, and critical env vars. Two separate signals give admins a complete picture.',
+    benefit:'Admins get a single actionable number for operational health without needing to manually count failed imports or check env vars.',
+    alternatives:'Using only the security score conflates configuration risk with operational risk. Ops Score is specifically about whether the system is functioning correctly day-to-day.',
+    usedIn:'/admin/diagnostics page, GET /api/admin/diagnostics',
+    assumptions:'Failed import count is the total across all time. One failed import costs 1 pt regardless of age.',
+    limitations:'Does not account for import volume context — 1 failure on 1 total import is different from 1 failure on 1000. Score resets to 100 base on each page refresh.',
+    file:'app/api/admin/diagnostics/route.ts — opsScore computation',
+    ref:'ALGORITHM_SPEC.md §System Diagnostics; TECHNICAL_METHOD.md §Admin Diagnostics; SRS.md FR-299', status:'Implemented',
+  },
 ];
 
 type CalcCategory = typeof CALCULATIONS[0]['category'];
