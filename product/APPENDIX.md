@@ -198,6 +198,10 @@
 | **Explorer Export** | Work Item Explorer Export | Excel (.xlsx, 5 sheets) or CSV (.csv) download of the current Work Item Explorer graph from /explore. |
 | **avgOpenAgeDays** | Average Open Age (days) | Mean number of days open items have been open per assignee. Computed from `ageDays` of non-done FlowItems. Red when > 14 days. |
 | **Executive PDF** | Executive One-Page PDF Export | A print-optimised single-page HTML file (A4 landscape) downloaded from /summary. Contains health score, KPIs, epic progress, team capacity, insights, top 3 recommendations. Printed via browser print dialog — no external library. |
+| **Action Owner** | Recommendation Action Owner | A team member name assigned to a Smart Recommendation card on the dashboard. Stored in `dc_rec_owners` (localStorage). Displayed as a blue badge on the card. |
+| **suggestedOwner** | Suggested Owner | The default role suggested for each recommendation type (e.g., "Scrum Master / Delivery Manager" for blockers). Shown as a placeholder in the owner assignment input. |
+| **dc_rec_owners** | — | localStorage key storing the map of `recKey → ownerName` for action-owner assignments on recommendation cards. |
+| **Developer Portal Search** | — | Global search in the `/developer` sidebar that searches across calculations, packages, and section labels simultaneously. |
 
 ---
 

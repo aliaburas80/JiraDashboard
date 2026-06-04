@@ -922,3 +922,37 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Outcome:** In 60 seconds, Rachel has a professional one-page delivery summary — no manual copy-paste from multiple pages, no formatting work.
 
 **Related:** UC-068, TC-EP-01–08
+
+### SCN-031 — Developer Finds Lead Time Formula via Portal Search
+
+**Persona:** New backend engineer joining the team
+**Context:** Engineer needs to understand how Lead Time is calculated before writing a test.
+
+**Scenario:**
+1. Engineer opens `/developer`
+2. Types "lead time" in the sidebar search box
+3. Results appear: Calculations (Lead Time, Cycle Time) + Section (Calculation Reference)
+4. Clicks "Lead Time" result → Calculation Reference opens with the Lead Time card expanded
+5. Engineer reads the formula, inputs, assumptions, and implementation file reference
+
+**Outcome:** Engineer finds the formula in 10 seconds without scrolling through 28 calculation entries or navigating manually.
+
+**Related:** UC-069, TC-AO (search is in-memory — no dedicated test needed)
+
+---
+
+### SCN-032 — Scrum Master Assigns Recommendation Owners Before Retro
+
+**Persona:** Marcus, Scrum Master
+**Context:** Sprint retro prep — Marcus wants each recommendation to have a named owner before the meeting.
+
+**Scenario:**
+1. Marcus opens the dashboard — Smart Recommendations section shows 4 cards
+2. Card 1: "Unblock 3 critical items" — Marcus clicks "+ Assign (Scrum Master / Delivery Manager)"
+3. Input opens; Marcus types "Ali" → presses Enter → "Ali" badge appears
+4. Card 2: "Team capacity imbalance" — Marcus types "Rachel" → saved
+5. In the retro, each recommendation card shows its owner — accountability is clear from the start
+
+**Outcome:** Retro action items are immediately owner-assigned in the tool, removing the need for a separate action tracker.
+
+**Related:** UC-070, TC-AO-01–08

@@ -359,7 +359,7 @@
 | 9.31 | Team-level health comparison | P2 | ✅ Done — /teams page: health score per assignee (completion 50%, critical 30%, blocked 20%), member scorecards, 4 comparison charts, detail table; nav item added; 10 tests passing |
 | 9.32 | Cross-team portfolio summary | P2 | ✅ Done — /portfolio page: portfolio score (epics 40%, projects 30%, sprint 20%, data quality 10%), epic progress panel, project cards, quarter bars, epic detail table; nav item added; 10 tests passing |
 | 9.33 | Executive one-page PDF export | P2 | ✅ Done — print-optimised single-page HTML (A4 landscape): health score, KPIs, epics, team capacity, top recommendations, insights; "Executive PDF" button on /summary; 8 tests passing |
-| 9.34 | Action-owner assignment inside recommendations | P2 | ❌ Not started |
+| 9.34 | Action-owner assignment inside recommendations | P2 | ✅ Done — "Assign" button on each rec card (suggested owner shown as placeholder, custom name saved to dc_rec_owners in localStorage, edit/clear); 8 tests passing |
 | 9.35 | Deployment guide for Vercel / Docker / VPS | P2 | ❌ Not started |
 | 9.36 | System health/admin diagnostics page | P2 | ❌ Not started |
 | 9.37 | Branding integration across login, favicon, reports, and exports | P2 | ❌ Not started |

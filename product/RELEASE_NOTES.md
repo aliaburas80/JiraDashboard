@@ -51,6 +51,20 @@
 - Flow panel access control: "Show filters" button, KPI card clicks, and `applyQuickFilter`
   scroll all suppressed when `hideFlowPanel: true`
 
+### Developer Portal — Global Search
+- **Search input** added to the Developer Portal blue sidebar (below the "Developer Portal" header)
+- Searches across all three data sources simultaneously: **Calculations** (name, formula, why, usedIn, file, category) · **Packages** (name, usedFor, feature) · **Section labels**
+- Results grouped by type with hit count; clicking a calculation result opens that section and expands the matching entry; clicking a package result opens packages and filters to it; clicking a section navigates directly
+- Clear button and "Clear search" link; breadcrumb + main content hidden during search to focus on results
+
+### P2 — Action-Owner Assignment in Recommendations (9.34)
+- Each Smart Recommendation card now shows an **"+ Assign"** button (when not muted) with the `suggestedOwner` shown as a placeholder
+- Clicking opens an inline text input — press Enter or "Save" to assign, Esc to cancel
+- Assigned owner displayed as a blue pill badge with **Edit** and **✕** (clear) controls
+- All owners persisted to `dc_rec_owners` in localStorage (key: `recKey(type, title)`)
+- `suggestedOwner` added to every `smartAction` entry (e.g., "Scrum Master / Delivery Manager" for blockers)
+- 8 automated tests (TC-AO-01–08)
+
 ### P2 — Executive One-Page PDF Export (9.33)
 - New **"Executive PDF"** button (purple) on the `/summary` page
 - Generates a **print-optimised single-page HTML** (`executive-summary-{date}.html`) designed to print as one A4 landscape page from any browser (no external PDF library)

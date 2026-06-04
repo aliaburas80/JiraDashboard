@@ -176,6 +176,9 @@ const SECTIONS = [
       { term: 'Explorer Export', full: 'Work Item Explorer Export', meaning: 'Excel (5-sheet workbook) or CSV download of the current /explore graph. Includes: Summary, All Issues, Risk Items, Orphans, Insights.' },
       { term: 'avgOpenAgeDays', full: 'Average Open Age (days)', meaning: 'Mean age in days of all non-done items per assignee. Red when > 14 days on the /teams page.' },
       { term: 'Executive PDF', full: 'Executive One-Page PDF Export', meaning: 'A print-optimised single-page HTML (A4 landscape) generated from /summary. Contains health score, KPIs, epics, team capacity, insights, top 3 recommendations. Downloaded as .html, printed as PDF via browser.' },
+      { term: 'Action Owner', full: 'Recommendation Action Owner', meaning: 'A team member name assigned to a Smart Recommendation card. Stored in dc_rec_owners (localStorage). Displayed as a blue badge on the card with edit/clear controls.' },
+      { term: 'suggestedOwner', full: 'Suggested Owner', meaning: 'Default role shown as a hint on the owner assignment input for each recommendation (e.g., "Scrum Master / Delivery Manager" for blocker recommendations).' },
+      { term: 'Portal Search', full: 'Developer Portal Global Search', meaning: 'A search box in the /developer sidebar that searches across all calculations, packages, and section labels simultaneously. Results grouped by type.' },
     ],
   },
 ];

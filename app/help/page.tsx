@@ -666,7 +666,28 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 26. Executive PDF
+  // 26. Recommendation Owner Assignment
+  {
+    id: 'rec-owners',
+    icon: '👤',
+    title: 'Recommendation Owners',
+    items: [
+      {
+        q: 'How do I assign an owner to a recommendation?',
+        a: 'On the dashboard Smart Recommendations section, each card shows a "+ Assign" button with the suggested owner role as a hint (e.g., "+ Assign (Scrum Master / Delivery Manager)"). Click it to open an inline input, type the owner name, then press Enter or click Save.',
+      },
+      {
+        q: 'Where is the owner assignment saved?',
+        a: 'Owner assignments are saved to your browser localStorage (dc_rec_owners key). They persist across page reloads but are specific to your browser. They are not synced to the server or visible to other users.',
+      },
+      {
+        q: 'Can I change or remove an owner?',
+        a: 'Yes — the blue owner badge shows Edit and ✕ buttons. Click Edit to update the name, or ✕ to clear the assignment entirely.',
+      },
+    ],
+  },
+
+  // 27. Executive PDF
   {
     id: 'executive-pdf',
     icon: '📄',

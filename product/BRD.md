@@ -766,6 +766,10 @@ The following metrics define product success and will be measured at 30, 90, and
 
 **BR-095 (Should — P2):** The Smart Recommendations section MUST maintain a history of up to 10 recommendation snapshots. Users MUST be able to see which recommendations are new since their last upload, which have been resolved, and browse the full history. This supports continuous improvement tracking over time.
 
+**BR-102 (Should — P2 — Done):** Developers navigating the Developer Portal need a way to find specific calculations, packages, or sections without knowing which subsection to open. A global search eliminates multi-click navigation for common queries like "lead time formula" or "prisma package".
+
+**BR-101 (Should — P2 — Done):** Smart Recommendations are only actionable if someone owns the action. A recommendation without an assigned owner is advice, not a task. Action-owner assignment turns each recommendation into an accountable delivery task without requiring a separate project management tool.
+
 **BR-100 (Should — P2 — Done):** Directors and programme leads MUST be able to produce a one-page executive summary in under 60 seconds for use in steering committees, board updates, or stakeholder emails. Manual copy-paste from multiple dashboard pages is error-prone and time-consuming. A dedicated one-page PDF export eliminates this friction.
 
 **BR-099 (Should — P2 — Done):** The system MUST provide a cross-team portfolio view that aggregates epics, projects, sprints, and quarters into a single dashboard. Delivery managers and programme leads need to assess the entire portfolio's health at a glance without switching between multiple views or exports.

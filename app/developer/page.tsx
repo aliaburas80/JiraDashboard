@@ -950,7 +950,9 @@ export default function DeveloperPage() {
   const [html,      setHtml]      = useState('');
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState<string | null>(null);
-  const [navOpen,   setNavOpen]   = useState(false);
+  const [navOpen,      setNavOpen]      = useState(false);
+  // Global search
+  const [globalSearch, setGlobalSearch] = useState('');
   // Package Reference state
   const [pkgSearch, setPkgSearch] = useState('');
   const [pkgScope,  setPkgScope]  = useState('all');
@@ -1019,6 +1021,20 @@ export default function DeveloperPage() {
           <div className="px-3 pb-3 mb-2 border-b border-slate-700">
             <p className="text-xs font-black text-white uppercase tracking-widest">Developer Portal</p>
             <p className="text-xs text-slate-400 mt-0.5">Delivery Clarity v4.0</p>
+            {/* Global search */}
+            <div className="relative mt-2">
+              <input
+                type="text"
+                value={globalSearch}
+                onChange={e => setGlobalSearch(e.target.value)}
+                placeholder="Search portal…"
+                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              />
+              {globalSearch && (
+                <button type="button" onClick={() => setGlobalSearch('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">✕</button>
+              )}
+            </div>
           </div>
 
           {groups.map(group => (
@@ -1049,7 +1065,102 @@ export default function DeveloperPage() {
 
         {/* Main */}
         <main className="flex-1 min-w-0 px-4 sm:px-8 py-6 overflow-auto">
-          {/* Breadcrumb */}
+
+          {/* ── Global Search Results ───────────────────────────────────────── */}
+          {globalSearch.trim() && (() => {
+            const q = globalSearch.trim().toLowerCase();
+            const matchedCalcs    = CALCULATIONS.filter(c =>
+              c.name.toLowerCase().includes(q) ||
+              c.formula.toLowerCase().includes(q) ||
+              c.why.toLowerCase().includes(q) ||
+              c.usedIn.toLowerCase().includes(q) ||
+              c.file.toLowerCase().includes(q) ||
+              c.category.toLowerCase().includes(q)
+            );
+            const matchedPkgs  = PACKAGES.filter(p =>
+              p.name.toLowerCase().includes(q) ||
+              p.usedFor.toLowerCase().includes(q) ||
+              p.feature.toLowerCase().includes(q)
+            );
+            const matchedSects = SECTIONS.filter(s =>
+              s.label.toLowerCase().includes(q) ||
+              s.id.toLowerCase().includes(q)
+            );
+            const total = matchedCalcs.length + matchedPkgs.length + matchedSects.length;
+
+            return (
+              <div className="mb-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="text-sm font-black text-slate-800">Search results for "{globalSearch}"</h2>
+                  <span className="text-xs text-slate-400">{total} match{total !== 1 ? 'es' : ''}</span>
+                  <button type="button" onClick={() => setGlobalSearch('')}
+                    className="ml-auto text-xs text-blue-600 hover:underline font-semibold">Clear search</button>
+                </div>
+
+                {total === 0 && (
+                  <div className="text-sm text-slate-500 py-8 text-center">No results found for "{globalSearch}"</div>
+                )}
+
+                {matchedSects.length > 0 && (
+                  <div className="mb-5">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Sections ({matchedSects.length})</p>
+                    <div className="flex flex-wrap gap-2">
+                      {matchedSects.map(s => (
+                        <button key={s.id} type="button"
+                          onClick={() => { setGlobalSearch(''); go(s.id); }}
+                          className="text-xs font-semibold bg-slate-100 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg px-3 py-1.5 text-slate-700 hover:text-blue-700 transition-colors">
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {matchedCalcs.length > 0 && (
+                  <div className="mb-5">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Calculations ({matchedCalcs.length})</p>
+                    <div className="space-y-2">
+                      {matchedCalcs.map(c => (
+                        <button key={c.name} type="button"
+                          onClick={() => { setGlobalSearch(''); setExpandedCalc(c.name); go('calculations'); }}
+                          className="w-full text-left bg-white border border-slate-200 hover:border-blue-300 rounded-xl p-3 transition-colors group">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-black text-slate-800 group-hover:text-blue-700">{c.name}</span>
+                            <span className="text-[10px] bg-slate-100 text-slate-500 rounded-full px-2 py-0.5 font-semibold">{c.category}</span>
+                            <span className={`text-[10px] rounded-full px-2 py-0.5 font-bold ml-auto ${c.status === 'Implemented' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>{c.status}</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-mono truncate">{c.formula.slice(0, 80)}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {matchedPkgs.length > 0 && (
+                  <div className="mb-5">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Packages ({matchedPkgs.length})</p>
+                    <div className="space-y-2">
+                      {matchedPkgs.map(p => (
+                        <button key={p.name} type="button"
+                          onClick={() => { setGlobalSearch(''); setPkgSearch(p.name); go('packages'); }}
+                          className="w-full text-left bg-white border border-slate-200 hover:border-blue-300 rounded-xl p-3 transition-colors group">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-black font-mono text-slate-800 group-hover:text-blue-700">{p.name}</span>
+                            <span className="text-[10px] text-slate-400">{p.version}</span>
+                            <span className={`text-[10px] rounded-full px-2 py-0.5 font-bold ml-auto ${p.status === 'Installed' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>{p.status}</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 truncate">{p.usedFor}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Breadcrumb — always visible */}
+          {!globalSearch.trim() && (
           <div className="flex items-center gap-2 text-xs text-slate-400 mb-5 flex-wrap">
             <span className="font-medium text-slate-500">Developer Portal</span>
             <span>›</span>
@@ -1062,7 +1173,9 @@ export default function DeveloperPage() {
               </span>
             )}
           </div>
+          )}
 
+          {!globalSearch.trim() && <>
           {loading && (
             <div className="flex items-center gap-3 text-slate-500 py-16 justify-center">
               <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
@@ -1226,6 +1339,7 @@ export default function DeveloperPage() {
               dangerouslySetInnerHTML={{ __html: html }}
             />
           )}
+          </>} {/* end !globalSearch.trim() */}
         </main>
       </div>
     </AppShell>

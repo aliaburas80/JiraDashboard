@@ -15,6 +15,7 @@ import { exportToExcel, exportToHtml } from '@/lib/exportUtils';
 import { loadMetrics } from '@/lib/storage';
 import { loadPresets, savePreset, deletePreset, type FilterPreset } from '@/lib/filterPresets';
 import { recKey, isMuted, muteRec, snoozeRec, restoreAll, getActiveMuted, type MutedRec } from '@/lib/mutedRecommendations';
+import { getRecOwner, setRecOwner, clearRecOwner, getAllRecOwners } from '@/lib/recOwners';
 import { getVote, castVote, type FeedbackVote } from '@/lib/recFeedback';
 import { saveRecSnapshot, getRecHistory, getNewTitles, getResolvedRecs, type RecHistoryEntry } from '@/lib/recHistory';
 import SprintThroughputPanel from '@/components/dashboard/SprintThroughputPanel';
@@ -287,8 +288,11 @@ export default function DashboardPage() {
   const [presetName, setPresetName] = useState('');
   const [showPresetInput, setShowPresetInput] = useState(false);
   const [mutedRecs, setMutedRecs]         = useState<MutedRec[]>([]);
-  const [snoozeMenuKey, setSnoozeMenuKey] = useState<string | null>(null);
-  const [showMuted, setShowMuted]         = useState(false);
+  const [snoozeMenuKey, setSnoozeMenuKey]   = useState<string | null>(null);
+  const [showMuted, setShowMuted]           = useState(false);
+  const [ownerEditKey, setOwnerEditKey]     = useState<string | null>(null);
+  const [ownerDraft,   setOwnerDraft]       = useState('');
+  const [recOwners,    setRecOwners]        = useState<Record<string, string>>({});
   // rec feedback votes — keyed by recKey; re-render on change via counter
   const [feedbackTick, setFeedbackTick]   = useState(0);
   const getRecVote = (key: string) => getVote(key);
@@ -366,6 +370,7 @@ export default function DashboardPage() {
       setMetrics(data);
       setPresets(loadPresets());
       setMutedRecs(getActiveMuted());
+      setRecOwners(getAllRecOwners());
 
       // Detect fresh upload (?fresh=1) — reset all filters and clear the param
       const p = new URLSearchParams(window.location.search);
@@ -502,38 +507,44 @@ export default function DashboardPage() {
   // smart actions — guard all metrics.* refs so hook runs before metrics loads
   const smartActions = useMemo(() => {
     if (!metrics) return [];
-    const acts: { type: string; icon: string; navTarget: string; filterAction: string | null; title: string; detail: string }[] = [];
+    const acts: { type: string; icon: string; navTarget: string; filterAction: string | null; title: string; detail: string; suggestedOwner: string }[] = [];
     const orphans = flowItems.filter(i => i.isOrphan).length;
     const critBlockers = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('block'));
     if (critBlockers.length)
       acts.push({ type: 'critical', icon: '🚫', navTarget: 'flow-health-panel', filterAction: 'blockers',
         title: `Unblock ${critBlockers.length} critical item${critBlockers.length > 1 ? 's' : ''}`,
-        detail: `${critBlockers[0].key}: ${(critBlockers[0].summary || critBlockers[0].reason).slice(0, 70)}` });
+        detail: `${critBlockers[0].key}: ${(critBlockers[0].summary || critBlockers[0].reason).slice(0, 70)}`,
+        suggestedOwner: 'Scrum Master / Delivery Manager' });
     const staleActive = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('in progress over 14'));
     if (staleActive.length)
       acts.push({ type: 'critical', icon: '⏳', navTarget: 'flow-health-panel', filterAction: 'stale',
         title: `${staleActive.length} item${staleActive.length > 1 ? 's' : ''} stalled in progress`,
-        detail: `${staleActive[0].key} has been active for ${Math.round((staleActive[0] as any).activeAgeDays || 0)} days` });
+        detail: `${staleActive[0].key} has been active for ${Math.round((staleActive[0] as any).activeAgeDays || 0)} days`,
+        suggestedOwner: 'Engineering Manager' });
     const capacity = ((metrics?.capacity || []) as any[]);
     const overloaded = capacity.filter((c: any) => c.loadShare > 35);
     if (overloaded.length && capacity.length > 2)
       acts.push({ type: 'warning', icon: '⚖️', navTarget: 'section-ownership', filterAction: null,
         title: 'Team capacity imbalance detected',
-        detail: `${overloaded[0].assignee} carries ${overloaded[0].loadShare}% — consider redistributing` });
+        detail: `${overloaded[0].assignee} carries ${overloaded[0].loadShare}% — consider redistributing`,
+        suggestedOwner: 'Engineering Manager / Scrum Master' });
     if (orphans > 0)
       acts.push({ type: 'info', icon: '👻', navTarget: 'section-attention', filterAction: null,
         title: `Link ${orphans} orphan item${orphans > 1 ? 's' : ''} to epics`,
-        detail: 'Items without epic reduce scope traceability and epic completion accuracy' });
+        detail: 'Items without epic reduce scope traceability and epic completion accuracy',
+        suggestedOwner: 'Product Owner' });
     const critEpics = epicReadiness.filter((e: any) => e.risk === 'critical');
     if (critEpics.length)
       acts.push({ type: 'warning', icon: '🚨', navTarget: 'section-readiness', filterAction: null,
         title: `${critEpics.length} epic${critEpics.length > 1 ? 's' : ''} in critical state`,
-        detail: `${(critEpics[0] as any).epic || 'Top epic'}: ${(critEpics[0] as any).completion}% complete — needs attention` });
+        detail: `${(critEpics[0] as any).epic || 'Top epic'}: ${(critEpics[0] as any).completion}% complete — needs attention`,
+        suggestedOwner: 'Engineering Manager' });
     const rels = metrics?.relations as any;
     if (rels?.blockedItems?.length)
       acts.push({ type: 'critical', icon: '🔗', navTarget: 'section-relations', filterAction: null,
         title: `${rels.blockedItems.length} item${rels.blockedItems.length > 1 ? 's' : ''} explicitly blocked`,
-        detail: `${rels.blockedItems[0].key} is blocked by ${rels.blockedItems[0].blockedBy}` });
+        detail: `${rels.blockedItems[0].key} is blocked by ${rels.blockedItems[0].blockedBy}`,
+        suggestedOwner: 'Scrum Master / Delivery Manager' });
     return acts.slice(0, 5);
   }, [flowItems, metrics?.capacity, metrics?.relations, epicReadiness]);
 
@@ -1042,6 +1053,59 @@ export default function DashboardPage() {
                           <p className="text-sm font-bold text-slate-800 mb-1">{action.title}</p>
                           <p className="text-xs text-slate-600 mb-2">{action.detail}</p>
                           {!muted && <p className="text-xs font-bold text-blue-600">Go to details →</p>}
+                          {/* Action owner */}
+                          {!muted && (() => {
+                            const assignedOwner = recOwners[key] ?? '';
+                            const isEditing     = ownerEditKey === key;
+                            return (
+                              <div className="mt-2 pt-2 border-t border-slate-200/60" onClick={e => e.stopPropagation()}>
+                                {isEditing ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <input
+                                      autoFocus
+                                      type="text"
+                                      value={ownerDraft}
+                                      onChange={e => setOwnerDraft(e.target.value)}
+                                      onKeyDown={e => {
+                                        if (e.key === 'Enter') { setRecOwner(key, ownerDraft); setRecOwners(getAllRecOwners()); setOwnerEditKey(null); }
+                                        if (e.key === 'Escape') setOwnerEditKey(null);
+                                      }}
+                                      placeholder={action.suggestedOwner}
+                                      className="flex-1 text-[10px] border border-slate-300 rounded px-2 py-1 focus:outline-none focus:border-blue-400"
+                                    />
+                                    <button type="button"
+                                      onClick={() => { setRecOwner(key, ownerDraft); setRecOwners(getAllRecOwners()); setOwnerEditKey(null); }}
+                                      className="text-[10px] font-bold bg-blue-600 text-white rounded px-2 py-1 hover:bg-blue-700">Save</button>
+                                    <button type="button"
+                                      onClick={() => setOwnerEditKey(null)}
+                                      className="text-[10px] text-slate-400 hover:text-slate-600">✕</button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="text-[10px] text-slate-400 font-semibold shrink-0">Owner:</span>
+                                    {assignedOwner ? (
+                                      <>
+                                        <span className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5">{assignedOwner}</span>
+                                        <button type="button"
+                                          onClick={() => { setOwnerDraft(assignedOwner); setOwnerEditKey(key); }}
+                                          className="text-[10px] text-slate-400 hover:text-blue-600 font-semibold">Edit</button>
+                                        <button type="button"
+                                          onClick={() => { clearRecOwner(key); setRecOwners(getAllRecOwners()); }}
+                                          className="text-[10px] text-slate-400 hover:text-red-500">✕</button>
+                                      </>
+                                    ) : (
+                                      <button type="button"
+                                        onClick={() => { setOwnerDraft(''); setOwnerEditKey(key); }}
+                                        className="text-[10px] font-semibold text-slate-400 hover:text-blue-600 border border-dashed border-slate-300 rounded-full px-2 py-0.5 hover:border-blue-400 transition-colors">
+                                        + Assign ({action.suggestedOwner})
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+
                           {/* Feedback buttons */}
                           {(() => {
                             const vote = getRecVote(key);

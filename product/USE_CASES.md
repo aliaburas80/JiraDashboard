@@ -2377,3 +2377,26 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 4. File downloads as `executive-summary-{date}.html`
 5. User opens the file and prints it (Ctrl/Cmd+P → Save as PDF) — one A4 landscape page
 **Related FR:** FR-294, BR-100
+
+### UC-069 — Developer Searches Portal for Calculation or Package
+
+**Actor:** Developer / Technical Lead
+**Trigger:** Developer needs to find a specific metric formula or package without knowing which section to open
+**Main Flow:**
+1. Developer opens `/developer`
+2. Types "lead time" into the search box in the blue sidebar
+3. Search results panel shows: 2 Calculations (Lead Time, Cycle Time) and 1 Section (Calculation Reference)
+4. Developer clicks "Lead Time" result → navigates to Calculation Reference with that entry expanded
+**Related FR:** FR-296, BR-102
+
+### UC-070 — Scrum Master Assigns Owner to a Recommendation
+
+**Actor:** Scrum Master
+**Trigger:** Sprint review — Scrum Master wants to make recommendations accountable
+**Main Flow:**
+1. Scrum Master opens the dashboard and sees Smart Recommendations section
+2. Card: "Unblock 3 critical items" — shows "+ Assign (Scrum Master / Delivery Manager)"
+3. Scrum Master clicks "Assign" → inline input opens with suggested owner as placeholder
+4. Types "Sarah Chen" → presses Enter → blue "Sarah Chen" pill appears on the card
+5. Owner persists across page reloads (stored in dc_rec_owners localStorage)
+**Related FR:** FR-295, BR-101
