@@ -597,3 +597,9 @@ Where `weightedAvg` weights each entry by its `issues` count. Falls back to `met
 7. `.no-print` class hides the browser hint text from printed output
 
 **Implementation:** `src/lib/executivePdf.ts — buildExecutivePdfHtml()`, `src/lib/exportUtils.ts — exportExecutivePdf()`, `app/summary/page.tsx`
+
+---
+
+## Current Code Alignment — 2026-06-06
+
+Metric algorithms still compute from normalised Jira export rows, but the latest computed `DashboardMetrics` payload is now persisted server-side to `data/latest-metrics.json` after upload/merge. Analytics pages load through `loadMetricsWithSource()`, which attempts bucket-backed `/api/metrics/latest` first and then browser `localStorage` fallback. Algorithm output shape remains unchanged.

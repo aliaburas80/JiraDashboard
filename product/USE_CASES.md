@@ -2540,3 +2540,18 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 5. Panel closes — section switcher now shows Sprints first; Labels/Work Items are gone
 6. Settings persist on refresh; blue dot on "Layout" button indicates custom layout is active
 **Related FR:** FR-305, BR-109
+
+### UC-083 — User Starts a Session from Bucket-Backed Metrics
+
+**Actor:** Authenticated user returning to the app
+**Trigger:** User logs in, registers, or navigates to an analytics page after a prior upload has been backed up
+**Main Flow:**
+1. User signs in or opens `/dashboard`, `/summary`, `/charts`, `/teams`, `/portfolio`, `/readiness`, `/customer`, or `/explore`.
+2. System calls `/api/metrics/latest`.
+3. Server runs `syncFromCloud()` to restore or validate the latest configured bucket backup/cache.
+4. Server reads `data/latest-metrics.json` and returns `{ available:true, metrics, source, provider, key }`.
+5. Client stores the metrics as browser fallback and records `dc_metrics_source_v1`.
+6. Header data source badge shows the cloud/cache source.
+7. Dashboard renders without requiring a fresh Jira upload.
+**Alternative Flow:** If `/api/metrics/latest` returns `{ available:false }`, the client falls back to `dc_metrics_v2` and shows `localStorage fallback`.
+**Related FR:** FR-307, FR-308, FR-309

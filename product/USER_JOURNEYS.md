@@ -991,7 +991,7 @@ The following friction points are observed across the four journeys. Each is rat
 
 **Observed in:** Marcus (Step 5.1), all personas implicitly
 **Frequency:** Every session, multiple times per week for power users
-**Impact:** Medium — creates latency between Jira updates and dashboard reflection; requires re-upload to see corrections
+**Impact:** Medium — creates latency between Jira updates and dashboard reflection; requires a fresh export/upload to see Jira-side corrections
 
 **Description:** When a blocker is resolved in Jira, the dashboard does not reflect it until the user exports and re-uploads. For Marcus, this means a noon re-upload ritual after standup resolves blockers. For Sarah, this means a second upload after mid-sprint reassignments. The re-upload itself is fast (under 2 seconds), but the need to remember to do it is a cognitive overhead.
 
@@ -1029,17 +1029,17 @@ The following friction points are observed across the four journeys. Each is rat
 
 ---
 
-### Pain Point 4 — Browser Refresh Clears the Dashboard
+### Pain Point 4 — Missing Bucket/Browser Fallback Clears the Dashboard
 
 **Observed in:** All personas, implicitly
 **Frequency:** Occasional — most users keep the browser tab open during their session
 **Impact:** Low to medium — when it happens, re-upload is fast but the loss of context (which section you were in, which filters were active) is mildly disorienting
 
-**Description:** React state is cleared on browser refresh. There is no server-side session; no URL captures the current dashboard state. A user who accidentally refreshes or whose browser crashes must re-upload to restore the dashboard.
+**Description:** React state is cleared on browser refresh, but the current implementation now attempts to restore the latest metrics from `data/latest-metrics.json` through `/api/metrics/latest`, then falls back to browser `dc_metrics_v2`. A user only needs to re-upload when both the bucket/server latest metrics and browser fallback are unavailable.
 
-**Current mitigation:** The "Save layout view" button persists filter state to `localStorage`, so filter preferences survive a refresh. However, the metrics themselves require re-upload.
+**Current mitigation:** The upload flow writes the latest metrics server-side and stores a browser fallback. The "Save layout view" button persists filter state to `localStorage`, so preferences survive alongside the metrics fallback.
 
-**Improvement opportunity (roadmap):** Persist the last metrics payload to `localStorage` (not just the filter state). On load, if a saved payload exists, offer to restore the last session without requiring a new upload. This is particularly valuable for users who upload once and refer to the dashboard throughout the day.
+**Improvement opportunity:** Surface a clearer in-page message when the app is using `localStorage fallback`, including the saved timestamp and a one-click path to upload a fresher Jira export.
 
 ---
 
@@ -1444,3 +1444,9 @@ All personas now experience a two-step flow after uploading:
 | 5 | Exports report, shares with stakeholders | Standard export from export button | + |
 
 **Emotional arc:** Positive open → concern (critical epic) → informed action
+
+---
+
+## 9. Current Code Alignment — 2026-06-06
+
+Returning-user journeys now include bucket-first metrics restoration. After login/register or direct analytics-page navigation, the app tries `/api/metrics/latest`, which syncs from the configured bucket/cache and returns `data/latest-metrics.json` when available. If the server/bucket payload is missing, the user falls back to the browser `dc_metrics_v2` copy and sees the `localStorage fallback` source badge. This replaces the older journey assumption that refresh always requires a new upload.

@@ -45,7 +45,7 @@ Delivery Clarity is a zero-credential, self-hosted delivery intelligence system 
 
 ### 4.1 Zero-Credential Architecture
 
-The system operates entirely from static file uploads. No API credentials, tokens, or OAuth flows are required. Data flows: User uploads CSV/XLSX → Server parses file → Metrics computed in-process → Results stored in localStorage (client) or SQLite (server). At no point does the system communicate with Jira.
+The system operates entirely from static file uploads. No Jira API credentials, Jira tokens, or Jira OAuth flows are required. Data flows: User uploads CSV/XLSX → Server parses file → Metrics computed in-process → Latest metrics written to server storage and included in configured cloud backups → Browser loads metrics from the bucket-backed server endpoint first, with `localStorage` fallback. At no point does the system communicate with Jira.
 
 **Technical novelty:** The system derives equivalent delivery intelligence to live-API tools from export files alone, using field normalisation and inference to compensate for the reduced data richness.
 
@@ -168,3 +168,9 @@ The closest known prior art:
 ---
 
 *© 2025 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity*
+
+---
+
+## Current Code Alignment — 2026-06-06
+
+Implementation now includes `data/latest-metrics.json` and `/api/metrics/latest` so returning sessions can load the latest computed dashboard payload from the bucket-backed server copy. This does not alter the zero-Jira-credential disclosure: cloud storage is used for Delivery Clarity backup/restore only.

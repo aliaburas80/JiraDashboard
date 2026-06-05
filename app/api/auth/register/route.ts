@@ -11,6 +11,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Registration is restricted. Contact your administrator.' }, { status: 403 });
   }
 
+  try {
+    const { syncFromCloud } = await import('@/services/storage/cloudSync');
+    await syncFromCloud();
+  } catch {
+    // Registration can still proceed against the local server database.
+  }
+
   let body: { name?: string; email?: string; password?: string };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });

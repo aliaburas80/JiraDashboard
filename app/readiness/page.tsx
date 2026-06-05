@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import ReleaseReadinessCard from '@/components/readiness/ReleaseReadinessCard';
-import { loadMetrics } from '@/lib/storage';
+import { loadMetricsWithSource } from '@/lib/storage';
 import { calculateReleaseReadiness } from '@/services/metrics/releaseReadiness.service';
 import type { ReleaseReadinessSummary } from '@/types/releaseReadiness';
 import type { DashboardMetrics } from '@/types/metrics';
@@ -15,11 +15,18 @@ export default function ReadinessPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const metrics = loadMetrics() as DashboardMetrics | null;
-    if (!metrics) { router.replace('/'); return; }
-    const items = (metrics.flow?.items ?? []) as any[];
-    setSummary(calculateReleaseReadiness(items));
-    setLoading(false);
+    let cancelled = false;
+    async function load() {
+      const result = await loadMetricsWithSource();
+      if (cancelled) return;
+      const metrics = result.metrics as DashboardMetrics | null;
+      if (!metrics) { router.replace('/'); return; }
+      const items = (metrics.flow?.items ?? []) as any[];
+      setSummary(calculateReleaseReadiness(items));
+      setLoading(false);
+    }
+    load().catch(() => { if (!cancelled) router.replace('/'); });
+    return () => { cancelled = true; };
   }, [router]);
 
   if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Calculating release readiness…</div></AppShell>;

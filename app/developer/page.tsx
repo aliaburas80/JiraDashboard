@@ -210,7 +210,8 @@ User drops file
     calculateDashboardMetrics() → DashboardMetrics
     appendImportLog()      save to data/import-logs.json
     return { metrics, warnings, importLog }
-  sessionStorage.setItem('dc_metrics', JSON.stringify(metrics))
+  writeLatestMetrics(metrics)
+  saveMetrics(metrics) // browser fallback: dc_metrics_v2
   router.push('/summary')
 \`\`\``,
 
@@ -524,7 +525,7 @@ it('describes what is being tested', () => {
 
 ## Rule 1 — Cache-First (never re-fetch unnecessarily)
 
-On startup: list bucket → find latest key → compare SHA-256 content hash with \`data/.cloud-cache-meta.json\` → hash match = use local cache (no download); hash differs = download + restore + update cache.
+On startup: list bucket → find latest key → compare SHA-256 content hash with \`data/.cloud-cache-meta.json\` → hash match = use local cache (no download); hash differs = download + restore + update cache. Analytics pages then fetch \`/api/metrics/latest\`, which returns \`data/latest-metrics.json\` from the restored/cache-backed server copy before the browser falls back to \`localStorage\`.
 
 **Files:** \`src/services/storage/cloudSync.ts — syncFromCloud()\`
 
@@ -532,7 +533,7 @@ On startup: list bucket → find latest key → compare SHA-256 content hash wit
 
 ## Rule 2 — Fallback on cloud failure
 
-Cloud unreachable → serve from local cache → \`pendingPush = true\` → show ⚠️ Offline cache badge → push when connection restored.
+Cloud unreachable → serve from local server/cache when possible. If no server latest metrics are available, the client falls back to browser \`localStorage\` and shows the ⚠️ localStorage fallback badge. If local changes are waiting to be pushed, startup sync does not pull an older bucket backup over them.
 
 ---
 
@@ -566,7 +567,7 @@ Shows in AppShell header next to theme toggle. Updates automatically:
 | 🌐 GCP | Data from Google Cloud Storage |
 | 💾 Local cache | Cloud set; hash matched; no download needed |
 | 📤 Jira upload | Fresh upload in this browser session |
-| ⚠️ Offline cache | Cloud unreachable; served from local backup |
+| ⚠️ localStorage fallback | Bucket/server metrics unavailable; served from browser fallback |
 
 **File:** \`src/components/ui/DataSourceBadge.tsx\`
 
@@ -585,6 +586,7 @@ When loading, a blue banner appears below the header: "Loading data from Amazon 
 | \`/api/admin/storage/download?key=X&restore=true\` | GET | Restore from cloud |
 | \`/api/admin/storage/auto-restore\` | GET | DB health (users, imports, size) |
 | \`/api/admin/storage/auto-restore?force=true\` | POST | Force restore latest backup |
+| \`/api/metrics/latest\` | GET | Bucket/server latest metrics; returns \`available:false\` with HTTP 200 when none exist yet |
 
 ---
 
@@ -593,12 +595,13 @@ When loading, a blue banner appears below the header: "Loading data from Amazon 
 | File | Contents |
 |------|----------|
 | \`delivery_clarity.db\` | Users, sessions, import logs, snapshots, audit events |
+| \`latest-metrics.json\` | Latest computed DashboardMetrics payload for bucket-first dashboard startup |
 | \`health-thresholds.json\` | Admin health threshold config |
 | \`retention-settings.json\` | Data retention rules |
 | \`orphan-rules.json\` | Orphan detection rules |
 | \`import-logs.json\` | File-based import log |
 
-**NOT backed up (browser-only localStorage):** Dashboard metrics (\`dc_metrics_v2\`), filter presets, layout/theme prefs, rec owners/feedback.
+**Browser-only localStorage fallback/preferences:** \`dc_metrics_v2\` (fallback copy), \`dc_metrics_source_v1\`, filter presets, layout/theme prefs, rec owners/feedback.
 
 ---
 

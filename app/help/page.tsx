@@ -729,7 +729,7 @@ const SECTIONS: Section[] = [
               <li><span className="font-bold text-green-600">🌐 GCP</span> — loaded or cached from Google Cloud Storage</li>
               <li><span className="font-bold text-slate-500">💾 Local cache</span> — cloud provider is set but data served from local cache (no re-fetch needed)</li>
               <li><span className="font-bold text-violet-600">📤 Jira upload</span> — data came from a fresh Jira CSV upload in this browser session</li>
-              <li><span className="font-bold text-amber-600">⚠️ Offline cache</span> — cloud was unreachable; data is from the last successful sync</li>
+              <li><span className="font-bold text-amber-600">⚠️ localStorage fallback</span> — bucket/server metrics were unavailable; data came from this browser&apos;s saved fallback copy</li>
             </ul>
             <p className="mt-2">When data is actively loading from the cloud, a blue <strong>loading banner</strong> appears at the top of the page: <em>"Loading data from Amazon S3…"</em></p>
           </div>
@@ -741,11 +741,11 @@ const SECTIONS: Section[] = [
       },
       {
         q: 'What happens if the cloud is unreachable?',
-        a: 'The app falls back to the local cache automatically. A "⚠️ Offline cache" badge appears in the nav bar. All normal functionality continues using the last successful sync. Any changes you make (new uploads, snapshots, config changes) are marked as pending and pushed to the cloud automatically when the connection is restored.',
+        a: 'The app first tries the bucket-backed server copy through /api/metrics/latest. If that is unavailable, it falls back to the browser localStorage copy and shows a "⚠️ localStorage fallback" badge. Local server changes waiting to be pushed are protected: startup sync will not overwrite them with an older bucket backup.',
       },
       {
         q: 'What happens when I upload a new Jira file?',
-        a: 'After every successful Jira CSV upload, the app immediately pushes a fresh backup to your configured cloud bucket (non-blocking — it doesn\'t slow down your upload). This ensures the cloud always has the latest version. The data source badge updates to "📤 Jira upload".',
+        a: 'After every successful Jira CSV upload, the app writes the latest dashboard metrics to data/latest-metrics.json, stores a browser fallback copy, and immediately pushes a fresh backup to your configured cloud bucket (non-blocking — it doesn\'t slow down your upload). The data source badge updates to "📤 Jira upload".',
       },
       {
         q: 'What happens when I switch from S3 to Azure (or any other provider)?',
@@ -774,7 +774,7 @@ const SECTIONS: Section[] = [
     items: [
       {
         q: 'What is the Cloud Storage feature?',
-        a: 'The Cloud Storage tab in /admin/settings allows admins to configure a cloud provider (AWS S3, Azure Blob, or Google Cloud Storage) to receive automatic backup files. This protects your database and config files in case of server failure.',
+        a: 'The Cloud Storage tab in /admin/settings allows admins to configure a cloud provider (AWS S3, Azure Blob, or Google Cloud Storage) to receive automatic backup files. Backups include the SQLite database, config files, import logs, and data/latest-metrics.json so the dashboard can load from the bucket-backed server copy on the next session.',
       },
       {
         q: 'Which providers are supported?',
@@ -1010,7 +1010,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: 'Can I deploy on Vercel?',
-        a: 'Vercel works for demos and previews but is NOT recommended for production. Vercel\'s serverless functions have no persistent filesystem, so SQLite data (user accounts, import logs, sessions) is lost between cold starts. The CSV-upload → dashboard flow works on Vercel since it uses localStorage.',
+        a: 'Vercel works for demos and previews but is NOT recommended for production. Vercel\'s serverless functions have no persistent filesystem, so SQLite data, data/latest-metrics.json, cache metadata, user accounts, import logs, and sessions are lost between cold starts. The CSV-upload → dashboard flow can still work when browser localStorage fallback is available.',
       },
       {
         q: 'How do I deploy on a VPS without Docker?',
@@ -1105,7 +1105,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: 'The page loads but shows "No successful import found"',
-        a: 'You are visiting the dashboard directly without having uploaded a file first. Navigate to the Upload page (/), drop your Jira export, and wait for the success message before returning to the dashboard. The dashboard reads from the last successful import stored in the server session.',
+        a: 'The dashboard could not find bucket-backed latest metrics and could not find a browser localStorage fallback. Navigate to the Upload page (/), drop your Jira export, and wait for the success message. That creates data/latest-metrics.json on the server and a browser fallback copy.',
       },
       {
         q: 'Rate limit error (429 Too Many Requests)',

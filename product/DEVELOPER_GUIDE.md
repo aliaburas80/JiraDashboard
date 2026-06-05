@@ -34,7 +34,7 @@ Version 4.0 | 2026-06-02 | Author: Ali Abu Ras
 | Class merging | clsx + tailwind-merge | 2.x | Via `cn()` helper in `src/lib/utils.ts` |
 | Testing | Jest + ts-jest | 29.x | Node environment; no browser testing |
 
-There is no separate backend process. Everything runs inside Next.js Route Handlers (`app/api/*/route.ts`). Import logs and user accounts are persisted to `data/delivery_clarity.db` (SQLite via Prisma 5). Metrics are cached in `localStorage` under the key `dc_metrics_v2` with a 5,000-item cap on `flow.items`.
+There is no separate backend process. Everything runs inside Next.js Route Handlers (`app/api/*/route.ts`). Import logs and user accounts are persisted to `data/delivery_clarity.db` (SQLite via Prisma 5). The latest computed dashboard metrics are written server-side to `data/latest-metrics.json`, included in cloud backup bundles, and fetched through `/api/metrics/latest` before the browser falls back to `localStorage` key `dc_metrics_v2`. Browser storage still keeps a fast fallback copy with a 5,000-item cap on `flow.items`.
 
 ---
 
@@ -89,8 +89,9 @@ Run `npx prisma generate && npx prisma migrate deploy` after first install to cr
 6. `buildColumnMapping` produces the column-mapping preview.
 7. `calculateDashboardMetrics` (metrics service) computes all KPIs. `buildFlowMetrics()` caps `flow.items` at 5,000 (sorted critical-first); `totalItemCount` and `itemsCapped` flags are set when the cap fires.
 8. The route handler saves an `ImportLog` to SQLite (with `userId`) and returns `{ metrics, warnings, importLog, columnMapping }`.
-9. The browser calls `saveMetrics(metrics)` (writes to `localStorage` key `dc_metrics_v2`). If `QuotaExceededError` fires it trims to 5,000 items, then falls back to clearing storage.
-10. The router pushes to `/dashboard?fresh=1`. On load, the `?fresh=1` param resets all 12 filters.
+9. The route handler writes `data/latest-metrics.json` via `writeLatestMetrics(metrics)` so the latest dashboard payload is part of the next cloud backup.
+10. The browser calls `saveMetrics(metrics)` (writes to `localStorage` key `dc_metrics_v2` and source key `dc_metrics_source_v1`). If `QuotaExceededError` fires it trims to 5,000 items, then falls back to clearing storage.
+11. The router pushes to `/dashboard?fresh=1`. On load, the `?fresh=1` param resets all 12 filters.
 
 ---
 
@@ -206,7 +207,7 @@ JiraDashboard/
 
 ## 4. Routing Architecture — Pages
 
-All pages are React Client Components (`'use client'`). They read metrics from `localStorage` via `loadMetrics()` (`dc_metrics_v2`). If the key is missing the router redirects to `/` (upload).
+All analytics pages are React Client Components (`'use client'`). They call `loadMetricsWithSource()`, which first fetches `/api/metrics/latest` to restore metrics from the bucket-backed server copy, then falls back to browser `localStorage` (`dc_metrics_v2`) if no server/bucket payload is available. If both are missing the router redirects to `/` (upload).
 
 ### Navigation structure
 
@@ -224,7 +225,7 @@ Mobile: hamburger button opens a 2-column grid panel below the header.
 Entry point. Renders a drag-and-drop file zone. On file selection:
 - Calls `clearMetrics()` to wipe any previous session
 - Calls `POST /api/upload` with `FormData`
-- Stores returned `metrics` via `saveMetrics()` → `localStorage` key `dc_metrics_v2`
+- Stores returned `metrics` server-side as `data/latest-metrics.json` and in the browser via `saveMetrics()` → `localStorage` key `dc_metrics_v2`
 - Navigates to `/dashboard?fresh=1`
 
 No nav bar is shown here (`showNav={false}`).
@@ -604,10 +605,11 @@ export async function GET() {
 
 ### Step 4 — Display in a page
 
-The dashboard pages read `DashboardMetrics` from `sessionStorage`. Access your metric with:
+The dashboard pages read `DashboardMetrics` through `loadMetricsWithSource()`. Access your metric after the async load with:
 
 ```ts
-const metrics = JSON.parse(sessionStorage.getItem('dc_metrics')!) as DashboardMetrics;
+const result = await loadMetricsWithSource();
+const metrics = result.metrics as DashboardMetrics;
 const value = metrics.myNewMetric;
 ```
 

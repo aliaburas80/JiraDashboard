@@ -5,7 +5,7 @@ import { useState, FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { hasMetrics } from '@/lib/storage';
+import { hasMetricsFromAnySource } from '@/lib/storage';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,7 +31,8 @@ export default function LoginPage() {
       // Otherwise go to dashboard only if the user already has data;
       // if no data has been uploaded yet, send them to the upload page.
       const explicit = params.get('redirect');
-      const destination = explicit ?? (hasMetrics() ? '/dashboard' : '/');
+      const hasData = await hasMetricsFromAnySource();
+      const destination = explicit ?? (hasData ? '/dashboard' : '/');
       router.push(destination);
       router.refresh();
     } catch {

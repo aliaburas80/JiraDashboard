@@ -79,7 +79,6 @@ Delivery Clarity accepts Jira CSV or Excel exports and produces a real-time, mul
 - Jira OAuth or API token direct connection (roadmap P3)
 - Real-time Jira data polling (roadmap P3)
 - Scheduled email or Slack reports (roadmap P4)
-- S3 / Azure / GCP cloud storage (roadmap P3)
 - In-app Notification Center (roadmap P4)
 - Maintenance Mode (roadmap P4)
 - Jira write-back / ticket creation (roadmap P3)
@@ -239,7 +238,7 @@ At the highest level, Delivery Clarity performs the following functions:
 3. **File processing:** Synchronous within the Next.js API route lifecycle. For datasets ≤ 5,000 issues, processing completes in < 500ms (optimised with parseDate memo cache and flowItemByKey Map). For exports > 5,000 issues, the top 5,000 highest-risk items are stored; all aggregate metrics use the full dataset.
 4. The `xlsx` package (SheetJS) is used for all file reading; handles `.csv`, `.xlsx`, and `.xls` formats.
 5. The application is a Next.js 14 App Router multi-page application. Pages are separate routes with server and client components.
-6. Computed metrics are stored in browser `localStorage` (key prefix `dc_`) for fast cross-page access. The `FLOW_ITEMS_CAP` is 5,000 items.
+6. Computed metrics are stored server-side in `data/latest-metrics.json`, included in cloud backup bundles, and cached in browser `localStorage` (key prefix `dc_`) for fallback. The `FLOW_ITEMS_CAP` is 5,000 items for browser-side `flow.items`.
 7. All uploaded file bytes are processed in memory and discarded after the response is sent. No file is written to disk.
 8. The standalone Express backend (`backend/`) is a v1 legacy artifact. It is not used in the production v4 Next.js build.
 9. Session TTL is configurable via `SESSION_TTL_HOURS` environment variable (default: 8 hours).
@@ -303,9 +302,9 @@ All pages are Next.js App Router routes under `app/`. Client components are mark
 
 **`src/components/layout/AppShell.tsx`** — navigation header with grouped dropdown nav (4 groups: Analytics / Delivery / Data / Reference), hamburger mobile menu, UserMenu, theme toggle.
 
-**`app/dashboard/page.tsx`** — Full Report dashboard. All metrics loaded from `localStorage` via `loadMetrics()`. State: 15+ filter controls, role-based view selector, export menu, snapshot save, filter presets, shareable URL sync.
+**`app/dashboard/page.tsx`** — Full Report dashboard. Metrics loaded via `loadMetricsWithSource()`, which tries `/api/metrics/latest` (bucket-backed server metrics) before falling back to `localStorage`. State: 15+ filter controls, role-based view selector, export menu, snapshot save, filter presets, shareable URL sync.
 
-**`src/lib/storage.ts`** — `saveMetrics()`, `loadMetrics()`, `hasMetrics()`. Handles `QuotaExceededError` gracefully. All keys prefixed `dc_`.
+**`src/lib/storage.ts`** — `saveMetrics()`, `loadMetricsWithSource()`, `hasMetricsFromAnySource()`, `markMetricsSource()`. Handles `QuotaExceededError` gracefully and records source metadata in `dc_metrics_source_v1`.
 
 **`middleware.ts`** — Next.js middleware protecting all app routes. Redirects unauthenticated users to `/login?redirect=<path>`. Admin routes redirect non-admin users.
 
@@ -357,9 +356,9 @@ All pages are Next.js App Router routes under `app/`. Client components are mark
 11. ImportLog saved to SQLite via Prisma with userId, fileName, healthScore, etc.
 12. AuditEvent saved to SQLite
 13. Response: { metrics, warnings, importLog }
-14. Client stores metrics in localStorage via saveMetrics()
+14. Server stores latest metrics in `data/latest-metrics.json`; client stores fallback metrics in localStorage via saveMetrics()
 15. Client navigates to /dashboard (or /summary if first upload)
-16. Dashboard page loads metrics from localStorage via loadMetrics()
+16. Dashboard page loads metrics from `/api/metrics/latest` first, then browser localStorage fallback via loadMetricsWithSource()
 17. All dashboard sections render from metrics
 ```
 
@@ -1310,7 +1309,7 @@ Rendered by `renderBackendHome()`. Provides: import history table, file statisti
 
 | Limitation | Impact | Mitigation |
 |---|---|---|
-| No persistent session state | Dashboard cleared on browser refresh | Re-upload the same file to restore; "Save layout view" persists filter preferences only |
+| No latest metrics available | Dashboard has no bucket/server payload or browser fallback | Upload a Jira file once; subsequent sessions can use bucket-backed latest metrics or localStorage fallback |
 | No user authentication | All users share the same view | Deploy behind an auth proxy for team use |
 | No real-time Jira connection | Manual export + upload required | Jira API integration is on the roadmap |
 | Flat JSON log store | Race conditions under concurrent uploads | Use a database (SQLite) for production |

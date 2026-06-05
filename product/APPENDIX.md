@@ -224,13 +224,13 @@
 
 ---
 
-## M — Planned Features (Not Yet Implemented)
+## M — Roadmap and Platform Features
 
 | Term | Meaning |
 |------|---------|
 | **Notification Center** | A planned P4 feature: in-app notifications from admin to users and from the system to admin (e.g. storage warnings, large imports). |
 | **Maintenance Mode** | A planned P4 feature: admin-controlled mode that shows a maintenance screen to users while the system is being updated. |
-| **S3 / Azure / GCP Storage** | A planned P3 feature: cloud storage integration for database and backup files. The current model uses local file storage. |
+| **S3 / Azure / GCP Storage** | Implemented P3 cloud storage integration for backup files and bucket-first latest metrics. Supports AWS S3/S3-compatible providers, Azure Blob Storage, and Google Cloud Storage. |
 | **Jira API Integration** | A planned P3 feature: direct read-only connection to Jira via API. The current model remains export-based (zero-credential). |
 
 ---
@@ -264,3 +264,7 @@
 | **dc_theme_custom** | — | localStorage key storing the user's theme customisation (accent, radius, fontSize). Loaded and applied on every page mount via initThemeCustom(). |
 | **Layout Builder** | Dashboard Layout Builder | Panel accessed via the "Layout" button (☰) in the dashboard sticky bar. Lets users reorder (▲▼) and toggle visibility of the 14 dashboard sections. Changes reflected in section switcher tabs. Saved to dc_section_layout (localStorage). |
 | **dc_section_layout** | — | localStorage key storing the user's custom dashboard layout: an ordered array of { key, visible } pairs. Applied on every dashboard load. |
+| **latest-metrics.json** | Latest Metrics Snapshot | Server-side JSON file in `data/latest-metrics.json` containing the latest computed `DashboardMetrics` payload. Included in cloud backups and served by `/api/metrics/latest`. |
+| **Bucket-first metrics loading** | — | Startup/load strategy where analytics pages try `/api/metrics/latest` first, then fall back to browser `localStorage` when bucket/server metrics are unavailable. |
+| **dc_metrics_source_v1** | Data Source Metadata | localStorage key storing whether current metrics came from bucket, server cache, fresh upload, snapshot, or localStorage fallback. Used by the data source badge. |
+| **localStorage fallback** | — | Degraded-but-usable mode where the dashboard uses the browser's saved `dc_metrics_v2` copy because bucket/server metrics are unavailable. |

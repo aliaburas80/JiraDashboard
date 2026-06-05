@@ -12,7 +12,7 @@ import LoadingState from '@/components/ui/LoadingState';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { getHealthBand, HEALTH_COLORS, formatDays, cn } from '@/lib/utils';
 import { exportToExcel, exportToHtml } from '@/lib/exportUtils';
-import { loadMetrics } from '@/lib/storage';
+import { loadMetricsWithSource } from '@/lib/storage';
 import { loadPresets, savePreset, deletePreset, type FilterPreset } from '@/lib/filterPresets';
 import { recKey, isMuted, muteRec, snoozeRec, restoreAll, getActiveMuted, type MutedRec } from '@/lib/mutedRecommendations';
 import { getRecOwner, setRecOwner, clearRecOwner, getAllRecOwners } from '@/lib/recOwners';
@@ -362,17 +362,22 @@ export default function DashboardPage() {
     .filter(s => !isHidden(s.key))
     .map(s => ({ id: s.sectionId, label: s.label, color: '#2563eb' }));
 
-  // load metrics + presets + view + URL filter state from localStorage / query params
+  // load metrics + presets + view + URL filter state from bucket/server/localStorage
   useEffect(() => {
+    let cancelled = false;
+
     // Restore saved view
     const savedView = getSavedViewId();
     setActiveViewId(savedView);
     const view = getView(savedView);
     setExpandedSections(new Set(view.defaultOpen));
 
-    try {
-      const data = loadMetrics() as DashboardMetrics | null;
-      if (!data) { router.replace('/'); return; }
+    async function load() {
+      try {
+        const result = await loadMetricsWithSource();
+        if (cancelled) return;
+        const data = result.metrics as DashboardMetrics | null;
+        if (!data) { router.replace('/'); return; }
       setMetrics(data);
       setPresets(loadPresets());
       setMutedRecs(getActiveMuted());
@@ -411,8 +416,12 @@ export default function DashboardPage() {
         const nonFreshKeys = [...p.keys()].filter(k => k !== 'fresh');
         if (nonFreshKeys.length > 0) setFlowPanelOpen(true);
       }
-    } catch { router.replace('/'); }
-    finally { setLoading(false); }
+      } catch { router.replace('/'); }
+      finally { if (!cancelled) setLoading(false); }
+    }
+
+    load();
+    return () => { cancelled = true; };
   }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync filter state → URL query params (replaceState = no history entry)

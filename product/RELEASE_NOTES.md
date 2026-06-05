@@ -5,6 +5,22 @@
 
 ---
 
+## v4.2 — Bucket-First Metrics Startup & Documentation Sync (2026-06-06)
+
+### Cloud-backed dashboard startup
+- Added `data/latest-metrics.json` as the server-side latest `DashboardMetrics` payload.
+- Included `latest-metrics.json` in backup bundles alongside SQLite, settings, orphan rules, retention settings, and import logs.
+- Added `GET /api/metrics/latest` for bucket/server metrics loading. It returns HTTP 200 with `available:false` when no latest metrics file exists yet, avoiding noisy 404s during first-run fallback.
+- Updated dashboard, overview, charts, readiness, customer, teams, portfolio, and explorer pages to use `loadMetricsWithSource()`: bucket-backed server metrics first, browser `localStorage` fallback second.
+- Updated login/register startup to sync from cloud before using the local server database where possible.
+- Added source metadata in `dc_metrics_source_v1`; the header badge now distinguishes bucket/cache, fresh upload, snapshot, server-local, and `localStorage fallback`.
+- Protected pending local changes from being overwritten by an older bucket restore when `pendingPush` is true.
+
+### Documentation
+- Updated all `product/` documents plus `/help` and `/developer` content so cloud storage, latest metrics, and fallback behavior match the current code.
+
+---
+
 ## v4.1 — UX Design System & Navigation (In Progress)
 
 **Branch:** `feat/ux-design-system`  
@@ -403,15 +419,11 @@
 
 ---
 
-## Planned — P2/P3/P4 (Not Yet Implemented)
+## Remaining Planned — P2/P3/P4
 
-- **P2** Admin Storage & Backup (S3, Azure, GCP) — architecture design only
 - **P2/P3** Optional Jira API Integration — export-first model remains default
 - **P4** Admin & System Notification Center
 - **P4** Maintenance Mode
-
-
----
 
 ## v4.1 — Recommendation Feedback (9.28, 2026-06-04)
 

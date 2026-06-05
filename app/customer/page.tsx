@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { loadMetrics } from '@/lib/storage';
+import { loadMetricsWithSource } from '@/lib/storage';
 import { getHealthBand, HEALTH_COLORS } from '@/lib/utils';
 import type { DashboardMetrics } from '@/types/metrics';
 
@@ -65,10 +65,17 @@ export default function CustomerPage() {
   const [printMode, setPrintMode] = useState(false);
 
   useEffect(() => {
-    const data = loadMetrics() as DashboardMetrics | null;
-    if (!data) { router.replace('/'); return; }
-    setMetrics(data);
-    setLoading(false);
+    let cancelled = false;
+    async function load() {
+      const result = await loadMetricsWithSource();
+      if (cancelled) return;
+      const data = result.metrics as DashboardMetrics | null;
+      if (!data) { router.replace('/'); return; }
+      setMetrics(data);
+      setLoading(false);
+    }
+    load().catch(() => { if (!cancelled) router.replace('/'); });
+    return () => { cancelled = true; };
   }, [router]);
 
   if (loading || !metrics) return (

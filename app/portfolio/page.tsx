@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
-import { loadMetrics } from '@/lib/storage';
+import { loadMetricsWithSource } from '@/lib/storage';
 import {
   computePortfolioSummary,
   portfolioBandColor,
@@ -110,9 +110,16 @@ export default function PortfolioPage() {
   const [noData,  setNoData]  = useState(false);
 
   useEffect(() => {
-    const metrics = loadMetrics() as DashboardMetrics | null;
-    if (!metrics) { setNoData(true); return; }
-    setSummary(computePortfolioSummary(metrics));
+    let cancelled = false;
+    async function load() {
+      const result = await loadMetricsWithSource();
+      if (cancelled) return;
+      const metrics = result.metrics as DashboardMetrics | null;
+      if (!metrics) { setNoData(true); return; }
+      setSummary(computePortfolioSummary(metrics));
+    }
+    load().catch(() => { if (!cancelled) setNoData(true); });
+    return () => { cancelled = true; };
   }, []);
 
   if (noData) {

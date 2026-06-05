@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { parseJiraFile } from '@/services/jira/parser';
 import { validateIssueData } from '@/services/jira/validation';
 import { calculateDashboardMetrics } from '@/services/metrics/metrics.service';
+import { writeLatestMetrics } from '@/services/metrics/latestMetricsStorage';
 import { mergeIssueArrays } from '@/lib/mergeIssues';
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
@@ -67,6 +68,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const { merged, stats } = mergeIssueArrays(allIssueArrays);
     const metrics = calculateDashboardMetrics(merged);
+    writeLatestMetrics(metrics);
+    import('@/services/storage/cloudSync')
+      .then(({ pushToCloud }) => pushToCloud())
+      .catch(() => {});
     return NextResponse.json({ metrics, warnings: fileWarnings, mergeStats: stats });
   } catch {
     return NextResponse.json({ error: 'Failed to calculate metrics from merged data.' }, { status: 500 });

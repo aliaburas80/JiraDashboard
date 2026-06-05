@@ -97,6 +97,16 @@ export async function syncFromCloud(): Promise<CloudSyncResult> {
     return { status: 'offline', source: 'local', reason: 'Local storage mode — no cloud sync.' };
   }
 
+  const meta = readCacheMeta();
+  if (meta?.pendingPush) {
+    return {
+      status:   'fallback',
+      source:   'local',
+      provider: settings.active,
+      reason:   'Local changes are waiting to be pushed. Using local data instead of pulling an older bucket backup.',
+    };
+  }
+
   // List cloud backups
   let backups: { key: string; lastModified: string }[] = [];
   try {
@@ -124,7 +134,6 @@ export async function syncFromCloud(): Promise<CloudSyncResult> {
   const latest = sorted[0];
 
   // Check if our local cache is already current (cache-hit — skip download)
-  const meta = readCacheMeta();
   if (meta && meta.provider === settings.active && meta.key === latest.key && !meta.pendingPush) {
     return {
       status:   'cache-hit',

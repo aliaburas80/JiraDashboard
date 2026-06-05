@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
-import { loadMetrics } from '@/lib/storage';
+import { loadMetricsWithSource } from '@/lib/storage';
 import { computeTeamHealth, teamBandColor, teamBandBg, type TeamHealthEntry } from '@/lib/teamHealth';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 
@@ -137,7 +137,11 @@ export default function TeamsPage() {
   const [noData, setNoData]   = useState(false);
 
   useEffect(() => {
-    const metrics = loadMetrics() as DashboardMetrics | null;
+    let cancelled = false;
+    async function load() {
+    const result = await loadMetricsWithSource();
+    if (cancelled) return;
+    const metrics = result.metrics as DashboardMetrics | null;
     if (!metrics) { setNoData(true); return; }
 
     const capacity  = metrics.capacity ?? [];
@@ -145,6 +149,9 @@ export default function TeamsPage() {
 
     if (!capacity.length) { setNoData(true); return; }
     setTeams(computeTeamHealth(capacity, flowItems));
+    }
+    load().catch(() => { if (!cancelled) setNoData(true); });
+    return () => { cancelled = true; };
   }, []);
 
   // ── Summary aggregates ────────────────────────────────────────────────────

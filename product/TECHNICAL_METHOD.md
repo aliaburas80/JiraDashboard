@@ -418,3 +418,19 @@ SORT recommendations: Critical → High → Medium → Low
 7. User opens the file and uses the browser's print dialog (Ctrl/Cmd+P → Save as PDF) — no external PDF library required.
 
 **Implementation:** `src/lib/executivePdf.ts`, `src/lib/exportUtils.ts — exportExecutivePdf()`, `app/summary/page.tsx`
+
+---
+
+## Method 19: Bucket-First Metrics Startup (v4.2)
+
+**Problem:** Users returning after login/register or page refresh need the latest dashboard without relying only on browser-local state.
+
+**How it works:**
+1. Upload and merge routes write the latest `DashboardMetrics` payload to `data/latest-metrics.json`.
+2. Backup bundles include `latest-metrics.json`, so S3/Azure/GCP/local backups carry the latest dashboard payload.
+3. Analytics pages call `loadMetricsWithSource()`, which fetches `/api/metrics/latest`.
+4. The endpoint runs `syncFromCloud()` and reads the restored/cache-backed latest metrics file.
+5. If no server/bucket metrics exist, the client falls back to `dc_metrics_v2` in browser `localStorage`.
+6. `dc_metrics_source_v1` drives the data source badge so users can see bucket/cache/upload/snapshot/localStorage fallback.
+
+**Implementation:** `src/services/metrics/latestMetricsStorage.ts`, `app/api/metrics/latest/route.ts`, `src/lib/storage.ts`, `src/components/ui/DataSourceBadge.tsx`

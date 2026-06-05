@@ -9,6 +9,7 @@ import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
+import { writeLatestMetrics } from '@/services/metrics/latestMetricsStorage';
 
 // ---------------------------------------------------------------------------
 // Simple in-process rate limiter — 20 uploads per 15 minutes per IP
@@ -137,6 +138,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const startTime = Date.now();
     const metrics   = calculateDashboardMetrics(issues);
+    writeLatestMetrics(metrics);
     const importLog = appendImportLog(
       buildImportLog({ file: fileArg, parseResult, validation, metrics, status: 'success' }),
     );

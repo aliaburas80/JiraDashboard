@@ -197,8 +197,8 @@ JiraDashboard/
 **Key data flow:**
 1. User uploads a Jira CSV/XLSX export on `/`.
 2. `POST /api/upload` parses the file, computes all metrics via `calculateDashboardMetrics()`, saves an `ImportLog` to SQLite, returns metrics + warnings.
-3. Computed metrics are stored in browser `localStorage` for fast page-to-page access.
-4. All dashboard pages load metrics from `localStorage` via `loadMetrics()`.
+3. Computed metrics are written to `data/latest-metrics.json` on the server and cached in browser `localStorage` for fast fallback.
+4. All dashboard pages load metrics through `loadMetricsWithSource()`: bucket-backed `/api/metrics/latest` first, then browser `localStorage` fallback.
 5. `middleware.ts` enforces auth on all routes — unauthenticated users are redirected to `/login`.
 
 **Tech stack:** Next.js 14 (App Router) · React 18 · TypeScript · Tailwind CSS · Prisma 5 · SQLite · iron-session · bcryptjs · ReactFlow · @dagrejs/dagre · XLSX · Recharts

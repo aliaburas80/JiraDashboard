@@ -4,6 +4,7 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
+import { getMetricsSource } from '@/lib/storage';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -16,6 +17,7 @@ export type DataSource =
   | 'local'        // local storage mode / no cloud
   | 'loading'      // actively loading from cloud
   | 'fallback'     // cloud failed, using local backup
+  | 'localstorage' // browser localStorage fallback
   | 'unknown';
 
 interface DataSourceCtx {
@@ -53,32 +55,43 @@ export function DataSourceProvider({ children }: { children: ReactNode }) {
     if (l) setSourceState('loading');
   }
 
-  // Detect data source from localStorage or sync API on mount
+  // Detect data source from the shared metrics source record.
   useEffect(() => {
-    try {
-      const metricsRaw = localStorage.getItem('dc_metrics_v2');
-      if (metricsRaw) {
-        setSourceState('upload'); // default: data from upload
-      }
-    } catch {}
+    function applyStoredSource() {
+      const info = getMetricsSource();
+      if (!info) return;
 
-    // Check if a cloud sync cache exists
-    fetch('/api/admin/storage/sync')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        if (!d) return;
-        if (d.provider === 'local' || !d.provider) return;
-        if (d.pendingPush) {
-          setSource('fallback', d.provider);
-        } else if (d.isCurrent && d.cachedKey) {
-          const src: DataSource = d.provider === 's3' ? 'cache'
-            : d.provider === 'azure' ? 'cache'
-            : d.provider === 'gcp'   ? 'cache'
-            : 'cache';
-          setSource(src, d.provider, d.cachedKey);
-        }
-      })
-      .catch(() => {}); // non-admins or no auth — ignore
+      if (info.source === 'bucket') {
+        const cloudSource: DataSource = info.provider === 's3' ? 'cloud-s3'
+          : info.provider === 'azure' ? 'cloud-azure'
+          : info.provider === 'gcp' ? 'cloud-gcp'
+          : 'cache';
+        setSource(cloudSource, info.provider, info.key);
+        return;
+      }
+
+      if (info.source === 'localstorage') {
+        setSource('localstorage', info.provider, info.key);
+      } else if (info.source === 'server-local') {
+        setSource('local', info.provider, info.key);
+      } else if (info.source === 'snapshot') {
+        setSource('cache', info.provider, info.key);
+      } else if (info.source === 'cache') {
+        setSource('cache', info.provider, info.key);
+      } else if (info.source === 'upload') {
+        setSource('upload', info.provider, info.key);
+      } else if (info.source === 'none') {
+        setSource('fallback', info.provider, info.key);
+      }
+    }
+
+    applyStoredSource();
+    window.addEventListener('dc-metrics-source-change', applyStoredSource);
+    window.addEventListener('storage', applyStoredSource);
+    return () => {
+      window.removeEventListener('dc-metrics-source-change', applyStoredSource);
+      window.removeEventListener('storage', applyStoredSource);
+    };
   }, []);
 
   return (
@@ -100,7 +113,8 @@ const SOURCE_CONFIG: Record<DataSource, { icon: string; label: string; color: st
   'upload':      { icon: '📤',  label: 'Jira upload', color: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
   'local':       { icon: '🗄️', label: 'Local',        color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
   'loading':     { icon: '⟳',   label: 'Loading…',   color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-  'fallback':    { icon: '⚠️',  label: 'Offline cache', color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
+  'fallback':    { icon: '⚠️',  label: 'No data source', color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
+  'localstorage':{ icon: '⚠️',  label: 'localStorage fallback', color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
   'unknown':     { icon: '?',   label: 'Unknown',     color: '#94a3b8', bg: '#f8fafc', border: '#e2e8f0' },
 };
 

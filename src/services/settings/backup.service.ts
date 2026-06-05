@@ -12,6 +12,7 @@ const DATA_DIR = path.join(process.cwd(), 'data');
 // Files included in every backup
 const BACKUP_FILES = [
   { name: 'delivery_clarity.db',     label: 'SQLite database'         },
+  { name: 'latest-metrics.json',     label: 'Latest dashboard metrics' },
   { name: 'health-thresholds.json',  label: 'Health threshold config' },
   { name: 'retention-settings.json', label: 'Retention settings'      },
   { name: 'orphan-rules.json',       label: 'Orphan detection rules'  },

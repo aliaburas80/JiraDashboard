@@ -10,7 +10,7 @@ import RelationStatsCards from '@/components/explore/RelationStatsCards';
 import RelationInsightPanel from '@/components/explore/RelationInsightPanel';
 import RelationDetailsTable from '@/components/explore/RelationDetailsTable';
 import RelationCharts from '@/components/explore/RelationCharts';
-import { loadMetrics } from '@/lib/storage';
+import { loadMetricsWithSource } from '@/lib/storage';
 import { buildRelationGraph } from '@/services/relations/relationExplorer.service';
 import { exportExplorerToExcel, exportExplorerToCsv } from '@/services/export/explorerExport.service';
 import type { RelationGraph } from '@/types/relations';
@@ -45,12 +45,18 @@ export default function ExplorePage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const data = loadMetrics() as DashboardMetrics | null;
-    setMetrics(data);
-    setRecent(loadRecent());
-    // Track onboarding step
-    markStepDone('try_explorer');
-    try { localStorage.setItem('dc_visited_explore', '1'); } catch {}
+    let cancelled = false;
+    async function load() {
+      const result = await loadMetricsWithSource();
+      if (cancelled) return;
+      setMetrics(result.metrics as DashboardMetrics | null);
+      setRecent(loadRecent());
+      // Track onboarding step
+      markStepDone('try_explorer');
+      try { localStorage.setItem('dc_visited_explore', '1'); } catch {}
+    }
+    load().catch(() => { if (!cancelled) setRecent(loadRecent()); });
+    return () => { cancelled = true; };
   }, []);
 
   const explore = useCallback((key: string) => {

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
-import { saveMetrics } from '@/lib/storage';
+import { markMetricsSource, saveMetrics } from '@/lib/storage';
 
 interface Snapshot {
   id:           string;
@@ -46,6 +46,7 @@ export default function SnapshotsPage() {
       if (!res.ok) { showToast(data.error ?? 'Load failed.'); return; }
       const metrics = JSON.parse(data.metricsJson);
       saveMetrics(metrics);
+      markMetricsSource({ source: 'snapshot', message: `Loaded snapshot "${snap.snapshotName}".` });
       showToast(`✓ Loaded "${snap.snapshotName}"`);
       await new Promise(r => setTimeout(r, 800));
       router.push('/dashboard');

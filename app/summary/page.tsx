@@ -7,7 +7,7 @@ import AppShell from '@/components/layout/AppShell';
 import KpiCard from '@/components/ui/KpiCard';
 import LoadingState from '@/components/ui/LoadingState';
 import type { DashboardMetrics } from '@/types/metrics';
-import { loadMetrics } from '@/lib/storage';
+import { loadMetricsWithSource } from '@/lib/storage';
 import { exportToExcel, exportToHtml, exportExecutivePdf } from '@/lib/exportUtils';
 import { getHealthBand, HEALTH_COLORS, type HealthBand } from '@/lib/utils';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
@@ -71,19 +71,27 @@ export default function SummaryPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    try {
-      const data = loadMetrics() as DashboardMetrics | null;
+    let cancelled = false;
+
+    async function load() {
+      try {
+      const result = await loadMetricsWithSource();
+      if (cancelled) return;
+      const data = result.metrics as DashboardMetrics | null;
       if (!data) { router.replace('/'); return; }
       setMetrics(data);
     } catch {
       router.replace('/');
     } finally {
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     }
+    }
+    load();
     // Check login state for onboarding
     fetch('/api/auth/me').then(r => r.ok ? r.json() : null).then(me => {
       if (me?.userId) setIsLoggedIn(true);
     }).catch(() => {});
+    return () => { cancelled = true; };
   }, [router]);
 
   if (loading) return <AppShell showNav><LoadingState message="Loading summary…" /></AppShell>;

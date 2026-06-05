@@ -39,7 +39,7 @@ Sarah opens the dashboard on a 375 px-wide mobile viewport (iPhone SE).
 
 #### Pre-conditions
 
-- The dashboard is already loaded in a browser session (the upload was performed from a desktop earlier; Sarah is opening the URL on her phone, which requires re-uploading since state is session-scoped — or alternatively, the session URL is shared with the same browser on the same device).
+- The dashboard can load from bucket-backed latest metrics if Sarah is signed in to the same deployment; otherwise she can upload directly from the phone or rely on the same browser's localStorage fallback.
 - Note: for a fully realistic mobile scenario, Sarah uploads from her phone directly.
 - Viewport width is 375 px.
 
@@ -1043,3 +1043,19 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Outcome:** Marcus discovers both the section switcher and the explorer in 3 minutes — features he wouldn't have found independently.
 
 **Related:** UC-079, TC-PT-01–08
+
+### SCN-038 — Returning User Loads Dashboard from Bucket
+
+**Persona:** Sarah, Engineering Manager
+**Context:** Sarah uploaded a Jira export yesterday and the configured S3 bucket received the automatic backup.
+
+**Scenario:**
+1. Sarah opens Delivery Clarity and signs in.
+2. The app attempts cloud sync before validating the current session's analytics data.
+3. `/api/metrics/latest` returns the restored `data/latest-metrics.json` payload.
+4. The dashboard opens with yesterday's latest metrics and the data source badge shows the cloud/cache provider.
+5. If the bucket is unavailable, the badge switches to `localStorage fallback` and uses the browser copy instead.
+
+**Outcome:** Sarah can resume analysis without re-uploading unless she wants a fresher Jira export.
+
+**Related:** UC-083, TC-CS-09–12

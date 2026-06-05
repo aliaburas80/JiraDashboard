@@ -4,7 +4,7 @@ import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { hasMetrics } from '@/lib/storage';
+import { hasMetricsFromAnySource } from '@/lib/storage';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -40,7 +40,7 @@ export default function RegisterPage() {
 
       if (loginRes.ok) {
         // Logged in — go to upload if no data, dashboard if data exists
-        router.push(hasMetrics() ? '/dashboard' : '/');
+        router.push(await hasMetricsFromAnySource() ? '/dashboard' : '/');
         router.refresh();
       } else {
         // Login failed for some reason — fall back to login page

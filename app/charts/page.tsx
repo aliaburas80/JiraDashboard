@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import type { DashboardMetrics } from '@/types/metrics';
-import { loadMetrics } from '@/lib/storage';
+import { loadMetricsWithSource } from '@/lib/storage';
 import SprintVelocityChart from '@/components/charts/SprintVelocityChart';
 import ChartCustomizerPanel from '@/components/charts/ChartCustomizerPanel';
 import { getChartPrefs, type ChartPref, type ChartSpan } from '@/lib/chartCustomizer';
@@ -370,8 +370,12 @@ export default function ChartsPage() {
   const [chartPrefs,  setChartPrefs]  = useState<ChartPref[]>([]);
 
   useEffect(() => {
-    try {
-      const data = loadMetrics() as DashboardMetrics | null;
+    let cancelled = false;
+    async function load() {
+      try {
+      const result = await loadMetricsWithSource();
+      if (cancelled) return;
+      const data = result.metrics as DashboardMetrics | null;
       if (!data) {
         router.replace('/');
         return;
@@ -381,8 +385,11 @@ export default function ChartsPage() {
     } catch {
       router.replace('/');
     } finally {
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     }
+    }
+    load();
+    return () => { cancelled = true; };
   }, [router]);
 
   if (loading) {

@@ -192,7 +192,6 @@ The following capabilities are implemented and in scope as of v4.0:
 - Real-time Jira API integration or OAuth authentication with Jira (P3 roadmap)
 - Scheduled email or Slack report delivery (P4 roadmap)
 - Native mobile application (iOS or Android)
-- S3 / Azure / GCP cloud storage (P3 roadmap)
 - In-app Notification Center (P4 roadmap)
 - Maintenance Mode (P4 roadmap)
 - Jira write-back or ticket creation (P3 roadmap)
@@ -206,7 +205,7 @@ The following capabilities are implemented and in scope as of v4.0:
 
 ### Future Scope (P2/P3/P4 Roadmap)
 
-- **P2** Admin Storage & Backup (S3, Azure, GCP) — architecture design only at this stage
+- **Done** Admin Storage & Backup (Local, S3/S3-compatible, Azure Blob, Google Cloud Storage) — implemented with bucket-first restore, push-on-change, and local fallback
 - **P2/P3** Optional Jira API Integration — read-only; export-first model remains default
 - **P4** Admin & System Notification Center — in-app notifications, admin-to-user messaging
 - **P4** Maintenance Mode — admin-controlled maintenance screen with audit log
@@ -500,7 +499,7 @@ The following metrics define product success and will be measured at 30, 90, and
 3. The Jira export format is stable enough that column header aliases captured in the 55+ alias library cover the majority of real-world exports. Edge cases may require alias additions in future maintenance releases.
 4. The self-hosted deployment environment runs Node.js >= 18 and npm >= 9 on a server or workstation accessible to all intended users via a browser.
 5. No user authentication is required for v1.0 — all users who can reach the URL are treated as authorised. Teams requiring access control will implement an authentication proxy at the network or web server layer.
-6. Browser state is ephemeral — users accept that refreshing the browser clears the current dashboard and requires re-upload.
+6. Browser state has a layered restore model: the app first loads the latest server/bucket metrics and then falls back to browser `localStorage` if needed.
 7. Jira Sprint field values in exports are assumed to be text strings (sprint names) from which sprint grouping and comparison can be derived.
 8. The "Blocked Flag" signal is available only in Jira exports that include a custom "Blocked Flag" field. Teams without this custom field will only have blocking links (not the flag) as a blocking signal.
 9. Story points are assumed to be numeric. Exports using T-shirt sizing (S/M/L/XL) will not yield meaningful story point metrics unless the values have been converted to numbers in Jira.
@@ -516,7 +515,7 @@ The following metrics define product success and will be measured at 30, 90, and
 
 ### Technical Constraints
 
-- **No persistent session state:** The architecture uses in-memory processing with no server-side session storage. Each upload is a stateless request. Maintaining dashboard state across browser refreshes is not technically feasible in v1.0 without a significant architectural change.
+- **Latest metrics require persistent app storage:** Returning sessions depend on `data/latest-metrics.json` plus the configured bucket/cache. Deployments without persistent storage can still use browser `localStorage` fallback, but server-side latest metrics will not survive cold starts.
 - **Flat file import log:** The current import log uses a flat JSON file, which is not safe for concurrent writes under high load. This constrains the system to low-concurrency deployments for v1.0.
 - **File size ceiling:** The 20 MB upload limit is a product of the current server-side memory allocation and processing model. Exports exceeding this size (typically > 5,000 issues) are not supported in v1.0.
 - **No database:** All analysis is recomputed on every upload. Historical trending and cross-session comparison are not technically possible without a persistent data store.
@@ -563,7 +562,7 @@ The following metrics define product success and will be measured at 30, 90, and
 | RISK-02 | Users do not upload frequently enough for Smart Recommendations to surface risks in time to act | Medium | High | Establish an organisational norm of minimum three uploads per week. Future roadmap item: direct Jira API integration to enable automated refresh. |
 | RISK-03 | The flat JSON import log suffers data corruption under concurrent writes | Low | Medium | For v1.0, the tool is scoped for single-team or low-concurrency use. Document the limitation. Roadmap item: migrate to SQLite for v1.1. |
 | RISK-04 | Exports exceed 20 MB for large backlogs (> 5,000 issues), preventing analysis | Low | Medium | Advise users to filter exports to the active programme or current quarter. Roadmap item: increase limit and implement streaming parse for large files. |
-| RISK-05 | Browser state loss on refresh causes frustration and repeated upload work | High | Low | Clear UX messaging at upload that state is session-scoped. Roadmap item: optional localStorage persistence of the last metrics payload. |
+| RISK-05 | Latest dashboard state is unavailable on refresh if both bucket/server metrics and browser fallback are missing | Medium | Low | Upload writes `data/latest-metrics.json` and browser `dc_metrics_v2`; source badge explains bucket/cache/upload/localStorage fallback state. |
 | RISK-06 | Health score thresholds do not fit all team contexts (e.g. a team with a 14-day cycle time norm flags as critical) | Medium | Medium | Document all threshold logic. Roadmap item: custom threshold configuration per project. Short-term: users can review the raw data in the Flow Health table alongside the score. |
 | RISK-07 | The self-hosted deployment model creates a maintenance burden on platform teams | Low | Medium | Provide clear setup documentation and a health check endpoint. The application has no external API dependencies in v1.0, minimising ongoing maintenance surface. |
 | RISK-08 | Users misinterpret the Health Score as a performance metric rather than a delivery health signal | Medium | High | Name the score "Delivery Health Score" (not "Team Score" or "Performance Score"). Include contextual Help guide content explaining the formula components. State clearly in the Manager Quick Overview that the score reflects delivery flow health, not team productivity. |

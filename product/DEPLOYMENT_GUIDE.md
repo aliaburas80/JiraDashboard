@@ -29,7 +29,8 @@
 Delivery Clarity is a **Next.js 14** application using:
 - **SQLite** via Prisma for authentication and import logs
 - **iron-session** for encrypted cookie sessions
-- **localStorage** for dashboard data (no cloud sync)
+- **Cloud-backed server metrics** via `data/latest-metrics.json` and `/api/metrics/latest`, with browser `localStorage` fallback
+- **Cloud storage providers**: Local filesystem, AWS S3/S3-compatible, Azure Blob Storage, and Google Cloud Storage
 - **bcryptjs** for password hashing
 
 ### Deployment targets
@@ -40,7 +41,7 @@ Delivery Clarity is a **Next.js 14** application using:
 | **VPS / bare metal** | Self-hosted production | ✅ Yes | ✅ Yes |
 | **Vercel** | Demo / preview / staging | ⚠️ Ephemeral (no SQLite) | ❌ Not for production auth |
 
-> **Why not Vercel for production?** Vercel's serverless functions have no persistent filesystem. SQLite data is lost between cold starts. Vercel works for the CSV upload → dashboard flow (localStorage-only) but auth sessions and import logs will not persist.
+> **Why not Vercel for production?** Vercel's serverless functions have no persistent filesystem. SQLite data and `data/latest-metrics.json` are lost between cold starts. Vercel works for previews when browser `localStorage` fallback is acceptable, but auth sessions, import logs, bucket cache metadata, and server-side latest metrics will not persist.
 
 ---
 
@@ -257,7 +258,7 @@ pm2 restart delivery-clarity
 
 Use Vercel only for:
 - Public demo / staging builds
-- Testing the CSV-upload → dashboard flow (which uses localStorage only)
+- Testing the CSV-upload → dashboard flow when browser `localStorage` fallback is acceptable
 
 ### 6.1 Steps
 
@@ -273,11 +274,12 @@ Use Vercel only for:
 
 | Feature | Status on Vercel |
 |---------|-----------------|
-| CSV upload → dashboard | ✅ Works (localStorage) |
+| CSV upload → dashboard | ✅ Works, with browser fallback; server latest metrics are ephemeral |
 | User registration / login | ⚠️ Works during session, lost on cold start |
 | Import logs / audit trail | ❌ Lost on cold start |
 | Admin user management | ❌ Ephemeral |
 | Trend data (requires DB) | ❌ Not persisted |
+| Bucket-first latest metrics | ⚠️ Route works, but local cache file is ephemeral unless the deployment has persistent storage |
 
 ---
 
@@ -438,7 +440,7 @@ The app also includes a built-in backup feature at `/admin/settings` (Backup & R
 | Upload fails with 413 error | nginx `client_max_body_size` too small | Set to `25M` in nginx config (see Section 7) |
 | Container won't start | Port 3000 already in use | Change `PORT` in `.env` or stop the conflicting process |
 | Import logs disappear after restart (Docker) | Volume not mounted | Check `docker compose ps` and `docker volume ls` |
-| "No data loaded" after login | localStorage is browser-specific | Dashboard data is in localStorage — re-upload your Jira file |
+| "No data loaded" after login | No `data/latest-metrics.json` yet and no browser fallback copy | Upload a Jira file once; this creates the server latest-metrics file and browser fallback |
 | App slow on first request | Next.js cold start | Normal on first request; subsequent requests are fast |
 | DB locked error | Multiple processes writing to SQLite | Ensure only one process accesses the DB (single Docker container) |
 

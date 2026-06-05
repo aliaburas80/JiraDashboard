@@ -24,6 +24,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Too many login attempts. Wait 1 minute.' }, { status: 429 });
   }
 
+  let dataSource: unknown = null;
+  try {
+    const { syncFromCloud } = await import('@/services/storage/cloudSync');
+    dataSource = await syncFromCloud();
+  } catch (error) {
+    dataSource = {
+      status: 'fallback',
+      source: 'local',
+      error: error instanceof Error ? error.message : String(error),
+      reason: 'Bucket sync failed before login; using local server database.',
+    };
+  }
+
   let body: { email?: string; password?: string };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
@@ -61,5 +74,5 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }}),
   ]);
 
-  return NextResponse.json({ ok: true, user: { name: user.name, email: user.email, role: user.role } });
+  return NextResponse.json({ ok: true, user: { name: user.name, email: user.email, role: user.role }, dataSource });
 }
