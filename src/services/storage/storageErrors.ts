@@ -9,6 +9,30 @@ interface ErrorExplanation {
 // ── Pattern → explanation map ─────────────────────────────────────────────────
 
 const ERROR_MAP: Array<{ pattern: RegExp | string; explanation: ErrorExplanation }> = [
+  // ── AWS: No credentials found in any source ──────────────────────────────
+  {
+    pattern: /Could not load credentials from any providers/i,
+    explanation: {
+      cause: 'The AWS SDK tried every credential source and found nothing.\n\n'
+           + 'It checks in this order:\n'
+           + '  1. Explicit keys in the form (accessKeyId + secretAccessKey) — empty\n'
+           + '  2. Environment variables: AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY — not set\n'
+           + '  3. Shared credentials file: ~/.aws/credentials — not found or empty\n'
+           + '  4. IAM instance role (EC2/ECS/Lambda) — not attached to this server\n\n'
+           + 'All four sources failed.',
+      fix:   'Choose one of these options:\n\n'
+           + 'Option A — Fill in the form: Click "Change provider", enter your AWS Access Key ID and Secret Access Key, click Save.\n\n'
+           + 'Option B — Environment variables: On your server, set:\n'
+           + '  AWS_ACCESS_KEY_ID=AKIAxxxxxxxxxxxx\n'
+           + '  AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxx\n'
+           + 'Then restart the app.\n\n'
+           + 'Option C — AWS credentials file: Create ~/.aws/credentials with:\n'
+           + '  [default]\n'
+           + '  aws_access_key_id = AKIAxxxxxxxxxxxx\n'
+           + '  aws_secret_access_key = xxxxxxxxxxxxxxxxxxxx\n\n'
+           + 'Option D — IAM role: If your server runs on EC2/ECS/Lambda, attach an IAM role with S3 permissions.',
+    },
+  },
   // Azure
   {
     pattern: /Invalid URL/i,

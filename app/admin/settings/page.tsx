@@ -418,7 +418,7 @@ function CloudStorageSettings() {
   const [saving,     setSaving]     = useState(false);
   const [testing,    setTesting]    = useState(false);
   const [uploading,  setUploading]  = useState(false);
-  const [msg,        setMsg]        = useState<{ text: string; ok: boolean; cause?: string; fix?: string } | null>(null);
+  const [msg,        setMsg]        = useState<{ text: string; ok: boolean; cause?: string; fix?: string; credDiag?: any } | null>(null);
   const [active,     setActive]     = useState<StorageProviderType>('local');
   // editMode = false means provider is locked (saved); true = user is changing
   const [editMode,   setEditMode]   = useState(false);
@@ -480,7 +480,7 @@ function CloudStorageSettings() {
       const d = await r.json();
       setMsg(d.ok
         ? { text: '✓ Connection successful!', ok: true }
-        : { text: `✗ Connection failed: ${d.error}`, ok: false, cause: d.cause, fix: d.fix });
+        : { text: `✗ Connection failed: ${d.error}`, ok: false, cause: d.cause, fix: d.fix, credDiag: d.credDiag });
     } catch { setMsg({ text: 'Test failed. Check server logs.', ok: false }); }
     finally { setTesting(false); }
   }
@@ -685,14 +685,40 @@ function CloudStorageSettings() {
                 <div className="px-4 py-3 space-y-2">
                   {msg.cause && (
                     <div>
-                      <p className="text-[11px] font-black text-red-700 uppercase tracking-wider mb-0.5">Why this happened</p>
-                      <p className="text-xs text-red-600 leading-relaxed">{msg.cause}</p>
+                      <p className="text-[11px] font-black text-red-700 uppercase tracking-wider mb-1">Why this happened</p>
+                      <pre className="text-xs text-red-600 leading-relaxed whitespace-pre-wrap font-sans">{msg.cause}</pre>
                     </div>
                   )}
                   {msg.fix && (
                     <div>
-                      <p className="text-[11px] font-black text-red-700 uppercase tracking-wider mb-0.5">How to fix it</p>
-                      <p className="text-xs text-red-600 leading-relaxed">{msg.fix}</p>
+                      <p className="text-[11px] font-black text-red-700 uppercase tracking-wider mb-1">How to fix it</p>
+                      <pre className="text-xs text-red-600 leading-relaxed whitespace-pre-wrap font-sans">{msg.fix}</pre>
+                    </div>
+                  )}
+                  {/* S3 credential source diagnostic */}
+                  {msg.credDiag && (
+                    <div className="mt-2 pt-2 border-t border-red-200">
+                      <p className="text-[11px] font-black text-red-700 uppercase tracking-wider mb-2">AWS credential source check (server-side)</p>
+                      <div className="space-y-1">
+                        {[
+                          { label: 'Credentials in form (accessKeyId + secretAccessKey)', ok: msg.credDiag.hasFormCredentials },
+                          { label: 'AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY env vars', ok: msg.credDiag.hasEnvCredentials },
+                          { label: 'AWS_PROFILE set', ok: msg.credDiag.hasAwsProfile },
+                        ].map(row => (
+                          <div key={row.label} className="flex items-center gap-2">
+                            <span className={`text-sm font-black shrink-0 ${row.ok ? 'text-green-600' : 'text-red-500'}`}>
+                              {row.ok ? '✓' : '✗'}
+                            </span>
+                            <span className={`text-[10px] font-mono ${row.ok ? 'text-green-700' : 'text-red-500'}`}>{row.label}</span>
+                          </div>
+                        ))}
+                        {msg.credDiag.awsRegionFromEnv && (
+                          <p className="text-[10px] text-slate-500 mt-1">Region from env: {msg.credDiag.awsRegionFromEnv}</p>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-red-500 mt-2 font-semibold">
+                        All three sources are ✗ — the AWS SDK has no credentials to use. Set at least one of the options above.
+                      </p>
                     </div>
                   )}
                 </div>

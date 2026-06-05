@@ -66,14 +66,23 @@ export async function POST(req: NextRequest) {
     const settings = readStorageSettings();
     const fieldErr = validateServerFields(settings);
     if (fieldErr) return NextResponse.json({ ok: false, error: fieldErr });
+
+    // Build credential source diagnostic for S3 (helps user understand what's available)
+    const credDiag = settings.active === 's3' ? {
+      hasFormCredentials:     !!(settings.s3?.accessKeyId?.trim() && settings.s3?.secretAccessKey?.trim()),
+      hasEnvCredentials:      !!(process.env.AWS_ACCESS_KEY_ID?.trim() && process.env.AWS_SECRET_ACCESS_KEY?.trim()),
+      hasAwsProfile:          !!(process.env.AWS_PROFILE),
+      awsRegionFromEnv:       process.env.AWS_DEFAULT_REGION ?? process.env.AWS_REGION ?? null,
+    } : null;
+
     try {
       const provider = await createProvider(settings.active, settings);
       const result   = await provider.test();
-      return NextResponse.json(result);  // already includes cause+fix when ok:false
+      return NextResponse.json({ ...result, credDiag });
     } catch (e: unknown) {
       const { explainStorageError } = await import('@/services/storage/storageErrors');
       const { raw, cause, fix } = explainStorageError(e);
-      return NextResponse.json({ ok: false, error: raw, cause, fix });
+      return NextResponse.json({ ok: false, error: raw, cause, fix, credDiag });
     }
   }
 
