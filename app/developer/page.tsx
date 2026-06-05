@@ -515,6 +515,96 @@ it('describes what is being tested', () => {
 - ⬜ Metrics: label multi-value parsing
 - ⬜ Metrics: link column detection
 - ⬜ API: upload rate limiting`,
+
+  'cloud-sync': `# Cloud Sync Architecture
+
+## Strategy: Cache-first · Push-on-change · Fallback · No-data-loss switch
+
+---
+
+## Rule 1 — Cache-First (never re-fetch unnecessarily)
+
+On startup: list bucket → find latest key → compare SHA-256 content hash with \`data/.cloud-cache-meta.json\` → hash match = use local cache (no download); hash differs = download + restore + update cache.
+
+**Files:** \`src/services/storage/cloudSync.ts — syncFromCloud()\`
+
+---
+
+## Rule 2 — Fallback on cloud failure
+
+Cloud unreachable → serve from local cache → \`pendingPush = true\` → show ⚠️ Offline cache badge → push when connection restored.
+
+---
+
+## Rule 3 — Push-on-change (all copies always same version)
+
+| Trigger | Where |
+|---------|-------|
+| Jira CSV upload | \`POST /api/upload\` (non-blocking) |
+| Snapshot save | \`POST /api/snapshots\` |
+| Config change | Admin settings save handlers |
+| Manual | \`POST /api/admin/storage/sync?action=push\` |
+
+If push fails → \`pendingPush=true\` → retried on next startup or sync request.
+
+---
+
+## Rule 4 — Provider switch (zero data loss)
+
+\`switchProvider()\`: 1. Pull latest from current provider. 2. Push to new provider. Both end at same version.
+
+---
+
+## Data Source Badge
+
+Shows in AppShell header next to theme toggle. Updates automatically:
+
+| Badge | Meaning |
+|-------|---------|
+| ☁️ S3 | Data restored from Amazon S3 |
+| 🔷 Azure | Data from Azure Blob Storage |
+| 🌐 GCP | Data from Google Cloud Storage |
+| 💾 Local cache | Cloud set; hash matched; no download needed |
+| 📤 Jira upload | Fresh upload in this browser session |
+| ⚠️ Offline cache | Cloud unreachable; served from local backup |
+
+**File:** \`src/components/ui/DataSourceBadge.tsx\`
+
+When loading, a blue banner appears below the header: "Loading data from Amazon S3…"
+
+---
+
+## API Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| \`/api/admin/storage/sync\` | GET | Sync status + cache meta |
+| \`/api/admin/storage/sync?action=push\` | POST | Push local to cloud |
+| \`/api/admin/storage/sync?action=switch\` | POST | Pull old → push new provider |
+| \`/api/admin/storage/download?key=X\` | GET | Download backup file |
+| \`/api/admin/storage/download?key=X&restore=true\` | GET | Restore from cloud |
+| \`/api/admin/storage/auto-restore\` | GET | DB health (users, imports, size) |
+| \`/api/admin/storage/auto-restore?force=true\` | POST | Force restore latest backup |
+
+---
+
+## What is backed up to cloud
+
+| File | Contents |
+|------|----------|
+| \`delivery_clarity.db\` | Users, sessions, import logs, snapshots, audit events |
+| \`health-thresholds.json\` | Admin health threshold config |
+| \`retention-settings.json\` | Data retention rules |
+| \`orphan-rules.json\` | Orphan detection rules |
+| \`import-logs.json\` | File-based import log |
+
+**NOT backed up (browser-only localStorage):** Dashboard metrics (\`dc_metrics_v2\`), filter presets, layout/theme prefs, rec owners/feedback.
+
+---
+
+## Startup Auto-Restore
+
+\`instrumentation.ts register()\` runs once on Node.js server start. If local DB is empty: find latest cloud backup → download → \`restoreBackup()\`. Uses \`new Function('m','return import(m)')\` to prevent webpack from tracing into cloud SDK packages at build time.`,
 };
 
 // ─── Nav config ───────────────────────────────────────────────────────────────
@@ -536,6 +626,7 @@ const SECTIONS = [
   { id: 'user-journeys', label: '🗺️ User Journeys',          group: 'Product Docs'    },
   { id: 'dev-guide',     label: '📖 Developer Guide',        group: 'Product Docs'    },
   { id: 'deployment',   label: '🚢 Deployment Guide',        group: 'Product Docs'    },
+  { id: 'cloud-sync',  label: '🔄 Cloud Sync Architecture', group: 'Technical'       },
 ];
 
 // ── Package Reference data ────────────────────────────────────────────────────
@@ -954,6 +1045,7 @@ type CalcCategory = typeof CALCULATIONS[0]['category'];
 const CALC_CATEGORIES = [...new Set(CALCULATIONS.map(c => c.category))] as CalcCategory[];
 
 const DOC_SLUGS = new Set(['brd','srs','use-cases','scenarios','test-cases','user-journeys','dev-guide','deployment']);
+// cloud-sync is in INLINE — no API fetch needed (handled by INLINE check in go())
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 

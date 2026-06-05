@@ -712,7 +712,61 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 27. Cloud Storage
+  // 27. Cloud Sync Strategy
+  {
+    id: 'cloud-sync',
+    icon: '🔄',
+    title: 'Cloud Sync & Data Source',
+    items: [
+      {
+        q: 'Where does my data come from — and how do I know?',
+        a: (
+          <div className="space-y-2 text-xs">
+            <p>Every page shows a <strong>data source badge</strong> in the top navigation bar indicating where the current data came from:</p>
+            <ul className="space-y-1 pl-3">
+              <li><span className="font-bold text-orange-600">☁️ S3</span> — loaded or cached from Amazon S3</li>
+              <li><span className="font-bold text-blue-600">🔷 Azure</span> — loaded or cached from Azure Blob Storage</li>
+              <li><span className="font-bold text-green-600">🌐 GCP</span> — loaded or cached from Google Cloud Storage</li>
+              <li><span className="font-bold text-slate-500">💾 Local cache</span> — cloud provider is set but data served from local cache (no re-fetch needed)</li>
+              <li><span className="font-bold text-violet-600">📤 Jira upload</span> — data came from a fresh Jira CSV upload in this browser session</li>
+              <li><span className="font-bold text-amber-600">⚠️ Offline cache</span> — cloud was unreachable; data is from the last successful sync</li>
+            </ul>
+            <p className="mt-2">When data is actively loading from the cloud, a blue <strong>loading banner</strong> appears at the top of the page: <em>"Loading data from Amazon S3…"</em></p>
+          </div>
+        ),
+      },
+      {
+        q: 'How does the cloud sync work? Will it re-download from S3 every time?',
+        a: 'No — the app uses a cache-first strategy. On startup it checks whether the local cache is already current by comparing a content hash. If the hash matches the latest cloud backup, no download happens. You only get a real download when the cloud has a newer version than your local cache.',
+      },
+      {
+        q: 'What happens if the cloud is unreachable?',
+        a: 'The app falls back to the local cache automatically. A "⚠️ Offline cache" badge appears in the nav bar. All normal functionality continues using the last successful sync. Any changes you make (new uploads, snapshots, config changes) are marked as pending and pushed to the cloud automatically when the connection is restored.',
+      },
+      {
+        q: 'What happens when I upload a new Jira file?',
+        a: 'After every successful Jira CSV upload, the app immediately pushes a fresh backup to your configured cloud bucket (non-blocking — it doesn\'t slow down your upload). This ensures the cloud always has the latest version. The data source badge updates to "📤 Jira upload".',
+      },
+      {
+        q: 'What happens when I switch from S3 to Azure (or any other provider)?',
+        a: 'The app downloads the latest backup from your current cloud provider first, then pushes it to the new provider — so no data is lost during a provider switch. Both providers end up with the same version. After the switch, all new backups go to the new provider.',
+      },
+      {
+        q: 'What if I switch to Local storage from the Cloud Storage settings?',
+        a: 'When you select "Local Storage" in Admin Settings → Cloud Storage, the app downloads the latest backup from your cloud bucket first (so you have it locally), then switches to local-only mode. From that point, backups are saved to data/cloud-backups/ on the server instead of the cloud.',
+      },
+      {
+        q: 'Are all cloud backups the same version? How do I avoid having outdated copies?',
+        a: 'Yes — the sync strategy ensures all copies are always at the same version. Push-on-change: every data modification immediately pushes to cloud. If the push fails (network issue), the change is marked as pending and retried on next startup or sync. You can also manually trigger a sync from Admin Settings → Cloud Storage → Sync button.',
+      },
+      {
+        q: 'How do I manually check or trigger a sync?',
+        a: 'Go to Admin Settings → ☁️ Cloud Storage tab. The "Disaster Recovery / Auto-restore" section shows the current sync status (last fetched, last pushed, pending push indicator). Use the "↺ Auto-restore (if empty DB)" or "↺ Force restore (overwrite)" buttons to manually pull from cloud.',
+      },
+    ],
+  },
+
+  // 28. Cloud Storage
   {
     id: 'cloud-storage',
     icon: '☁️',

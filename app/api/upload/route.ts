@@ -178,6 +178,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           releaseConfidenceScore,
         }),
       }}).catch(() => {});
+
+      // Push-on-change: sync new data to cloud immediately (non-blocking)
+      import('@/services/storage/cloudSync')
+        .then(({ pushToCloud }) => pushToCloud())
+        .catch(() => {}); // never block the upload response
     }
 
     // Warn when items are capped due to large export

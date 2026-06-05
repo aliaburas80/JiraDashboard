@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.scss';
+import { DataSourceProvider, CloudLoadingBanner } from '@/components/ui/DataSourceBadge';
 
 export const metadata: Metadata = {
   title:       'Delivery Clarity — Jira Intelligence',
@@ -31,7 +32,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="bg-slate-50 text-slate-900 antialiased overflow-x-hidden" style={{ fontFamily: "var(--font-inter, 'Inter', sans-serif)" }}>
-        {children}
+        <DataSourceProvider>
+          <CloudLoadingBanner />
+          {children}
+        </DataSourceProvider>
       </body>
     </html>
   );
