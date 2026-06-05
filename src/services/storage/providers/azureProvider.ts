@@ -6,7 +6,6 @@
 //  2. AZURE_STORAGE_CONNECTION_STRING environment variable
 //  3. Error — cannot connect without either
 
-import { BlobServiceClient } from '@azure/storage-blob';
 import type { StorageProvider, CloudObject, AzureStorageConfig } from '@/types/storage';
 import { explainStorageError } from '@/services/storage/storageErrors';
 
@@ -18,7 +17,9 @@ export class AzureStorageProvider implements StorageProvider {
     this.config = config;
   }
 
-  private getClient() {
+  private async getClient() {
+    const { BlobServiceClient } = await import('@azure/storage-blob');
+
     // Prefer explicit connection string, fall back to env var
     const connStr =
       this.config.connectionString?.trim() ||
@@ -50,7 +51,7 @@ export class AzureStorageProvider implements StorageProvider {
   }
 
   async upload(key: string, content: Buffer | string): Promise<string> {
-    const { container } = this.getClient();
+    const { container } = await this.getClient();
     const blobName = this.prefixed(key);
     const buf = typeof content === 'string' ? Buffer.from(content, 'utf-8') : content;
     await container.getBlockBlobClient(blobName).uploadData(buf, {
@@ -60,13 +61,13 @@ export class AzureStorageProvider implements StorageProvider {
   }
 
   async download(key: string): Promise<string> {
-    const { container } = this.getClient();
+    const { container } = await this.getClient();
     const resp = await container.getBlockBlobClient(key).downloadToBuffer();
     return resp.toString('utf-8');
   }
 
   async list(prefix?: string): Promise<CloudObject[]> {
-    const { container } = this.getClient();
+    const { container } = await this.getClient();
     const p = prefix ?? this.config.prefix ?? '';
     const results: CloudObject[] = [];
     for await (const blob of container.listBlobsFlat({ prefix: p })) {
@@ -80,13 +81,13 @@ export class AzureStorageProvider implements StorageProvider {
   }
 
   async delete(key: string): Promise<void> {
-    const { container } = this.getClient();
+    const { container } = await this.getClient();
     await container.getBlockBlobClient(key).delete();
   }
 
   async test(): Promise<{ ok: true } | { ok: false; error: string; cause?: string; fix?: string }> {
     try {
-      const { container } = this.getClient();
+      const { container } = await this.getClient();
       await container.getProperties();
       return { ok: true };
     } catch (e: unknown) {

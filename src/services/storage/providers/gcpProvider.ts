@@ -7,7 +7,6 @@
 //  3. GOOGLE_APPLICATION_CREDENTIALS env var — picked up automatically by the SDK
 //  4. Application Default Credentials (gcloud auth, metadata server on GCE/Cloud Run)
 
-import { Storage } from '@google-cloud/storage';
 import type { StorageProvider, CloudObject, GcpStorageConfig } from '@/types/storage';
 import { explainStorageError } from '@/services/storage/storageErrors';
 
@@ -19,7 +18,8 @@ export class GcpStorageProvider implements StorageProvider {
     this.config = config;
   }
 
-  private getBucket() {
+  private async getBucket() {
+    const { Storage } = await import('@google-cloud/storage');
     const opts: Record<string, unknown> = {};
 
     if (this.config.projectId?.trim()) {
@@ -47,7 +47,7 @@ export class GcpStorageProvider implements StorageProvider {
   }
 
   async upload(key: string, content: Buffer | string): Promise<string> {
-    const bucket    = this.getBucket();
+    const bucket    = await this.getBucket();
     const remoteKey = this.prefixed(key);
     await bucket.file(remoteKey).save(
       typeof content === 'string' ? Buffer.from(content, 'utf-8') : content,
@@ -57,13 +57,13 @@ export class GcpStorageProvider implements StorageProvider {
   }
 
   async download(key: string): Promise<string> {
-    const bucket  = this.getBucket();
+    const bucket  = await this.getBucket();
     const [content] = await bucket.file(key).download();
     return content.toString('utf-8');
   }
 
   async list(prefix?: string): Promise<CloudObject[]> {
-    const bucket = this.getBucket();
+    const bucket = await this.getBucket();
     const p = prefix ?? this.config.prefix ?? '';
     const [files] = await bucket.getFiles({ prefix: p });
     return files.map(f => ({
@@ -74,13 +74,13 @@ export class GcpStorageProvider implements StorageProvider {
   }
 
   async delete(key: string): Promise<void> {
-    const bucket = this.getBucket();
+    const bucket = await this.getBucket();
     await bucket.file(key).delete();
   }
 
   async test(): Promise<{ ok: true } | { ok: false; error: string; cause?: string; fix?: string }> {
     try {
-      const bucket = this.getBucket();
+      const bucket = await this.getBucket();
       const [exists] = await bucket.exists();
       if (!exists) {
         return {
