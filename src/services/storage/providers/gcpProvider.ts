@@ -9,6 +9,7 @@
 
 import { Storage } from '@google-cloud/storage';
 import type { StorageProvider, CloudObject, GcpStorageConfig } from '@/types/storage';
+import { explainStorageError } from '@/services/storage/storageErrors';
 
 export class GcpStorageProvider implements StorageProvider {
   readonly type = 'gcp' as const;
@@ -77,14 +78,22 @@ export class GcpStorageProvider implements StorageProvider {
     await bucket.file(key).delete();
   }
 
-  async test(): Promise<{ ok: true } | { ok: false; error: string }> {
+  async test(): Promise<{ ok: true } | { ok: false; error: string; cause?: string; fix?: string }> {
     try {
       const bucket = this.getBucket();
       const [exists] = await bucket.exists();
-      if (!exists) return { ok: false, error: `GCP: Bucket "${this.config.bucket}" does not exist or is not accessible.` };
+      if (!exists) {
+        return {
+          ok: false,
+          error: `Bucket "${this.config.bucket}" does not exist or is not accessible.`,
+          cause: 'The GCP bucket name does not exist in your project, or the service account does not have access to it.',
+          fix: `Create the bucket at console.cloud.google.com/storage, or check that the service account has the Storage Object Admin role on bucket "${this.config.bucket}".`,
+        };
+      }
       return { ok: true };
     } catch (e: unknown) {
-      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+      const { raw, cause, fix } = explainStorageError(e);
+      return { ok: false, error: raw, cause, fix };
     }
   }
 }

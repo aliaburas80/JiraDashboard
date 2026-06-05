@@ -69,9 +69,11 @@ export async function POST(req: NextRequest) {
     try {
       const provider = await createProvider(settings.active, settings);
       const result   = await provider.test();
-      return NextResponse.json(result);
+      return NextResponse.json(result);  // already includes cause+fix when ok:false
     } catch (e: unknown) {
-      return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) });
+      const { explainStorageError } = await import('@/services/storage/storageErrors');
+      const { raw, cause, fix } = explainStorageError(e);
+      return NextResponse.json({ ok: false, error: raw, cause, fix });
     }
   }
 

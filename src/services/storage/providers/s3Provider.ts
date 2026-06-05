@@ -4,6 +4,7 @@
 // The SDK is loaded dynamically so the app starts without it installed.
 
 import type { StorageProvider, CloudObject, S3StorageConfig } from '@/types/storage';
+import { explainStorageError } from '@/services/storage/storageErrors';
 
 export class S3StorageProvider implements StorageProvider {
   readonly type = 's3' as const;
@@ -73,12 +74,13 @@ export class S3StorageProvider implements StorageProvider {
     await client.send(new DeleteObjectCommand({ Bucket: this.config.bucket, Key: key }));
   }
 
-  async test(): Promise<{ ok: true } | { ok: false; error: string }> {
+  async test(): Promise<{ ok: true } | { ok: false; error: string; cause?: string; fix?: string }> {
     try {
       await this.list(this.config.prefix);
       return { ok: true };
     } catch (e: unknown) {
-      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+      const { raw, cause, fix } = explainStorageError(e);
+      return { ok: false, error: raw, cause, fix };
     }
   }
 }

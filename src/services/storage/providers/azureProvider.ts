@@ -8,6 +8,7 @@
 
 import { BlobServiceClient } from '@azure/storage-blob';
 import type { StorageProvider, CloudObject, AzureStorageConfig } from '@/types/storage';
+import { explainStorageError } from '@/services/storage/storageErrors';
 
 export class AzureStorageProvider implements StorageProvider {
   readonly type = 'azure' as const;
@@ -27,6 +28,15 @@ export class AzureStorageProvider implements StorageProvider {
       throw new Error(
         'Azure: No connection string provided. ' +
         'Set it in the form OR set the AZURE_STORAGE_CONNECTION_STRING environment variable.'
+      );
+    }
+
+    // Validate format before calling SDK — catches "Invalid URL" early
+    if (!connStr.startsWith('DefaultEndpointsProtocol=') && !connStr.startsWith('AccountName=') && !connStr.includes('AccountKey=')) {
+      throw new Error(
+        'The connection string format is invalid. ' +
+        'Azure connection strings must start with "DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...". ' +
+        'Copy it from: Azure Portal → Storage Account → Access keys → key1 → Connection string.'
       );
     }
 
@@ -74,14 +84,14 @@ export class AzureStorageProvider implements StorageProvider {
     await container.getBlockBlobClient(key).delete();
   }
 
-  async test(): Promise<{ ok: true } | { ok: false; error: string }> {
+  async test(): Promise<{ ok: true } | { ok: false; error: string; cause?: string; fix?: string }> {
     try {
       const { container } = this.getClient();
-      // Verify container exists (creates if not found is an option — here we just check)
       await container.getProperties();
       return { ok: true };
     } catch (e: unknown) {
-      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+      const { raw, cause, fix } = explainStorageError(e);
+      return { ok: false, error: raw, cause, fix };
     }
   }
 }

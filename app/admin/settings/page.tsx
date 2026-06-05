@@ -172,7 +172,7 @@ function CloudStorageSettings() {
   const [saving,     setSaving]     = useState(false);
   const [testing,    setTesting]    = useState(false);
   const [uploading,  setUploading]  = useState(false);
-  const [msg,        setMsg]        = useState<{ text: string; ok: boolean } | null>(null);
+  const [msg,        setMsg]        = useState<{ text: string; ok: boolean; cause?: string; fix?: string } | null>(null);
   const [active,     setActive]     = useState<StorageProviderType>('local');
   // editMode = false means provider is locked (saved); true = user is changing
   const [editMode,   setEditMode]   = useState(false);
@@ -232,7 +232,9 @@ function CloudStorageSettings() {
       if (!saved) { setTesting(false); return; }
       const r = await fetch('/api/admin/storage?action=test', { method: 'POST' });
       const d = await r.json();
-      setMsg(d.ok ? { text: '✓ Connection successful!', ok: true } : { text: `✗ Connection failed: ${d.error}`, ok: false });
+      setMsg(d.ok
+        ? { text: '✓ Connection successful!', ok: true }
+        : { text: `✗ Connection failed: ${d.error}`, ok: false, cause: d.cause, fix: d.fix });
     } catch { setMsg({ text: 'Test failed. Check server logs.', ok: false }); }
     finally { setTesting(false); }
   }
@@ -414,11 +416,39 @@ function CloudStorageSettings() {
         </div>
       )}
 
-      {/* Status message */}
+      {/* Status message — structured for errors */}
       {msg && (
-        <div className={`flex items-start gap-2 rounded-xl px-4 py-3 text-sm font-semibold ${msg.ok ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
-          <span className="shrink-0">{msg.ok ? '✓' : '✗'}</span>
-          <span>{msg.text}</span>
+        <div className={`rounded-xl border text-sm ${msg.ok ? 'bg-green-50 border-green-200 text-green-700 px-4 py-3' : 'bg-red-50 border-red-200 text-red-800'}`}>
+          {msg.ok ? (
+            <div className="flex items-center gap-2 font-semibold">
+              <span>✓</span><span>{msg.text}</span>
+            </div>
+          ) : (
+            <div className="divide-y divide-red-200">
+              {/* Error headline */}
+              <div className="flex items-start gap-2 px-4 py-3 font-bold">
+                <span className="shrink-0 text-red-600">✗</span>
+                <span className="text-red-700">{msg.text}</span>
+              </div>
+              {/* Cause + Fix explanation */}
+              {(msg.cause || msg.fix) && (
+                <div className="px-4 py-3 space-y-2">
+                  {msg.cause && (
+                    <div>
+                      <p className="text-[11px] font-black text-red-700 uppercase tracking-wider mb-0.5">Why this happened</p>
+                      <p className="text-xs text-red-600 leading-relaxed">{msg.cause}</p>
+                    </div>
+                  )}
+                  {msg.fix && (
+                    <div>
+                      <p className="text-[11px] font-black text-red-700 uppercase tracking-wider mb-0.5">How to fix it</p>
+                      <p className="text-xs text-red-600 leading-relaxed">{msg.fix}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

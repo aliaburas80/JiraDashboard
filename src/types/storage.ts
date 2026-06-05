@@ -78,6 +78,6 @@ export interface StorageProvider {
   /** Delete an object by key. */
   delete(key: string): Promise<void>;
 
-  /** Test connectivity — resolves with 'ok' or rejects with error message. */
-  test(): Promise<{ ok: true } | { ok: false; error: string }>;
+  /** Test connectivity — resolves with ok or a structured error with cause + fix. */
+  test(): Promise<{ ok: true } | { ok: false; error: string; cause?: string; fix?: string }>;
 }
