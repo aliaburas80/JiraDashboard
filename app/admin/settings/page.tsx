@@ -155,6 +155,145 @@ function ConnectionGuide({ provider, installCmd }: { provider: string; installCm
 
 // ── Cloud Storage Settings panel ──────────────────────────────────────────────
 
+// ── Cloud Backup List — reads from the active bucket ─────────────────────────
+
+function CloudBackupList({ savedProvider, setMsg }: {
+  savedProvider: StorageProviderType;
+  setMsg: (m: { text: string; ok: boolean; cause?: string; fix?: string } | null) => void;
+}) {
+  const [backups,   setBackups]   = useState<any[]>([]);
+  const [loading,   setLoading]   = useState(true);
+  const [fetchErr,  setFetchErr]  = useState('');
+  const [restoring, setRestoring] = useState<string | null>(null);
+
+  async function loadBackups() {
+    setLoading(true); setFetchErr('');
+    try {
+      const r = await fetch('/api/admin/storage');
+      const d = await r.json();
+      setBackups(d.backups ?? []);
+    } catch {
+      setFetchErr('Could not load backup list from the cloud bucket.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { loadBackups(); }, [savedProvider]);
+
+  async function handleDownload(key: string) {
+    try {
+      const r = await fetch(`/api/admin/storage/download?key=${encodeURIComponent(key)}`);
+      if (!r.ok) {
+        const d = await r.json();
+        setMsg({ text: `Download failed: ${d.error}`, ok: false });
+        return;
+      }
+      const blob = await r.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = key.split('/').pop() ?? 'backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      setMsg({ text: `✓ Downloaded: ${a.download}`, ok: true });
+    } catch {
+      setMsg({ text: 'Download failed. Check server logs.', ok: false });
+    }
+  }
+
+  async function handleRestore(key: string) {
+    if (!confirm(`Restore from "${key.split('/').pop()}"?\n\nThis will overwrite current database and config files. Make a backup first if needed.`)) return;
+    setRestoring(key);
+    setMsg(null);
+    try {
+      const r = await fetch(`/api/admin/storage/download?key=${encodeURIComponent(key)}&restore=true`);
+      const d = await r.json();
+      if (d.ok) {
+        setMsg({ text: `✓ Restored from cloud: ${d.restored?.join(', ')}`, ok: true });
+      } else {
+        setMsg({ text: `✗ Restore failed: ${d.error ?? 'Unknown error'}`, ok: false });
+      }
+    } catch {
+      setMsg({ text: 'Restore failed. Check server logs.', ok: false });
+    } finally {
+      setRestoring(null);
+    }
+  }
+
+  const label = { s3: 'S3', azure: 'Azure', gcp: 'GCP', local: 'Local' }[savedProvider] ?? savedProvider;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-black text-slate-700">
+          Cloud Backups in {label} {loading ? '…' : `(${backups.length})`}
+        </p>
+        <button type="button" onClick={loadBackups} disabled={loading}
+          className="text-[10px] font-bold text-blue-600 hover:underline disabled:text-slate-400">
+          {loading ? 'Loading…' : '↻ Refresh'}
+        </button>
+      </div>
+
+      {fetchErr && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700 font-semibold">{fetchErr}</div>
+      )}
+
+      {!loading && !fetchErr && backups.length === 0 && (
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-500 text-center">
+          No backups found in the {label} bucket yet. Click "Upload backup now" to create the first one.
+        </div>
+      )}
+
+      {backups.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                {['Filename', 'Size', 'Date', 'Actions'].map(h => (
+                  <th key={h} className="py-2.5 px-3 text-[10px] font-black uppercase tracking-wider text-slate-500 text-left whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {[...backups].sort((a, b) => b.lastModified.localeCompare(a.lastModified)).map((b: any) => {
+                const filename = b.key.split('/').pop() ?? b.key;
+                const isRestoring = restoring === b.key;
+                return (
+                  <tr key={b.key} className="hover:bg-slate-50">
+                    <td className="py-2 px-3 font-mono text-slate-700 max-w-[220px] truncate" title={b.key}>
+                      {filename}
+                    </td>
+                    <td className="py-2 px-3 text-slate-500 whitespace-nowrap">
+                      {(b.size / 1024).toFixed(1)} KB
+                    </td>
+                    <td className="py-2 px-3 text-slate-500 whitespace-nowrap">
+                      {b.lastModified ? new Date(b.lastModified).toLocaleString() : '—'}
+                    </td>
+                    <td className="py-2 px-3">
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => handleDownload(b.key)}
+                          className="text-[10px] font-bold text-blue-600 hover:underline whitespace-nowrap">
+                          ↓ Download
+                        </button>
+                        <span className="text-slate-200">|</span>
+                        <button type="button" onClick={() => handleRestore(b.key)} disabled={isRestoring}
+                          className="text-[10px] font-bold text-amber-600 hover:underline disabled:opacity-40 whitespace-nowrap">
+                          {isRestoring ? 'Restoring…' : '↺ Restore'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Field validation ──────────────────────────────────────────────────────────
 
 function validateFields(provider: StorageProviderType, s3: any, az: any, gcp: any): string | null {
@@ -452,29 +591,9 @@ function CloudStorageSettings() {
         </div>
       )}
 
-      {/* Cloud backup list */}
-      {active !== 'local' && data?.backups?.length > 0 && (
-        <div>
-          <p className="text-xs font-black text-slate-700 mb-3">Cloud Backups ({data.backups.length})</p>
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <table className="w-full text-xs">
-              <thead><tr className="bg-slate-50 border-b border-slate-200">
-                {['Key / Filename', 'Size', 'Last modified'].map(h => (
-                  <th key={h} className="py-2.5 px-3 text-[10px] font-black uppercase tracking-wider text-slate-500 text-left">{h}</th>
-                ))}
-              </tr></thead>
-              <tbody className="divide-y divide-slate-100">
-                {data.backups.map((b: any) => (
-                  <tr key={b.key} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 font-mono text-slate-700 truncate max-w-[200px]" title={b.key}>{b.key}</td>
-                    <td className="py-2 px-3 text-slate-500">{(b.size / 1024).toFixed(1)} KB</td>
-                    <td className="py-2 px-3 text-slate-500">{new Date(b.lastModified).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      {/* Cloud backup list — read from bucket */}
+      {(savedProvider as string) !== 'local' && (
+        <CloudBackupList savedProvider={savedProvider} setMsg={setMsg} />
       )}
     </div>
   );
