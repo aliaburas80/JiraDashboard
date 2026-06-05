@@ -78,12 +78,11 @@ export async function POST(req: NextRequest) {
   // ── Server-side field validation ─────────────────────────────────────────
   function validateServerFields(s: StorageSettings): string | null {
     const { active } = s;
-    if (active === 's3'    && !s.s3?.bucket)                    return 'S3: bucket is required.';
-    if (active === 'azure' && !s.azure?.containerName)          return 'Azure: containerName is required.';
-    if (active === 'azure' && !s.azure?.connectionString)       return 'Azure: connectionString is required.';
-    if (active === 'gcp'   && !s.gcp?.bucket)                   return 'GCP: bucket is required.';
-    if (active === 'gcp'   && !s.gcp?.projectId)                return 'GCP: projectId is required.';
-    if (active === 'gcp'   && !(s.gcp?.keyFilename || s.gcp?.keyJson)) return 'GCP: service account credentials (keyJson or keyFilename) are required.';
+    // Only bucket/container names required — credentials can come from env vars
+    if (active === 's3'    && !s.s3?.bucket)               return 'S3: Bucket name is required.';
+    if (active === 'azure' && !s.azure?.containerName)     return 'Azure: Container name is required.';
+    if (active === 'gcp'   && !s.gcp?.bucket)              return 'GCP: Bucket name is required.';
+    if (active === 'gcp'   && !s.gcp?.projectId)           return 'GCP: Project ID is required.';
     return null;
   }
 

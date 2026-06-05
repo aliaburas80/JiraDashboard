@@ -158,12 +158,12 @@ function ConnectionGuide({ provider, installCmd }: { provider: string; installCm
 // ── Field validation ──────────────────────────────────────────────────────────
 
 function validateFields(provider: StorageProviderType, s3: any, az: any, gcp: any): string | null {
-  if (provider === 's3'    && !s3.bucket?.trim())               return 'S3: Bucket name is required.';
-  if (provider === 'azure' && !az.containerName?.trim())        return 'Azure: Container name is required.';
-  if (provider === 'azure' && !az.connectionString?.trim())     return 'Azure: Connection string is required.';
-  if (provider === 'gcp'   && !gcp.bucket?.trim())              return 'GCP: Bucket name is required.';
-  if (provider === 'gcp'   && !gcp.projectId?.trim())           return 'GCP: Project ID is required.';
-  if (provider === 'gcp'   && !gcp.keyJson?.trim())             return 'GCP: Service Account JSON is required.';
+  // Only bucket/container names are required — credentials can come from env vars
+  if (provider === 's3'    && !s3.bucket?.trim())            return 'S3: Bucket name is required.';
+  if (provider === 'azure' && !az.containerName?.trim())     return 'Azure: Container name is required.';
+  if (provider === 'gcp'   && !gcp.bucket?.trim())           return 'GCP: Bucket name is required.';
+  if (provider === 'gcp'   && !gcp.projectId?.trim())        return 'GCP: Project ID is required.';
+  // Credentials (Connection String, Access Key, Service Account JSON) are optional — env vars work too
   return null;
 }
 
@@ -334,9 +334,6 @@ function CloudStorageSettings() {
       {(!isLocked) && active === 'azure' && (
         <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
           <p className="text-xs font-black text-slate-700 mb-3">Azure Blob Storage Configuration</p>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-2">
-            <p className="text-[10px] font-bold text-red-700">All fields marked * are required to connect.</p>
-          </div>
           {[['Container name *', 'containerName'], ['Folder prefix (optional)', 'prefix']].map(([label, key]) => (
             <div key={key}>
               <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
@@ -345,20 +342,23 @@ function CloudStorageSettings() {
             </div>
           ))}
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Connection String</label>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Connection String (optional)</label>
             <input type="password" value={azForm.connectionString} onChange={e => setAzForm(f => ({ ...f, connectionString: e.target.value }))}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
           </div>
-          {data?.settings?.azure?.hasCredentials && <p className="text-[10px] text-green-600 font-semibold">✓ Connection string saved.</p>}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-[10px] font-bold text-blue-800 mb-1">Connection string is optional</p>
+            <p className="text-[10px] text-blue-700 leading-relaxed">
+              Leave empty to use the <strong className="font-mono">AZURE_STORAGE_CONNECTION_STRING</strong> environment variable on your server.
+              Find it: Azure Portal → Storage account → Access keys → key1 → Connection string.
+            </p>
+          </div>
         </div>
       )}
 
       {(!isLocked) && active === 'gcp' && (
         <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
           <p className="text-xs font-black text-slate-700 mb-3">Google Cloud Storage Configuration</p>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-2">
-            <p className="text-[10px] font-bold text-red-700">All fields marked * are required to connect.</p>
-          </div>
           {[['Bucket name *', 'bucket'], ['Project ID *', 'projectId'], ['Folder prefix (optional)', 'prefix']].map(([label, key]) => (
             <div key={key}>
               <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
@@ -367,9 +367,16 @@ function CloudStorageSettings() {
             </div>
           ))}
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Service Account JSON * (paste contents)</label>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Service Account JSON (optional)</label>
             <textarea value={gcpForm.keyJson} onChange={e => setGcpForm(f => ({ ...f, keyJson: e.target.value }))} rows={4}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-blue-400" placeholder='{"type":"service_account",...}' />
+          </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-[10px] font-bold text-blue-800 mb-1">Service Account JSON is optional</p>
+            <p className="text-[10px] text-blue-700 leading-relaxed">
+              Leave empty to use the <strong className="font-mono">GOOGLE_APPLICATION_CREDENTIALS</strong> environment variable (path to your service account JSON file),
+              or Application Default Credentials (gcloud auth, GCE/Cloud Run metadata server).
+            </p>
           </div>
         </div>
       )}

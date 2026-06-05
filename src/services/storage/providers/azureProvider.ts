@@ -1,8 +1,12 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 // Azure Blob Storage provider.
-// Requires: npm install @azure/storage-blob
-// The SDK is loaded dynamically so the app starts without it installed.
+//
+// Credential resolution order (same pattern as S3):
+//  1. connectionString from form (explicit — highest priority)
+//  2. AZURE_STORAGE_CONNECTION_STRING environment variable
+//  3. Error — cannot connect without either
 
+import { BlobServiceClient } from '@azure/storage-blob';
 import type { StorageProvider, CloudObject, AzureStorageConfig } from '@/types/storage';
 
 export class AzureStorageProvider implements StorageProvider {
@@ -13,15 +17,22 @@ export class AzureStorageProvider implements StorageProvider {
     this.config = config;
   }
 
-  private async getClient() {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore — optional peer dependency; installed separately when Azure is used
-    const { BlobServiceClient } = await import(/* webpackIgnore: true */ '@azure/storage-blob' as string).catch(() => {
-      throw new Error('Azure SDK not installed. Run: npm install @azure/storage-blob');
-    }) as any;
-    const service   = BlobServiceClient.fromConnectionString(this.config.connectionString);
+  private getClient() {
+    // Prefer explicit connection string, fall back to env var
+    const connStr =
+      this.config.connectionString?.trim() ||
+      process.env.AZURE_STORAGE_CONNECTION_STRING?.trim();
+
+    if (!connStr) {
+      throw new Error(
+        'Azure: No connection string provided. ' +
+        'Set it in the form OR set the AZURE_STORAGE_CONNECTION_STRING environment variable.'
+      );
+    }
+
+    const service   = BlobServiceClient.fromConnectionString(connStr);
     const container = service.getContainerClient(this.config.containerName);
-    return { container, BlobServiceClient };
+    return { service, container };
   }
 
   private prefixed(key: string): string {
@@ -29,21 +40,23 @@ export class AzureStorageProvider implements StorageProvider {
   }
 
   async upload(key: string, content: Buffer | string): Promise<string> {
-    const { container } = await this.getClient();
+    const { container } = this.getClient();
     const blobName = this.prefixed(key);
     const buf = typeof content === 'string' ? Buffer.from(content, 'utf-8') : content;
-    await container.getBlockBlobClient(blobName).uploadData(buf, { blobHTTPHeaders: { blobContentType: 'application/json' } });
+    await container.getBlockBlobClient(blobName).uploadData(buf, {
+      blobHTTPHeaders: { blobContentType: 'application/json' },
+    });
     return blobName;
   }
 
   async download(key: string): Promise<string> {
-    const { container } = await this.getClient();
+    const { container } = this.getClient();
     const resp = await container.getBlockBlobClient(key).downloadToBuffer();
     return resp.toString('utf-8');
   }
 
   async list(prefix?: string): Promise<CloudObject[]> {
-    const { container } = await this.getClient();
+    const { container } = this.getClient();
     const p = prefix ?? this.config.prefix ?? '';
     const results: CloudObject[] = [];
     for await (const blob of container.listBlobsFlat({ prefix: p })) {
@@ -57,14 +70,15 @@ export class AzureStorageProvider implements StorageProvider {
   }
 
   async delete(key: string): Promise<void> {
-    const { container } = await this.getClient();
+    const { container } = this.getClient();
     await container.getBlockBlobClient(key).delete();
   }
 
   async test(): Promise<{ ok: true } | { ok: false; error: string }> {
     try {
-      const { container } = await this.getClient();
-      await container.exists();
+      const { container } = this.getClient();
+      // Verify container exists (creates if not found is an option — here we just check)
+      await container.getProperties();
       return { ok: true };
     } catch (e: unknown) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
