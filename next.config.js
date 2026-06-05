@@ -1,17 +1,51 @@
 /** @type {import('next').NextConfig} */
+
+// Packages that use Node.js built-ins (http, https, stream, fs, net, tls)
+// and must NEVER be bundled by webpack — loaded at runtime by Node.js.
+const CLOUD_EXTERNALS = [
+  '@google-cloud/storage', '@google-cloud/paginator', '@google-cloud/projectify',
+  '@google-cloud/promisify', '@azure/storage-blob', '@aws-sdk/client-s3',
+  // Transitive deps of @google-cloud/storage that also use Node built-ins
+  'agent-base', 'https-proxy-agent', 'http-proxy-agent', 'gaxios',
+  'google-auth-library', 'google-gax', 'node-fetch',
+];
+
 const nextConfig = {
   output: 'standalone',
   experimental: {
     serverComponentsExternalPackages: [
       'xlsx', 'prisma', '@prisma/client', 'bcryptjs',
-      // Cloud SDKs — use Node.js built-ins (stream, fs, etc.) that can't be bundled
-      '@google-cloud/storage', '@google-cloud/paginator', '@google-cloud/projectify',
-      '@google-cloud/promisify', '@azure/storage-blob', '@aws-sdk/client-s3',
+      ...CLOUD_EXTERNALS,
     ],
     instrumentationHook: true,
   },
-  webpack: (config) => {
-    config.resolve.fallback = { ...config.resolve.fallback, fs: false };
+  webpack: (config, { isServer }) => {
+    // Client: mark Node built-ins as false (not available)
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false, http: false, https: false,
+      stream: false, net: false, tls: false,
+    };
+
+    if (isServer) {
+      // Server: mark cloud SDK packages as CJS externals so webpack
+      // never tries to bundle them (they are loaded at runtime by Node.js).
+      const existingExternals = Array.isArray(config.externals)
+        ? config.externals
+        : config.externals ? [config.externals] : [];
+
+      config.externals = [
+        ...existingExternals,
+        ({ request }, callback) => {
+          const isCloudPkg = CLOUD_EXTERNALS.some(
+            pkg => request === pkg || request?.startsWith(pkg + '/')
+          );
+          if (isCloudPkg) return callback(null, 'commonjs ' + request);
+          callback();
+        },
+      ];
+    }
+
     return config;
   },
 };
