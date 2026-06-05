@@ -64,6 +64,8 @@ export async function POST(req: NextRequest) {
   // ── Test connectivity ────────────────────────────────────────────────────
   if (action === 'test') {
     const settings = readStorageSettings();
+    const fieldErr = validateServerFields(settings);
+    if (fieldErr) return NextResponse.json({ ok: false, error: fieldErr });
     try {
       const provider = await createProvider(settings.active, settings);
       const result   = await provider.test();
@@ -73,9 +75,23 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── Server-side field validation ─────────────────────────────────────────
+  function validateServerFields(s: StorageSettings): string | null {
+    const { active } = s;
+    if (active === 's3'    && !s.s3?.bucket)                    return 'S3: bucket is required.';
+    if (active === 'azure' && !s.azure?.containerName)          return 'Azure: containerName is required.';
+    if (active === 'azure' && !s.azure?.connectionString)       return 'Azure: connectionString is required.';
+    if (active === 'gcp'   && !s.gcp?.bucket)                   return 'GCP: bucket is required.';
+    if (active === 'gcp'   && !s.gcp?.projectId)                return 'GCP: projectId is required.';
+    if (active === 'gcp'   && !(s.gcp?.keyFilename || s.gcp?.keyJson)) return 'GCP: service account credentials (keyJson or keyFilename) are required.';
+    return null;
+  }
+
   // ── Upload backup to cloud ───────────────────────────────────────────────
   if (action === 'upload') {
     const settings = readStorageSettings();
+    const fieldErr = validateServerFields(settings);
+    if (fieldErr) return NextResponse.json({ ok: false, error: fieldErr }, { status: 400 });
     try {
       const bundle   = createBackup();
       const content  = JSON.stringify(bundle, null, 2);
