@@ -16,5 +16,5 @@ export interface TrendPoint {
   criticalCount:           number;
   dataQualityScore:        number | null;
   avgSprintThroughput:     number | null;
-  releaseConfidenceScore:  number | null;
+  releaseConfidenceScore?: number | null;
 }

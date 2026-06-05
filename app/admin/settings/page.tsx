@@ -155,6 +155,113 @@ function ConnectionGuide({ provider, installCmd }: { provider: string; installCm
 
 // ── Cloud Storage Settings panel ──────────────────────────────────────────────
 
+// ── DB Health Status ──────────────────────────────────────────────────────────
+
+function DbHealthBadge() {
+  const [health, setHealth] = useState<any>(null);
+  useEffect(() => {
+    fetch('/api/admin/storage/auto-restore').then(r => r.json()).then(setHealth).catch(() => {});
+  }, []);
+  if (!health) return null;
+  return (
+    <div className={`flex items-center gap-2 text-[10px] font-bold px-3 py-1.5 rounded-full border ${
+      health.healthy ? 'bg-green-50 border-green-200 text-green-700' : 'bg-amber-50 border-amber-200 text-amber-700'
+    }`}>
+      <span>{health.healthy ? '✓' : '⚠'}</span>
+      <span>
+        {health.dbExists
+          ? `Local DB: ${health.users} user${health.users !== 1 ? 's' : ''} · ${health.imports} import${health.imports !== 1 ? 's' : ''} · ${health.dbSizeKb}KB`
+          : 'Local DB: not found — restore from cloud needed'}
+      </span>
+    </div>
+  );
+}
+
+// ── Auto-Restore Section ──────────────────────────────────────────────────────
+
+function AutoRestoreSection({ setMsg }: {
+  setMsg: (m: { text: string; ok: boolean; cause?: string; fix?: string } | null) => void;
+}) {
+  const [restoring, setRestoring] = useState(false);
+  const [health,    setHealth]    = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/api/admin/storage/auto-restore').then(r => r.json()).then(setHealth).catch(() => {});
+  }, []);
+
+  async function handleAutoRestore(force: boolean) {
+    if (!confirm(
+      force
+        ? 'This will overwrite your current local database with the LATEST backup from the cloud bucket.\n\nAre you sure? This cannot be undone.'
+        : 'Restore latest cloud backup to local database?\n\nOnly runs if local database is missing or empty.'
+    )) return;
+
+    setRestoring(true);
+    setMsg(null);
+    try {
+      const url = `/api/admin/storage/auto-restore${force ? '?force=true' : ''}`;
+      const r   = await fetch(url, { method: 'POST' });
+      const d   = await r.json();
+
+      if (d.ok || d.action === 'restored') {
+        setMsg({ text: `✓ Restored from cloud: ${d.key ?? ''}. Files: ${d.restored?.join(', ') ?? ''}`, ok: true });
+        // Refresh health badge
+        fetch('/api/admin/storage/auto-restore').then(r => r.json()).then(setHealth).catch(() => {});
+      } else if (d.action === 'skipped') {
+        setMsg({ text: `ℹ ${d.reason}`, ok: true });
+      } else {
+        setMsg({ text: `✗ Auto-restore: ${d.reason ?? d.error}`, ok: false });
+      }
+    } catch {
+      setMsg({ text: 'Auto-restore failed. Check server logs.', ok: false });
+    } finally {
+      setRestoring(false);
+    }
+  }
+
+  const dbMissing = health && (!health.dbExists || !health.healthy);
+
+  return (
+    <div className={`rounded-xl border p-4 ${dbMissing ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+      <div className="flex items-start gap-3 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-black text-slate-800 mb-1">
+            {dbMissing ? '⚠ Local database missing or empty — restore from cloud' : '↺ Disaster Recovery / Auto-restore'}
+          </p>
+          <p className="text-[10px] text-slate-600 leading-relaxed">
+            {dbMissing
+              ? 'The local database is empty or missing. Click "Restore from cloud" to download the latest backup from the cloud bucket and restore it automatically.'
+              : 'On a fresh server deployment with no database, the app automatically checks the cloud bucket at startup and restores the latest backup. You can also trigger this manually.'
+            }
+          </p>
+          <p className="text-[10px] text-slate-500 mt-1">
+            <strong>Startup behaviour:</strong> When the server starts with an empty database, it reads the latest backup from your cloud bucket and restores it automatically — no manual action needed.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 shrink-0">
+          {dbMissing ? (
+            <button type="button" onClick={() => handleAutoRestore(true)} disabled={restoring}
+              className="btn-warning px-4 py-2 text-xs font-bold">
+              {restoring ? 'Restoring…' : '↺ Restore from cloud'}
+            </button>
+          ) : (
+            <>
+              <button type="button" onClick={() => handleAutoRestore(false)} disabled={restoring}
+                className="btn-secondary px-4 py-2 text-xs">
+                {restoring ? 'Checking…' : '↺ Auto-restore (if empty DB)'}
+              </button>
+              <button type="button" onClick={() => handleAutoRestore(true)} disabled={restoring}
+                className="btn-outline-danger px-4 py-2 text-xs">
+                {restoring ? 'Restoring…' : '↺ Force restore (overwrite)'}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Cloud Backup List — reads from the active bucket ─────────────────────────
 
 function CloudBackupList({ savedProvider, setMsg }: {
@@ -397,17 +504,21 @@ function CloudStorageSettings() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      {/* Step header + DB health + Change provider */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h3 className="text-sm font-black text-slate-800 mb-1">Cloud Storage Provider</h3>
           <p className="text-xs text-slate-500">Credentials are stored server-side and never sent to the browser.</p>
         </div>
-        {isLocked && (
-          <button type="button" onClick={() => { setEditMode(true); setMsg(null); }}
-            className="btn-secondary btn-sm shrink-0">
-            Change provider
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          <DbHealthBadge />
+          {isLocked && (
+            <button type="button" onClick={() => { setEditMode(true); setMsg(null); }}
+              className="btn-secondary btn-sm shrink-0">
+              Change provider
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Active provider badge when locked */}
@@ -591,7 +702,12 @@ function CloudStorageSettings() {
         </div>
       )}
 
-      {/* Cloud backup list — read from bucket */}
+      {/* ── Step N: Auto-restore from cloud (for disaster recovery) ── */}
+      {(savedProvider as string) !== 'local' && (
+        <AutoRestoreSection setMsg={setMsg} />
+      )}
+
+      {/* ── Cloud backup list — read directly from bucket ── */}
       {(savedProvider as string) !== 'local' && (
         <CloudBackupList savedProvider={savedProvider} setMsg={setMsg} />
       )}
