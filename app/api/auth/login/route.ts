@@ -7,6 +7,7 @@ import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { verifyPassword } from '@/lib/auth';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
+import { isAppRole } from '@/lib/roles';
 
 const LOGIN_RATE = new Map<string, number[]>();
 
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   session.userId     = user.id;
   session.email      = user.email;
   session.name       = user.name;
-  session.role       = user.role as 'user' | 'admin';
+  session.role       = isAppRole(user.role) ? user.role : 'user';
   session.isLoggedIn = true;
   await session.save();
 

@@ -2,7 +2,7 @@
 // Dashboard view tests — TC-DV-01 to TC-DV-10
 
 import { DASHBOARD_VIEWS, DEFAULT_VIEW_ID } from '../types/dashboardView';
-import { getSavedViewId, saveViewId, getView } from '../lib/dashboardView';
+import { getInitialViewId, getSavedViewId, saveViewId, getView } from '../lib/dashboardView';
 
 const store: Record<string, string> = {};
 Object.defineProperty(global, 'localStorage', {
@@ -81,4 +81,9 @@ test('TC-DV-10: scrum_master defaultOpen includes throughput and attention', () 
   const sm = getView('scrum_master');
   expect(sm.defaultOpen).toContain('throughput');
   expect(sm.defaultOpen).toContain('attention');
+});
+
+test('TC-DV-11: assigned role ignores saved dashboard view outside role', () => {
+  saveViewId('executive');
+  expect(getInitialViewId('scrum_master')).toBe('scrum_master');
 });

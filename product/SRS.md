@@ -48,7 +48,7 @@ Delivery Clarity accepts Jira CSV or Excel exports and produces a real-time, mul
 - Story/Task Flow Health table with 11 filters, column reorder, saved presets, shareable URL
 - **User authentication and multi-user sessions** — login, register, profile, iron-session cookies
 - **SQLite database persistence** via Prisma 5 — User, ImportLog, DashboardSnapshot, AuditEvent
-- **Role-based access** — `user` and `admin` roles; admin sees all import logs
+- **Role-based access** — `admin`, `scrum_master`, `product_owner`, `manager`, `c_level`, and legacy `user`; Admin/Manager/C-level can request all import logs, while Scrum Master/Product Owner/user are scoped to their own uploads
 - **Data Quality Score** — 0–100% score, 10-field check, plain-English summary
 - **Metric Confidence Score** — per-KPI confidence badge with reason and missing-field explanation
 - **Missing-column impact explanation** — field-by-field dashboard impact
@@ -302,7 +302,7 @@ All pages are Next.js App Router routes under `app/`. Client components are mark
 
 **`src/components/layout/AppShell.tsx`** — navigation header with grouped dropdown nav (4 groups: Analytics / Delivery / Data / Reference), hamburger mobile menu, UserMenu, theme toggle.
 
-**`app/dashboard/page.tsx`** — Full Report dashboard. Metrics loaded via `loadMetricsWithSource()`, which tries `/api/metrics/latest` (bucket-backed server metrics) before falling back to `localStorage`. State: 15+ filter controls, role-based view selector, export menu, snapshot save, filter presets, shareable URL sync.
+**`app/dashboard/page.tsx`** — Full Report dashboard. Metrics loaded via `loadMetricsWithSource()`, which tries `/api/metrics/latest` (bucket-backed server metrics) before falling back to `localStorage`. State: 15+ filter controls, role-based view selector, export menu, snapshot save, filter presets, shareable URL sync. First load defaults to the authenticated user's role view unless a manual view is already saved.
 
 **`src/lib/storage.ts`** — `saveMetrics()`, `loadMetricsWithSource()`, `hasMetricsFromAnySource()`, `markMetricsSource()`. Handles `QuotaExceededError` gracefully and records source metadata in `dc_metrics_source_v1`.
 
@@ -366,7 +366,7 @@ All pages are Next.js App Router routes under `app/`. Client components are mark
 
 | Model | Key fields |
 |---|---|
-| `User` | id, name, email (unique), passwordHash, role (user/admin), createdAt |
+| `User` | id, name, email (unique), passwordHash, role (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`, legacy `user`), isActive, createdAt |
 | `ImportLog` | id, userId, fileName, fileSize, fileType, totalIssues, doneIssues, healthScore, processingTimeMs, createdAt |
 | `DashboardSnapshot` | id, userId, name, metrics (JSON), createdAt |
 | `AuditEvent` | id, userId, eventType, eventDescription, ipAddress, userAgent, createdAt |
@@ -1593,11 +1593,21 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-232:** When a user is authenticated, every call to `POST /api/upload` MUST save an `ImportLog` record to the SQLite database with the authenticated userId, fileName, fileSize, fileType, totalIssues, doneIssues, healthScore, and processingTimeMs.
 
-**FR-233:** `GET /api/imports` MUST return only the authenticated user's import logs. Admin users calling with `?all=true` MUST receive all users' logs including the associated user name and email.
+**FR-233:** `GET /api/imports` MUST return only the authenticated user's import logs by default. Users with role `admin`, `manager`, or `c_level` calling with `?all=true` MUST receive all users' logs including the associated user name and email.
 
-**FR-234:** A UserMenu component MUST appear in the application header when the user is authenticated, displaying: user initials avatar, name, role badge (admin only), links to Profile and Admin Logs, and a Sign Out action.
+**FR-234:** A UserMenu component MUST appear in the application header when the user is authenticated, displaying: user initials avatar, name, role badge, links to Profile and permitted admin pages, and a Sign Out action.
 
 **FR-235:** The system MUST provide `/register` page when `ALLOW_OPEN_REGISTRATION=true`. When false, `POST /api/auth/register` MUST return HTTP 403.
+
+**FR-235A:** Admin users MUST be able to manage users from `/admin/settings → Users`: list users, create users, assign `admin`, `scrum_master`, `product_owner`, `manager`, or `c_level` roles, edit display names, and enable/disable accounts.
+
+**FR-235B:** The system MUST expose admin-only `GET/POST/PATCH /api/admin/users` endpoints for user management. The API MUST never return password hashes and MUST write audit events for admin user create/update operations.
+
+**FR-235C:** When cloud storage is active, authentication and admin user-management flows MUST sync the local SQLite user database from cloud before reading or mutating users. Registration and admin user create/update operations MUST push an updated backup to cloud after the local mutation succeeds.
+
+**FR-235D:** Assigned delivery roles (`scrum_master`, `product_owner`, `manager`, `c_level`) MUST be locked to their corresponding dashboard view. Browser-saved dashboard view preferences MUST NOT allow those roles to open a different dashboard view.
+
+**FR-235E:** The application navigation MUST hide protected routes that the authenticated user's role cannot access. Middleware MUST enforce the same protected-page route matrix so a user cannot open a disallowed route by typing the URL directly.
 
 ### F4 — Smart Excel Export
 
@@ -1668,6 +1678,8 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 ### A.7 — Configurable Thresholds and Rules
 
 **FR-260:** Admin users MUST be able to configure 9 health thresholds via `/admin/settings`: cycle time critical/warning days, lead time critical/warning days, active age critical/warning days, open age warning days, blocked ratio warning %, orphan ratio warning %.
+
+**FR-260A:** The `/admin/settings` page MUST use the Admin Console layout: left settings sidebar, gradient hero header, operational status indicator, summary stat cards, and a large content panel for the selected settings area.
 
 **FR-261:** Thresholds MUST be persisted to `data/health-thresholds.json` and applied to all future uploads.
 

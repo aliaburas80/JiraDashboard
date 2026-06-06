@@ -1,5 +1,6 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 import { DASHBOARD_VIEWS, DEFAULT_VIEW_ID, type ViewId, type DashboardView } from '@/types/dashboardView';
+import { defaultDashboardViewForRole, isDashboardViewLockedForRole } from '@/lib/roles';
 
 const STORAGE_KEY = 'dc_dashboard_view';
 
@@ -9,6 +10,15 @@ export function getSavedViewId(): ViewId {
     if (saved && DASHBOARD_VIEWS.find(v => v.id === saved)) return saved;
   } catch {}
   return DEFAULT_VIEW_ID;
+}
+
+export function getInitialViewId(role?: string | null): ViewId {
+  if (isDashboardViewLockedForRole(role)) return defaultDashboardViewForRole(role);
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY) as ViewId | null;
+    if (saved && DASHBOARD_VIEWS.find(v => v.id === saved)) return saved;
+  } catch {}
+  return defaultDashboardViewForRole(role);
 }
 
 export function saveViewId(id: ViewId): void {

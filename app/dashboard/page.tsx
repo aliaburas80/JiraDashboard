@@ -31,7 +31,8 @@ import DashboardSectionSwitcher from '@/components/dashboard/DashboardSectionSwi
 import { DASHBOARD_SECTIONS, OVERVIEW_KEYS, type SectionMode } from '@/lib/dashboardSections';
 import SectionNav from '@/components/ui/SectionNav';
 import SaveSnapshotButton from '@/components/dashboard/SaveSnapshotButton';
-import { getSavedViewId, saveViewId, getView, isTierHidden } from '@/lib/dashboardView';
+import { getInitialViewId, saveViewId, getView, isTierHidden } from '@/lib/dashboardView';
+import { allowedDashboardViewsForRole, isDashboardViewLockedForRole } from '@/lib/roles';
 import type { ViewId } from '@/types/dashboardView';
 import dynamic from 'next/dynamic';
 const ProductTour = dynamic(() => import('@/components/tour/ProductTour'), { ssr: false });
@@ -285,6 +286,7 @@ export default function DashboardPage() {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
   const [activeViewId, setActiveViewId] = useState<ViewId>('full');
+  const [currentRole, setCurrentRole] = useState<string | null>(null);
   const [sectionMode, setSectionMode]   = useState<SectionMode>('full');
 
   // filter presets
@@ -314,6 +316,7 @@ export default function DashboardPage() {
     setExpandedSections(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
 
   function changeView(id: ViewId) {
+    if (!allowedDashboardViewsForRole(currentRole).includes(id)) return;
     const view = getView(id);
     setActiveViewId(id);
     saveViewId(id);
@@ -322,6 +325,8 @@ export default function DashboardPage() {
   }
 
   const activeView    = getView(activeViewId);
+  const allowedViewIds = allowedDashboardViewsForRole(currentRole);
+  const viewLocked    = isDashboardViewLockedForRole(currentRole);
   const layoutHidden  = layoutPrefs.length ? getHiddenKeys(layoutPrefs) : new Set<string>();
   const isHidden      = (key: string) => activeView.hidden.includes(key) || layoutHidden.has(key);
   const isTierHid    = (tier: string) => isTierHidden(activeView, tier);
@@ -366,14 +371,15 @@ export default function DashboardPage() {
   useEffect(() => {
     let cancelled = false;
 
-    // Restore saved view
-    const savedView = getSavedViewId();
-    setActiveViewId(savedView);
-    const view = getView(savedView);
-    setExpandedSections(new Set(view.defaultOpen));
-
     async function load() {
       try {
+        const me = await fetch('/api/auth/me').then(r => r.ok ? r.json() : null).catch(() => null);
+        if (cancelled) return;
+        setCurrentRole(me?.role ?? null);
+        const initialView = getInitialViewId(me?.role);
+        setActiveViewId(initialView);
+        setExpandedSections(new Set(getView(initialView).defaultOpen));
+
         const result = await loadMetricsWithSource();
         if (cancelled) return;
         const data = result.metrics as DashboardMetrics | null;
@@ -745,7 +751,7 @@ export default function DashboardPage() {
             <p className="text-sm text-slate-500 mt-0.5">Flow, sprint, kanban, capacity, story points, and epic performance.</p>
           </div>
           {/* View selector — top-right of header */}
-          <DashboardViewSelector activeViewId={activeViewId} onChange={changeView} />
+          <DashboardViewSelector activeViewId={activeViewId} onChange={changeView} allowedViewIds={allowedViewIds} locked={viewLocked} />
           <div className="flex items-center gap-3">
             {metrics.healthScore !== undefined && (
               <div

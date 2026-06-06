@@ -56,6 +56,24 @@ test('TC-CS-02: writeStorageSettings persists; readStorageSettings retrieves', (
   expect(loaded.updatedBy).toBe('admin@test.com');
 });
 
+test('TC-CS-02b: response-only credential flags are stripped from saved settings', () => {
+  writeStorageSettings({
+    active: 's3',
+    local:  { provider: 'local' },
+    s3:     { bucket: 'my-bucket', region: 'eu-west-1', accessKeyId: '', secretAccessKey: '', hasCredentials: true } as any,
+    azure:  { containerName: 'container', hasCredentials: true } as any,
+    gcp:    { bucket: 'gcp-bucket', projectId: 'project', hasCredentials: true } as any,
+  });
+
+  const raw = Object.values(mockFiles)[0];
+  expect(raw).not.toContain('hasCredentials');
+
+  const loaded = readStorageSettings();
+  expect((loaded.s3 as any).hasCredentials).toBeUndefined();
+  expect((loaded.azure as any).hasCredentials).toBeUndefined();
+  expect((loaded.gcp as any).hasCredentials).toBeUndefined();
+});
+
 // ── TC-CS-03: PROVIDER_INFO has 4 entries ─────────────────────────────────────
 
 test('TC-CS-03: PROVIDER_INFO has entries for local, s3, azure, gcp', () => {

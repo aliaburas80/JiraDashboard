@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { roleLabel } from '@/lib/roles';
 
 interface Me { name: string; email: string; role: string }
 
@@ -72,9 +73,7 @@ export default function UserMenu() {
           <div className="px-4 py-2 border-b border-slate-100">
             <p className="text-xs font-bold text-slate-800 truncate">{me.name}</p>
             <p className="text-xs text-slate-400 truncate">{me.email}</p>
-            {me.role === 'admin' && (
-              <span className="inline-block mt-1 text-[9px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded uppercase tracking-wider">Admin</span>
-            )}
+            <span className="inline-block mt-1 text-[9px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded uppercase tracking-wider">{roleLabel(me.role)}</span>
           </div>
           <Link href="/profile" onClick={() => setOpen(false)}
             className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">

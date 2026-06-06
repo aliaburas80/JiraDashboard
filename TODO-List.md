@@ -11,7 +11,7 @@
 
 > This is always P0. No feature, fix, or PR is complete until documentation is updated.
 
-For every code change:
+For every code change (this remains P0 at all times):
 - Update each affected document in `product/`.
 - Update `/help` and `/developer` in-app docs when user-facing or developer-facing behavior changes.
 - Update `product/APPENDIX.md` when new terms, files, routes, storage keys, states, or provider concepts are introduced.
@@ -144,6 +144,7 @@ For every code change:
 | 3.11 | Middleware route protection (all app routes guarded) | P0 | ✅ Done |
 | 3.12 | Upload API saves ImportLog with userId to SQLite | P1 | ✅ Done |
 | 3.13 | `/api/imports` returns logs filtered by user (admin sees all with `?all=true`) | P1 | ✅ Done |
+| 3.14 | User management admin module — add/manage users, assign roles (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`), and filter dashboard/import data by role scope | P1 | ✅ Done — `/admin/settings → Users`, `/api/admin/users`, role-scoped imports, role-default dashboard views, 4 role tests |
 
 **First login credentials:**
 - Email: `admin@deliveryclarity.com`
@@ -424,8 +425,12 @@ For every code change:
 | JIRA-GATE-02 | Harden cloud restore behavior with tests: `/api/metrics/latest` returns `200 { available:false }`; `latest-metrics.json` is included in backups; pending local changes are not overwritten by bucket restore; `loadMetricsWithSource()` falls back to `localStorage`; saved cloud provider credentials persist across login/logout/session changes | P0 | ✅ Done — `cloudRestoreHardening.test.ts` adds TC-CS-09 to TC-CS-12; `storageSettingsPersistence.test.ts` adds TC-CS-13 to TC-CS-15 |
 | JIRA-GATE-03 | Add visible source details: provider, bucket key, last fetched, last pushed, fallback reason | P0 | ❌ Not started |
 | JIRA-GATE-04 | Add admin sync health check in Admin Settings / Diagnostics showing whether latest metrics are available and whether the cloud copy is current | P0 | ❌ Not started |
-| JIRA-GATE-05 | Write Jira integration design doc before code: auth model, Jira API scope, field mapping, refresh strategy, storage tables, failure modes, and export-upload fallback/default path | P0 | ❌ Not started |
-| JIRA-GATE-06 | After JIRA-GATE-01 through JIRA-GATE-05 are done, create `feat/jira-api-read-integration` from updated `main` | P0 | 🚫 Blocked — waiting on prior gates |
+| JIRA-GATE-05 | Cloud Storage tab initial-load guard — when opening ☁️ Cloud Storage, disable provider cards/forms/actions until `/api/admin/storage` fully loads; only enable provider selection if no provider was previously chosen; prevent a temporary default/active state from flashing before server settings arrive | P0 | ❌ Not started |
+| JIRA-GATE-06 | Cloud-backed user authority — when cloud storage is active, login/register/admin user management must sync user DB from cloud first and push user changes back to cloud; users must not rely on browser localStorage for account state | P0 | ✅ Done — `syncFromCloud()` before auth/admin user reads/writes; `pushToCloud()` after register/admin create/update |
+| JIRA-GATE-07 | Email access notifications — configure SMTP/email provider, send each created user their access URL and role, and log delivery status/errors | P0 | ❌ Not started |
+| JIRA-GATE-08 | Strict role route authorization matrix — define which pages each role can open; hide disallowed nav routes and enforce protected page access in middleware, not only dashboard section visibility | P0 | ✅ Done — `allowedRoutePrefixesForRole()`, `canAccessRoute()`, AppShell nav filtering, middleware redirects, route matrix tests |
+| JIRA-GATE-09 | Write Jira integration design doc before code: auth model, Jira API scope, field mapping, refresh strategy, storage tables, failure modes, and export-upload fallback/default path | P0 | ❌ Not started |
+| JIRA-GATE-10 | After JIRA-GATE-01 through JIRA-GATE-09 are done, create `feat/jira-api-read-integration` from updated `main` | P0 | 🚫 Blocked — waiting on prior gates |
 
 ---
 

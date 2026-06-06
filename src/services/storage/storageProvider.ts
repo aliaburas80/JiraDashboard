@@ -22,7 +22,7 @@ const DEFAULTS: StorageSettings = {
 export function readStorageSettings(): StorageSettings {
   try {
     if (!fs.existsSync(SETTINGS_FILE)) return { ...DEFAULTS };
-    return { ...DEFAULTS, ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8')) };
+    return sanitizeStorageSettings({ ...DEFAULTS, ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8')) });
   } catch {
     return { ...DEFAULTS };
   }
@@ -31,7 +31,23 @@ export function readStorageSettings(): StorageSettings {
 export function writeStorageSettings(settings: StorageSettings): void {
   const dir = path.dirname(SETTINGS_FILE);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(sanitizeStorageSettings(settings), null, 2));
+}
+
+function stripResponseOnlyFields<T extends object>(config: T | undefined): Omit<T, 'hasCredentials'> | undefined {
+  if (!config) return config;
+  const { hasCredentials, ...rest } = config as T & { hasCredentials?: unknown };
+  return rest;
+}
+
+function sanitizeStorageSettings(settings: StorageSettings): StorageSettings {
+  return {
+    ...settings,
+    local: settings.local ?? DEFAULTS.local,
+    s3: stripResponseOnlyFields(settings.s3) ?? {},
+    azure: stripResponseOnlyFields(settings.azure) ?? {},
+    gcp: stripResponseOnlyFields(settings.gcp) ?? {},
+  };
 }
 
 // ── Provider factory ──────────────────────────────────────────────────────────

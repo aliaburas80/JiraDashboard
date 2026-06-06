@@ -5,6 +5,24 @@
 
 ---
 
+## v4.2.2 — Admin User Management & Role Scope (2026-06-06)
+
+### Auth / users
+- Added admin-managed users in `/admin/settings → Users`: create users, assign roles, update display names, and enable/disable accounts.
+- Added roles: `admin`, `scrum_master`, `product_owner`, `manager`, and `c_level`; existing `user` remains supported for legacy/open-registration accounts.
+- Added `GET/POST/PATCH /api/admin/users` with admin-only access, password-strength checks, duplicate-email protection, and audit events.
+- Role-scoped import visibility now allows Admin, Manager, and C-level users to request all import logs; Scrum Master and Product Owner remain scoped to their own uploads.
+- Dashboard first-load view now locks assigned delivery roles to their role view: Scrum Master, Product Owner, Engineering Manager, or Executive. Saved browser preferences cannot override assigned roles.
+- Cloud-backed user authority: login/register/admin user management syncs from cloud first when cloud storage is active, and register/admin create/update pushes the user DB backup back to cloud.
+- Added strict protected-page route visibility/enforcement by role: disallowed routes are hidden from the AppShell navigation and blocked in middleware.
+- Redesigned `/admin/settings` to match the attached admin settings mockup: settings sidebar, gradient hero, operational status pill, summary cards, and large content panel.
+- Added shared role helpers and automated tests for role labels, import visibility, cloud-backed admin user changes, dashboard role locking, and route access.
+
+### Documentation
+- Kept documentation policy as permanent P0 and updated TODO, release notes, SRS, developer guide, test cases, and appendix for the new role model.
+
+---
+
 ## v4.2.1 — Cloud Restore Hardening Tests (2026-06-06)
 
 ### Jira integration gate

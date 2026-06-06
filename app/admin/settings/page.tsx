@@ -8,6 +8,7 @@ import HealthThresholdSettings from '@/components/admin/HealthThresholdSettings'
 import OrphanRulesSettings from '@/components/admin/OrphanRulesSettings';
 import BackupRestoreSettings from '@/components/admin/BackupRestoreSettings';
 import ClearLocalDataPanel from '@/components/admin/ClearLocalDataPanel';
+import { ASSIGNABLE_ROLES, roleLabel, type AppRole } from '@/lib/roles';
 import type { RetentionSettings, RetentionStats } from '@/types/settings';
 import type { HealthThresholds } from '@/types/thresholds';
 import type { OrphanRules } from '@/types/orphanRules';
@@ -428,18 +429,54 @@ function CloudStorageSettings() {
 
   // The provider that is actually saved server-side
   const savedProvider: StorageProviderType = data?.settings?.active ?? 'local';
-  const isLocked = !editMode && savedProvider !== 'local';
+  const savedS3CredentialSources = data?.settings?.s3?.credentialSources;
+  const savedS3HasCredentialSource = !!(
+    savedS3CredentialSources?.hasFormCredentials ||
+    savedS3CredentialSources?.hasEnvCredentials ||
+    savedS3CredentialSources?.hasAwsProfile ||
+    savedS3CredentialSources?.hasSharedCredentialsFile
+  );
+  const savedProviderHasCredentialSource = savedProvider !== 's3' || savedS3HasCredentialSource;
+  const isLocked = !editMode && savedProvider !== 'local' && savedProviderHasCredentialSource;
 
   useEffect(() => {
     fetch('/api/admin/storage').then(r => r.json()).then(d => {
       setData(d);
       const svd = d.settings?.active ?? 'local';
       setActive(svd);
-      // Lock to saved provider on initial load (unless it's local)
-      setEditMode(svd === 'local');
-      if (d.settings?.s3)    setS3Form (f => ({ ...f, ...d.settings.s3 }));
-      if (d.settings?.azure) setAzForm (f => ({ ...f, ...d.settings.azure }));
-      if (d.settings?.gcp)   setGcpForm(f => ({ ...f, ...d.settings.gcp }));
+      const s3Sources = d.settings?.s3?.credentialSources;
+      const s3HasCredentialSource = !!(
+        s3Sources?.hasFormCredentials ||
+        s3Sources?.hasEnvCredentials ||
+        s3Sources?.hasAwsProfile ||
+        s3Sources?.hasSharedCredentialsFile
+      );
+      // Lock only when the saved provider has a visible server-side credential source.
+      setEditMode(svd === 'local' || (svd === 's3' && !s3HasCredentialSource));
+      if (d.settings?.s3) {
+        setS3Form(f => ({
+          ...f,
+          bucket: d.settings.s3.bucket ?? '',
+          region: d.settings.s3.region ?? 'us-east-1',
+          prefix: d.settings.s3.prefix ?? '',
+          endpoint: d.settings.s3.endpoint ?? '',
+        }));
+      }
+      if (d.settings?.azure) {
+        setAzForm(f => ({
+          ...f,
+          containerName: d.settings.azure.containerName ?? '',
+          prefix: d.settings.azure.prefix ?? '',
+        }));
+      }
+      if (d.settings?.gcp) {
+        setGcpForm(f => ({
+          ...f,
+          bucket: d.settings.gcp.bucket ?? '',
+          projectId: d.settings.gcp.projectId ?? '',
+          prefix: d.settings.gcp.prefix ?? '',
+        }));
+      }
     }).catch(() => setMsg({ text: 'Failed to load storage settings.', ok: false }));
   }, []);
 
@@ -451,7 +488,16 @@ function CloudStorageSettings() {
 
     setSaving(true); setMsg(null);
     const body: any = { active };
-    if (active === 's3')    body.s3    = s3Form;
+    if (active === 's3') {
+      body.s3 = {
+        bucket: s3Form.bucket,
+        region: s3Form.region,
+        prefix: s3Form.prefix,
+        endpoint: s3Form.endpoint,
+        accessKeyId: s3Form.accessKeyId,
+        secretAccessKey: s3Form.secretAccessKey,
+      };
+    }
     if (active === 'azure') body.azure = azForm;
     if (active === 'gcp')   body.gcp   = gcpForm;
     try {
@@ -459,8 +505,29 @@ function CloudStorageSettings() {
       const d = await r.json();
       if (d.ok) {
         setMsg({ text: '✓ Settings saved.', ok: true });
-        setData((prev: any) => ({ ...prev, settings: { ...prev?.settings, active, ...body } }));
-        setEditMode(false); // lock to this provider
+        const s3HasTypedCredentials = active === 's3' && !!(s3Form.accessKeyId.trim() && s3Form.secretAccessKey.trim());
+        setData((prev: any) => ({
+          ...prev,
+          settings: {
+            ...prev?.settings,
+            active,
+            ...body,
+            s3: active === 's3'
+              ? {
+                bucket: s3Form.bucket,
+                region: s3Form.region,
+                prefix: s3Form.prefix,
+                endpoint: s3Form.endpoint,
+                hasCredentials: s3HasTypedCredentials || !!prev?.settings?.s3?.hasCredentials,
+                credentialSources: {
+                  ...(prev?.settings?.s3?.credentialSources ?? {}),
+                  hasFormCredentials: s3HasTypedCredentials || !!prev?.settings?.s3?.credentialSources?.hasFormCredentials,
+                },
+              }
+              : prev?.settings?.s3,
+          },
+        }));
+        setEditMode(active === 's3' && !s3HasTypedCredentials && !savedS3HasCredentialSource);
         return true;
       }
       setMsg({ text: `Save failed: ${d.error}`, ok: false });
@@ -481,6 +548,9 @@ function CloudStorageSettings() {
       setMsg(d.ok
         ? { text: '✓ Connection successful!', ok: true }
         : { text: `✗ Connection failed: ${d.error}`, ok: false, cause: d.cause, fix: d.fix, credDiag: d.credDiag });
+      if (!d.ok && d.credDiag && !d.credDiag.hasFormCredentials && !d.credDiag.hasEnvCredentials && !d.credDiag.hasAwsProfile && !d.credDiag.hasSharedCredentialsFile) {
+        setEditMode(true);
+      }
     } catch { setMsg({ text: 'Test failed. Check server logs.', ok: false }); }
     finally { setTesting(false); }
   }
@@ -704,6 +774,7 @@ function CloudStorageSettings() {
                           { label: 'Credentials in form (accessKeyId + secretAccessKey)', ok: msg.credDiag.hasFormCredentials },
                           { label: 'AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY env vars', ok: msg.credDiag.hasEnvCredentials },
                           { label: 'AWS_PROFILE set', ok: msg.credDiag.hasAwsProfile },
+                          { label: '~/.aws/credentials file found', ok: msg.credDiag.hasSharedCredentialsFile },
                         ].map(row => (
                           <div key={row.label} className="flex items-center gap-2">
                             <span className={`text-sm font-black shrink-0 ${row.ok ? 'text-green-600' : 'text-red-500'}`}>
@@ -717,7 +788,7 @@ function CloudStorageSettings() {
                         )}
                       </div>
                       <p className="text-[10px] text-red-500 mt-2 font-semibold">
-                        All three sources are ✗ — the AWS SDK has no credentials to use. Set at least one of the options above.
+                        No server-side credential source was found. Set at least one option above, then save and test again.
                       </p>
                     </div>
                   )}
@@ -741,16 +812,177 @@ function CloudStorageSettings() {
   );
 }
 
-type Tab = 'retention' | 'thresholds' | 'orphan' | 'backup' | 'cloud' | 'browser';
+interface ManagedUser {
+  id: string;
+  name: string;
+  email: string;
+  role: AppRole;
+  roleLabel: string;
+  isActive: boolean;
+  createdAt: string;
+  lastLoginAt: string | null;
+  importCount: number;
+  snapshotCount: number;
+}
+
+function UserManagementSettings() {
+  const [users, setUsers] = useState<ManagedUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'scrum_master' as AppRole });
+
+  async function loadUsers() {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/users');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Could not load users.');
+      setUsers(data.users ?? []);
+    } catch (error) {
+      setMsg({ ok: false, text: error instanceof Error ? error.message : 'Could not load users.' });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { loadUsers(); }, []);
+
+  async function createUser() {
+    setSaving(true); setMsg(null);
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Could not create user.');
+      setUsers(prev => [data.user, ...prev]);
+      setForm({ name: '', email: '', password: '', role: 'scrum_master' });
+      setMsg({ ok: true, text: 'User created.' });
+    } catch (error) {
+      setMsg({ ok: false, text: error instanceof Error ? error.message : 'Could not create user.' });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function updateUser(id: string, patch: Partial<Pick<ManagedUser, 'name' | 'role' | 'isActive'>>) {
+    setMsg(null);
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...patch }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Could not update user.');
+      setUsers(prev => prev.map(user => user.id === id ? data.user : user));
+      setMsg({ ok: true, text: 'User updated.' });
+    } catch (error) {
+      setMsg({ ok: false, text: error instanceof Error ? error.message : 'Could not update user.' });
+    }
+  }
+
+  function roleOptionsFor(user?: ManagedUser): AppRole[] {
+    return user?.role === 'user' ? ['user', ...ASSIGNABLE_ROLES] : ASSIGNABLE_ROLES;
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+        <div>
+          <h3 className="text-sm font-black text-slate-800">Add User</h3>
+          <p className="text-xs text-slate-500 mt-1">Admins create accounts and assign the role that controls default views and data scope.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Name"
+            className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
+          <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Email"
+            className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
+          <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Temporary password"
+            className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
+          <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
+            className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-blue-400">
+            {ASSIGNABLE_ROLES.map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
+          </select>
+        </div>
+        <button type="button" onClick={createUser} disabled={saving}
+          className="btn-primary px-5 py-2 text-sm">{saving ? 'Creating...' : 'Create user'}</button>
+      </div>
+
+      {msg && (
+        <div className={`rounded-xl border px-4 py-3 text-sm font-semibold ${msg.ok ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+          {msg.text}
+        </div>
+      )}
+
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="text-sm font-black text-slate-800">Manage Users</h3>
+          <button type="button" onClick={loadUsers} disabled={loading}
+            className="text-xs font-bold text-blue-600 hover:underline disabled:text-slate-400">{loading ? 'Loading...' : 'Refresh'}</button>
+        </div>
+        {loading ? (
+          <div className="p-5 text-sm text-slate-400 animate-pulse">Loading users...</div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {users.map(user => (
+              <div key={user.id} className="p-4 grid gap-3 md:grid-cols-[1.2fr_0.9fr_0.8fr_auto] md:items-center">
+                <div className="min-w-0">
+                  <input value={user.name} onChange={e => setUsers(prev => prev.map(u => u.id === user.id ? { ...u, name: e.target.value } : u))}
+                    onBlur={e => updateUser(user.id, { name: e.target.value })}
+                    className="w-full text-sm font-black text-slate-800 border border-transparent rounded px-2 py-1 focus:border-blue-300 focus:outline-none" />
+                  <p className="text-xs text-slate-500 truncate px-2">{user.email}</p>
+                </div>
+                <select value={user.role} onChange={e => updateUser(user.id, { role: e.target.value as AppRole })}
+                  className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-blue-400">
+                  {roleOptionsFor(user).map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
+                </select>
+                <div className="text-xs text-slate-500">
+                  <p>{user.importCount} imports</p>
+                  <p>{user.snapshotCount} snapshots</p>
+                </div>
+                <button type="button" onClick={() => updateUser(user.id, { isActive: !user.isActive })}
+                  className={`btn-sm px-3 py-1.5 text-xs font-bold rounded-full border ${user.isActive ? 'bg-green-50 border-green-200 text-green-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                  {user.isActive ? 'Active' : 'Disabled'}
+                </button>
+              </div>
+            ))}
+            {users.length === 0 && <div className="p-5 text-sm text-slate-400">No users found.</div>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+type Tab = 'users' | 'retention' | 'thresholds' | 'orphan' | 'backup' | 'cloud' | 'browser';
+
+const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; description: string }> = [
+  { id: 'users',      label: 'User Management',     icon: '👥', description: 'Accounts, roles, access state' },
+  { id: 'retention',  label: 'Privacy & Retention', icon: '🔒', description: 'Data windows and cleanup' },
+  { id: 'thresholds', label: 'Health Thresholds',   icon: '⚡', description: 'Delivery health rules' },
+  { id: 'orphan',     label: 'Orphan Rules',        icon: '👻', description: 'Hierarchy detection rules' },
+  { id: 'backup',     label: 'Backup & Restore',    icon: '🗄️', description: 'Local backup bundles' },
+  { id: 'cloud',      label: 'Cloud Storage',       icon: '☁️', description: 'S3, Azure, GCP, restore' },
+  { id: 'browser',    label: 'Browser Data',        icon: '🗑️', description: 'Client-side cached data' },
+];
+
+function activeTabMeta(tab: Tab) {
+  return ADMIN_TABS.find(item => item.id === tab) ?? ADMIN_TABS[0];
+}
 
 export default function AdminSettingsPage() {
   const router = useRouter();
-  const [tab, setTab]                 = useState<Tab>('retention');
+  const [tab, setTab]                 = useState<Tab>('users');
   const [settings, setSettings]       = useState<RetentionSettings | null>(null);
   const [stats, setStats]             = useState<RetentionStats | null>(null);
   const [thresholds, setThresholds]   = useState<HealthThresholds | null>(null);
   const [orphanRules, setOrphanRules]  = useState<OrphanRules | null>(null);
   const [backupFiles, setBackupFiles]  = useState<any[]>([]);
+  const [userSummary, setUserSummary]  = useState({ total: 0, active: 0, admins: 0 });
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
 
@@ -764,16 +996,24 @@ export default function AdminSettingsPage() {
           fetch('/api/admin/thresholds').then(r => r.json()),
           fetch('/api/admin/orphan-rules').then(r => r.json()),
           fetch('/api/admin/backup?info=true').then(r => r.json()),
+          fetch('/api/admin/users').then(r => r.json()),
         ]);
       })
       .then(results => {
         if (!results) return;
-        const [retData, thrData, orphData, backData] = results;
+        const [retData, thrData, orphData, backData, userData] = results;
         if (retData?.settings)  setSettings(retData.settings);
         if (retData?.stats)     setStats(retData.stats);
         if (thrData?.thresholds) setThresholds(thrData.thresholds);
         if (orphData?.rules) setOrphanRules(orphData.rules);
         if (backData?.files) setBackupFiles(backData.files);
+        if (Array.isArray(userData?.users)) {
+          setUserSummary({
+            total: userData.users.length,
+            active: userData.users.filter((user: ManagedUser) => user.isActive).length,
+            admins: userData.users.filter((user: ManagedUser) => user.role === 'admin').length,
+          });
+        }
       })
       .catch(() => setError('Failed to load settings.'))
       .finally(() => setLoading(false));
@@ -815,42 +1055,120 @@ export default function AdminSettingsPage() {
 
   if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading settings…</div></AppShell>;
 
+  const activeUsers = userSummary.active;
+  const totalUsers = userSummary.total;
+  const latestBackup = backupFiles?.some(file => file.included) ? 'Available' : 'Not yet';
+  const selectedTab = activeTabMeta(tab);
+
   return (
     <AppShell showNav>
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-black text-slate-900">Admin Settings</h1>
-          <p className="text-sm text-slate-500 mt-1">Configure data retention, health thresholds, and system behaviour.</p>
+      <div className="mx-auto max-w-7xl">
+        <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+          <aside className="lg:sticky lg:top-20 self-start rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+            <div className="px-2 py-3">
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Settings</p>
+            </div>
+            <nav className="grid gap-2" aria-label="Admin settings navigation">
+              {ADMIN_TABS.map(item => {
+                const selected = tab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setTab(item.id)}
+                    className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors ${
+                      selected ? 'bg-blue-50 text-blue-700 shadow-[inset_4px_0_0_#2563eb]' : 'text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-lg shadow-sm">{item.icon}</span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-black">{item.label}</span>
+                      <span className="block truncate text-[11px] font-semibold text-slate-400">{item.description}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+            <div className="mt-6 grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-green-50 text-sm font-black text-green-600">✓</span>
+              <span>
+                <strong className="block text-xs text-slate-800">System secure</strong>
+                <span className="text-[11px] font-bold text-green-600">Operational</span>
+              </span>
+              <span className="text-xl text-slate-400">›</span>
+            </div>
+          </aside>
+
+          <div className="min-w-0">
+            <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-blue-700 via-indigo-700 to-violet-700 px-6 py-8 text-white shadow-[0_16px_40px_rgba(15,23,42,0.14)] sm:px-10 sm:py-10">
+              <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="mb-3 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold text-blue-50">Admin Console</p>
+                  <h1 className="text-3xl font-black tracking-tight sm:text-5xl">Admin Settings</h1>
+                  <p className="mt-3 max-w-2xl text-sm text-blue-50/85 sm:text-base">Manage users, security, data retention, storage, and system behaviour.</p>
+                </div>
+                <div className="flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold backdrop-blur">
+                  <span className="h-2.5 w-2.5 rounded-full bg-green-400 shadow-[0_0_0_7px_rgba(34,197,94,0.16)]" />
+                  All systems operational
+                </div>
+              </div>
+              <div className="pointer-events-none absolute -right-20 -top-16 h-64 w-64 rounded-full bg-cyan-300/20" />
+              <div className="pointer-events-none absolute -bottom-24 right-24 h-72 w-72 rounded-full bg-pink-300/20" />
+            </section>
+
+            <section className="relative z-10 mt-[-34px] grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Admin summary">
+              {[
+                { icon: '👥', label: 'Total Users', value: String(totalUsers), note: 'All accounts', color: 'bg-blue-50 text-blue-700' },
+                { icon: '🟢', label: 'Active Users', value: String(activeUsers), note: totalUsers ? `${Math.round((activeUsers / totalUsers) * 100)}% of total` : 'No users yet', color: 'bg-green-50 text-green-700' },
+                { icon: '🛡️', label: 'Admins', value: String(userSummary.admins), note: totalUsers ? `${Math.round((userSummary.admins / totalUsers) * 100)}% of total` : 'No users yet', color: 'bg-violet-50 text-violet-700' },
+                { icon: '☁️', label: 'Last Backup', value: latestBackup, note: backupFiles?.length ? 'Backup available' : 'No backup found', color: 'bg-orange-50 text-orange-700' },
+              ].map(card => (
+                <article key={card.label} className="min-h-[132px] rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
+                  <div className="flex items-center gap-4">
+                    <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-full text-xl ${card.color}`}>{card.icon}</span>
+                    <span className="min-w-0">
+                      <span className="block text-xs font-black uppercase tracking-wide text-slate-400">{card.label}</span>
+                      <strong className="mt-1 block truncate text-xl font-black text-slate-900">{card.value}</strong>
+                      <span className="mt-1 block truncate text-xs font-bold text-slate-500">{card.note}</span>
+                    </span>
+                  </div>
+                </article>
+              ))}
+            </section>
+
+            {error && <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div>}
+
+            <section className="mt-6 rounded-[22px] border border-slate-200 bg-white/90 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur sm:p-6">
+              <div className="mb-5 flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <span className="grid h-12 w-12 place-items-center rounded-2xl border border-blue-100 bg-blue-50 text-xl text-blue-700">{selectedTab.icon}</span>
+                  <div>
+                    <h2 className="text-xl font-black tracking-tight text-slate-900">{selectedTab.label}</h2>
+                    <p className="mt-1 text-sm text-slate-500">{selectedTab.description}</p>
+                  </div>
+                </div>
+              </div>
+
+              {tab === 'users' && <UserManagementSettings />}
+              {tab === 'retention' && settings && (
+                <DataRetentionSettings settings={settings} stats={stats} onSave={handleSaveRetention} onCleanup={handleCleanup} onClearAll={handleClearAll} />
+              )}
+              {tab === 'thresholds' && thresholds && (
+                <HealthThresholdSettings thresholds={thresholds} onSave={handleSaveThresholds} />
+              )}
+              {tab === 'orphan' && orphanRules && (
+                <OrphanRulesSettings rules={orphanRules} onSave={handleSaveOrphanRules} />
+              )}
+              {tab === 'backup' && (
+                <BackupRestoreSettings files={backupFiles} />
+              )}
+              {tab === 'cloud' && <CloudStorageSettings />}
+              {tab === 'browser' && (
+                <ClearLocalDataPanel />
+              )}
+            </section>
+          </div>
         </div>
-
-        {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-6">{error}</div>}
-
-        {/* Tab bar */}
-        <div className="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-xl mb-6">
-          {([['retention', '🔒 Privacy & Retention'], ['thresholds', '⚡ Health Thresholds'], ['orphan', '👻 Orphan Rules'], ['backup', '💾 Backup & Restore'], ['cloud', '☁️ Cloud Storage'], ['browser', '🗑️ Browser Data']] as [Tab, string][]).map(([t, label]) => (
-            <button key={t} type="button" onClick={() => setTab(t)}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${tab === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {tab === 'retention' && settings && (
-          <DataRetentionSettings settings={settings} stats={stats} onSave={handleSaveRetention} onCleanup={handleCleanup} onClearAll={handleClearAll} />
-        )}
-        {tab === 'thresholds' && thresholds && (
-          <HealthThresholdSettings thresholds={thresholds} onSave={handleSaveThresholds} />
-        )}
-        {tab === 'orphan' && orphanRules && (
-          <OrphanRulesSettings rules={orphanRules} onSave={handleSaveOrphanRules} />
-        )}
-        {tab === 'backup' && (
-          <BackupRestoreSettings files={backupFiles} />
-        )}
-        {tab === 'cloud' && <CloudStorageSettings />}
-        {tab === 'browser' && (
-          <ClearLocalDataPanel />
-        )}
       </div>
     </AppShell>
   );

@@ -7,6 +7,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import {
   readStorageSettings,
@@ -45,6 +48,16 @@ function preserveSecret(currentValue: string | undefined, nextValue: unknown): s
   if (nonEmpty(nextValue)) return nextValue;
   if (nextValue === '') return currentValue;
   return currentValue;
+}
+
+function s3CredentialSources(settings: StorageSettings) {
+  return {
+    hasFormCredentials:       !!(settings.s3?.accessKeyId?.trim() && settings.s3?.secretAccessKey?.trim()),
+    hasEnvCredentials:        !!(process.env.AWS_ACCESS_KEY_ID?.trim() && process.env.AWS_SECRET_ACCESS_KEY?.trim()),
+    hasAwsProfile:            !!process.env.AWS_PROFILE?.trim(),
+    hasSharedCredentialsFile: fs.existsSync(path.join(os.homedir(), '.aws', 'credentials')),
+    awsRegionFromEnv:         process.env.AWS_DEFAULT_REGION ?? process.env.AWS_REGION ?? null,
+  };
 }
 
 function mergeStorageSettingsUpdate(current: StorageSettings, body: StorageSettingsUpdate, updatedBy: string): StorageSettings {
@@ -94,7 +107,7 @@ export async function GET(req: NextRequest) {
   // Redact secrets from response (return presence only)
   const safeSettings = {
     active: settings.active,
-    s3:     { bucket: settings.s3.bucket, region: settings.s3.region, prefix: settings.s3.prefix, endpoint: settings.s3.endpoint, hasCredentials: !!(settings.s3.accessKeyId && settings.s3.secretAccessKey) },
+    s3:     { bucket: settings.s3.bucket, region: settings.s3.region, prefix: settings.s3.prefix, endpoint: settings.s3.endpoint, hasCredentials: !!(settings.s3.accessKeyId && settings.s3.secretAccessKey), credentialSources: s3CredentialSources(settings) },
     azure:  { containerName: settings.azure.containerName, prefix: settings.azure.prefix, hasCredentials: !!settings.azure.connectionString },
     gcp:    { bucket: settings.gcp.bucket, projectId: settings.gcp.projectId, prefix: settings.gcp.prefix, hasCredentials: !!(settings.gcp.keyFilename || settings.gcp.keyJson) },
     updatedAt: settings.updatedAt,
@@ -120,12 +133,7 @@ export async function POST(req: NextRequest) {
     if (fieldErr) return NextResponse.json({ ok: false, error: fieldErr });
 
     // Build credential source diagnostic for S3 (helps user understand what's available)
-    const credDiag = settings.active === 's3' ? {
-      hasFormCredentials:     !!(settings.s3?.accessKeyId?.trim() && settings.s3?.secretAccessKey?.trim()),
-      hasEnvCredentials:      !!(process.env.AWS_ACCESS_KEY_ID?.trim() && process.env.AWS_SECRET_ACCESS_KEY?.trim()),
-      hasAwsProfile:          !!(process.env.AWS_PROFILE),
-      awsRegionFromEnv:       process.env.AWS_DEFAULT_REGION ?? process.env.AWS_REGION ?? null,
-    } : null;
+    const credDiag = settings.active === 's3' ? s3CredentialSources(settings) : null;
 
     try {
       const provider = await createProvider(settings.active, settings);
