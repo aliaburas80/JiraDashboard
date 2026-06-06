@@ -910,31 +910,34 @@ function UserManagementSettings() {
           </div>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-[1fr_1fr_1fr_1.05fr_auto] xl:items-end">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <label className="grid gap-2 text-xs font-extrabold text-slate-700">
             Full Name
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Enter full name"
-              className="h-[42px] rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
+              className="h-[42px] min-w-0 rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
           </label>
           <label className="grid gap-2 text-xs font-extrabold text-slate-700">
             Email Address
             <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Enter email address"
-              className="h-[42px] rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
+              className="h-[42px] min-w-0 rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
           </label>
           <label className="grid gap-2 text-xs font-extrabold text-slate-700">
             Temporary Password
             <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Enter temporary password"
-              className="h-[42px] rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
+              className="h-[42px] min-w-0 rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
           </label>
           <label className="grid gap-2 text-xs font-extrabold text-slate-700">
             Role
             <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
-              className="h-[42px] rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100">
+              className="h-[42px] min-w-0 rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100">
               {ASSIGNABLE_ROLES.map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
             </select>
           </label>
+        </div>
+
+        <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
           <button type="button" onClick={createUser} disabled={saving}
-            className="inline-flex h-[42px] items-center justify-center gap-2 rounded-[9px] bg-blue-600 px-5 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(37,99,235,0.20)] transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300">
+            className="inline-flex h-[42px] w-full items-center justify-center gap-2 rounded-[9px] bg-blue-600 px-5 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(37,99,235,0.20)] transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto">
             <span>👥</span>{saving ? 'Creating...' : 'Create User'}
           </button>
         </div>
