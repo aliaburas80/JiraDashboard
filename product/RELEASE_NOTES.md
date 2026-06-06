@@ -15,7 +15,8 @@
 - Dashboard first-load view now locks assigned delivery roles to their role view: Scrum Master, Product Owner, Engineering Manager, or Executive. Saved browser preferences cannot override assigned roles.
 - Cloud-backed user authority: login/register/admin user management syncs from cloud first when cloud storage is active, and register/admin create/update pushes the user DB backup back to cloud.
 - Added strict protected-page route visibility/enforcement by role: disallowed routes are hidden from the AppShell navigation and blocked in middleware.
-- Redesigned `/admin/settings` to match the attached flat admin settings mockup: sticky settings sidebar, flat top context bar, page-level status, summary cards, and a table-first Users workflow.
+- Redesigned `/admin/settings` to match the attached flat admin settings mockup: sticky settings sidebar, flat top context bar, page-level status, contextual summary cards, and a table-first Users workflow.
+- Added a dedicated Administration navigation group and applied the same flat admin console layout to Settings, Diagnostics, Security, and Import Logs.
 - Added shared role helpers and automated tests for role labels, import visibility, cloud-backed admin user changes, dashboard role locking, and route access.
 
 ### Documentation

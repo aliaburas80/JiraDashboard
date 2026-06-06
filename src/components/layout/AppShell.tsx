@@ -36,7 +36,15 @@ const NAV_GROUPS = [
     items: [
       { href: '/snapshots',          label: 'Snapshots',    icon: '📸', desc: 'Saved metric snapshots'        },
       { href: '/backend',            label: 'Backend',      icon: '⚙️', desc: 'Import logs & raw data'        },
-      { href: '/admin/diagnostics',  label: 'Diagnostics',  icon: '🩺', desc: 'System health & admin stats'   },
+    ],
+  },
+  {
+    label: 'Administration',
+    items: [
+      { href: '/admin/settings',     label: 'Settings',    icon: '⚙️', desc: 'Users, storage, retention'      },
+      { href: '/admin/diagnostics',  label: 'Diagnostics', icon: '🩺', desc: 'System health & admin stats'    },
+      { href: '/admin/security',     label: 'Security',    icon: '🔐', desc: 'Production security checks'     },
+      { href: '/admin/logs',         label: 'Import Logs', icon: '🧾', desc: 'All user import activity'       },
     ],
   },
   {

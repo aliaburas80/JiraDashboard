@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -124,28 +125,33 @@ export default function DiagnosticsPage() {
   const opsBand  = data.opsScore >= 80 ? 'Healthy'  : data.opsScore >= 60 ? 'Degraded' : 'At Risk';
   const envOkCount = Object.values(data.env).filter(Boolean).length;
   const envTotal   = Object.keys(data.env).length;
+  const diagnosticsStats = [
+    { icon: '🩺', label: 'Ops Score', value: String(data.opsScore), note: opsBand, tone: data.opsScore >= 80 ? 'bg-green-50 text-green-700' : data.opsScore >= 60 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700' },
+    { icon: '✓', label: 'Env Checks', value: `${envOkCount}/${envTotal}`, note: 'Configuration checks' },
+    { icon: '↥', label: 'Imports', value: String(data.imports.total), note: `${data.imports.successRate}% success` },
+    { icon: '▣', label: 'Audit Events', value: String(data.auditEvents.total), note: 'Recorded actions' },
+  ];
 
   return (
     <AppShell showNav>
-      <div className="max-w-5xl mx-auto">
-
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">System Diagnostics</h1>
-            <p className="text-sm text-slate-500 mt-1">Live system health snapshot — admin only. Generated {ago(data.generatedAt)}.</p>
-          </div>
-          <div className="flex items-center gap-3">
+      <AdminConsoleLayout
+        title="System Diagnostics"
+        description={`Live system health snapshot. Generated ${ago(data.generatedAt)}.`}
+        stats={diagnosticsStats}
+        statusLabel={opsBand}
+        actions={
+          <>
             <button type="button" onClick={() => setRefresh(r => r + 1)}
-              className="btn-secondary px-4 py-2 text-xs gap-1.5">
+              className="inline-flex h-[38px] items-center justify-center gap-1.5 rounded-[9px] border border-slate-300 bg-white px-4 text-xs font-extrabold text-slate-700 transition hover:bg-slate-50">
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current"><path d="M17.6 6.4A8 8 0 0 0 4 12H2a10 10 0 0 1 17-7.1V3h2v6h-6V7h2.6ZM20 12h2a10 10 0 0 1-17 7.1V21H3v-6h6v2H6.4A8 8 0 0 0 20 12Z" /></svg>
               Refresh
             </button>
-            <a href="/admin/security" className="btn-primary px-4 py-2 text-xs gap-1.5">
+            <a href="/admin/security" className="inline-flex h-[38px] items-center justify-center rounded-[9px] bg-blue-600 px-4 text-xs font-extrabold text-white transition hover:bg-blue-700">
               Security Report →
             </a>
-          </div>
-        </div>
+          </>
+        }
+      >
 
         {/* Ops score banner */}
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-6 flex items-center gap-5 flex-wrap">
@@ -299,7 +305,7 @@ export default function DiagnosticsPage() {
           ))}
         </div>
 
-      </div>
+      </AdminConsoleLayout>
     </AppShell>
   );
 }

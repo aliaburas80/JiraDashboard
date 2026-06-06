@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import type { SecurityReport, SecurityCheck, CheckStatus, CheckSeverity } from '@/services/settings/securityCheck.service';
 
 const STATUS_CONFIG: Record<CheckStatus, { icon: string; label: string; cls: string }> = {
@@ -83,17 +84,21 @@ export default function SecurityPage() {
     (catFilter === 'all' || c.category === catFilter) &&
     (statusFilter === 'all' || c.status === statusFilter)
   ) ?? [];
+  const securityStats = report ? [
+    { icon: '🔐', label: 'Security Score', value: String(report.overallScore), note: report.isProductionReady ? 'Production ready' : 'Review required', tone: report.overallScore >= 80 ? 'bg-green-50 text-green-700' : report.overallScore >= 60 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700' },
+    { icon: '✓', label: 'Passing', value: String(report.passCount), note: 'Automated checks' },
+    { icon: '△', label: 'Warnings', value: String(report.warnCount), note: 'Needs attention' },
+    { icon: '?', label: 'Manual Review', value: String(report.manualCount), note: 'Runbook checks' },
+  ] : [];
 
   return (
     <AppShell showNav>
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-black text-slate-900">Security Checklist</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Production security assessment — automated checks + manual review items.
-          </p>
-        </div>
-
+      <AdminConsoleLayout
+        title="Security Checklist"
+        description="Production security assessment — automated checks and manual review items."
+        stats={securityStats}
+        statusLabel={report?.isProductionReady ? 'Production ready' : 'Review required'}
+      >
         {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-4">{error}</div>}
 
         {report && (
@@ -166,7 +171,7 @@ export default function SecurityPage() {
             </div>
           </>
         )}
-      </div>
+      </AdminConsoleLayout>
     </AppShell>
   );
 }

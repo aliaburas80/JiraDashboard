@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 
 interface Log {
   id: string; fileName: string; fileType: string; totalIssues: number;
@@ -29,13 +30,27 @@ export default function AdminLogsPage() {
   }, [router]);
 
   if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading logs…</div></AppShell>;
+  const successfulLogs = logs.filter(log => log.status === 'success').length;
+  const failedLogs = logs.length - successfulLogs;
+  const uniqueUsers = new Set(logs.map(log => log.user?.email).filter(Boolean)).size;
+  const averageHealth = logs.length
+    ? Math.round(logs.reduce((sum, log) => sum + (log.healthScore || 0), 0) / logs.length)
+    : 0;
+  const logStats = [
+    { icon: '🧾', label: 'Import Logs', value: String(logs.length), note: 'Across all users', tone: 'bg-blue-50 text-blue-700' },
+    { icon: '✓', label: 'Successful', value: String(successfulLogs), note: logs.length ? `${Math.round((successfulLogs / logs.length) * 100)}% success` : 'No imports yet' },
+    { icon: '△', label: 'Failed', value: String(failedLogs), note: 'Needs review', tone: failedLogs > 0 ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-700' },
+    { icon: '▣', label: 'Avg Health', value: logs.length ? `${averageHealth}/100` : '—', note: `${uniqueUsers} user${uniqueUsers !== 1 ? 's' : ''}` },
+  ];
 
   return (
     <AppShell showNav>
-      <div className="mb-6">
-        <h1 className="text-2xl font-black text-slate-900">Admin — All Import Logs</h1>
-        <p className="text-sm text-slate-500 mt-1">{logs.length} total import log{logs.length !== 1 ? 's' : ''} across all users</p>
-      </div>
+      <AdminConsoleLayout
+        title="Import Logs"
+        description={`${logs.length} total import log${logs.length !== 1 ? 's' : ''} across all users.`}
+        stats={logStats}
+        statusLabel="Operational"
+      >
 
       {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-4">{error}</div>}
 
@@ -81,6 +96,7 @@ export default function AdminLogsPage() {
           </table>
         </div>
       </div>
+      </AdminConsoleLayout>
     </AppShell>
   );
 }
