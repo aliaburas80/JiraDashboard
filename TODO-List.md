@@ -7,6 +7,19 @@
 
 ---
 
+## Permanent P0 Policy — Documentation Must Match Code
+
+> This is always P0. No feature, fix, or PR is complete until documentation is updated.
+
+For every code change:
+- Update each affected document in `product/`.
+- Update `/help` and `/developer` in-app docs when user-facing or developer-facing behavior changes.
+- Update `product/APPENDIX.md` when new terms, files, routes, storage keys, states, or provider concepts are introduced.
+- Update `TODO-List.md` when roadmap status, priority, or sequencing changes.
+- PR descriptions must mention docs updated or explicitly state why no docs were affected.
+
+---
+
 ## Status Key
 
 | Symbol | Meaning |
@@ -401,6 +414,21 @@
 
 ---
 
+## P0 — Before Jira Integration
+
+> Complete these before starting `feat/jira-api-read-integration`. Jira integration must branch from updated `main` after PR #3 is merged.
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| JIRA-GATE-01 | Merge PR #3 first — Jira integration depends on the cloud/session groundwork | P0 | ❌ Not started |
+| JIRA-GATE-02 | Harden cloud restore behavior with tests: `/api/metrics/latest` returns `200 { available:false }`; `latest-metrics.json` is included in backups; pending local changes are not overwritten by bucket restore; `loadMetricsWithSource()` falls back to `localStorage` | P0 | ❌ Not started |
+| JIRA-GATE-03 | Add visible source details: provider, bucket key, last fetched, last pushed, fallback reason | P0 | ❌ Not started |
+| JIRA-GATE-04 | Add admin sync health check in Admin Settings / Diagnostics showing whether latest metrics are available and whether the cloud copy is current | P0 | ❌ Not started |
+| JIRA-GATE-05 | Write Jira integration design doc before code: auth model, Jira API scope, field mapping, refresh strategy, storage tables, failure modes, and export-upload fallback/default path | P0 | ❌ Not started |
+| JIRA-GATE-06 | After JIRA-GATE-01 through JIRA-GATE-05 are done, create `feat/jira-api-read-integration` from updated `main` | P0 | 🚫 Blocked — waiting on prior gates |
+
+---
+
 ## P2 — Architecture / Backlog Design
 
 > Cloud storage design has moved into implementation (P3-01). Jira integration remains design-first: do NOT implement Jira API/OAuth/write-back until the integration design is documented and reviewed.
@@ -408,9 +436,9 @@
 | # | Task | Priority | Status |
 |---|------|----------|--------|
 | P2-01 | Admin Storage & Backup — architecture design, storage provider interface, S3/Azure/GCP planning | P2 | ✅ Done — implemented in P3-01; docs updated for bucket-first latest metrics |
-| P2-02 | Optional Jira API Integration — read-only mode design, field mapping, JQL fetch | P2 | 📄 Planning documented — NO code written |
+| P2-02 | Optional Jira API Integration — read-only mode design, field mapping, JQL fetch | P2 | 🚫 Blocked — promoted to P0 gate JIRA-GATE-05 before implementation |
 | P2-03 | Storage database tables design (`storage_settings`, `storage_objects`, etc.) | P2 | ✅ Superseded — current implementation uses `data/storage-settings.json`, provider factory, cache metadata, and backup bundles instead of storage DB tables |
-| P2-04 | Jira database tables design (`jira_connections`, `jira_field_mappings`, etc.) | P2 | 📄 Included in P2-02 docs — NO code written |
+| P2-04 | Jira database tables design (`jira_connections`, `jira_field_mappings`, etc.) | P2 | 🚫 Blocked — include in P0 Jira integration design doc |
 
 ---
 
@@ -421,7 +449,7 @@
 | # | Task | Priority | Status |
 |---|------|----------|--------|
 | P3-01 | Full S3/Azure/GCP cloud storage implementation | P3 | ✅ Done — StorageProvider interface; LocalProvider (data/cloud-backups/); S3Provider (@aws-sdk/client-s3, dynamic import); AzureProvider (@azure/storage-blob); GcpProvider (@google-cloud/storage); storageProvider.ts factory; GET/POST /api/admin/storage; Cloud Storage tab in /admin/settings; bucket-first `/api/metrics/latest`; `data/latest-metrics.json` included in backups; localStorage fallback indicator; PR #3 |
-| P3-02 | Full Jira API read integration | P3 | ❌ Not started |
+| P3-02 | Full Jira API read integration | P3 | 🚫 Blocked — start only after P0 Jira gates are complete and `feat/jira-api-read-integration` is branched from updated `main` |
 | P3-03 | Jira write-back (ticket creation from recommendations) | P3 | ❌ Not started |
 | P3-04 | Jira OAuth support | P3 | ❌ Not started |
 | P3-05 | Multi-provider cloud backup | P3 | ✅ Done for selectable active providers — Local, S3/S3-compatible, Azure Blob, and GCP are implemented. Future enhancement, if needed: simultaneous replication to multiple providers. |
