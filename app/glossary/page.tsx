@@ -157,8 +157,13 @@ const SECTIONS = [
     icon: '👥',
     description: 'What each role can access in Delivery Clarity.',
     rows: [
-      { term: 'user',  full: 'Regular User', meaning: 'Can upload files, view dashboards, see their own import logs in Backend.' },
-      { term: 'admin', full: 'Administrator', meaning: 'All user access plus: see all users\' import logs, access /admin/logs, see "Uploaded By" column.' },
+      { term: 'admin', full: 'Administrator', meaning: 'Full system access: manage users, see all import logs, access admin pages, retention, backup, restore, and security.' },
+      { term: 'scrum_master', full: 'Scrum Master', meaning: 'Defaults to the Scrum Master dashboard view and sees own uploads/import logs.' },
+      { term: 'product_owner', full: 'Product Owner', meaning: 'Defaults to the Product Owner dashboard view and sees own uploads/import logs.' },
+      { term: 'manager', full: 'Manager', meaning: 'Defaults to the Engineering Manager dashboard view and can request all import logs.' },
+      { term: 'c_level', full: 'C-level', meaning: 'Defaults to the Executive dashboard view and can request all import logs.' },
+      { term: 'user', full: 'Regular User', meaning: 'Legacy/open-registration role. Can upload files, view dashboards, and see own import logs.' },
+      { term: 'Route Scope', full: 'Role Route Access', meaning: 'Routes outside the assigned role are hidden from navigation and blocked by middleware if opened directly.' },
     ],
   },
   {

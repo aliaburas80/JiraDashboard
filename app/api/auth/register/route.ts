@@ -45,5 +45,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
   }});
 
+  try {
+    const { pushToCloud } = await import('@/services/storage/cloudSync');
+    await pushToCloud();
+  } catch {
+    // Registration succeeded locally; cloud sync will retry from pending state.
+  }
+
   return NextResponse.json({ ok: true, userId: user.id }, { status: 201 });
 }

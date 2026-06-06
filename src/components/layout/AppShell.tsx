@@ -9,6 +9,7 @@ import UserMenu from '@/components/auth/UserMenu';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import ThemeCustomizerPanel from '@/components/ui/ThemeCustomizerPanel';
 import { DataSourceBadge } from '@/components/ui/DataSourceBadge';
+import { canAccessRoute } from '@/lib/roles';
 
 const NAV_GROUPS = [
   {
@@ -54,6 +55,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
   const [theme, setTheme]         = useState<'light' | 'dark'>('light');
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -62,6 +64,14 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
     applyTheme(initial);
     initThemeCustom();
   }, []);
+
+  useEffect(() => {
+    if (!showNav) return;
+    fetch('/api/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(me => setRole(me?.role ?? null))
+      .catch(() => setRole(null));
+  }, [showNav]);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -90,6 +100,10 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
   function isGroupActive(group: typeof NAV_GROUPS[0]) {
     return group.items.some(i => pathname === i.href);
   }
+
+  const visibleGroups = NAV_GROUPS
+    .map(group => ({ ...group, items: group.items.filter(item => !showNav || (role !== null && canAccessRoute(role, item.href))) }))
+    .filter(group => group.items.length > 0);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 dark:text-slate-100 flex flex-col">
@@ -139,7 +153,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
               <>
                 {/* Desktop grouped nav */}
                 <nav className="hidden md:flex items-center gap-0.5">
-                  {NAV_GROUPS.map(group => {
+                  {visibleGroups.map(group => {
                     const active = isGroupActive(group);
                     const open   = openGroup === group.label;
                     return (
@@ -255,7 +269,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
         {/* Mobile nav panel — slides in below header */}
         {showNav && mobileOpen && (
           <div className="md:hidden border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3">
-            {NAV_GROUPS.map(group => (
+            {visibleGroups.map(group => (
               <div key={group.label} className="mb-3">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1 px-1">
                   {group.label}

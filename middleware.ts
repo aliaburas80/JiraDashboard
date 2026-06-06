@@ -4,8 +4,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
+import { canAccessRoute, fallbackRouteForRole } from '@/lib/roles';
 
-const PROTECTED  = ['/dashboard', '/summary', '/charts', '/explore', '/backend', '/profile', '/customer', '/snapshots', '/trends', '/readiness', '/admin'];
+const PROTECTED  = ['/dashboard', '/summary', '/charts', '/explore', '/backend', '/profile', '/customer', '/snapshots', '/trends', '/readiness', '/teams', '/portfolio', '/landing', '/glossary', '/developer', '/help', '/admin'];
 const ADMIN_ONLY = ['/admin'];
 
 export async function middleware(req: NextRequest) {
@@ -30,6 +31,10 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', req.url));
   }
 
+  if (!canAccessRoute(session.role, pathname)) {
+    return NextResponse.redirect(new URL(fallbackRouteForRole(session.role), req.url));
+  }
+
   return res;
 }
 
@@ -37,6 +42,8 @@ export const config = {
   matcher: [
     '/dashboard/:path*', '/summary/:path*', '/charts/:path*',
     '/explore/:path*',   '/backend/:path*', '/profile/:path*',
-    '/customer/:path*',  '/snapshots/:path*', '/trends/:path*', '/readiness/:path*', '/admin/:path*',
+    '/customer/:path*',  '/snapshots/:path*', '/trends/:path*', '/readiness/:path*',
+    '/teams/:path*', '/portfolio/:path*', '/landing/:path*', '/glossary/:path*',
+    '/developer/:path*', '/help/:path*', '/admin/:path*',
   ],
 };

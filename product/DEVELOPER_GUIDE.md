@@ -122,17 +122,18 @@ JiraDashboard/
 │   ├── profile/page.tsx          # /profile — User settings
 │   ├── admin/
 │   │   ├── logs/page.tsx         # /admin/logs — Import log management
-│   │   ├── settings/page.tsx     # /admin/settings — Backup, restore, thresholds
+│   │   ├── settings/page.tsx     # /admin/settings — Users, backup, restore, thresholds
 │   │   └── security/page.tsx     # /admin/security — Production security checklist
 │   └── api/
 │       ├── upload/route.ts       # POST /api/upload — parse + metrics + save log
-│       ├── imports/route.ts      # GET  /api/imports — logs (user-scoped or all for admin)
+│       ├── imports/route.ts      # GET  /api/imports — logs (role-scoped; all for admin/manager/c_level)
 │       ├── snapshots/route.ts    # GET/POST /api/snapshots
 │       ├── snapshots/[id]/route.ts # DELETE /api/snapshots/:id
 │       ├── auth/login/route.ts   # POST /api/auth/login
 │       ├── auth/logout/route.ts  # POST /api/auth/logout
 │       ├── auth/register/route.ts # POST /api/auth/register
 │       ├── auth/me/route.ts      # GET  /api/auth/me
+│       ├── admin/users/route.ts  # GET/POST/PATCH /api/admin/users
 │       ├── admin/backup/route.ts # GET  /api/admin/backup
 │       ├── admin/restore/route.ts # POST /api/admin/restore
 │       └── settings/*/route.ts   # GET/POST various admin settings
@@ -323,6 +324,18 @@ Runs `runSecurityChecks()` — 8 automated checks (SESSION_SECRET, HTTPS, DB per
 Admin-only live health dashboard. Fetches `GET /api/admin/diagnostics` — aggregates DB row counts, import success rates, env var presence, system info, recent audit events, and computes an Ops Health Score (0–100). Refresh button for live re-fetch; quick links to all other admin pages.
 
 ### `app/admin/settings/page.tsx` — Admin Settings (`/admin/settings`)
+
+Admin-only settings console. Tabs include Users, Privacy & Retention, Health Thresholds, Orphan Rules, Backup & Restore, Cloud Storage, and Browser Data.
+
+The Users tab calls `GET/POST/PATCH /api/admin/users` and lets admins create users, assign roles (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`), edit display names, and enable/disable accounts. Password hashes are never returned to the browser.
+
+Role helpers live in `src/lib/roles.ts`. Admin, Manager, and C-level can request all import logs with `/api/imports?all=true`, while Scrum Master/Product Owner/user remain scoped to their own uploads. Assigned delivery roles are locked to their dashboard view, so saved browser preferences cannot switch a Scrum Master/Product Owner/Manager/C-level user into another role's dashboard view.
+
+When cloud storage is active, auth/admin user flows use cloud-backed SQLite authority rather than browser storage: login/register/admin user reads call `syncFromCloud()` before user lookup or mutation, and registration/admin user create/update calls `pushToCloud()` after the local DB change succeeds.
+
+Route visibility is role-scoped through the same helper module: `allowedRoutePrefixesForRole()`, `canAccessRoute()`, and `fallbackRouteForRole()`. `AppShell` fetches `/api/auth/me` and filters nav items before rendering; `middleware.ts` enforces the same matrix for protected page routes and redirects disallowed direct URL access to the role fallback route.
+
+The page layout follows the Admin Console mockup: a left settings sidebar, blue gradient hero, operational status pill, summary cards, and one large content card for the active tab.
 
 Tabs: Health Thresholds, Orphan Rules, Privacy & Retention, Backup & Restore.
 

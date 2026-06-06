@@ -7,11 +7,16 @@ import { DASHBOARD_VIEWS, type ViewId } from '@/types/dashboardView';
 interface Props {
   activeViewId: ViewId;
   onChange: (id: ViewId) => void;
+  allowedViewIds?: ViewId[];
+  locked?: boolean;
 }
 
-export default function DashboardViewSelector({ activeViewId, onChange }: Props) {
+export default function DashboardViewSelector({ activeViewId, onChange, allowedViewIds, locked = false }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const views = allowedViewIds?.length
+    ? DASHBOARD_VIEWS.filter(view => allowedViewIds.includes(view.id))
+    : DASHBOARD_VIEWS;
   const active = DASHBOARD_VIEWS.find(v => v.id === activeViewId) ?? DASHBOARD_VIEWS[0];
 
   useEffect(() => {
@@ -28,22 +33,27 @@ export default function DashboardViewSelector({ activeViewId, onChange }: Props)
       {/* Trigger */}
       <button
         type="button"
-        onClick={() => setOpen(o => !o)}
+        onClick={() => { if (!locked && views.length > 1) setOpen(o => !o); }}
         className="btn-secondary text-xs px-3 py-1.5 gap-2"
         style={{ borderLeftColor: active.accentColor, borderLeftWidth: 3 }}
+        title={locked ? 'Dashboard view is locked by your assigned role.' : 'Change dashboard view'}
       >
         <span>{active.icon}</span>
         <span>{active.label}</span>
-        <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
+        {locked ? (
+          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Locked</span>
+        ) : (
+          <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
       </button>
 
       {/* Dropdown */}
-      {open && (
+      {open && !locked && views.length > 1 && (
         <div className="absolute left-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1.5 min-w-[280px]">
           <p className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Dashboard view</p>
-          {DASHBOARD_VIEWS.map(view => {
+          {views.map(view => {
             const isActive = view.id === activeViewId;
             return (
               <button

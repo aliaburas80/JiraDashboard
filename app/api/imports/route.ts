@@ -8,14 +8,15 @@ import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { readImportLogs } from '@/services/imports/importLogs.service';
+import { canViewAllImportData } from '@/lib/roles';
 
 export async function GET(req: NextRequest) {
   try {
     const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
 
     if (session.isLoggedIn) {
-      const isAdmin = session.role === 'admin';
-      const showAll = isAdmin && req.nextUrl.searchParams.get('all') === 'true';
+      const canViewAll = canViewAllImportData(session.role);
+      const showAll = canViewAll && req.nextUrl.searchParams.get('all') === 'true';
 
       const logs = await prisma.importLog.findMany({
         where:   showAll ? {} : { userId: session.userId },

@@ -786,7 +786,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: 'Are credentials stored securely?',
-        a: 'Credentials are stored in data/storage-settings.json on the server and are never sent to the browser. API responses show only whether credentials are present (not their values).',
+        a: 'Credentials are stored in data/storage-settings.json on the server and are never sent to the browser. API responses show only whether credentials are present (not their values). The saved connection remains available across login, logout, session expiry, and refresh; it changes only when an admin saves a different provider/settings.',
       },
     ],
   },

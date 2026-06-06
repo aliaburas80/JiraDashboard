@@ -150,8 +150,14 @@
 
 | Role | Access |
 |------|--------|
-| **user** | Can upload files, view their own dashboards, see their own import logs. |
-| **admin** | All user access plus: see all users' import logs, access `/admin/logs`, `/admin/settings`, `/admin/security`, manage retention, run backup/restore. |
+| **user** | Legacy/open-registration role. Can upload files, view dashboards, and see own import logs. |
+| **admin** | Full system access: manage users, see all import logs, access `/admin/logs`, `/admin/settings`, `/admin/security`, manage retention, run backup/restore. |
+| **scrum_master** | Scrum Master role. Defaults to the Scrum Master dashboard view; sees own uploads/import logs. |
+| **product_owner** | Product Owner role. Defaults to the Product Owner dashboard view; sees own uploads/import logs. |
+| **manager** | Manager role. Defaults to the Engineering Manager dashboard view; can request all import logs. |
+| **c_level** | C-level/executive role. Defaults to the Executive dashboard view; can request all import logs. |
+| **Role Scope** | The data visibility rule attached to a role. Admin, Manager, and C-level can request all import logs; Scrum Master/Product Owner/user are scoped to their own uploads. |
+| **Route Scope** | The page visibility rule attached to a role. AppShell hides routes outside the user's role, and middleware blocks direct URL access to disallowed protected pages. |
 
 ---
 
