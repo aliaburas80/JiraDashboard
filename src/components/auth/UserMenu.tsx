@@ -37,10 +37,16 @@ export default function UserMenu() {
 
   if (!me) {
     return (
-      <Link href="/login"
-        className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-100 transition-colors">
-        Sign in
-      </Link>
+      <div className="flex items-center gap-1.5">
+        <Link href="/register"
+          className="px-3 py-1.5 rounded-lg text-xs font-bold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-colors hidden sm:inline-flex">
+          Register
+        </Link>
+        <Link href="/login"
+          className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-100 transition-colors">
+          Sign in
+        </Link>
+      </div>
     );
   }
 
@@ -75,10 +81,20 @@ export default function UserMenu() {
             <span>👤</span> My Profile
           </Link>
           {me.role === 'admin' && (
-            <Link href="/admin/logs" onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-              <span>🗂️</span> Admin Logs
-            </Link>
+            <>
+              <Link href="/admin/logs" onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                <span>🗂️</span> Admin Logs
+              </Link>
+              <Link href="/admin/security" onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                <span>🔒</span> Security Checklist
+              </Link>
+              <Link href="/admin/settings" onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                <span>🔒</span> Privacy & Retention
+              </Link>
+            </>
           )}
           <div className="border-t border-slate-100 mt-1 pt-1">
             <button onClick={logout}

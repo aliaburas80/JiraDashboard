@@ -5,8 +5,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import type { DashboardMetrics } from '@/types/metrics';
-import { loadMetrics } from '@/lib/storage';
+import { loadMetricsWithSource } from '@/lib/storage';
 import SprintVelocityChart from '@/components/charts/SprintVelocityChart';
+import ChartCustomizerPanel from '@/components/charts/ChartCustomizerPanel';
+import { getChartPrefs, type ChartPref, type ChartSpan } from '@/lib/chartCustomizer';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const DONE_ST   = ['done', 'closed', 'resolved'];
@@ -247,7 +249,7 @@ function GanttChart({
 
   const rows: GanttRow[] = (epics as any[]).length
     ? (epics as any[]).slice(0, 12).map((e) => ({
-        label: (e.epic || 'No epic').slice(0, 32),
+        label: e.epic || 'No epic',
         pct:   e.progress    || 0,
         done:  e.completedIssues || 0,
         total: e.issues      || 0,
@@ -259,7 +261,7 @@ function GanttChart({
             : 'good',
       }))
     : (sprints as any[]).slice(0, 10).map((s) => ({
-        label: (s.name || 'Sprint').slice(0, 32),
+        label: s.name || 'Sprint',
         pct:   s.completionRate || 0,
         done:  s.completedIssues || 0,
         total: s.issues          || 0,
@@ -363,22 +365,31 @@ function KpiPill({
 // ─── Charts Page ──────────────────────────────────────────────────────────────
 export default function ChartsPage() {
   const router = useRouter();
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [metrics,     setMetrics]     = useState<DashboardMetrics | null>(null);
+  const [loading,     setLoading]     = useState(true);
+  const [chartPrefs,  setChartPrefs]  = useState<ChartPref[]>([]);
 
   useEffect(() => {
-    try {
-      const data = loadMetrics() as DashboardMetrics | null;
+    let cancelled = false;
+    async function load() {
+      try {
+      const result = await loadMetricsWithSource();
+      if (cancelled) return;
+      const data = result.metrics as DashboardMetrics | null;
       if (!data) {
         router.replace('/');
         return;
       }
       setMetrics(data);
+      setChartPrefs(getChartPrefs());
     } catch {
       router.replace('/');
     } finally {
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     }
+    }
+    load();
+    return () => { cancelled = true; };
   }, [router]);
 
   if (loading) {
@@ -391,6 +402,18 @@ export default function ChartsPage() {
     );
   }
   if (!metrics) return null;
+
+  // ── Chart pref helpers ────────────────────────────────────────────────────────
+  const isChartVisible = (id: string) => {
+    if (!chartPrefs.length) return true;
+    const p = chartPrefs.find(c => c.id === id);
+    return p ? p.visible : true;
+  };
+  const chartSpan = (id: string): ChartSpan => {
+    if (!chartPrefs.length) return 1;
+    const p = chartPrefs.find(c => c.id === id);
+    return p ? p.span : 1;
+  };
 
   // ── Derived data ─────────────────────────────────────────────────────────────
   const flow   = metrics.flow          || ({} as any);
@@ -509,6 +532,7 @@ export default function ChartsPage() {
             Charts and diagrams summarising delivery health, flow, team, and progress across all dimensions.
           </p>
         </div>
+        <ChartCustomizerPanel onPrefsChange={setChartPrefs} />
 
         {/* KPI Pills */}
         <div className="flex flex-wrap gap-2">
@@ -542,8 +566,8 @@ export default function ChartsPage() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 
-        {/* 1. Delivery Composition — span 2 */}
-        <ChartWidget title="Delivery Composition" icon="💠" span={2}>
+        {/* 1. Delivery Composition */}
+        {isChartVisible('delivery') && <ChartWidget title="Delivery Composition" icon="💠" span={chartSpan('delivery') as 1|2|3}>
           <div className="flex flex-wrap items-center gap-6">
             <DonutChart
               segments={deliverySegs}
@@ -567,10 +591,10 @@ export default function ChartsPage() {
               </div>
             </div>
           </div>
-        </ChartWidget>
+        </ChartWidget>}
 
-        {/* 2. Health Mix — span 1 */}
-        <ChartWidget title="Health Mix" icon="🏥" span={1}>
+        {/* 2. Health Mix */}
+        {isChartVisible('health') && <ChartWidget title="Health Mix" icon="🏥" span={chartSpan('health') as 1|2|3}>
           <div className="flex flex-wrap items-center gap-4">
             <DonutChart
               segments={healthSegs}
@@ -590,10 +614,10 @@ export default function ChartsPage() {
               ))}
             </div>
           </div>
-        </ChartWidget>
+        </ChartWidget>}
 
-        {/* 3. Issue Types — span 1 */}
-        <ChartWidget title="Issue Types" icon="📁" span={1}>
+        {/* 3. Issue Types */}
+        {isChartVisible('types') && <ChartWidget title="Issue Types" icon="📁" span={chartSpan('types') as 1|2|3}>
           {typeList.length > 0 ? (
             <div className="flex flex-wrap items-center gap-4">
               <DonutChart
@@ -617,10 +641,10 @@ export default function ChartsPage() {
           ) : (
             <p className="text-sm text-slate-400 italic">No issue type data</p>
           )}
-        </ChartWidget>
+        </ChartWidget>}
 
-        {/* 4. Story Points — span 1 */}
-        <ChartWidget title="Story Points" icon="💎" span={1}>
+        {/* 4. Story Points */}
+        {isChartVisible('points') && <ChartWidget title="Story Points" icon="💎" span={chartSpan('points') as 1|2|3}>
           {sp.totalStoryPoints > 0 ? (
             <div className="flex flex-wrap items-center gap-4">
               <DonutChart
@@ -641,17 +665,17 @@ export default function ChartsPage() {
           ) : (
             <p className="text-sm text-slate-400 italic">No story point data</p>
           )}
-        </ChartWidget>
+        </ChartWidget>}
 
-        {/* 5. Sprint Velocity — span 2 */}
-        <ChartWidget title="Sprint Velocity" icon="🏃" span={2}>
+        {/* 5. Sprint Velocity */}
+        {isChartVisible('velocity') && <ChartWidget title="Sprint Velocity" icon="🏃" span={chartSpan('velocity') as 1|2|3}>
           {sprints.length > 0 ? (
             <>
               <div className="flex items-end gap-2 h-28 w-full">
                 {sprints.map((s: any) => (
                   <VertBar
                     key={s.name}
-                    label={s.name?.length > 9 ? s.name.slice(0, 9) + '…' : s.name}
+                    label={s.name || 'Sprint'}
                     value={s.issues}
                     maxValue={maxSprint}
                     color={
@@ -685,7 +709,7 @@ export default function ChartsPage() {
               No sprint data — include Sprint column in export.
             </p>
           )}
-        </ChartWidget>
+        </ChartWidget>}
 
         {/* 5b. Sprint Velocity — Story Points (full width) */}
         {metrics.throughput?.sprint && (
@@ -694,14 +718,14 @@ export default function ChartsPage() {
           </div>
         )}
 
-        {/* 6. Team Load — span 1 */}
-        <ChartWidget title="Team Load" icon="👥" span={1}>
+        {/* 6. Team Load */}
+        {isChartVisible('team') && <ChartWidget title="Team Load" icon="👥" span={chartSpan('team') as 1|2|3}>
           {capacity.length > 0 ? (
             <div className="space-y-2.5">
               {capacity.map((c: any) => (
                 <HorizBar
                   key={c.assignee}
-                  label={c.assignee?.length > 14 ? c.assignee.slice(0, 14) + '…' : c.assignee}
+                  label={c.assignee || '(unassigned)'}
                   value={c.loadShare}
                   maxValue={maxLoad}
                   color={
@@ -718,10 +742,10 @@ export default function ChartsPage() {
           ) : (
             <p className="text-sm text-slate-400 italic">No assignee data</p>
           )}
-        </ChartWidget>
+        </ChartWidget>}
 
-        {/* 7. Quarter Throughput — span 2 */}
-        <ChartWidget title="Quarter Throughput" icon="📅" span={2}>
+        {/* 7. Quarter Throughput */}
+        {isChartVisible('quarters') && <ChartWidget title="Quarter Throughput" icon="📅" span={chartSpan('quarters') as 1|2|3}>
           {quarters.length > 0 ? (
             <>
               <div className="flex items-end gap-3 h-28 w-full">
@@ -766,16 +790,16 @@ export default function ChartsPage() {
               No date data — include Created Date and Resolution Date in export.
             </p>
           )}
-        </ChartWidget>
+        </ChartWidget>}
 
-        {/* 8. Kanban Status Flow — span 1 */}
-        <ChartWidget title="Kanban Status Flow" icon="🗃️" span={1}>
+        {/* 8. Kanban Status Flow */}
+        {isChartVisible('kanban') && <ChartWidget title="Kanban Status Flow" icon="🗃️" span={chartSpan('kanban') as 1|2|3}>
           {kanbanTop.length > 0 ? (
             <div className="space-y-2.5">
               {kanbanTop.map((k: any) => (
                 <HorizBar
                   key={k.name}
-                  label={k.name?.length > 16 ? k.name.slice(0, 16) + '…' : k.name}
+                  label={k.name || '?'}
                   value={k.count}
                   maxValue={maxKanban}
                   color={
@@ -791,20 +815,20 @@ export default function ChartsPage() {
           ) : (
             <p className="text-sm text-slate-400 italic">No status data</p>
           )}
-        </ChartWidget>
+        </ChartWidget>}
 
-        {/* 9. Gantt / Timeline — span 3 */}
-        <ChartWidget
+        {/* 9. Gantt / Timeline */}
+        {isChartVisible('timeline') && <ChartWidget
           title={epics.length > 0 ? 'Epic Delivery Timeline' : 'Sprint Completion Timeline'}
           icon="📊"
-          span={3}
+          span={chartSpan('timeline') as 1|2|3}
         >
           <GanttChart epics={epics} sprints={sprints} />
-        </ChartWidget>
+        </ChartWidget>}
 
-        {/* 10. Label Distribution — span 2 (conditional) */}
-        {labelStats.length > 0 && (
-          <ChartWidget title="Label Distribution" icon="🏷️" span={2}>
+        {/* 10. Label Distribution (conditional) */}
+        {isChartVisible('labels') && labelStats.length > 0 && (
+          <ChartWidget title="Label Distribution" icon="🏷️" span={chartSpan('labels') as 1|2|3}>
             <div className="space-y-2.5">
               {labelStats.map((l: any, i: number) => (
                 <HorizBar
@@ -873,9 +897,9 @@ export default function ChartsPage() {
           </ChartWidget>
         )}
 
-        {/* 12. Issue Relations — span 1 (conditional) */}
-        {linkSegs.length > 0 && (
-          <ChartWidget title="Issue Relations" icon="🔗" span={1}>
+        {/* 12. Issue Relations (conditional) */}
+        {isChartVisible('links') && linkSegs.length > 0 && (
+          <ChartWidget title="Issue Relations" icon="🔗" span={chartSpan('links') as 1|2|3}>
             <div className="flex flex-wrap items-center gap-4">
               <DonutChart
                 segments={linkSegs}
@@ -901,27 +925,25 @@ export default function ChartsPage() {
 
       {/* CTA */}
       <div className="flex flex-wrap items-center justify-center gap-3 pb-4">
-        <button
-          type="button"
-          onClick={() => router.push('/')}
-          className="text-sm font-semibold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg px-5 py-2.5 shadow-sm transition-colors"
-        >
+
+        <button type="button" onClick={() => router.push('/')} className="btn-secondary px-5 py-2.5">
           Upload new file
         </button>
-        <button
-          type="button"
-          onClick={() => router.push('/summary')}
-          className="text-sm font-semibold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg px-5 py-2.5 shadow-sm transition-colors"
-        >
-          ← Overview
+
+        <button type="button" onClick={() => router.push('/summary')} className="btn-secondary px-5 py-2.5">
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2Z"/>
+          </svg>
+          Overview
         </button>
-        <button
-          type="button"
-          onClick={() => router.push('/dashboard')}
-          className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-6 py-2.5 shadow-sm transition-colors"
-        >
-          View Full Report →
+
+        <button type="button" onClick={() => router.push('/dashboard')} className="btn-primary px-5 py-2.5">
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+            <path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/>
+          </svg>
+          View Full Report
         </button>
+
       </div>
     </AppShell>
   );

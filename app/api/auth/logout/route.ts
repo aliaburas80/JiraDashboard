@@ -2,13 +2,13 @@
 // POST /api/auth/logout — clears session cookie.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const res     = NextResponse.json({ ok: true });
-  const session = await getIronSession<SessionData>(req, res, SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
 
   if (session.isLoggedIn && session.userId) {
     await prisma.auditEvent.create({ data: {
@@ -19,5 +19,5 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   session.destroy();
-  return res;
+  return NextResponse.json({ ok: true });
 }

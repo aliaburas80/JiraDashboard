@@ -20,13 +20,13 @@ export default function NotFound() {
         <div className="flex items-center gap-3 mt-2">
           <Link
             href="/"
-            className="inline-block bg-blue-600 text-white text-sm font-bold px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="btn-primary px-6 py-2"
           >
             Go to Home
           </Link>
           <Link
             href="/dashboard"
-            className="inline-block bg-white border border-slate-200 text-slate-700 text-sm font-bold px-6 py-2 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+            className="btn-secondary px-6 py-2"
           >
             Go to Dashboard
           </Link>

@@ -2,6 +2,7 @@
 // POST /api/auth/login — validates credentials, sets iron-session cookie.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { verifyPassword } from '@/lib/auth';
@@ -23,6 +24,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Too many login attempts. Wait 1 minute.' }, { status: 429 });
   }
 
+  let dataSource: unknown = null;
+  try {
+    const { syncFromCloud } = await import('@/services/storage/cloudSync');
+    dataSource = await syncFromCloud();
+  } catch (error) {
+    dataSource = {
+      status: 'fallback',
+      source: 'local',
+      error: error instanceof Error ? error.message : String(error),
+      reason: 'Bucket sync failed before login; using local server database.',
+    };
+  }
+
   let body: { email?: string; password?: string };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
@@ -42,8 +56,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const valid = await verifyPassword(password, user.passwordHash);
   if (!valid) return NextResponse.json({ error: GENERIC }, { status: 401 });
 
-  const res = NextResponse.json({ ok: true, user: { name: user.name, email: user.email, role: user.role } });
-  const session = await getIronSession<SessionData>(req, res, SESSION_OPTIONS);
+  // Use cookies() from next/headers — correct App Router approach for iron-session v8
+  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
   session.userId     = user.id;
   session.email      = user.email;
   session.name       = user.name;
@@ -60,5 +74,5 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }}),
   ]);
 
-  return res;
+  return NextResponse.json({ ok: true, user: { name: user.name, email: user.email, role: user.role }, dataSource });
 }

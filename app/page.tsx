@@ -1,37 +1,101 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
-import { saveMetrics } from '@/lib/storage';
+import { saveMetrics, clearMetrics } from '@/lib/storage';
+import { hasLocalData, clearLocalData } from '@/lib/clearLocalData';
+import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
+import DataQualitySummary from '@/components/upload/DataQualitySummary';
+import MissingFieldImpactPanel from '@/components/upload/MissingFieldImpactPanel';
+import ColumnMappingPreview from '@/components/upload/ColumnMappingPreview';
+import type { DataQualityResult, FieldImpactReport } from '@/types/dataQuality';
+import type { ColumnMappingResult } from '@/types/columnMapping';
 
 interface MergeStats { fileCount: number; totalBeforeMerge: number; duplicatesRemoved: number; uniqueIssues: number }
 
 export default function HomePage() {
   const router = useRouter();
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState<string | null>(null);
-  const [mergeFiles, setMergeFiles] = useState<File[]>([]);
-  const [mergeOpen, setMergeOpen]   = useState(false);
-  const [mergeStats, setMergeStats] = useState<MergeStats | null>(null);
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState<string | null>(null);
+  const [mergeFiles, setMergeFiles]     = useState<File[]>([]);
+  const [mergeOpen, setMergeOpen]       = useState(false);
+  const [mergeStats, setMergeStats]     = useState<MergeStats | null>(null);
+  const [dataQuality, setDataQuality]     = useState<DataQualityResult | null>(null);
+  const [fieldImpacts, setFieldImpacts]   = useState<FieldImpactReport | null>(null);
+  const [columnMapping, setColumnMapping]   = useState<ColumnMappingResult | null>(null);
+  const [pendingMetrics, setPendingMetrics] = useState<any>(null);
+  const [loadingSample, setLoadingSample]   = useState(false);
+  const [storedDataFound, setStoredDataFound] = useState(false);
+  const [confirmClear, setConfirmClear]       = useState(false);
+  const [clearSuccess, setClearSuccess]       = useState(false);
   const inputRef  = useRef<HTMLInputElement>(null);
   const mergeRef  = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { setStoredDataFound(hasLocalData()); }, []);
 
   // ── Single file upload (existing golden path) ─────────────────────────────
   async function handleFile(file: File) {
     setLoading(true); setError(null); setMergeStats(null);
+    setDataQuality(null); setFieldImpacts(null); setColumnMapping(null); setPendingMetrics(null);
     try {
       const form = new FormData();
       form.append('file', file);
       const res  = await fetch('/api/upload', { method: 'POST', body: form });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Upload failed'); return; }
-      saveMetrics(data.metrics);
-      router.push('/dashboard');
+
+      // Show column mapping preview — user confirms before proceeding
+      if (data.columnMapping) {
+        setPendingMetrics(data.metrics);
+        setColumnMapping(data.columnMapping);
+        setDataQuality(data.metrics?.dataQuality ?? null);
+        setFieldImpacts(data.metrics?.fieldImpacts ?? null);
+        // Don't auto-redirect — wait for user to click Proceed
+      } else {
+        saveMetrics(data.metrics);
+        router.push('/dashboard');
+      }
     } catch { setError('Upload failed. Please check the file and try again.'); }
     finally { setLoading(false); }
   }
 
   // ── Multi-file merge ──────────────────────────────────────────────────────
+  async function handleSampleData() {
+    setLoadingSample(true); setError(null);
+    try {
+      const res  = await fetch('/samples/sample-jira-export.csv');
+      const blob = await res.blob();
+      const file = new File([blob], 'sample-jira-export.csv', { type: 'text/csv' });
+      // Track onboarding
+      try { const { markStepDone } = await import('@/lib/onboarding'); markStepDone('upload_file'); } catch {}
+      await handleFile(file);
+    } catch {
+      setError('Failed to load sample data. Please try uploading your own file.');
+    } finally {
+      setLoadingSample(false);
+    }
+  }
+
+  function handleProceed() {
+    if (pendingMetrics) {
+      clearMetrics(); // ensure old data is fully removed before saving new
+      saveMetrics(pendingMetrics);
+      router.push('/dashboard?fresh=1');
+    }
+  }
+
+  function handleReupload() {
+    setColumnMapping(null); setPendingMetrics(null);
+    setDataQuality(null);   setFieldImpacts(null);
+  }
+
+  function handleClearConfirm() {
+    clearLocalData();
+    setConfirmClear(false);
+    setStoredDataFound(false);
+    setClearSuccess(true);
+  }
+
   function addMergeFile(file: File) {
     setMergeFiles(prev => prev.find(f => f.name === file.name) ? prev : [...prev, file]);
     setError(null);
@@ -64,6 +128,32 @@ export default function HomePage() {
     <AppShell showNav={false}>
       <div className="min-h-[calc(100vh-10rem)] flex flex-col items-center justify-center gap-8 py-12">
 
+        {/* Stored data detection banner */}
+        {clearSuccess && (
+          <div className="w-full max-w-md flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-800 font-semibold animate-fade-in">
+            <span className="text-lg">✅</span>
+            Local data cleared. Upload a new file to start fresh.
+          </div>
+        )}
+        {storedDataFound && !clearSuccess && (
+          <div className="w-full max-w-md flex items-start justify-between gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 animate-fade-in">
+            <div className="flex items-start gap-2 text-sm text-amber-800">
+              <span className="text-base shrink-0">⚠️</span>
+              <p className="leading-snug">
+                <strong>Stored Delivery Clarity data was found in this browser.</strong>
+                <br />You can upload a new file or clear the existing data.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setConfirmClear(true)}
+              className="btn-outline-danger btn-sm"
+            >
+              Clear Local Data
+            </button>
+          </div>
+        )}
+
         {/* Hero */}
         <div className="text-center max-w-2xl animate-fade-in">
           <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-full px-3 py-1 text-xs font-bold text-blue-700 mb-4">
@@ -75,6 +165,9 @@ export default function HomePage() {
           <p className="text-slate-500 text-base leading-relaxed">
             Upload any Jira CSV or Excel export and get sprint health, flow efficiency, risk signals, capacity, and epic readiness in seconds.
           </p>
+          <a href="/landing" className="inline-block mt-3 text-xs font-bold text-blue-600 hover:underline">
+            See all 12 features →
+          </a>
         </div>
 
         {/* ── Single file drop zone ── */}
@@ -97,7 +190,7 @@ export default function HomePage() {
               <span className="text-4xl">📥</span>
               <p className="font-bold text-slate-700">Drop your Jira export here</p>
               <p className="text-sm text-slate-500">or click to browse — CSV, XLSX, XLS · Max 20 MB</p>
-              <span className="mt-2 inline-block bg-blue-600 text-white text-sm font-bold px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <span className="btn-primary px-6 py-2">
                 Choose file
               </span>
             </div>
@@ -172,7 +265,7 @@ export default function HomePage() {
                 type="button"
                 disabled={mergeFiles.length < 2 || loading}
                 onClick={handleMerge}
-                className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full btn-primary py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -188,11 +281,59 @@ export default function HomePage() {
           )}
         </div>
 
+        {/* Column Mapping Preview — user confirms before going to dashboard */}
+        {columnMapping && !mergeStats && (
+          <div className="w-full max-w-lg space-y-3">
+            <ColumnMappingPreview
+              mapping={columnMapping}
+              onProceed={handleProceed}
+              onReupload={handleReupload}
+              autoRedirectSecs={columnMapping.missingEssential.length > 0 ? 0 : 10}
+            />
+            {dataQuality && <DataQualitySummary quality={dataQuality} compact />}
+            {fieldImpacts?.hasIssues && (
+              <MissingFieldImpactPanel report={fieldImpacts} compact />
+            )}
+          </div>
+        )}
+
         {/* Error */}
         {error && (
           <p className="text-sm text-red-600 font-medium bg-red-50 border border-red-200 rounded-xl px-4 py-3 max-w-md w-full text-center">
             {error}
           </p>
+        )}
+
+        {/* ── Try with sample data ── */}
+        {!columnMapping && (
+          <div className="flex flex-col items-center gap-2 w-full max-w-md">
+            <div className="flex items-center gap-3 w-full">
+              <div className="flex-1 border-t border-slate-200" />
+              <span className="text-xs text-slate-400 font-semibold whitespace-nowrap">or try a demo first</span>
+              <div className="flex-1 border-t border-slate-200" />
+            </div>
+            <button
+              type="button"
+              onClick={handleSampleData}
+              disabled={loading || loadingSample}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-purple-300 text-sm font-bold text-purple-700 hover:bg-purple-50 hover:border-purple-400 transition-colors disabled:opacity-50"
+            >
+              {loadingSample ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-purple-300 border-t-purple-700 rounded-full animate-spin" />
+                  Loading sample data…
+                </>
+              ) : (
+                <>
+                  <span className="text-base">🎯</span>
+                  Try with 35-issue sample Jira export
+                </>
+              )}
+            </button>
+            <p className="text-[10px] text-slate-400 text-center">
+              A realistic demo dataset with 4 sprints, 3 epics, and multiple issue types — no real Jira account needed.
+            </p>
+          </div>
         )}
 
         {/* Feature chips */}
@@ -203,6 +344,16 @@ export default function HomePage() {
         </div>
 
       </div>
+
+      {confirmClear && (
+        <ConfirmDeleteDialog
+          title="Clear Local Data?"
+          message="This will remove local data and may end your current session. You may need to log in again."
+          confirmLabel="Yes, clear it"
+          onConfirm={handleClearConfirm}
+          onCancel={() => setConfirmClear(false)}
+        />
+      )}
     </AppShell>
   );
 }

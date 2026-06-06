@@ -1,6 +1,6 @@
 # Delivery Clarity — Algorithm Specification
 
-**Author:** Ali Abu Ras | **Date:** 2026-05-31
+**Author:** Ali Abu Ras | **Date:** 2026-06-03 | **Version:** 4.0
 
 ---
 
@@ -276,3 +276,330 @@ FUNCTION percentile(values: number[], p: number): number
 ---
 
 *© 2025 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity*
+
+---
+
+## Risk-Path Computation Algorithm (9.18)
+
+```
+INPUT: nodes[] — all RelationNodes in current graph
+       edges[] — all RelationEdges in current graph
+
+STEP 1 — Build parent lookup:
+  For each edge of type parent-child or epic-link:
+    parentOf[edge.targetId] = edge.sourceId
+
+STEP 2 — Identify risky source nodes:
+  riskyNodes = nodes.filter(n =>
+    (n.isBlocked OR n.health === 'critical') AND NOT n.isDone
+  )
+  NOTE: done=critical is historical data, not active risk.
+
+STEP 3 — Walk ancestors and collect risk path:
+  riskNodeIds = new Set()
+  riskEdgeIds = new Set()
+  For each riskyNode:
+    current = riskyNode.id
+    riskNodeIds.add(current)
+    WHILE parentOf[current] exists:
+      parent = parentOf[current]
+      riskNodeIds.add(parent)
+      eid = edge connecting parent ↔ current
+      IF eid: riskEdgeIds.add(eid)
+      current = parent
+
+OUTPUT:
+  nodes with isOnRiskPath = riskNodeIds.has(node.id)
+  edges with isOnRiskPath = riskEdgeIds.has(edge.id)
+```
+
+**Visual treatment:**
+- Risk-path nodes: red border (#dc2626), red-tinted bg (#fff5f5), red glow, ⚠ RISK PATH badge
+- Risk-path edges: red stroke, thicker (≥2.5px), animated (flowing particles)
+- Done nodes excluded regardless of health status
+
+**Implementation:** `src/services/relations/relationExplorer.service.ts — computeRiskPaths()`
+
+---
+
+## Data Quality Score Algorithm (9.1 — v4.0)
+
+```
+INPUT: issues[] — full parsed JiraIssue array
+
+FIELD_CHECKS = [
+  { field: 'Created Date',       weight: 12, critical: true  },
+  { field: 'Done Date',          weight: 12, critical: true  },
+  { field: 'Story Points',       weight: 10, critical: false },
+  { field: 'Sprint',             weight: 10, critical: false },
+  { field: 'Assignee',           weight: 10, critical: false },
+  { field: 'Epic Link/Parent',   weight: 10, critical: false },
+  { field: 'In Progress Date',   weight: 10, critical: false },
+  { field: 'Due Date',           weight: 9,  critical: false },
+  { field: 'Priority',           weight: 9,  critical: false },
+  { field: 'Labels',             weight: 8,  critical: false },
+]
+
+FOR each check IN FIELD_CHECKS:
+  presentCount = issues.filter(i => i[check.field] is non-empty).length
+  fillRate = presentCount / issues.length
+  check.score = fillRate × check.weight
+
+rawScore = SUM(check.score for check in FIELD_CHECKS)
+maxScore = SUM(check.weight for check in FIELD_CHECKS)  // = 100
+normalised = Math.round((rawScore / maxScore) × 100)
+
+band =
+  IF normalised >= 90: 'Excellent'
+  IF normalised >= 75: 'Good'
+  IF normalised >= 50: 'Fair'
+  IF normalised >= 25: 'Poor'
+  ELSE:               'Critical'
+
+OUTPUT: { score: normalised, band, fieldBreakdown[], summary }
+```
+
+**Implementation:** `src/services/dataQuality/dataQuality.service.ts — calculateDataQuality()`
+
+---
+
+## Metric Confidence Algorithm (9.2 — v4.0)
+
+```
+INPUT: issues[] — full parsed JiraIssue array
+
+FOR each KPI in [SprintThroughput, KanbanFlow, CycleTime, LeadTime, ...]:
+  requiredFields = CONFIDENCE_RULES[KPI].requiredFields
+  presentFields  = requiredFields.filter(f => issues.some(i => i[f]))
+  coverage       = issues.filter(i => isRelevantFor(KPI, i)).length / issues.length
+  sampleSize     = issues.filter(i => hasDataFor(KPI, i)).length
+
+  IF presentFields.length === requiredFields.length AND sampleSize >= MIN_SAMPLE[KPI]:
+    confidence = 'High'
+  ELSE IF presentFields.length >= requiredFields.length × 0.7:
+    confidence = 'Medium'
+  ELSE IF sampleSize > 0:
+    confidence = 'Low'
+  ELSE IF presentFields.length === 0:
+    confidence = 'Unreliable'
+  ELSE:
+    confidence = 'N/A'
+
+  missingFields = requiredFields.filter(f => NOT presentField(f))
+  reason = generateReason(confidence, missingFields)
+
+OUTPUT: Map<KPI, { confidence, reason, missingFields[] }>
+```
+
+**Implementation:** `src/services/metrics/metricConfidence.service.ts — calculateMetricConfidence()`
+
+---
+
+## parseDate Memoisation Algorithm (9.27 — v4.0)
+
+```
+// Module-level cache — reset per calculateDashboardMetrics call
+_parseDateCache: Map<string, Date | null> | null = null
+
+FUNCTION parseDate(value: unknown): Date | null
+  IF value is null/undefined/empty: RETURN null
+  IF value instanceof Date AND valid: RETURN value
+
+  text = String(value).trim()
+  IF text is empty: RETURN null
+
+  // Cache lookup — O(1)
+  IF _parseDateCache:
+    hit = _parseDateCache.get(text)
+    IF hit !== undefined: RETURN hit  // cache hit
+
+  result = null
+
+  // Try numeric (Excel serial):
+  IF isFiniteNumber(text) AND 20000 < text < 80000:
+    result = excelEpoch + (text × 86400000)
+  // Try Jira format (15/Jan/2024):
+  ELSE IF matches /^(\d{1,2})\/([A-Za-z]{3})\/(\d{2,4})/:
+    result = buildDate(...)
+  // Try numeric date (15/01/2024 or 01-15-2024):
+  ELSE IF matches /^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/:
+    result = buildDate(...)
+  // Try ISO (2024-01-15):
+  ELSE IF matches /^(\d{4})-(\d{1,2})-(\d{1,2})/:
+    result = buildDate(...)
+  ELSE:
+    result = new Date(text) — null if invalid
+
+  // Cache set — O(1)
+  IF _parseDateCache: _parseDateCache.set(text, result)
+  RETURN result
+
+// Called from calculateDashboardMetrics:
+  _parseDateCache = new Map()          // reset
+  ... compute all metrics ...
+  _parseDateCache = null               // free
+```
+
+**Benefit:** Jira exports repeat the same date strings heavily (same sprint dates, same creation dates for bulk imports). Memoisation reduces ~40,000 regex operations for a 5,000-issue export to ~1,000 unique parses.
+
+**Implementation:** `src/services/metrics/metrics.service.ts` — `parseDate()`, `_parseDateCache`, `calculateDashboardMetrics()`
+
+---
+
+## flowItemByKey Map Algorithm (9.27 — v4.0)
+
+```
+// PROBLEM: 7 builder functions each call:
+//   flowItems.filter(fi => issueKeySet.has(fi.key))  — O(n) per group
+// For 5,000 issues with 50 epics = 250,000 iterations.
+
+// SOLUTION: Build Map once, O(1) lookup per item
+
+// In calculateDashboardMetrics():
+flowItemByKey = new Map(flowItems.map(fi => [fi.key, fi]))
+// Cost: O(n) once
+
+// In each builder function (buildEpicMetrics, buildSprintMetrics, etc.):
+// BEFORE:
+  issueKeys = new Set(items.map(i => i['Issue Key']))
+  matchingFlowItems = flowItems.filter(fi => issueKeys.has(fi.key))  // O(n)
+// AFTER:
+  matchingFlowItems = items
+    .map(i => flowItemByKey.get(i['Issue Key']))
+    .filter(fi => fi !== undefined)  // O(group_size)
+
+// Total cost: O(n) once for Map creation + O(group_size) per group
+// vs. O(n × num_groups) before
+```
+
+**Affected functions:** `buildSprintMetrics`, `buildEpicMetrics`, `buildQuarterMetrics`, `buildLabelMetrics`, `buildTypeMetrics`, `buildProjectMetrics`, `buildParentMetrics`
+
+**Implementation:** `src/services/metrics/metrics.service.ts`
+
+---
+
+## Snapshot Comparison Algorithm (9.12 — v4.0)
+
+```
+INPUT: snapshotA — saved DashboardMetrics object (older)
+       snapshotB — saved DashboardMetrics object (newer)
+
+COMPARISON_METRICS = [
+  { key: 'healthScore',       label: 'Health Score',      higherIsBetter: true  },
+  { key: 'completionRate',    label: 'Completion Rate',   higherIsBetter: true  },
+  { key: 'totalIssues',       label: 'Total Issues',      higherIsBetter: null  },
+  { key: 'doneIssues',        label: 'Done',              higherIsBetter: true  },
+  { key: 'activeIssues',      label: 'Active',            higherIsBetter: null  },
+  { key: 'blockedIssues',     label: 'Blocked',           higherIsBetter: false },
+  { key: 'flow.critical',     label: 'Critical',          higherIsBetter: false },
+  { key: 'flow.averageCycle', label: 'Avg Cycle Time',    higherIsBetter: false },
+  { key: 'flow.averageLead',  label: 'Avg Lead Time',     higherIsBetter: false },
+  { key: 'storyPoints.total', label: 'Story Points Done', higherIsBetter: true  },
+  { key: 'orphanRatio',       label: 'Orphan Ratio',      higherIsBetter: false },
+  { key: 'blockedRatio',      label: 'Blocked Ratio',     higherIsBetter: false },
+]
+
+FOR each metric IN COMPARISON_METRICS:
+  valA = get(snapshotA, metric.key)
+  valB = get(snapshotB, metric.key)
+  delta = valB - valA
+  direction = delta > 0 ? '↑' : delta < 0 ? '↓' : '→'
+  positive = (metric.higherIsBetter === true AND delta > 0)
+          OR (metric.higherIsBetter === false AND delta < 0)
+
+OUTPUT: ComparisonRow[] with { label, valueA, valueB, delta, direction, positive }
+        + insights[] — plain-English narrative of most significant changes
+        + sameDataFlag — true if snapshotA.uploadedAt === snapshotB.uploadedAt
+```
+
+**Implementation:** `src/services/imports/importLogs.service.ts`, `app/snapshots/compare/page.tsx`
+
+---
+
+## Release Confidence Score Algorithm (9.30 — v4.1)
+
+**Problem:** A single health score cannot distinguish between "slow team" and "blocked-before-release" scenarios. A release-gate-specific signal is needed to trend over uploads.
+
+**Formula:**
+```
+score = clamp(0, 100,
+  (completionRate / 100) × 55 +
+  (1 − min(blockedIssues / max(totalIssues, 1), 1)) × 25 +
+  (1 − min(criticalCount / max(totalIssues, 1), 1)) × 12 +
+  max(0, 8 − openDefects × 2)
+)
+```
+
+**Weights:** Completion (55 pts) · no-blockers (25 pts) · no-critical (12 pts) · no-defects (8 pts)
+
+**Band thresholds:** High ≥ 80 · Medium ≥ 60 · Low ≥ 40 · Critical < 40
+
+**Storage:** Score is computed at upload time and persisted in `ImportLog.metadataJson` as `releaseConfidenceScore`. Returned by `GET /api/trends`.
+
+**Implementation:** `src/lib/releaseConfidence.ts — computeReleaseConfidence()`, `app/api/upload/route.ts`
+
+---
+
+## Team Health Score Algorithm (9.31 — v4.1)
+
+**Problem:** `metrics.capacity[]` gives workload counts but no comparable health signal. Managers need a single score per assignee that factors in completion, critical items, and blocked items.
+
+**Formula (per assignee):**
+```
+healthScore = clamp(0, 100,
+  (doneIssues / max(totalIssues, 1)) × 50 +
+  (1 − min(criticalCount / max(totalIssues, 1), 1)) × 30 +
+  (1 − min(blockedCount  / max(totalIssues, 1), 1)) × 20
+)
+```
+Where `criticalCount` and `blockedCount` count only open (non-done) items.
+
+**Band thresholds:** Healthy ≥ 70 · At Risk ≥ 40 · Critical < 40
+
+**Sort:** Results sorted by `healthScore` descending.
+
+**Implementation:** `src/lib/teamHealth.ts — computeTeamHealth()`, `app/teams/page.tsx`
+
+---
+
+## Portfolio Score Algorithm (9.32 — v4.1)
+
+**Problem:** Individual metrics (health score, sprint completion, epic progress) each tell part of the story. A unified portfolio score is needed for programme-level reporting.
+
+**Formula:**
+```
+portfolioScore = clamp(0, 100,
+  weightedAvg(epics, e.progress)    × 0.40 +
+  weightedAvg(projects, p.completionRate) × 0.30 +
+  sprint.averageCompletionPct       × 0.20 +
+  (dataQuality.score / 100)         × 10
+)
+```
+Where `weightedAvg` weights each entry by its `issues` count. Falls back to `metrics.completionRate` when epics or projects are absent.
+
+**Band thresholds:** Excellent ≥ 85 · Good ≥ 70 · Moderate ≥ 55 · At Risk ≥ 35 · Critical < 35
+
+**Implementation:** `src/lib/portfolioHealth.ts — computePortfolioSummary()`, `app/portfolio/page.tsx`
+
+---
+
+## Executive PDF Layout Algorithm (9.33 — v4.1)
+
+**Problem:** The full HTML export is multi-page and data-dense. Executives and steering committees need a single-page snapshot — formatted, printable, ready in seconds.
+
+**Layout rules:**
+1. A4 landscape (`@page { size: A4 landscape; margin: 10mm; }`), 3-column grid
+2. Column 1: health score header + 6 KPI cards (2×3 grid) + insights bullets
+3. Column 2: top 5 epics with progress bars (colour-coded by health) + top 4 assignees with capacity bars
+4. Column 3: top 3 recommendations with priority dots + evidence text
+5. All user data escaped via `esc()` before injection into HTML template literals
+6. `print-color-adjust: exact` preserves background colours in print output
+7. `.no-print` class hides the browser hint text from printed output
+
+**Implementation:** `src/lib/executivePdf.ts — buildExecutivePdfHtml()`, `src/lib/exportUtils.ts — exportExecutivePdf()`, `app/summary/page.tsx`
+
+---
+
+## Current Code Alignment — 2026-06-06
+
+Metric algorithms still compute from normalised Jira export rows, but the latest computed `DashboardMetrics` payload is now persisted server-side to `data/latest-metrics.json` after upload/merge. Analytics pages load through `loadMetricsWithSource()`, which attempts bucket-backed `/api/metrics/latest` first and then browser `localStorage` fallback. Algorithm output shape remains unchanged.

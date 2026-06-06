@@ -1,7 +1,7 @@
 # Delivery Clarity — User Journey Maps
 
-**Version:** 1.0
-**Date:** 2026-05-30
+**Version:** 4.0
+**Date:** 2026-06-03
 **Author:** Ali Abu Ras
 **Status:** Approved
 **Classification:** Internal
@@ -991,7 +991,7 @@ The following friction points are observed across the four journeys. Each is rat
 
 **Observed in:** Marcus (Step 5.1), all personas implicitly
 **Frequency:** Every session, multiple times per week for power users
-**Impact:** Medium — creates latency between Jira updates and dashboard reflection; requires re-upload to see corrections
+**Impact:** Medium — creates latency between Jira updates and dashboard reflection; requires a fresh export/upload to see Jira-side corrections
 
 **Description:** When a blocker is resolved in Jira, the dashboard does not reflect it until the user exports and re-uploads. For Marcus, this means a noon re-upload ritual after standup resolves blockers. For Sarah, this means a second upload after mid-sprint reassignments. The re-upload itself is fast (under 2 seconds), but the need to remember to do it is a cognitive overhead.
 
@@ -1029,17 +1029,17 @@ The following friction points are observed across the four journeys. Each is rat
 
 ---
 
-### Pain Point 4 — Browser Refresh Clears the Dashboard
+### Pain Point 4 — Missing Bucket/Browser Fallback Clears the Dashboard
 
 **Observed in:** All personas, implicitly
 **Frequency:** Occasional — most users keep the browser tab open during their session
 **Impact:** Low to medium — when it happens, re-upload is fast but the loss of context (which section you were in, which filters were active) is mildly disorienting
 
-**Description:** React state is cleared on browser refresh. There is no server-side session; no URL captures the current dashboard state. A user who accidentally refreshes or whose browser crashes must re-upload to restore the dashboard.
+**Description:** React state is cleared on browser refresh, but the current implementation now attempts to restore the latest metrics from `data/latest-metrics.json` through `/api/metrics/latest`, then falls back to browser `dc_metrics_v2`. A user only needs to re-upload when both the bucket/server latest metrics and browser fallback are unavailable.
 
-**Current mitigation:** The "Save layout view" button persists filter state to `localStorage`, so filter preferences survive a refresh. However, the metrics themselves require re-upload.
+**Current mitigation:** The upload flow writes the latest metrics server-side and stores a browser fallback. The "Save layout view" button persists filter state to `localStorage`, so preferences survive alongside the metrics fallback.
 
-**Improvement opportunity (roadmap):** Persist the last metrics payload to `localStorage` (not just the filter state). On load, if a saved payload exists, offer to restore the last session without requiring a new upload. This is particularly valuable for users who upload once and refer to the dashboard throughout the day.
+**Improvement opportunity:** Surface a clearer in-page message when the app is using `localStorage fallback`, including the saved timestamp and a one-click path to upload a fresher Jira export.
 
 ---
 
@@ -1291,3 +1291,162 @@ All personas now experience a two-step flow after uploading:
 | 5 | Sorts by health score | Identifies lowest-scoring imports | Strategic |
 
 **Pain point resolved:** Admin has full visibility into all team uploads without accessing individual accounts.
+
+---
+
+## v4.0 Journey Maps (2026-06-03)
+
+---
+
+### UJ-015 — Scrum Master: Using Data Quality and Confidence Scores to Build Trust
+
+**Persona:** Marcus, Scrum Master  
+**Goal:** Present delivery metrics confidently, knowing data gaps are explained  
+**Entry point:** Upload page
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Uploads latest sprint export | Column-mapping preview: Data Quality Score 71% — Good | Hopeful |
+| 2 | Reads missing fields: In Progress Date, Done Date | Impact: "Cycle Time will be estimated only" | Aware |
+| 3 | Proceeds to dashboard | Cycle Time KPI shows "Low" confidence badge | Informed |
+| 4 | Hovers badge | Tooltip: reason + missing fields | Transparent |
+| 5 | Notes in sprint review: "Cycle Time estimated" | — | Honest |
+| 6 | Acts on recommendation to set transition dates in Jira | — | Proactive |
+
+**Pain point resolved:** Metrics are presented with explicit reliability context — no more presenting numbers without knowing their trustworthiness.
+
+---
+
+### UJ-016 — Engineering Manager: Comparing Performance Using Snapshots
+
+**Persona:** Sarah, Engineering Manager  
+**Goal:** Show measurable improvement over a quarter  
+**Entry point:** /snapshots
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens /snapshots, selects Q1 and Q2 snapshots | Two snapshots checked | Focused |
+| 2 | Clicks "Compare" | 12-metric delta table: Health ↑+14, Critical ↓-6, Cycle ↓-2.1d | Proud |
+| 3 | Reads auto-generated insight paragraph | Improvement quantified | Satisfied |
+| 4 | Copies insights into quarterly review slide | — | Ready |
+
+**Pain point resolved:** Quarterly improvement shown in seconds, not manual spreadsheet work.
+
+---
+
+### UJ-017 — Returning User: Clearing Stale Browser Data (Planned P1.2)
+
+**Persona:** Marcus, Scrum Master  
+**Goal:** Start fresh with a new sprint's data  
+**Entry point:** Upload page (/)
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens app after 2 weeks | "Stored Delivery Clarity data was found in this browser" notice | Slightly confused |
+| 2 | Clicks "Clear stored data" | Confirmation modal with session-end warning | Cautious |
+| 3 | Confirms | All dc_ keys removed; page refreshes | Reassured |
+| 4 | Uploads new export | Fresh dashboard with only new data | Relieved |
+
+**Pain point resolved:** Clear, guided reset without needing browser developer tools knowledge.
+
+---
+
+### UJ-018 — Admin: Managing Data Retention for Compliance
+
+**Persona:** Admin user  
+**Goal:** Auto-delete import logs older than 90 days  
+**Entry point:** /admin/settings
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens Data Retention panel | Current setting: Never | Concerned |
+| 2 | Changes to "90 days", saves | Config written to database | In control |
+| 3 | Returns the next week | Old logs auto-deleted | Confident |
+
+**Pain point resolved:** Compliance data minimisation met without manual record deletion.
+
+---
+
+### UJ-019 — Engineering Manager: Focused Dashboard Review Using Section Switcher (Planned P1.3)
+
+**Persona:** Sarah, Engineering Manager  
+**Goal:** Check sprint health quickly without the full dashboard  
+**Entry point:** /dashboard
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens /dashboard | Default: Overview mode — health, KPIs, top risks | Oriented |
+| 2 | Clicks "Sprints" in section control row | Smooth scroll; Sprint section fades in; button highlighted | Focused |
+| 3 | Reviews SprintThroughputPanel and MidSprintDeliveryPanel | Other sections hidden | Efficient |
+| 4 | Clicks "Full Dashboard" | All sections visible | Complete |
+
+**Pain point resolved:** Direct, clean access to sprint data without scrolling past 15 sections.
+
+
+---
+
+## v4.1 — UX Design System User Journeys (2026-06-04)
+
+### UJ-020 — Admin Clears Browser Data for Troubleshooting
+
+**Persona:** Ahmed, System Admin  
+**Goal:** Clear stale browser data for a user experiencing display issues  
+**Entry point:** /admin/settings → Browser Data tab
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|------------------|
+| 1 | Navigates to Admin Settings | Settings page with 5 tabs | Confident |
+| 2 | Clicks "Browser Data" tab | Panel shows detected DC keys + key inventory | Informed |
+| 3 | Sees amber banner: "Stored Delivery Clarity data was found" | Clear Local Data button visible | Ready |
+| 4 | Clicks "Clear Local Data" | Confirmation modal: session-end warning | Cautious |
+| 5 | Clicks "Yes, clear it" | Data cleared; green success banner; redirect to /  | Relieved |
+
+**Pain point resolved:** No need to manually clear browser storage via DevTools.
+
+### UJ-021 — Executive Views Dashboard Without Technical Noise
+
+**Persona:** Emma, VP of Product  
+**Goal:** Get a health summary without seeing issue-level filters and tables  
+**Entry point:** /dashboard
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|------------------|
+| 1 | Opens /dashboard | Full view loaded | Overwhelmed |
+| 2 | Selects "Executive" from view selector | Filter row and flow panel hidden; only health/KPIs/risks/readiness visible | Focused |
+| 3 | Reads health score, recommendations, risks | Clean, no-noise view | Confident |
+| 4 | Exports Excel report for board meeting | Smart 17-sheet workbook downloaded | Satisfied |
+
+**Pain point resolved:** No accidental exposure to raw issue-level data inappropriate for C-level audience.
+## v4.1 — P2 Analytics Feature Journeys (2026-06-04)
+
+### UJ-022 — Engineering Manager — Team Health Review
+
+| Step | User Action | System Response | Emotion |
+|------|-------------|-----------------|---------|
+| 1 | Opens Analytics nav → Teams | `/teams` loads, member scorecards visible | + |
+| 2 | Scans scorecards — spots "David: 34/100 Critical" | Scorecard shows red health score, 3 blocked | - |
+| 3 | Checks Workload Share chart | David bar is red (42% load), Alice bar green (18%) | ~ |
+| 4 | Notes avgOpenAgeDays: 18d for David | Red text "18d" confirms long-running open items | - |
+| 5 | Takes screenshot, raises in retro | — | + |
+
+**Emotional arc:** Neutral → concern (David's score) → action (retro discussion)
+
+---
+
+### UJ-023 — Programme Lead — Portfolio Review
+
+| Step | User Action | System Response | Emotion |
+|------|-------------|-----------------|---------|
+| 1 | Opens Analytics nav → Portfolio | Score banner: 71/100 "Good" | + |
+| 2 | Reads insights bullet: "1 epic has critical items" | Blue bullet list gives specific context | ~ |
+| 3 | Scrolls to Epic Progress panel | Payments v2: red dot, 30%, 2 critical | - |
+| 4 | Checks Quarter Throughput bars | Q2 bar shorter than Q1 — delivery dipped | - |
+| 5 | Exports report, shares with stakeholders | Standard export from export button | + |
+
+**Emotional arc:** Positive open → concern (critical epic) → informed action
+
+---
+
+## 9. Current Code Alignment — 2026-06-06
+
+Returning-user journeys now include bucket-first metrics restoration. After login/register or direct analytics-page navigation, the app tries `/api/metrics/latest`, which syncs from the configured bucket/cache and returns `data/latest-metrics.json` when available. If the server/bucket payload is missing, the user falls back to the browser `dc_metrics_v2` copy and sees the `localStorage fallback` source badge. This replaces the older journey assumption that refresh always requires a new upload.

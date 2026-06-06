@@ -1,11 +1,19 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
+import { hasMetricsFromAnySource } from '@/lib/storage';
 
 export default function RegisterPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_ALLOW_REGISTER !== 'true') {
+      router.replace('/login');
+    }
+  }, [router]);
   const [name, setName]         = useState('');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -16,23 +24,49 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true); setError('');
     try {
+      // Step 1: Register
       const res  = await fetch('/api/auth/register', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? 'Registration failed.'); return; }
-      router.push('/login?registered=1');
-    } catch { setError('Network error. Please try again.'); }
-    finally { setLoading(false); }
+
+      // Step 2: Auto-login after registration
+      const loginRes = await fetch('/api/auth/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (loginRes.ok) {
+        // Logged in — go to upload if no data, dashboard if data exists
+        router.push(await hasMetricsFromAnySource() ? '/dashboard' : '/');
+        router.refresh();
+      } else {
+        // Login failed for some reason — fall back to login page
+        router.push('/login?registered=1');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Delivery Clarity</h1>
-          <p className="text-sm text-slate-500 mt-1">Create your account</p>
+          <div className="flex justify-center mb-3">
+            <Image
+              src="/logo/delivery-clarity-logo-horizontal.svg"
+              alt="Delivery Clarity"
+              width={200}
+              height={62}
+              priority
+            />
+          </div>
+          <p className="text-sm text-slate-500">Create your account</p>
         </div>
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{error}</div>}
@@ -49,7 +83,7 @@ export default function RegisterPage() {
             </div>
           ))}
           <button type="submit" disabled={loading}
-            className="w-full py-2.5 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-50">
+            className="w-full btn-primary py-2.5 disabled:opacity-50">
             {loading ? 'Creating account…' : 'Create account'}
           </button>
         </form>

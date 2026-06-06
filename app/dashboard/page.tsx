@@ -12,13 +12,31 @@ import LoadingState from '@/components/ui/LoadingState';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { getHealthBand, HEALTH_COLORS, formatDays, cn } from '@/lib/utils';
 import { exportToExcel, exportToHtml } from '@/lib/exportUtils';
-import { loadMetrics } from '@/lib/storage';
+import { loadMetricsWithSource } from '@/lib/storage';
 import { loadPresets, savePreset, deletePreset, type FilterPreset } from '@/lib/filterPresets';
+import { recKey, isMuted, muteRec, snoozeRec, restoreAll, getActiveMuted, type MutedRec } from '@/lib/mutedRecommendations';
+import { getRecOwner, setRecOwner, clearRecOwner, getAllRecOwners } from '@/lib/recOwners';
+import { getVote, castVote, type FeedbackVote } from '@/lib/recFeedback';
+import { saveRecSnapshot, getRecHistory, getNewTitles, getResolvedRecs, type RecHistoryEntry } from '@/lib/recHistory';
 import SprintThroughputPanel from '@/components/dashboard/SprintThroughputPanel';
 import MidSprintDeliveryPanel from '@/components/dashboard/MidSprintDeliveryPanel';
 import KanbanThroughputPanel from '@/components/dashboard/KanbanThroughputPanel';
 import SprintComparePanel from '@/components/dashboard/SprintComparePanel';
 import DraggableMetricTable from '@/components/dashboard/DraggableMetricTable';
+import DataQualityCard from '@/components/dashboard/DataQualityCard';
+import MetricConfidenceBadge from '@/components/ui/MetricConfidenceBadge';
+import MissingFieldImpactPanel from '@/components/upload/MissingFieldImpactPanel';
+import DashboardViewSelector from '@/components/dashboard/DashboardViewSelector';
+import DashboardSectionSwitcher from '@/components/dashboard/DashboardSectionSwitcher';
+import { DASHBOARD_SECTIONS, OVERVIEW_KEYS, type SectionMode } from '@/lib/dashboardSections';
+import SectionNav from '@/components/ui/SectionNav';
+import SaveSnapshotButton from '@/components/dashboard/SaveSnapshotButton';
+import { getSavedViewId, saveViewId, getView, isTierHidden } from '@/lib/dashboardView';
+import type { ViewId } from '@/types/dashboardView';
+import dynamic from 'next/dynamic';
+const ProductTour = dynamic(() => import('@/components/tour/ProductTour'), { ssr: false });
+import LayoutBuilderPanel from '@/components/dashboard/LayoutBuilderPanel';
+import { getLayoutPrefs, getOrderedVisibleSections, getHiddenKeys, type SectionPref } from '@/lib/layoutBuilder';
 
 // ─── accent map ───────────────────────────────────────────────────────────────
 const HEALTH_VARIANT: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'neutral'> = {
@@ -177,9 +195,10 @@ const CHIP_CLS: Record<string, string> = {
   info: 'bg-blue-50 text-blue-700 border border-blue-200',
   neutral: 'bg-slate-100 text-slate-600 border border-slate-200',
 };
-function CollapsibleTrigger({ id, icon, title, chips, accent, expanded, onToggle }: {
-  id: string; icon: string; title: string; chips: Chip[]; accent: string; expanded: boolean; onToggle: () => void;
+function CollapsibleTrigger({ id, icon, title, chips, accent, expanded, onToggle, hidden = false }: {
+  id: string; icon: string; title: string; chips: Chip[]; accent: string; expanded: boolean; onToggle: () => void; hidden?: boolean;
 }) {
+  if (hidden) return null;
   return (
     <button
       type="button"
@@ -265,41 +284,144 @@ export default function DashboardPage() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['overview', 'attention', 'readiness']));
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
+  const [activeViewId, setActiveViewId] = useState<ViewId>('full');
+  const [sectionMode, setSectionMode]   = useState<SectionMode>('full');
 
   // filter presets
   const [presets, setPresets] = useState<FilterPreset[]>([]);
   const [presetName, setPresetName] = useState('');
   const [showPresetInput, setShowPresetInput] = useState(false);
+  const [mutedRecs, setMutedRecs]         = useState<MutedRec[]>([]);
+  const [snoozeMenuKey, setSnoozeMenuKey]   = useState<string | null>(null);
+  const [showMuted, setShowMuted]           = useState(false);
+  const [ownerEditKey, setOwnerEditKey]     = useState<string | null>(null);
+  const [ownerDraft,   setOwnerDraft]       = useState('');
+  const [recOwners,    setRecOwners]        = useState<Record<string, string>>({});
+  const [layoutPrefs,  setLayoutPrefs]      = useState<SectionPref[]>([]);
+  // rec feedback votes — keyed by recKey; re-render on change via counter
+  const [feedbackTick, setFeedbackTick]   = useState(0);
+  const getRecVote = (key: string) => getVote(key);
+  function handleFeedback(key: string, title: string, vote: FeedbackVote) {
+    castVote(key, title, vote);
+    setFeedbackTick(t => t + 1);
+  }
+
+  // rec history
+  const [recHistory, setRecHistory]       = useState<RecHistoryEntry[]>([]);
+  const [showHistory, setShowHistory]     = useState(false);
 
   const toggleSection = (key: string) =>
     setExpandedSections(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
 
-  // load metrics + presets + URL filter state from localStorage / query params
+  function changeView(id: ViewId) {
+    const view = getView(id);
+    setActiveViewId(id);
+    saveViewId(id);
+    setExpandedSections(new Set(view.defaultOpen));
+    setSectionMode('full');
+  }
+
+  const activeView    = getView(activeViewId);
+  const layoutHidden  = layoutPrefs.length ? getHiddenKeys(layoutPrefs) : new Set<string>();
+  const isHidden      = (key: string) => activeView.hidden.includes(key) || layoutHidden.has(key);
+  const isTierHid    = (tier: string) => isTierHidden(activeView, tier);
+  const hideFlowPanel = activeView.hideFlowPanel;
+
+  // ── Section mode helpers ────────────────────────────────────────────────────
+  function isModeVisible(key: string): boolean {
+    if (sectionMode === 'full') return true;
+    if (sectionMode === 'overview') return OVERVIEW_KEYS.has(key);
+    return key === sectionMode;
+  }
+  function sectionHeaderVisible(key: string): boolean {
+    return !isHidden(key) && isModeVisible(key);
+  }
+  function sectionVisible(key: string): boolean {
+    if (isHidden(key)) return false;
+    if (sectionMode === 'full') return expandedSections.has(key);
+    return isModeVisible(key);
+  }
+  function focusSection(key: string) {
+    setExpandedSections(prev => new Set([...prev, key]));
+    setTimeout(() => {
+      // Prefer the CollapsibleTrigger button (trigger-{key}) so the section
+      // header is the first thing visible below the sticky bar, not the content.
+      const el = document.getElementById(`trigger-${key}`)
+              ?? document.getElementById(`section-${key}`);
+      if (!el) return;
+      const header = document.querySelector('header') as HTMLElement | null;
+      const bar    = document.getElementById('dashboard-sticky-bar');
+      const offset = (header?.offsetHeight ?? 56) + (bar?.offsetHeight ?? 100) + 12;
+      const top = el.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }, 80);
+  }
+
+  // Build section nav dot list (sections visible to role view, for SectionNav sidebar)
+  const navSections = DASHBOARD_SECTIONS
+    .filter(s => !isHidden(s.key))
+    .map(s => ({ id: s.sectionId, label: s.label, color: '#2563eb' }));
+
+  // load metrics + presets + view + URL filter state from bucket/server/localStorage
   useEffect(() => {
-    try {
-      const data = loadMetrics() as DashboardMetrics | null;
-      if (!data) { router.replace('/'); return; }
+    let cancelled = false;
+
+    // Restore saved view
+    const savedView = getSavedViewId();
+    setActiveViewId(savedView);
+    const view = getView(savedView);
+    setExpandedSections(new Set(view.defaultOpen));
+
+    async function load() {
+      try {
+        const result = await loadMetricsWithSource();
+        if (cancelled) return;
+        const data = result.metrics as DashboardMetrics | null;
+        if (!data) { router.replace('/'); return; }
       setMetrics(data);
       setPresets(loadPresets());
+      setMutedRecs(getActiveMuted());
+      setRecOwners(getAllRecOwners());
+      setLayoutPrefs(getLayoutPrefs());
 
-      // Restore filters from URL query params
+      // Detect fresh upload (?fresh=1) — reset all filters and clear the param
       const p = new URLSearchParams(window.location.search);
-      if (p.get('key'))      setKeyFilter(p.get('key')!);
-      if (p.get('summary'))  setSummaryFilter(p.get('summary')!);
-      if (p.get('status'))   setStatusFilter(p.get('status')!);
-      if (p.get('sprint'))   setSprintFilter(p.get('sprint')!);
-      if (p.get('assignee')) setAssigneeFilter(p.get('assignee')!);
-      if (p.get('health'))   setHealthFilter(p.get('health')!);
-      if (p.get('leadMax'))  setLeadMaxFilter(p.get('leadMax')!);
-      if (p.get('cycleMax')) setCycleMaxFilter(p.get('cycleMax')!);
-      if (p.get('ageMax'))   setOpenAgeMaxFilter(p.get('ageMax')!);
-      if (p.get('reason'))   setReasonFilter(p.get('reason')!);
-      if (p.get('label'))    setLabelFilter(p.get('label')!);
-      if (p.get('quick'))    setActiveQuickFilter(p.get('quick')!);
-      // Open filter panel if any filter was in URL
-      if ([...p.keys()].length > 0) setFlowPanelOpen(true);
-    } catch { router.replace('/'); }
-    finally { setLoading(false); }
+      const isFreshUpload = p.get('fresh') === '1';
+
+      if (isFreshUpload) {
+        // New upload — reset all filters, collapsed sections, URL params
+        setKeyFilter(''); setSummaryFilter(''); setStatusFilter('all');
+        setSprintFilter('all'); setAssigneeFilter('all'); setHealthFilter('all');
+        setLeadMaxFilter(''); setCycleMaxFilter(''); setOpenAgeMaxFilter('');
+        setReasonFilter(''); setLabelFilter(''); setActiveQuickFilter('all');
+        setFlowPanelOpen(false);
+        setShowMuted(false);
+        // Clean the ?fresh=1 from the URL immediately
+        window.history.replaceState(null, '', window.location.pathname);
+      } else {
+        // Restore filters from URL query params (existing behaviour)
+        if (p.get('key'))      setKeyFilter(p.get('key')!);
+        if (p.get('summary'))  setSummaryFilter(p.get('summary')!);
+        if (p.get('status'))   setStatusFilter(p.get('status')!);
+        if (p.get('sprint'))   setSprintFilter(p.get('sprint')!);
+        if (p.get('assignee')) setAssigneeFilter(p.get('assignee')!);
+        if (p.get('health'))   setHealthFilter(p.get('health')!);
+        if (p.get('leadMax'))  setLeadMaxFilter(p.get('leadMax')!);
+        if (p.get('cycleMax')) setCycleMaxFilter(p.get('cycleMax')!);
+        if (p.get('ageMax'))   setOpenAgeMaxFilter(p.get('ageMax')!);
+        if (p.get('reason'))   setReasonFilter(p.get('reason')!);
+        if (p.get('label'))    setLabelFilter(p.get('label')!);
+        if (p.get('quick'))    setActiveQuickFilter(p.get('quick')!);
+        // Open filter panel if any filter was in URL
+        const nonFreshKeys = [...p.keys()].filter(k => k !== 'fresh');
+        if (nonFreshKeys.length > 0) setFlowPanelOpen(true);
+      }
+      } catch { router.replace('/'); }
+      finally { if (!cancelled) setLoading(false); }
+    }
+
+    load();
+    return () => { cancelled = true; };
   }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync filter state → URL query params (replaceState = no history entry)
@@ -355,7 +477,12 @@ export default function DashboardPage() {
   }, [detailPanel]);
 
   // ── useMemo hooks must be ABOVE all early returns (Rules of Hooks) ─────────
-  const flowItems: FlowItem[] = metrics?.flow?.items || [];
+  // Deduplicate by Jira key — large exports can contain duplicate rows
+  const flowItems: FlowItem[] = useMemo(() => {
+    const raw = metrics?.flow?.items || [];
+    const seen = new Set<string>();
+    return raw.filter(i => { if (seen.has(i.key)) return false; seen.add(i.key); return true; });
+  }, [metrics?.flow?.items]);
 
   const filteredFlowItems = useMemo(() => flowItems.filter(item =>
     matchText(item.key, keyFilter) &&
@@ -396,40 +523,55 @@ export default function DashboardPage() {
   // smart actions — guard all metrics.* refs so hook runs before metrics loads
   const smartActions = useMemo(() => {
     if (!metrics) return [];
-    const acts: { type: string; icon: string; navTarget: string; filterAction: string | null; title: string; detail: string }[] = [];
+    const acts: { type: string; icon: string; navTarget: string; filterAction: string | null; title: string; detail: string; suggestedOwner: string }[] = [];
     const orphans = flowItems.filter(i => i.isOrphan).length;
     const critBlockers = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('block'));
     if (critBlockers.length)
       acts.push({ type: 'critical', icon: '🚫', navTarget: 'flow-health-panel', filterAction: 'blockers',
         title: `Unblock ${critBlockers.length} critical item${critBlockers.length > 1 ? 's' : ''}`,
-        detail: `${critBlockers[0].key}: ${(critBlockers[0].summary || critBlockers[0].reason).slice(0, 70)}` });
+        detail: `${critBlockers[0].key}: ${(critBlockers[0].summary || critBlockers[0].reason).slice(0, 70)}`,
+        suggestedOwner: 'Scrum Master / Delivery Manager' });
     const staleActive = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('in progress over 14'));
     if (staleActive.length)
       acts.push({ type: 'critical', icon: '⏳', navTarget: 'flow-health-panel', filterAction: 'stale',
         title: `${staleActive.length} item${staleActive.length > 1 ? 's' : ''} stalled in progress`,
-        detail: `${staleActive[0].key} has been active for ${Math.round((staleActive[0] as any).activeAgeDays || 0)} days` });
+        detail: `${staleActive[0].key} has been active for ${Math.round((staleActive[0] as any).activeAgeDays || 0)} days`,
+        suggestedOwner: 'Engineering Manager' });
     const capacity = ((metrics?.capacity || []) as any[]);
     const overloaded = capacity.filter((c: any) => c.loadShare > 35);
     if (overloaded.length && capacity.length > 2)
       acts.push({ type: 'warning', icon: '⚖️', navTarget: 'section-ownership', filterAction: null,
         title: 'Team capacity imbalance detected',
-        detail: `${overloaded[0].assignee} carries ${overloaded[0].loadShare}% — consider redistributing` });
+        detail: `${overloaded[0].assignee} carries ${overloaded[0].loadShare}% — consider redistributing`,
+        suggestedOwner: 'Engineering Manager / Scrum Master' });
     if (orphans > 0)
       acts.push({ type: 'info', icon: '👻', navTarget: 'section-attention', filterAction: null,
         title: `Link ${orphans} orphan item${orphans > 1 ? 's' : ''} to epics`,
-        detail: 'Items without epic reduce scope traceability and epic completion accuracy' });
+        detail: 'Items without epic reduce scope traceability and epic completion accuracy',
+        suggestedOwner: 'Product Owner' });
     const critEpics = epicReadiness.filter((e: any) => e.risk === 'critical');
     if (critEpics.length)
       acts.push({ type: 'warning', icon: '🚨', navTarget: 'section-readiness', filterAction: null,
         title: `${critEpics.length} epic${critEpics.length > 1 ? 's' : ''} in critical state`,
-        detail: `${(critEpics[0] as any).epic || 'Top epic'}: ${(critEpics[0] as any).completion}% complete — needs attention` });
+        detail: `${(critEpics[0] as any).epic || 'Top epic'}: ${(critEpics[0] as any).completion}% complete — needs attention`,
+        suggestedOwner: 'Engineering Manager' });
     const rels = metrics?.relations as any;
     if (rels?.blockedItems?.length)
       acts.push({ type: 'critical', icon: '🔗', navTarget: 'section-relations', filterAction: null,
         title: `${rels.blockedItems.length} item${rels.blockedItems.length > 1 ? 's' : ''} explicitly blocked`,
-        detail: `${rels.blockedItems[0].key} is blocked by ${rels.blockedItems[0].blockedBy}` });
+        detail: `${rels.blockedItems[0].key} is blocked by ${rels.blockedItems[0].blockedBy}`,
+        suggestedOwner: 'Scrum Master / Delivery Manager' });
     return acts.slice(0, 5);
   }, [flowItems, metrics?.capacity, metrics?.relations, epicReadiness]);
+
+  // Save recommendation snapshot and load history — must be after smartActions useMemo
+  useEffect(() => {
+    if (!metrics || smartActions.length === 0) return;
+    saveRecSnapshot(metrics.healthScore ?? 0, smartActions.map(a => ({
+      type: a.type, icon: a.icon, title: a.title, detail: a.detail,
+    })));
+    setRecHistory(getRecHistory());
+  }, [smartActions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── All hooks are now above this line. Early returns are safe here. ─────────
   if (loading) return <AppShell showNav><LoadingState message="Loading dashboard…" /></AppShell>;
@@ -480,8 +622,11 @@ export default function DashboardPage() {
     if (type === 'high-risk') setHealthFilter('critical');
     if (type === 'needs-review') setStatusFilter('in progress');
     if (type === 'blocked') setReasonFilter('block');
-    setFlowPanelOpen(true);
-    setTimeout(() => scrollTo('flow-health-panel'), 120);
+    // Only open and scroll to the flow panel if it is visible for the active view
+    if (!hideFlowPanel) {
+      setFlowPanelOpen(true);
+      setTimeout(() => scrollTo('flow-health-panel'), 120);
+    }
   };
 
   const clearFilters = () => {
@@ -579,6 +724,11 @@ export default function DashboardPage() {
   // ── render ───────────────────────────────────────────────────────────────────
   return (
     <AppShell showNav>
+      {/* Right-side dot navigation — hidden on small screens, print:hidden */}
+      <div className="print:hidden">
+        <SectionNav sections={navSections} />
+      </div>
+
       <div aria-hidden={detailPanel ? true : undefined}>
 
         {/* ── 1. HEADER ──────────────────────────────────────────────────────── */}
@@ -594,6 +744,8 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Full Delivery Report</h1>
             <p className="text-sm text-slate-500 mt-0.5">Flow, sprint, kanban, capacity, story points, and epic performance.</p>
           </div>
+          {/* View selector — top-right of header */}
+          <DashboardViewSelector activeViewId={activeViewId} onChange={changeView} />
           <div className="flex items-center gap-3">
             {metrics.healthScore !== undefined && (
               <div
@@ -615,15 +767,48 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => router.push('/')}
-              className="text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 shadow-sm transition-colors"
+              className="btn-secondary px-4 py-2"
             >
               Upload new file
             </button>
           </div>
         </div>
 
+        {/* ── VIEW BANNER — shown when not Full Report ── */}
+        {activeViewId !== 'full' && (
+          <div
+            className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-4 border"
+            style={{ background: activeView.accentColor + '10', borderColor: activeView.accentColor + '40' }}
+          >
+            <span className="text-lg">{activeView.icon}</span>
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-black" style={{ color: activeView.accentColor }}>{activeView.label} View</span>
+              <span className="text-xs text-slate-500 ml-2">{activeView.description}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => changeView('full')}
+              className="text-[10px] font-bold text-slate-500 hover:text-slate-700 border border-slate-200 rounded-full px-2.5 py-0.5 bg-white shrink-0"
+            >
+              Switch to Full Report
+            </button>
+          </div>
+        )}
+
         {/* ── 2. SUMMARY BAR ─────────────────────────────────────────────────── */}
         <Card id="dashboard-summary" className="px-5 py-4 mb-4">
+          <div className="flex flex-wrap items-center gap-4 mb-3">
+            {/* Tour trigger — only shows when tour not yet dismissed */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('dc:start-tour'))}
+              className="ml-auto btn-secondary btn-xs gap-1 print:hidden"
+              title="Take a guided tour of the dashboard"
+            >
+              <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>
+              Tour
+            </button>
+          </div>
           <div className="flex flex-wrap items-center gap-4 mb-3">
             <div className={cn(
               'flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold border',
@@ -668,67 +853,157 @@ export default function DashboardPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" onClick={exportRisk}
-              className="text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 transition-colors">
+              className="btn-secondary btn-sm">
               Export risk report
             </button>
             {reportMsg && <span className="text-xs text-green-700 font-semibold">{reportMsg}</span>}
           </div>
         </Card>
 
-        {/* ── STICKY QUICK FILTERS ────────────────────────────────────────────── */}
-        <div className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-slate-200 mb-4 -mx-4 px-4 py-2 flex flex-wrap items-center gap-2 shadow-sm">
-          {(['all', 'high-risk', 'blocked', 'needs-review'] as const).map(f => (
-            <button key={f} type="button"
-              onClick={() => applyQuickFilter(f)}
-              className={cn('text-xs font-bold rounded-full px-3 py-1 border transition-colors',
-                activeQuickFilter === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'
-              )}>
-              {f === 'all' ? 'All' : f === 'high-risk' ? 'High Risk' : f === 'blocked' ? 'Blocked' : 'Needs Review'}
-            </button>
-          ))}
-          <div className="flex items-center gap-2 ml-auto">
+        {/* ── LARGE EXPORT BANNER (top) ───────────────────────────────────────── */}
+        {(flow as any).itemsCapped && (
+          <div className="bg-amber-50 border border-amber-300 rounded-xl px-5 py-3 mb-4 flex items-center gap-3">
+            <span className="text-xl shrink-0">⚡</span>
+            <p className="text-xs text-amber-800">
+              <strong>Large export:</strong> showing top 5,000 of{' '}
+              <strong>{(flow as any).totalItemCount?.toLocaleString()}</strong> items (sorted by risk).
+              All aggregate metrics are calculated from the full dataset.
+            </p>
+          </div>
+        )}
+
+        {/* ── STICKY QUICK FILTERS + SECTION SWITCHER ──────────────────────────── */}
+        <div id="dashboard-sticky-bar" className="sticky top-14 z-30 mb-4 -mx-4 print:hidden"
+          style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(14px)', borderBottom: '1px solid rgba(198,210,226,0.7)', boxShadow: '0 4px 16px rgba(24,43,77,0.07)' }}>
+          {/* ── Section nav row ── */}
+          <div className="px-5 flex items-center gap-2">
+            <div className="flex-1 min-w-0">
+              <DashboardSectionSwitcher
+                mode={sectionMode}
+                hiddenKeys={new Set([...activeView.hidden, ...getHiddenKeys(layoutPrefs)])}
+                orderedKeys={layoutPrefs.length ? getOrderedVisibleSections(layoutPrefs).map(s => s.key) : undefined}
+                alertKeys={new Set([
+                  ...(topBlockers.length  ? ['attention'] : []),
+                  ...(topOverdue.length   ? ['attention'] : []),
+                  ...((metrics?.healthScore ?? 100) < 60 ? ['overview'] : []),
+                ])}
+                onMode={setSectionMode}
+                onFocusSection={focusSection}
+              />
+            </div>
+            <div className="shrink-0 pb-2">
+              <LayoutBuilderPanel onLayoutChange={setLayoutPrefs} />
+            </div>
+          </div>
+
+          {/* ── Gradient separator + filter row — hidden for views that hide the flow panel ── */}
+          {!hideFlowPanel && <>
+          <div aria-hidden="true" style={{ height: 2, background: 'linear-gradient(90deg, rgba(37,99,235,0.45), rgba(139,92,246,0.32), rgba(20,184,166,0.32))' }} />
+
+          {/* ── Single action row: filter tabs + tools (NavItem tab style — matches section switcher) ── */}
+          <div className="px-4 flex flex-wrap items-center" style={{ gap: 2, paddingTop: 6, paddingBottom: 6 }}>
+
+            {/* ── Filter tabs — no border, underline indicator for active ── */}
+            {([
+              { f: 'all',          label: 'All',          activeColor: '#2563eb', activeShadow: 'rgba(37,99,235,0.10)',   iconPath: 'M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z',  dot: false },
+              { f: 'high-risk',    label: 'High Risk',    activeColor: '#dc2626', activeShadow: 'rgba(220,38,38,0.10)',   iconPath: 'M12 2 4 5.5v6.1c0 5 3.4 9.6 8 10.8 4.6-1.2 8-5.8 8-10.8V5.5L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V7h2v5Z', dot: ((metrics?.blockedIssues ?? 0) + ((metrics?.flow as any)?.critical ?? 0)) > 0 },
+              { f: 'blocked',      label: 'Blocked',      activeColor: '#ea580c', activeShadow: 'rgba(234,88,12,0.10)',  iconPath: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM7 11h10v2H7v-2Z', dot: false },
+              { f: 'needs-review', label: 'Needs Review', activeColor: '#8b5cf6', activeShadow: 'rgba(139,92,246,0.10)', iconPath: 'M12 5C7 5 3.2 8.1 1.6 12c1.6 3.9 5.4 7 10.4 7s8.8-3.1 10.4-7C20.8 8.1 17 5 12 5Zm0 10.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z', dot: false },
+            ] as const).map(({ f, label, activeColor, activeShadow, iconPath, dot }) => {
+              const isActive = activeQuickFilter === f;
+              return (
+                <button key={f} type="button" onClick={() => applyQuickFilter(f)}
+                  style={{
+                    position: 'relative',
+                    display: 'inline-flex',
+                    minWidth: 'max-content',
+                    minHeight: 44,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 5,
+                    padding: '6px 10px',
+                    borderRadius: 12,
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    fontFamily: 'inherit',
+                    transition: 'background 180ms ease, color 180ms ease',
+                    color: isActive ? activeColor : '#334155',
+                    background: isActive
+                      ? 'linear-gradient(180deg, rgba(239,246,255,0.95), rgba(241,245,249,0.72))'
+                      : 'transparent',
+                  }}
+                >
+                  {dot && activeQuickFilter !== f && (
+                    <span style={{ position: 'absolute', top: 6, right: 6, width: 7, height: 7, borderRadius: '50%', background: '#ef4444' }} aria-hidden="true" />
+                  )}
+                  <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: isActive ? activeColor : '#64748b', flexShrink: 0 }}>
+                    <path d={iconPath} />
+                  </svg>
+                  <span>{label}</span>
+                  {isActive && (
+                    <span style={{ position: 'absolute', left: 10, right: 10, bottom: -4, height: 3, borderRadius: 999, background: activeColor, boxShadow: `0 0 0 4px ${activeShadow}` }} aria-hidden="true" />
+                  )}
+                </button>
+              );
+            })}
+
+            {/* Active count badge */}
             {activeFilterCount > 0 && (
-              <span className="text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5">{activeFilterCount} active</span>
+              <span className="btn-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 font-black">{activeFilterCount} active</span>
             )}
+
+            {/* Divider */}
+            <span className="w-px h-5 bg-slate-200 mx-1 shrink-0" aria-hidden="true" />
+
+            {/* Clear — tab style */}
             <button type="button" onClick={clearFilters}
-              className="text-xs font-semibold text-slate-500 hover:text-slate-700 border border-slate-200 rounded-full px-3 py-1 bg-white transition-colors">
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, minWidth: 'max-content', padding: '6px 10px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, lineHeight: 1, fontFamily: 'inherit', color: '#334155', background: 'transparent', transition: 'background 180ms ease' }}>
+              <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: '#64748b', flexShrink: 0 }}><path d="m19 6.4-1.4-1.4L12 10.6 6.4 5 5 6.4l5.6 5.6L5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4Z" /></svg>
               Clear
             </button>
-            <button type="button" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 120); }}
-              className="text-xs font-bold bg-blue-600 text-white rounded-full px-3 py-1 hover:bg-blue-700 transition-colors">
-              Show filters
-            </button>
 
-            {/* ── Copy shareable link ── */}
-            {activeFilterCount > 0 && (
-              <button
-                type="button"
-                onClick={() => copyToClipboard(window.location.href)}
-                title="Copy shareable link with current filters"
-                className="inline-flex items-center gap-1.5 text-xs font-bold bg-slate-700 hover:bg-slate-900 text-white rounded-full px-3 py-1 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-                Copy link
+            {/* Show filters — tab style, blue accent */}
+            {!hideFlowPanel && (
+              <button type="button" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 120); }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, minWidth: 'max-content', padding: '6px 10px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, lineHeight: 1, fontFamily: 'inherit', color: '#2563eb', background: 'transparent', transition: 'background 180ms ease' }}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: '#2563eb', flexShrink: 0 }}><path d="M3 5h18l-7 8v5l-4 2v-7L3 5Zm4.4 2 4.6 5.2L16.6 7H7.4Z" /></svg>
+                Show filters
               </button>
             )}
 
-            {/* ── Export dropdown — always visible in sticky bar ── */}
+            {/* Copy link — tab style (only when filters active) */}
+            {activeFilterCount > 0 && (
+              <button type="button" onClick={() => copyToClipboard(window.location.href)} title="Copy shareable link"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, minWidth: 'max-content', padding: '6px 10px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, lineHeight: 1, fontFamily: 'inherit', color: '#334155', background: 'transparent', transition: 'background 180ms ease' }}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: '#64748b', flexShrink: 0 }}><path d="M13.8 10.2a4 4 0 0 0-5.6 0l-4 4a4 4 0 1 0 5.6 5.6l1.1-1.1-1.4-1.4-1.1 1.1a2 2 0 1 1-2.8-2.8l4-4a2 2 0 0 1 2.8 2.8l-.8.8 1.4 1.4.8-.8a4 4 0 0 0 0-5.6Z" /></svg>
+                <span className="hidden sm:inline">Copy link</span>
+              </button>
+            )}
+
+            {/* Save Snapshot */}
+            <SaveSnapshotButton metrics={metrics} />
+
+            {/* ── Export dropdown ── */}
             <div ref={exportMenuRef} style={{ position: 'relative' }}>
               <button
                 type="button"
                 onClick={() => setExportMenuOpen(o => !o)}
                 title="Export report"
-                className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-3 py-1 transition-colors"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '6px 12px', borderRadius: 12, border: 'none',
+                  cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+                  minHeight: 44, whiteSpace: 'nowrap', color: '#ffffff',
+                  background: 'linear-gradient(135deg, #059669, #10b981 58%, #14b8a6)',
+                  boxShadow: '0 4px 12px rgba(5,150,105,0.28)',
+                }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M7 10l5 5 5-5M12 4v11" />
-                </svg>
+                <svg viewBox="0 0 24 24" style={{ width: 12, height: 12, fill: 'white' }} aria-hidden="true"><path d="M11 3h2v10.2l3.6-3.6L18 11l-6 6-6-6 1.4-1.4 3.6 3.6V3ZM5 19h14v2H5v-2Z" /></svg>
                 Export
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
+                <svg viewBox="0 0 24 24" style={{ width: 10, height: 10, fill: 'white' }} aria-hidden="true"><path d="m7 9 5 5 5-5 1.4 1.4L12 16.8 5.6 10.4 7 9Z" /></svg>
               </button>
               {exportMenuOpen && (
                 <div className="absolute right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1.5 min-w-[170px]">
@@ -741,8 +1016,8 @@ export default function DashboardPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (metrics) exportToExcel(metrics);
+                    onClick={async () => {
+                      if (metrics) await exportToExcel(metrics);
                       setExportMenuOpen(false);
                     }}
                     className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
@@ -762,14 +1037,42 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
+          </div>{/* /single action row */}
+          </>}{/* /hideFlowPanel guard */}
+        </div>{/* /dashboard-sticky-bar */}
+
+        {/* ── LARGE FILE WARNING BANNER ────────────────────────────────────────── */}
+        {(flow as any).itemsCapped && (
+          <div className="bg-amber-50 border border-amber-300 rounded-xl px-5 py-3 mb-3 flex items-center gap-3">
+            <span className="text-xl shrink-0">⚡</span>
+            <div>
+              <p className="text-sm font-black text-amber-900">Large export detected — showing top 5,000 items</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Your file contains <strong>{(flow as any).totalItemCount?.toLocaleString()} items</strong>.
+                Dashboard shows the 5,000 highest-risk items (critical → warning → good).
+                All aggregate metrics (health score, counts, throughput) are calculated from the full dataset.
+                For full item browsing, split your Jira export into smaller files.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* ── DATA QUALITY + FIELD IMPACT ──────────────────────────────────────── */}
+        {metrics.dataQuality && (
+          <div className="mb-5 space-y-3">
+            <DataQualityCard quality={metrics.dataQuality} />
+            {metrics.fieldImpacts?.hasIssues && (
+              <MissingFieldImpactPanel report={metrics.fieldImpacts} />
+            )}
+          </div>
+        )}
 
         {/* ── 3. SMART RECOMMENDATIONS ────────────────────────────────────────── */}
         {smartActions.length > 0 && (
-          <section className="mb-6" aria-label="Smart recommendations">
+          <section id="section-recommendations" className="mb-6" aria-label="Smart recommendations">
             <CollapsibleTrigger
               id="recommendations"
+          hidden={!sectionHeaderVisible('recommendations')}
               icon="⚡"
               title="Smart Recommendations"
               chips={[{ label: `${smartActions.length} action${smartActions.length !== 1 ? 's' : ''}`, type: smartActions.some(a => a.type === 'critical') ? 'danger' : 'warning' }]}
@@ -777,44 +1080,252 @@ export default function DashboardPage() {
               expanded={expandedSections.has('recommendations')}
               onToggle={() => toggleSection('recommendations')}
             />
-            {expandedSections.has('recommendations') && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
-              {smartActions.map((action, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => handleSmartAction(action)}
-                  className={cn(
-                    'text-left rounded-xl border p-4 shadow-sm hover:shadow-md transition-shadow',
-                    action.type === 'critical' ? 'border-red-200 bg-red-50' :
-                      action.type === 'warning' ? 'border-amber-200 bg-amber-50' : 'border-blue-200 bg-blue-50'
-                  )}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg" aria-hidden="true">{action.icon}</span>
-                    <span className={cn('text-xs font-black uppercase tracking-wider rounded-full px-2 py-0.5 border',
-                      action.type === 'critical' ? 'text-red-700 bg-red-100 border-red-200' :
-                        action.type === 'warning' ? 'text-amber-700 bg-amber-100 border-amber-200' :
-                          'text-blue-700 bg-blue-100 border-blue-200'
-                    )}>{action.type}</span>
-                    <span className="text-xs text-slate-400 ml-auto">#{i + 1}</span>
+            {sectionVisible('recommendations') && (() => {
+              const mutedCount    = smartActions.filter(a => isMuted(recKey(a.type, a.title))).length;
+              const visibleActions = smartActions.filter(a => showMuted || !isMuted(recKey(a.type, a.title)));
+              const currentTitles  = smartActions.map(a => a.title);
+              const newTitles      = recHistory.length > 0 ? getNewTitles(currentTitles) : new Set<string>();
+              const resolvedRecs   = recHistory.length > 0 ? getResolvedRecs(currentTitles) : [];
+              return (
+              <div className="mt-3 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {visibleActions.map((action, i) => {
+                    const key = recKey(action.type, action.title);
+                    const muted = isMuted(key);
+                    const menuOpen = snoozeMenuKey === key;
+                    const isNew = newTitles.has(action.title);
+                    return (
+                      <div key={i} className="relative group">
+                        <button type="button" onClick={() => { if (!muted) handleSmartAction(action); }}
+                          className={cn('w-full text-left rounded-xl border p-4 shadow-sm hover:shadow-md transition-shadow',
+                            muted ? 'opacity-40 grayscale' :
+                              action.type === 'critical' ? 'border-red-200 bg-red-50' :
+                              action.type === 'warning'  ? 'border-amber-200 bg-amber-50' : 'border-blue-200 bg-blue-50')}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg" aria-hidden="true">{action.icon}</span>
+                            <span className={cn('text-xs font-black uppercase tracking-wider rounded-full px-2 py-0.5 border',
+                              action.type === 'critical' ? 'text-red-700 bg-red-100 border-red-200' :
+                                action.type === 'warning' ? 'text-amber-700 bg-amber-100 border-amber-200' :
+                                  'text-blue-700 bg-blue-100 border-blue-200')}>{action.type}</span>
+                            {muted && <span className="text-[10px] text-slate-400 font-semibold ml-1">muted</span>}
+                            {isNew && !muted && (
+                              <span className="text-[10px] font-black bg-blue-100 text-blue-700 border border-blue-200 rounded-full px-1.5 py-0.5 ml-1">NEW</span>
+                            )}
+                            <span className="text-xs text-slate-400 ml-auto">#{i + 1}</span>
+                          </div>
+                          <p className="text-sm font-bold text-slate-800 mb-1">{action.title}</p>
+                          <p className="text-xs text-slate-600 mb-2">{action.detail}</p>
+                          {!muted && <p className="text-xs font-bold text-blue-600">Go to details →</p>}
+                          {/* Action owner */}
+                          {!muted && (() => {
+                            const assignedOwner = recOwners[key] ?? '';
+                            const isEditing     = ownerEditKey === key;
+                            return (
+                              <div className="mt-2 pt-2 border-t border-slate-200/60" onClick={e => e.stopPropagation()}>
+                                {isEditing ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <input
+                                      autoFocus
+                                      type="text"
+                                      value={ownerDraft}
+                                      onChange={e => setOwnerDraft(e.target.value)}
+                                      onKeyDown={e => {
+                                        if (e.key === 'Enter') { setRecOwner(key, ownerDraft); setRecOwners(getAllRecOwners()); setOwnerEditKey(null); }
+                                        if (e.key === 'Escape') setOwnerEditKey(null);
+                                      }}
+                                      placeholder={action.suggestedOwner}
+                                      className="flex-1 text-[10px] border border-slate-300 rounded px-2 py-1 focus:outline-none focus:border-blue-400"
+                                    />
+                                    <button type="button"
+                                      onClick={() => { setRecOwner(key, ownerDraft); setRecOwners(getAllRecOwners()); setOwnerEditKey(null); }}
+                                      className="text-[10px] font-bold bg-blue-600 text-white rounded px-2 py-1 hover:bg-blue-700">Save</button>
+                                    <button type="button"
+                                      onClick={() => setOwnerEditKey(null)}
+                                      className="text-[10px] text-slate-400 hover:text-slate-600">✕</button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="text-[10px] text-slate-400 font-semibold shrink-0">Owner:</span>
+                                    {assignedOwner ? (
+                                      <>
+                                        <span className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5">{assignedOwner}</span>
+                                        <button type="button"
+                                          onClick={() => { setOwnerDraft(assignedOwner); setOwnerEditKey(key); }}
+                                          className="text-[10px] text-slate-400 hover:text-blue-600 font-semibold">Edit</button>
+                                        <button type="button"
+                                          onClick={() => { clearRecOwner(key); setRecOwners(getAllRecOwners()); }}
+                                          className="text-[10px] text-slate-400 hover:text-red-500">✕</button>
+                                      </>
+                                    ) : (
+                                      <button type="button"
+                                        onClick={() => { setOwnerDraft(''); setOwnerEditKey(key); }}
+                                        className="text-[10px] font-semibold text-slate-400 hover:text-blue-600 border border-dashed border-slate-300 rounded-full px-2 py-0.5 hover:border-blue-400 transition-colors">
+                                        + Assign ({action.suggestedOwner})
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Feedback buttons */}
+                          {(() => {
+                            const vote = getRecVote(key);
+                            return (
+                              <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-200/60" onClick={e => e.stopPropagation()}>
+                                <span className="text-[10px] text-slate-400 font-semibold mr-1">Helpful?</span>
+                                <button
+                                  type="button"
+                                  title="Mark as helpful"
+                                  onClick={() => handleFeedback(key, action.title, 'helpful')}
+                                  className={cn('inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border transition-colors',
+                                    vote === 'helpful'
+                                      ? 'bg-green-600 text-white border-green-600'
+                                      : 'bg-white text-slate-500 border-slate-200 hover:border-green-400 hover:text-green-600'
+                                  )}
+                                >
+                                  👍 {vote === 'helpful' ? 'Thanks!' : 'Yes'}
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Mark as not helpful"
+                                  onClick={() => handleFeedback(key, action.title, 'not_helpful')}
+                                  className={cn('inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border transition-colors',
+                                    vote === 'not_helpful'
+                                      ? 'bg-red-600 text-white border-red-600'
+                                      : 'bg-white text-slate-500 border-slate-200 hover:border-red-400 hover:text-red-600'
+                                  )}
+                                >
+                                  👎 No
+                                </button>
+                              </div>
+                            );
+                          })()}
+                        </button>
+                        {/* Mute / snooze controls — revealed on hover */}
+                        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          {muted ? (
+                            <button type="button" onClick={() => { const { restoreRec } = require('@/lib/mutedRecommendations'); restoreRec(key); setMutedRecs(getActiveMuted()); }}
+                              className="text-[10px] font-bold bg-white border border-slate-200 rounded px-1.5 py-0.5 text-slate-600 hover:bg-slate-50 shadow-sm">Restore</button>
+                          ) : (<>
+                            <div className="relative">
+                              <button type="button" onClick={e => { e.stopPropagation(); setSnoozeMenuKey(menuOpen ? null : key); }}
+                                className="text-[10px] font-bold bg-white border border-slate-200 rounded px-1.5 py-0.5 text-slate-600 hover:bg-slate-50 shadow-sm" title="Snooze">💤</button>
+                              {menuOpen && (
+                                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 min-w-[130px]">
+                                  {([['7 days', 7], ['30 days', 30]] as [string, number][]).map(([label, days]) => (
+                                    <button key={label} type="button" onClick={() => { snoozeRec(key, action.title, days); setMutedRecs(getActiveMuted()); setSnoozeMenuKey(null); }}
+                                      className="w-full text-left px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">Snooze {label}</button>
+                                  ))}
+                                  <div className="border-t border-slate-100 mt-1 pt-1">
+                                    <button type="button" onClick={() => { muteRec(key, action.title); setMutedRecs(getActiveMuted()); setSnoozeMenuKey(null); }}
+                                      className="w-full text-left px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50">Mute permanently</button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <button type="button" onClick={e => { e.stopPropagation(); muteRec(key, action.title); setMutedRecs(getActiveMuted()); }}
+                              className="text-[10px] font-black bg-white border border-slate-200 rounded px-1.5 py-0.5 text-slate-400 hover:text-red-600 hover:border-red-200 shadow-sm" title="Mute">×</button>
+                          </>)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {mutedCount > 0 && (
+                  <div className="flex items-center gap-3 pt-1">
+                    <button type="button" onClick={() => setShowMuted(v => !v)}
+                      className="text-xs text-slate-400 hover:text-slate-600 font-semibold">
+                      {showMuted ? 'Hide muted' : `${mutedCount} recommendation${mutedCount !== 1 ? 's' : ''} muted`}
+                    </button>
+                    <button type="button" onClick={() => { restoreAll(); setMutedRecs([]); setShowMuted(false); }}
+                      className="text-xs font-bold text-blue-600 hover:underline">Restore all</button>
                   </div>
-                  <p className="text-sm font-bold text-slate-800 mb-1">{action.title}</p>
-                  <p className="text-xs text-slate-600 mb-2">{action.detail}</p>
-                  <p className="text-xs font-bold text-blue-600">Go to details →</p>
-                </button>
-              ))}
-            </div>
-            )}
+                )}
+
+                {/* ── Resolved since last upload ── */}
+                {resolvedRecs.length > 0 && (
+                  <div className="mt-2 pt-3 border-t border-slate-100">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-green-600 mb-2">
+                      ✅ Resolved since last upload ({resolvedRecs.length})
+                    </p>
+                    <div className="space-y-1.5">
+                      {resolvedRecs.map((r, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs text-slate-500">
+                          <span>{r.icon}</span>
+                          <span className="line-through">{r.title}</span>
+                          <span className="text-green-600 font-semibold text-[10px] ml-auto shrink-0">resolved</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── History toggle ── */}
+                {recHistory.length > 1 && (
+                  <div className="mt-2 pt-3 border-t border-slate-100">
+                    <button type="button"
+                      onClick={() => setShowHistory(v => !v)}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-700 transition-colors">
+                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
+                        <path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.96L6.6 18.4A9 9 0 1 0 13 3Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"/>
+                      </svg>
+                      {showHistory ? 'Hide history' : `View history (${recHistory.length - 1} previous snapshot${recHistory.length > 2 ? 's' : ''})`}
+                      <span className={cn('text-slate-400 transition-transform duration-200', showHistory && 'rotate-180')}>▾</span>
+                    </button>
+
+                    {showHistory && (
+                      <div className="mt-2 space-y-3">
+                        {recHistory.slice(1).map((entry, ei) => (
+                          <div key={entry.id} className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                                {new Date(entry.savedAt).toLocaleString()}
+                              </p>
+                              <span className={cn('text-[10px] font-black px-2 py-0.5 rounded-full',
+                                entry.healthScore >= 75 ? 'bg-green-100 text-green-700'
+                                  : entry.healthScore >= 50 ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-red-100 text-red-700'
+                              )}>
+                                Health {entry.healthScore}
+                              </span>
+                            </div>
+                            {entry.recommendations.length === 0 ? (
+                              <p className="text-xs text-slate-400 italic">No recommendations at this point</p>
+                            ) : (
+                              <ul className="space-y-1">
+                                {entry.recommendations.map((r, ri) => (
+                                  <li key={ri} className="flex items-center gap-2 text-xs text-slate-600">
+                                    <span className={cn('text-[10px] font-black px-1.5 py-0.5 rounded-full shrink-0',
+                                      r.type === 'critical' ? 'bg-red-100 text-red-700'
+                                        : r.type === 'warning' ? 'bg-amber-100 text-amber-700'
+                                        : 'bg-blue-100 text-blue-700'
+                                    )}>{r.type}</span>
+                                    <span className="truncate">{r.title}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              );
+            })()}
           </section>
         )}
 
         {/* ── TIER 1: PRIORITY ATTENTION ──────────────────────────────────────── */}
-        <TierSep icon="🚨" label="Priority Attention" tier={0} />
+        {!isTierHid('attention') && <TierSep icon="🚨" label="Priority Attention" tier={0} />}
 
         {/* ── 4. TIER 1 — TOP 3 HIGHLIGHT CARDS ──────────────────────────────── */}
         <CollapsibleTrigger
           id="attention"
+          hidden={!sectionHeaderVisible('attention')}
           icon="🚨"
           title="Priority Attention"
           chips={[
@@ -826,8 +1337,8 @@ export default function DashboardPage() {
           expanded={expandedSections.has('attention')}
           onToggle={() => toggleSection('attention')}
         />
-        {expandedSections.has('attention') && (
-        <section id="section-attention" className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {sectionVisible('attention') && (
+        <section id="section-attention" className="dashboard-section grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 animate-slide-up">
           {[
             { id: 'blockers', title: 'Top Blockers', tag: 'Blockers', items: topBlockers, color: 'border-red-400 bg-red-50', tagCls: 'bg-red-100 text-red-700' },
             { id: 'overdue', title: 'Top Overdue', tag: 'Schedule', items: topOverdue, color: 'border-amber-400 bg-amber-50', tagCls: 'bg-amber-100 text-amber-700' },
@@ -841,8 +1352,8 @@ export default function DashboardPage() {
               <h3 className="text-sm font-black text-slate-800 mb-2">{title}</h3>
               {items.length ? (
                 <ul className="space-y-1.5">
-                  {items.map(item => (
-                    <li key={item.key} className="flex items-start gap-2 text-xs">
+                  {items.map((item, idx) => (
+                    <li key={`${id}-${item.key ?? idx}`} className="flex items-start gap-2 text-xs">
                       <span className="font-mono font-bold text-blue-700 shrink-0">{item.key}</span>
                       <span className="text-slate-600 truncate">{item.summary || (item as any).reason || (item as any).epic || 'No epic'}</span>
                     </li>
@@ -857,11 +1368,12 @@ export default function DashboardPage() {
         )}
 
         {/* ── TIER 2: PRIMARY METRICS ─────────────────────────────────────────── */}
-        <TierSep icon="📊" label="Primary Metrics" tier={1} />
+        {!isTierHid('primary') && <TierSep icon="📊" label="Primary Metrics" tier={1} />}
 
         {/* ── 5. TIER 2 — 6 KPI CARDS ─────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="overview"
+          hidden={!sectionHeaderVisible('overview')}
           icon="📊"
           title="Key Metrics"
           chips={[
@@ -872,15 +1384,15 @@ export default function DashboardPage() {
           expanded={expandedSections.has('overview')}
           onToggle={() => toggleSection('overview')}
         />
-        {expandedSections.has('overview') && (
-        <section id="section-overview" className="mb-6">
+        {sectionVisible('overview') && (
+        <section id="section-overview" className="dashboard-section mb-6 animate-slide-up">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <KpiCard label="Completion" value={`${metrics.completionRate}%`} detail={`${metrics.doneIssues} of ${metrics.totalIssues} done`} accent="#16a34a" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
-            <KpiCard label="Health Alerts" value={(flow.critical || 0) + (flow.warning || 0)} detail={`${flow.critical || 0} critical · ${flow.warning || 0} warning`} accent="#dc2626" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
-            <KpiCard label="Active Work" value={metrics.activeIssues || 0} detail="In progress, review, QA, UAT" accent="#f59e0b" />
-            <KpiCard label="Lead Time" value={`${flow.averageLeadTimeDays || 0}d`} detail={`${flow.leadTimeSampleSize || 0} completed items`} accent="#2563eb" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
-            <KpiCard label="Cycle Time" value={`${flow.averageCycleTimeDays || 0}d`} detail={`${flow.cycleTimeSampleSize || 0} items w/ start dates`} accent="#0f766e" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
-            <KpiCard label="Story Points" value={storyPoints.totalStoryPoints || 0} detail={`${storyPoints.pointCompletionRate || 0}% complete`} accent="#7c3aed" />
+            <KpiCard label="Completion" value={`${metrics.completionRate}%`} detail={`${metrics.doneIssues} of ${metrics.totalIssues} done`} accent="#16a34a" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.healthScore} />
+            <KpiCard label="Health Alerts" value={(flow.critical || 0) + (flow.warning || 0)} detail={`${flow.critical || 0} critical · ${flow.warning || 0} warning`} accent="#dc2626" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
+            <KpiCard label="Active Work" value={metrics.activeIssues || 0} detail="In progress, review, QA, UAT" accent="#f59e0b" confidence={metrics.confidence?.teamCapacity} />
+            <KpiCard label="Lead Time" value={`${flow.averageLeadTimeDays || 0}d`} detail={`${flow.leadTimeSampleSize || 0} completed items`} accent="#2563eb" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.leadTime} />
+            <KpiCard label="Cycle Time" value={`${flow.averageCycleTimeDays || 0}d`} detail={`${flow.cycleTimeSampleSize || 0} items w/ start dates`} accent="#0f766e" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.cycleTime} />
+            <KpiCard label="Story Points" value={storyPoints.totalStoryPoints || 0} detail={`${storyPoints.pointCompletionRate || 0}% complete`} accent="#7c3aed" confidence={metrics.confidence?.storyPoints} />
           </div>
         </section>
         )}
@@ -888,6 +1400,7 @@ export default function DashboardPage() {
         {/* ── 6. DELIVERY COMPOSITION RING ─────────────────────────────────────── */}
         <CollapsibleTrigger
           id="ratios"
+          hidden={!sectionHeaderVisible('ratios')}
           icon="🍩"
           title="Delivery Composition"
           chips={[{ label: `${metrics.completionRate}% complete`, type: metrics.completionRate >= 80 ? 'good' : 'warning' }]}
@@ -895,8 +1408,8 @@ export default function DashboardPage() {
           expanded={expandedSections.has('ratios')}
           onToggle={() => toggleSection('ratios')}
         />
-        {expandedSections.has('ratios') && (
-        <section id="section-ratios" className="mb-6">
+        {sectionVisible('ratios') && (
+        <section id="section-ratios" className="dashboard-section mb-6 animate-slide-up">
           <Card className="p-5 flex flex-col md:flex-row items-center gap-8">
             <div className="shrink-0 relative">
               <div
@@ -933,6 +1446,7 @@ export default function DashboardPage() {
         {/* ── 7. VISUAL INTELLIGENCE ───────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="visuals"
+          hidden={!sectionHeaderVisible('visuals')}
           icon="📈"
           title="Visual Analytics"
           chips={[{ label: 'Charts', type: 'neutral' }]}
@@ -940,8 +1454,8 @@ export default function DashboardPage() {
           expanded={expandedSections.has('visuals')}
           onToggle={() => toggleSection('visuals')}
         />
-        {expandedSections.has('visuals') && (
-        <section id="section-visuals" className="mb-6">
+        {sectionVisible('visuals') && (
+        <section id="section-visuals" className="dashboard-section mb-6 animate-slide-up">
           {/* hero row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* health mix donut */}
@@ -1009,11 +1523,12 @@ export default function DashboardPage() {
         )}
 
         {/* ── TIER 3: DELIVERY DETAIL ──────────────────────────────────────────── */}
-        <TierSep icon="📋" label="Delivery Detail" tier={2} />
+        {!isTierHid('delivery') && <TierSep icon="📋" label="Delivery Detail" tier={2} />}
 
         {/* ── 8a. DELIVERY CONTROLS ────────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="delivery"
+          hidden={!sectionHeaderVisible('delivery')}
           icon="🌊"
           title="Delivery Controls"
           chips={[
@@ -1024,8 +1539,8 @@ export default function DashboardPage() {
           expanded={expandedSections.has('delivery')}
           onToggle={() => toggleSection('delivery')}
         />
-        {expandedSections.has('delivery') && (
-          <section id="section-delivery-controls" className="mb-4">
+        {sectionVisible('delivery') && (
+          <section id="section-delivery-controls" className="dashboard-section mb-4 animate-slide-up">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
               <Card className="p-4">
                 <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Flow Efficiency</h4>
@@ -1068,6 +1583,7 @@ export default function DashboardPage() {
         {/* ── 8b. QUARTER STATISTICS ───────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="quarters"
+          hidden={!sectionHeaderVisible('quarters')}
           icon="📅"
           title="Quarter Statistics"
           chips={[{ label: `${quarters.filter((q: any) => q.quarter !== 'No date').length} quarters`, type: 'neutral' }]}
@@ -1075,8 +1591,8 @@ export default function DashboardPage() {
           expanded={expandedSections.has('quarters')}
           onToggle={() => toggleSection('quarters')}
         />
-        {expandedSections.has('quarters') && (
-          <section id="section-quarters" className="mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+        {sectionVisible('quarters') && (
+          <section id="section-quarters" className="dashboard-section mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-slide-up">
             <MetricTable
               columns={[
                 { key: 'quarter', label: 'Quarter' }, { key: 'issues', label: 'Issues' },
@@ -1096,6 +1612,7 @@ export default function DashboardPage() {
         {/* ── 8c. KANBAN STATUS ────────────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="kanban"
+          hidden={!sectionHeaderVisible('kanban')}
           icon="🗃️"
           title="Kanban Status Health"
           chips={[
@@ -1106,8 +1623,8 @@ export default function DashboardPage() {
           expanded={expandedSections.has('kanban')}
           onToggle={() => toggleSection('kanban')}
         />
-        {expandedSections.has('kanban') && (
-          <section id="section-kanban" className="mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
+        {sectionVisible('kanban') && (
+          <section id="section-kanban" className="dashboard-section mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4 animate-slide-up">
             <DistributionDonut title="Kanban Share" rows={(kanban?.byStatus || []).slice(0, 6)} emptyMessage="No status data." />
             <CompactBarChart rows={(kanban?.byStatus || []).slice(0, 8)} emptyMessage="No status data." />
             <MetricTable
@@ -1128,6 +1645,7 @@ export default function DashboardPage() {
         {/* ── 8d. SPRINT STATUS ────────────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="sprint"
+          hidden={!sectionHeaderVisible('sprint')}
           icon="🏃"
           title="Sprint Status"
           chips={[
@@ -1138,8 +1656,8 @@ export default function DashboardPage() {
           expanded={expandedSections.has('sprint')}
           onToggle={() => toggleSection('sprint')}
         />
-        {expandedSections.has('sprint') && (
-          <section id="section-sprint" className="mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
+        {sectionVisible('sprint') && (
+          <section id="section-sprint" className="dashboard-section mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4 animate-slide-up">
             <DistributionDonut title="Sprint Share" rows={(sprint.sprints || []).slice(0, 6)} labelKey="name" valueKey="issues" emptyMessage="No sprint data." />
             <MetricTable
               columns={[
@@ -1159,6 +1677,7 @@ export default function DashboardPage() {
         {/* ── 8e. OWNERSHIP & CAPACITY ─────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="ownership"
+          hidden={!sectionHeaderVisible('ownership')}
           icon="👥"
           title="Ownership & Capacity"
           chips={[
@@ -1169,8 +1688,8 @@ export default function DashboardPage() {
           expanded={expandedSections.has('ownership')}
           onToggle={() => toggleSection('ownership')}
         />
-        {expandedSections.has('ownership') && (
-          <section id="section-ownership" className="mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+        {sectionVisible('ownership') && (
+          <section id="section-ownership" className="dashboard-section mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-slide-up">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card id="capacity-section" className="p-4">
                 <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Capacity By Assignee</h4>
@@ -1212,11 +1731,12 @@ export default function DashboardPage() {
         )}
 
         {/* ── TIER 4: DEEP DIVE ────────────────────────────────────────────────── */}
-        <TierSep icon="🔍" label="Deep Dive" tier={3} />
+        {!isTierHid('deepdive') && <TierSep icon="🔍" label="Deep Dive" tier={3} />}
 
         {/* ── 9a. CLASSIFICATION (LABELS + TYPES) ──────────────────────────────── */}
         <CollapsibleTrigger
           id="labels"
+          hidden={!sectionHeaderVisible('labels')}
           icon="🏷️"
           title="Labels, Types & Projects"
           chips={[{ label: 'Classification', type: 'neutral' }]}
@@ -1224,8 +1744,8 @@ export default function DashboardPage() {
           expanded={expandedSections.has('labels')}
           onToggle={() => toggleSection('labels')}
         />
-        {expandedSections.has('labels') && (
-        <section id="section-labels" className="mb-6">
+        {sectionVisible('labels') && (
+        <section id="section-labels" className="dashboard-section mb-6 animate-slide-up">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <Card className="p-4">
               <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Label Distribution</h4>
@@ -1317,6 +1837,7 @@ export default function DashboardPage() {
         {/* ── 9b. RELATIONS ────────────────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="relations"
+          hidden={!sectionHeaderVisible('relations')}
           icon="🔗"
           title="Linked Issues & Dependencies"
           chips={rels?.hasLinks ? [{ label: `${rels.totalLinks} links`, type: 'info' as const }] : [{ label: 'No links found', type: 'neutral' as const }]}
@@ -1324,8 +1845,8 @@ export default function DashboardPage() {
           expanded={expandedSections.has('relations')}
           onToggle={() => toggleSection('relations')}
         />
-        {expandedSections.has('relations') && (
-        <section id="section-relations" className="mb-6">
+        {sectionVisible('relations') && (
+        <section id="section-relations" className="dashboard-section mb-6 animate-slide-up">
           <div className="mb-3">
             <p className="text-sm text-slate-500 mt-0.5">
               {rels?.hasLinks
@@ -1402,6 +1923,7 @@ export default function DashboardPage() {
         {/* ── 9d. READINESS ────────────────────────────────────────────────────── */}
         <CollapsibleTrigger
           id="readiness"
+          hidden={!sectionHeaderVisible('readiness')}
           icon="🚀"
           title="Epic Health & Release Readiness"
           chips={[
@@ -1412,8 +1934,8 @@ export default function DashboardPage() {
           expanded={expandedSections.has('readiness')}
           onToggle={() => toggleSection('readiness')}
         />
-        {expandedSections.has('readiness') && (
-        <section id="section-readiness" className="mb-6">
+        {sectionVisible('readiness') && (
+        <section id="section-readiness" className="dashboard-section mb-6 animate-slide-up">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="p-4">
               <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Top At-Risk Epics</h4>
@@ -1468,6 +1990,7 @@ export default function DashboardPage() {
         )}
 
         {/* ── 10. FLOW HEALTH PANEL ────────────────────────────────────────────── */}
+        {!hideFlowPanel && (
         <section id="flow-health-panel" className="mb-8">
           <button
             type="button"
@@ -1540,14 +2063,14 @@ export default function DashboardPage() {
                       setOpenAgeMaxFilter(''); setHealthFilter('all'); setReasonFilter(''); setLabelFilter('');
                       setActiveQuickFilter('all');
                     }}
-                    className="text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg px-3 py-1.5 bg-white hover:bg-slate-50 transition-colors"
+                    className="btn-secondary text-xs px-3 py-1.5"
                   >
                     Reset
                   </button>
                   <button
                     type="button"
                     onClick={exportCsv}
-                    className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 border border-blue-600 rounded-lg px-3 py-1.5 transition-colors"
+                    className="btn-primary text-xs px-3 py-1.5"
                   >
                     Export CSV
                   </button>
@@ -1592,7 +2115,7 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => setShowPresetInput(true)}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 border border-dashed border-slate-300 rounded-full px-3 py-0.5 hover:border-blue-400 hover:text-blue-600 transition-colors"
+                      className="btn-ghost text-xs px-3 py-0.5 border border-dashed border-slate-300 hover:border-blue-400 hover:text-blue-600"
                     >
                       + Save current filters
                     </button>
@@ -1611,6 +2134,7 @@ export default function DashboardPage() {
                               reasonFilter, labelFilter, activeQuickFilter,
                             });
                             setPresets(loadPresets());
+      setMutedRecs(getActiveMuted());
                             setPresetName('');
                             setShowPresetInput(false);
                           }
@@ -1629,6 +2153,7 @@ export default function DashboardPage() {
                             reasonFilter, labelFilter, activeQuickFilter,
                           });
                           setPresets(loadPresets());
+      setMutedRecs(getActiveMuted());
                           setPresetName('');
                           setShowPresetInput(false);
                         }}
@@ -1697,7 +2222,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setVisibleCount(c => c + 100)}
-                  className="text-sm font-semibold text-slate-700 border border-slate-200 rounded-lg px-4 py-2 bg-white hover:bg-slate-50 transition-colors"
+                  className="btn-secondary px-4 py-2"
                 >
                   Show {Math.min(100, filteredFlowItems.length - visibleCount)} more
                   <span className="text-slate-400 ml-1">— {filteredFlowItems.length - visibleCount} remaining</span>
@@ -1706,6 +2231,7 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+        )}
 
         {/* ── DETAIL MODAL ─────────────────────────────────────────────────────── */}
         {detailPanel && (
@@ -1756,11 +2282,13 @@ export default function DashboardPage() {
           </div>
         )}
 
+
         {/* ── 11. THROUGHPUT ANALYTICS ─────────────────────────────────────────── */}
         {metrics.throughput && (
           <>
             <CollapsibleTrigger
               id="throughput"
+          hidden={!sectionHeaderVisible('throughput')}
               icon="⚡"
               title="Throughput & Delivery Analytics"
               chips={[
@@ -1770,10 +2298,20 @@ export default function DashboardPage() {
               ]}
               accent="#2563eb"
               expanded={expandedSections.has('throughput')}
-              onToggle={() => toggleSection('throughput')}
+              onToggle={() => {
+                toggleSection('throughput');
+                // Track onboarding step on first expand
+                if (!expandedSections.has('throughput')) {
+                  try {
+                    localStorage.setItem('dc_viewed_sprints', '1');
+                    const { markStepDone } = require('@/lib/onboarding');
+                    markStepDone('review_sprints');
+                  } catch {}
+                }
+              }}
             />
-            {expandedSections.has('throughput') && (
-            <section id="section-throughput" className="mb-8 space-y-6">
+            {sectionVisible('throughput') && (
+            <section id="section-throughput" className="dashboard-section mb-8 space-y-6 animate-slide-up">
               <SprintThroughputPanel summary={metrics.throughput.sprint} />
               {metrics.throughput.sprint.totalSprints >= 2 && (
                 <SprintComparePanel summary={metrics.throughput.sprint} />
@@ -1789,6 +2327,7 @@ export default function DashboardPage() {
 
       </div>
       <ScrollToTopFab />
+      <ProductTour />
     </AppShell>
   );
 }

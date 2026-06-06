@@ -2,7 +2,8 @@
 
 **Document type:** Technical Method Description
 **Author:** Ali Abu Ras
-**Date:** 2026-05-31
+**Date:** 2026-06-03
+**Version:** 4.0
 
 ---
 
@@ -248,4 +249,188 @@ SORT recommendations: Critical → High → Medium → Low
 
 ---
 
-*© 2025 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity*
+---
+
+## Method 9: Data Quality Scoring
+
+**Problem:** Users don't know how reliable their Jira data is before viewing dashboard metrics. A team that never fills in Story Points or Sprint fields gets the same visual presentation as a team with complete data — creating false confidence.
+
+**How it works:**
+1. After `parseJiraFile()` and before `calculateDashboardMetrics()`, the upload API calls `calculateDataQuality(issues)`.
+2. 10 fields are checked: Created Date, Done Date, Story Points, Sprint, Assignee, Epic Link / Parent Key, In Progress Date, Due Date, Priority, Labels.
+3. For each field, the fill rate (% of issues with a non-empty value) is computed.
+4. A weighted score is calculated based on field criticality. Essential timing fields (Created Date, Done Date) carry higher weight than cosmetic fields (Labels).
+5. The score is normalised to 0–100 and assigned a band: Excellent (≥90), Good (≥75), Fair (≥50), Poor (≥25), Critical (<25).
+6. A plain-English summary is generated explaining the band and top improvement actions.
+
+**Key design:** The score is computed once per upload and stored as part of the metrics response. It is displayed on the column-mapping preview page and in the dashboard Data Quality card.
+
+**Implementation:** `src/services/dataQuality/dataQuality.service.ts` — `calculateDataQuality()`
+
+---
+
+## Method 10: Metric Confidence Scoring
+
+**Problem:** A metric like "Average Cycle Time = 8.2 days" looks precise but may be calculated from only 3 resolved issues in a 200-issue dataset, making it statistically unreliable.
+
+**How it works:**
+1. After computing all dashboard metrics, `calculateMetricConfidence(issues)` is called.
+2. For each major KPI (Sprint Throughput, Kanban Flow, Cycle Time, Lead Time, Velocity, Orphan Ratio, etc.), confidence is assessed by checking: which required fields are present, what percentage of issues provide data for the metric, and whether the sample size is statistically meaningful.
+3. Confidence levels are: High (all required fields, sufficient sample), Medium (some fields missing, metric is estimable), Low (significant data gaps, interpret with caution), Unreliable (critical fields absent, metric cannot be trusted), N/A (metric not applicable to this dataset).
+4. For each KPI card on the dashboard, a confidence badge is rendered. Hovering shows the reason and which fields are missing.
+
+**Implementation:** `src/services/metrics/metricConfidence.service.ts` — `calculateMetricConfidence()`
+
+---
+
+## Method 11: Missing-Column Impact Explanation
+
+**Problem:** When optional Jira fields are absent, metrics degrade silently. Users don't know which sections of the dashboard are affected or what they'd gain by improving their export.
+
+**How it works:**
+1. `calculateFieldImpacts(issues)` runs after the upload, checking which of the 53 optional fields are absent.
+2. For each missing field, a pre-defined impact descriptor is returned: which metrics are degraded, which dashboard sections are affected, what the user would see now vs. what they'd gain.
+3. This data is displayed on the column-mapping preview and in the Data Quality section.
+
+**Implementation:** `src/services/dataQuality/missingFieldImpact.service.ts` — `calculateFieldImpacts()`
+
+---
+
+## Method 12: Browser Local-Data Reset
+
+**Problem:** Computed metrics are stored in `localStorage` under `dc_` prefixed keys. When users return to the app, stale data from a previous upload persists. Users need a safe, guided way to clear this data without accidentally clearing unrelated browser data or deleting server records.
+
+**How it works (implemented — P1.2):**
+1. On mount, `app/page.tsx` calls `hasLocalData()` from `src/lib/clearLocalData.ts`. This checks all 11 fixed `DC_FIXED_KEYS` plus any dynamic `dc_col_order_*` keys in `localStorage`.
+2. If stored data is found, an amber banner appears: "Stored Delivery Clarity data was found in this browser."
+3. User clicks "Clear Local Data" → `ConfirmDeleteDialog` opens with title "Clear Local Data?" and warning: "This will remove local data and may end your current session."
+4. On confirm, `clearLocalData()` removes each key individually (never uses `localStorage.clear()`) — only `dc_*` keys are touched.
+5. `sessionStorage` `dc_*` keys are also cleared.
+6. The action does NOT call any API endpoint — server-side import logs and database records are unaffected.
+7. The same `ClearLocalDataPanel` component is available in Admin Settings → Browser Data tab.
+
+**Key invariant:** `clearLocalData()` uses an explicit allowlist (`DC_FIXED_KEYS`) plus a prefix scan (`dc_col_order_`). Any key not matching is guaranteed to be preserved.
+
+**Implementation:** `src/lib/clearLocalData.ts` — `hasLocalData()`, `clearLocalData()`, `DC_FIXED_KEYS`; `src/components/admin/ClearLocalDataPanel.tsx`; `app/page.tsx` (detection banner + modal)
+
+---
+
+## Method 13: Dashboard Section Visibility
+
+**Problem:** The dashboard shows all sections simultaneously, creating visual overwhelm for users who only need one area of information at a time (e.g., a Scrum Master looking only at sprint health).
+
+**How it works (implemented — P1.3):**
+1. `DashboardSectionSwitcher` renders as a sticky tab bar (`sticky top-14 z-30`) with a gradient lightning-bolt brand mark, 14 named section tabs, and Full / Overview mode buttons.
+2. Dashboard state holds `sectionMode: 'full' | 'overview' | string`. Three helper functions derive visibility:
+   - `isModeVisible(key)` — returns `true` if `key` should be shown for the current mode
+   - `sectionHeaderVisible(key)` — `!isHidden(key) && isModeVisible(key)` — controls `CollapsibleTrigger` rendering
+   - `sectionVisible(key)` — `!isHidden(key) && isModeVisible(key)` (in non-full modes, sections auto-expand)
+3. `OVERVIEW_KEYS = { overview, attention, recommendations }` — these three sections show in Overview mode.
+4. Section tab clicks call `focusSection(key)`: sets `sectionMode`, ensures section is in `expandedSections`, then calls `window.scrollTo` with offset = `header.offsetHeight + stickyBar.offsetHeight + 12px` measured dynamically.
+5. All 14 `<section>` elements carry `className="dashboard-section animate-slide-up"`. The `animate-slide-up` keyframe is `{ from: opacity:0; transform:translateY(16px) }`. `@media (prefers-reduced-motion: reduce)` disables the animation.
+6. `SectionNav` (right-side dot sidebar) uses `IntersectionObserver` with `rootMargin: "-20% 0px -70% 0px"` to track which section is most visible and highlights the corresponding dot.
+7. Role-based view `isHidden(key)` always takes priority over `sectionMode` — a section hidden by the Executive view cannot be revealed by the switcher.
+8. The entire sticky bar (switcher + filter row) has `print:hidden`; `SectionNav` is wrapped in `print:hidden`.
+
+**Implementation:** `src/lib/dashboardSections.ts`; `src/components/dashboard/DashboardSectionSwitcher.tsx`; `src/components/ui/SectionNav.tsx`; `app/dashboard/page.tsx` — `sectionMode` state, `focusSection()`, `sectionHeaderVisible()`, `sectionVisible()`
+
+---
+
+## Method 14: Pill Button Design System
+
+**Problem:** Pre-v4.1, buttons across the app used inconsistent shape (mix of `rounded-full`, `rounded-lg`, `rounded-xl`), inconsistent colour semantics, and no shared baseline — each page styled buttons independently.
+
+**How it works (implemented — v4.1):**
+1. Nine utility classes are defined in `app/globals.scss` under `@layer components`, all using `border-radius: 9999px` (fully rounded pill):
+   - `btn-primary` (blue `#2563eb` filled), `btn-secondary` (white outlined), `btn-ghost` (transparent)
+   - `btn-danger` (red filled), `btn-outline-danger` (red outlined → fills on hover)
+   - `btn-green` (emerald filled), `btn-dark` (slate-900 filled), `btn-warning` (amber outlined)
+   - `btn-sm` / `btn-xs` size modifiers
+2. Every `<button>` and `<a>` acting as a button in the app uses one of these classes. No custom padding/colour/radius outside these classes.
+3. For colour overrides within a variant (e.g. teal Customer View), inline `style={{ background: "#hex" }}` is used — the pill shape and font weight are still inherited from the base class.
+
+**Implementation:** `app/globals.scss` — 9 classes; applied across all pages and components
+
+---
+
+*© 2026 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity v4.1*
+
+---
+
+## Method 15: Release Confidence Scoring (9.30 — v4.1)
+
+**Problem:** Upload-to-upload health score trends don't isolate release-gate signals. Teams need a metric specifically tracking whether the product is safe to release, not just generally healthy.
+
+**How it works:**
+1. At every successful upload, four release-gate inputs are extracted from the computed `DashboardMetrics`: `completionRate`, `blockedIssues`, `criticalCount` (from `flow.critical`), `openDefects`, `totalIssues`.
+2. `computeReleaseConfidence()` applies the weighted formula: completion (55 pts) + no-blockers (25 pts) + no-critical (12 pts) + no-defects (8 pts), clamped 0–100.
+3. The score is stored in `ImportLog.metadataJson` as `releaseConfidenceScore`.
+4. `GET /api/trends` reads it back and includes it in each `TrendPoint`.
+5. `/trends` page renders a purple trend chart, stat card, and log column — all gated on `!= null` so old uploads degrade gracefully.
+
+**Implementation:** `src/lib/releaseConfidence.ts`, `app/api/upload/route.ts`, `app/api/trends/route.ts`, `app/trends/page.tsx`
+
+---
+
+## Method 16: Team Health Scoring (9.31 — v4.1)
+
+**Problem:** `metrics.capacity[]` provides raw counts per assignee but no comparable health signal. Managers reviewing team performance in retrospectives need a single score to rank and compare team members.
+
+**How it works:**
+1. `computeTeamHealth()` joins `capacity[]` (workload counts) with `flow.items[]` (per-item health + reason) by assignee name.
+2. Per assignee, it counts: `criticalCount` (open items where `health === 'critical'`), `blockedCount` (open items where `reason` contains "block"), `warningCount`, `goodCount`.
+3. It also computes `avgOpenAgeDays` from the `ageDays` of all non-done items — done items are excluded.
+4. The health score formula: completion (50 pts) + no-critical (30 pts) + no-blocked (20 pts), clamped 0–100.
+5. Results are sorted by `healthScore` descending and rendered on `/teams` as scorecards, 4 comparison charts, and a detail table.
+
+**Implementation:** `src/lib/teamHealth.ts`, `app/teams/page.tsx`
+
+---
+
+## Method 17: Portfolio Aggregation Scoring (9.32 — v4.1)
+
+**Problem:** No single view shows the health of the entire delivery portfolio — epics, projects, sprints, and quarters — in one place. Programme leads need to assess cross-team delivery at a glance.
+
+**How it works:**
+1. `computePortfolioSummary()` reads `metrics.epics[]`, `metrics.projects[]`, `metrics.quarters[]`, and `metrics.throughput.sprint` from the loaded `DashboardMetrics`.
+2. It computes a weighted-average completion rate for epics and projects (each weighted by issue count).
+3. Sprint performance comes from `throughput.sprint.averageCompletionPct`; data quality from `metrics.dataQuality.score`.
+4. The portfolio score formula: epics×40 + projects×30 + sprint×20 + dataQuality×10, clamped 0–100.
+5. Epic health is derived from critical/warning counts: `critical > 0 → critical`, `warning > 0 → warning`, else `good`. Project health is derived from `completionRate`: ≥70 → good, ≥40 → warning, else critical.
+6. "No date" quarters are filtered from the display.
+7. Insights are generated based on atRiskEpics, atRiskProjects, blocked items, and score band.
+
+**Implementation:** `src/lib/portfolioHealth.ts`, `app/portfolio/page.tsx`
+
+---
+
+## Method 18: Executive One-Page PDF Generation (9.33 — v4.1)
+
+**Problem:** Executives and stakeholders need a shareable, printable one-page summary that can be produced in seconds without manual aggregation from multiple dashboard pages.
+
+**How it works:**
+1. User clicks "Executive PDF" on `/summary` — triggers `exportExecutivePdf()` via lazy import.
+2. `buildExecutivePdfHtml(metrics)` assembles a self-contained HTML document from `DashboardMetrics`.
+3. The document uses a 3-column CSS grid: KPIs + insights | Epics + team capacity | Top 3 recommendations.
+4. All user-supplied strings (epic names, assignee names, insights) are sanitised via `esc()` (HTML entity encoding) before injection into the template literal.
+5. Print CSS sets `@page { size: A4 landscape; margin: 10mm }` and `-webkit-print-color-adjust: exact` to preserve colours.
+6. The HTML is wrapped in a `Blob` and downloaded as `executive-summary-{date}.html`.
+7. User opens the file and uses the browser's print dialog (Ctrl/Cmd+P → Save as PDF) — no external PDF library required.
+
+**Implementation:** `src/lib/executivePdf.ts`, `src/lib/exportUtils.ts — exportExecutivePdf()`, `app/summary/page.tsx`
+
+---
+
+## Method 19: Bucket-First Metrics Startup (v4.2)
+
+**Problem:** Users returning after login/register or page refresh need the latest dashboard without relying only on browser-local state.
+
+**How it works:**
+1. Upload and merge routes write the latest `DashboardMetrics` payload to `data/latest-metrics.json`.
+2. Backup bundles include `latest-metrics.json`, so S3/Azure/GCP/local backups carry the latest dashboard payload.
+3. Analytics pages call `loadMetricsWithSource()`, which fetches `/api/metrics/latest`.
+4. The endpoint runs `syncFromCloud()` and reads the restored/cache-backed latest metrics file.
+5. If no server/bucket metrics exist, the client falls back to `dc_metrics_v2` in browser `localStorage`.
+6. `dc_metrics_source_v1` drives the data source badge so users can see bucket/cache/upload/snapshot/localStorage fallback.
+
+**Implementation:** `src/services/metrics/latestMetricsStorage.ts`, `app/api/metrics/latest/route.ts`, `src/lib/storage.ts`, `src/components/ui/DataSourceBadge.tsx`

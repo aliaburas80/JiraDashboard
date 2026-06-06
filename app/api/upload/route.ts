@@ -4,9 +4,12 @@ import { parseJiraFile } from '@/services/jira/parser';
 import { validateIssueData } from '@/services/jira/validation';
 import { calculateDashboardMetrics } from '@/services/metrics/metrics.service';
 import { appendImportLog, buildImportLog } from '@/services/imports/importLogs.service';
+import { computeReleaseConfidence } from '@/lib/releaseConfidence';
 import { getIronSession } from 'iron-session';
+import { cookies } from 'next/headers';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
+import { writeLatestMetrics } from '@/services/metrics/latestMetricsStorage';
 
 // ---------------------------------------------------------------------------
 // Simple in-process rate limiter — 20 uploads per 15 minutes per IP
@@ -128,20 +131,28 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // --- Get session user (optional — works without auth too) ---
-  const sessionRes = new NextResponse();
-  const session    = await getIronSession<SessionData>(req, sessionRes, SESSION_OPTIONS);
-  const userId     = session.isLoggedIn ? session.userId : null;
+  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const userId  = session.isLoggedIn ? session.userId : null;
 
   // --- Metrics + log ---
   try {
     const startTime = Date.now();
     const metrics   = calculateDashboardMetrics(issues);
+    writeLatestMetrics(metrics);
     const importLog = appendImportLog(
       buildImportLog({ file: fileArg, parseResult, validation, metrics, status: 'success' }),
     );
 
-    // Save to DB if user is logged in
+    // Save to DB if user is logged in — include trend metrics in metadataJson
     if (userId) {
+      const flow = (metrics.flow ?? {}) as any;
+      const releaseConfidenceScore = computeReleaseConfidence({
+        completionRate: metrics.completionRate  ?? 0,
+        blockedIssues:  metrics.blockedIssues   ?? 0,
+        criticalCount:  flow.critical           ?? 0,
+        openDefects:    metrics.openDefects     ?? 0,
+        totalIssues:    metrics.totalIssues     ?? 0,
+      });
       await prisma.importLog.create({ data: {
         userId,
         fileName:        originalname,
@@ -154,10 +165,33 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         doneIssues:      metrics.doneIssues  ?? 0,
         healthScore:     metrics.healthScore ?? 0,
         processingTimeMs: Date.now() - startTime,
-      }}).catch(() => {}); // non-blocking — don't fail upload on DB error
+        metadataJson: JSON.stringify({
+          completionRate:          metrics.completionRate       ?? 0,
+          blockedIssues:           metrics.blockedIssues        ?? 0,
+          activeIssues:            metrics.activeIssues         ?? 0,
+          openDefects:             metrics.openDefects          ?? 0,
+          avgLeadTimeDays:         flow.averageLeadTimeDays     ?? 0,
+          avgCycleTimeDays:        flow.averageCycleTimeDays    ?? 0,
+          criticalCount:           flow.critical               ?? 0,
+          warningCount:            flow.warning                ?? 0,
+          dataQualityScore:        metrics.dataQuality?.score  ?? null,
+          avgSprintThroughput:     metrics.throughput?.sprint?.averageThroughputCount ?? null,
+          trendDirection:          metrics.throughput?.sprint?.trendDirection ?? null,
+          releaseConfidenceScore,
+        }),
+      }}).catch(() => {});
+
+      // Push-on-change: sync new data to cloud immediately (non-blocking)
+      import('@/services/storage/cloudSync')
+        .then(({ pushToCloud }) => pushToCloud())
+        .catch(() => {}); // never block the upload response
     }
 
-    return NextResponse.json({ metrics, warnings, importLog });
+    // Warn when items are capped due to large export
+    if ((metrics.flow as any).itemsCapped) {
+      warnings.push(`Large export: ${(metrics.flow as any).totalItemCount?.toLocaleString()} items detected. Dashboard shows top 5,000 highest-risk items. All aggregate metrics are accurate.`);
+    }
+    return NextResponse.json({ metrics, warnings, importLog, columnMapping: parseResult.columnMapping });
   } catch (error) {
     appendImportLog(
       buildImportLog({ file: fileArg, status: 'failed', error: error instanceof Error ? error.message : String(error) }),

@@ -11,6 +11,7 @@ const ALLOWED: Record<string, string> = {
   'test-cases':   'TEST_CASES.md',
   'user-journeys':'USER_JOURNEYS.md',
   'dev-guide':    'DEVELOPER_GUIDE.md',
+  'deployment':   'DEPLOYMENT_GUIDE.md',
   readme:         'README.md',
 };
 

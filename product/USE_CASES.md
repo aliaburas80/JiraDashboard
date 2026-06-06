@@ -5,12 +5,12 @@
 | Field | Detail |
 |---|---|
 | **Document Title** | Delivery Clarity — Use Cases |
-| **Version** | 1.0 |
-| **Date** | 2026-05-30 |
+| **Version** | 4.0 |
+| **Date** | 2026-06-03 |
 | **Author** | Ali Abu Ras |
-| **Status** | Approved |
+| **Status** | Active |
 | **Classification** | Internal |
-| **Derived From** | BRD v1.0, SRS v1.0.0 |
+| **Derived From** | BRD v4.0, SRS v4.0.0 |
 
 ### Revision History
 
@@ -18,6 +18,7 @@
 |---|---|---|---|
 | 0.1 | 2026-05-30 | Ali Abu Ras | Initial draft — all 40 use cases, actors, diagrams |
 | 1.0 | 2026-05-30 | Ali Abu Ras | Final review — approved as baseline |
+| 4.0 | 2026-06-03 | Ali Abu Ras | v4 addendum: UC-051–059 — data quality, confidence, snapshots, thresholds, clear data, section switcher, calculation reference |
 
 ---
 
@@ -2127,3 +2128,430 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 3a. HTTP 409 "An account with this email already exists"
 
 **Related FR:** FR-228, FR-235
+
+---
+
+## v4.0 Use Cases (2026-06-03)
+
+### UC-051 — Review Data Quality Score After Upload
+
+**Actor:** Engineering Manager, Scrum Master  
+**Trigger:** Column-mapping preview shown after file upload  
+**Precondition:** File parsed successfully; `calculateDataQuality()` run  
+**Main Flow:**
+1. Column-mapping preview displays Data Quality Score (0–100%) and band
+2. User reads plain-English summary explaining score and top improvements
+3. User reviews field breakdown: fill rates per field
+4. User proceeds to dashboard (immediately or after 10-second auto-proceed)
+
+**Alternate Flow A — Poor/Critical score:**  
+2a. User notes missing fields and plans Jira data improvement actions  
+
+**Related FR:** FR-242–FR-245, FR-275
+
+---
+
+### UC-052 — Interpret Metric Confidence Badge
+
+**Actor:** Engineering Manager  
+**Trigger:** User views a KPI card on the dashboard  
+**Precondition:** Dashboard loaded; confidence scores computed  
+**Main Flow:**
+1. User sees a "Low" confidence badge on Cycle Time KPI card
+2. User hovers/clicks badge → tooltip: reason + missing fields list
+3. User understands metric is unreliable; notes action to fix Jira workflow
+
+**Related FR:** FR-246–FR-248
+
+---
+
+### UC-053 — Save and Load Dashboard Snapshot
+
+**Actor:** Authenticated user  
+**Trigger:** User clicks "Save snapshot" in dashboard sticky bar  
+**Main Flow:**
+1. User enters snapshot name
+2. System saves DashboardSnapshot record to SQLite
+3. User later navigates to /snapshots, selects the snapshot, and loads it
+
+**Alternate Flow A — Max 20 snapshots reached:**  
+2a. Error: "Maximum 20 snapshots reached. Delete one first."  
+
+**Related FR:** FR-255–FR-256
+
+---
+
+### UC-054 — Compare Two Snapshots
+
+**Actor:** Engineering Manager  
+**Trigger:** User selects two snapshots and clicks "Compare"  
+**Main Flow:**
+1. User selects two snapshots on /snapshots
+2. /snapshots/compare shows 12-metric delta table with ↑↓→ indicators
+3. Insights paragraph summarises most significant changes
+4. User copies insights to report or presentation
+
+**Alternate Flow A — Same data:**  
+3a. "Same data detected" notice shown  
+
+**Related FR:** FR-257
+
+---
+
+### UC-055 — Configure Health Thresholds (Admin)
+
+**Actor:** Admin user  
+**Trigger:** Admin opens Health Thresholds panel in /admin/settings  
+**Main Flow:**
+1. Admin adjusts threshold values (cycle time critical days, blocked ratio warning %, etc.)
+2. Admin saves; config written to data/health-thresholds.json
+3. Cache invalidated; next upload uses new thresholds
+
+**Related FR:** FR-260–FR-261
+
+---
+
+### UC-056 — Clear Local Delivery Data from Upload Page (Planned P1.2)
+
+**Actor:** Any authenticated user  
+**Trigger:** Upload page detects stored dc_ keys in localStorage  
+**Main Flow:**
+1. Upload page shows: "Stored Delivery Clarity data was found in this browser"
+2. User clicks "Clear stored data"
+3. Confirmation modal with session-end warning shown
+4. User confirms → all dc_ keys cleared; redirect to /login if session cleared
+
+**Exception:** User cancels → no data changed  
+
+**Related FR:** FR-284
+
+---
+
+### UC-057 — Clear Local Data from Admin Settings (Planned P1.2)
+
+**Actor:** Admin user  
+**Trigger:** Admin opens "Local Data & Browser Session" in /admin/settings  
+**Main Flow:**
+1. Admin clicks "Clear Local Data"
+2. Confirmation modal shown
+3. Admin confirms → dc_ keys cleared; server-side records NOT deleted
+
+**Related FR:** FR-284, FR-286
+
+---
+
+### UC-058 — Use Dashboard Section Switcher (Planned P1.3)
+
+**Actor:** Engineering Manager, Scrum Master  
+**Trigger:** User opens /dashboard  
+**Main Flow:**
+1. Default view: Overview mode (health score, KPIs, top risks, quality summary)
+2. User clicks a section button (e.g., "Sprints")
+3. Page smooth-scrolls to Sprint section with fade-in animation
+4. Other heavy sections hidden
+5. "Full Dashboard" button restores all sections
+
+**Reduced-motion:** No animations; instant scroll and show/hide  
+
+**Related FR:** FR-285, BR-088–BR-090
+
+---
+
+### UC-059 — Use Calculation Reference in Developer Portal (Planned P1.1)
+
+**Actor:** Developer, Technical Lead  
+**Trigger:** User navigates to /developer  
+**Main Flow:**
+1. "Calculation Reference" visible as distinct item in blue side menu
+2. User clicks → navigates/scrolls to Calculation Reference section
+3. User finds a metric, reads: formula, data source, why used, assumptions, limitations, related code
+
+**Related FR:** FR-283, BR-085
+
+
+---
+
+## v4.1 — UX Design System (2026-06-04)
+
+### UC-060 — Clear Local Browser Data
+
+**Actor:** Any logged-in user  
+**Trigger:** User visits Upload page and sees stored data banner, or navigates to Admin Settings → Browser Data tab  
+**Main Flow:**
+1. Banner on upload page shows "Stored Delivery Clarity data was found"
+2. User clicks "Clear Local Data"
+3. Confirmation modal warns about session end
+4. User confirms → `clearLocalData()` removes all `dc_*` keys
+5. Success message shown; page redirects to clean upload page
+**Related FR:** FR-284, BR-086–BR-087
+
+### UC-061 — Navigate Dashboard Sections via Section Switcher
+
+**Actor:** Dashboard user  
+**Trigger:** User wants to focus on one section without scrolling  
+**Main Flow:**
+1. User sees sticky section tab bar with 14 section tabs + Full / Overview modes
+2. User clicks "Kanban" tab → only Kanban section visible, page scrolls to it
+3. Blue underline highlights active tab via IntersectionObserver
+4. User clicks "Full" to restore all sections
+**Related FR:** FR-285, BR-088–BR-090
+
+### UC-062 — Executive Accesses Dashboard Without Flow Detail
+
+**Actor:** C-level executive  
+**Trigger:** Executive opens dashboard and selects Executive view  
+**Main Flow:**
+1. Executive selects "Executive" from view selector
+2. Dashboard shows: health score, key KPIs, risks, recommendations only
+3. Filter row (All/High Risk/Blocked), Show filters button, and Flow Health Panel are hidden
+4. Executive cannot accidentally navigate to issue-level technical detail
+**Related FR:** FR-289, BR-094
+
+### UC-063 — User Tracks Recommendation Progress Over Multiple Uploads
+
+**Actor:** Scrum Master  
+**Trigger:** User uploads a new Jira export after addressing some issues  
+**Main Flow:**
+1. New metrics load; dashboard shows Smart Recommendations
+2. Resolved section shows: "✅ Resolved since last upload (2)" — items fixed since previous export
+3. NEW badges appear on newly detected issues
+4. User clicks "View history (3 previous snapshots)" to see full timeline
+5. Each past snapshot shows date, health score, and recommendation list
+**Related FR:** FR-289
+### UC-064 — User Exports Work Item Explorer Graph
+
+**Actor:** Scrum Master / Engineering Manager
+**Trigger:** User has explored an issue key on `/explore` and wants to share findings
+**Main Flow:**
+1. User enters an issue key and the graph loads
+2. User clicks "↓ Export" dropdown → selects "Export to Excel (.xlsx)"
+3. System generates a 5-sheet workbook: Summary, All Issues, Risk Items, Orphans, Insights
+4. File downloads as `explorer-{key}-{date}.xlsx`
+5. Alternatively, user selects "Export to CSV (.csv)" for a flat table
+**Related FR:** FR-290, BR-096
+
+### UC-065 — User Monitors Release Confidence Trend Over Uploads
+
+**Actor:** Engineering Manager / Release Manager
+**Trigger:** User navigates to `/trends` after multiple uploads
+**Main Flow:**
+1. User opens `/trends` — requires 2+ uploads
+2. "Release Confidence" stat card shows delta vs first upload
+3. Purple trend chart shows score trajectory over all uploads
+4. Upload log table shows "Rel. Confidence" column per row, colour-coded green/amber/red
+**Related FR:** FR-291, BR-097
+
+### UC-066 — Manager Compares Team Member Health
+
+**Actor:** Engineering Manager / Scrum Master
+**Trigger:** Pre-retro or sprint review — manager wants to see who is healthy vs at risk
+**Main Flow:**
+1. User navigates to `/teams` from Analytics nav
+2. Member scorecards show each assignee's health score, completion bar, blocked/critical counts
+3. Four comparison charts rank all members by health, completion, workload, and risk
+4. Detail table shows all members with sortable columns
+5. Manager identifies who needs support before the retro
+**Related FR:** FR-292, BR-098
+
+### UC-067 — Programme Lead Reviews Cross-Team Portfolio
+
+**Actor:** Director of Engineering / Programme Manager
+**Trigger:** Weekly programme review or steering committee preparation
+**Main Flow:**
+1. User navigates to `/portfolio` from Analytics nav
+2. Portfolio Score banner shows 0–100 score with band label and key insights
+3. Epic Progress panel shows all epics with completion bars, health dots, and critical/warning counts
+4. Project cards show per-project completion and health band
+5. Quarter throughput bars show historical delivery by quarter
+6. Epic detail table enables deep-dive per epic
+**Related FR:** FR-293, BR-099
+
+### UC-068 — User Exports Executive One-Page PDF
+
+**Actor:** Director of Engineering / Engineering Manager
+**Trigger:** User needs a one-page executive summary for a steering committee or stakeholder meeting
+**Main Flow:**
+1. User navigates to `/summary` (Overview page)
+2. User clicks "Executive PDF" button (purple, document icon)
+3. System generates a print-optimised HTML file with: health score, 6 KPIs, top 5 epics, team capacity, insights, top 3 recommendations
+4. File downloads as `executive-summary-{date}.html`
+5. User opens the file and prints it (Ctrl/Cmd+P → Save as PDF) — one A4 landscape page
+**Related FR:** FR-294, BR-100
+
+### UC-069 — Developer Searches Portal for Calculation or Package
+
+**Actor:** Developer / Technical Lead
+**Trigger:** Developer needs to find a specific metric formula or package without knowing which section to open
+**Main Flow:**
+1. Developer opens `/developer`
+2. Types "lead time" into the search box in the blue sidebar
+3. Search results panel shows: 2 Calculations (Lead Time, Cycle Time) and 1 Section (Calculation Reference)
+4. Developer clicks "Lead Time" result → navigates to Calculation Reference with that entry expanded
+**Related FR:** FR-296, BR-102
+
+### UC-070 — Scrum Master Assigns Owner to a Recommendation
+
+**Actor:** Scrum Master
+**Trigger:** Sprint review — Scrum Master wants to make recommendations accountable
+**Main Flow:**
+1. Scrum Master opens the dashboard and sees Smart Recommendations section
+2. Card: "Unblock 3 critical items" — shows "+ Assign (Scrum Master / Delivery Manager)"
+3. Scrum Master clicks "Assign" → inline input opens with suggested owner as placeholder
+4. Types "Sarah Chen" → presses Enter → blue "Sarah Chen" pill appears on the card
+5. Owner persists across page reloads (stored in dc_rec_owners localStorage)
+**Related FR:** FR-295, BR-101
+
+### UC-071 — DevOps Engineer Deploys Delivery Clarity via Docker
+
+**Actor:** DevOps Engineer / System Administrator
+**Trigger:** Team wants to self-host Delivery Clarity in their infrastructure
+**Main Flow:**
+1. Engineer clones the repo, copies `.env.example` to `.env`
+2. Sets `SESSION_SECRET` (openssl rand -hex 32) and `ADMIN_PASSWORD`
+3. Runs `docker compose up -d --build`
+4. Visits `http://server-ip:3000`, logs in with the seed admin credentials
+5. Changes admin password, runs security checklist at `/admin/security`
+6. (Optional) Configures nginx reverse proxy and SSL via Let's Encrypt
+**Related FR:** FR-297, BR-103
+
+### UC-072 — Admin Consults Deployment Guide Before Going to Production
+
+**Actor:** Engineering Manager / DevOps
+**Trigger:** Team is preparing to go from development to production
+**Main Flow:**
+1. Admin opens `product/DEPLOYMENT_GUIDE.md` (or `/developer` → Deployment)
+2. Reviews post-deploy checklist (Section 9) — confirms SESSION_SECRET, password change, security score
+3. Follows the troubleshooting table when the first upload returns a 413 error
+4. Adds nginx `client_max_body_size 25M` → re-uploads successfully
+**Related FR:** FR-297, BR-103
+
+### UC-073 — Admin Reviews System Health Before Production Go-Live
+
+**Actor:** System Administrator / DevOps Engineer
+**Trigger:** Pre-production checklist — admin wants to confirm system is healthy before announcing to users
+**Main Flow:**
+1. Admin navigates to Data → Diagnostics (`/admin/diagnostics`)
+2. Ops Score shows 85/100 — Healthy
+3. Environment checks: SESSION_SECRET ✓, NODE_ENV production ✓, registration locked ✓
+4. Import health: 100% success rate, avg health score 78
+5. Recent audit events confirm normal login/upload activity
+6. Admin clicks "Security Report →" to check security score (separate concern)
+**Related FR:** FR-299, BR-104
+
+### UC-074 — Admin Investigates Failed Import Spike
+
+**Actor:** System Administrator
+**Trigger:** Users report dashboard errors — admin suspects import failures
+**Main Flow:**
+1. Admin opens `/admin/diagnostics`
+2. Import Health card shows: Success Rate 60%, Failed: 4 imports
+3. Ops Score shows 96 (−4 from failed imports)
+4. Admin clicks "Import Logs" quick link → reviews failed logs
+5. Identifies the cause (file encoding issue) and fixes it
+**Related FR:** FR-299, BR-104
+
+### UC-075 — User Sees Branded Login Page
+
+**Actor:** Any user (new or returning)
+**Trigger:** User navigates to /login
+**Main Flow:**
+1. User opens /login
+2. The Delivery Clarity logo SVG (horizontal variant) is displayed at the top of the card
+3. User logs in and proceeds to the dashboard
+**Related FR:** FR-300, BR-105
+
+### UC-076 — Stakeholder Opens Exported Report — Sees Branding
+
+**Actor:** Stakeholder / Manager (receiving a report)
+**Trigger:** A report (HTML, Excel, PDF) is shared with a stakeholder
+**Main Flow:**
+1. Stakeholder opens the HTML or PDF report
+2. Header shows the Delivery Clarity lightning bolt brand mark + "Delivery Report" / "Executive Summary"
+3. Footer shows "Delivery Clarity v4.1 · Ali Abu Ras · aliaburas80@gmail.com"
+4. Browser tab shows branded favicon and title "Delivery Clarity — Jira Intelligence"
+**Related FR:** FR-300, BR-105
+
+### UC-077 — New Team Member Discovers Features via Landing Page
+
+**Actor:** New team member / onboarding user
+**Trigger:** User has just been given access but doesn't know what the tool can do
+**Main Flow:**
+1. User clicks "About" in the Reference nav group → /landing opens
+2. Hero section explains the value proposition with headline and CTAs
+3. User reads the "How it works" 3-step section
+4. User scans the 12 feature cards — clicks "Work Item Explorer" → /explore opens
+5. User explores the feature, then returns to /landing to try another
+**Related FR:** FR-301, BR-106
+
+### UC-078 — User Shares Landing Page with Stakeholder
+
+**Actor:** Engineering Manager
+**Trigger:** Manager wants to introduce a stakeholder to the tool before they log in
+**Main Flow:**
+1. Manager copies the /landing URL and shares it with a stakeholder
+2. Stakeholder opens the page — sees the branded hero, stats, how-it-works, and feature grid
+3. Stakeholder clicks "Upload Jira Export" and starts onboarding
+**Related FR:** FR-301, BR-106
+
+### UC-079 — New User Completes Guided Tour on First Visit
+
+**Actor:** New user (just uploaded first Jira export)
+**Trigger:** User lands on /summary — tour auto-starts after 800ms delay
+**Main Flow:**
+1. User sees dark popover: "Welcome to Delivery Clarity 👋" with "Start tour" CTA
+2. User clicks "Start tour" → redirected to /dashboard
+3. Tour highlights Section Switcher → Health Score → Attention Items → Recommendations → Sprint Throughput
+4. Final step offers "Open Explorer →" navigation
+5. User completes tour → dc_tour_completed saved to localStorage
+**Related FR:** FR-303, BR-107
+
+### UC-080 — Returning User Replays Tour from Dashboard
+
+**Actor:** Any logged-in user
+**Trigger:** User wants to re-explore features
+**Main Flow:**
+1. User clicks the ℹ️ "Tour" button in the dashboard header card
+2. Tour starts from Step 1 (Welcome) regardless of previous completion
+3. User navigates with ← → arrow keys or buttons, presses Esc to exit
+**Related FR:** FR-303, BR-107
+
+### UC-081 — User Customises Theme Accent Colour
+
+**Actor:** Any logged-in user
+**Trigger:** User wants the UI to match their team colour or personal preference
+**Main Flow:**
+1. User clicks the 🎨 palette icon in the AppShell header (next to dark mode toggle)
+2. Theme Customizer panel opens — shows 7 accent colour swatches
+3. User clicks "Purple" swatch → all primary buttons turn purple immediately
+4. User adjusts "Rounded" radius → all cards and buttons get more rounded corners
+5. User selects "Large" text size → font scales up throughout the app
+6. Panel closes on outside click; settings persist across page refreshes
+**Related FR:** FR-304, BR-108
+
+### UC-082 — User Builds Custom Dashboard Layout
+
+**Actor:** Any dashboard user (Scrum Master, Engineering Manager, etc.)
+**Trigger:** User wants the most important sections first without using a pre-built role view
+**Main Flow:**
+1. User opens /dashboard → clicks "Layout" button in the sticky section switcher bar
+2. Layout Builder panel opens — 14 sections listed with ▲▼ arrows and toggle switches
+3. User moves "Sprints" to position 1 using ▲ arrow
+4. User toggles off "Labels" and "Work Items" (low priority for them)
+5. Panel closes — section switcher now shows Sprints first; Labels/Work Items are gone
+6. Settings persist on refresh; blue dot on "Layout" button indicates custom layout is active
+**Related FR:** FR-305, BR-109
+
+### UC-083 — User Starts a Session from Bucket-Backed Metrics
+
+**Actor:** Authenticated user returning to the app
+**Trigger:** User logs in, registers, or navigates to an analytics page after a prior upload has been backed up
+**Main Flow:**
+1. User signs in or opens `/dashboard`, `/summary`, `/charts`, `/teams`, `/portfolio`, `/readiness`, `/customer`, or `/explore`.
+2. System calls `/api/metrics/latest`.
+3. Server runs `syncFromCloud()` to restore or validate the latest configured bucket backup/cache.
+4. Server reads `data/latest-metrics.json` and returns `{ available:true, metrics, source, provider, key }`.
+5. Client stores the metrics as browser fallback and records `dc_metrics_source_v1`.
+6. Header data source badge shows the cloud/cache source.
+7. Dashboard renders without requiring a fresh Jira upload.
+**Alternative Flow:** If `/api/metrics/latest` returns `{ available:false }`, the client falls back to `dc_metrics_v2` and shows `localStorage fallback`.
+**Related FR:** FR-307, FR-308, FR-309

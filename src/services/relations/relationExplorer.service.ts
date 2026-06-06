@@ -96,8 +96,121 @@ function buildNode(
     depth,
     childCount,
     isExpanded:     depth < 2,  // default: expand first 2 levels
-    isFocusNode:    isFocus,
+    isFocusNode:      isFocus,
+    isOnRiskPath:     false, // set after risk path computation
+    isLargestBranch:  false, // set after largest branch computation
   };
+}
+
+// ── Largest unfinished branch computation ─────────────────────────────────────
+// Finds which direct child of the focus node has the most open (non-done) items
+// in its sub-tree. Helps users know where to concentrate their effort.
+
+function computeLargestUnfinishedBranch(
+  nodes: RelationNode[],
+  edges: RelationEdge[],
+  focusKey: string,
+): { largestBranch: import('@/types/relations').LargestBranch | null; branchNodeIds: Set<string> } {
+  // Build parent→children map
+  const children = new Map<string, string[]>();
+  edges.forEach(e => {
+    if (e.type === 'parent-child' || e.type === 'epic-link') {
+      if (!children.has(e.sourceId)) children.set(e.sourceId, []);
+      children.get(e.sourceId)!.push(e.targetId);
+    }
+  });
+
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+
+  // BFS to collect all descendants of a given root
+  function getSubtree(rootId: string): string[] {
+    const result: string[] = [];
+    const queue = [rootId];
+    const visited = new Set<string>();
+    while (queue.length) {
+      const cur = queue.shift()!;
+      if (visited.has(cur)) continue;
+      visited.add(cur);
+      result.push(cur);
+      (children.get(cur) ?? []).forEach(c => queue.push(c));
+    }
+    return result;
+  }
+
+  // Get direct children of focus
+  const directChildren = (children.get(focusKey) ?? []).filter(id => id !== focusKey);
+  if (!directChildren.length) return { largestBranch: null, branchNodeIds: new Set() };
+
+  let best: import('@/types/relations').LargestBranch | null = null;
+  let bestSubtreeIds: string[] = [];
+
+  directChildren.forEach(childId => {
+    const subtreeIds = getSubtree(childId);
+    const subtreeNodes = subtreeIds.map(id => nodeMap.get(id)).filter(Boolean) as RelationNode[];
+    const total = subtreeNodes.length;
+    const open  = subtreeNodes.filter(n => !n.isDone).length;
+    if (open === 0) return;
+    if (!best || open > best.openCount) {
+      const childNode = nodeMap.get(childId);
+      best = {
+        rootKey:  childId,
+        rootLabel: childNode ? `${childNode.issueKey} — ${childNode.summary.slice(0, 40)}` : childId,
+        openCount: open,
+        totalCount: total,
+        completionPct: total > 0 ? Math.round(((total - open) / total) * 100) : 0,
+      };
+      bestSubtreeIds = subtreeIds;
+    }
+  });
+
+  return { largestBranch: best, branchNodeIds: new Set(bestSubtreeIds) };
+}
+
+// ── Risk path computation ─────────────────────────────────────────────────────
+// For every blocked or critical node, walk up the edge tree to the root,
+// marking every node (and connecting edge) on that path.
+
+function computeRiskPaths(nodes: RelationNode[], edges: RelationEdge[]): {
+  riskNodeIds: Set<string>;
+  riskEdgeIds: Set<string>;
+} {
+  // Build child → parent lookup from hierarchy edges
+  const parentOf = new Map<string, string>();
+  edges.forEach(e => {
+    if (e.type === 'parent-child' || e.type === 'epic-link') {
+      parentOf.set(e.targetId, e.sourceId);
+    }
+  });
+
+  // Edge lookup: (source, target) → edge id
+  const edgeKey = (s: string, t: string) => `${s}→${t}`;
+  const edgeById = new Map<string, string>();
+  edges.forEach(e => {
+    edgeById.set(edgeKey(e.sourceId, e.targetId), e.id);
+    edgeById.set(edgeKey(e.targetId, e.sourceId), e.id); // bidirectional lookup
+  });
+
+  const riskNodeIds = new Set<string>();
+  const riskEdgeIds = new Set<string>();
+
+  // Source nodes: blocked OR critical (but not done — done critical is historical)
+  const riskyNodes = nodes.filter(n => (n.isBlocked || n.health === 'critical') && !n.isDone);
+
+  riskyNodes.forEach(node => {
+    let current = node.id;
+    riskNodeIds.add(current);
+    // Walk up to root
+    while (parentOf.has(current)) {
+      const parent = parentOf.get(current)!;
+      riskNodeIds.add(parent);
+      // Mark the edge connecting them
+      const eid = edgeById.get(edgeKey(parent, current)) ?? edgeById.get(edgeKey(current, parent));
+      if (eid) riskEdgeIds.add(eid);
+      current = parent;
+    }
+  });
+
+  return { riskNodeIds, riskEdgeIds };
 }
 
 // ── Edge helpers ──────────────────────────────────────────────────────────────
@@ -136,6 +249,7 @@ function computeStats(nodes: RelationNode[], edges: RelationEdge[]): RelationSta
     completionPct: compPct, blockedRatio: blockedR,
     dependencyCount: deps, orphanCount: orphans,
     deliveryConfidence: Math.round(confidence),
+    largestUnfinishedBranch: null, // set after computeLargestUnfinishedBranch
   };
 }
 
@@ -235,5 +349,28 @@ export function buildRelationGraph(focusKey: string, allIssues: JiraIssue[]): Re
   const stats    = computeStats(nodes, edges);
   const insights = generateInsights(nodes, stats, focusKey);
 
-  return { focusKey, focusType, nodes, edges, orphanNodes, stats, insights };
+  // Compute and apply risk paths
+  const { riskNodeIds, riskEdgeIds } = computeRiskPaths(nodes, edges);
+
+  // Compute largest unfinished branch
+  const { largestBranch, branchNodeIds } = computeLargestUnfinishedBranch(nodes, edges, focusKey);
+
+  const statsWithBranch = { ...stats, largestUnfinishedBranch: largestBranch };
+
+  const nodesWithFlags = nodes.map(n => ({
+    ...n,
+    isOnRiskPath:    riskNodeIds.has(n.id),
+    isLargestBranch: branchNodeIds.has(n.id) && !n.isDone,
+  }));
+  const edgesWithRisk = edges.map(e => ({ ...e, isOnRiskPath: riskEdgeIds.has(e.id) }));
+
+  // Add insight about largest unfinished branch
+  const branchInsights = insights.slice();
+  if (largestBranch && largestBranch.openCount >= 1) {
+    branchInsights.push(
+      `The largest unfinished branch is ${largestBranch.rootLabel} with ${largestBranch.openCount} open item${largestBranch.openCount !== 1 ? 's' : ''} (${largestBranch.completionPct}% complete). Focus here to maximise delivery progress.`
+    );
+  }
+
+  return { focusKey, focusType, nodes: nodesWithFlags, edges: edgesWithRisk, orphanNodes, stats: statsWithBranch, insights: branchInsights };
 }

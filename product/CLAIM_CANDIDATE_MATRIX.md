@@ -114,3 +114,9 @@ A computer-implemented method for generating a statistical project export compri
 ---
 
 *© 2025 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity*
+
+---
+
+## Current Code Alignment — 2026-06-06
+
+Cloud backup and bucket-first latest-metrics startup are now implemented. Patent/claim material remains focused on export-only delivery intelligence and does not claim a live Jira integration; the cloud bucket stores Delivery Clarity backups and latest computed metrics, not Jira credentials or live Jira data.

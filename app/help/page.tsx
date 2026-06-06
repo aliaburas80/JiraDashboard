@@ -1,7 +1,7 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AppShell from '@/components/layout/AppShell';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -574,7 +574,506 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 21. Troubleshooting
+  // 22. Explorer Export
+  {
+    id: 'explorer-export',
+    icon: '📥',
+    title: 'Explorer Export',
+    items: [
+      {
+        q: 'How do I export from the Work Item Explorer?',
+        a: 'After exploring any issue key on the /explore page, an "↓ Export" dropdown button appears in the results header. Choose "Export to Excel (.xlsx)" for a 5-sheet workbook (Summary, All Issues, Risk Items, Orphans, Insights) or "Export to CSV (.csv)" for a flat table. The file is named explorer-{key}-{date}.',
+      },
+      {
+        q: 'What is included in the Excel workbook?',
+        a: 'Sheet 1 (Summary): focus issue key, delivery stats, confidence score, largest unfinished branch, and insights. Sheet 2 (All Issues): all connected nodes and orphans with health, risk-path, blocked, and role columns. Sheet 3 (Risk Items): only blocked, critical, or on-risk-path items. Sheet 4 (Orphans): orphan items only. Sheet 5 (Insights): generated insight text bullets.',
+      },
+      {
+        q: 'Why is the Export button not showing?',
+        a: 'The Export dropdown only appears after a graph has been loaded — enter an issue key and click "Explore Issue" first.',
+      },
+    ],
+  },
+
+  // 23. Teams Page
+  {
+    id: 'teams',
+    icon: '👥',
+    title: 'Teams',
+    items: [
+      {
+        q: 'What is the Teams page?',
+        a: 'The /teams page shows a side-by-side health comparison for each team member (assignee) in your Jira data. It computes a Team Health Score (0–100) per person based on their completion rate, critical items, and blocked items.',
+      },
+      {
+        q: 'How is the Team Health Score calculated?',
+        a: 'Score = (done/total) × 50 + (1 − critical/total) × 30 + (1 − blocked/total) × 20, clamped 0–100. Bands: Healthy ≥ 70 / At Risk ≥ 40 / Critical < 40.',
+      },
+      {
+        q: 'What do the four comparison charts show?',
+        a: 'Health Score (ranked by score, colour-coded by band) · Completion % (ranked by completion) · Workload Share (load%, red > 35%, amber > 20%) · Blocked + Critical Items (ranked by total risk count).',
+      },
+      {
+        q: 'The Teams page shows "No team data available"',
+        a: 'This means no assignee data was found in the uploaded Jira export. Ensure your Jira export includes the Assignee column and has been uploaded from the home page.',
+      },
+    ],
+  },
+
+  // 24. Portfolio Page
+  {
+    id: 'portfolio',
+    icon: '🗂️',
+    title: 'Portfolio',
+    items: [
+      {
+        q: 'What is the Portfolio page?',
+        a: 'The /portfolio page aggregates all epics, projects, sprints, and quarters into a single Portfolio Score (0–100) and health view. It is designed for programme leads and directors who need a cross-team delivery snapshot.',
+      },
+      {
+        q: 'How is the Portfolio Score calculated?',
+        a: 'Score = epic completion × 40% + project completion × 30% + sprint performance × 20% + data quality × 10%, weighted by issue count. Bands: Excellent ≥ 85 / Good ≥ 70 / Moderate ≥ 55 / At Risk ≥ 35 / Critical < 35.',
+      },
+      {
+        q: 'What does the Epic Progress panel show?',
+        a: 'A scrollable list of all epics with health dots (green/amber/red), completion bars, percentage, issue counts, and critical/warning counts. Sorted by the order they appear in your Jira data.',
+      },
+      {
+        q: 'What do the Quarter Throughput bars show?',
+        a: 'Bar height represents total issues per quarter. Bar colour represents completion rate: green ≥ 70%, amber 40–69%, red < 40%. Bars are capped to the last 8 quarters. "No date" quarters are excluded.',
+      },
+    ],
+  },
+
+  // 25. Release Confidence Trend
+  {
+    id: 'release-confidence',
+    icon: '📉',
+    title: 'Release Confidence Trend',
+    items: [
+      {
+        q: 'What is the Release Confidence Score?',
+        a: 'A 0–100 score computed on every upload that specifically measures release readiness — not just general health. It weights completion (55 pts), absence of blockers (25 pts), absence of critical items (12 pts), and absence of open defects (8 pts).',
+      },
+      {
+        q: 'Where do I see the Release Confidence Trend?',
+        a: 'On the /trends page (requires 2+ uploads while logged in): a purple "Release Confidence" chart, a stat card in the summary row, and a "Rel. Confidence" column in the upload log table — colour-coded green ≥ 80%, amber ≥ 60%, red < 60%.',
+      },
+      {
+        q: 'Why does the Release Confidence column show "—" for some uploads?',
+        a: 'Uploads made before this feature was added (v4.1) do not have a stored score. Only uploads from v4.1 onwards will show a value.',
+      },
+    ],
+  },
+
+  // 26. System Diagnostics
+  {
+    id: 'diagnostics',
+    icon: '🩺',
+    title: 'System Diagnostics',
+    items: [
+      {
+        q: 'What is the System Diagnostics page?',
+        a: 'The /admin/diagnostics page (admin-only) shows a live system health snapshot including: an Ops Health Score (0–100), database row counts (users, sessions, imports, snapshots), import success rate and average health score, environment variable checks, system info (Node version, uptime), and the last 8 audit events.',
+      },
+      {
+        q: 'How is the Ops Health Score calculated?',
+        a: 'Score starts at 100 and loses points for: missing SESSION_SECRET (−30), non-production NODE_ENV (−10), open registration enabled (−10), failed imports (−1 each, max −10), and zero active sessions when users exist (−5). Score is clamped to 0–100.',
+      },
+      {
+        q: 'What do the environment checks show?',
+        a: 'Five checks with pass/fail indicators: SESSION_SECRET set (≥32 chars), NODE_ENV=production, DATABASE_URL configured, ALLOW_OPEN_REGISTRATION=false (registration locked), and NEXT_PUBLIC_APP_URL set. Values are never shown — only presence/validity is checked.',
+      },
+      {
+        q: 'How do I access the System Diagnostics page?',
+        a: 'Navigate to Data → Diagnostics in the nav menu, or go directly to /admin/diagnostics. Requires admin role — regular users are redirected to the dashboard.',
+      },
+    ],
+  },
+
+  // 27. Filter Bar
+  {
+    id: 'filter-bar',
+    icon: '🔍',
+    title: 'Filter Bar',
+    items: [
+      {
+        q: 'What do the filter tabs at the top of the dashboard do?',
+        a: 'The filter bar has four quick-filter tabs: All (show everything), High Risk (critical and warning items), Blocked (items with blocked flag), Needs Review (items needing attention). The active tab shows a coloured underline — blue for All, red for High Risk, orange for Blocked, purple for Needs Review.',
+      },
+      {
+        q: 'What does the red dot on "High Risk" mean?',
+        a: 'A red dot badge on the High Risk tab means there are currently blocked or critical items in your data. It disappears when no high-risk items exist.',
+      },
+      {
+        q: 'What do Clear, Show filters, Copy link, and Save snapshot do?',
+        a: '"Clear" resets all active filters to show all items. "Show filters" opens the advanced filter panel for detailed filtering (status, assignee, sprint, health, etc.). "Copy link" copies a shareable URL with your current filter state. "Save snapshot" saves the current dashboard metrics as a named point-in-time report.',
+      },
+    ],
+  },
+
+  // 27. Cloud Sync Strategy
+  {
+    id: 'cloud-sync',
+    icon: '🔄',
+    title: 'Cloud Sync & Data Source',
+    items: [
+      {
+        q: 'Where does my data come from — and how do I know?',
+        a: (
+          <div className="space-y-2 text-xs">
+            <p>Every page shows a <strong>data source badge</strong> in the top navigation bar indicating where the current data came from:</p>
+            <ul className="space-y-1 pl-3">
+              <li><span className="font-bold text-orange-600">☁️ S3</span> — loaded or cached from Amazon S3</li>
+              <li><span className="font-bold text-blue-600">🔷 Azure</span> — loaded or cached from Azure Blob Storage</li>
+              <li><span className="font-bold text-green-600">🌐 GCP</span> — loaded or cached from Google Cloud Storage</li>
+              <li><span className="font-bold text-slate-500">💾 Local cache</span> — cloud provider is set but data served from local cache (no re-fetch needed)</li>
+              <li><span className="font-bold text-violet-600">📤 Jira upload</span> — data came from a fresh Jira CSV upload in this browser session</li>
+              <li><span className="font-bold text-amber-600">⚠️ localStorage fallback</span> — bucket/server metrics were unavailable; data came from this browser&apos;s saved fallback copy</li>
+            </ul>
+            <p className="mt-2">When data is actively loading from the cloud, a blue <strong>loading banner</strong> appears at the top of the page: <em>"Loading data from Amazon S3…"</em></p>
+          </div>
+        ),
+      },
+      {
+        q: 'How does the cloud sync work? Will it re-download from S3 every time?',
+        a: 'No — the app uses a cache-first strategy. On startup it checks whether the local cache is already current by comparing a content hash. If the hash matches the latest cloud backup, no download happens. You only get a real download when the cloud has a newer version than your local cache.',
+      },
+      {
+        q: 'What happens if the cloud is unreachable?',
+        a: 'The app first tries the bucket-backed server copy through /api/metrics/latest. If that is unavailable, it falls back to the browser localStorage copy and shows a "⚠️ localStorage fallback" badge. Local server changes waiting to be pushed are protected: startup sync will not overwrite them with an older bucket backup.',
+      },
+      {
+        q: 'What happens when I upload a new Jira file?',
+        a: 'After every successful Jira CSV upload, the app writes the latest dashboard metrics to data/latest-metrics.json, stores a browser fallback copy, and immediately pushes a fresh backup to your configured cloud bucket (non-blocking — it doesn\'t slow down your upload). The data source badge updates to "📤 Jira upload".',
+      },
+      {
+        q: 'What happens when I switch from S3 to Azure (or any other provider)?',
+        a: 'The app downloads the latest backup from your current cloud provider first, then pushes it to the new provider — so no data is lost during a provider switch. Both providers end up with the same version. After the switch, all new backups go to the new provider.',
+      },
+      {
+        q: 'What if I switch to Local storage from the Cloud Storage settings?',
+        a: 'When you select "Local Storage" in Admin Settings → Cloud Storage, the app downloads the latest backup from your cloud bucket first (so you have it locally), then switches to local-only mode. From that point, backups are saved to data/cloud-backups/ on the server instead of the cloud.',
+      },
+      {
+        q: 'Are all cloud backups the same version? How do I avoid having outdated copies?',
+        a: 'Yes — the sync strategy ensures all copies are always at the same version. Push-on-change: every data modification immediately pushes to cloud. If the push fails (network issue), the change is marked as pending and retried on next startup or sync. You can also manually trigger a sync from Admin Settings → Cloud Storage → Sync button.',
+      },
+      {
+        q: 'How do I manually check or trigger a sync?',
+        a: 'Go to Admin Settings → ☁️ Cloud Storage tab. The "Disaster Recovery / Auto-restore" section shows the current sync status (last fetched, last pushed, pending push indicator). Use the "↺ Auto-restore (if empty DB)" or "↺ Force restore (overwrite)" buttons to manually pull from cloud.',
+      },
+    ],
+  },
+
+  // 28. Cloud Storage
+  {
+    id: 'cloud-storage',
+    icon: '☁️',
+    title: 'Cloud Storage',
+    items: [
+      {
+        q: 'What is the Cloud Storage feature?',
+        a: 'The Cloud Storage tab in /admin/settings allows admins to configure a cloud provider (AWS S3, Azure Blob, or Google Cloud Storage) to receive automatic backup files. Backups include the SQLite database, config files, import logs, and data/latest-metrics.json so the dashboard can load from the bucket-backed server copy on the next session.',
+      },
+      {
+        q: 'Which providers are supported?',
+        a: 'Four options: (1) Local — saves to data/cloud-backups/ on the server, no credentials needed. (2) AWS S3 — also compatible with MinIO, Backblaze B2, Cloudflare R2. (3) Azure Blob Storage. (4) Google Cloud Storage. Each requires its SDK: @aws-sdk/client-s3, @azure/storage-blob, @google-cloud/storage.',
+      },
+      {
+        q: 'How do I configure a cloud provider?',
+        a: 'Go to /admin/settings → Cloud Storage tab → select a provider → fill in credentials → click "Save settings" → click "Test connection" → if successful, click "Upload backup now" to push the first backup.',
+      },
+      {
+        q: 'Are credentials stored securely?',
+        a: 'Credentials are stored in data/storage-settings.json on the server and are never sent to the browser. API responses show only whether credentials are present (not their values).',
+      },
+    ],
+  },
+
+  // 28. Chart Customization
+  {
+    id: 'chart-customization',
+    icon: '📊',
+    title: 'Chart Customization',
+    items: [
+      {
+        q: 'Where is the chart customizer?',
+        a: 'Click the "Customise" button in the top-right of the Visual Analytics (/charts) page header. A blue dot appears when your settings differ from the defaults.',
+      },
+      {
+        q: 'What can I customise per chart?',
+        a: 'Three things per chart: (1) Visibility — toggle the chart on or off. (2) Column width — 1/3 (narrow), 2/3 (medium), or Full (full width). (3) Order — use ▲▼ buttons to move charts up or down in the panel.',
+      },
+      {
+        q: 'Where are chart preferences saved?',
+        a: 'Saved to dc_chart_prefs in your browser localStorage. Applied automatically on every page load.',
+      },
+    ],
+  },
+
+  // 28. Layout Builder
+  {
+    id: 'layout-builder',
+    icon: '☰',
+    title: 'Layout Builder',
+    items: [
+      {
+        q: 'Where is the Layout Builder?',
+        a: 'Click the "Layout" button (☰) on the right side of the section switcher bar at the top of the Dashboard (/dashboard). A blue dot appears on the button when your layout differs from the default.',
+      },
+      {
+        q: 'What can I customise in the Layout Builder?',
+        a: 'Two things: (1) Section order — use the ▲ and ▼ arrow buttons to move any of the 14 dashboard sections up or down. This changes their order in the section switcher tabs. (2) Section visibility — toggle each section on or off. Hidden sections disappear from both the switcher and the dashboard body.',
+      },
+      {
+        q: 'Where is my layout saved?',
+        a: 'Layout preferences are saved to your browser\'s localStorage (dc_section_layout). They persist across page reloads and are specific to your browser.',
+      },
+      {
+        q: 'How do I reset to the default layout?',
+        a: 'Click "Reset" inside the Layout Builder panel. This restores all 14 sections in the original default order, all visible.',
+      },
+    ],
+  },
+
+  // 28. Theme Customization
+  {
+    id: 'theme-customization',
+    icon: '🎨',
+    title: 'Theme Customization',
+    items: [
+      {
+        q: 'Where is the theme customizer?',
+        a: 'Click the 🎨 palette icon in the top-right of the header, next to the dark/light mode toggle. The panel opens inline.',
+      },
+      {
+        q: 'What can I customise?',
+        a: 'Three settings: (1) Accent colour — 7 presets (Blue, Purple, Teal, Orange, Indigo, Rose, Slate) that change all primary action buttons and focus elements. (2) Corner radius — Sharp (4px), Default (12px), or Rounded (18px). (3) Text size — Small (13px), Medium (14px), or Large (16px).',
+      },
+      {
+        q: 'Where are my theme settings saved?',
+        a: 'Settings are saved to your browser localStorage (dc_theme_custom) and applied automatically on every page load. They are browser-specific — other users keep their own settings.',
+      },
+      {
+        q: 'How do I reset to the default theme?',
+        a: 'Click "Reset" in the theme customizer panel. This restores Blue accent, Default radius, and Medium font size.',
+      },
+    ],
+  },
+
+  // 28. Product Tour
+  {
+    id: 'product-tour',
+    icon: '🎯',
+    title: 'Product Tour',
+    items: [
+      {
+        q: 'How do I start the guided tour?',
+        a: 'Two ways: (1) On the Overview (/summary) page, click the "Take a tour" button in the CTA row — it navigates to the dashboard and starts the tour automatically. (2) On the Dashboard (/dashboard), click the small "Tour" (ℹ️) button in the top-right of the header card.',
+      },
+      {
+        q: 'What does the tour cover?',
+        a: '8 steps: Welcome → Section Switcher (tab navigation) → Health Score & Key Metrics → Priority Attention (blockers/overdue) → Smart Recommendations (action cards) → Sprint Throughput → Work Item Explorer (opens /explore) → Done.',
+      },
+      {
+        q: 'How do I navigate the tour?',
+        a: 'Click "Next →" and "← Back" buttons, or use arrow keys (→ Next, ← Back). Press Esc or click "Skip tour" at any time to exit.',
+      },
+      {
+        q: 'How do I replay the tour after completing it?',
+        a: 'Click the "Tour" button on the dashboard at any time — it always restarts from Step 1. Or run resetTour() in the browser console to fully clear the completed state.',
+      },
+    ],
+  },
+
+  // 28. Export Sheets Reference
+  {
+    id: 'export-sheets',
+    icon: '📋',
+    title: 'Export Sheets Reference',
+    items: [
+      {
+        q: 'What sheets are included in the main Excel export (17 sheets)?',
+        a: (
+          <div className="space-y-1 text-xs">
+            <p className="font-bold text-slate-700 mb-2">Main workbook — triggered from the Export button or Overview page:</p>
+            <ol className="space-y-0.5 list-none">
+              {[
+                ['01 Executive Summary',    'Health score, completion rate, velocity, top 5 recommendations, executive narrative'],
+                ['02 Project Health',       '9 health metrics with scores and interpretation'],
+                ['03 Team Performance',     'Per-assignee: issues, done, active, blocked, load %, SP, bug count'],
+                ['04 Sprint Throughput',    'Per-sprint: committed vs completed, carryover, scope changes, goal outcome'],
+                ['05 Mid-Sprint Delivery',  'Mid-sprint delivery patterns (healthy, end-loaded, blocked, scope instability)'],
+                ['06 Kanban Flow',          'Kanban periods: throughput, cycle time, lead time, flow efficiency, aging WIP'],
+                ['07 Risks and Blockers',   'All blocked, critical, overdue, and orphan items with reasons'],
+                ['08 Orphan & Data Quality','Orphan items + data quality score, field breakdown, missing-field impact'],
+                ['09 Assignee Workload',    'Per-assignee capacity: issues, story points, load share %'],
+                ['10 Story Points Analysis','SP distribution, completion %, velocity, breakdown by type'],
+                ['11 Cycle & Lead Time',    'P50/P75/P85/P95 percentiles for cycle and lead time'],
+                ['12 Throughput Trends',    'Sprint-over-sprint delivery trend with direction indicator'],
+                ['13 Recommendations',      'All smart recommendations: priority, evidence, suggested owner, action'],
+                ['14 Release Readiness',    'Per-version Go/No-Go verdict, checklist, completion %'],
+                ['15 Dependencies',         'Issue dependency links and blocked-by relationships'],
+                ['16 Metric Dictionary',    'Formula for every metric in the workbook — the "how it\'s calculated" reference'],
+                ['17 Raw Data Reference',   'Complete issue-level data export with all fields'],
+              ].map(([sheet, desc]) => (
+                <li key={sheet} className="flex gap-2">
+                  <span className="font-mono font-bold text-slate-600 shrink-0 w-44">{sheet}</span>
+                  <span className="text-slate-500">{desc}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ),
+      },
+      {
+        q: 'What sheets are in the Work Item Explorer Excel export (5 sheets)?',
+        a: (
+          <div className="space-y-1 text-xs">
+            <p className="font-bold text-slate-700 mb-2">Explorer workbook — triggered from the Export button on /explore after a graph is loaded:</p>
+            <ol className="space-y-0.5 list-none">
+              {[
+                ['01 Summary',    'Focus key, delivery stats, confidence score, largest unfinished branch, insights'],
+                ['02 All Issues', 'All connected nodes + orphans with 17 columns: key, summary, type, status, health, blocked, risk-path, role'],
+                ['03 Risk Items', 'Filtered to blocked, critical, or on-risk-path items only'],
+                ['04 Orphans',    'Orphan items only (no epic or parent link)'],
+                ['05 Insights',   'Generated insight bullets for the explored issue'],
+              ].map(([sheet, desc]) => (
+                <li key={sheet} className="flex gap-2">
+                  <span className="font-mono font-bold text-slate-600 shrink-0 w-28">{sheet}</span>
+                  <span className="text-slate-500">{desc}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ),
+      },
+      {
+        q: 'What does the Executive PDF export contain?',
+        a: 'A single A4 landscape page (downloaded as .html, printed as PDF from the browser) with: health score circle + band label, 6 KPI cards (completion, total issues, done, active, blocked, story points), top 5 epic progress bars, top 4 team capacity bars, key insights, and top 3 recommendations with priority dots.',
+      },
+      {
+        q: 'What does the HTML report export contain?',
+        a: 'A self-contained HTML file with: header (health score + band), key metrics grid, delivery composition donut, health mix donut, issue types donut, story points donut, team capacity bars, epic/sprint progress, status distribution, label distribution, and flow metrics. Fully printable with @media print styles.',
+      },
+    ],
+  },
+
+  // 28. About / Landing Page
+  {
+    id: 'about',
+    icon: '🏠',
+    title: 'About / Feature Overview',
+    items: [
+      {
+        q: 'What is the About (Landing) page?',
+        a: 'The /landing page is an in-app product showcase. It shows all 12 major features with clickable cards (each linking directly to that feature), a "How it works" section, key product stats, and a branded CTA footer. Access it via Reference → About in the nav, or click "See all 12 features →" on the upload page.',
+      },
+      {
+        q: 'Which features are shown on the landing page?',
+        a: 'Sprint Throughput, Work Item Explorer, Upload-to-Upload Trends, Team Health, Portfolio Summary, Release Readiness, Visual Analytics, Customer View, Smart Export Suite, Dashboard Snapshots, Data Quality Score, and Admin Diagnostics.',
+      },
+    ],
+  },
+
+  // 28. Branding
+  {
+    id: 'branding',
+    icon: '🎨',
+    title: 'Branding',
+    items: [
+      {
+        q: 'Why do the login and register pages show a logo instead of text?',
+        a: 'The login and register pages now display the Delivery Clarity horizontal logo SVG instead of plain text, for consistent visual branding across all user-facing pages.',
+      },
+      {
+        q: 'Does the product have a favicon?',
+        a: 'Yes — the browser tab shows a Delivery Clarity lightning bolt favicon (SVG + ICO fallback). On iOS/Android home screens, the 128×128 PNG icon is used as the apple-touch-icon.',
+      },
+      {
+        q: 'What branding appears in exported reports?',
+        a: 'HTML reports and Executive PDF files include the lightning bolt brand mark in the header alongside the report title. Footers show "Delivery Clarity v4.1 · Ali Abu Ras · aliaburas80@gmail.com". Excel workbooks include the product name, slogan, and author in the Executive Summary sheet.',
+      },
+    ],
+  },
+
+  // 28. Deployment
+  {
+    id: 'deployment',
+    icon: '🚢',
+    title: 'Deployment',
+    items: [
+      {
+        q: 'What is the recommended way to deploy Delivery Clarity?',
+        a: 'Docker is the recommended deployment method for production. Clone the repo, copy .env.example to .env, set SESSION_SECRET (openssl rand -hex 32) and ADMIN_PASSWORD, then run: docker compose up -d --build. The app will be available on port 3000. Full instructions are in product/DEPLOYMENT_GUIDE.md and the Developer Portal → Deployment Guide.',
+      },
+      {
+        q: 'Can I deploy on Vercel?',
+        a: 'Vercel works for demos and previews but is NOT recommended for production. Vercel\'s serverless functions have no persistent filesystem, so SQLite data, data/latest-metrics.json, cache metadata, user accounts, import logs, and sessions are lost between cold starts. The CSV-upload → dashboard flow can still work when browser localStorage fallback is available.',
+      },
+      {
+        q: 'How do I deploy on a VPS without Docker?',
+        a: 'Install Node.js 20 and PM2. Clone the repo, copy .env.example to .env.local, set the required environment variables. Run: npm ci → npx prisma generate → npx prisma migrate deploy → npm run build → pm2 start npm --name "delivery-clarity" -- start. Then run pm2 save and pm2 startup to enable autostart.',
+      },
+      {
+        q: 'File uploads fail with a 413 error',
+        a: 'This is an nginx upload size limit. Add client_max_body_size 25M; inside the server {} block of your nginx site config. Jira CSV/XLSX exports can exceed the nginx default of 1 MB.',
+      },
+      {
+        q: 'How do I set up HTTPS?',
+        a: 'Use Certbot with Let\'s Encrypt: sudo apt install certbot python3-certbot-nginx → sudo certbot --nginx -d your-domain.com. Certbot updates the nginx config and sets up auto-renewal. Full instructions are in product/DEPLOYMENT_GUIDE.md §8.',
+      },
+      {
+        q: 'What environment variables are required?',
+        a: 'Required: SESSION_SECRET (≥ 32 chars, use: openssl rand -hex 32), DATABASE_URL (SQLite file path), ADMIN_EMAIL, ADMIN_PASSWORD. Optional: SESSION_TTL_HOURS (default 8), ALLOW_OPEN_REGISTRATION / NEXT_PUBLIC_ALLOW_REGISTER (default false), PORT (default 3000).',
+      },
+    ],
+  },
+
+  // 27. Recommendation Owner Assignment
+  {
+    id: 'rec-owners',
+    icon: '👤',
+    title: 'Recommendation Owners',
+    items: [
+      {
+        q: 'How do I assign an owner to a recommendation?',
+        a: 'On the dashboard Smart Recommendations section, each card shows a "+ Assign" button with the suggested owner role as a hint (e.g., "+ Assign (Scrum Master / Delivery Manager)"). Click it to open an inline input, type the owner name, then press Enter or click Save.',
+      },
+      {
+        q: 'Where is the owner assignment saved?',
+        a: 'Owner assignments are saved to your browser localStorage (dc_rec_owners key). They persist across page reloads but are specific to your browser. They are not synced to the server or visible to other users.',
+      },
+      {
+        q: 'Can I change or remove an owner?',
+        a: 'Yes — the blue owner badge shows Edit and ✕ buttons. Click Edit to update the name, or ✕ to clear the assignment entirely.',
+      },
+    ],
+  },
+
+  // 27. Executive PDF
+  {
+    id: 'executive-pdf',
+    icon: '📄',
+    title: 'Executive PDF',
+    items: [
+      {
+        q: 'What is the Executive PDF export?',
+        a: 'The "Executive PDF" button on the Overview (/summary) page generates a print-optimised single-page HTML file designed to fit on one A4 landscape page. It contains: health score, 6 KPI cards, top 5 epic progress bars, top 4 team capacity bars, insights, and the top 3 recommendations.',
+      },
+      {
+        q: 'How do I save it as a PDF?',
+        a: 'After clicking "Executive PDF", a file named executive-summary-{date}.html downloads. Open it in your browser, then press Ctrl+P (Windows) or Cmd+P (Mac) → change destination to "Save as PDF" → Print. The layout is optimised to fit one page in landscape orientation.',
+      },
+      {
+        q: 'Why is it downloaded as .html instead of .pdf?',
+        a: 'No external PDF library is needed — your browser already contains a high-quality PDF rendering engine. Downloading as .html and printing to PDF produces a better, smaller file than any JavaScript PDF library could generate.',
+      },
+    ],
+  },
+
+  // 27. Troubleshooting
   {
     id: 'troubleshooting',
     icon: '🛠️',
@@ -606,7 +1105,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: 'The page loads but shows "No successful import found"',
-        a: 'You are visiting the dashboard directly without having uploaded a file first. Navigate to the Upload page (/), drop your Jira export, and wait for the success message before returning to the dashboard. The dashboard reads from the last successful import stored in the server session.',
+        a: 'The dashboard could not find bucket-backed latest metrics and could not find a browser localStorage fallback. Navigate to the Upload page (/), drop your Jira export, and wait for the success message. That creates data/latest-metrics.json on the server and a browser fallback copy.',
       },
       {
         q: 'Rate limit error (429 Too Many Requests)',
@@ -702,7 +1201,39 @@ function SectionAccordion({ section }: { section: Section }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function HelpPage() {
-  const [search, setSearch] = useState('');
+  const [search, setSearch]   = useState('');
+  const [activeId, setActiveId] = useState<string>(SECTIONS[0].id);
+
+  // Track active section via IntersectionObserver
+  useEffect(() => {
+    if (search.trim()) return;
+    const observer = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveId(entry.target.id.replace('section-', ''));
+            break;
+          }
+        }
+      },
+      { rootMargin: '-20% 0px -65% 0px' },
+    );
+    SECTIONS.forEach(s => {
+      const el = document.getElementById(`section-${s.id}`);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [search]);
+
+  // Smooth scroll accounting for app header + sticky bars
+  function goTo(id: string) {
+    const el     = document.getElementById(`section-${id}`);
+    if (!el) return;
+    const header = document.querySelector('header') as HTMLElement | null;
+    const nav    = document.getElementById('help-nav') as HTMLElement | null;
+    const offset = (header?.offsetHeight ?? 56) + (nav?.offsetHeight ?? 48) + 12;
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
+  }
 
   const filteredSections = search.trim()
     ? SECTIONS.map((s) => ({
@@ -718,8 +1249,9 @@ export default function HelpPage() {
   return (
     <AppShell showNav>
       <div className="max-w-3xl mx-auto">
+
         {/* Page header */}
-        <div className="mb-6">
+        <div className="mb-5">
           <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-1">
             Help &amp; Documentation
           </h1>
@@ -728,35 +1260,75 @@ export default function HelpPage() {
           </p>
         </div>
 
-        {/* Search */}
-        <div className="mb-5">
-          <input
-            type="search"
-            placeholder="Search help topics..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-          />
-        </div>
-
-        {/* Quick-jump chips */}
-        {!search && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {SECTIONS.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => {
-                  const el = document.getElementById(`section-${s.id}`);
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }}
-                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 hover:border-blue-200 transition-colors"
-              >
-                <span aria-hidden>{s.icon}</span>
-                {s.title.split(' — ')[0].replace(/^[^ ]+ /, '')}
-              </button>
-            ))}
+        {/* ── Sticky section nav ── */}
+        <div
+          id="help-nav"
+          className="sticky top-14 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 mb-6 print:hidden"
+          style={{
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(14px)',
+            borderBottom: '1px solid rgba(198,210,226,0.7)',
+            boxShadow: '0 4px 16px rgba(24,43,77,0.07)',
+          }}
+        >
+          {/* Search inside sticky bar */}
+          <div className="pt-2 pb-1">
+            <input
+              type="search"
+              placeholder="Search help topics…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+            />
           </div>
-        )}
+
+          {/* Section tabs — shown only when not searching */}
+          {!search && (
+            <div className="flex flex-wrap items-end gap-0.5 py-0.5">
+              {SECTIONS.map(s => {
+                const active = activeId === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => goTo(s.id)}
+                    style={{
+                      position: 'relative',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      padding: '7px 9px 9px',
+                      borderRadius: 12,
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: 11.5,
+                      fontWeight: 700,
+                      fontFamily: 'inherit',
+                      whiteSpace: 'nowrap',
+                      background: active
+                        ? 'linear-gradient(180deg, rgba(239,246,255,0.95), rgba(241,245,249,0.72))'
+                        : 'transparent',
+                      color: active ? '#2563eb' : '#64748b',
+                      transition: 'background 150ms, color 150ms',
+                    }}
+                  >
+                    <span style={{ fontSize: 12, lineHeight: 1 }}>{s.icon}</span>
+                    {s.title.split(' — ')[0].replace(/^\S+\s/, '')}
+                    {active && (
+                      <span style={{
+                        position: 'absolute',
+                        left: 9, right: 9, bottom: 2,
+                        height: 3, borderRadius: 999,
+                        background: '#2563eb',
+                        boxShadow: '0 0 0 4px rgba(37,99,235,0.10)',
+                      }} aria-hidden="true" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* No results */}
         {filteredSections.length === 0 && (
@@ -775,7 +1347,7 @@ export default function HelpPage() {
               <div
                 key={section.id}
                 id={`section-${section.id}`}
-                className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden"
+                className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden scroll-mt-32"
               >
                 <div className="px-5 py-3 flex items-center gap-3 border-b border-slate-100 bg-slate-50">
                   <span className="text-xl" aria-hidden>{section.icon}</span>
@@ -788,17 +1360,29 @@ export default function HelpPage() {
                 </div>
               </div>
             ) : (
-              <div key={section.id} id={`section-${section.id}`}>
+              <div key={section.id} id={`section-${section.id}`} className="scroll-mt-32">
                 <SectionAccordion section={section} />
               </div>
             )
           )}
         </div>
 
-        {/* Footer credit */}
-        <p className="text-center text-xs text-slate-400 mt-10 pb-4">
-          Delivery Clarity v2 &nbsp;&middot;&nbsp; © 2025 Ali Abu Ras &nbsp;&middot;&nbsp; aburasali80@gmail.com
-        </p>
+        {/* Footer */}
+        <div className="text-center mt-10 pb-4 space-y-3 border-t border-slate-200 pt-8">
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="btn-primary px-6 py-2.5"
+          >
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
+              <path d="M12 4 4 12h5v8h6v-8h5L12 4Z" />
+            </svg>
+            Back to Top
+          </button>
+          <p className="text-xs text-slate-400">
+            Delivery Clarity v2 &nbsp;&middot;&nbsp; © 2025 Ali Abu Ras &nbsp;&middot;&nbsp; aburasali80@gmail.com
+          </p>
+        </div>
       </div>
     </AppShell>
   );

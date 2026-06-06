@@ -3,6 +3,11 @@
 import { calculateSprintThroughput } from './throughput.service';
 import { calculateMidSprintInsights } from './midSprint.service';
 import { calculateKanbanFlow } from './kanbanFlow.service';
+import { calculateDataQuality } from '../dataQuality/dataQuality.service';
+import { calculateFieldImpacts } from '../dataQuality/missingFieldImpact.service';
+import { calculateMetricConfidence } from './metricConfidence.service';
+import { readThresholds } from '../settings/thresholds.service';
+import { readOrphanRules, isOrphanByRules } from '../settings/orphanRules.service';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -10,6 +15,9 @@ import { calculateKanbanFlow } from './kanbanFlow.service';
 
 const DONE_STATUSES: string[] = ['Done', 'Closed', 'Resolved'];
 const IN_PROGRESS_STATUSES: string[] = ['In Progress', 'Code Review', 'QA', 'Testing', 'UAT'];
+
+// Per-request parseDate memo — reset at the start of calculateDashboardMetrics, freed at the end.
+let _parseDateCache: Map<string, Date | null> | null = null;
 const MONTHS: Record<string, number> = {
   jan: 0,
   feb: 1,
@@ -83,6 +91,8 @@ interface StatusBreakdownItem extends FlowSummary {
 
 interface FlowMetrics extends FlowSummary {
   items: FlowItem[];
+  totalItemCount?: number;   // real total before any cap (for large exports)
+  itemsCapped?:    boolean;  // true when items array is truncated
 }
 
 interface SprintEntry extends FlowSummary {
@@ -261,6 +271,9 @@ interface DashboardMetrics {
   prediction: PredictionResult;
   insights: string[];
   throughput: import('@/types/throughput').ThroughputMetrics;
+  dataQuality:  import('@/types/dataQuality').DataQualityResult;
+  fieldImpacts: import('@/types/dataQuality').FieldImpactReport;
+  confidence:   import('@/types/metricConfidence').MetricConfidenceMap;
 }
 
 // ---------------------------------------------------------------------------
@@ -336,51 +349,62 @@ function parseDate(value: unknown): Date | null {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
 
   const text = String(value).trim();
+  if (!text) return null;
+
+  if (_parseDateCache) {
+    const hit = _parseDateCache.get(text);
+    if (hit !== undefined) return hit;
+  }
+
+  let result: Date | null = null;
 
   const numericValue = Number(text);
   if (Number.isFinite(numericValue) && numericValue > 20000 && numericValue < 80000) {
     const excelEpoch = new Date(Date.UTC(1899, 11, 30));
     const millis = excelEpoch.getTime() + numericValue * 86400000;
     const parsed = new Date(millis);
-    return buildDate(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate());
-  }
-
-  const jiraDate = text.match(
-    /^(\d{1,2})\/([A-Za-z]{3})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{2})\s*(AM|PM)?)?/i,
-  );
-  if (jiraDate) {
-    const [, day, month, year, hour = '0', minute = '0', period] = jiraDate;
-    const time = parseTimeParts(hour, minute, period);
-    return buildDate(
-      normalizeTwoDigitYear(year),
-      MONTHS[month.toLowerCase()],
-      Number(day),
-      time.hour,
-      time.minute,
+    result = buildDate(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate());
+  } else {
+    const jiraDate = text.match(
+      /^(\d{1,2})\/([A-Za-z]{3})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{2})\s*(AM|PM)?)?/i,
     );
+    if (jiraDate) {
+      const [, day, month, year, hour = '0', minute = '0', period] = jiraDate;
+      const time = parseTimeParts(hour, minute, period);
+      result = buildDate(
+        normalizeTwoDigitYear(year),
+        MONTHS[month.toLowerCase()],
+        Number(day),
+        time.hour,
+        time.minute,
+      );
+    } else {
+      const numericDate = text.match(
+        /^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})\s*(AM|PM)?)?$/i,
+      );
+      if (numericDate) {
+        const [, first, second, year, hour = '0', minute = '0', period] = numericDate;
+        const firstNumber = Number(first);
+        const secondNumber = Number(second);
+        const day = secondNumber > 12 ? secondNumber : firstNumber;
+        const month = secondNumber > 12 ? firstNumber - 1 : secondNumber - 1;
+        const time = parseTimeParts(hour, minute, period);
+        result = buildDate(normalizeTwoDigitYear(year), month, day, time.hour, time.minute);
+      } else {
+        const isoDate = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s](\d{1,2}):(\d{2}))?/);
+        if (isoDate) {
+          const [, year, month, day, hour = '0', minute = '0'] = isoDate;
+          result = buildDate(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute));
+        } else {
+          const parsed = new Date(text);
+          result = Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+      }
+    }
   }
 
-  const numericDate = text.match(
-    /^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})(?:\s+(\d{1,2}):(\d{2})\s*(AM|PM)?)?$/i,
-  );
-  if (numericDate) {
-    const [, first, second, year, hour = '0', minute = '0', period] = numericDate;
-    const firstNumber = Number(first);
-    const secondNumber = Number(second);
-    const day = secondNumber > 12 ? secondNumber : firstNumber;
-    const month = secondNumber > 12 ? firstNumber - 1 : secondNumber - 1;
-    const time = parseTimeParts(hour, minute, period);
-    return buildDate(normalizeTwoDigitYear(year), month, day, time.hour, time.minute);
-  }
-
-  const isoDate = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s](\d{1,2}):(\d{2}))?/);
-  if (isoDate) {
-    const [, year, month, day, hour = '0', minute = '0'] = isoDate;
-    return buildDate(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute));
-  }
-
-  const parsed = new Date(text);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
+  _parseDateCache?.set(text, result);
+  return result;
 }
 
 function daysBetween(start: Date | null, end: Date | null): number | null {
@@ -458,32 +482,33 @@ function getHealthFromIssue(issue: JiraIssue, today: Date = new Date()): FlowIte
   const isOverdue = dueDate && dueDate < today && !isDone(issue);
   const isHighPriority = ['High', 'Highest', 'Critical'].includes(issue['Priority'] as string);
 
+  const thresholds = readThresholds();
   const reasons: string[] = [];
   let health: HealthStatus = 'good';
 
   if (isDone(issue)) {
-    if (cycleTimeDays !== null && cycleTimeDays > 14) {
+    if (cycleTimeDays !== null && cycleTimeDays > thresholds.cycleTimeCriticalDays) {
       health = 'critical';
-      reasons.push('Cycle time is over 14 days.');
-    } else if (cycleTimeDays !== null && cycleTimeDays > 7) {
+      reasons.push(`Cycle time is over ${thresholds.cycleTimeCriticalDays} days.`);
+    } else if (cycleTimeDays !== null && cycleTimeDays > thresholds.cycleTimeWarningDays) {
       health = 'warning';
-      reasons.push('Cycle time is over 7 days.');
+      reasons.push(`Cycle time is over ${thresholds.cycleTimeWarningDays} days.`);
     } else {
       reasons.push('Completed within expected cycle time.');
     }
   } else if (isActive(issue)) {
-    if (activeAgeDays !== null && activeAgeDays > 14) {
+    if (activeAgeDays !== null && activeAgeDays > thresholds.activeAgeCriticalDays) {
       health = 'critical';
-      reasons.push('Active work has been in progress over 14 days.');
-    } else if (activeAgeDays !== null && activeAgeDays > 7) {
+      reasons.push(`Active work has been in progress over ${thresholds.activeAgeCriticalDays} days.`);
+    } else if (activeAgeDays !== null && activeAgeDays > thresholds.activeAgeWarningDays) {
       health = 'warning';
-      reasons.push('Active work has been in progress over 7 days.');
+      reasons.push(`Active work has been in progress over ${thresholds.activeAgeWarningDays} days.`);
     } else {
       reasons.push('Active work is within expected age.');
     }
-  } else if (ageDays !== null && ageDays > 30) {
+  } else if (ageDays !== null && ageDays > thresholds.openAgeWarningDays) {
     health = 'warning';
-    reasons.push('Item has waited over 30 days.');
+    reasons.push(`Item has waited over ${thresholds.openAgeWarningDays} days.`);
   } else {
     reasons.push('No flow risk detected from available dates.');
   }
@@ -511,7 +536,7 @@ function getHealthFromIssue(issue: JiraIssue, today: Date = new Date()): FlowIte
     highLevelStatus: (issue['High Level Status'] as string) || '',
     sprint: getSprintName(issue),
     epic: (issue['Epic Link'] as string) || (issue['Parent Key'] as string) || '',
-    isOrphan: !(issue['Epic Link'] || issue['Parent Key']),
+    isOrphan: isOrphanByRules(issue, readOrphanRules()),
     assignee: (issue['Assignee'] as string) || 'Unassigned',
     priority: (issue['Priority'] as string) || '',
     storyPoints: round(getStoryPoints(issue)),
@@ -600,22 +625,34 @@ function buildStatusBreakdown(
     .sort((a, b) => b.count - a.count);
 }
 
+// Maximum items stored in flow.items — keeps localStorage under ~4MB.
+// Aggregate metrics (counts, averages) are always calculated from ALL items.
+const FLOW_ITEMS_CAP = 5_000;
+
 function buildFlowMetrics(flowItems: FlowItem[]): FlowMetrics {
   const summary = summarizeFlowItems(flowItems);
 
+  // Sort: critical first, then warning, then good — within each group by age desc
+  const sorted = flowItems.slice().sort((a, b) => {
+    const healthOrder: Record<HealthStatus, number> = { critical: 0, warning: 1, good: 2 };
+    return (
+      healthOrder[a.health] - healthOrder[b.health] ||
+      (b.ageDays || 0) - (a.ageDays || 0)
+    );
+  });
+
+  const totalItemCount = sorted.length;
+  const capped         = totalItemCount > FLOW_ITEMS_CAP;
+
   return {
     ...summary,
-    items: flowItems.slice().sort((a, b) => {
-      const healthOrder: Record<HealthStatus, number> = { critical: 0, warning: 1, good: 2 };
-      return (
-        healthOrder[a.health] - healthOrder[b.health] ||
-        (b.ageDays || 0) - (a.ageDays || 0)
-      );
-    }),
+    items:          capped ? sorted.slice(0, FLOW_ITEMS_CAP) : sorted,
+    totalItemCount: capped ? totalItemCount : undefined,
+    itemsCapped:    capped || undefined,
   };
 }
 
-function buildSprintMetrics(issues: JiraIssue[], flowItems: FlowItem[]): SprintMetrics {
+function buildSprintMetrics(issues: JiraIssue[], flowItemByKey: Map<string, FlowItem>): SprintMetrics {
   const sprintIssues = issues.filter(
     (issue) => issue['Sprint'] || issue['Actual Sprint'] || issue['Planned Sprint'],
   );
@@ -625,8 +662,9 @@ function buildSprintMetrics(issues: JiraIssue[], flowItems: FlowItem[]): SprintM
     .map(([name, items]) => {
       const committedPoints = sum(items.map(getStoryPoints));
       const completedPoints = sum(items.filter(isDone).map(getStoryPoints));
-      const issueKeys = new Set(items.map((issue) => issue['Issue Key']));
-      const matchingFlowItems = flowItems.filter((item) => issueKeys.has(item.key));
+      const matchingFlowItems = items
+        .map(i => flowItemByKey.get(i['Issue Key'] as string))
+        .filter((fi): fi is FlowItem => fi !== undefined);
 
       return {
         name,
@@ -674,7 +712,7 @@ function buildCapacityMetrics(issues: JiraIssue[]): CapacityEntry[] {
     .slice(0, 10);
 }
 
-function buildEpicMetrics(issues: JiraIssue[], flowItems: FlowItem[]): EpicEntry[] {
+function buildEpicMetrics(issues: JiraIssue[], flowItemByKey: Map<string, FlowItem>): EpicEntry[] {
   const groups = groupBy(
     issues,
     (issue) =>
@@ -687,8 +725,9 @@ function buildEpicMetrics(issues: JiraIssue[], flowItems: FlowItem[]): EpicEntry
     .map(([epic, items]) => {
       const storyPoints = sum(items.map(getStoryPoints));
       const doneStoryPoints = sum(items.filter(isDone).map(getStoryPoints));
-      const issueKeys = new Set(items.map((issue) => issue['Issue Key']));
-      const matchingFlowItems = flowItems.filter((item) => issueKeys.has(item.key));
+      const matchingFlowItems = items
+        .map(i => flowItemByKey.get(i['Issue Key'] as string))
+        .filter((fi): fi is FlowItem => fi !== undefined);
 
       return {
         epic,
@@ -723,15 +762,16 @@ function getQuarterDate(issue: JiraIssue): Date | null {
   );
 }
 
-function buildQuarterMetrics(issues: JiraIssue[], flowItems: FlowItem[]): QuarterEntry[] {
+function buildQuarterMetrics(issues: JiraIssue[], flowItemByKey: Map<string, FlowItem>): QuarterEntry[] {
   const groups = groupBy(issues, (issue) => getQuarterLabel(getQuarterDate(issue)));
 
   return Object.entries(groups)
     .map(([quarter, items]) => {
       const storyPoints = sum(items.map(getStoryPoints));
       const completedStoryPoints = sum(items.filter(isDone).map(getStoryPoints));
-      const issueKeys = new Set(items.map((issue) => issue['Issue Key']));
-      const matchingFlowItems = flowItems.filter((item) => issueKeys.has(item.key));
+      const matchingFlowItems = items
+        .map(i => flowItemByKey.get(i['Issue Key'] as string))
+        .filter((fi): fi is FlowItem => fi !== undefined);
 
       return {
         quarter,
@@ -757,7 +797,7 @@ function buildQuarterMetrics(issues: JiraIssue[], flowItems: FlowItem[]): Quarte
     });
 }
 
-function buildLabelMetrics(issues: JiraIssue[], flowItems: FlowItem[]): LabelMetrics {
+function buildLabelMetrics(issues: JiraIssue[], flowItemByKey: Map<string, FlowItem>): LabelMetrics {
   const labelMap: Record<string, JiraIssue[]> = {};
   issues.forEach((issue) => {
     const ls = parseLabels(issue);
@@ -770,8 +810,9 @@ function buildLabelMetrics(issues: JiraIssue[], flowItems: FlowItem[]): LabelMet
 
   const labelStats: LabelEntry[] = Object.entries(labelMap)
     .map(([label, items]) => {
-      const keys = new Set(items.map((i) => i['Issue Key']));
-      const matching = flowItems.filter((fi) => keys.has(fi.key));
+      const matching = items
+        .map(i => flowItemByKey.get(i['Issue Key'] as string))
+        .filter((fi): fi is FlowItem => fi !== undefined);
       return {
         label,
         count: items.length,
@@ -798,11 +839,12 @@ function buildLabelMetrics(issues: JiraIssue[], flowItems: FlowItem[]): LabelMet
   };
 }
 
-function buildTypeMetrics(issues: JiraIssue[], flowItems: FlowItem[]): TypeEntry[] {
+function buildTypeMetrics(issues: JiraIssue[], flowItemByKey: Map<string, FlowItem>): TypeEntry[] {
   return Object.entries(groupBy(issues, (i) => (i['Issue Type'] as string) || 'Unknown'))
     .map(([type, items]) => {
-      const keys = new Set(items.map((i) => i['Issue Key']));
-      const matching = flowItems.filter((fi) => keys.has(fi.key));
+      const matching = items
+        .map(i => flowItemByKey.get(i['Issue Key'] as string))
+        .filter((fi): fi is FlowItem => fi !== undefined);
       return {
         type,
         count: items.length,
@@ -817,11 +859,12 @@ function buildTypeMetrics(issues: JiraIssue[], flowItems: FlowItem[]): TypeEntry
     .sort((a, b) => b.count - a.count);
 }
 
-function buildProjectMetrics(issues: JiraIssue[], flowItems: FlowItem[]): ProjectEntry[] {
+function buildProjectMetrics(issues: JiraIssue[], flowItemByKey: Map<string, FlowItem>): ProjectEntry[] {
   return Object.entries(groupBy(issues, (i) => (i['Project'] as string) || 'Unknown'))
     .map(([project, items]) => {
-      const keys = new Set(items.map((i) => i['Issue Key']));
-      const matching = flowItems.filter((fi) => keys.has(fi.key));
+      const matching = items
+        .map(i => flowItemByKey.get(i['Issue Key'] as string))
+        .filter((fi): fi is FlowItem => fi !== undefined);
       return {
         project,
         count: items.length,
@@ -836,15 +879,16 @@ function buildProjectMetrics(issues: JiraIssue[], flowItems: FlowItem[]): Projec
     .sort((a, b) => b.count - a.count);
 }
 
-function buildParentMetrics(issues: JiraIssue[], flowItems: FlowItem[]): ParentEntry[] {
+function buildParentMetrics(issues: JiraIssue[], flowItemByKey: Map<string, FlowItem>): ParentEntry[] {
   const issuesWithParent = issues.filter(
     (i) => i['Parent Key'] && String(i['Parent Key']).trim(),
   );
   if (!issuesWithParent.length) return [];
   return Object.entries(groupBy(issuesWithParent, (i) => i['Parent Key'] as string))
     .map(([parent, items]) => {
-      const keys = new Set(items.map((i) => i['Issue Key']));
-      const matching = flowItems.filter((fi) => keys.has(fi.key));
+      const matching = items
+        .map(i => flowItemByKey.get(i['Issue Key'] as string))
+        .filter((fi): fi is FlowItem => fi !== undefined);
       return {
         parent,
         count: items.length,
@@ -860,8 +904,7 @@ function buildParentMetrics(issues: JiraIssue[], flowItems: FlowItem[]): ParentE
     .slice(0, 12);
 }
 
-function buildRiskMetrics(issues: JiraIssue[]): RiskMetrics {
-  const today = new Date();
+function buildRiskMetrics(issues: JiraIssue[], today: Date): RiskMetrics {
   const blockedIssues = countIssues(
     issues,
     (issue) =>
@@ -1097,7 +1140,7 @@ function calculatePrediction(
 // Insights
 // ---------------------------------------------------------------------------
 
-function buildInsights(metrics: Omit<DashboardMetrics, 'healthScore' | 'prediction' | 'insights' | 'throughput'>): string[] {
+function buildInsights(metrics: Omit<DashboardMetrics, 'healthScore' | 'prediction' | 'insights' | 'throughput' | 'dataQuality' | 'fieldImpacts' | 'confidence'>): string[] {
   const insights: string[] = [];
 
   if (metrics.flow.leadTimeSampleSize) {
@@ -1154,27 +1197,33 @@ function buildInsights(metrics: Omit<DashboardMetrics, 'healthScore' | 'predicti
 // ---------------------------------------------------------------------------
 
 export function calculateDashboardMetrics(issues: JiraIssue[]): DashboardMetrics {
+  const t0 = performance.now();
+  _parseDateCache = new Map(); // reset per-request cache
+
+  const today = new Date();
   const totalIssues = issues.length;
   const doneIssues = countIssues(issues, isDone);
   const activeIssues = countIssues(issues, isActive);
   const completionRate = totalIssues
     ? Math.round((doneIssues / totalIssues) * 100)
     : 0;
-  const flowItems = issues.map((issue) => getHealthFromIssue(issue));
-  const risk = buildRiskMetrics(issues);
+  const flowItems = issues.map((issue) => getHealthFromIssue(issue, today));
+  // O(1) lookup map — avoids repeated O(n) filter scans in every builder function
+  const flowItemByKey = new Map(flowItems.map(fi => [fi.key, fi]));
+  const risk = buildRiskMetrics(issues, today);
   const flow = buildFlowMetrics(flowItems);
-  const sprint = buildSprintMetrics(issues, flowItems);
+  const sprint = buildSprintMetrics(issues, flowItemByKey);
   const kanban = {
     byStatus: buildStatusBreakdown(issues, 'Status', flowItems),
     byHighLevelStatus: buildStatusBreakdown(issues, 'High Level Status', flowItems),
   };
-  const quarters = buildQuarterMetrics(issues, flowItems);
+  const quarters = buildQuarterMetrics(issues, flowItemByKey);
   const capacity = buildCapacityMetrics(issues);
-  const epics = buildEpicMetrics(issues, flowItems);
-  const labels = buildLabelMetrics(issues, flowItems);
-  const types = buildTypeMetrics(issues, flowItems);
-  const projects = buildProjectMetrics(issues, flowItems);
-  const parents = buildParentMetrics(issues, flowItems);
+  const epics = buildEpicMetrics(issues, flowItemByKey);
+  const labels = buildLabelMetrics(issues, flowItemByKey);
+  const types = buildTypeMetrics(issues, flowItemByKey);
+  const projects = buildProjectMetrics(issues, flowItemByKey);
+  const parents = buildParentMetrics(issues, flowItemByKey);
   const relations = buildLinksMetrics(issues);
 
   if (relations._issueLinksText) {
@@ -1249,6 +1298,14 @@ export function calculateDashboardMetrics(issues: JiraIssue[]): DashboardMetrics
   const sprintThroughput = calculateSprintThroughput(issues);
   const kanbanFlow       = calculateKanbanFlow(issues);
   const midSprintData    = calculateMidSprintInsights(sprintThroughput);
+  const dataQuality    = calculateDataQuality(issues);
+  const fieldImpacts   = calculateFieldImpacts(issues);
+  const confidence     = calculateMetricConfidence(issues);
+
+  _parseDateCache = null; // free memory after computation
+
+  const elapsed = Math.round(performance.now() - t0);
+  console.log(`[metrics] calculateDashboardMetrics: ${elapsed}ms for ${totalIssues} issues`);
 
   return {
     ...metrics,
@@ -1256,9 +1313,12 @@ export function calculateDashboardMetrics(issues: JiraIssue[]): DashboardMetrics
     prediction,
     insights: buildInsights(metrics),
     throughput: {
-      sprint:   sprintThroughput,
-      kanban:   kanbanFlow,
+      sprint:    sprintThroughput,
+      kanban:    kanbanFlow,
       midSprint: midSprintData,
     },
+    dataQuality,
+    fieldImpacts,
+    confidence,
   };
 }

@@ -38,6 +38,8 @@ export interface RelationNode {
   childCount: number;
   isExpanded: boolean;
   isFocusNode: boolean;
+  isOnRiskPath:     boolean;   // true when this node is on the path from a risky node to the root
+  isLargestBranch:  boolean;   // true when this node belongs to the largest unfinished branch
 }
 
 export interface RelationEdge {
@@ -45,7 +47,16 @@ export interface RelationEdge {
   sourceId: string;
   targetId: string;
   type: RelationEdgeType;
+  isOnRiskPath?: boolean;   // true when both endpoints are on the risk path
   label?: string;
+}
+
+export interface LargestBranch {
+  rootKey:    string;   // issue key of the branch root (direct child of focus)
+  rootLabel:  string;   // summary / label of the branch root
+  openCount:  number;   // total open (non-done) items in this subtree
+  totalCount: number;   // total items in this subtree
+  completionPct: number;
 }
 
 export interface RelationStats {
@@ -62,6 +73,7 @@ export interface RelationStats {
   dependencyCount: number;
   orphanCount: number;
   deliveryConfidence: number;
+  largestUnfinishedBranch: LargestBranch | null;
 }
 
 export interface RelationGraph {

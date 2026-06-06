@@ -1,7 +1,7 @@
 # Delivery Clarity — Developer Guide
 
 ## Document Control
-Version 2.0 | 2026-05-30 | Author: Ali Abu Ras
+Version 4.0 | 2026-06-02 | Author: Ali Abu Ras
 
 ---
 
@@ -34,9 +34,7 @@ Version 2.0 | 2026-05-30 | Author: Ali Abu Ras
 | Class merging | clsx + tailwind-merge | 2.x | Via `cn()` helper in `src/lib/utils.ts` |
 | Testing | Jest + ts-jest | 29.x | Node environment; no browser testing |
 
-There is no separate backend process in v2. Everything runs inside Next.js Route Handlers (`app/api/*/route.ts`). Import logs are persisted to `data/import-logs.json` on the local filesystem (or the server filesystem in production).
-
-The legacy CRA + Express stack lives under `frontend/` and `backend/` and is kept for reference only. It is not used at runtime in v2.
+There is no separate backend process. Everything runs inside Next.js Route Handlers (`app/api/*/route.ts`). Import logs and user accounts are persisted to `data/delivery_clarity.db` (SQLite via Prisma 5). The latest computed dashboard metrics are written server-side to `data/latest-metrics.json`, included in cloud backup bundles, and fetched through `/api/metrics/latest` before the browser falls back to `localStorage` key `dc_metrics_v2`. Browser storage still keeps a fast fallback copy with a 5,000-item cap on `flow.items`.
 
 ---
 
@@ -71,18 +69,29 @@ npm test
 
 There are no required environment variables for local development. The app runs entirely on the Next.js dev server.
 
-For production deployment set `NEXT_PUBLIC_*` variables as needed (none are currently required). The import log file path is derived from `process.cwd()` inside `importLogs.service.ts` and writes to `data/import-logs.json` relative to the server working directory.
+For production deployment, set these environment variables:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `SESSION_SECRET` | `dev-secret-change-me` | iron-session cookie signing key — **change in production** |
+| `ALLOW_OPEN_REGISTRATION` | `false` | Set `true` to allow public registration |
+| `DATABASE_URL` | `file:./data/delivery_clarity.db` | SQLite DB path (Prisma) |
+
+Run `npx prisma generate && npx prisma migrate deploy` after first install to create the database.
 
 ### Data flow in a single upload
 
 1. User drops a `.xlsx` / `.csv` file on the home page (`app/page.tsx`).
-2. Browser `POST`s the file to `/api/upload`.
-3. `parseJiraFile` (parser service) converts the buffer to typed rows and canonicalises column headers.
-4. `validateIssueData` (validation service) confirms required fields are present.
-5. `calculateDashboardMetrics` (metrics service) computes all KPIs.
-6. The route handler writes an import log entry and returns `{ metrics, warnings, importLog }`.
-7. The browser stores `metrics` in `sessionStorage` under the key `dc_metrics`.
-8. The router pushes to `/dashboard`.
+2. `clearMetrics()` is called to wipe any previous session from `localStorage`.
+3. Browser `POST`s the file to `POST /api/upload`.
+4. `parseJiraFile` (parser service) converts the buffer to typed rows and canonicalises column headers.
+5. `validateIssueData` (validation service) confirms required fields are present.
+6. `buildColumnMapping` produces the column-mapping preview.
+7. `calculateDashboardMetrics` (metrics service) computes all KPIs. `buildFlowMetrics()` caps `flow.items` at 5,000 (sorted critical-first); `totalItemCount` and `itemsCapped` flags are set when the cap fires.
+8. The route handler saves an `ImportLog` to SQLite (with `userId`) and returns `{ metrics, warnings, importLog, columnMapping }`.
+9. The route handler writes `data/latest-metrics.json` via `writeLatestMetrics(metrics)` so the latest dashboard payload is part of the next cloud backup.
+10. The browser calls `saveMetrics(metrics)` (writes to `localStorage` key `dc_metrics_v2` and source key `dc_metrics_source_v1`). If `QuotaExceededError` fires it trims to 5,000 items, then falls back to clearing storage.
+11. The router pushes to `/dashboard?fresh=1`. On load, the `?fresh=1` param resets all 12 filters.
 
 ---
 
@@ -92,63 +101,103 @@ For production deployment set `NEXT_PUBLIC_*` variables as needed (none are curr
 JiraDashboard/
 │
 ├── app/                          # Next.js App Router root
-│   ├── layout.tsx                # Root layout — sets <html>, <body>, global font
+│   ├── layout.tsx                # Root layout — sets <html>, <body>, favicon metadata
+│   ├── icon.png                  # App favicon (auto-detected by Next.js)
 │   ├── globals.scss              # Global styles (Tailwind base + custom)
 │   ├── page.tsx                  # / — Upload page (home)
 │   ├── summary/page.tsx          # /summary — Health overview
-│   ├── charts/page.tsx           # /charts  — Visual analytics
+│   ├── charts/page.tsx           # /charts — Visual analytics
 │   ├── dashboard/page.tsx        # /dashboard — Full delivery report
+│   ├── trends/page.tsx           # /trends — Upload-to-upload trend analysis
+│   ├── explore/page.tsx          # /explore — Work Item Explorer (React Flow)
+│   ├── readiness/page.tsx        # /readiness — Release readiness checklist
+│   ├── customer/page.tsx         # /customer — Customer-facing summary
+│   ├── snapshots/page.tsx        # /snapshots — Saved metric snapshots
+│   ├── backend/page.tsx          # /backend — Import logs & backend status
+│   ├── glossary/page.tsx         # /glossary — Abbreviations & metric guide
 │   ├── developer/page.tsx        # /developer — Developer wiki UI
-│   ├── backend/page.tsx          # /backend — Backend status UI
 │   ├── help/page.tsx             # /help — FAQ / help guide
+│   ├── login/page.tsx            # /login — Authentication
+│   ├── register/page.tsx         # /register — New account
+│   ├── profile/page.tsx          # /profile — User settings
+│   ├── admin/
+│   │   ├── logs/page.tsx         # /admin/logs — Import log management
+│   │   ├── settings/page.tsx     # /admin/settings — Backup, restore, thresholds
+│   │   └── security/page.tsx     # /admin/security — Production security checklist
 │   └── api/
-│       ├── upload/route.ts       # POST /api/upload
-│       ├── imports/route.ts      # GET  /api/imports
-│       ├── metrics/route.ts      # GET  /api/metrics
-│       ├── dashboard/route.ts    # GET  /api/dashboard
-│       ├── health/route.ts       # GET  /api/health
-│       ├── backend-view/route.ts # GET  /api/backend-view
-│       └── developer-view/route.ts # GET /api/developer-view
+│       ├── upload/route.ts       # POST /api/upload — parse + metrics + save log
+│       ├── imports/route.ts      # GET  /api/imports — logs (user-scoped or all for admin)
+│       ├── snapshots/route.ts    # GET/POST /api/snapshots
+│       ├── snapshots/[id]/route.ts # DELETE /api/snapshots/:id
+│       ├── auth/login/route.ts   # POST /api/auth/login
+│       ├── auth/logout/route.ts  # POST /api/auth/logout
+│       ├── auth/register/route.ts # POST /api/auth/register
+│       ├── auth/me/route.ts      # GET  /api/auth/me
+│       ├── admin/backup/route.ts # GET  /api/admin/backup
+│       ├── admin/restore/route.ts # POST /api/admin/restore
+│       └── settings/*/route.ts   # GET/POST various admin settings
 │
 ├── src/
 │   ├── components/
 │   │   ├── layout/
-│   │   │   └── AppShell.tsx      # Sticky header + nav + footer wrapper
+│   │   │   └── AppShell.tsx      # Sticky header with 4-group dropdown nav + mobile hamburger
+│   │   ├── auth/
+│   │   │   └── UserMenu.tsx      # Avatar dropdown (name, role badge, sign out)
+│   │   ├── admin/
+│   │   │   └── BackupRestoreSettings.tsx
+│   │   ├── onboarding/
+│   │   │   └── OnboardingChecklist.tsx
+│   │   ├── readiness/
+│   │   │   └── ReleaseReadinessCard.tsx
 │   │   └── ui/
-│   │       ├── Badge.tsx         # Status / health badge pill
-│   │       ├── Card.tsx          # White rounded card container
-│   │       ├── KpiCard.tsx       # Metric card with accent border
-│   │       └── LoadingState.tsx  # Spinner / loading message
+│   │       ├── Badge.tsx / Card.tsx / KpiCard.tsx / LoadingState.tsx
+│   │       └── DraggableMetricTable.tsx
 │   ├── lib/
-│   │   └── utils.ts              # cn(), formatDays(), getHealthBand(), HEALTH_COLORS
+│   │   ├── utils.ts              # cn(), formatDays(), getHealthBand()
+│   │   ├── storage.ts            # saveMetrics(), loadMetrics(), clearMetrics() — localStorage dc_metrics_v2
+│   │   ├── theme.ts              # getInitialTheme(), applyTheme() — dark mode
+│   │   └── session.ts            # iron-session config (SESSION_SECRET, cookie options)
 │   ├── services/
 │   │   ├── jira/
 │   │   │   ├── parser.ts         # parseJiraFile(), FIELD_ALIASES, OPTIONAL_FIELDS
 │   │   │   └── validation.ts     # validateIssueData()
-│   │   ├── imports/
-│   │   │   └── importLogs.service.ts  # read/write/build import log entries
-│   │   └── metrics/
-│   │       └── metrics.service.ts     # calculateDashboardMetrics() — core engine
+│   │   ├── metrics/
+│   │   │   ├── metrics.service.ts      # calculateDashboardMetrics() — core engine; FLOW_ITEMS_CAP=5,000
+│   │   │   ├── releaseReadiness.service.ts # calculateReleaseReadiness() — Go/No-Go per Fix Version
+│   │   │   ├── trendAnalysis.service.ts
+│   │   │   ├── snapshotComparison.service.ts
+│   │   │   └── relationGraph.service.ts    # buildRelationGraph() — Work Item Explorer
+│   │   └── settings/
+│   │       ├── backup.service.ts       # createBackup(), restoreBackup()
+│   │       ├── securityCheck.service.ts # runSecurityChecks() — 8 auto + 5 manual
+│   │       └── healthThresholds.service.ts
 │   ├── types/
-│   │   ├── jira.ts               # JiraIssue, ESSENTIAL_FIELDS, OPTIONAL_FIELDS, status constants
-│   │   ├── metrics.ts            # DashboardMetrics, FlowMetrics, SprintMetrics, etc.
-│   │   └── api.ts                # UploadResponse, ImportLogEntry, ApiError
-│   └── __tests__/
-│       └── metrics.test.ts       # Jest unit tests for calculateDashboardMetrics
+│   │   ├── jira.ts               # JiraIssue, ESSENTIAL_FIELDS, status constants
+│   │   ├── metrics.ts            # DashboardMetrics, FlowMetrics (itemsCapped, totalItemCount), etc.
+│   │   ├── relations.ts          # RelationNode (isOnRiskPath, isLargestBranch), RelationEdge, RelationStats
+│   │   ├── releaseReadiness.ts   # ReleaseReadinessResult, ReleaseReadinessSummary
+│   │   └── throughput.ts         # ThroughputMetrics, SprintEntry, etc.
+│   └── __tests__/                # Jest test suites (280+ tests across 22 files)
 │
 ├── data/
-│   └── import-logs.json          # Persisted import history (up to 200 entries)
+│   └── delivery_clarity.db       # SQLite database (users, sessions, import logs, snapshots)
 │
-├── frontend/                     # Legacy CRA frontend (reference only, not used in v2)
-├── backend/                      # Legacy Express backend (reference only, not used in v2)
+├── prisma/
+│   └── schema.prisma             # User, ImportLog, DashboardSnapshot, AuditEvent models
 │
-├── product/                      # Product documentation
-│   ├── DEVELOPER_GUIDE.md        # This file
-│   ├── BRD.md
-│   ├── SRS.md
-│   └── ...
+├── public/
+│   ├── favicon.ico               # Multi-resolution ICO (9 sizes)
+│   ├── favicon.svg               # SVG fallback
+│   └── logo/
+│       ├── delivery-clarity-logo-horizontal.svg  # Header logo (desktop)
+│       ├── delivery-clarity-logo-icon.svg        # Header logo (mobile)
+│       └── delivery_clarity_mark_128.png         # 128×128 PNG mark
 │
-├── package.json                  # Root package — Next.js v2 app
+├── product/                      # Product documentation (private — do not expose publicly)
+├── Dockerfile                    # Multi-stage build (node:20-alpine, non-root)
+├── docker-compose.yml            # Volume mount for data/, healthcheck
+├── .dockerignore
+├── package.json
 ├── tailwind.config.ts
 ├── tsconfig.json
 └── jest.config.js
@@ -158,14 +207,26 @@ JiraDashboard/
 
 ## 4. Routing Architecture — Pages
 
-All pages are React Client Components (`'use client'`). They read `dc_metrics` from `sessionStorage` on mount. If the key is missing the router redirects to `/` (upload).
+All analytics pages are React Client Components (`'use client'`). They call `loadMetricsWithSource()`, which first fetches `/api/metrics/latest` to restore metrics from the bucket-backed server copy, then falls back to browser `localStorage` (`dc_metrics_v2`) if no server/bucket payload is available. If both are missing the router redirects to `/` (upload).
+
+### Navigation structure
+
+The `AppShell` header renders 4 dropdown groups:
+- **Analytics**: `/summary`, `/dashboard`, `/charts`, `/trends`, `/teams`, `/portfolio`
+- **Reference**: `/landing` (About), `/glossary`, `/developer`, `/help`
+- **Delivery**: `/readiness`, `/explore`, `/customer`
+- **Data**: `/snapshots`, `/backend`
+- **Reference**: `/glossary`, `/developer`, `/help`
+
+Mobile: hamburger button opens a 2-column grid panel below the header.
 
 ### `app/page.tsx` — Upload (`/`)
 
 Entry point. Renders a drag-and-drop file zone. On file selection:
+- Calls `clearMetrics()` to wipe any previous session
 - Calls `POST /api/upload` with `FormData`
-- Stores returned `metrics` in `sessionStorage.setItem('dc_metrics', JSON.stringify(data.metrics))`
-- Navigates to `/summary`
+- Stores returned `metrics` server-side as `data/latest-metrics.json` and in the browser via `saveMetrics()` → `localStorage` key `dc_metrics_v2`
+- Navigates to `/dashboard?fresh=1`
 
 No nav bar is shown here (`showNav={false}`).
 
@@ -175,6 +236,7 @@ Executive one-page summary. Renders:
 - Health score banner (score circle, band label, prediction chip)
 - Six KPI cards: Completion, Health Alerts, Active Work, Lead Time, Cycle Time, Story Points
 - Attention section: blockers, overdue items, orphan count
+- Export buttons: Excel, **Executive PDF** (purple — `exportExecutivePdf()` → `src/lib/executivePdf.ts`), HTML
 - Key insights list (from `metrics.insights`)
 - CTA buttons to Charts and Full Report
 
@@ -223,6 +285,46 @@ Fetches `/api/backend-view` and renders live import statistics, endpoint table, 
 ### `app/help/page.tsx` — Help (`/help`)
 
 Static FAQ accordion. Three sections: Getting Started, Metrics Explained, Health Classification. No API calls.
+
+### `app/readiness/page.tsx` — Release Readiness (`/readiness`)
+
+Groups `flow.items` by Fix Version. For each version runs a 7-item checklist (completion ≥90%, no blockers, no open bugs, etc.) and assigns a Go / Conditional Go / No-Go verdict. Summary chips at top. Falls back gracefully when no Fix Version column is present.
+
+### `app/explore/page.tsx` — Work Item Explorer (`/explore`)
+
+Search for any issue key → loads React Flow graph (focus node + parent + direct children). Highlights risk path (red) and largest unfinished branch (amber). "Blocked only" toggle filters graph and table. Uses `buildRelationGraph()` service.
+
+### `app/snapshots/page.tsx` — Snapshots (`/snapshots`)
+
+Save current metrics as a named snapshot (max 20/user). Load or delete saved snapshots. Compare two snapshots side-by-side with 12-metric delta table.
+
+### `app/trends/page.tsx` — Trends (`/trends`)
+
+SVG line charts for 9 metrics (health score, issues, done, lead time, cycle time, blocked, throughput, data quality, **release confidence**) over up to 30 uploads. Timeline table with deltas. Release Confidence Score is computed at upload time via `src/lib/releaseConfidence.ts` and stored in `ImportLog.metadataJson`.
+
+### `app/teams/page.tsx` — Team Health Comparison (`/teams`)
+
+Per-assignee health comparison sourced from `metrics.capacity[]` and `metrics.flow.items[]`. Computes `TeamHealthEntry[]` via `src/lib/teamHealth.ts` (score = completion×50 + no-critical×30 + no-blocked×20). Renders: member scorecards grid, 4 comparison charts, detail table. Sorted by health score descending.
+
+### `app/portfolio/page.tsx` — Portfolio Summary (`/portfolio`)
+
+Cross-team portfolio aggregation from `metrics.epics[]`, `metrics.projects[]`, `metrics.quarters[]`, and sprint throughput. Computes `PortfolioSummary` via `src/lib/portfolioHealth.ts` (score = epicCompletion×40 + projectCompletion×30 + sprintPerformance×20 + dataQuality×10). Renders: score banner, 6 KPI cards, epic progress panel, project cards, quarter bars, epic detail table.
+
+### `app/customer/page.tsx` — Customer View (`/customer`)
+
+Clean stakeholder summary — completion ring, key milestones, top risks. No technical detail. Print / PDF optimised.
+
+### `app/admin/security/page.tsx` — Security Checklist (`/admin/security`)
+
+Runs `runSecurityChecks()` — 8 automated checks (SESSION_SECRET, HTTPS, DB permissions, etc.) + 5 manual items. 0–100 score, production-ready flag.
+
+### `app/admin/diagnostics/page.tsx` — System Diagnostics (`/admin/diagnostics`)
+
+Admin-only live health dashboard. Fetches `GET /api/admin/diagnostics` — aggregates DB row counts, import success rates, env var presence, system info, recent audit events, and computes an Ops Health Score (0–100). Refresh button for live re-fetch; quick links to all other admin pages.
+
+### `app/admin/settings/page.tsx` — Admin Settings (`/admin/settings`)
+
+Tabs: Health Thresholds, Orphan Rules, Privacy & Retention, Backup & Restore.
 
 ---
 
@@ -503,10 +605,11 @@ export async function GET() {
 
 ### Step 4 — Display in a page
 
-The dashboard pages read `DashboardMetrics` from `sessionStorage`. Access your metric with:
+The dashboard pages read `DashboardMetrics` through `loadMetricsWithSource()`. Access your metric after the async load with:
 
 ```ts
-const metrics = JSON.parse(sessionStorage.getItem('dc_metrics')!) as DashboardMetrics;
+const result = await loadMetricsWithSource();
+const metrics = result.metrics as DashboardMetrics;
 const value = metrics.myNewMetric;
 ```
 
@@ -796,7 +899,7 @@ Required environment variables (add to `.env.local`):
 ```
 SESSION_SECRET=your-32-char-secret
 DATABASE_URL=file:./data/delivery_clarity.db
-ALLOW_OPEN_REGISTRATION=false
+ALLOW_OPEN_REGISTRATION=true
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=ChangeThisImmediately1
 ADMIN_NAME=Administrator
@@ -815,3 +918,306 @@ src/services/export/recommendationEngine.ts          — rule-based recs
 ---
 
 *Delivery Clarity v3.0 — © 2025 Ali Abu Ras — aburasali80@gmail.com*
+
+---
+
+## Package Reference — Dependencies Used by Delivery Clarity
+
+Last verified: 2026-06-02
+
+| Package | Version | Used For | Feature / Area | Runtime Scope | Status | Risk if Removed |
+|---------|---------|----------|----------------|---------------|--------|-----------------|
+| `next` | 14.2.5 | App Router, SSR, API routes | Core Framework | Shared | Installed | Application fails completely |
+| `react` / `react-dom` | ^18.3.1 | UI rendering, hooks, state | Core Framework | Client | Installed | Application fails completely |
+| `typescript` | ^5.4.5 | Type safety, interfaces, strict mode | Core Framework | Dev-only | Installed | Type errors uncaught |
+| `tailwindcss` | ^3.4.4 | Utility-first CSS styling | UI/Styling | Client | Installed | All styling breaks |
+| `sass` | ^1.77.8 | globals.scss global stylesheet | UI/Styling | Client | Installed | Global styles break |
+| `xlsx` | ^0.18.5 | Parse Jira CSV/XLSX exports; generate Excel workbook | Upload + Export | Server | Installed | Upload and export completely broken |
+| `reactflow` | ^11.11.4 | Interactive hierarchy graph in Work Item Explorer | F2 Work Item Explorer | Client | Installed | Explorer graph fails to render |
+| `@dagrejs/dagre` | ^3.0.0 | Hierarchical layout algorithm for React Flow nodes | F2 Work Item Explorer | Client | Installed | Graph layout broken |
+| `prisma` | ^5.22.0 | ORM, schema, migrations, SQLite queries | F3 Authentication & Database | Server | Installed | No database access, auth fails |
+| `@prisma/client` | ^5.22.0 | Generated Prisma query client | F3 Authentication & Database | Server | Installed | Database queries fail |
+| `iron-session` | ^8.0.4 | HTTP-only cookie session management | F3 Authentication & Database | Server | Installed | Login/logout completely broken |
+| `bcryptjs` | ^3.0.3 | Password hashing (rounds=12) | F3 Authentication & Database | Server | Installed | Passwords stored in plaintext |
+| `@types/bcryptjs` | ^2.4.6 | TypeScript types for bcryptjs | F3 Authentication & Database | Dev-only | Installed | TypeScript errors in auth code |
+| `lucide-react` | ^0.427.0 | SVG icon components | UI/Icons | Client | Installed | Icons disappear (minor) |
+| `clsx` + `tailwind-merge` | ^2.1.1 / ^2.3.0 | Conditional className, conflict resolution | UI/Styling | Client | Installed | className logic errors |
+| `jest` + `ts-jest` | ^29.7.0 / ^29.2.2 | 253 automated tests across 21 test suites | Testing | Dev-only | Installed | No automated testing |
+
+### Planned Future Packages (Not Yet Installed)
+
+| Package | Purpose | Feature | Priority |
+|---------|---------|---------|---------|
+| `@aws-sdk/client-s3` | Amazon S3 cloud storage | P3 Cloud Storage | P3 |
+| `@azure/storage-blob` | Azure Blob Storage | P3 Cloud Storage | P3 |
+| `@google-cloud/storage` | Google Cloud Storage | P3 Cloud Storage | P3 |
+| Jira API client (TBD) | Jira REST API integration | P3 Jira Integration | P3 |
+| `nodemailer` (TBD) | Email notification channel | P4 Notifications | P4 |
+
+---
+
+## P2 — Admin Storage & Backup (Architecture Design Only)
+
+**Status:** Design and backlog planning only. Do NOT implement full cloud storage until explicitly instructed.
+
+### Goal
+Save uploaded Jira files, parsed data, import logs, dashboard snapshots, Excel exports, and processing metadata to local or cloud storage.
+
+### Storage Provider Interface (Planned)
+```typescript
+interface StorageProvider {
+  name: string;
+  type: 'local' | 's3' | 'azure' | 'gcp' | 's3-compatible';
+  save(key: string, data: Buffer, metadata?: object): Promise<string>;
+  get(key: string): Promise<Buffer>;
+  delete(key: string): Promise<void>;
+  exists(key: string): Promise<boolean>;
+  list(prefix: string): Promise<string[]>;
+}
+```
+
+### Storage Object Types (Planned)
+- `Original Upload` — raw Jira CSV/XLSX file
+- `Normalised Data` — parsed JiraIssue[] JSON
+- `Dashboard Snapshot` — full DashboardMetrics JSON
+- `Excel Export` — generated .xlsx workbook
+- `Import Log` — processing metadata
+- `Error Report` — failed upload diagnostics
+
+### Storage Status Values (Planned)
+`Pending | Saving | Success | Failed | Retrying | Synced | Permanent Failure | Skipped`
+
+### Future Database Tables (Planned)
+- `storage_settings` — provider config, credentials (encrypted), enabled flag
+- `storage_objects` — each stored object with key, type, status, size
+- `storage_events` — audit log of all storage operations
+- `storage_retry_queue` — failed saves queued for retry
+
+### Future Storage Events (Planned)
+`STORAGE_SETTINGS_UPDATED | STORAGE_CONNECTION_TEST_STARTED | STORAGE_CONNECTION_TEST_SUCCESS | STORAGE_CONNECTION_TEST_FAILED | STORAGE_SAVE_STARTED | STORAGE_SAVE_SUCCESS | STORAGE_SAVE_FAILED | STORAGE_LOCAL_FALLBACK_USED | STORAGE_RETRY_QUEUED | STORAGE_RETRY_STARTED | STORAGE_RETRY_SUCCESS | STORAGE_RETRY_FAILED | STORAGE_RETRY_LIMIT_REACHED | STORAGE_SYNC_COMPLETED`
+
+---
+
+## P2/P3 — Optional Jira API Integration (Architecture Design Only)
+
+**Status:** Design and backlog planning only. Export-first model remains default.
+
+### Product Positioning
+Delivery Clarity is export-first and zero-credential by default. Jira API integration is optional — it must not replace the upload model.
+
+### Future Modes
+1. **Export Mode** — default, zero-credential
+2. **Connected Jira Mode** — optional API integration
+3. **Hybrid Mode** — API fetch + export fallback
+
+### Required Architecture Rule
+Future Jira API data MUST flow through the existing analytics pipeline:
+```
+Jira API response → Jira API adapter → Normalised JiraIssue[] → Existing metrics services → Dashboard
+```
+
+### Future Database Tables (Planned)
+- `jira_connections` — connection config, URL, credentials (encrypted), test status
+- `jira_field_mappings` — canonical field → Jira field mapping per project
+- `jira_sync_logs` — sync history, status, issue count
+- `jira_suggested_tickets` — recommendations converted to Jira ticket suggestions
+- `jira_events` — audit log of all Jira operations
+
+### Write-Back Safety Rules (When Implemented)
+- Write-back disabled by default
+- Admin must explicitly enable write-back
+- User must approve before ticket creation
+- No automatic ticket creation
+- Preview before send required
+- Dry-run mode supported
+- Duplicate prevention required
+- Never expose Jira credentials to frontend
+
+### Future Jira Events (Planned)
+`JIRA_CONNECTION_TEST_STARTED | JIRA_CONNECTION_TEST_SUCCESS | JIRA_CONNECTION_TEST_FAILED | JIRA_SYNC_STARTED | JIRA_SYNC_SUCCESS | JIRA_SYNC_FAILED | JIRA_FIELD_MAPPING_UPDATED | JIRA_TICKET_SUGGESTION_CREATED | JIRA_TICKET_SUGGESTION_APPROVED | JIRA_TICKET_SUGGESTION_REJECTED | JIRA_TICKET_CREATE_STARTED | JIRA_TICKET_CREATE_SUCCESS | JIRA_TICKET_CREATE_FAILED | JIRA_PERMISSION_DENIED`
+
+---
+
+## P4 — Admin & System Notification Center (Planned)
+
+**Status:** Future planning only. Do NOT implement during P0 stabilisation.
+
+### Goal
+In-app notification system for admin announcements, system alerts, errors, warnings, and security events.
+
+### Notification Types (Planned)
+Admin Announcement, System Alert, Error, Warning, Security Threat, Storage Failure, Jira Integration Failure, Failed Upload, Failed Export, Failed Login Attempt, Data Quality Warning, Maintenance Notice, Release Notice, Action Required, Information
+
+### Notification Severity
+`Info | Success | Warning | Error | Critical | Security`
+
+### Notification Audience
+`All Users | Admins Only | Specific User | Specific Role | Users Linked to Import`
+
+### Notification Status
+`Unread | Read | Acknowledged | Dismissed | Expired`
+
+### Future Database Tables (Planned)
+- `notifications` — id, title, message, severity, type, audience, created_by_user_id, requires_acknowledgement, expires_at
+- `notification_recipients` — notification_id, user_id, status, read_at, acknowledged_at, dismissed_at
+- `notification_events` — notification_id, user_id, event_type, metadata_json
+
+### Suggested UI Routes (Planned)
+- `app/notifications/page.tsx`
+- `app/admin/notifications/page.tsx`
+- `src/components/notifications/NotificationBell.tsx`
+- `src/components/notifications/NotificationDropdown.tsx`
+
+---
+
+## P4 — Maintenance Mode (Planned)
+
+**Status:** Future planning only. Part of P4 Communication / Governance Layer.
+
+### Goal
+Admin-controlled feature to temporarily prevent normal user access while system upgrades, migrations, or security handling is in progress.
+
+### Behavior When Active
+- Normal users redirected to `/maintenance` page
+- Admin users retain access if `allowAdminAccess = true`
+- Upload, export, sync, write-back operations blocked
+- API routes return `503 Service Unavailable` with JSON body
+
+### API Response During Maintenance (Planned)
+```json
+{ "status": "maintenance", "message": "Delivery Clarity is currently under maintenance.", "expectedReturnAt": "2026-06-02T18:00:00+03:00" }
+```
+
+### Future Database Tables (Planned)
+- `maintenance_settings` — is_enabled, title, message, expected_return_at, allow_admin_access, enabled_by_user_id
+- `maintenance_events` — event_type, user_id, metadata_json
+
+### Maintenance Events (Planned)
+`MAINTENANCE_MODE_ENABLED | MAINTENANCE_MODE_DISABLED | MAINTENANCE_SETTINGS_UPDATED | MAINTENANCE_USER_REDIRECTED | MAINTENANCE_ADMIN_ACCESS_GRANTED | MAINTENANCE_UPLOAD_BLOCKED`
+
+### Maintenance Status Values (Planned)
+`Enabled | Disabled | Scheduled | Expired`
+
+
+---
+
+## v4.1 — UX Design System Developer Notes (2026-06-04)
+
+### Pill Button System
+
+All buttons use `globals.scss` utility classes. Do not use `rounded-lg` or `rounded-xl` on buttons.
+
+```scss
+// Use these — all rounded-full
+.btn-primary    // blue filled
+.btn-secondary  // white outlined
+.btn-ghost      // transparent
+.btn-danger     // red filled
+.btn-outline-danger  // red outlined → fills on hover
+.btn-green      // green filled
+.btn-dark       // slate-900 filled
+.btn-warning    // amber outlined
+.btn-sm         // size modifier: px-3 py-1 text-xs
+.btn-xs         // size modifier: px-2.5 py-0.5 text-[10px]
+```
+
+For colour overrides on `btn-primary` or `btn-green` use inline `style={{ background: "#hex" }}`.
+
+### Dashboard Section Switcher
+
+**Files:**
+- `src/lib/dashboardSections.ts` — `DASHBOARD_SECTIONS` array (14 entries), `OVERVIEW_KEYS`, `SectionMode` type
+- `src/components/dashboard/DashboardSectionSwitcher.tsx` — the sticky tab bar component
+
+**Adding a new section:**
+1. Add a section to `DASHBOARD_SECTIONS` in `dashboardSections.ts`
+2. Add `<section id="section-{key}">` with `className="dashboard-section ..."` in `dashboard/page.tsx`
+3. Add a `CollapsibleTrigger id="{key}"` above the section
+4. Add the key to the appropriate `SECTION_GROUPS` array in `DashboardSectionSwitcher`
+
+### Clear Local Data
+
+**Files:**
+- `src/lib/clearLocalData.ts` — `hasLocalData()`, `clearLocalData()`, `DC_FIXED_KEYS`
+- `src/components/admin/ClearLocalDataPanel.tsx` — admin settings panel
+
+To add a new localStorage key owned by the app: add it to `DC_FIXED_KEYS` in `clearLocalData.ts`.
+
+### Flow Panel Access Control
+
+Set `hideFlowPanel: true` on a `DashboardView` in `src/types/dashboardView.ts` to:
+- Hide the entire `<section id="flow-health-panel">`
+- Hide the filter row (All / High Risk / Blocked / Needs Review / Clear / Show filters)
+- Disable KPI card onClick handlers that open the flow panel
+- Skip `setFlowPanelOpen(true)` in `applyQuickFilter`
+
+### Dynamic Imports for Heavy Libraries
+
+`xlsx` and `excelInsightExport.service` are lazy-loaded. Do NOT add static `import * as XLSX from "xlsx"` in any client-side file. Instead:
+
+```typescript
+// Inside an async function triggered by user action:
+const XLSX = await import("xlsx");
+const { downloadInsightWorkbook } = await import("@/services/export/excelInsightExport.service");
+```
+---
+
+## 12. Deployment
+
+See **`product/DEPLOYMENT_GUIDE.md`** for the full guide. Summary:
+
+### Deployment targets
+
+| Target | Command | Persistence | Recommended |
+|--------|---------|------------|-------------|
+| **Docker** | `docker compose up -d --build` | Volume mount | ✅ Production |
+| **VPS / PM2** | `pm2 start npm -- start` | Local filesystem | ✅ Production |
+| **Vercel** | `git push` → auto-deploy | ❌ Ephemeral | Demo only |
+
+### Key files
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile` | Multi-stage build (deps → builder → runner), non-root user |
+| `docker-compose.yml` | Service definition, volume mount, healthcheck, env vars |
+| `.env.example` | Template for all environment variables |
+| `product/DEPLOYMENT_GUIDE.md` | Full 12-section deployment manual |
+
+### Minimum production env vars
+
+```bash
+SESSION_SECRET=<openssl rand -hex 32>   # REQUIRED — 32+ chars
+DATABASE_URL=file:./data/delivery_clarity.db
+ADMIN_EMAIL=admin@yourdomain.com
+ADMIN_PASSWORD=<strong password>
+```
+
+### nginx upload size
+
+Set `client_max_body_size 25M;` in the nginx site config. Without this, Jira CSV exports > 1 MB will fail with a 413 error.
+
+### Post-deploy
+
+1. Log in and **change the admin password** immediately
+2. Visit `/admin/security` and aim for score ≥ 80
+3. Test file upload with a real Jira export
+4. Set up cron backups (see DEPLOYMENT_GUIDE.md §11)
+
+### Product Tour
+
+**Library:** None — pure React + CSS animations.
+
+**State:** `src/lib/tour.ts` — `dismissTour()`, `completeTour()`, `resetTour()`, `TOUR_STEPS[]`; persisted to `dc_tour_dismissed` / `dc_tour_completed` in localStorage.
+
+**Component:** `src/components/tour/ProductTour.tsx` — lazy-loaded via `dynamic(() => import(...), { ssr: false })`.
+- `HighlightRing`: `position:fixed` pulsing border ring around the target element (tracked by `requestAnimationFrame`)
+- `TourPopover`: dark `position:fixed` card with progress dots, navigation buttons, keyboard handler
+- `Backdrop`: semi-transparent overlay, click to dismiss
+- Injects `@keyframes dc-tour-pulse` and `dc-tour-fadein` once via `<style>` tag
+
+**Tour triggers:**
+- `/summary` — "Take a tour" button fires `router.push('/dashboard')` then `dc:start-tour` event after 600ms
+- `/dashboard` — "Tour" button dispatches `window.dispatchEvent(new CustomEvent('dc:start-tour'))`
+- `ProductTour` listens for `dc:start-tour` and sets `active = true`
+
+**Reset for development:** Run `resetTour()` from the browser console, or clear `dc_tour_dismissed` and `dc_tour_completed` from localStorage.

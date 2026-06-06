@@ -152,3 +152,9 @@ The following combinations of capabilities do not appear in any single prior-art
 ---
 
 *© 2025 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity*
+
+---
+
+## Current Code Alignment — 2026-06-06
+
+Cloud backup and bucket-first latest-metrics loading are implemented as operational persistence features. The prior-art distinction remains the same: delivery intelligence is computed from static Jira exports without Jira OAuth/API access; bucket storage holds Delivery Clarity backups, not a live Jira connector.

@@ -1,5 +1,7 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 import type { ThroughputMetrics } from './throughput';
+import type { DataQualityResult } from './dataQuality';
+import type { MetricConfidenceMap } from './metricConfidence';
 
 export type HealthStatus = 'good' | 'warning' | 'critical';
 
@@ -43,7 +45,9 @@ export interface FlowSummary {
 }
 
 export interface FlowMetrics extends FlowSummary {
-  items: FlowItem[];
+  items:           FlowItem[];
+  totalItemCount?: number;   // real total before any cap
+  itemsCapped?:    boolean;  // true when items array is truncated to 5,000
 }
 
 export interface SprintEntry extends FlowSummary {
@@ -120,4 +124,7 @@ export interface DashboardMetrics {
   prediction: PredictionResult;
   insights: string[];
   throughput: ThroughputMetrics;
+  dataQuality:  DataQualityResult;
+  fieldImpacts: import('./dataQuality').FieldImpactReport;
+  confidence:   MetricConfidenceMap;
 }

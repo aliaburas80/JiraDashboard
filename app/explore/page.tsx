@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { markStepDone } from '@/lib/onboarding';
 import dynamic from 'next/dynamic';
 import AppShell from '@/components/layout/AppShell';
 import LoadingState from '@/components/ui/LoadingState';
@@ -9,8 +10,9 @@ import RelationStatsCards from '@/components/explore/RelationStatsCards';
 import RelationInsightPanel from '@/components/explore/RelationInsightPanel';
 import RelationDetailsTable from '@/components/explore/RelationDetailsTable';
 import RelationCharts from '@/components/explore/RelationCharts';
-import { loadMetrics } from '@/lib/storage';
+import { loadMetricsWithSource } from '@/lib/storage';
 import { buildRelationGraph } from '@/services/relations/relationExplorer.service';
+import { exportExplorerToExcel, exportExplorerToCsv } from '@/services/export/explorerExport.service';
 import type { RelationGraph } from '@/types/relations';
 import type { DashboardMetrics } from '@/types/metrics';
 
@@ -33,17 +35,28 @@ function saveRecent(key: string): void {
 export default function ExplorePage() {
   const [metrics, setMetrics]     = useState<DashboardMetrics | null>(null);
   const [query, setQuery]         = useState('');
-  const [graph, setGraph]         = useState<RelationGraph | null>(null);
-  const [error, setError]         = useState('');
-  const [loading, setLoading]     = useState(false);
+  const [graph, setGraph]           = useState<RelationGraph | null>(null);
+  const [error, setError]           = useState('');
+  const [loading, setLoading]       = useState(false);
   const [focusedKey, setFocusedKey] = useState('');
-  const [recent, setRecent]       = useState<string[]>([]);
+  const [recent, setRecent]         = useState<string[]>([]);
+  const [blockedOnly, setBlockedOnly] = useState(false);
+  const [exportOpen, setExportOpen]   = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const data = loadMetrics() as DashboardMetrics | null;
-    setMetrics(data);
-    setRecent(loadRecent());
+    let cancelled = false;
+    async function load() {
+      const result = await loadMetricsWithSource();
+      if (cancelled) return;
+      setMetrics(result.metrics as DashboardMetrics | null);
+      setRecent(loadRecent());
+      // Track onboarding step
+      markStepDone('try_explorer');
+      try { localStorage.setItem('dc_visited_explore', '1'); } catch {}
+    }
+    load().catch(() => { if (!cancelled) setRecent(loadRecent()); });
+    return () => { cancelled = true; };
   }, []);
 
   const explore = useCallback((key: string) => {
@@ -99,8 +112,8 @@ export default function ExplorePage() {
 
         {/* ── Search Bar ── */}
         <form onSubmit={handleSubmit} className="mb-6">
-          <div className="flex gap-3 items-center flex-wrap">
-            <div className="relative flex-1 min-w-[280px]">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
               <input
                 ref={inputRef}
                 type="text"
@@ -115,7 +128,7 @@ export default function ExplorePage() {
             <button
               type="submit"
               disabled={loading || noData || !query.trim()}
-              className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="btn-primary w-full sm:w-auto px-6 py-3 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? 'Exploring…' : 'Explore Issue'}
             </button>
@@ -128,7 +141,7 @@ export default function ExplorePage() {
               {recent.map(k => (
                 <button key={k} type="button"
                   onClick={() => { setQuery(k); explore(k); }}
-                  className="text-xs font-mono font-bold bg-white border border-slate-200 rounded-full px-2.5 py-0.5 text-blue-700 hover:border-blue-400 transition-colors">
+                  className="text-xs font-mono font-bold bg-white border border-slate-200 rounded-xl px-2.5 py-0.5 text-blue-700 hover:border-blue-400 transition-colors">
                   {k}
                 </button>
               ))}
@@ -158,19 +171,73 @@ export default function ExplorePage() {
         {graph && !loading && (
           <div className="space-y-6">
 
-            {/* Focus label */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="font-mono text-lg font-black text-blue-700">{graph.focusKey}</span>
-              <span className="text-sm text-slate-500">·</span>
-              <span className="text-sm font-semibold text-slate-600">{graph.focusType}</span>
-              <span className="text-sm text-slate-500">·</span>
-              <span className="text-sm text-slate-500">{graph.nodes.length} connected items</span>
-              {graph.orphanNodes.length > 0 && (
-                <span className="text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200 rounded-full px-3 py-0.5">
-                  {graph.orphanNodes.length} orphan{graph.orphanNodes.length > 1 ? 's' : ''} detected
-                </span>
-              )}
-            </div>
+            {/* Focus label + blocked filter toggle */}
+            {(() => {
+              const blockedCount = graph.nodes.filter(n => n.isBlocked || n.health === 'critical').length;
+              const riskPathCount = graph.nodes.filter(n => n.isOnRiskPath).length;
+              return (
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="font-mono text-lg font-black text-blue-700">{graph.focusKey}</span>
+                  <span className="text-sm text-slate-500">·</span>
+                  <span className="text-sm font-semibold text-slate-600">{graph.focusType}</span>
+                  <span className="text-sm text-slate-500">·</span>
+                  <span className="text-sm text-slate-500">{graph.nodes.length} connected items</span>
+                  {graph.orphanNodes.length > 0 && (
+                    <span className="text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200 rounded-full px-3 py-0.5">
+                      {graph.orphanNodes.length} orphan{graph.orphanNodes.length > 1 ? 's' : ''} detected
+                    </span>
+                  )}
+                  {/* Blocked branch filter toggle */}
+                  {blockedCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setBlockedOnly(v => !v)}
+                      className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-xl border transition-colors ${
+                        blockedOnly
+                          ? 'bg-red-600 text-white border-red-600'
+                          : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                      }`}
+                    >
+                      🚫 {blockedOnly ? 'Show all' : `Show blocked branches (${blockedCount})`}
+                    </button>
+                  )}
+                  {blockedOnly && riskPathCount > 0 && (
+                    <span className="text-xs text-red-600 font-semibold">
+                      {riskPathCount} node{riskPathCount !== 1 ? 's' : ''} on risk path
+                    </span>
+                  )}
+
+                  {/* Export dropdown */}
+                  <div className="relative ml-auto">
+                    <button
+                      type="button"
+                      onClick={() => setExportOpen(v => !v)}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-xl border border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:text-blue-700 transition-colors shadow-sm"
+                    >
+                      ↓ Export
+                    </button>
+                    {exportOpen && (
+                      <div className="absolute right-0 top-8 z-30 bg-white border border-slate-200 rounded-xl shadow-lg min-w-[160px] py-1">
+                        <button
+                          type="button"
+                          onClick={() => { exportExplorerToExcel(graph); setExportOpen(false); }}
+                          className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        >
+                          Export to Excel (.xlsx)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { exportExplorerToCsv(graph); setExportOpen(false); }}
+                          className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        >
+                          Export to CSV (.csv)
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* 1. Visual Map — primary, above the fold */}
             <section aria-label="Work item relationship map">
@@ -178,6 +245,7 @@ export default function ExplorePage() {
                 graph={graph}
                 focusNodeId={focusedKey}
                 onNodeFocus={handleNodeFocus}
+                dimNonRiskPath={blockedOnly}
               />
             </section>
 
@@ -195,17 +263,39 @@ export default function ExplorePage() {
               <RelationStatsCards stats={graph.stats} />
             </section>
 
-            {/* 4. Details Table */}
-            <section aria-label="Issue details">
-              <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">
-                Issue Details ({graph.nodes.length + graph.orphanNodes.length})
-              </h2>
-              <RelationDetailsTable
-                nodes={graph.nodes}
-                orphanNodes={graph.orphanNodes}
-                onFocusNode={handleNodeFocus}
-              />
-            </section>
+            {/* 5. Details Table — filtered when blockedOnly is active */}
+            {(() => {
+              const filteredNodes  = blockedOnly
+                ? graph.nodes.filter(n => n.isOnRiskPath || n.isBlocked)
+                : graph.nodes;
+              const filteredOrphans = blockedOnly ? [] : graph.orphanNodes;
+              const totalShown = filteredNodes.length + filteredOrphans.length;
+              const totalAll   = graph.nodes.length + graph.orphanNodes.length;
+              return (
+                <section aria-label="Issue details">
+                  <div className="flex items-center gap-3 mb-3">
+                    <h2 className="text-xs font-black uppercase tracking-widest text-slate-500">
+                      Issue Details
+                    </h2>
+                    <span className="text-xs text-slate-400">
+                      {blockedOnly
+                        ? `${totalShown} on risk path (of ${totalAll})`
+                        : `${totalAll} total`}
+                    </span>
+                    {blockedOnly && (
+                      <span className="text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 rounded-full px-2 py-0.5">
+                        🚫 Blocked branches only
+                      </span>
+                    )}
+                  </div>
+                  <RelationDetailsTable
+                    nodes={filteredNodes}
+                    orphanNodes={filteredOrphans}
+                    onFocusNode={handleNodeFocus}
+                  />
+                </section>
+              );
+            })()}
 
           </div>
         )}

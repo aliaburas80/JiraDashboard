@@ -27,9 +27,9 @@ function shortName(name: string): string {
 // ── Grouped bar pair per sprint ───────────────────────────────────────────────
 
 function SprintBar({
-  label, committed, completed, maxValue, completionPct,
+  label, fullName, committed, completed, maxValue, completionPct,
 }: {
-  label: string; committed: number; completed: number; maxValue: number; completionPct: number;
+  label: string; fullName: string; committed: number; completed: number; maxValue: number; completionPct: number;
 }) {
   const committedH = maxValue > 0 ? Math.max(4, Math.round((committed / maxValue) * 100)) : 4;
   const completedH = maxValue > 0 ? Math.max(4, Math.round((completed / maxValue) * 100)) : 4;
@@ -60,9 +60,9 @@ function SprintBar({
         />
       </div>
 
-      {/* Sprint label */}
+      {/* Sprint label — short code displayed, full name in tooltip */}
       <span className="text-[9px] text-slate-500 text-center leading-none max-w-full truncate w-full text-center"
-        title={label}>
+        title={fullName}>
         {label}
       </span>
     </div>
@@ -126,10 +126,10 @@ export default function SprintVelocityChart({ summary }: Props) {
               {trendIcon} <span className="text-xs">{summary.trendDirection}</span>
             </p>
           </div>
-          <div className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-center">
+          <div className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-center min-w-[90px] max-w-[140px]">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Best Sprint</p>
-            <p className="text-xs font-black text-slate-700 leading-none truncate max-w-[80px]" title={summary.bestSprintName}>
-              {shortName(summary.bestSprintName)}
+            <p className="text-xs font-black text-slate-700 leading-none truncate" title={summary.bestSprintName}>
+              {summary.bestSprintName || '—'}
             </p>
           </div>
         </div>
@@ -149,6 +149,7 @@ export default function SprintVelocityChart({ summary }: Props) {
             <SprintBar
               key={sprint.sprintName}
               label={shortName(sprint.sprintName)}
+              fullName={sprint.sprintName}
               committed={sprint.committedPoints}
               completed={sprint.completedPoints}
               maxValue={maxValue}

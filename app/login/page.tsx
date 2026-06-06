@@ -3,7 +3,9 @@
 'use client';
 import { useState, FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
+import { hasMetricsFromAnySource } from '@/lib/storage';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +14,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
+  const registered = params.get('registered') === '1';
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -24,8 +27,13 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? 'Login failed.'); return; }
-      const redirect = params.get('redirect') ?? '/dashboard';
-      router.push(redirect);
+      // If an explicit redirect param exists, honour it.
+      // Otherwise go to dashboard only if the user already has data;
+      // if no data has been uploaded yet, send them to the upload page.
+      const explicit = params.get('redirect');
+      const hasData = await hasMetricsFromAnySource();
+      const destination = explicit ?? (hasData ? '/dashboard' : '/');
+      router.push(destination);
       router.refresh();
     } catch {
       setError('Network error. Please try again.');
@@ -37,13 +45,26 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm">
-        {/* Logo */}
+        {/* Brand */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Delivery Clarity</h1>
-          <p className="text-sm text-slate-500 mt-1">Sign in to your account</p>
+          <div className="flex justify-center mb-3">
+            <Image
+              src="/logo/delivery-clarity-logo-horizontal.svg"
+              alt="Delivery Clarity"
+              width={200}
+              height={62}
+              priority
+            />
+          </div>
+          <p className="text-sm text-slate-500">Sign in to your account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-4">
+          {registered && (
+            <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-700 font-semibold">
+              ✓ Account created — sign in to continue
+            </div>
+          )}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{error}</div>
           )}
@@ -68,7 +89,7 @@ export default function LoginPage() {
 
           <button
             type="submit" disabled={loading}
-            className="w-full py-2.5 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className="w-full btn-primary py-2.5 disabled:opacity-50"
           >
             {loading ? 'Signing in…' : 'Sign in'}
           </button>

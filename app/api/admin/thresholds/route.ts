@@ -1,0 +1,55 @@
+// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// GET  /api/admin/thresholds — return current health thresholds (any logged-in user)
+// POST /api/admin/thresholds — update thresholds (admin only)
+
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getIronSession } from 'iron-session';
+import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
+import { readThresholds, writeThresholds, invalidateThresholdCache } from '@/services/settings/thresholds.service';
+import type { HealthThresholds } from '@/types/thresholds';
+
+export async function GET() {
+  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+  return NextResponse.json({ thresholds: readThresholds() });
+}
+
+export async function POST(req: NextRequest) {
+  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+  if (session.role !== 'admin') return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
+
+  let body: Partial<HealthThresholds>;
+  try { body = await req.json(); } catch {
+    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
+  }
+
+  // Validate: warning must be < critical for each pair
+  if (body.cycleTimeWarningDays && body.cycleTimeCriticalDays &&
+      body.cycleTimeWarningDays >= body.cycleTimeCriticalDays) {
+    return NextResponse.json({ error: 'Cycle time warning must be less than critical.' }, { status: 400 });
+  }
+  if (body.activeAgeWarningDays && body.activeAgeCriticalDays &&
+      body.activeAgeWarningDays >= body.activeAgeCriticalDays) {
+    return NextResponse.json({ error: 'Active age warning must be less than critical.' }, { status: 400 });
+  }
+  if (body.blockedRatioWarningPct && body.blockedRatioCriticalPct &&
+      body.blockedRatioWarningPct >= body.blockedRatioCriticalPct) {
+    return NextResponse.json({ error: 'Blocked ratio warning must be less than critical.' }, { status: 400 });
+  }
+
+  const updated: HealthThresholds = {
+    ...readThresholds(),
+    ...body,
+    updatedAt: new Date().toISOString(),
+    updatedBy: session.email,
+  };
+
+  writeThresholds(updated);
+  invalidateThresholdCache();
+
+  return NextResponse.json({ ok: true, thresholds: updated });
+}
+
+export const dynamic = 'force-dynamic';

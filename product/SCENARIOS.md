@@ -39,7 +39,7 @@ Sarah opens the dashboard on a 375 px-wide mobile viewport (iPhone SE).
 
 #### Pre-conditions
 
-- The dashboard is already loaded in a browser session (the upload was performed from a desktop earlier; Sarah is opening the URL on her phone, which requires re-uploading since state is session-scoped — or alternatively, the session URL is shared with the same browser on the same device).
+- The dashboard can load from bucket-backed latest metrics if Sarah is signed in to the same deployment; otherwise she can upload directly from the phone or rely on the same browser's localStorage fallback.
 - Note: for a fully realistic mobile scenario, Sarah uploads from her phone directly.
 - Viewport width is 375 px.
 
@@ -560,7 +560,7 @@ You click "← Back" and you're back on the dashboard, right where you were.
 
 **Related Use Cases:** UC-042 | **Related Test Cases:** TC-108, TC-109
 
-*Document prepared by Ali Abu Ras · Delivery Clarity v1.0 · 2026-05-30*
+*Document prepared by Ali Abu Ras · Delivery Clarity v4.0 · 2026-06-03*
 
 ---
 
@@ -652,3 +652,410 @@ You click "← Back" and you're back on the dashboard, right where you were.
 6. Rachel pastes the executive narrative into her board slide
 
 **Outcome:** Rachel presents a data-backed delivery status without needing the app open.
+
+---
+
+## v4.0 Scenarios (2026-06-03)
+
+---
+
+### SCN-017 — Scrum Master Reviews Data Quality Score Before Trusting Metrics
+
+**Persona:** Marcus, Scrum Master  
+**Context:** Marcus notices that some KPI cards show "Low Confidence" badges. He wants to understand why before presenting the dashboard to leadership.
+
+**Scenario:**
+1. Marcus uploads the latest sprint export
+2. On the column-mapping preview, he sees the Data Quality Score: 61% — Fair
+3. The preview shows: "Missing fields: In Progress Date (impacts Cycle Time), Done Date (impacts Lead Time)"
+4. He opens the dashboard and notices Cycle Time card has a yellow "Low" confidence badge
+5. He hovers the badge: "Cycle Time requires In Progress Date. Only 12% of issues have this field."
+6. Marcus shares the dashboard with a note: "Cycle Time data is unreliable this sprint — Jira In Progress Date not being set consistently."
+7. He creates a team action item to update the Jira workflow to capture transition dates
+
+**Outcome:** Marcus avoids presenting misleading metrics and creates a corrective action to improve data quality.
+
+---
+
+### SCN-018 — Admin Clears Local Browser Data Before Support Session
+
+**Persona:** Admin user troubleshooting a stale dashboard for a team member  
+**Context:** A team member reports seeing last week's data in their dashboard despite uploading a new file.
+
+**Scenario (Planned — P1.2):**
+1. The admin navigates to `/admin/settings`
+2. In the "Local Data & Browser Session" section, they see a "Clear Local Data" button
+3. Admin clicks "Clear Local Data"
+4. A modal appears: "Warning: This will remove Delivery Clarity local data stored in this browser, including cached dashboard/session data and local preferences. It may also end your current session. You may need to log in again."
+5. Admin reads: "Are you sure you want to clear local data and reset this browser session?"
+6. Admin clicks "Yes, Clear Local Data"
+7. All dc_ localStorage and sessionStorage keys are removed
+8. The session cookie is cleared; the user is redirected to /login
+9. On re-login and re-upload, the dashboard shows fresh data
+
+**Outcome:** Stale data issue resolved without touching server-side records.
+
+---
+
+### SCN-019 — Returning User Sees Stored-Data Notice on Upload Page
+
+**Persona:** Sarah, Engineering Manager  
+**Context:** Sarah returns to the app two weeks after her last upload. She wants to upload a fresh Jira export.
+
+**Scenario (Planned — P1.2):**
+1. Sarah opens the app at `/`
+2. The upload page detects stored data: `hasMetrics()` returns true
+3. A notice appears: "Stored Delivery Clarity data was found in this browser."
+4. Below the upload area, a secondary button reads "Clear stored data"
+5. Sarah clicks "Clear stored data"
+6. Confirmation modal: "This will remove cached dashboard data. Are you sure?"
+7. Sarah confirms; data is cleared
+8. She proceeds to upload her new Jira export
+9. Dashboard loads with only the new data
+
+**Outcome:** Sarah avoids confusion between old and new data without manual browser clearing.
+
+---
+
+### SCN-020 — Engineering Manager Uses Dashboard Section Switcher
+
+**Persona:** Sarah, Engineering Manager  
+**Context:** Sarah opens the Full Report dashboard. She finds the page overwhelming with all sections open and wants to focus just on sprint metrics.
+
+**Scenario (Planned — P1.3):**
+1. Sarah opens `/dashboard` after uploading
+2. She sees the Overview section at the top, then a row of section buttons: Overview | Sprints | Kanban | Flow | Risks | Data Quality | ...
+3. Default view shows only the top Overview (health score, KPIs, top risks, data quality summary)
+4. Sarah clicks "Sprints"
+5. The page smooth-scrolls to the Sprint section
+6. The sprint panel fades in with a 180ms animation
+7. All other heavy sections are hidden
+8. The "Sprints" button has a highlighted active state
+9. Sarah reviews sprint throughput, mid-sprint pattern, and sprint comparison
+10. She clicks "Full Dashboard" to restore the full view
+
+**Outcome:** Sarah gets a focused, clean view of sprint health without scrolling past irrelevant sections.
+
+---
+
+### SCN-021 — Engineering Manager Compares Two Snapshots Across Quarters
+
+**Persona:** Sarah, Engineering Manager  
+**Context:** Sarah saved a snapshot after the Q1 sprint and wants to compare it against the end-of-Q2 state.
+
+**Scenario:**
+1. Sarah navigates to `/snapshots`
+2. She sees two saved snapshots: "Q1 End — Mar 2026" and "Q2 End — Jun 2026"
+3. She selects both and clicks "Compare"
+4. The comparison page shows a 12-metric delta table: Health Score ↑ +12, Completion Rate ↑ +8%, Blocked ↓ -3, Critical ↓ -5, Avg Cycle Time ↓ -1.4d
+5. Positive deltas are green, negative risk deltas are green, worsened risk metrics are red
+6. An insights paragraph reads: "Significant improvement in Q2: health score up 12 points, critical items reduced by 5, and cycle time shortened by 1.4 days."
+7. Sarah copies the insights text into her quarterly business review presentation
+
+**Outcome:** Sarah demonstrates measurable delivery improvement to leadership with data evidence.
+
+---
+
+### SCN-022 — Developer Checks Calculation Reference for Cycle Time Formula
+
+**Persona:** Developer integrating Delivery Clarity into a CI pipeline  
+**Context:** The developer wants to verify exactly how Cycle Time is calculated before building a downstream alerting system.
+
+**Scenario (Planned — P1.1 — Calculation Reference in /developer):**
+1. Developer navigates to `/developer`
+2. In the blue side menu, they see a clear item: "Calculation Reference"
+3. They click it; the page smooth-scrolls to the Calculation Reference section
+4. They find "Cycle Time" with the following documented:
+   - **What it is:** Elapsed days from when work started to when it was completed
+   - **Formula:** `(doneDate - startedDate) / 86400000` in days, rounded to 1 decimal
+   - **Data source:** `In Progress Date` field (or `Sprint Start` as fallback), `Done Date` (or `Resolution Date`)
+   - **Why used:** Measures execution speed rather than total wait time (which Lead Time captures)
+   - **Assumptions:** Issue must have both startedDate and doneDate; values > 3,650 days are discarded as data errors
+   - **Limitations:** Does not account for time paused in waiting states (that's Flow Efficiency)
+   - **Related code:** `src/services/metrics/metrics.service.ts — getHealthFromIssue(), daysBetween()`
+5. Developer uses the formula in their alerting system
+
+**Outcome:** Developer builds a correct integration without guessing at calculation details.
+
+
+---
+
+### SCN-023 — User Clears Stale Browser Data Before New Upload
+
+**Persona:** Jordan, Scrum Master  
+**Context:** Jordan uploaded a sprint file last week. Today they return to upload a new file but the dashboard is showing old data.
+
+**Scenario:**
+1. Jordan navigates to the Upload page (`/`)
+2. An amber banner appears: **"Stored Delivery Clarity data was found in this browser."**
+3. Jordan clicks "Clear Local Data" — a confirmation modal opens:
+   - Title: "Clear Local Data?"
+   - Warning: "This will remove local data and may end your current session. You may need to log in again."
+4. Jordan clicks "Yes, clear it"
+5. All `dc_*` localStorage/sessionStorage keys are removed
+6. A green banner appears: "Local data cleared. Upload a new file to start fresh."
+7. Jordan uploads the new sprint file; the dashboard shows current data
+
+**Outcome:** Jordan eliminates stale cached data without needing DevTools or IT support.
+
+---
+
+### SCN-024 — C-Level Executive Reviews Dashboard Without Technical Noise
+
+**Persona:** Emma, VP of Engineering  
+**Context:** Emma needs to present delivery health at a board meeting. She does not need to see the issue-level flow table or sprint filters.
+
+**Scenario:**
+1. Emma opens `/dashboard` — full view loads with all technical sections
+2. She selects "Executive" from the view selector
+3. The sticky bar filter row (All / High Risk / Blocked / Needs Review / Clear / Show filters) disappears
+4. The Story / Task Flow Health section disappears
+5. Only visible: health score, key KPIs, Smart Recommendations, Priority Attention, Delivery Mix, Epic Readiness
+6. Emma selects "Readiness" in the section switcher — page smooth-scrolls to Epic Health & Release Readiness
+7. She exports the Excel report for the board
+
+**Outcome:** Emma gets a clean executive view with no technical clutter, appropriate for board-level communication.
+
+---
+
+### SCN-025 — Engineering Manager Uses Section Switcher for Focused Review
+
+**Persona:** Carlos, Engineering Manager  
+**Context:** Carlos wants to review only sprint performance without scrolling through the entire dashboard.
+
+**Scenario:**
+1. Carlos opens `/dashboard` in Full mode
+2. He clicks "Sprints" in the sticky section tab bar
+3. The page smooth-scrolls to the Sprint Status section; all other sections are hidden
+4. The active "Sprints" tab shows a blue underline indicator
+5. Carlos reviews SprintThroughputPanel and MidSprintDeliveryPanel
+6. He clicks "Full" to restore the complete dashboard view
+
+**Outcome:** Carlos focuses on exactly what he needs in seconds, without manual scrolling or collapsing unrelated sections.
+
+---
+
+*© 2026 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity v4.1*
+### SCN-026 — Scrum Master Exports Explorer Graph for Offline Review
+
+**Persona:** Marcus, Scrum Master
+**Context:** Marcus has traced a blocked epic in Work Item Explorer and wants to share the risk analysis with a stakeholder who doesn't have app access.
+
+**Scenario:**
+1. Marcus navigates to `/explore` and enters `EPIC-14`
+2. The graph loads: 12 connected items, 3 on the risk path, 1 orphan
+3. Marcus clicks "↓ Export" → "Export to Excel (.xlsx)"
+4. A 5-sheet workbook downloads: Summary (delivery confidence 62%), All Issues (12 rows), Risk Items (3 rows), Orphans (1 row), Insights
+5. Marcus emails the workbook to the product owner before the sprint review
+
+**Outcome:** Stakeholder has a complete offline snapshot of the delivery structure without needing app access.
+
+**Related:** UC-064, TC-EX-01–08
+
+---
+
+### SCN-027 — Release Manager Watches Confidence Score Improve Sprint-Over-Sprint
+
+**Persona:** Rachel, Director of Engineering
+**Context:** After blocking issues were resolved over two sprints, Rachel wants to confirm release confidence is trending up.
+
+**Scenario:**
+1. Rachel navigates to `/trends`
+2. The Release Confidence chart shows: Sprint 3 → 48%, Sprint 4 → 67%, Sprint 5 → 84%
+3. The stat card shows "+36% vs first upload" in green
+4. The upload log table shows the Rel. Confidence column improving row by row
+
+**Outcome:** Rachel can objectively demonstrate to the steering committee that release confidence improved, backed by trend data rather than anecdote.
+
+**Related:** UC-065, TC-RC-01–10
+
+---
+
+### SCN-028 — Engineering Manager Identifies Overloaded Team Member Before Retro
+
+**Persona:** Carlos, Engineering Manager
+**Context:** Sprint 6 retrospective is tomorrow. Carlos wants data to support the conversation about uneven workload distribution.
+
+**Scenario:**
+1. Carlos opens `/teams` from the Analytics nav
+2. He sees 6 team member scorecards; "David: 34/100 Critical" stands out
+3. The Workload Share chart shows David at 42% load share (red bar, > 35%)
+4. The Blocked + Critical chart confirms David has 3 blocked items
+5. Carlos notes David's avgOpenAgeDays is 18d (red)
+6. He uses this data to open the retro discussion on workload balancing
+
+**Outcome:** Retro conversation is data-driven. Team agrees to redistribute 2 issues from David to Alice (Healthy, 68/100, 18% load).
+
+**Related:** UC-066, TC-TH-01–10
+
+---
+
+### SCN-029 — Programme Lead Prepares Steering Committee Deck from Portfolio Page
+
+**Persona:** Rachel, Director of Engineering
+**Context:** Weekly steering committee in 30 minutes. Rachel needs a portfolio health summary.
+
+**Scenario:**
+1. Rachel navigates to `/portfolio`
+2. Portfolio Score is 71 (Good) — score banner confirms "Portfolio is in a strong position"
+3. Epic Progress panel shows 4 epics: 3 healthy (green), 1 critical (red — "Payments v2, 30% complete, 2 critical")
+4. Project cards: PROJ-A healthy, PROJ-B at risk (50%)
+5. Quarter throughput bars: Q1 80% → Q2 65% — slight dip noted
+6. Rachel screenshots the score banner and epic panel for her deck
+
+**Outcome:** Steering committee gets a coherent portfolio view in under 5 minutes, no manual aggregation needed.
+
+**Related:** UC-067, TC-PF-01–10
+
+### SCN-030 — Director Prepares One-Page Executive PDF Before Steering Committee
+
+**Persona:** Rachel, Director of Engineering
+**Context:** 15 minutes before a steering committee, Rachel needs a one-page printed summary.
+
+**Scenario:**
+1. Rachel navigates to `/summary`
+2. She clicks "Executive PDF" (purple button)
+3. A file `executive-summary-2026-06-04.html` downloads instantly
+4. She opens it in Chrome → Ctrl+P → "Save as PDF" → one A4 landscape page renders
+5. She prints it and walks into the meeting
+
+**Outcome:** In 60 seconds, Rachel has a professional one-page delivery summary — no manual copy-paste from multiple pages, no formatting work.
+
+**Related:** UC-068, TC-EP-01–08
+
+### SCN-031 — Developer Finds Lead Time Formula via Portal Search
+
+**Persona:** New backend engineer joining the team
+**Context:** Engineer needs to understand how Lead Time is calculated before writing a test.
+
+**Scenario:**
+1. Engineer opens `/developer`
+2. Types "lead time" in the sidebar search box
+3. Results appear: Calculations (Lead Time, Cycle Time) + Section (Calculation Reference)
+4. Clicks "Lead Time" result → Calculation Reference opens with the Lead Time card expanded
+5. Engineer reads the formula, inputs, assumptions, and implementation file reference
+
+**Outcome:** Engineer finds the formula in 10 seconds without scrolling through 28 calculation entries or navigating manually.
+
+**Related:** UC-069, TC-AO (search is in-memory — no dedicated test needed)
+
+---
+
+### SCN-032 — Scrum Master Assigns Recommendation Owners Before Retro
+
+**Persona:** Marcus, Scrum Master
+**Context:** Sprint retro prep — Marcus wants each recommendation to have a named owner before the meeting.
+
+**Scenario:**
+1. Marcus opens the dashboard — Smart Recommendations section shows 4 cards
+2. Card 1: "Unblock 3 critical items" — Marcus clicks "+ Assign (Scrum Master / Delivery Manager)"
+3. Input opens; Marcus types "Ali" → presses Enter → "Ali" badge appears
+4. Card 2: "Team capacity imbalance" — Marcus types "Rachel" → saved
+5. In the retro, each recommendation card shows its owner — accountability is clear from the start
+
+**Outcome:** Retro action items are immediately owner-assigned in the tool, removing the need for a separate action tracker.
+
+**Related:** UC-070, TC-AO-01–08
+
+### SCN-033 — DevOps Engineer Self-Hosts via Docker in 10 Minutes
+
+**Persona:** Alex, DevOps Engineer
+**Context:** The team wants Delivery Clarity running on their internal server before the sprint review tomorrow.
+
+**Scenario:**
+1. Alex clones the repo to `/opt/delivery-clarity` on an Ubuntu 22.04 VPS
+2. Copies `.env.example` to `.env`, sets `SESSION_SECRET` and a strong `ADMIN_PASSWORD`
+3. Runs `docker compose up -d --build` — Docker pulls Node 20 alpine, builds two stages, starts the container
+4. `docker compose ps` shows "healthy" after ~60 seconds
+5. Alex visits `http://192.168.1.50:3000`, logs in, uploads a Jira CSV, confirms dashboard works
+6. Follows Section 7 to configure nginx on port 80 → uploads the Jira file successfully (25M limit set)
+7. Follows Section 8 to set up SSL via Certbot → site is live at `https://delivery.team.internal`
+
+**Outcome:** The team has a production Delivery Clarity instance in under 30 minutes with persistent SQLite storage, nginx, and HTTPS.
+
+**Related:** UC-071, DEPLOYMENT_GUIDE.md §4, §7, §8
+
+### SCN-034 — Admin Runs Pre-Production Health Check
+
+**Persona:** Alex, DevOps Engineer
+**Context:** The team is about to announce Delivery Clarity to 50 users. Alex wants to confirm the system is production-ready.
+
+**Scenario:**
+1. Alex opens `/admin/diagnostics`
+2. Ops Score: 90/100 — Healthy
+3. Environment: SESSION_SECRET ✓, NODE_ENV production ✓, registration locked ✓, DB URL ✓
+4. One check fails: NEXT_PUBLIC_APP_URL not set (−5 not in score, just flagged)
+5. Import health: 100% success rate, 3 successful imports so far
+6. 2 active sessions (Alex + test user)
+7. Alex clicks "Security Report →" — score 88/100, production ready
+8. Alex sets NEXT_PUBLIC_APP_URL in .env and restarts → refreshes diagnostics → all green
+
+**Outcome:** Alex confirms the system is production-ready in under 3 minutes, using a single admin page.
+
+**Related:** UC-073, TC-SD-01–08
+
+### SCN-035 — Manager Shares Branded Executive PDF with Board
+
+**Persona:** Rachel, Director of Engineering
+**Context:** Rachel needs to share a professional delivery summary for a board meeting.
+
+**Scenario:**
+1. Rachel clicks "Executive PDF" on the Overview page
+2. Opens the file — header shows the lightning bolt brand mark + "Delivery Clarity" + "Executive Summary"
+3. The board receives a document that looks like it came from a real product, not a generic spreadsheet
+4. Footer reads "Generated by Delivery Clarity v4.1 · 2026-06-04 · Ali Abu Ras · aliaburas80@gmail.com"
+5. Browser tab shows the DC lightning bolt favicon
+
+**Outcome:** Professional delivery report with consistent branding — no manual formatting needed.
+
+**Related:** UC-076, FR-300
+
+### SCN-036 — New Team Member Discovers Work Item Explorer via Landing Page
+
+**Persona:** David, new Scrum Master joining the team
+**Context:** The team uses Delivery Clarity. David has been given an account but doesn't know what features exist.
+
+**Scenario:**
+1. David logs in → sees the upload page → clicks "See all 12 features →"
+2. /landing opens — branded hero, "From messy boards to measurable delivery confidence"
+3. David reads "How it works" (3 steps) — understands the zero-credential approach
+4. He scans the feature grid — "Work Item Explorer" catches his eye (dependency graph)
+5. He clicks the card → /explore opens → he enters an epic key → graph loads
+6. He returns to /landing and clicks "Release Readiness" → /readiness opens
+
+**Outcome:** David discovers two features he wouldn't have found from the dashboard alone, in under 5 minutes.
+
+**Related:** UC-077, FR-301
+
+### SCN-037 — New Team Member Discovers Smart Recommendations via Tour
+
+**Persona:** Marcus, new Scrum Master joining the team
+**Context:** Marcus has just uploaded his first Jira export and landed on the Overview page.
+
+**Scenario:**
+1. Overview page loads — after 800ms, a dark tour popover appears: "Welcome to Delivery Clarity 👋"
+2. Marcus clicks "Start tour" → dashboard loads
+3. Tour Step 2: pulsing ring around the section switcher tabs. Marcus sees he can click "Sprints" to focus only on sprint data
+4. Tour Step 5: ring highlights Smart Recommendations section. Popover explains he can assign owners and give feedback
+5. Tour Step 7: "Open Explorer →" — Marcus clicks, navigates to /explore
+6. Tour marks complete; Marcus opens the explorer and traces EPIC-42
+
+**Outcome:** Marcus discovers both the section switcher and the explorer in 3 minutes — features he wouldn't have found independently.
+
+**Related:** UC-079, TC-PT-01–08
+
+### SCN-038 — Returning User Loads Dashboard from Bucket
+
+**Persona:** Sarah, Engineering Manager
+**Context:** Sarah uploaded a Jira export yesterday and the configured S3 bucket received the automatic backup.
+
+**Scenario:**
+1. Sarah opens Delivery Clarity and signs in.
+2. The app attempts cloud sync before validating the current session's analytics data.
+3. `/api/metrics/latest` returns the restored `data/latest-metrics.json` payload.
+4. The dashboard opens with yesterday's latest metrics and the data source badge shows the cloud/cache provider.
+5. If the bucket is unavailable, the badge switches to `localStorage fallback` and uses the browser copy instead.
+
+**Outcome:** Sarah can resume analysis without re-uploading unless she wants a fresher Jira export.
+
+**Related:** UC-083, TC-CS-09–12
