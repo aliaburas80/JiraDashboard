@@ -474,7 +474,7 @@ function CloudStorageSettings() {
   async function handleTest() {
     setTesting(true); setMsg(null);
     try {
-      const saved = await handleSave();
+      const saved = isLocked ? true : await handleSave();
       if (!saved) { setTesting(false); return; }
       const r = await fetch('/api/admin/storage?action=test', { method: 'POST' });
       const d = await r.json();
@@ -490,7 +490,7 @@ function CloudStorageSettings() {
   async function handleUpload() {
     setUploading(true); setMsg(null);
     try {
-      const saved = await handleSave();
+      const saved = isLocked ? true : await handleSave();
       if (!saved) { setUploading(false); return; }
       const r = await fetch('/api/admin/storage?action=upload', { method: 'POST' });
       const d = await r.json();

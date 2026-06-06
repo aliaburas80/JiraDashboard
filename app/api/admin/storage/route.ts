@@ -18,11 +18,63 @@ import {
 import { createBackup } from '@/services/settings/backup.service';
 import type { StorageSettings } from '@/types/storage';
 
+type StorageSettingsUpdate = Partial<StorageSettings> & {
+  s3?: Partial<StorageSettings['s3']> & { hasCredentials?: boolean };
+  azure?: Partial<StorageSettings['azure']> & { hasCredentials?: boolean };
+  gcp?: Partial<StorageSettings['gcp']> & { hasCredentials?: boolean };
+};
+
 async function requireAdmin(): Promise<{ session: SessionData } | NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn)      return NextResponse.json({ error: 'Not authenticated.' },     { status: 401 });
   if (session.role !== 'admin') return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
   return { session };
+}
+
+function nonEmpty(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function stripPresenceFlag<T extends { hasCredentials?: boolean }>(config: T | undefined): Omit<T, 'hasCredentials'> | undefined {
+  if (!config) return undefined;
+  const { hasCredentials, ...rest } = config;
+  return rest;
+}
+
+function preserveSecret(currentValue: string | undefined, nextValue: unknown): string | undefined {
+  if (nonEmpty(nextValue)) return nextValue;
+  if (nextValue === '') return currentValue;
+  return currentValue;
+}
+
+function mergeStorageSettingsUpdate(current: StorageSettings, body: StorageSettingsUpdate, updatedBy: string): StorageSettings {
+  const s3Input    = stripPresenceFlag(body.s3);
+  const azureInput = stripPresenceFlag(body.azure);
+  const gcpInput   = stripPresenceFlag(body.gcp);
+
+  return {
+    ...current,
+    ...body,
+    s3: s3Input ? {
+      ...current.s3,
+      ...s3Input,
+      accessKeyId:     preserveSecret(current.s3.accessKeyId, s3Input.accessKeyId),
+      secretAccessKey: preserveSecret(current.s3.secretAccessKey, s3Input.secretAccessKey),
+    } : current.s3,
+    azure: azureInput ? {
+      ...current.azure,
+      ...azureInput,
+      connectionString: preserveSecret(current.azure.connectionString, azureInput.connectionString),
+    } : current.azure,
+    gcp: gcpInput ? {
+      ...current.gcp,
+      ...gcpInput,
+      keyFilename: preserveSecret(current.gcp.keyFilename, gcpInput.keyFilename),
+      keyJson:     preserveSecret(current.gcp.keyJson, gcpInput.keyJson),
+    } : current.gcp,
+    updatedAt: new Date().toISOString(),
+    updatedBy,
+  };
 }
 
 // ── GET — return settings + provider info + cloud backup list ──────────────
@@ -115,18 +167,13 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Update settings ──────────────────────────────────────────────────────
-  let body: Partial<StorageSettings>;
+  let body: StorageSettingsUpdate;
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
 
   const current = readStorageSettings();
-  const updated: StorageSettings = {
-    ...current,
-    ...body,
-    updatedAt: new Date().toISOString(),
-    updatedBy: session.email,
-  };
+  const updated = mergeStorageSettingsUpdate(current, body, session.email ?? 'unknown');
   writeStorageSettings(updated);
   return NextResponse.json({ ok: true });
 }

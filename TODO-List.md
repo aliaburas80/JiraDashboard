@@ -1,9 +1,9 @@
 # Delivery Clarity — TODO List
 
 **Last updated:** 2026-06-06  
-**Branch:** feat/cloud-restore-hardening  
-**Version:** v4.2.1 (cloud restore hardening tests)  
-**Release status:** PR #3 is merged to main. Cloud restore hardening tests are complete; before Jira integration, remaining work is source-detail visibility, admin sync health, and the Jira integration design document.
+**Branch:** fix/preserve-storage-connection  
+**Version:** v4.2.1 (cloud restore hardening + storage credential persistence)  
+**Release status:** PR #3 is merged to main. Cloud restore hardening and saved cloud credential persistence are complete; before Jira integration, remaining work is source-detail visibility, admin sync health, and the Jira integration design document.
 
 ---
 
@@ -421,7 +421,7 @@ For every code change:
 | # | Task | Priority | Status |
 |---|------|----------|--------|
 | JIRA-GATE-01 | Merge PR #3 first — Jira integration depends on the cloud/session groundwork | P0 | ✅ Done — PR #3 merged to `main` on 2026-06-06 |
-| JIRA-GATE-02 | Harden cloud restore behavior with tests: `/api/metrics/latest` returns `200 { available:false }`; `latest-metrics.json` is included in backups; pending local changes are not overwritten by bucket restore; `loadMetricsWithSource()` falls back to `localStorage` | P0 | ✅ Done — `cloudRestoreHardening.test.ts` adds TC-CS-09 to TC-CS-12 coverage |
+| JIRA-GATE-02 | Harden cloud restore behavior with tests: `/api/metrics/latest` returns `200 { available:false }`; `latest-metrics.json` is included in backups; pending local changes are not overwritten by bucket restore; `loadMetricsWithSource()` falls back to `localStorage`; saved cloud provider credentials persist across login/logout/session changes | P0 | ✅ Done — `cloudRestoreHardening.test.ts` adds TC-CS-09 to TC-CS-12; `storageSettingsPersistence.test.ts` adds TC-CS-13 to TC-CS-15 |
 | JIRA-GATE-03 | Add visible source details: provider, bucket key, last fetched, last pushed, fallback reason | P0 | ❌ Not started |
 | JIRA-GATE-04 | Add admin sync health check in Admin Settings / Diagnostics showing whether latest metrics are available and whether the cloud copy is current | P0 | ❌ Not started |
 | JIRA-GATE-05 | Write Jira integration design doc before code: auth model, Jira API scope, field mapping, refresh strategy, storage tables, failure modes, and export-upload fallback/default path | P0 | ❌ Not started |

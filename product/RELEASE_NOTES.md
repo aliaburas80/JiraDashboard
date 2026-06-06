@@ -10,6 +10,7 @@
 ### Jira integration gate
 - Merged PR #3 to `main` before starting the next Jira integration gate.
 - Added automated coverage for the cloud restore startup contract: `/api/metrics/latest` first-run fallback response, `latest-metrics.json` backup inclusion, pending-push restore protection, and browser `localStorage` fallback.
+- Fixed cloud storage credential persistence so saved provider credentials survive login, logout, session expiry, refresh, and locked Test connection / Upload backup actions. Redacted browser settings can no longer overwrite saved server-side secrets with blank values.
 - Updated TODO and test documentation so TC-CS-09 through TC-CS-12 are tracked as automated pre-Jira integration gates.
 
 ---

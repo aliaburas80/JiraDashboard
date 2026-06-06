@@ -554,6 +554,8 @@ If push fails → \`pendingPush=true\` → retried on next startup or sync reque
 
 \`switchProvider()\`: 1. Pull latest from current provider. 2. Push to new provider. Both end at same version.
 
+Storage provider selection and credentials live in \`data/storage-settings.json\`, not in the browser session. Login, logout, session expiry, and locked admin Test connection / Upload backup actions must not clear the active provider or saved secrets. API responses return only \`hasCredentials\`; blank/redacted credential fields from the browser are ignored so existing server-side secrets are preserved unless the admin explicitly saves replacement values.
+
 ---
 
 ## Data Source Badge
