@@ -830,6 +830,8 @@ function UserManagementSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [query, setQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'scrum_master' as AppRole });
 
   async function loadUsers() {
@@ -889,71 +891,161 @@ function UserManagementSettings() {
     return user?.role === 'user' ? ['user', ...ASSIGNABLE_ROLES] : ASSIGNABLE_ROLES;
   }
 
+  const filteredUsers = users.filter(user => {
+    const searchText = `${user.name} ${user.email}`.toLowerCase();
+    const matchesQuery = !query.trim() || searchText.includes(query.trim().toLowerCase());
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    return matchesQuery && matchesRole;
+  });
+
   return (
-    <div className="space-y-5">
-      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-        <div>
-          <h3 className="text-sm font-black text-slate-800">Add User</h3>
-          <p className="text-xs text-slate-500 mt-1">Admins create accounts and assign the role that controls default views and data scope.</p>
+    <div className="space-y-6">
+      <section className="rounded-[14px] border border-slate-200 bg-white p-5 shadow-[0_3px_12px_rgba(15,23,42,0.04)]">
+        <div className="mb-5 flex items-center gap-3">
+          <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-blue-50 text-blue-700">👤</span>
+          <div>
+            <h3 className="text-lg font-black tracking-tight text-slate-900">Add User</h3>
+            <p className="text-sm text-slate-500">Create a new user account and assign a role.</p>
+          </div>
         </div>
-        <div className="grid sm:grid-cols-2 gap-3">
-          <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Name"
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
-          <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Email"
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
-          <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Temporary password"
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
-          <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-blue-400">
-            {ASSIGNABLE_ROLES.map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
-          </select>
+
+        <div className="grid gap-4 xl:grid-cols-[1fr_1fr_1fr_1.05fr_auto] xl:items-end">
+          <label className="grid gap-2 text-xs font-extrabold text-slate-700">
+            Full Name
+            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Enter full name"
+              className="h-[42px] rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
+          </label>
+          <label className="grid gap-2 text-xs font-extrabold text-slate-700">
+            Email Address
+            <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Enter email address"
+              className="h-[42px] rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
+          </label>
+          <label className="grid gap-2 text-xs font-extrabold text-slate-700">
+            Temporary Password
+            <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Enter temporary password"
+              className="h-[42px] rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
+          </label>
+          <label className="grid gap-2 text-xs font-extrabold text-slate-700">
+            Role
+            <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
+              className="h-[42px] rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100">
+              {ASSIGNABLE_ROLES.map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
+            </select>
+          </label>
+          <button type="button" onClick={createUser} disabled={saving}
+            className="inline-flex h-[42px] items-center justify-center gap-2 rounded-[9px] bg-blue-600 px-5 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(37,99,235,0.20)] transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300">
+            <span>👥</span>{saving ? 'Creating...' : 'Create User'}
+          </button>
         </div>
-        <button type="button" onClick={createUser} disabled={saving}
-          className="btn-primary px-5 py-2 text-sm">{saving ? 'Creating...' : 'Create user'}</button>
-      </div>
+      </section>
 
       {msg && (
-        <div className={`rounded-xl border px-4 py-3 text-sm font-semibold ${msg.ok ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+        <div className={`rounded-[14px] border px-4 py-3 text-sm font-semibold ${msg.ok ? 'border-green-200 bg-green-50 text-green-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
           {msg.text}
         </div>
       )}
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-sm font-black text-slate-800">Manage Users</h3>
-          <button type="button" onClick={loadUsers} disabled={loading}
-            className="text-xs font-bold text-blue-600 hover:underline disabled:text-slate-400">{loading ? 'Loading...' : 'Refresh'}</button>
+      <section className="overflow-hidden rounded-[14px] border border-slate-200 bg-white shadow-[0_3px_12px_rgba(15,23,42,0.04)]">
+        <div className="flex flex-col gap-4 border-b border-slate-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h3 className="text-lg font-black tracking-tight text-slate-900">User Management</h3>
+            <p className="text-sm text-slate-500">View and manage all users in your account.</p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label className="relative block">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">⌕</span>
+              <input value={query} onChange={e => setQuery(e.target.value)} type="search" placeholder="Search users"
+                className="h-[38px] w-full rounded-[9px] border border-slate-300 bg-white pl-9 pr-3 text-sm outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100 sm:w-56" />
+            </label>
+            <select value={roleFilter} onChange={e => setRoleFilter(e.target.value as AppRole | 'all')}
+              className="h-[38px] rounded-[9px] border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100">
+              <option value="all">All roles</option>
+              {roleOptionsFor().map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
+            </select>
+            <button type="button" onClick={loadUsers} disabled={loading}
+              className="inline-flex h-[38px] items-center justify-center rounded-[9px] border border-slate-300 bg-white px-4 text-sm font-extrabold text-slate-700 transition hover:bg-slate-50 disabled:text-slate-400">
+              {loading ? 'Loading...' : '↻ Refresh'}
+            </button>
+          </div>
         </div>
         {loading ? (
           <div className="p-5 text-sm text-slate-400 animate-pulse">Loading users...</div>
         ) : (
-          <div className="divide-y divide-slate-100">
-            {users.map(user => (
-              <div key={user.id} className="p-4 grid gap-3 md:grid-cols-[1.2fr_0.9fr_0.8fr_auto] md:items-center">
-                <div className="min-w-0">
-                  <input value={user.name} onChange={e => setUsers(prev => prev.map(u => u.id === user.id ? { ...u, name: e.target.value } : u))}
-                    onBlur={e => updateUser(user.id, { name: e.target.value })}
-                    className="w-full text-sm font-black text-slate-800 border border-transparent rounded px-2 py-1 focus:border-blue-300 focus:outline-none" />
-                  <p className="text-xs text-slate-500 truncate px-2">{user.email}</p>
-                </div>
-                <select value={user.role} onChange={e => updateUser(user.id, { role: e.target.value as AppRole })}
-                  className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-blue-400">
-                  {roleOptionsFor(user).map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
-                </select>
-                <div className="text-xs text-slate-500">
-                  <p>{user.importCount} imports</p>
-                  <p>{user.snapshotCount} snapshots</p>
-                </div>
-                <button type="button" onClick={() => updateUser(user.id, { isActive: !user.isActive })}
-                  className={`btn-sm px-3 py-1.5 text-xs font-bold rounded-full border ${user.isActive ? 'bg-green-50 border-green-200 text-green-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
-                  {user.isActive ? 'Active' : 'Disabled'}
-                </button>
-              </div>
-            ))}
-            {users.length === 0 && <div className="p-5 text-sm text-slate-400">No users found.</div>}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[880px] table-fixed border-collapse text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="w-[32%] px-5 py-3 text-left text-xs font-black text-slate-600">User</th>
+                  <th className="w-[20%] px-5 py-3 text-left text-xs font-black text-slate-600">Role</th>
+                  <th className="px-5 py-3 text-left text-xs font-black text-slate-600">Imports</th>
+                  <th className="px-5 py-3 text-left text-xs font-black text-slate-600">Snapshots</th>
+                  <th className="px-5 py-3 text-left text-xs font-black text-slate-600">Status</th>
+                  <th className="w-[12%] px-5 py-3 text-left text-xs font-black text-slate-600">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user, index) => {
+                  const initials = user.name
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map(part => part[0]?.toUpperCase())
+                    .join('') || user.email.slice(0, 2).toUpperCase();
+                  const avatarTone = [
+                    'bg-violet-50 text-violet-700',
+                    'bg-blue-50 text-blue-700',
+                    'bg-cyan-50 text-cyan-700',
+                    'bg-amber-50 text-amber-700',
+                    'bg-orange-50 text-orange-700',
+                  ][index % 5];
+
+                  return (
+                    <tr key={user.id} className="border-t border-slate-200">
+                      <td className="px-5 py-4">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-black ${avatarTone}`}>{initials}</span>
+                          <div className="min-w-0">
+                            <input value={user.name} onChange={e => setUsers(prev => prev.map(u => u.id === user.id ? { ...u, name: e.target.value } : u))}
+                              onBlur={e => updateUser(user.id, { name: e.target.value })}
+                              className="w-full truncate rounded-[8px] border border-transparent px-2 py-1 text-sm font-black text-slate-900 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
+                            <p className="truncate px-2 text-xs text-slate-500">{user.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <select value={user.role} onChange={e => updateUser(user.id, { role: e.target.value as AppRole })}
+                          className="h-[38px] w-44 rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100">
+                          {roleOptionsFor(user).map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
+                        </select>
+                      </td>
+                      <td className="px-5 py-4 font-bold text-slate-700">{user.importCount}</td>
+                      <td className="px-5 py-4 font-bold text-slate-700">{user.snapshotCount}</td>
+                      <td className="px-5 py-4">
+                        <span className={`inline-flex h-7 items-center gap-2 rounded-full border px-3 text-xs font-black ${user.isActive ? 'border-green-200 bg-green-50 text-green-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${user.isActive ? 'bg-green-600' : 'bg-slate-400'}`} />
+                          {user.isActive ? 'Active' : 'Disabled'}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <button type="button" onClick={() => updateUser(user.id, { isActive: !user.isActive })}
+                          className="grid h-8 w-8 place-items-center rounded-[8px] text-lg text-slate-700 transition hover:bg-slate-100"
+                          aria-label={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}>
+                          {user.isActive ? '⏸' : '▶'}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {filteredUsers.length === 0 && <div className="p-5 text-sm text-slate-400">No users match the current filters.</div>}
+            <div className="flex items-center justify-between border-t border-slate-200 px-5 py-3 text-sm text-slate-600">
+              <span>Showing {filteredUsers.length} of {users.length} users</span>
+              <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-[9px] bg-blue-50 px-3 text-xs font-black text-blue-700">1</span>
+            </div>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
@@ -1059,14 +1151,27 @@ export default function AdminSettingsPage() {
   const totalUsers = userSummary.total;
   const latestBackup = backupFiles?.some(file => file.included) ? 'Available' : 'Not yet';
   const selectedTab = activeTabMeta(tab);
+  const statsCards = [
+    { icon: '👥', label: 'Total Users', value: String(totalUsers), note: 'All accounts', tone: 'bg-blue-50 text-blue-700' },
+    { icon: '🛡', label: 'Active Users', value: String(activeUsers), note: totalUsers ? `${Math.round((activeUsers / totalUsers) * 100)}% of total` : 'No users yet', tone: 'bg-slate-100 text-slate-700' },
+    { icon: '↥', label: 'Admin Users', value: String(userSummary.admins), note: totalUsers ? `${Math.round((userSummary.admins / totalUsers) * 100)}% of total` : 'No users yet', tone: 'bg-slate-100 text-slate-700' },
+    { icon: '▣', label: 'Backup State', value: latestBackup, note: backupFiles?.length ? 'Backup available' : 'No backup found', tone: 'bg-slate-100 text-slate-700' },
+  ];
 
   return (
     <AppShell showNav>
-      <div className="mx-auto max-w-7xl">
-        <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
-          <aside className="lg:sticky lg:top-20 self-start rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
-            <div className="px-2 py-3">
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Settings</p>
+      <div className="-mx-4 -my-6 min-h-[calc(100vh-5rem)] bg-[#f7f9fc] px-4 py-6 sm:-mx-6 sm:px-6">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[285px_minmax(0,1fr)]">
+          <aside className="self-start rounded-[14px] border border-slate-200 bg-white p-5 shadow-[0_3px_12px_rgba(15,23,42,0.035)] lg:sticky lg:top-20">
+            <div className="mb-7 flex min-h-11 items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-slate-100 text-lg text-slate-700">☰</span>
+              <div>
+                <p className="text-base font-black tracking-tight text-slate-900">Delivery Clarity</p>
+                <p className="text-xs font-bold text-slate-500">Admin Console</p>
+              </div>
+            </div>
+            <div className="mb-3">
+              <p className="text-xs font-black uppercase tracking-[0.08em] text-slate-500">Settings</p>
             </div>
             <nav className="grid gap-2" aria-label="Admin settings navigation">
               {ADMIN_TABS.map(item => {
@@ -1076,79 +1181,77 @@ export default function AdminSettingsPage() {
                     key={item.id}
                     type="button"
                     onClick={() => setTab(item.id)}
-                    className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors ${
-                      selected ? 'bg-blue-50 text-blue-700 shadow-[inset_4px_0_0_#2563eb]' : 'text-slate-700 hover:bg-slate-50'
+                    className={`flex min-h-[50px] items-center gap-3 rounded-xl px-3.5 text-left text-sm font-extrabold transition ${
+                      selected ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
-                    <span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-lg shadow-sm">{item.icon}</span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-black">{item.label}</span>
-                      <span className="block truncate text-[11px] font-semibold text-slate-400">{item.description}</span>
-                    </span>
+                    <span className="grid h-6 w-6 shrink-0 place-items-center text-base">{item.icon}</span>
+                    <span className="truncate">{item.label}</span>
                   </button>
                 );
               })}
             </nav>
-            <div className="mt-6 grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-green-50 text-sm font-black text-green-600">✓</span>
-              <span>
-                <strong className="block text-xs text-slate-800">System secure</strong>
-                <span className="text-[11px] font-bold text-green-600">Operational</span>
-              </span>
-              <span className="text-xl text-slate-400">›</span>
+            <div className="mt-8 rounded-[14px] border border-slate-200 bg-slate-50 p-4 shadow-[0_3px_12px_rgba(15,23,42,0.035)]">
+              <h3 className="mb-1 text-sm font-black text-slate-900">Need help?</h3>
+              <p className="mb-4 text-sm leading-6 text-slate-500">Review diagnostics before changing roles, storage, retention, or recovery settings.</p>
+              <a href="/admin/diagnostics" className="inline-flex h-9 w-full items-center justify-center rounded-[10px] border border-slate-300 bg-white text-sm font-extrabold text-blue-600 transition hover:bg-blue-50">
+                Open Diagnostics ↗
+              </a>
             </div>
           </aside>
 
-          <div className="min-w-0">
-            <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-blue-700 via-indigo-700 to-violet-700 px-6 py-8 text-white shadow-[0_16px_40px_rgba(15,23,42,0.14)] sm:px-10 sm:py-10">
-              <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="mb-3 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold text-blue-50">Admin Console</p>
-                  <h1 className="text-3xl font-black tracking-tight sm:text-5xl">Admin Settings</h1>
-                  <p className="mt-3 max-w-2xl text-sm text-blue-50/85 sm:text-base">Manage users, security, data retention, storage, and system behaviour.</p>
+          <main className="min-w-0">
+            <header className="mb-7 rounded-[14px] border border-slate-200 bg-white px-5 py-4 shadow-[0_3px_12px_rgba(15,23,42,0.035)]">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-center gap-2 text-sm font-bold text-slate-500">
+                  <span>Admin Console</span>
+                  <span className="text-slate-300">/</span>
+                  <span className="text-slate-900">{selectedTab.label}</span>
                 </div>
-                <div className="flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold backdrop-blur">
-                  <span className="h-2.5 w-2.5 rounded-full bg-green-400 shadow-[0_0_0_7px_rgba(34,197,94,0.16)]" />
-                  All systems operational
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <label className="relative hidden md:block">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">⌕</span>
+                    <input type="search" placeholder="Search settings..." disabled
+                      className="h-[42px] w-72 rounded-xl border border-slate-300 bg-white pl-9 pr-14 text-sm text-slate-500 shadow-[0_3px_12px_rgba(15,23,42,0.035)] outline-none" />
+                    <span className="absolute right-3 top-1/2 grid h-6 min-w-9 -translate-y-1/2 place-items-center rounded-[7px] border border-slate-200 bg-slate-50 px-2 text-xs font-black text-slate-500">⌘ K</span>
+                  </label>
+                  <span className="inline-flex h-[38px] items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 text-sm font-black text-green-700">
+                    <span className="h-2 w-2 rounded-full bg-green-600" />
+                    System healthy
+                  </span>
                 </div>
               </div>
-              <div className="pointer-events-none absolute -right-20 -top-16 h-64 w-64 rounded-full bg-cyan-300/20" />
-              <div className="pointer-events-none absolute -bottom-24 right-24 h-72 w-72 rounded-full bg-pink-300/20" />
+            </header>
+
+            <section className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h1 className="text-3xl font-black tracking-tight text-slate-950">{selectedTab.label}</h1>
+                <p className="mt-2 text-base text-slate-600">{selectedTab.description}</p>
+              </div>
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3.5 py-2 text-sm font-black text-green-700">
+                <span className="h-2 w-2 rounded-full bg-green-600" />
+                Operational
+              </div>
             </section>
 
-            <section className="relative z-10 mt-[-34px] grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Admin summary">
-              {[
-                { icon: '👥', label: 'Total Users', value: String(totalUsers), note: 'All accounts', color: 'bg-blue-50 text-blue-700' },
-                { icon: '🟢', label: 'Active Users', value: String(activeUsers), note: totalUsers ? `${Math.round((activeUsers / totalUsers) * 100)}% of total` : 'No users yet', color: 'bg-green-50 text-green-700' },
-                { icon: '🛡️', label: 'Admins', value: String(userSummary.admins), note: totalUsers ? `${Math.round((userSummary.admins / totalUsers) * 100)}% of total` : 'No users yet', color: 'bg-violet-50 text-violet-700' },
-                { icon: '☁️', label: 'Last Backup', value: latestBackup, note: backupFiles?.length ? 'Backup available' : 'No backup found', color: 'bg-orange-50 text-orange-700' },
-              ].map(card => (
-                <article key={card.label} className="min-h-[132px] rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
+            <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Admin summary">
+              {statsCards.map(card => (
+                <article key={card.label} className="min-h-[88px] rounded-[14px] border border-slate-200 bg-white p-4 shadow-[0_3px_12px_rgba(15,23,42,0.035)]">
                   <div className="flex items-center gap-4">
-                    <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-full text-xl ${card.color}`}>{card.icon}</span>
+                    <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-lg ${card.tone}`}>{card.icon}</span>
                     <span className="min-w-0">
-                      <span className="block text-xs font-black uppercase tracking-wide text-slate-400">{card.label}</span>
-                      <strong className="mt-1 block truncate text-xl font-black text-slate-900">{card.value}</strong>
-                      <span className="mt-1 block truncate text-xs font-bold text-slate-500">{card.note}</span>
+                      <strong className="block truncate text-2xl font-black tracking-tight text-slate-900">{card.value}</strong>
+                      <span className="mt-1 block truncate text-sm font-bold text-slate-500">{card.label}</span>
+                      <span className="mt-1 block truncate text-xs font-semibold text-slate-400">{card.note}</span>
                     </span>
                   </div>
                 </article>
               ))}
             </section>
 
-            {error && <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div>}
+            {error && <div className="mb-6 rounded-[14px] border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div>}
 
-            <section className="mt-6 rounded-[22px] border border-slate-200 bg-white/90 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur sm:p-6">
-              <div className="mb-5 flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="grid h-12 w-12 place-items-center rounded-2xl border border-blue-100 bg-blue-50 text-xl text-blue-700">{selectedTab.icon}</span>
-                  <div>
-                    <h2 className="text-xl font-black tracking-tight text-slate-900">{selectedTab.label}</h2>
-                    <p className="mt-1 text-sm text-slate-500">{selectedTab.description}</p>
-                  </div>
-                </div>
-              </div>
-
+            <section>
               {tab === 'users' && <UserManagementSettings />}
               {tab === 'retention' && settings && (
                 <DataRetentionSettings settings={settings} stats={stats} onSave={handleSaveRetention} onCleanup={handleCleanup} onClearAll={handleClearAll} />
@@ -1167,7 +1270,7 @@ export default function AdminSettingsPage() {
                 <ClearLocalDataPanel />
               )}
             </section>
-          </div>
+          </main>
         </div>
       </div>
     </AppShell>

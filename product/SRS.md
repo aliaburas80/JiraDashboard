@@ -1679,7 +1679,7 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-260:** Admin users MUST be able to configure 9 health thresholds via `/admin/settings`: cycle time critical/warning days, lead time critical/warning days, active age critical/warning days, open age warning days, blocked ratio warning %, orphan ratio warning %.
 
-**FR-260A:** The `/admin/settings` page MUST use the Admin Console layout: left settings sidebar, gradient hero header, operational status indicator, summary stat cards, and a large content panel for the selected settings area.
+**FR-260A:** The `/admin/settings` page MUST use the flat Admin Console layout: sticky left settings sidebar, top context bar, page title/status area, summary stat cards, and scannable operational panels for the selected settings area.
 
 **FR-261:** Thresholds MUST be persisted to `data/health-thresholds.json` and applied to all future uploads.
 

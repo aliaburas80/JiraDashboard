@@ -335,7 +335,7 @@ When cloud storage is active, auth/admin user flows use cloud-backed SQLite auth
 
 Route visibility is role-scoped through the same helper module: `allowedRoutePrefixesForRole()`, `canAccessRoute()`, and `fallbackRouteForRole()`. `AppShell` fetches `/api/auth/me` and filters nav items before rendering; `middleware.ts` enforces the same matrix for protected page routes and redirects disallowed direct URL access to the role fallback route.
 
-The page layout follows the Admin Console mockup: a left settings sidebar, blue gradient hero, operational status pill, summary cards, and one large content card for the active tab.
+The page layout follows the flat Admin Console mockup: a sticky left settings sidebar, white top context bar, page-level operational status, summary cards, and table-first user management. The layout intentionally avoids a marketing-style hero so settings remain dense, scannable, and operational.
 
 Tabs: Health Thresholds, Orphan Rules, Privacy & Retention, Backup & Restore.
 
