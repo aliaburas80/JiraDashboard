@@ -67,12 +67,14 @@ export default function OnboardingChecklist({ isLoggedIn = false, compact = fals
     return (
       <Link
         href="/summary"
-        className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-1 hover:bg-purple-100 transition-colors"
+        title={`${doneCount} of ${totalSteps} setup steps complete`}
+        className="inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-purple-200 bg-purple-50 px-2.5 text-xs font-black text-purple-700 transition-colors hover:bg-purple-100"
       >
-        <span className="w-2.5 h-2.5 rounded-full bg-purple-200 overflow-hidden flex-shrink-0">
+        <span className="h-2.5 w-2.5 flex-shrink-0 overflow-hidden rounded-full bg-purple-200">
           <span className="block h-full bg-purple-600 rounded-full" style={{ width: `${progress}%` }} />
         </span>
-        {doneCount}/{totalSteps} setup
+        <span>{doneCount}/{totalSteps}</span>
+        <span className="hidden xl:inline">setup</span>
       </Link>
     );
   }

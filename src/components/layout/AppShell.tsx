@@ -251,7 +251,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
             <UserMenu />
 
             {/* Data source indicator — shows where current data comes from */}
-            <DataSourceBadge className="hidden sm:inline-flex" />
+            <DataSourceBadge compact className="hidden sm:inline-flex" />
 
             <ThemeCustomizerPanel />
 

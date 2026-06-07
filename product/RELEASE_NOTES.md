@@ -17,6 +17,7 @@
 - Added strict protected-page route visibility/enforcement by role: disallowed routes are hidden from the AppShell navigation and blocked in middleware.
 - Redesigned `/admin/settings` to match the attached flat admin settings mockup: sticky settings sidebar, flat top context bar, page-level status, contextual summary cards, and a table-first Users workflow.
 - Added a dedicated Administration navigation group and applied the same flat admin console layout to Settings, Diagnostics, Security, and Import Logs.
+- Polished the admin header utility chips so setup progress and data-source status stay compact and do not wrap into the navigation area.
 - Added shared role helpers and automated tests for role labels, import visibility, cloud-backed admin user changes, dashboard role locking, and route access.
 
 ### Documentation

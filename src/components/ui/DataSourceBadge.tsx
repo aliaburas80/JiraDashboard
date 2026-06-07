@@ -118,7 +118,20 @@ const SOURCE_CONFIG: Record<DataSource, { icon: string; label: string; color: st
   'unknown':     { icon: '?',   label: 'Unknown',     color: '#94a3b8', bg: '#f8fafc', border: '#e2e8f0' },
 };
 
-export function DataSourceBadge({ className = '' }: { className?: string }) {
+const SOURCE_SHORT_LABEL: Record<DataSource, string> = {
+  'cloud-s3': 'S3',
+  'cloud-azure': 'Azure',
+  'cloud-gcp': 'GCP',
+  'cache': 'Cache',
+  'upload': 'Upload',
+  'local': 'Local',
+  'loading': 'Loading',
+  'fallback': 'No data',
+  'localstorage': 'localStorage',
+  'unknown': 'Unknown',
+};
+
+export function DataSourceBadge({ className = '', compact = false }: { className?: string; compact?: boolean }) {
   const { source, provider, key, loading } = useDataSource();
   if (source === 'unknown') return null;
 
@@ -126,10 +139,13 @@ export function DataSourceBadge({ className = '' }: { className?: string }) {
   const providerLabel = provider && provider !== 'local'
     ? provider.toUpperCase()
     : cfg.label;
+  const displayLabel = compact ? SOURCE_SHORT_LABEL[source] : `Data: ${providerLabel}`;
 
   return (
     <div
-      className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full border print:hidden ${className}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border font-bold print:hidden ${
+        compact ? 'h-9 shrink-0 px-2.5 text-xs' : 'px-2.5 py-1 text-[10px]'
+      } ${className}`}
       style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border }}
       title={key ? `Data source: ${providerLabel} · Key: ${key}` : `Data source: ${providerLabel}`}
     >
@@ -140,7 +156,7 @@ export function DataSourceBadge({ className = '' }: { className?: string }) {
       ) : (
         <span aria-hidden="true">{cfg.icon}</span>
       )}
-      <span>Data: {providerLabel}</span>
+      <span>{displayLabel}</span>
     </div>
   );
 }
