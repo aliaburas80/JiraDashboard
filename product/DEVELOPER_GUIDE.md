@@ -56,7 +56,7 @@ npm run dev
 
 # Production build
 npm run build
-# Runs .next/standalone/server.js because next.config.js uses output: 'standalone'
+# Prepares local standalone assets, then runs .next/standalone/server.js
 npm start
 
 # Lint
@@ -76,7 +76,7 @@ For production deployment, set these environment variables:
 |---|---|---|
 | `SESSION_SECRET` | `dev-secret-change-me` | iron-session cookie signing key — **change in production** |
 | `ALLOW_OPEN_REGISTRATION` | `false` | Kept false; public registration is inactive and users are admin-created |
-| `DATABASE_URL` | `file:./data/delivery_clarity.db` | SQLite DB path (Prisma) |
+| `DATABASE_URL` | `file:./data/delivery_clarity.db` | SQLite DB path (Prisma). Relative `file:./data/...` or `file:../data/...` values are normalized to the app `data/` directory at runtime for standalone builds. |
 
 Run `npx prisma generate && npx prisma migrate deploy` after first install to create the database.
 
