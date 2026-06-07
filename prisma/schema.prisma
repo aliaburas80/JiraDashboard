@@ -17,6 +17,7 @@ model User {
   role         String    @default("user") // "user" | "admin"
   avatarUrl    String?
   isActive     Boolean   @default(true)
+  mustChangePassword Boolean @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   lastLoginAt  DateTime?

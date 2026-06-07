@@ -135,9 +135,9 @@ For every code change (this remains P0 at all times):
 | 3.2 | `prisma/schema.prisma` — User, Session, ImportLog, DashboardSnapshot, AuditEvent | P0 | ✅ Done |
 | 3.3 | SQLite database created: `data/delivery_clarity.db` | P0 | ✅ Done |
 | 3.4 | Seed script — first admin user created | P0 | ✅ Done |
-| 3.5 | Real auth API routes: login, logout, register, me | P0 | ✅ Done |
+| 3.5 | Real auth API routes: login, logout, inactive register, me, change password | P0 | ✅ Done |
 | 3.6 | Login page (`/login`) | P0 | ✅ Done |
-| 3.7 | Register page (`/register`) | P0 | ✅ Done |
+| 3.7 | Register route (`/register`) reserved but inactive | P0 | ✅ Done — redirects to `/login`; users are created only by Admin |
 | 3.8 | Profile page (`/profile`) | P0 | ✅ Done |
 | 3.9 | Admin logs page (`/admin/logs`) | P0 | ✅ Done |
 | 3.10 | UserMenu in header (avatar, name, role badge, sign out) | P0 | ✅ Done |
@@ -222,7 +222,7 @@ For every code change (this remains P0 at all times):
 | 8.8 | Shareable URL with filter state in query params | P2 | ✅ Done — URL syncs live, "Copy link" button in sticky bar |
 | 8.9 | Drag-and-drop column reordering in issue table | P3 | ✅ Done — DraggableMetricTable, persisted to localStorage, Reset button |
 | 8.10 | PR merged to main | — | ✅ Done — merged to main 2026-05-31 |
-| 8.11 | Create new user account via Register page (`/register`) — enable `ALLOW_OPEN_REGISTRATION=true` in `.env` | P1 | ✅ Done — NEXT_PUBLIC_ALLOW_REGISTER wired to login link + register page guard |
+| 8.11 | Public Register page guard | P1 | ✅ Superseded — public registration is disabled; user creation is admin-only |
 
 ---
 
@@ -389,7 +389,7 @@ For every code change (this remains P0 at all times):
 | 9.40 | Advanced theme customization | P3 | ✅ Done — palette panel in AppShell header: 7 accent colours (blue/purple/teal/orange/indigo/rose/slate) via --dc-accent CSS vars; 3 radius presets (sharp/default/rounded) via --radius-md/lg; 3 font sizes (sm/md/lg) on html root; settings in dc_theme_custom localStorage; btn-primary wired to CSS vars; 8 tests passing |
 | 9.41 | Custom dashboard layout builder | P3 | ✅ Done — "Layout" button in dashboard sticky bar opens panel: 14 sections with ▲▼ reorder buttons + toggle switches; saves order+visibility to dc_section_layout localStorage; DashboardSectionSwitcher reads custom order/hidden; isHidden() checks both view AND layout prefs; blue dot when layout differs from default; 9 tests passing |
 | 9.42 | Advanced chart customization | P3 | ✅ Done — "Customise" button on /charts page opens panel: 11 charts with ▲▼ reorder, toggle visibility, width picker (1/3 · 2/3 · Full); spans applied from prefs via CSS span class; saved to dc_chart_prefs localStorage; blue dot when non-default; 9 tests passing |
-| 9.43 | Add Register link in header UserMenu dropdown (when not logged in) | P1 | ✅ Done |
+| 9.43 | Add Register link in header UserMenu dropdown (when not logged in) | P1 | ✅ Superseded — public registration is inactive; header shows Sign in only |
 | 9.44 | Show "Create new account" link on login page always | P1 | ✅ Done |
 | 9.45 | Fix Charts page — Best Sprint chip shows abbreviated "S2" instead of full sprint name | P1 | ✅ Done |
 | 9.46 | Audit all Charts page KPI chips and truncated values — ensure full names shown in tooltips/titles | P2 | ✅ Done — removed JS truncation from Sprint Velocity VertBar (was >9), Team Load HorizBar (was >14), Kanban Status HorizBar (was >16), GanttChart labels (was .slice(0,32)); SprintVelocityChart: shortName() kept for display but fullName prop added so tooltip shows full sprint name |
@@ -426,7 +426,7 @@ For every code change (this remains P0 at all times):
 | JIRA-GATE-03 | Add visible source details: provider, bucket key, last fetched, last pushed, fallback reason | P0 | ❌ Not started |
 | JIRA-GATE-04 | Add admin sync health check in Admin Settings / Diagnostics showing whether latest metrics are available and whether the cloud copy is current | P0 | ❌ Not started |
 | JIRA-GATE-05 | Cloud Storage tab initial-load guard — when opening ☁️ Cloud Storage, disable provider cards/forms/actions until `/api/admin/storage` fully loads; only enable provider selection if no provider was previously chosen; prevent a temporary default/active state from flashing before server settings arrive | P0 | ❌ Not started |
-| JIRA-GATE-06 | Cloud-backed user authority — when cloud storage is active, login/register/admin user management must sync user DB from cloud first and push user changes back to cloud; users must not rely on browser localStorage for account state | P0 | ✅ Done — `syncFromCloud()` before auth/admin user reads/writes; `pushToCloud()` after register/admin create/update |
+| JIRA-GATE-06 | Cloud-backed user authority — when cloud storage is active, login/admin user management must sync user DB from cloud first and push user changes back to cloud; users must not rely on browser localStorage for account state | P0 | ✅ Done — `syncFromCloud()` before auth/admin user reads/writes; `pushToCloud()` after admin create/update and password change |
 | JIRA-GATE-07 | Email access notifications — configure SMTP/email provider, send each created user their access URL and role, and log delivery status/errors | P0 | ❌ Not started |
 | JIRA-GATE-08 | Strict role route authorization matrix — define which pages each role can open; hide disallowed nav routes and enforce protected page access in middleware, not only dashboard section visibility | P0 | ✅ Done — `allowedRoutePrefixesForRole()`, `canAccessRoute()`, AppShell nav filtering, middleware redirects, route matrix tests |
 | JIRA-GATE-09 | Write Jira integration design doc before code: auth model, Jira API scope, field mapping, refresh strategy, storage tables, failure modes, and export-upload fallback/default path | P0 | ❌ Not started |

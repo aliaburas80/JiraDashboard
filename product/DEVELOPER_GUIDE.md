@@ -74,7 +74,7 @@ For production deployment, set these environment variables:
 | Variable | Default | Purpose |
 |---|---|---|
 | `SESSION_SECRET` | `dev-secret-change-me` | iron-session cookie signing key — **change in production** |
-| `ALLOW_OPEN_REGISTRATION` | `false` | Set `true` to allow public registration |
+| `ALLOW_OPEN_REGISTRATION` | `false` | Kept false; public registration is inactive and users are admin-created |
 | `DATABASE_URL` | `file:./data/delivery_clarity.db` | SQLite DB path (Prisma) |
 
 Run `npx prisma generate && npx prisma migrate deploy` after first install to create the database.
@@ -118,7 +118,8 @@ JiraDashboard/
 │   ├── developer/page.tsx        # /developer — Developer wiki UI
 │   ├── help/page.tsx             # /help — FAQ / help guide
 │   ├── login/page.tsx            # /login — Authentication
-│   ├── register/page.tsx         # /register — New account
+│   ├── register/page.tsx         # /register — Reserved; redirects to login
+│   ├── change-password/page.tsx  # /change-password — First-login password change
 │   ├── profile/page.tsx          # /profile — User settings
 │   ├── admin/
 │   │   ├── logs/page.tsx         # /admin/logs — Import log management
@@ -131,7 +132,8 @@ JiraDashboard/
 │       ├── snapshots/[id]/route.ts # DELETE /api/snapshots/:id
 │       ├── auth/login/route.ts   # POST /api/auth/login
 │       ├── auth/logout/route.ts  # POST /api/auth/logout
-│       ├── auth/register/route.ts # POST /api/auth/register
+│       ├── auth/register/route.ts # POST /api/auth/register (inactive / 403)
+│       ├── auth/change-password/route.ts
 │       ├── auth/me/route.ts      # GET  /api/auth/me
 │       ├── admin/users/route.ts  # GET/POST/PATCH /api/admin/users
 │       ├── admin/backup/route.ts # GET  /api/admin/backup
@@ -331,7 +333,9 @@ The Users tab calls `GET/POST/PATCH /api/admin/users` and lets admins create use
 
 Role helpers live in `src/lib/roles.ts`. Admin, Manager, and C-level can request all import logs with `/api/imports?all=true`, while Scrum Master/Product Owner/user remain scoped to their own uploads. Assigned delivery roles are locked to their dashboard view, so saved browser preferences cannot switch a Scrum Master/Product Owner/Manager/C-level user into another role's dashboard view.
 
-When cloud storage is active, auth/admin user flows use cloud-backed SQLite authority rather than browser storage: login/register/admin user reads call `syncFromCloud()` before user lookup or mutation, and registration/admin user create/update calls `pushToCloud()` after the local DB change succeeds.
+When cloud storage is active, auth/admin user flows use cloud-backed SQLite authority rather than browser storage: login/admin user reads call `syncFromCloud()` before user lookup or mutation, and admin user create/update or password-change flows call `pushToCloud()` after the local DB change succeeds.
+
+Public registration is inactive by product policy. `/register` remains as a future adjustment route but redirects to `/login`, `POST /api/auth/register` returns 403, and users can only be created through `/admin/settings → User Management`. Admin-created users are saved with `mustChangePassword=true`; after their first successful login, middleware forces them to `/change-password` until they replace the temporary password.
 
 Route visibility is role-scoped through the same helper module: `allowedRoutePrefixesForRole()`, `canAccessRoute()`, and `fallbackRouteForRole()`. `AppShell` fetches `/api/auth/me` and filters nav items before rendering; `middleware.ts` enforces the same matrix for protected page routes and redirects disallowed direct URL access to the role fallback route.
 

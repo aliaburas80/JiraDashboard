@@ -18,6 +18,7 @@ async function requireAdmin(): Promise<SessionData | NextResponse> {
 
 function safeUser(user: {
   id: string; name: string; email: string; role: string; isActive: boolean;
+  mustChangePassword?: boolean;
   createdAt: Date; updatedAt: Date; lastLoginAt: Date | null;
   _count?: { importLogs: number; snapshots: number };
 }) {
@@ -28,6 +29,7 @@ function safeUser(user: {
     role: isAppRole(user.role) ? user.role : 'user',
     roleLabel: roleLabel(user.role),
     isActive: user.isActive,
+    mustChangePassword: Boolean(user.mustChangePassword),
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
     lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
@@ -97,7 +99,7 @@ export async function POST(req: NextRequest) {
   if (existing) return NextResponse.json({ error: 'An account with this email already exists.' }, { status: 409 });
 
   const user = await prisma.user.create({
-    data: { name, email, passwordHash: await hashPassword(body.password), role },
+    data: { name, email, passwordHash: await hashPassword(body.password), role, mustChangePassword: true },
     include: { _count: { select: { importLogs: true, snapshots: true } } },
   });
 

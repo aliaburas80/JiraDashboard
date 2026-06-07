@@ -67,7 +67,7 @@ docker-compose up --build
 | Path | Description |
 |---|---|
 | `/login` | Sign in page |
-| `/register` | Create account (requires `ALLOW_OPEN_REGISTRATION=true` in `.env`) |
+| `/register` | Reserved for future registration flow; currently redirects to `/login` |
 
 ### Authenticated (all users)
 | Path | Description |
@@ -103,7 +103,8 @@ docker-compose up --build
 |---|---|---|
 | `POST` | `/api/auth/login` | Login with email + password |
 | `POST` | `/api/auth/logout` | Invalidate session |
-| `POST` | `/api/auth/register` | Create account (requires `ALLOW_OPEN_REGISTRATION=true`) |
+| `POST` | `/api/auth/register` | Inactive; returns 403 because users are admin-created |
+| `POST` | `/api/auth/change-password` | Authenticated first-login password change |
 | `GET` | `/api/auth/me` | Get current session user |
 | `POST` | `/api/upload` | Parse Jira file, compute metrics, save ImportLog |
 | `POST` | `/api/upload/merge` | Merge multiple Jira exports (up to 10 files) |

@@ -8,6 +8,7 @@ export interface SessionData {
   email: string;
   name: string;
   role: AppRole;
+  mustChangePassword?: boolean;
   isLoggedIn: boolean;
 }
 

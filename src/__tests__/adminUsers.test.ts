@@ -73,7 +73,7 @@ test('admin users API creates a role-assigned user without returning password ha
   const { prisma } = await import('@/lib/prisma');
   const { syncFromCloud, pushToCloud } = await import('@/services/storage/cloudSync');
   (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
-  (prisma.user.create as jest.Mock).mockResolvedValue(user({ role: 'product_owner' }));
+  (prisma.user.create as jest.Mock).mockResolvedValue(user({ role: 'product_owner', mustChangePassword: true }));
   const { POST } = await import('../../app/api/admin/users/route');
 
   const response = await POST(request({
@@ -86,7 +86,11 @@ test('admin users API creates a role-assigned user without returning password ha
 
   expect(response.status).toBe(201);
   expect(body.user.role).toBe('product_owner');
+  expect(body.user.mustChangePassword).toBe(true);
   expect(body.user.passwordHash).toBeUndefined();
+  expect(prisma.user.create).toHaveBeenCalledWith(expect.objectContaining({
+    data: expect.objectContaining({ mustChangePassword: true }),
+  }));
   expect(prisma.auditEvent.create).toHaveBeenCalled();
   expect(syncFromCloud).toHaveBeenCalled();
   expect(pushToCloud).toHaveBeenCalled();

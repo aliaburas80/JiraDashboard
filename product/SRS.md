@@ -1597,13 +1597,15 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-234:** A UserMenu component MUST appear in the application header when the user is authenticated, displaying: user initials avatar, name, role badge, links to Profile and permitted admin pages, and a Sign Out action.
 
-**FR-235:** The system MUST provide `/register` page when `ALLOW_OPEN_REGISTRATION=true`. When false, `POST /api/auth/register` MUST return HTTP 403.
+**FR-235:** Public registration MUST be inactive. The `/register` route MUST remain reserved for future adjustment but redirect to `/login`, and `POST /api/auth/register` MUST return HTTP 403. New users MUST be created through admin user management only.
 
 **FR-235A:** Admin users MUST be able to manage users from `/admin/settings → Users`: list users, create users, assign `admin`, `scrum_master`, `product_owner`, `manager`, or `c_level` roles, edit display names, and enable/disable accounts.
 
-**FR-235B:** The system MUST expose admin-only `GET/POST/PATCH /api/admin/users` endpoints for user management. The API MUST never return password hashes and MUST write audit events for admin user create/update operations.
+**FR-235B:** The system MUST expose admin-only `GET/POST/PATCH /api/admin/users` endpoints for user management. The API MUST never return password hashes and MUST write audit events for admin user create/update operations. Admin-created users MUST be marked `mustChangePassword=true`.
 
-**FR-235C:** When cloud storage is active, authentication and admin user-management flows MUST sync the local SQLite user database from cloud before reading or mutating users. Registration and admin user create/update operations MUST push an updated backup to cloud after the local mutation succeeds.
+**FR-235C:** When cloud storage is active, authentication and admin user-management flows MUST sync the local SQLite user database from cloud before reading or mutating users. Admin user create/update and password-change operations MUST push an updated backup to cloud after the local mutation succeeds.
+
+**FR-235D:** After first login with an admin-provided temporary password, users marked `mustChangePassword=true` MUST be redirected to `/change-password`. Anonymous users MUST be redirected to `/login` for protected routes, including `/change-password`. Users who must change password MUST be blocked by middleware from accessing other protected app routes until the password change succeeds.
 
 **FR-235D:** Assigned delivery roles (`scrum_master`, `product_owner`, `manager`, `c_level`) MUST be locked to their corresponding dashboard view. Browser-saved dashboard view preferences MUST NOT allow those roles to open a different dashboard view.
 

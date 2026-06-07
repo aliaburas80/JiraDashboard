@@ -39,10 +39,6 @@ export default function UserMenu() {
   if (!me) {
     return (
       <div className="flex items-center gap-1.5">
-        <Link href="/register"
-          className="px-3 py-1.5 rounded-lg text-xs font-bold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-colors hidden sm:inline-flex">
-          Register
-        </Link>
         <Link href="/login"
           className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-100 transition-colors">
           Sign in

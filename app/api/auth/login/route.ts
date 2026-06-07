@@ -63,6 +63,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   session.email      = user.email;
   session.name       = user.name;
   session.role       = isAppRole(user.role) ? user.role : 'user';
+  session.mustChangePassword = user.mustChangePassword;
   session.isLoggedIn = true;
   await session.save();
 
@@ -75,5 +76,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }}),
   ]);
 
-  return NextResponse.json({ ok: true, user: { name: user.name, email: user.email, role: user.role }, dataSource });
+  return NextResponse.json({
+    ok: true,
+    user: { name: user.name, email: user.email, role: user.role, mustChangePassword: user.mustChangePassword },
+    mustChangePassword: user.mustChangePassword,
+    dataSource,
+  });
 }

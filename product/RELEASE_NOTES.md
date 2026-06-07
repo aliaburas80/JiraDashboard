@@ -10,10 +10,11 @@
 ### Auth / users
 - Added admin-managed users in `/admin/settings → Users`: create users, assign roles, update display names, and enable/disable accounts.
 - Added roles: `admin`, `scrum_master`, `product_owner`, `manager`, and `c_level`; existing `user` remains supported for legacy/open-registration accounts.
-- Added `GET/POST/PATCH /api/admin/users` with admin-only access, password-strength checks, duplicate-email protection, and audit events.
+- Added `GET/POST/PATCH /api/admin/users` with admin-only access, password-strength checks, duplicate-email protection, first-login password-change enforcement, and audit events.
 - Role-scoped import visibility now allows Admin, Manager, and C-level users to request all import logs; Scrum Master and Product Owner remain scoped to their own uploads.
 - Dashboard first-load view now locks assigned delivery roles to their role view: Scrum Master, Product Owner, Engineering Manager, or Executive. Saved browser preferences cannot override assigned roles.
-- Cloud-backed user authority: login/register/admin user management syncs from cloud first when cloud storage is active, and register/admin create/update pushes the user DB backup back to cloud.
+- Cloud-backed user authority: login/admin user management syncs from cloud first when cloud storage is active, and admin create/update or password-change flows push the user DB backup back to cloud.
+- Locked public registration: the login page no longer links to registration, `/register` redirects to `/login`, and `POST /api/auth/register` returns 403 for future-only registration code.
 - Added strict protected-page route visibility/enforcement by role: disallowed routes are hidden from the AppShell navigation and blocked in middleware.
 - Redesigned `/admin/settings` to match the attached flat admin settings mockup: sticky settings sidebar, flat top context bar, page-level status, contextual summary cards, and a table-first Users workflow.
 - Added a dedicated Administration navigation group and applied the same flat admin console layout to Settings, Diagnostics, Security, and Import Logs.
