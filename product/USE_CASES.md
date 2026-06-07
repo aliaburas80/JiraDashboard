@@ -2640,3 +2640,23 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 **Postcondition:** User has a private password known only to them, `mustChangePassword = false`, and unrestricted access to all routes their role permits  
 **Related FR:** FR-235D
+
+---
+
+### UC-087 — Navigate Flat Admin Console
+
+**Actor:** Admin user  
+**Trigger:** Admin opens `/admin/settings`  
+**Main Flow:**
+1. Admin opens `/admin/settings`; the flat admin console loads with a sticky sidebar, top context bar, page title/status area, and a content panel.
+2. The left sidebar shows setting categories and remains visible while scrolling.
+3. The top context bar displays the current tab, a page status badge, and an action button when the selected tab supports a primary task.
+4. The selected settings tab shows summary cards and operational panels relevant to that area — the Users tab surfaces a table-first workflow, the Security tab shows danger-zone actions, and Diagnostics shows health indicators.
+5. Admin switches tabs in the sidebar; the content panel updates in place without losing the flat admin console layout.
+6. Admin reviews status and settings using the flat console design and navigates to the appropriate task-specific flow.
+
+**Alternate Flow A — Validation error on save:**  
+4a. Admin saves a change and a validation error occurs; the console remains on the same tab and highlights the field needing correction.
+
+**Postcondition:** Admin successfully interacts with the redesigned flat admin console, using the persistent sidebar and contextual summary cards to find and manage settings quickly.  
+**Related FR:** FR-260A

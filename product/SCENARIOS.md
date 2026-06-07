@@ -1136,3 +1136,21 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Outcome:** Dana is now using a private password of her own choosing, and the forced-change flow has produced an auditable record without ever exposing the temporary password to anyone but Ali.
 
 **Related:** UC-086
+
+---
+
+### SCN-043 — Admin Reviews the Flat Admin Console
+
+**Persona:** Ali, administrator  
+**Context:** Ali needs to audit system health and manage settings from a single unified admin console.
+
+**Scenario:**
+1. Ali signs in and opens `/admin/settings`; the flat admin console loads with a sticky sidebar and top context bar.
+2. He verifies the current tab name, page status badge, and contextual summary cards for the selected settings area.
+3. He selects the Users tab from the sidebar and reviews the table-first workflow with inline-edit controls.
+4. He clicks the Security tab; the page updates the main panel in place while the sidebar remains visible.
+5. He switches to Diagnostics and confirms the top context bar updates to reflect the selected area.
+
+**Outcome:** Ali completes his review and trusts the new admin console layout because related controls and status information are clearly grouped and easy to navigate.
+
+**Related:** UC-087

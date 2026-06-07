@@ -1509,4 +1509,20 @@ Returning-user journeys now include bucket-first metrics restoration. After logi
 | 5 | Enters a strong, different password (8+ chars, 1 uppercase, 1 number) that matches its confirmation | `POST /api/auth/change-password` succeeds; `mustChangePassword` cleared; `password_change` audit event written | Relieved |
 | 6 | Is redirected to `/dashboard` | Full route access restored without re-login | Confident |
 
-**Pain point resolved:** New users are guaranteed to set a private password before touching real data, with clear, specific guidance at each misstep — not a generic "error occurred" message.
+---
+
+### UJ-027 — Admin Uses the Flat Admin Console
+
+**Persona:** Ali, administrator  
+**Goal:** Manage settings quickly and with confidence using the flat admin-settings redesign  
+**Entry point:** `/admin/settings`
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens `/admin/settings` | Flat console loads with sticky sidebar, top context bar, page title/status, and summary cards | Oriented |
+| 2 | Clicks the Users tab in the sidebar | Table-first Users workflow appears with inline edit controls and summaries | Empowered |
+| 3 | Uses the top context bar to confirm current tab and status | Page shows contextual summary cards and action buttons | Confident |
+| 4 | Switches to Security and then Diagnostics | Content panel updates in place; sidebar remains visible | Efficient |
+| 5 | Finds the setting they need without extra page navigation | Control groups and status cards keep the flow clear | In control |
+
+**Pain point resolved:** The redesigned flat admin console reduces navigation friction and makes settings discovery faster and less error-prone.
