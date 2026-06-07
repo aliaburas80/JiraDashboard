@@ -2660,3 +2660,28 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 **Postcondition:** Admin successfully interacts with the redesigned flat admin console, using the persistent sidebar and contextual summary cards to find and manage settings quickly.  
 **Related FR:** FR-260A
+
+---
+
+## v4.2.2 — Work Item Explorer Risk & Branch Insights Use Cases (2026-06-08)
+
+### UC-088 — Investigate Delivery Risk and Branch Health in the Work Item Explorer
+
+**Actor:** Scrum Master, Product Owner, Delivery Manager  
+**Trigger:** User has loaded a relation graph on `/explore` and wants to identify where delivery risk concentrates  
+**Main Flow:**
+1. User loads a graph for an issue key; the system computes risk paths from every blocked-or-critical, not-done node up to the root and marks every node and edge on that path
+2. Nodes on a risk path render with a solid red border, red-tinted background, and a "⚠ RISK PATH" badge; their connecting edges render thicker, animated, and red
+3. The system also computes the largest unfinished branch — the direct child of the focus node whose subtree holds the most open (non-done) items — and marks its nodes with a solid purple border and "📊 MOST WORK" badge
+4. The stats panel shows a "Largest Unfinished Branch" card naming the root issue, its open count, total count, and completion percentage whenever that branch has 2 or more open items
+5. User clicks "Show blocked branches"; the graph and details table narrow to only nodes that are blocked or on a risk path, while every other node dims to 20% opacity and grayscale and its edges dim to near-invisible
+6. User clicks "Show all" to restore the full, undimmed graph
+
+**Alternate Flow A — No risk in the dataset:**  
+1a. No node is blocked or critical-and-not-done → no node or edge is marked `isOnRiskPath`; the "Show blocked branches" toggle does not render because the blocked/critical count is zero
+
+**Alternate Flow B — Mixed raw/normalized issue data:**  
+1b. The underlying dataset mixes raw JiraIssue export field names (`Issue Key`, `Status`, `Blocked Flag`, `Parent Key`, `Epic Link`) and normalized FlowItem field names (`key`, `status`, `isBlocked`, `parent`, `epic`); the relation graph builder resolves both formats through the same field accessors (raw name first, FlowItem name as fallback), so the risk-path, branch, and filter computations behave identically regardless of which format — or mixture — the source data uses
+
+**Postcondition:** User can immediately see where delivery risk concentrates, which branch needs the most attention, and can narrow the view to only the at-risk subset of the graph and table — without leaving the Explorer or running a manual Jira query  
+**Related FR:** FR-225A, FR-225B, FR-225C, FR-225D

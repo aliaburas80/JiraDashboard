@@ -1526,3 +1526,23 @@ Returning-user journeys now include bucket-first metrics restoration. After logi
 | 5 | Finds the setting they need without extra page navigation | Control groups and status cards keep the flow clear | In control |
 
 **Pain point resolved:** The redesigned flat admin console reduces navigation friction and makes settings discovery faster and less error-prone.
+
+---
+
+## 11. v4.2.2 — Work Item Explorer Risk & Branch Insights Journeys (2026-06-08)
+
+### UJ-028 — Delivery Manager Investigates Risk Paths and Branch Health in the Explorer
+
+**Persona:** Delivery Manager  
+**Goal:** Quickly find where delivery risk concentrates and focus the stakeholder conversation on the riskiest branch  
+**Entry point:** `/explore`
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Searches an epic key | Graph renders with type-coded node cards, an orphan badge on unlinked items, and a legend overlay | Oriented |
+| 2 | Reads the insight panel and stat cards | Sees the risk-path count and a "Largest Unfinished Branch" card naming the root, open count, and completion % | Informed |
+| 3 | Scans the graph for red "⚠ RISK PATH" and purple "📊 MOST WORK" badges | Risky nodes and edges glow red; the branch with the most open work carries a purple badge | Focused |
+| 4 | Clicks "Show blocked branches" | Graph and table dim every node that isn't blocked or on a risk path to near-invisible | In control |
+| 5 | Reviews the narrowed view and filters the details table for the briefing | Only the at-risk subset remains in full color; "Show all" restores the complete graph | Confident |
+
+**Pain point resolved:** No more manually tracing which branch is blocking delivery — the graph highlights it automatically and lets the user filter straight to it, regardless of whether the underlying export uses raw Jira field names or normalized FlowItem fields.

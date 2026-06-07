@@ -1154,3 +1154,25 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Outcome:** Ali completes his review and trusts the new admin console layout because related controls and status information are clearly grouped and easy to navigate.
 
 **Related:** UC-087
+
+---
+
+## v4.2.2 — Work Item Explorer Risk & Branch Insights Scenarios (2026-06-08)
+
+### SCN-044 — Delivery Manager Reads the Visual Graph and Filters to Risk
+
+**Persona:** Priya, Delivery Manager, preparing a stakeholder risk briefing  
+**Context:** Priya needs to show exactly where delivery risk concentrates inside `EPIC-30` before a release-readiness review.
+
+**Scenario:**
+1. Priya opens `/explore` and searches `EPIC-30`; the graph renders with distinctly colored, type-coded node cards — purple Epic, blue Stories, slate Tasks, red Bugs — each showing its type icon, status, assignee, and health dot.
+2. She spots `PROJ-77` with a dashed orange border and an "ORPHAN" badge because it has neither an Epic Link nor a Parent Key, and opens the legend overlay to confirm what the dashed border, badges, and edge styles mean.
+3. The insight panel reads "2 items are on the risk path toward EPIC-30" and "STORY-31 is the largest unfinished branch with 4 open items."
+4. She scans the seven KPI stat cards (Total Items, Done, Open, Blocked, Bugs, Story Points, Orphans) plus the new "Largest Unfinished Branch" card naming `STORY-31`, its open count, total count, and completion percentage.
+5. In the graph, `STORY-31` and its risky descendants glow with a solid red "⚠ RISK PATH" border and animated red edges, while `STORY-31`'s branch carries a purple "📊 MOST WORK" badge.
+6. Priya clicks "Show blocked branches (3)"; the graph and details table dim every node that isn't blocked or on the risk path to near-invisible, leaving only the at-risk subset in full color.
+7. She filters the details table by Health = Critical and screenshots the narrowed view for the stakeholder briefing, then clicks "Show all" to restore the full graph.
+
+**Outcome:** Priya identifies exactly where delivery risk concentrates and which branch needs the most attention — all from one screen, without a manual Jira query.
+
+**Related:** UC-046, UC-088, TC-E-01–TC-E-08, TC-RP-01–TC-RP-08, TC-LB-01–TC-LB-08, TC-BF-01–TC-BF-08

@@ -1579,6 +1579,14 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-225:** The system MUST store the last 5 searched keys in localStorage key `dc_explore_recent` and display them as clickable chips below the search input.
 
+**FR-225A:** The relation graph builder MUST resolve every issue field from either raw JiraIssue export field names (e.g. `Issue Key`, `Issue Type`, `Status`, `Parent Key`, `Epic Link`, `Blocked Flag`) or normalized FlowItem field names (e.g. `key`, `type`, `status`, `parent`, `epic`, `isBlocked`), trying the raw name first and falling back to the FlowItem name, so the graph, stats, risk-path, branch, and filter computations behave identically regardless of which format the uploaded dataset uses.
+
+**FR-225B:** For every node that is blocked or has critical health and is not done, the system MUST walk the hierarchy edges from that node up to the root and mark every node and connecting edge on that path with `isOnRiskPath = true`. Risk-path nodes MUST render with a solid red border, red-tinted background, and a "⚠ RISK PATH" badge; risk-path edges MUST render thicker, animated, and in red.
+
+**FR-225C:** The system MUST identify the "largest unfinished branch" — the direct child of the focus node whose subtree contains the most open (non-done) items — and mark every non-done node in that subtree with `isLargestBranch = true`. Branch-root nodes MUST render with a solid purple border, light-purple background, and a "📊 MOST WORK" badge, and the stats panel MUST show a card naming the branch root, its open count, total count, and completion percentage whenever it has 2 or more open items.
+
+**FR-225D:** The Explorer MUST offer a "Show blocked branches" toggle that, when active, narrows the graph and details table to only nodes that are blocked or on a risk path; every other node MUST dim to 20% opacity with a grayscale filter and its connecting edges MUST dim to 10% opacity with animation disabled. The toggle MUST display the count of blocked/critical nodes and, while active, the count of risk-path nodes.
+
 ### F3 — Authentication & Database
 
 **FR-226:** All routes MUST be protected by Next.js middleware. Unauthenticated requests to `/dashboard`, `/summary`, `/charts`, `/explore`, `/backend`, `/profile`, or `/admin` MUST redirect to `/login?redirect=<originalPath>`.
