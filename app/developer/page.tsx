@@ -589,6 +589,7 @@ When loading, a blue banner appears below the header: "Loading data from Amazon 
 | \`/api/admin/storage/auto-restore\` | GET | DB health (users, imports, size) |
 | \`/api/admin/storage/auto-restore?force=true\` | POST | Force restore latest backup |
 | \`/api/metrics/latest\` | GET | Bucket/server latest metrics; returns \`available:false\` with HTTP 200 when none exist yet |
+| \`/api/profile/image\` | GET/POST | Authenticated S3-backed profile image upload/proxy; stores objects under \`images/profile/\` |
 
 ---
 
@@ -602,6 +603,7 @@ When loading, a blue banner appears below the header: "Loading data from Amazon 
 | \`retention-settings.json\` | Data retention rules |
 | \`orphan-rules.json\` | Orphan detection rules |
 | \`import-logs.json\` | File-based import log |
+| \`images/profile/*\` | S3-stored member profile images uploaded from \`/profile\` |
 
 **Browser-only localStorage fallback/preferences:** \`dc_metrics_v2\` (fallback copy), \`dc_metrics_source_v1\`, filter presets, layout/theme prefs, rec owners/feedback.
 

@@ -137,6 +137,7 @@ JiraDashboard/
 │       ├── auth/change-password/route.ts
 │       ├── auth/me/route.ts      # GET  /api/auth/me
 │       ├── profile/route.ts      # GET/PATCH /api/profile
+│       ├── profile/image/route.ts # GET/POST /api/profile/image — S3 profile image upload/proxy
 │       ├── members/route.ts      # GET /api/members
 │       ├── admin/users/route.ts  # GET/POST/PATCH/DELETE /api/admin/users
 │       ├── admin/backup/route.ts # GET  /api/admin/backup
@@ -334,7 +335,7 @@ Admin-only settings console. Tabs include Users, Privacy & Retention, Health Thr
 
 The Users tab calls `GET/POST/PATCH/DELETE /api/admin/users` and lets admins create users, assign roles (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`), edit display names, enable/disable accounts, and delete users with confirmation. Password hashes are never returned to the browser, and admins cannot delete or disable their own account.
 
-Each authenticated user edits their shared profile through `/profile`, backed by `GET/PATCH /api/profile`. Shared profile fields include name, position, profile picture URL, telephone, contact email, address, certificates, and any team-facing notes. `/members` calls `GET /api/members` and shows all active users to logged-in users as a searchable directory with a detail/contact popup.
+Each authenticated user edits their shared profile through `/profile`, backed by `GET/PATCH /api/profile`. Shared profile fields include name, position, profile image, telephone, contact email, address, certificates, and any team-facing notes. Profile images are uploaded through `POST /api/profile/image`, stored in the active S3 bucket under `images/profile/`, and rendered back through authenticated `GET /api/profile/image?key=...` URLs so the bucket can remain private. `/members` calls `GET /api/members` and shows all active users to logged-in users as a searchable directory with a detail/contact popup.
 
 Role helpers live in `src/lib/roles.ts`. Admin, Manager, and C-level can request all import logs with `/api/imports?all=true`, while Scrum Master/Product Owner/user remain scoped to their own uploads. Assigned delivery roles are locked to their dashboard view, so saved browser preferences cannot switch a Scrum Master/Product Owner/Manager/C-level user into another role's dashboard view.
 
@@ -393,6 +394,12 @@ Returns `{ logs: ImportLog[] }` — all entries from `data/import-logs.json`, ne
 File: `app/api/profile/route.ts`
 
 Authenticated profile endpoint. `GET` returns the signed-in user's public member profile. `PATCH` updates editable team-facing fields: `name`, `avatarUrl`, `position`, `phone`, `contactEmail`, `address`, `certificates`, and `bio`, writes a `profile_update` audit event, updates the session display name, and pushes the DB backup to cloud when configured.
+
+### `GET/POST /api/profile/image`
+
+File: `app/api/profile/image/route.ts`
+
+Authenticated S3-backed profile image endpoint. `POST` accepts multipart field `image` with JPG, PNG, WebP, or GIF up to 5 MB, stores it in the active S3 bucket under `images/profile/`, updates the user's `avatarUrl`, writes a `profile_image_upload` audit event, and pushes the DB backup to cloud. `GET` streams profile images back through the app for logged-in users, avoiding public S3 object access.
 
 ### `GET /api/members`
 

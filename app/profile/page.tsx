@@ -47,6 +47,7 @@ export default function ProfilePage() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
@@ -102,6 +103,25 @@ export default function ProfilePage() {
       showToast(error instanceof Error ? error.message : 'Failed to save profile.');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function uploadProfileImage(file: File | null) {
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const form = new FormData();
+      form.append('image', file);
+      const res = await fetch('/api/profile/image', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Could not upload profile image.');
+      updateField('avatarUrl', data.avatarUrl);
+      showToast('Profile image uploaded.');
+      router.refresh();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to upload profile image.');
+    } finally {
+      setUploadingImage(false);
     }
   }
 
@@ -198,9 +218,19 @@ export default function ProfilePage() {
                 className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
             </label>
             <label className="grid gap-2 text-xs font-extrabold text-slate-700">
-              Profile picture URL
-              <input value={profile.avatarUrl} onChange={e => updateField('avatarUrl', e.target.value)} placeholder="https://..."
-                className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
+              Profile picture
+              <span className="flex h-11 min-w-0 items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 text-sm">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={e => uploadProfileImage(e.target.files?.[0] ?? null)}
+                  disabled={uploadingImage}
+                  className="min-w-0 flex-1 text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-blue-700 disabled:opacity-50"
+                />
+              </span>
+              <span className="text-[11px] font-semibold text-slate-400">
+                {uploadingImage ? 'Uploading to S3...' : 'Stored in S3 under images/profile/.'}
+              </span>
             </label>
             <label className="grid gap-2 text-xs font-extrabold text-slate-700">
               Contact email

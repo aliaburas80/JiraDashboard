@@ -82,7 +82,7 @@ docker-compose up --build
 | `/customer` | Customer View — clean stakeholder summary (no technical detail) |
 | `/snapshots` | Saved Snapshots — list, load, compare saved metric snapshots |
 | `/snapshots/compare` | Snapshot Comparison — side-by-side delta table |
-| `/profile` | User Profile — edit name, role-visible profile, contact info, certificates, and shared team info |
+| `/profile` | User Profile — edit name, upload S3 profile image, contact info, certificates, and shared team info |
 | `/members` | Member Directory — searchable logged-in user directory with role, position, and contact popup |
 | `/glossary` | Glossary — all metric abbreviations and definitions |
 | `/developer` | Developer Portal — Package Reference, Calculation Reference, API docs |
@@ -108,6 +108,7 @@ docker-compose up --build
 | `POST` | `/api/auth/change-password` | Authenticated first-login password change |
 | `GET` | `/api/auth/me` | Get current session user |
 | `GET/PATCH` | `/api/profile` | Read/update the authenticated user's shared member profile |
+| `GET/POST` | `/api/profile/image` | Upload/read authenticated S3 profile images under `images/profile/` |
 | `GET` | `/api/members` | Read active members for the logged-in user directory |
 | `POST` | `/api/upload` | Parse Jira file, compute metrics, save ImportLog |
 | `POST` | `/api/upload/merge` | Merge multiple Jira exports (up to 10 files) |

@@ -28,6 +28,7 @@ const ENDPOINTS = [
   { method: 'POST', path: '/api/auth/change-password', description: 'Authenticated first-login password change' },
   { method: 'GET',  path: '/api/auth/me',        description: 'Return the current authenticated user' },
   { method: 'GET/PATCH', path: '/api/profile',   description: 'Read or update the current user member profile' },
+  { method: 'GET/POST', path: '/api/profile/image', description: 'Upload or stream S3-backed profile images under images/profile/' },
   { method: 'GET',  path: '/api/members',        description: 'List active members for the logged-in user directory' },
   { method: 'GET/POST/PATCH/DELETE', path: '/api/admin/users', description: 'Admin-only user management' },
 ];

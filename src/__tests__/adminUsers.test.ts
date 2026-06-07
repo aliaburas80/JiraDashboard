@@ -1,6 +1,8 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 // Admin user management API tests.
 
+export {};
+
 const mockSession = {
   isLoggedIn: true,
   role: 'admin',

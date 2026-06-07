@@ -1611,7 +1611,9 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-235E:** The application navigation MUST hide protected routes that the authenticated user's role cannot access. Middleware MUST enforce the same protected-page route matrix so a user cannot open a disallowed route by typing the URL directly.
 
-**FR-235F:** Authenticated users MUST be able to edit a shared member profile at `/profile`, including name, position, profile picture URL, telephone, contact email, address, certificates, and team-facing notes. Profile updates MUST be persisted server-side and synced to cloud backup when cloud storage is configured.
+**FR-235F:** Authenticated users MUST be able to edit a shared member profile at `/profile`, including name, position, profile image, telephone, contact email, address, certificates, and team-facing notes. Profile updates MUST be persisted server-side and synced to cloud backup when cloud storage is configured.
+
+**FR-235F.1:** When Amazon S3 is the active cloud storage provider, authenticated users MUST be able to upload a JPG, PNG, WebP, or GIF profile image from `/profile`. The system MUST store the object in S3 under `images/profile/`, update the user's `avatarUrl`, and serve the image through an authenticated `/api/profile/image` route so public bucket access is not required.
 
 **FR-235G:** Authenticated users MUST be able to open `/members` to view active team members with name, position, role, and contact summary. Selecting a member MUST open a detail popup with contact info, certificates, address, and team-facing notes. Anonymous users MUST be redirected to `/login`.
 

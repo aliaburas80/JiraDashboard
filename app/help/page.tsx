@@ -788,6 +788,10 @@ const SECTIONS: Section[] = [
         q: 'Are credentials stored securely?',
         a: 'Credentials are stored in data/storage-settings.json on the server and are never sent to the browser. API responses show only whether credentials are present (not their values). The saved connection remains available across login, logout, session expiry, and refresh; it changes only when an admin saves a different provider/settings.',
       },
+      {
+        q: 'Where are profile images stored?',
+        a: 'When Amazon S3 is the active cloud provider, profile images uploaded from /profile are stored in the S3 folder images/profile/. The app serves them back through an authenticated /api/profile/image URL, so the bucket does not need to be public.',
+      },
     ],
   },
 
