@@ -42,15 +42,18 @@ COPY --from=builder /app/node_modules   ./node_modules
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma         ./prisma
+COPY --from=builder /app/scripts        ./scripts
 
 # Create the data directory with correct ownership
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 
 USER nextjs
 
+# PORT is a starting preference, not a hard lock — start-server.js falls
+# back to the next free port if it's already taken inside the container.
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Run DB migrations then start the app
-CMD ["sh", "-c", "npx prisma migrate deploy 2>/dev/null || true && node node_modules/next/dist/bin/next start"]
+# Run DB migrations then start the app (auto-picks a free port)
+CMD ["sh", "-c", "npx prisma migrate deploy 2>/dev/null || true && node scripts/start-server.js start"]

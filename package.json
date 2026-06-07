@@ -4,9 +4,9 @@
   "description": "Delivery Clarity — Jira Delivery Intelligence Platform",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/start-server.js dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/start-server.js start",
     "lint": "next lint",
     "test": "jest --passWithNoTests"
   },
