@@ -120,7 +120,8 @@ JiraDashboard/
 │   ├── login/page.tsx            # /login — Authentication
 │   ├── register/page.tsx         # /register — Reserved; redirects to login
 │   ├── change-password/page.tsx  # /change-password — First-login password change
-│   ├── profile/page.tsx          # /profile — User settings
+│   ├── profile/page.tsx          # /profile — Editable member profile
+│   ├── members/page.tsx          # /members — Team member directory
 │   ├── admin/
 │   │   ├── logs/page.tsx         # /admin/logs — Import log management
 │   │   ├── settings/page.tsx     # /admin/settings — Users, backup, restore, thresholds
@@ -135,7 +136,9 @@ JiraDashboard/
 │       ├── auth/register/route.ts # POST /api/auth/register (inactive / 403)
 │       ├── auth/change-password/route.ts
 │       ├── auth/me/route.ts      # GET  /api/auth/me
-│       ├── admin/users/route.ts  # GET/POST/PATCH /api/admin/users
+│       ├── profile/route.ts      # GET/PATCH /api/profile
+│       ├── members/route.ts      # GET /api/members
+│       ├── admin/users/route.ts  # GET/POST/PATCH/DELETE /api/admin/users
 │       ├── admin/backup/route.ts # GET  /api/admin/backup
 │       ├── admin/restore/route.ts # POST /api/admin/restore
 │       └── settings/*/route.ts   # GET/POST various admin settings
@@ -329,7 +332,9 @@ Admin-only live health dashboard. Fetches `GET /api/admin/diagnostics` — aggre
 
 Admin-only settings console. Tabs include Users, Privacy & Retention, Health Thresholds, Orphan Rules, Backup & Restore, Cloud Storage, and Browser Data.
 
-The Users tab calls `GET/POST/PATCH /api/admin/users` and lets admins create users, assign roles (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`), edit display names, and enable/disable accounts. Password hashes are never returned to the browser.
+The Users tab calls `GET/POST/PATCH/DELETE /api/admin/users` and lets admins create users, assign roles (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`), edit display names, enable/disable accounts, and delete users with confirmation. Password hashes are never returned to the browser, and admins cannot delete or disable their own account.
+
+Each authenticated user edits their shared profile through `/profile`, backed by `GET/PATCH /api/profile`. Shared profile fields include name, position, profile picture URL, telephone, contact email, address, certificates, and any team-facing notes. `/members` calls `GET /api/members` and shows all active users to logged-in users as a searchable directory with a detail/contact popup.
 
 Role helpers live in `src/lib/roles.ts`. Admin, Manager, and C-level can request all import logs with `/api/imports?all=true`, while Scrum Master/Product Owner/user remain scoped to their own uploads. Assigned delivery roles are locked to their dashboard view, so saved browser preferences cannot switch a Scrum Master/Product Owner/Manager/C-level user into another role's dashboard view.
 
@@ -382,6 +387,18 @@ Accepts a `multipart/form-data` body with a field named `file`.
 File: `app/api/imports/route.ts`
 
 Returns `{ logs: ImportLog[] }` — all entries from `data/import-logs.json`, newest first.
+
+### `GET/PATCH /api/profile`
+
+File: `app/api/profile/route.ts`
+
+Authenticated profile endpoint. `GET` returns the signed-in user's public member profile. `PATCH` updates editable team-facing fields: `name`, `avatarUrl`, `position`, `phone`, `contactEmail`, `address`, `certificates`, and `bio`, writes a `profile_update` audit event, updates the session display name, and pushes the DB backup to cloud when configured.
+
+### `GET /api/members`
+
+File: `app/api/members/route.ts`
+
+Authenticated member-directory endpoint. Returns active users only with safe public profile fields: name, account email, role label, position, avatar URL, contact email, phone, address, certificates, and shared team info.
 
 ### `GET /api/metrics`
 

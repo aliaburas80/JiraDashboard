@@ -138,13 +138,14 @@ For every code change (this remains P0 at all times):
 | 3.5 | Real auth API routes: login, logout, inactive register, me, change password | P0 | ✅ Done |
 | 3.6 | Login page (`/login`) | P0 | ✅ Done |
 | 3.7 | Register route (`/register`) reserved but inactive | P0 | ✅ Done — redirects to `/login`; users are created only by Admin |
-| 3.8 | Profile page (`/profile`) | P0 | ✅ Done |
+| 3.8 | Profile page (`/profile`) | P0 | ✅ Done — editable shared member profile fields |
 | 3.9 | Admin logs page (`/admin/logs`) | P0 | ✅ Done |
 | 3.10 | UserMenu in header (avatar, name, role badge, sign out) | P0 | ✅ Done |
 | 3.11 | Middleware route protection (all app routes guarded) | P0 | ✅ Done |
 | 3.12 | Upload API saves ImportLog with userId to SQLite | P1 | ✅ Done |
 | 3.13 | `/api/imports` returns logs filtered by user (admin sees all with `?all=true`) | P1 | ✅ Done |
-| 3.14 | User management admin module — add/manage users, assign roles (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`), and filter dashboard/import data by role scope | P1 | ✅ Done — `/admin/settings → Users`, `/api/admin/users`, role-scoped imports, role-default dashboard views, 4 role tests |
+| 3.14 | User management admin module — add/manage/delete users, assign roles (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`), and filter dashboard/import data by role scope | P1 | ✅ Done — `/admin/settings → Users`, `/api/admin/users`, role-scoped imports, role-default dashboard views, route tests |
+| 3.15 | Member directory (`/members`) for logged-in users with profile cards and contact/detail popup | P1 | ✅ Done |
 
 **First login credentials:**
 - Email: `admin@deliveryclarity.com`

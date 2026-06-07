@@ -1,5 +1,5 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
-// GET/POST/PATCH /api/admin/users — admin-only user management.
+// GET/POST/PATCH/DELETE /api/admin/users — admin-only user management.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
@@ -150,6 +150,38 @@ export async function PATCH(req: NextRequest) {
   await pushUsersToCloudIfConfigured();
 
   return NextResponse.json({ ok: true, user: safeUser(user) });
+}
+
+export async function DELETE(req: NextRequest) {
+  const session = await requireAdmin();
+  if (session instanceof NextResponse) return session;
+  await syncUsersFromCloudIfConfigured();
+
+  let body: { id?: string };
+  try { body = await req.json(); } catch {
+    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
+  }
+
+  if (!body.id) return NextResponse.json({ error: 'User id is required.' }, { status: 400 });
+  if (body.id === session.userId) {
+    return NextResponse.json({ error: 'You cannot delete your own account.' }, { status: 400 });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: body.id },
+    select: { id: true, name: true, email: true },
+  });
+  if (!user) return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+
+  await prisma.user.delete({ where: { id: user.id } });
+  await prisma.auditEvent.create({ data: {
+    userId: session.userId,
+    eventType: 'admin_user_delete',
+    eventDescription: `${session.email} deleted user ${user.email}.`,
+  }});
+  await pushUsersToCloudIfConfigured();
+
+  return NextResponse.json({ ok: true, deletedUserId: user.id });
 }
 
 export const dynamic = 'force-dynamic';

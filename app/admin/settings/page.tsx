@@ -9,6 +9,7 @@ import OrphanRulesSettings from '@/components/admin/OrphanRulesSettings';
 import BackupRestoreSettings from '@/components/admin/BackupRestoreSettings';
 import ClearLocalDataPanel from '@/components/admin/ClearLocalDataPanel';
 import { AdminConsoleLayout, type AdminConsoleStat } from '@/components/admin/AdminConsoleLayout';
+import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import { ASSIGNABLE_ROLES, roleLabel, type AppRole } from '@/lib/roles';
 import type { RetentionSettings, RetentionStats } from '@/types/settings';
 import type { HealthThresholds } from '@/types/thresholds';
@@ -833,6 +834,8 @@ function UserManagementSettings() {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
+  const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'scrum_master' as AppRole });
 
   async function loadUsers() {
@@ -888,6 +891,27 @@ function UserManagementSettings() {
     }
   }
 
+  async function deleteUser() {
+    if (!deleteTarget) return;
+    setDeleting(true); setMsg(null);
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: deleteTarget.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Could not delete user.');
+      setUsers(prev => prev.filter(user => user.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      setMsg({ ok: true, text: 'User deleted.' });
+    } catch (error) {
+      setMsg({ ok: false, text: error instanceof Error ? error.message : 'Could not delete user.' });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   function roleOptionsFor(user?: ManagedUser): AppRole[] {
     return user?.role === 'user' ? ['user', ...ASSIGNABLE_ROLES] : ASSIGNABLE_ROLES;
   }
@@ -901,6 +925,17 @@ function UserManagementSettings() {
 
   return (
     <div className="space-y-6">
+      {deleteTarget && (
+        <ConfirmDeleteDialog
+          title="Delete user?"
+          message={`This removes ${deleteTarget.name} from the account and their access will stop immediately.`}
+          confirmLabel="Delete user"
+          onConfirm={deleteUser}
+          onCancel={() => setDeleteTarget(null)}
+          loading={deleting}
+        />
+      )}
+
       <section className="rounded-[14px] border border-slate-200 bg-white p-5 shadow-[0_3px_12px_rgba(15,23,42,0.04)]">
         <div className="mb-5 flex items-center gap-3">
           <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-blue-50 text-blue-700">👤</span>
@@ -1031,11 +1066,18 @@ function UserManagementSettings() {
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <button type="button" onClick={() => updateUser(user.id, { isActive: !user.isActive })}
-                          className="grid h-8 w-8 place-items-center rounded-[8px] text-lg text-slate-700 transition hover:bg-slate-100"
-                          aria-label={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}>
-                          {user.isActive ? '⏸' : '▶'}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button type="button" onClick={() => updateUser(user.id, { isActive: !user.isActive })}
+                            className="grid h-8 w-8 place-items-center rounded-[8px] text-lg text-slate-700 transition hover:bg-slate-100"
+                            aria-label={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}>
+                            {user.isActive ? '⏸' : '▶'}
+                          </button>
+                          <button type="button" onClick={() => setDeleteTarget(user)}
+                            className="grid h-8 w-8 place-items-center rounded-[8px] text-lg text-red-600 transition hover:bg-red-50"
+                            aria-label={`Delete ${user.name}`}>
+                            🗑
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

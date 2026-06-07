@@ -54,7 +54,7 @@ export function allowedDashboardViewsForRole(role: string | null | undefined): V
     : ['full', 'executive', 'scrum_master', 'product_owner', 'engineering_manager'];
 }
 
-const COMMON_ROUTES = ['/profile', '/help', '/glossary', '/landing', '/change-password'];
+const COMMON_ROUTES = ['/profile', '/members', '/help', '/glossary', '/landing', '/change-password'];
 
 export function allowedRoutePrefixesForRole(role: string | null | undefined): string[] {
   switch (role) {

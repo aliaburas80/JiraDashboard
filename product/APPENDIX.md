@@ -158,6 +158,8 @@
 | **c_level** | C-level/executive role. Defaults to the Executive dashboard view; can request all import logs. |
 | **Role Scope** | The data visibility rule attached to a role. Admin, Manager, and C-level can request all import logs; Scrum Master/Product Owner/user are scoped to their own uploads. |
 | **Route Scope** | The page visibility rule attached to a role. AppShell hides routes outside the user's role, and middleware blocks direct URL access to disallowed protected pages. |
+| **Member Profile** | The team-facing profile each logged-in user edits on `/profile`: name, position, profile image, contact details, certificates, and shared notes. |
+| **Member Directory** | The `/members` route for logged-in users. It lists active users and opens a detail popup with role, position, contact info, certificates, and shared team info. |
 
 ---
 

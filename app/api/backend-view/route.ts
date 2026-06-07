@@ -27,6 +27,9 @@ const ENDPOINTS = [
   { method: 'POST', path: '/api/auth/register',  description: 'Inactive public registration endpoint — returns 403' },
   { method: 'POST', path: '/api/auth/change-password', description: 'Authenticated first-login password change' },
   { method: 'GET',  path: '/api/auth/me',        description: 'Return the current authenticated user' },
+  { method: 'GET/PATCH', path: '/api/profile',   description: 'Read or update the current user member profile' },
+  { method: 'GET',  path: '/api/members',        description: 'List active members for the logged-in user directory' },
+  { method: 'GET/POST/PATCH/DELETE', path: '/api/admin/users', description: 'Admin-only user management' },
 ];
 
 export async function GET(req: NextRequest): Promise<NextResponse> {

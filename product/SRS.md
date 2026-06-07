@@ -1599,9 +1599,9 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-235:** Public registration MUST be inactive. The `/register` route MUST remain reserved for future adjustment but redirect to `/login`, and `POST /api/auth/register` MUST return HTTP 403. New users MUST be created through admin user management only.
 
-**FR-235A:** Admin users MUST be able to manage users from `/admin/settings → Users`: list users, create users, assign `admin`, `scrum_master`, `product_owner`, `manager`, or `c_level` roles, edit display names, and enable/disable accounts.
+**FR-235A:** Admin users MUST be able to manage users from `/admin/settings → Users`: list users, create users, assign `admin`, `scrum_master`, `product_owner`, `manager`, or `c_level` roles, edit display names, enable/disable accounts, and delete users. The system MUST prevent an admin from deleting or disabling their own account.
 
-**FR-235B:** The system MUST expose admin-only `GET/POST/PATCH /api/admin/users` endpoints for user management. The API MUST never return password hashes and MUST write audit events for admin user create/update operations. Admin-created users MUST be marked `mustChangePassword=true`.
+**FR-235B:** The system MUST expose admin-only `GET/POST/PATCH/DELETE /api/admin/users` endpoints for user management. The API MUST never return password hashes and MUST write audit events for admin user create/update/delete operations. Admin-created users MUST be marked `mustChangePassword=true`.
 
 **FR-235C:** When cloud storage is active, authentication and admin user-management flows MUST sync the local SQLite user database from cloud before reading or mutating users. Admin user create/update and password-change operations MUST push an updated backup to cloud after the local mutation succeeds.
 
@@ -1610,6 +1610,10 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 **FR-235D:** Assigned delivery roles (`scrum_master`, `product_owner`, `manager`, `c_level`) MUST be locked to their corresponding dashboard view. Browser-saved dashboard view preferences MUST NOT allow those roles to open a different dashboard view.
 
 **FR-235E:** The application navigation MUST hide protected routes that the authenticated user's role cannot access. Middleware MUST enforce the same protected-page route matrix so a user cannot open a disallowed route by typing the URL directly.
+
+**FR-235F:** Authenticated users MUST be able to edit a shared member profile at `/profile`, including name, position, profile picture URL, telephone, contact email, address, certificates, and team-facing notes. Profile updates MUST be persisted server-side and synced to cloud backup when cloud storage is configured.
+
+**FR-235G:** Authenticated users MUST be able to open `/members` to view active team members with name, position, role, and contact summary. Selecting a member MUST open a detail popup with contact info, certificates, address, and team-facing notes. Anonymous users MUST be redirected to `/login`.
 
 ### F4 — Smart Excel Export
 

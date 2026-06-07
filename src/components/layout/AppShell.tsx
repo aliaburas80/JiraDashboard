@@ -50,6 +50,7 @@ const NAV_GROUPS = [
   {
     label: 'Reference',
     items: [
+      { href: '/members',   label: 'Members',   icon: '🪪', desc: 'Team directory & contacts' },
       { href: '/landing',   label: 'About',     icon: '🏠', desc: 'Product overview & features' },
       { href: '/glossary',  label: 'Glossary',  icon: '📖', desc: 'Term & abbreviation guide' },
       { href: '/developer', label: 'Developer', icon: '💻', desc: 'API & technical docs'      },

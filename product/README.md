@@ -82,7 +82,8 @@ docker-compose up --build
 | `/customer` | Customer View — clean stakeholder summary (no technical detail) |
 | `/snapshots` | Saved Snapshots — list, load, compare saved metric snapshots |
 | `/snapshots/compare` | Snapshot Comparison — side-by-side delta table |
-| `/profile` | User Profile — name, email, role |
+| `/profile` | User Profile — edit name, role-visible profile, contact info, certificates, and shared team info |
+| `/members` | Member Directory — searchable logged-in user directory with role, position, and contact popup |
 | `/glossary` | Glossary — all metric abbreviations and definitions |
 | `/developer` | Developer Portal — Package Reference, Calculation Reference, API docs |
 | `/help` | Help Guide — animated, searchable guide covering every metric |
@@ -106,6 +107,8 @@ docker-compose up --build
 | `POST` | `/api/auth/register` | Inactive; returns 403 because users are admin-created |
 | `POST` | `/api/auth/change-password` | Authenticated first-login password change |
 | `GET` | `/api/auth/me` | Get current session user |
+| `GET/PATCH` | `/api/profile` | Read/update the authenticated user's shared member profile |
+| `GET` | `/api/members` | Read active members for the logged-in user directory |
 | `POST` | `/api/upload` | Parse Jira file, compute metrics, save ImportLog |
 | `POST` | `/api/upload/merge` | Merge multiple Jira exports (up to 10 files) |
 | `GET` | `/api/dashboard` | Return cached dashboard metrics |
@@ -127,6 +130,7 @@ docker-compose up --build
 | `POST` | `/api/admin/backup` | Trigger database backup |
 | `POST` | `/api/admin/restore` | Restore from backup |
 | `POST` | `/api/admin/cleanup` | Delete expired import logs |
+| `GET/POST/PATCH/DELETE` | `/api/admin/users` | Admin-only user management |
 
 ---
 
@@ -146,6 +150,7 @@ JiraDashboard/
 │   ├── snapshots/                # /snapshots + /snapshots/compare
 │   ├── login/page.tsx
 │   ├── register/page.tsx
+│   ├── members/page.tsx
 │   ├── profile/page.tsx
 │   ├── glossary/page.tsx
 │   ├── developer/page.tsx

@@ -24,6 +24,7 @@ jest.mock('@/lib/prisma', () => ({
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
     auditEvent: { create: jest.fn() },
   },
@@ -108,6 +109,34 @@ test('admin users API updates role and active state', async () => {
   expect(body.ok).toBe(true);
   expect(body.user.role).toBe('manager');
   expect(body.user.isActive).toBe(false);
+  expect(syncFromCloud).toHaveBeenCalled();
+  expect(pushToCloud).toHaveBeenCalled();
+});
+
+test('admin users API blocks deleting the signed-in admin', async () => {
+  const { DELETE } = await import('../../app/api/admin/users/route');
+
+  const response = await DELETE(request({ id: 'admin-1' }));
+  const body = await response.json();
+
+  expect(response.status).toBe(400);
+  expect(body.error).toBe('You cannot delete your own account.');
+});
+
+test('admin users API deletes another user and syncs cloud data', async () => {
+  const { prisma } = await import('@/lib/prisma');
+  const { syncFromCloud, pushToCloud } = await import('@/services/storage/cloudSync');
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue(user({ id: 'user-2', email: 'delete@test.com' }));
+  (prisma.user.delete as jest.Mock).mockResolvedValue(user({ id: 'user-2', email: 'delete@test.com' }));
+  const { DELETE } = await import('../../app/api/admin/users/route');
+
+  const response = await DELETE(request({ id: 'user-2' }));
+  const body = await response.json();
+
+  expect(body.ok).toBe(true);
+  expect(body.deletedUserId).toBe('user-2');
+  expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'user-2' } });
+  expect(prisma.auditEvent.create).toHaveBeenCalled();
   expect(syncFromCloud).toHaveBeenCalled();
   expect(pushToCloud).toHaveBeenCalled();
 });
