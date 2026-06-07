@@ -115,6 +115,36 @@ test('admin users API updates role and active state', async () => {
   expect(pushToCloud).toHaveBeenCalled();
 });
 
+test('admin users API blocks disabling the signed-in admin', async () => {
+  const { prisma } = await import('@/lib/prisma');
+  const { PATCH } = await import('../../app/api/admin/users/route');
+
+  const response = await PATCH(request({ id: 'admin-1', isActive: false }));
+  const body = await response.json();
+
+  expect(response.status).toBe(400);
+  expect(body.error).toBe('You cannot disable your own account.');
+  expect(prisma.user.update).not.toHaveBeenCalled();
+});
+
+test('admin users API rejects duplicate email on create', async () => {
+  const { prisma } = await import('@/lib/prisma');
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue(user({ email: 'sam@test.com' }));
+  const { POST } = await import('../../app/api/admin/users/route');
+
+  const response = await POST(request({
+    name: 'Sam Two',
+    email: 'sam@test.com',
+    password: 'Password@123',
+    role: 'product_owner',
+  }));
+  const body = await response.json();
+
+  expect(response.status).toBe(409);
+  expect(body.error).toBe('An account with this email already exists.');
+  expect(prisma.user.create).not.toHaveBeenCalled();
+});
+
 test('admin users API blocks deleting the signed-in admin', async () => {
   const { DELETE } = await import('../../app/api/admin/users/route');
 

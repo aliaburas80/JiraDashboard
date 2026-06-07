@@ -4,34 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
-
-interface Member {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  roleLabel: string;
-  avatarUrl: string;
-  position: string;
-  phone: string;
-  contactEmail: string;
-  address: string;
-  certificates: string;
-  bio: string;
-}
-
-function initialsFor(member: Member): string {
-  return member.name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(part => part[0]?.toUpperCase())
-    .join('') || member.email.slice(0, 2).toUpperCase();
-}
-
-function contactEmailFor(member: Member): string {
-  return member.contactEmail || member.email;
-}
+import { type Member, initialsFor, contactEmailFor, matchesMemberQuery } from '@/lib/members';
 
 export default function MembersPage() {
   const router = useRouter();
@@ -56,13 +29,9 @@ export default function MembersPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  const filteredMembers = useMemo(() => {
-    const text = query.trim().toLowerCase();
-    if (!text) return members;
-    return members.filter(member => (
-      `${member.name} ${member.email} ${member.position} ${member.roleLabel} ${member.bio}`.toLowerCase().includes(text)
-    ));
-  }, [members, query]);
+  const filteredMembers = useMemo(() => (
+    members.filter(member => matchesMemberQuery(member, query))
+  ), [members, query]);
 
   const roleCount = new Set(members.map(member => member.role)).size;
 

@@ -5,6 +5,18 @@
 
 ---
 
+## v4.2.2 — TRACE-01 Cluster #1 Test Automation: Admin/Member/Password-Change (2026-06-07, P0 — test coverage)
+
+### Closed all 14 remaining test-writing gaps from the TRACE-01 cluster #1 closure (below)
+- **`TC-AU-06`/`TC-AU-07`** (admin self-disable-protection 400, duplicate-email 409): added to `src/__tests__/adminUsers.test.ts`, asserting the existing `app/api/admin/users/route.ts` branches at lines 130–132 and 98–99.
+- **`TC-MD-05`–`TC-MD-08`** (active-only sorted query, search filter, contact-email fallback, anonymous-401): added new `src/__tests__/members.test.ts`. Extracted the page's pure helpers `matchesMemberQuery()` and `contactEmailFor()` (plus `initialsFor()`) out of `app/members/page.tsx` into a new `src/lib/members.ts` module so they can be unit-tested directly without React component-rendering infrastructure (this project's Jest setup is Node-environment only — no `@testing-library/react`/jsdom).
+- **`TC-PW-07`** (middleware redirects every protected route to `/change-password` while `mustChangePassword = true`, with no redirect loop on `/change-password` itself): added new `src/__tests__/middleware.test.ts`, exercising the real `middleware()` function against constructed `NextRequest` instances with a mocked `iron-session` session.
+- **`TC-PW-08`–`TC-PW-10`** (reject new-password-equals-temporary, successful change clears `mustChangePassword`/writes `password_change` AuditEvent/updates session, reject wrong current password): added new `src/__tests__/changePassword.test.ts` against `app/api/auth/change-password/route.ts`. Also corrected the `TC-PW-08` expected-message text in `TEST_CASES.md` to match the actual route copy ("New password must be different from **the temporary password**", not "your current password").
+- Test suite count rose from **469 tests / 48 suites → 481 tests / 51 suites** (3 new files, 2 new cases added to an existing file). `npm run lint` and `npm run build` remain clean.
+- Updated `product/TEST_CASES.md` §9.43 to flip all 14 rows from `❌ Not Run` to `✅ Automated`, and updated the F3-14/15/16 rows plus Gaps Summary item 1 in `TODO-List.md` Section 12 to reflect that **TRACE-01 gap cluster #1 is now fully closed** — both the documentation-anchoring layer and the underlying test-automation layer.
+
+---
+
 ## v4.2.2 — TRACE-01 Traceability: Admin/Member/Password-Change Documentation (2026-06-07, P0 — documentation only)
 
 ### Traceability matrix (TRACE-01) — first pass and gap closure
@@ -17,7 +29,7 @@
 
 ### Known limitations / what remains open
 - `TRACE-01` itself remains 🔧 **In progress**, not ✅ Done — three further gap clusters identified by the matrix are still open: Feature 2 Explorer visuals/filters (`F2-05/06/07/09/11/12/13`), Excel export sheet documentation (`F4-05/06/08`), and UX items (`UX-02/03/05/11/13`) while `UX-14` is now anchored with `UC-087`, `SCN-043`, `UJ-027`, and `TC-AC-01–TC-AC-03`.
-- The 14 newly-identified `❌ Not Run` test cases above are documentation/planning entries only in this pass — the actual test code has not yet been written. `npm test` count (469/48) is unchanged by this pass since no test files were added or modified.
+- The 14 newly-identified `❌ Not Run` test cases above were documentation/planning entries only in *this* pass — the actual test code had not yet been written, and `npm test` count (469/48) was unchanged by this pass since no test files were added or modified. **Update:** all 14 were subsequently automated the same day — see the "TRACE-01 Cluster #1 Test Automation" section above (now 481/51 passing).
 - This is a **documentation-only** change; no application code, routes, schemas, or UI were modified. Lint/build/test status is unaffected (carried over from the prior v4.2.2 P0 reconciliation pass below).
 
 ---
