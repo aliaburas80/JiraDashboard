@@ -1,6 +1,6 @@
 # Delivery Clarity — Master TODO List
 
-**Last updated:** 2026-06-07 (TRACE-01 gap cluster #1 fully closed — 14 test cases automated, 481/51 passing)  
+**Last updated:** 2026-06-07 (TRACE-01 gap cluster #1 fully closed — 14 test cases automated; UX-14 TC-AC-01–03 also automated, 492/52 passing)  
 **Product:** Delivery Clarity  
 **Brand:** Ali Delivery Intelligence  
 **Product line:** From Jira Exports to Delivery Confidence  
@@ -10,7 +10,7 @@
 **Current known version from uploaded TODO:** `v4.2.2`  
 **Current known test status from uploaded TODO:** `npm run lint` pass, `npm test` pass with 469 tests / 48 suites, `npm run build` pass.  
 **Important correction:** Do **not** treat P0 as fully closed while `TRACE-01`, `TRACE-02`, full app coverage validation, and required-output reporting are still open.  
-**TRACE-01 progress (2026-06-07):** First-pass traceability matrix compiled and inserted in Section 12 (~50 feature rows cross-referenced against SRS/UC/SCN/UJ/TC/Release Notes); ~38% of cells started as `GAP — not found`. **Cluster #1 (F3-14/15/16 — admin user mgmt, members, forced password change) is now fully closed**: anchored with `UC-084/085/086`/`SCN-039–042`/`UJ-024–026`/`TC-AU/MD/PW` and all 14 of those test cases automated and passing (suite grew 469/48 → 481/51). UX-14 (flat admin redesign) is now anchored too (`UC-087/SCN-043/UJ-027/TC-AC-01–03`). Remaining gaps: F2-05/06/07/09/11/12/13 (explorer visuals/filters), F4-05/06/08 (export sheets), F1-07/08 (data-model items), and narrative backfill for UX-02/03/05/11/13 plus automation of TC-AC-01–03. See Section 12 Gaps Summary for the full prioritized punch-list.
+**TRACE-01 progress (2026-06-07):** First-pass traceability matrix compiled and inserted in Section 12 (~50 feature rows cross-referenced against SRS/UC/SCN/UJ/TC/Release Notes); ~38% of cells started as `GAP — not found`. **Cluster #1 (F3-14/15/16 — admin user mgmt, members, forced password change) is now fully closed**: anchored with `UC-084/085/086`/`SCN-039–042`/`UJ-024–026`/`TC-AU/MD/PW` and all 14 of those test cases automated and passing (suite grew 469/48 → 481/51). **UX-14 (flat admin redesign) is now fully closed too**: anchored with `UC-087/SCN-043/UJ-027/TC-AC-01–03`, and all 3 of those test cases automated and passing (suite grew 481/51 → 492/52, via a new `src/lib/adminConsole.ts` pure-logic extraction mirroring the `src/lib/members.ts` pattern). Remaining gaps: F2-05/06/07/09/11/12/13 (explorer visuals/filters), F4-05/06/08 (export sheets), F1-07/08 (data-model items), and narrative backfill for UX-02/03/05/11/13. See Section 12 Gaps Summary for the full prioritized punch-list.
 
 ---
 
@@ -305,7 +305,7 @@ Every implemented feature must be traceable end-to-end.
 
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
-| TRACE-01 | Build full traceability matrix for every shipped v4.2.x feature | P0 | 🔧 In progress — cluster #1 (F3-14/15/16) fully closed 2026-06-07 incl. all 14 test cases automated; UX-14 anchored | Cross-reference Feature ↔ SRS FR ID ↔ Use Case ID ↔ Scenario ID ↔ User Journey ID ↔ Test Case ID ↔ Release Note ↔ TODO Status. Filled matrix and prioritized gap punch-list now in Section 12. Cannot be marked ✅ Done until F2-05/06/07/09/11/12/13, F4-05/06/08, F1-07/08, and remaining UX narrative/TC-AC-01–03 gaps are closed (see Gaps Summary). |
+| TRACE-01 | Build full traceability matrix for every shipped v4.2.x feature | P0 | 🔧 In progress — cluster #1 (F3-14/15/16) and UX-14 fully closed 2026-06-07 incl. all 17 test cases (14 + TC-AC-01–03) automated | Cross-reference Feature ↔ SRS FR ID ↔ Use Case ID ↔ Scenario ID ↔ User Journey ID ↔ Test Case ID ↔ Release Note ↔ TODO Status. Filled matrix and prioritized gap punch-list now in Section 12. Cannot be marked ✅ Done until F2-05/06/07/09/11/12/13, F4-05/06/08, F1-07/08, and remaining UX narrative gaps (UX-02/03/05/11/13) are closed (see Gaps Summary). |
 | TRACE-02 | Validate SRS, Use Cases, and Test Cases cover the full app | P0 | ❌ Not started | Added from missing prompt details. Must cover all pages/routes/APIs/roles/features/future items. |
 | TRACE-03 | Block new coding if any implemented feature lacks traceability | P0 | ✅ Permanent | Any gap becomes P0 immediately. |
 | TRACE-04 | Add traceability rows for P1.1 Calculation Reference | P0 | ❌ Not started | Must include doc/test references. |
@@ -399,10 +399,10 @@ Cross-reference of every shipped Feature 1–4 / UX item against SRS FR IDs, Use
 2. **Feature 2 explorer visual/filter items (F2-05, F2-06, F2-07, F2-09, F2-11, F2-12, F2-13)**: Node styling, orphan visual badge/border, the four Relation* panels, the FlowItem/JiraIssue compatibility fix, and the three "Needs verification" items (risk-path highlight, largest-branch insight, blocked-branch filter) lack SRS FR and/or SCN/UJ coverage even though TC-RP/TC-LB/TC-BF test suites exist. **Action**: add FR entries for the uncovered behaviours, write SCN/UJ narratives for the visual graph experience, and re-verify F2-11/12/13 at the code level before their TODO Status can move from 🔍 to ✅.
 3. **Feature 4 export sheets (F4-05, F4-06, F4-08)**: Risks & Blockers / Orphan & Data Quality / Release Readiness sheets and the Cycle & Lead Time percentile sheet have no dedicated UC/TC; the export button trigger has no TC. **Action**: add `TC-X-06`–`TC-X-1x` rows naming each sheet, plus a UC for the export-trigger flow.
 4. **F1-07/F1-08 (types & DashboardMetrics field)**: Pure implementation/data-model items with zero UC/SCN/UJ/TC — only named in Release Notes. **Action**: either mark these as "implementation detail — not independently traceable" in a matrix legend, or add a minimal UC/TC asserting `metrics.throughput` shape coverage.
-5. **UX items (UX-02, UX-03, UX-05, UX-11, UX-13)**: "Default open sections", "status chips", "HTML export redesign", and "advanced theme/chart customization" still lack UC/SCN/UJ/TC anchoring. **UX-14 (flat admin-settings redesign)** is now anchored with `UC-087`, `SCN-043`, `UJ-027`, and `TC-AC-01–TC-AC-03`. **Action**: backfill narrative coverage for the remaining UX items.
+5. ~~**UX-14 (flat admin-settings redesign)**~~ — **FULLY CLOSED 2026-06-07.** Anchored with `UC-087`, `SCN-043`, `UJ-027`, `TC-AC-01–TC-AC-03`, then **automated all 3 previously-❌-Not-Run test cases the same day**: `TC-AC-01` (sidebar tab metadata via `activeTabMeta`/`ADMIN_TABS`), `TC-AC-02` (tab-switch panel/stat-card swap via `activeTabMeta`/`buildSettingsStats`), `TC-AC-03` (Users-tab summary cards, `roleOptionsFor`, `matchesUserFilter` table search/filter) — new `adminSettingsConsole.test.ts`, with `Tab`/`ADMIN_TABS`/`activeTabMeta`/`retentionLabel`/`buildSettingsStats`/`ManagedUser`/`roleOptionsFor`/`matchesUserFilter` extracted to `src/lib/adminConsole.ts` for direct unit testing (mirrors the `src/lib/members.ts` pattern). Test count rose from 481/51 to 492/52 suites. **Remaining UX items (UX-02, UX-03, UX-05, UX-11, UX-13)**: "Default open sections", "status chips", "HTML export redesign", and "advanced theme/chart customization" still lack UC/SCN/UJ/TC anchoring. **Action**: backfill narrative coverage for these remaining UX items.
 6. **Cross-cutting ambiguity**: USE_CASES.md bundles multiple FRs under one UC via "Related FR: FR-207–FR-214" style ranges (e.g., UC-043, UC-046), which makes strict 1:1 FR↔UC traceability ambiguous. **Action**: either split these UCs or add an FR→UC index table as a TRACE-01 appendix.
 
-**Net assessment (updated 2026-06-07):** Gap cluster #1 (F3-14/15/16 — 18 GAP cells plus 14 test-writing sub-gaps) is now **fully closed**: documentation anchored same-day, then all 14 test cases automated and passing same-day. UX-14 (cluster #5's highest-priority item) is also now anchored (`UC-087/SCN-043/UJ-027/TC-AC-01–03`, though those 3 TC rows remain planning-only ❌ Not Run). Remaining matrix gap clusters are #2 (Feature 2 explorer visuals/filters), #3 (Excel export sheets), #4 (F1-07/08 type/data-model items), and the residue of #5 (UX-02/03/05/11/13 narrative coverage + TC-AC-01–03 automation). TRACE-01 cannot be marked ✅ Done until those are closed too. TRACE-02 (full app coverage validation) should follow the same evidence-based approach once this matrix's gaps are filled, since many `COVER-*` rows depend on the same UC/SCN/TC inventory being complete.
+**Net assessment (updated 2026-06-07):** Gap cluster #1 (F3-14/15/16 — 18 GAP cells plus 14 test-writing sub-gaps) and UX-14 (cluster #5's highest-priority item — anchoring plus 3 test-writing sub-gaps) are now **both fully closed**: documentation anchored, then all 17 test cases (14 + `TC-AC-01–03`) automated and passing, same-day for each. Remaining matrix gap clusters are #2 (Feature 2 explorer visuals/filters), #3 (Excel export sheets), #4 (F1-07/08 type/data-model items), and the residue of #5 (UX-02/03/05/11/13 narrative coverage). TRACE-01 cannot be marked ✅ Done until those are closed too. TRACE-02 (full app coverage validation) should follow the same evidence-based approach once this matrix's gaps are filled, since many `COVER-*` rows depend on the same UC/SCN/TC inventory being complete.
 
 ---
 
@@ -497,7 +497,7 @@ The following items are in the uploaded TODO as Done. Keep them, but verify trac
 | UX-12 | Custom dashboard layout builder | P3 | ✅ Done |
 | UX-13 | Advanced chart customization | P3 | ✅ Done |
 | UX-14 | Flat admin-settings UI redesign | P1 | ✅ Done |
-| UX-TRACE | Add/verify traceability for all UX items | P0 | 🔍 Needs verification — matrix compiled, UX-14 (flat admin redesign) has zero UC/SCN/UJ/TC anchoring — prioritize (see Section 12 Gaps Summary item 5) |
+| UX-TRACE | Add/verify traceability for all UX items | P0 | 🔧 In progress — UX-14 (flat admin redesign) fully closed 2026-06-07 (`UC-087/SCN-043/UJ-027/TC-AC-01–03`, all automated); UX-02/03/05/11/13 still lack anchoring — see Section 12 Gaps Summary item 5 |
 
 ---
 
@@ -953,11 +953,11 @@ Follow this order exactly.
 
 | ID | Task | Priority | Status | Reason |
 |---|---|---:|---|---|
-| NEXT-01 | Complete `TRACE-01` full traceability matrix | P0 | 🔧 In progress — cluster #1 (F3-14/15/16) fully closed 2026-06-07 incl. 14 automated tests; UX-14 anchored; clusters #2/#3/#4 and UX-02/03/05/11/13 narrative + TC-AC-01–03 automation remain | This is the main blocker before new P1/P2 development. |
+| NEXT-01 | Complete `TRACE-01` full traceability matrix | P0 | 🔧 In progress — cluster #1 (F3-14/15/16) and UX-14 fully closed 2026-06-07 incl. 17 automated tests (14 + TC-AC-01–03); clusters #2/#3/#4 and UX-02/03/05/11/13 narrative anchoring remain | This is the main blocker before new P1/P2 development. |
 | NEXT-02 | Complete `TRACE-02` full app coverage validation | P0 | ❌ Not started | This was missing from the uploaded TODO and is required by the master prompt. |
 | NEXT-03 | Produce actual product documentation impact matrix | P0 | ❌ Not started | The template exists, but the filled matrix must be produced before push. |
 | NEXT-04 | Verify storage docs and open storage gates | P0 | 🔍 Needs verification | JIRA-GATE-03/04/05/07 remain open and must be considered before Jira integration. |
-| NEXT-05 | Re-run lint/test/build and update normalized test count | P0 | ✅ Verified 2026-06-07 | Test count is now 481 tests / 51 suites (was 469/48 — 12 new tests across 3 new files: `members.test.ts`, `middleware.test.ts`, `changePassword.test.ts`, plus 2 added to `adminUsers.test.ts`). Lint clean (pre-existing warnings only); build compiles successfully. |
+| NEXT-05 | Re-run lint/test/build and update normalized test count | P0 | ✅ Verified 2026-06-07 | Test count is now 492 tests / 52 suites (was 469/48 — 23 new tests across 4 new files: `members.test.ts`, `middleware.test.ts`, `changePassword.test.ts`, `adminSettingsConsole.test.ts`, plus 2 added to `adminUsers.test.ts`). Lint clean (pre-existing warnings only); build compiles successfully. |
 | NEXT-06 | Then begin HARD-01 Backend Integration Gateway if P0 is clean | P1 | 🚫 Blocked | Depends on P0 closure. |
 
 ---

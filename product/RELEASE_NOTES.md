@@ -5,6 +5,18 @@
 
 ---
 
+## v4.2.2 — UX-14 Test Automation: Flat Admin-Settings Console (2026-06-07, P0 — test coverage)
+
+### Closed all 3 remaining test-writing gaps for UX-14 (flat admin-settings redesign)
+- **`TC-AC-01`** (console loads with sidebar/context-bar/status area showing the current tab's name and description): asserted via `activeTabMeta()` resolving each of the 7 tabs to its label/description (with a first-tab fallback for unknown ids) and `ADMIN_TABS` listing every sidebar entry with a label and icon.
+- **`TC-AC-02`** (switching tabs swaps the main panel in place without a full layout reload): asserted via `activeTabMeta()` resolving a distinct tab per selection and `buildSettingsStats()` returning tab-specific stat cards (and an empty array for unrecognised tabs) for all 7 tabs — proving panel content is driven purely by the selected `Tab` while the sidebar/layout (`ADMIN_TABS`) stays constant.
+- **`TC-AC-03`** (Users tab is table-first with inline role/status editing and contextual summary cards): asserted via `buildSettingsStats('users', …)` producing correct total/active/admin summary cards (incl. the "No users yet" zero-division guard), `roleOptionsFor()` returning the right assignable-role set for plain vs. elevated users, and `matchesUserFilter()` narrowing the inline-editable table by name/email search and role filter.
+- Added new `src/__tests__/adminSettingsConsole.test.ts` (11 tests). Extracted the page's pure helpers `Tab`, `ADMIN_TABS`, `activeTabMeta()`, `retentionLabel()`, `buildSettingsStats()`, `ManagedUser`, `roleOptionsFor()`, and `matchesUserFilter()` out of `app/admin/settings/page.tsx` into a new `src/lib/adminConsole.ts` module so they can be unit-tested directly without React component-rendering infrastructure — the same pattern used for `src/lib/members.ts` in the cluster #1 closure below.
+- Test suite count rose from **481 tests / 51 suites → 492 tests / 52 suites** (1 new file, 11 new tests). `npm run lint` and `npm run build` remain clean.
+- Updated `product/TEST_CASES.md` §9.44 to flip all 3 `TC-AC` rows from `❌ Not Run` to `✅ Automated`, and updated the UX-14/Gaps-Summary entries in `TODO-List.md` Section 12 to reflect that **UX-14 is now fully closed** — both the documentation-anchoring layer and the underlying test-automation layer.
+
+---
+
 ## v4.2.2 — TRACE-01 Cluster #1 Test Automation: Admin/Member/Password-Change (2026-06-07, P0 — test coverage)
 
 ### Closed all 14 remaining test-writing gaps from the TRACE-01 cluster #1 closure (below)
