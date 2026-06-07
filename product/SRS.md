@@ -1641,6 +1641,10 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-241:** The workbook MUST NOT contain HTML markup, React JSX syntax, CSS class names, or `[object Object]` values in any cell.
 
+**FR-242:** The Risks & Blockers, Orphan & Data Quality, Cycle & Lead Time, and Release Readiness sheets MUST each derive their content directly from the in-memory `DashboardMetrics.flow.items` rather than recomputed approximations: (a) Risks & Blockers MUST list every item that is critical/warning health, blocked, or aged beyond 14 days, sorted critical → warning → good, each with a risk-tier suggested action ("Escalate immediately…" for critical, "Review in next standup…" for warning, "Monitor — add to sprint backlog review" for everything else), and MUST show a clean-bill-of-health message when no item qualifies; (b) Orphan & Data Quality MUST report counts and percentages of orphan, missing-story-point, unassigned, and no-sprint items plus an itemized orphan detail block (or a complete-hierarchy message when there are no orphans); (c) Cycle & Lead Time MUST compute average, median (P50), P75, P85, P95, min, max, and sample size for both lead time and cycle time, plus a top-20-slowest-by-lead-time ranking; (d) Release Readiness MUST group items by Fix Version/Release and assign a Go / Conditional Go / No-Go readiness verdict from each group's completion %, blocked count, and open-bug count.
+
+**FR-243:** The dashboard sticky bar and the `/summary` page MUST each expose an "Export" control that lets the user trigger the 17-sheet smart workbook download (in addition to CSV-risk, HTML-report, and Executive-PDF formats from the same control). Triggering the Excel export MUST build the workbook from the current `DashboardMetrics`, download it under the documented default filename `delivery-clarity-report.xlsx` (or a caller-supplied filename), and silently record the `download_report` onboarding step without blocking or failing the export if tracking is unavailable.
+
 ---
 
 ## Addendum A — v4.0 Quality & Trust Layer Requirements (2026-06-03)

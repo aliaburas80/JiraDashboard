@@ -2685,3 +2685,29 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 **Postcondition:** User can immediately see where delivery risk concentrates, which branch needs the most attention, and can narrow the view to only the at-risk subset of the graph and table — without leaving the Explorer or running a manual Jira query  
 **Related FR:** FR-225A, FR-225B, FR-225C, FR-225D
+
+---
+
+## v4.2.2 — Smart Excel Export Sheet & Trigger Use Cases (2026-06-08)
+
+### UC-089 — Trigger and Review the Smart Excel Workbook from the Dashboard or Summary Page
+
+**Actor:** Scrum Master, Product Owner, Delivery Manager, C-level stakeholder  
+**Trigger:** User wants a shareable, offline-readable statistical breakdown of the current project without re-opening the app  
+**Main Flow:**
+1. User opens the Export control — the green "Export" button in the dashboard sticky bar, or the "Excel" tile in the `/summary` page's Export group
+2. User selects "Excel (all data)"; the system builds the 17-sheet smart workbook from the currently loaded `DashboardMetrics` and downloads it as `delivery-clarity-report.xlsx` (or a caller-supplied filename), then silently records the `download_report` onboarding step
+3. User opens sheet "07 Risks and Blockers" and finds every blocked, critical, warning, or aged-beyond-14-day item listed critical-first, each annotated with a risk-tier suggested action ("Escalate immediately…", "Review in next standup…", or "Monitor — add to sprint backlog review")
+4. User opens sheet "08 Orphan & Data Quality" and finds a summary table of orphan/missing-story-point/unassigned/no-sprint counts and percentages, followed by an itemized list of every orphan issue and what it is missing
+5. User opens sheet "11 Cycle & Lead Time" and finds average, median (P50), P75, P85, P95, min, max, and sample-size statistics for both lead time and cycle time, an interpretation key, and the 20 slowest items ranked by lead time
+6. User opens sheet "14 Release Readiness" and finds every Fix Version grouped with its scope/done/open/bug/blocked/critical counts, completion percentage, and a Go / Conditional Go / No-Go readiness verdict
+
+**Alternate Flow A — Healthy dataset, no risk or orphans:**  
+3a. No item meets the risk criteria → sheet 07 shows "No risk items detected — delivery health looks good." instead of a table  
+4a. No item is an orphan → sheet 08 shows "No orphan items detected — hierarchy is complete." instead of a detail block
+
+**Alternate Flow B — Onboarding tracking unavailable:**  
+2b. `localStorage` or the onboarding module is unavailable (e.g. private browsing, server-side context) → the workbook still downloads normally; the onboarding-step write is swallowed silently and never blocks or fails the export
+
+**Postcondition:** User holds a single offline workbook that reproduces the dashboard's risk, data-quality, cycle-time, and release-readiness analysis without needing the app open or a live Jira connection  
+**Related FR:** FR-236, FR-242, FR-243

@@ -1176,3 +1176,24 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Outcome:** Priya identifies exactly where delivery risk concentrates and which branch needs the most attention — all from one screen, without a manual Jira query.
 
 **Related:** UC-046, UC-088, TC-E-01–TC-E-08, TC-RP-01–TC-RP-08, TC-LB-01–TC-LB-08, TC-BF-01–TC-BF-08
+
+---
+
+## v4.2.2 — Smart Excel Export Sheet & Trigger Scenarios (2026-06-08)
+
+### SCN-045 — Product Owner Exports the Smart Workbook for an Offline Release Review
+
+**Persona:** Marcus, Product Owner, preparing for an offline release-readiness sync with stakeholders who don't have dashboard access  
+**Context:** Marcus needs a single file that captures risk, data-quality, cycle-time, and release-readiness analysis without anyone needing to open Delivery Clarity.
+
+**Scenario:**
+1. From the dashboard sticky bar, Marcus opens the green "Export" dropdown and clicks "Excel (all data)"; the workbook downloads instantly as `delivery-clarity-report.xlsx` and the app quietly records his "downloaded a report" onboarding milestone.
+2. He opens "07 Risks and Blockers" first and sees `PROJ-118` at the very top in red with risk level `CRITICAL`, blocked = `YES`, and the action "Escalate immediately — assign owner and resolution date" — followed by the warning-tier items each carrying "Review in next standup — prevent further aging."
+3. On "08 Orphan & Data Quality" he reads the summary block: 6 orphan items (12%), 9 missing story points (18%), 4 unassigned (8%), 3 with no sprint (6%) — each row naming the dashboard impact and the Jira-side fix — then scrolls to the itemized orphan list to see exactly which issues need an Epic Link.
+4. On "11 Cycle & Lead Time" he reads that the team's P85 lead time is 18 days — "use this as your delivery SLA" — and scans the 20 slowest items, spotting that three of them belong to the release he's reviewing.
+5. On "14 Release Readiness" he finds `v2.4.0` at 80% complete with 1 blocked item and 1 open bug marked "Conditional Go," while `v2.5.0` sits at 50% and "No-Go" — exactly the evidence he needs to push the v2.5.0 date.
+6. He forwards the single `.xlsx` attachment to the stakeholder distribution list; everyone can filter and sort the same data in Excel without ever logging into Delivery Clarity.
+
+**Outcome:** Marcus produces one offline-readable artifact that reproduces the dashboard's risk, data-quality, cycle-time, and readiness analysis — turning a live-dashboard walkthrough into a forwardable file.
+
+**Related:** UC-049, UC-089, FR-236, FR-242, FR-243, TC-X-09–TC-X-13b

@@ -1546,3 +1546,24 @@ Returning-user journeys now include bucket-first metrics restoration. After logi
 | 5 | Reviews the narrowed view and filters the details table for the briefing | Only the at-risk subset remains in full color; "Show all" restores the complete graph | Confident |
 
 **Pain point resolved:** No more manually tracing which branch is blocking delivery — the graph highlights it automatically and lets the user filter straight to it, regardless of whether the underlying export uses raw Jira field names or normalized FlowItem fields.
+
+---
+
+## 12. v4.2.2 — Smart Excel Export Sheet & Trigger Journeys (2026-06-08)
+
+### UJ-029 — Product Owner Exports and Reads the Smart Workbook for an Offline Review
+
+**Persona:** Product Owner  
+**Goal:** Produce one forwardable file that captures risk, data-quality, cycle-time, and release-readiness analysis for stakeholders without dashboard access  
+**Entry point:** Dashboard sticky bar or `/summary` page
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens "Export" in the dashboard sticky bar (or the "Excel" tile on `/summary`) and picks "Excel (all data)" | Builds the 17-sheet workbook from the live metrics, downloads it as `delivery-clarity-report.xlsx`, and silently records the download milestone | Productive |
+| 2 | Opens "07 Risks and Blockers" | Sees every at-risk item sorted critical-first, each with a risk-tier suggested action — or a clean-bill-of-health message if none qualify | Informed |
+| 3 | Opens "08 Orphan & Data Quality" | Reads orphan/missing-field counts and percentages, then the itemized list of exactly which issues are missing an Epic Link or Parent Key | Clear-eyed |
+| 4 | Opens "11 Cycle & Lead Time" | Reads the P50/P75/P85/P95 lead- and cycle-time statistics, the SLA interpretation key, and the 20 slowest items ranked by lead time | Equipped |
+| 5 | Opens "14 Release Readiness" | Sees every Fix Version grouped with completion %, blocked/bug counts, and a Go / Conditional Go / No-Go verdict | Decisive |
+| 6 | Forwards the single `.xlsx` to the stakeholder list | Recipients filter and sort the same analysis in Excel without ever opening Delivery Clarity | Confident |
+
+**Pain point resolved:** No more re-explaining the dashboard live to people who can't access it — one click produces a self-contained workbook that mirrors the app's risk, data-quality, cycle-time, and readiness analysis, ready to forward as-is.
