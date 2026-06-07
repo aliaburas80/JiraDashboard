@@ -3,7 +3,7 @@
 **Last updated:** 2026-06-07  
 **Branch:** codex/flat-admin-settings  
 **Version:** v4.2.2 — Release Candidate  
-**Release status:** P0 reconciliation pass complete. `npm run lint`, `npm test` (469 tests / 48 suites), and `npm run build` all pass as of 2026-06-07. SRS, Use Cases, Developer Guide, Release Notes, README, and Test Cases are reconciled to the verified code state. Cloud storage is implemented and documented consistently as Done across all product docs. Forced first-login password change and the flat admin-settings redesign are in progress on this branch (uncommitted). New P1/P2 roadmap items below (Backend Gateway, User Add-Member Request Workflow, Role-Based Coaching Insights, Retrospective module, Forecasting) are Not Started — do not begin until explicitly approved per the priority model.
+**Release status:** P0 reconciliation pass complete. `npm run lint`, `npm test` (469 tests / 48 suites), and `npm run build` all pass as of 2026-06-07. SRS, Use Cases, Developer Guide, Release Notes, README, and Test Cases are reconciled to the verified code state. Cloud storage is implemented and documented consistently as Done across all product docs. Forced first-login password change (`a6e8eec`) and the flat admin-settings redesign (`208db38`, `e43f3c1`, `7a748a4`, `da51b17`, `1d0148f`) are committed and pushed to this branch — see P1-11. New P1/P2 roadmap items below (Backend Gateway, User Add-Member Request Workflow, Role-Based Coaching Insights, Retrospective module, Forecasting) are Not Started — do not begin until explicitly approved per the priority model.
 
 ### Verified status (2026-06-07)
 
@@ -25,6 +25,55 @@ For every code change (this remains P0 at all times):
 - Update `product/APPENDIX.md` when new terms, files, routes, storage keys, states, or provider concepts are introduced.
 - Update `TODO-List.md` when roadmap status, priority, or sequencing changes.
 - PR descriptions must mention docs updated or explicitly state why no docs were affected.
+
+---
+
+## Push Gate — Product Documentation Impact Matrix (New, from 2026-06-07 master prompt)
+
+> Before every push, output this matrix. If any row is "Behind" or "Needs Review," do not push.
+
+| Product file | Reviewed? | Update needed? | What changed / why no change | Status |
+|---|---|---|---|---|
+| product/SRS.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/BRD.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/USE_CASES.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/USER_JOURNEYS.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/SCENARIOS.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/TEST_CASES.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/DEVELOPER_GUIDE.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/RELEASE_NOTES.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/README.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/ALGORITHM_SPEC.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/TECHNICAL_METHOD.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/APPENDIX.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/PATENT_DISCLOSURE.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/PRIOR_ART_COMPARISON.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| product/CLAIM_CANDIDATE_MATRIX.md | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+| Any other product/ file | Yes/No | Yes/No | ... | Done / Behind / Needs Review |
+
+**Hard stop:** if any product file cannot be confirmed reviewed, output `Push blocked: product documentation impact check is incomplete.` If any product file is behind code, output `Push blocked: product documentation is behind code.`
+
+---
+
+## Traceability Rule (New, from 2026-06-07 master prompt)
+
+> Every implemented feature must be traceable end-to-end. If any implemented feature lacks traceability, mark it P0 and fix documentation before new coding.
+
+| Feature | SRS FR ID | Use Case ID | Scenario ID | User Journey ID | Test Case ID | Release Note | TODO Status |
+|---|---|---|---|---|---|---|---|
+| *(fill per feature — build this matrix as a P0 documentation task before HARD-01/02/03 begin)* | | | | | | | |
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| TRACE-01 | Build the full traceability matrix above for every shipped v4.2.x feature (cross-reference SRS FR-xxx ↔ UC-xxx ↔ SCN-xxx ↔ UJ-xxx ↔ TC-xxx ↔ Release Notes entry ↔ TODO row) | P0 | ❌ Not started |
+
+---
+
+## Daily Master Prompt Regeneration Rule (New, from 2026-06-07 master prompt)
+
+> At the start of every workday, regenerate the working prompt from current project state — do not reuse yesterday's prompt blindly.
+
+The regenerated prompt must restate: current date, branch, version, code status, documentation status, TODO status, release-notes status, test/build/lint status, what changed yesterday, what is still behind, what is P0 today, what must not be started yet, updated execution order, and updated Definition of Done. If any document is behind code, it becomes P0 immediately.
 
 ---
 
@@ -421,6 +470,7 @@ For every code change (this remains P0 at all times):
 | P1-08 | Dockerfile and docker-compose setup | P1 | ✅ Done — implemented as 9.24 |
 | P1-09 | Performance profiling for 5,000+ issues | P1 | ✅ Done — FLOW_ITEMS_CAP=5,000 + deduplication (9.25) |
 | P1-10 | Arrange navigation with grouped sub-menus instead of flat list (Analytics / Delivery / Data / Reference) | P1 | ✅ Done — dropdown groups + mobile hamburger panel |
+| P1-11 | Flat admin-settings UI redesign — unified sidebar, top context bar, summary cards, table-first workflow, danger-zone styling, role-based visibility, mobile responsiveness across `/admin/settings`, `/admin/security`, `/admin/diagnostics`, `/admin/logs` | P1 | ✅ Done — `208db38` (apply flat redesign), `e43f3c1` (unify console layout), `7a748a4` (add-user form layout), `da51b17` (header status chips), `1d0148f` (role-scoped user mgmt); committed and pushed |
 
 ---
 
@@ -450,7 +500,7 @@ For every code change (this remains P0 at all times):
 | # | Task | Priority | Status |
 |---|------|----------|--------|
 | HARD-01 | Backend Integration Gateway foundation — `externalGateway.ts`, `providerRegistry.ts`, `endpointPolicy.ts`, `retryPolicy.ts`, `gatewayLogger.ts`, `types.ts`; endpoint allowlisting, SSRF/private-IP blocking, secret redaction, timeout/retry policy, audit logging, single-provider routing with architecture for future round-robin | P1 | ❌ Not started |
-| HARD-02 | User Add-Member Request Workflow — in-app request form (name, email, role, reason), pending-request queue for admin, accept/reject flow, requester notification, duplicate-email and high-privilege-role checks, audit log | P1 | ❌ Not started |
+| HARD-02 | User Add-Member Request Workflow — in-app request form (name, email, role, reason), pending-request queue at new `/admin/user-requests` page (must follow the flat admin design from P1-11: same sidebar/top context bar/summary cards/table-first/danger-zone/role visibility/mobile pattern), accept/reject flow, requester notification, duplicate-email and high-privilege-role checks, audit log | P1 | ❌ Not started |
 | HARD-03 | Role-Based Delivery Coaching Insights — per-role (Scrum Master, Product Owner, Engineering Manager, Delivery Manager, C-level, Team Lead, Admin) evidence-based suggestions derived from existing metrics; ceremony advice; dashboard section with role tabs/cards and severity badges | P1 | ❌ Not started |
 
 ---
@@ -478,6 +528,9 @@ For every code change (this remains P0 at all times):
 | P2-02 | Optional Jira API Integration — read-only mode design, field mapping, JQL fetch | P2 | 🚫 Blocked — promoted to P0 gate JIRA-GATE-05 before implementation |
 | P2-03 | Storage database tables design (`storage_settings`, `storage_objects`, etc.) | P2 | ✅ Superseded — current implementation uses `data/storage-settings.json`, provider factory, cache metadata, and backup bundles instead of storage DB tables |
 | P2-04 | Jira database tables design (`jira_connections`, `jira_field_mappings`, etc.) | P2 | 🚫 Blocked — include in P0 Jira integration design doc |
+| P2-05 | Load-balancer-aware gateway expansion — design `round_robin`, `weighted_round_robin`, `failover`, and `least_error_rate` provider-routing strategies on top of the Backend Integration Gateway's initial `single` mode; stateless request handling, shared DB-backed config, provider health state, correlation IDs | P2 | ❌ Not started — depends on HARD-01 foundation; design only, do not implement routing strategies until HARD-01 ships |
+| P2-06 | CI/CD design with GitHub Actions — pipeline stages (lint, test, build, Docker image, deploy), branch/PR gating rules, secrets handling; design doc only | P2 | ❌ Not started |
+| P2-07 | PostgreSQL migration assessment — feasibility, schema diff from SQLite/Prisma, migration strategy, rollback plan, performance comparison; assessment doc only | P2 | ❌ Not started |
 
 ---
 
@@ -492,6 +545,8 @@ For every code change (this remains P0 at all times):
 | P3-03 | Jira write-back (ticket creation from recommendations) | P3 | ❌ Not started |
 | P3-04 | Jira OAuth support | P3 | ❌ Not started |
 | P3-05 | Multi-provider cloud backup | P3 | ✅ Done for selectable active providers — Local, S3/S3-compatible, Azure Blob, and GCP are implemented. Future enhancement, if needed: simultaneous replication to multiple providers. |
+| P3-06 | Full CI/CD deployment automation (GitHub Actions pipelines, automated deploy) | P3 | 🚫 Blocked — do not implement until P2-06 design doc is documented and reviewed |
+| P3-07 | PostgreSQL production migration | P3 | 🚫 Blocked — do not implement until P2-07 assessment is documented and reviewed |
 
 ---
 
@@ -505,6 +560,7 @@ For every code change (this remains P0 at all times):
 | P4-02 | Maintenance Mode — admin-controlled, user maintenance screen, audit logs | P4 | 📄 Planning documented — NO code written |
 | P4-03 | Email notification channel | P4 | ❌ Planned |
 | P4-04 | Slack/Teams webhook notification channel | P4 | ❌ Planned |
+| P4-05 | Browser push notifications channel | P4 | ❌ Planned |
 
 ---
 
