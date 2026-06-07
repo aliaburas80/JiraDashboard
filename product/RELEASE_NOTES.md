@@ -12,8 +12,8 @@
 - Added admin delete-user support with confirmation, self-delete protection, audit events, and cloud sync after user removal.
 - Expanded `/profile` into an editable team profile: name, position, profile picture URL, telephone, contact email, address, certificates, and shared team info.
 - Added S3-backed profile image upload from `/profile`; images are stored under `images/profile/` and served through authenticated `/api/profile/image` URLs.
-- Fixed production startup with standalone output: `npm start` now runs `.next/standalone/server.js`, and auto-restore instrumentation resolves its bundled module path correctly.
-- Normalized relative SQLite `DATABASE_URL` values at Prisma startup so standalone production runs open `data/delivery_clarity.db` reliably.
+- Fixed production startup: local `npm start` and Docker now run the full Next production server so App Router pages, API routes, and static chunks resolve without 404s.
+- Normalized relative SQLite `DATABASE_URL` values at Prisma startup so production runs open `data/delivery_clarity.db` reliably.
 - Added `/members` for logged-in users: searchable member cards with position/role, plus a detail popup for contact info and shared profile details.
 - Added roles: `admin`, `scrum_master`, `product_owner`, `manager`, and `c_level`; existing `user` remains supported for legacy/open-registration accounts.
 - Added `GET/POST/PATCH/DELETE /api/admin/users` with admin-only access, password-strength checks, duplicate-email protection, first-login password-change enforcement, and audit events.
@@ -350,7 +350,7 @@
 - **9.21** Release readiness checklist (`/readiness`) — Go / Conditional Go / No-Go verdict per Fix Version; 7-item checklist; summary chips; 10 tests
 - **9.22** Database backup & restore — admin tab: one-click JSON backup (DB + config files), restore with `.bak` safety copy, security allow-list, 8 tests
 - **9.23** Production security checklist (`/admin/security`) — 8 automated checks + 5 manual, 0–100 score, production-ready flag, 8 tests
-- **9.24** Docker deployment — multi-stage `Dockerfile` (node:20-alpine, non-root user), `docker-compose.yml` with volume mount + healthcheck, `.dockerignore`, `output: 'standalone'` in next.config.js
+- **9.24** Docker deployment — multi-stage `Dockerfile` (node:20-alpine, non-root user), `docker-compose.yml` with volume mount + healthcheck, `.dockerignore`, full Next production runtime
 
 ### P0 — Critical Bug Fixes
 - **9.25** Large export white screen fix — `FLOW_ITEMS_CAP = 5,000`; `flow.items` sorted critical-first before cap; `QuotaExceededError` handling in `saveMetrics()` (trim → clear → log); amber warning banner on dashboard when items are capped; `MAX_FILE_SIZE` corrected to 20 MB; upload API warns in response

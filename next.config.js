@@ -13,7 +13,6 @@ const CLOUD_EXTERNALS = [
 const NODE_EXTERNALS = ['fs', 'path', 'http', 'https', 'stream', 'net', 'tls'];
 
 const nextConfig = {
-  output: 'standalone',
   experimental: {
     serverComponentsExternalPackages: [
       'xlsx', 'prisma', '@prisma/client', 'bcryptjs',
