@@ -731,7 +731,7 @@ const SECTIONS: Section[] = [
               <li><span className="font-bold text-violet-600">📤 Jira upload</span> — data came from a fresh Jira CSV upload in this browser session</li>
               <li><span className="font-bold text-amber-600">⚠️ localStorage fallback</span> — bucket/server metrics were unavailable; data came from this browser&apos;s saved fallback copy</li>
             </ul>
-            <p className="mt-2">When data is actively loading from the cloud, a blue <strong>loading banner</strong> appears at the top of the page: <em>"Loading data from Amazon S3…"</em></p>
+            <p className="mt-2">When data is actively loading from the cloud, a blue <strong>loading banner</strong> appears at the top of the page: <em>&ldquo;Loading data from Amazon S3…&rdquo;</em></p>
           </div>
         ),
       },

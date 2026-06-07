@@ -1204,14 +1204,14 @@ export default function DeveloperPage() {
             return (
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <h2 className="text-sm font-black text-slate-800">Search results for "{globalSearch}"</h2>
+                  <h2 className="text-sm font-black text-slate-800">Search results for &quot;{globalSearch}&quot;</h2>
                   <span className="text-xs text-slate-400">{total} match{total !== 1 ? 'es' : ''}</span>
                   <button type="button" onClick={() => setGlobalSearch('')}
                     className="ml-auto text-xs text-blue-600 hover:underline font-semibold">Clear search</button>
                 </div>
 
                 {total === 0 && (
-                  <div className="text-sm text-slate-500 py-8 text-center">No results found for "{globalSearch}"</div>
+                  <div className="text-sm text-slate-500 py-8 text-center">No results found for &quot;{globalSearch}&quot;</div>
                 )}
 
                 {matchedSects.length > 0 && (

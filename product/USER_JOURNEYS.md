@@ -1334,7 +1334,7 @@ All personas now experience a two-step flow after uploading:
 
 ---
 
-### UJ-017 — Returning User: Clearing Stale Browser Data (Planned P1.2)
+### UJ-017 — Returning User: Clearing Stale Browser Data (P1.2 — Done, Verified)
 
 **Persona:** Marcus, Scrum Master  
 **Goal:** Start fresh with a new sprint's data  
@@ -1367,7 +1367,7 @@ All personas now experience a two-step flow after uploading:
 
 ---
 
-### UJ-019 — Engineering Manager: Focused Dashboard Review Using Section Switcher (Planned P1.3)
+### UJ-019 — Engineering Manager: Focused Dashboard Review Using Section Switcher (P1.3 — Done, Verified)
 
 **Persona:** Sarah, Engineering Manager  
 **Goal:** Check sprint health quickly without the full dashboard  

@@ -79,7 +79,7 @@ export default function SaveSnapshotButton({ metrics }: Props) {
             <div>
               <p className="text-xs font-black text-slate-800 mb-1">Save dashboard snapshot</p>
               <p className="text-xs text-slate-400 mb-3">
-                Saves current metrics as a named point-in-time report (e.g. "End of Sprint 14").
+                Saves current metrics as a named point-in-time report (e.g. &quot;End of Sprint 14&quot;).
               </p>
               <input
                 autoFocus

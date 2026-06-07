@@ -7,12 +7,12 @@
 | Field | Value |
 |---|---|
 | **Document Title** | Software Requirements Specification — Delivery Clarity |
-| **Version** | 4.0.0 |
-| **Date** | 2026-06-03 |
+| **Version** | 4.2.2 |
+| **Date** | 2026-06-07 |
 | **Author** | Ali Abu Ras (aburasali80@gmail.com) |
-| **Status** | Active — v4.0 in progress on feat/enhancements branch |
+| **Status** | Active — Release Candidate (lint, tests, and build verified 2026-06-07) |
 | **Repository** | https://github.com/aliaburas80/JiraDashboard |
-| **Branch** | feat/enhancements |
+| **Branch** | codex/flat-admin-settings |
 
 ### Revision History
 
@@ -26,6 +26,8 @@
 | 2.0 | 2026-05-30 | Ali Abu Ras | v2 migration to Next.js App Router; all routes updated |
 | 3.0 | 2026-05-31 | Ali Abu Ras | F1 Throughput, F2 Explorer, F3 Auth/Database, F4 Excel Export |
 | 4.0 | 2026-06-03 | Ali Abu Ras | v4 Quality & Trust Layer; see Section 4.12–4.15 and Addendum A |
+| 4.2.1 | 2026-06-06 | Ali Abu Ras | Cloud restore hardening, saved cloud-credential persistence |
+| 4.2.2 | 2026-06-07 | Ali Abu Ras | P0 reconciliation pass — P1.1/P1.2/P1.3 marked Done/Verified, storage status reconciled as Implemented, test count normalised to 469 tests / 48 suites, lint/build failures fixed |
 
 ---
 
@@ -85,10 +87,10 @@ Delivery Clarity accepts Jira CSV or Excel exports and produces a real-time, mul
 - AI-generated delivery narrative (roadmap, unscheduled)
 - Native mobile application (not planned)
 
-**Planned P1 (queued — not yet started):**
-- Calculation Reference as clearly visible item in `/developer` blue side menu (P1.1)
-- Clear Local Data — Admin window + Upload/Landing page with detection, warning, confirmation (P1.2)
-- Dashboard Section Show/Hide controls — Overview/Single/Full modes, smooth scroll, CSS animation (P1.3)
+**P1 — Done / Verified (shipped; see FR-283–FR-285 for full acceptance detail):**
+- Calculation Reference as clearly visible item in `/developer` blue side menu (P1.1) — Done, Verified, covered by tests and `/developer` docs
+- Clear Local Data — Admin window + Upload/Landing page with detection, warning, confirmation (P1.2) — Done, Verified, covered by `clearLocalData.test.ts`
+- Dashboard Section Show/Hide controls — Overview/Single/Full modes, smooth scroll, CSS animation, reduced-motion support (P1.3) — Done, Verified, covered by `dashboardSectionSwitcher.test.ts`
 
 ### 1.3 Definitions and Acronyms
 
@@ -1496,7 +1498,7 @@ Rendered by `renderBackendHome()`. Provides: import history table, file statisti
 
 ---
 
-*End of Software Requirements Specification — Delivery Clarity v1.0.0*
+*End of Software Requirements Specification — Delivery Clarity v4.2.2*
 *Document prepared: 2026-05-30*
 *Author: Ali Abu Ras — aburasali80@gmail.com*
 

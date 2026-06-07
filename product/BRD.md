@@ -7,10 +7,10 @@
 | Field | Detail |
 |---|---|
 | **Document Title** | Delivery Clarity — Business Requirements Document |
-| **Version** | 4.0 |
-| **Date** | 2026-06-03 |
+| **Version** | 4.2.2 |
+| **Date** | 2026-06-07 |
 | **Author** | Ali Abu Ras |
-| **Status** | Approved |
+| **Status** | Approved — reconciled with v4.2.2 Release Candidate (P0 pass 2026-06-07: superseded v1.0 scope/assumption language on authentication, multi-user, and audit trail; storage status confirmed Done) |
 | **Classification** | Internal |
 
 ### Revision History
@@ -133,9 +133,11 @@ The urgency of this problem is increasing as engineering organisations scale. Ea
 
 ## 6. Scope
 
-### In Scope (v1.0 — Current)
+### In Scope — v1.0 Historical Baseline (superseded by v4.0 section below)
 
-The following capabilities are in scope for the current v1.0 release of Delivery Clarity:
+> This subsection is preserved as a historical record of the original v1.0 baseline scope (pre-authentication, single-user). It no longer reflects the current product — see "In Scope (v4.0 — Current)" immediately below for the authoritative current scope, which supersedes every "v1.0" assumption in this subsection (in particular, authentication, multi-user roles, and historical comparison are now implemented and in scope).
+
+The following capabilities were in scope for the original v1.0 release of Delivery Clarity:
 
 - File upload and parsing: CSV, XLSX, and XLS Jira export files up to 20 MB, with 55+ column header aliases for automatic field normalisation
 - Backend validation of required fields (Issue Key, Issue Type, Summary, Status) with specific error messages on failure
@@ -197,11 +199,11 @@ The following capabilities are implemented and in scope as of v4.0:
 - Jira write-back or ticket creation (P3 roadmap)
 - AI-generated narrative via external LLM API (unscheduled)
 
-### Planned P1 (Queued — Not Yet Started)
+### P1 — Done / Verified (shipped in v4.2.x)
 
-- Calculation Reference clearly visible in `/developer` blue side menu (P1.1)
-- Clear Local Data — Admin window + Upload page with detection, warning, confirmation (P1.2)
-- Dashboard Section Show/Hide controls — Overview/Single/Full modes, smooth scroll, animation (P1.3)
+- Calculation Reference clearly visible in `/developer` blue side menu (P1.1) — Done, Verified
+- Clear Local Data — Admin window + Upload page with detection, warning, confirmation (P1.2) — Done, Verified
+- Dashboard Section Show/Hide controls — Overview/Single/Full modes, smooth scroll, animation (P1.3) — Done, Verified
 
 ### Future Scope (P2/P3/P4 Roadmap)
 
@@ -498,7 +500,7 @@ The following metrics define product success and will be measured at 30, 90, and
 2. Exported Jira files will include at minimum the four required fields: Issue Key, Issue Type, Summary, and Status. Richer analysis is conditional on additional columns being included in the export.
 3. The Jira export format is stable enough that column header aliases captured in the 55+ alias library cover the majority of real-world exports. Edge cases may require alias additions in future maintenance releases.
 4. The self-hosted deployment environment runs Node.js >= 18 and npm >= 9 on a server or workstation accessible to all intended users via a browser.
-5. No user authentication is required for v1.0 — all users who can reach the URL are treated as authorised. Teams requiring access control will implement an authentication proxy at the network or web server layer.
+5. *(Historical v1.0 assumption, superseded — see Section 6 "In Scope (v4.0 — Current)")* User authentication and role-based access control are now implemented and required: every route is gated by `iron-session` cookies and a role matrix enforced in `middleware.ts`. Admin-managed accounts replace the original "anyone who can reach the URL is authorised" model. Self-hosting teams no longer need to add an external authentication proxy.
 6. Browser state has a layered restore model: the app first loads the latest server/bucket metrics and then falls back to browser `localStorage` if needed.
 7. Jira Sprint field values in exports are assumed to be text strings (sprint names) from which sprint grouping and comparison can be derived.
 8. The "Blocked Flag" signal is available only in Jira exports that include a custom "Blocked Flag" field. Teams without this custom field will only have blocking links (not the flag) as a blocking signal.
@@ -507,7 +509,7 @@ The following metrics define product success and will be measured at 30, 90, and
 11. All date fields in Jira exports are in one of the supported formats: ISO 8601, Jira short date (DD/MMM/YY), Excel serial number, or native JavaScript Date-parseable strings.
 12. Users with mobile devices will primarily use the tool in a read/review capacity rather than as the primary upload path.
 13. The existing React and Node.js technology stack is approved for use and no technology substitution will be required during v1.0 delivery.
-14. The initial deployment is for internal use within a single organisation. Multi-tenancy requirements are not in scope for v1.0.
+14. The deployment remains single-organisation, self-hosted, and single-database (no cross-organisation multi-tenancy). Within that organisation, the product now supports multiple authenticated users with distinct roles (admin, manager, c_level, scrum_master, product_owner, engineering_manager, member) — multi-user support is implemented and in scope (see Section 6 "In Scope (v4.0 — Current)"); cross-organisation multi-tenancy remains out of scope.
 
 ---
 
@@ -532,7 +534,7 @@ The following metrics define product success and will be measured at 30, 90, and
 ### Regulatory / Compliance Constraints
 
 - **Data residency:** Because the product is self-hosted and processes no data outside the organisation's own infrastructure, there are no third-party data residency concerns. However, the deploying organisation is responsible for ensuring the server environment meets their own data classification requirements for Jira project data.
-- **Audit trail:** The import log provides a basic audit trail of file uploads (file name, timestamp, column statistics, row count). It does not record which users performed uploads, as there is no user authentication in v1.0.
+- **Audit trail:** *(Historical v1.0 limitation, resolved in v4.x)* The import log now records the authenticated `userId` for every upload alongside file name, timestamp, column statistics, and row count, since user authentication and role-based access are implemented (see Section 6 "In Scope (v4.0 — Current)" and `AuditEvent` in the Prisma schema).
 
 ---
 
@@ -796,3 +798,18 @@ The following metrics define product success and will be measured at 30, 90, and
 **BR-097 (Should — P2 — Done):** The system MUST track release confidence as a trend over multiple uploads. Teams need to see whether their release readiness is improving or degrading sprint-over-sprint — not just a one-time snapshot. This is a continuous improvement visibility requirement.
 
 **BR-096 (Should — P2 — Done):** The Work Item Explorer (`/explore`) MUST allow users to export the current graph as an Excel workbook or CSV. This is a reporting and stakeholder-sharing requirement — users need to take explorer findings offline or embed them in delivery reports without re-entering data manually.
+
+---
+
+## Revision Note — v4.2.2 Reconciliation (2026-06-07)
+
+This BRD carried several "v1.0" baseline statements forward into the v4.0+ document body that contradicted the "In Scope (v4.0 — Current)" section and the actual shipped product. As part of the P0 reconciliation pass:
+
+- Section 6 "In Scope (v1.0 — Current)" was relabelled **"In Scope — v1.0 Historical Baseline (superseded by v4.0 section below)"** with an explicit pointer to the v4.0 section as the authoritative current scope.
+- The "Planned P1 (Queued — Not Yet Started)" list (Calculation Reference, Clear Local Data, Dashboard Section Switcher) was corrected to **"P1 — Done / Verified"**, matching SRS FR-283–FR-285 and TODO-List.md.
+- Assumption 5 ("No user authentication is required for v1.0") was corrected to reflect that authentication and role-based access are implemented and required.
+- Assumption 14 ("Multi-tenancy requirements are not in scope for v1.0") was corrected to distinguish implemented multi-user support (in scope, done) from out-of-scope cross-organisation multi-tenancy.
+- The audit-trail constraint ("does not record which users performed uploads, as there is no user authentication in v1.0") was corrected — `userId` is now recorded on every import log entry.
+- Document version bumped to 4.2.2 and status updated to reflect the Release Candidate verification (lint/test/build all passing, 469 tests / 48 suites).
+
+No business requirement IDs (BR-xxx) were renumbered or removed; only scope-framing and assumption/constraint language that contradicted the shipped v4.x product was corrected.

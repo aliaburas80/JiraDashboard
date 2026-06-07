@@ -5,12 +5,12 @@
 | Field | Detail |
 |---|---|
 | **Document Title** | Delivery Clarity — Use Cases |
-| **Version** | 4.0 |
-| **Date** | 2026-06-03 |
+| **Version** | 4.2.2 |
+| **Date** | 2026-06-07 |
 | **Author** | Ali Abu Ras |
 | **Status** | Active |
 | **Classification** | Internal |
-| **Derived From** | BRD v4.0, SRS v4.0.0 |
+| **Derived From** | BRD v4.0, SRS v4.2.2 |
 
 ### Revision History
 
@@ -19,6 +19,7 @@
 | 0.1 | 2026-05-30 | Ali Abu Ras | Initial draft — all 40 use cases, actors, diagrams |
 | 1.0 | 2026-05-30 | Ali Abu Ras | Final review — approved as baseline |
 | 4.0 | 2026-06-03 | Ali Abu Ras | v4 addendum: UC-051–059 — data quality, confidence, snapshots, thresholds, clear data, section switcher, calculation reference |
+| 4.2.2 | 2026-06-07 | Ali Abu Ras | P0 reconciliation — scope updated from v1.0 baseline language to current v4.2.x reality: authentication, role-based access, admin user management, snapshots/trends, cloud-backed metrics, Clear Local Data, Dashboard Section Switcher, Calculation Reference, and System Tour are now in scope and implemented |
 
 ---
 
@@ -26,30 +27,36 @@
 
 ### 1.1 Purpose
 
-This Use Cases document specifies the complete behavioural requirements for Delivery Clarity v1.0 from the perspective of every actor who interacts with the system. It translates the business requirements captured in the BRD and the technical requirements specified in the SRS into concrete, scenario-based descriptions of how users and external systems interact with Delivery Clarity to achieve their goals.
+This Use Cases document specifies the complete behavioural requirements for Delivery Clarity v4.2.x from the perspective of every actor who interacts with the system. It translates the business requirements captured in the BRD and the technical requirements specified in the SRS into concrete, scenario-based descriptions of how users and external systems interact with Delivery Clarity to achieve their goals.
 
-Each use case describes a discrete unit of observable system behaviour that produces a result of value to at least one actor. Together, the 40 use cases in this document constitute the full interaction surface of Delivery Clarity v1.0.
+Each use case describes a discrete unit of observable system behaviour that produces a result of value to at least one actor. The original baseline of 40 use cases (v1.0) has been extended by the v4.0–v4.2 addenda (UC-051 onward, plus the v4.0/v4.1/v4.2 use-case sections later in this document) to cover authentication, role-based access, admin user management, snapshots, trends, cloud storage, and the admin console redesign. Together they constitute the full interaction surface of Delivery Clarity v4.2.x.
 
 ### 1.2 Scope
 
-This document covers every interaction available to users of the Delivery Clarity v1.0 system, including:
+This document covers every interaction available to users of the current Delivery Clarity v4.2.x system, including:
 
 - File upload, parsing, and validation flows (including all error paths)
 - All 14 dashboard sections and their interactive behaviours
 - The Manager Quick Overview Report
 - Smart Recommendations navigation
 - The Flow Health table and its 11 filter dimensions
-- Help Guide navigation
+- Help Guide navigation and System Tour
 - Theme toggling and accessibility features
 - Backend control centre and import log interactions
+- Authentication, role-based access control, and admin-managed user accounts (in scope — implemented)
+- Snapshots, snapshot comparison, and upload-to-upload trend analysis (in scope — implemented)
+- Cloud-backed metrics startup and admin Cloud Storage management (in scope — implemented)
+- Clear Local Data (Admin Settings + Upload/Landing page) (in scope — implemented)
+- Dashboard Section Switcher and Calculation Reference (in scope — implemented)
 - All known error, rate-limit, and degraded-state scenarios
 
-Out of scope for this document (consistent with BRD Section 6):
+Out of scope for this document (consistent with BRD Section 6 roadmap classification):
 
-- Jira OAuth / API integration
-- User authentication and multi-user workspaces
-- Scheduled email or Slack report delivery
-- Historical sprint-over-sprint comparison across separate uploads
+- Jira OAuth / API integration (P3 roadmap)
+- Jira write-back / ticket creation (P3 roadmap)
+- Scheduled email or Slack report delivery (P4 roadmap)
+- In-app Notification Center, Maintenance Mode, browser push notifications (P4 roadmap)
+- Backend Integration Gateway, User Add-Member Request Workflow, Role-Based Delivery Coaching Insights, Retrospective Upload/Template/In-App Form, and Forecasting & Delivery Adjustment Report (P1/P2 roadmap — not yet implemented; see TODO-List.md)
 
 ### 1.3 How to Read Use Cases
 

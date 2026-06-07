@@ -48,7 +48,7 @@ export default function ReadinessPage() {
             <p className="text-base font-black text-slate-700 mb-2">No Fix Version data found</p>
             <p className="text-sm text-slate-500 mb-6 max-w-md mx-auto">
               Release readiness requires the <strong>Fix Version/s</strong> column in your Jira export.
-              In Jira: Columns → add "Fix Version" then re-export.
+              In Jira: Columns → add &quot;Fix Version&quot; then re-export.
             </p>
             <button type="button" onClick={() => router.push('/')}
               className="btn-primary px-5 py-2.5">

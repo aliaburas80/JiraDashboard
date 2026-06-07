@@ -193,7 +193,7 @@ JiraDashboard/
 │   └── delivery_clarity.db
 ├── public/                       # Static assets (favicon, logo SVGs)
 ├── product/                      # Living product documentation (this folder)
-├── src/__tests__/                # Jest test suites (253+ tests across 21 suites)
+├── src/__tests__/                # Jest test suites (469 tests across 48 suites — verified 2026-06-07)
 ├── Dockerfile                    # Multi-stage production Docker image
 ├── docker-compose.yml            # Docker Compose with volume + healthcheck
 ├── middleware.ts                 # Route protection — all routes require auth

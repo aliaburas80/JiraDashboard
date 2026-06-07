@@ -185,7 +185,7 @@ JiraDashboard/
 │   │   ├── relations.ts          # RelationNode (isOnRiskPath, isLargestBranch), RelationEdge, RelationStats
 │   │   ├── releaseReadiness.ts   # ReleaseReadinessResult, ReleaseReadinessSummary
 │   │   └── throughput.ts         # ThroughputMetrics, SprintEntry, etc.
-│   └── __tests__/                # Jest test suites (280+ tests across 22 files)
+│   └── __tests__/                # Jest test suites (469 tests across 48 suites — verified 2026-06-07)
 │
 ├── data/
 │   └── delivery_clarity.db       # SQLite database (users, sessions, import logs, snapshots)
@@ -986,59 +986,77 @@ Last verified: 2026-06-02
 | `@types/bcryptjs` | ^2.4.6 | TypeScript types for bcryptjs | F3 Authentication & Database | Dev-only | Installed | TypeScript errors in auth code |
 | `lucide-react` | ^0.427.0 | SVG icon components | UI/Icons | Client | Installed | Icons disappear (minor) |
 | `clsx` + `tailwind-merge` | ^2.1.1 / ^2.3.0 | Conditional className, conflict resolution | UI/Styling | Client | Installed | className logic errors |
-| `jest` + `ts-jest` | ^29.7.0 / ^29.2.2 | 253 automated tests across 21 test suites | Testing | Dev-only | Installed | No automated testing |
+| `jest` + `ts-jest` | ^29.7.0 / ^29.2.2 | 469 automated tests across 48 test suites (verified 2026-06-07 via `npm test`) | Testing | Dev-only | Installed | No automated testing |
+
+### Cloud Storage SDK Packages (Installed, Dynamically Loaded)
+
+| Package | Purpose | Feature | Status |
+|---------|---------|---------|--------|
+| `@aws-sdk/client-s3` | Amazon S3 / S3-compatible cloud storage | Cloud Storage | Installed — dynamic import |
+| `@azure/storage-blob` | Azure Blob Storage | Cloud Storage | Installed — dynamic import |
+| `@google-cloud/storage` | Google Cloud Storage | Cloud Storage | Installed — dynamic import |
 
 ### Planned Future Packages (Not Yet Installed)
 
 | Package | Purpose | Feature | Priority |
 |---------|---------|---------|---------|
-| `@aws-sdk/client-s3` | Amazon S3 cloud storage | P3 Cloud Storage | P3 |
-| `@azure/storage-blob` | Azure Blob Storage | P3 Cloud Storage | P3 |
-| `@google-cloud/storage` | Google Cloud Storage | P3 Cloud Storage | P3 |
 | Jira API client (TBD) | Jira REST API integration | P3 Jira Integration | P3 |
 | `nodemailer` (TBD) | Email notification channel | P4 Notifications | P4 |
 
 ---
 
-## P2 — Admin Storage & Backup (Architecture Design Only)
+## Cloud Storage & Backup (Implemented — v4.2.x)
 
-**Status:** Design and backlog planning only. Do NOT implement full cloud storage until explicitly instructed.
+**Status:** Implemented and verified. Shipped in PR #3 (P3-01) and hardened in v4.2.1 (cloud restore hardening, credential persistence).
 
 ### Goal
-Save uploaded Jira files, parsed data, import logs, dashboard snapshots, Excel exports, and processing metadata to local or cloud storage.
+Back up the local SQLite database (users, import logs, snapshots, latest-metrics cache, config files) to a self-hosted or cloud storage destination so admins can restore after data loss, and serve user-uploaded profile images through cloud storage when configured.
 
-### Storage Provider Interface (Planned)
+### Storage Provider Interface (Implemented — `src/types/storage.ts`)
 ```typescript
-interface StorageProvider {
-  name: string;
-  type: 'local' | 's3' | 'azure' | 'gcp' | 's3-compatible';
-  save(key: string, data: Buffer, metadata?: object): Promise<string>;
-  get(key: string): Promise<Buffer>;
+export type StorageProviderType = 'local' | 's3' | 'azure' | 'gcp';
+
+export interface StorageProvider {
+  readonly type: StorageProviderType;
+  upload(key: string, content: Buffer | string, contentType?: string): Promise<string>;
+  download(key: string): Promise<string>;
+  list(prefix?: string): Promise<CloudObject[]>;
   delete(key: string): Promise<void>;
-  exists(key: string): Promise<boolean>;
-  list(prefix: string): Promise<string[]>;
+  test(): Promise<{ ok: true } | { ok: false; error: string; cause?: string; fix?: string }>;
 }
 ```
 
-### Storage Object Types (Planned)
-- `Original Upload` — raw Jira CSV/XLSX file
-- `Normalised Data` — parsed JiraIssue[] JSON
-- `Dashboard Snapshot` — full DashboardMetrics JSON
-- `Excel Export` — generated .xlsx workbook
-- `Import Log` — processing metadata
-- `Error Report` — failed upload diagnostics
+### Implemented Providers (`src/services/storage/providers/`)
+- `LocalProvider` — writes to `data/cloud-backups/` on the host filesystem (default; no credentials needed)
+- `S3Provider` — Amazon S3 and S3-compatible endpoints via `@aws-sdk/client-s3` (dynamic import)
+- `AzureProvider` — Azure Blob Storage via `@azure/storage-blob` (dynamic import)
+- `GcpProvider` — Google Cloud Storage via `@google-cloud/storage` (dynamic import)
 
-### Storage Status Values (Planned)
-`Pending | Saving | Success | Failed | Retrying | Synced | Permanent Failure | Skipped`
+Each cloud SDK is loaded dynamically (`storageProvider.ts` factory) so the app starts and runs without any cloud SDK installed — `LocalProvider` is always available as the fallback.
 
-### Future Database Tables (Planned)
-- `storage_settings` — provider config, credentials (encrypted), enabled flag
-- `storage_objects` — each stored object with key, type, status, size
-- `storage_events` — audit log of all storage operations
-- `storage_retry_queue` — failed saves queued for retry
+### Supported Operations
+- **Provider selection & credentials** — `/admin/settings → Cloud Storage` tab: provider picker (4 cards), per-provider credential forms, redacted display of saved secrets, Test Connection, Upload Backup Now
+- **Bucket-first metrics startup** — `/api/metrics/latest` reads `data/latest-metrics.json` from the active cloud provider before falling back to the local cache, so a fresh deployment can boot directly from a cloud backup
+- **Cloud-backed user authority** — `syncFromCloud()` runs before login/admin user reads or mutations when cloud storage is active; `pushToCloud()` runs after admin create/update and password-change operations so the user database stays in sync with the cloud backup
+- **Backup bundle** — one-click JSON backup of the SQLite DB plus config files (`storage-settings.json`, `latest-metrics.json`, thresholds, orphan rules); restore creates a `.bak` safety copy before overwriting
+- **Restore hardening** — security allow-list on restorable file paths, `.bak` rollback on failed restore, auto-restore-on-boot guard (`autoRestore.ts`)
+- **Profile images** — when Amazon S3 is the active provider, `/profile` uploads (JPG/PNG/WebP/GIF) are stored under `images/profile/` and served through the authenticated `/api/profile/image` route
 
-### Future Storage Events (Planned)
-`STORAGE_SETTINGS_UPDATED | STORAGE_CONNECTION_TEST_STARTED | STORAGE_CONNECTION_TEST_SUCCESS | STORAGE_CONNECTION_TEST_FAILED | STORAGE_SAVE_STARTED | STORAGE_SAVE_SUCCESS | STORAGE_SAVE_FAILED | STORAGE_LOCAL_FALLBACK_USED | STORAGE_RETRY_QUEUED | STORAGE_RETRY_STARTED | STORAGE_RETRY_SUCCESS | STORAGE_RETRY_FAILED | STORAGE_RETRY_LIMIT_REACHED | STORAGE_SYNC_COMPLETED`
+### Current Limitations
+- Only one provider can be active at a time (no multi-provider replication)
+- Profile image upload to cloud storage is implemented for Amazon S3 only; other providers fall back to local storage for images
+- No automatic scheduled backups — backups are triggered manually ("Upload Backup Now") or on data-changing admin actions (push-on-change)
+
+### Credential Security
+- Credentials are persisted server-side in `data/storage-settings.json` and are never returned to the browser in plaintext — API responses redact secret fields
+- Saved credentials survive login, logout, session expiry, refresh, and locked Test Connection / Upload Backup actions; redacted browser-side settings can never overwrite saved server-side secrets with blank values
+
+### Fallback Behaviour
+- If no cloud provider is configured, or a cloud operation fails, the system falls back to `LocalProvider` (`data/cloud-backups/`) and surfaces a "local fallback" indicator in the admin UI
+- `/api/metrics/latest` falls back from bucket → local cache → live recomputation if all cloud reads fail
+
+### Tests
+Covered by `cloudStorage.test.ts`, `cloudRestoreHardening.test.ts`, `storageSettingsPersistence.test.ts`, and `backup.test.ts` (see `product/TEST_CASES.md`, TC-CS-01 to TC-CS-08 and related backup/restore cases).
 
 ---
 

@@ -180,7 +180,7 @@ export default function OnboardingChecklist({ isLoggedIn = false, compact = fals
             onClick={handleDismiss}
             className="w-full py-2 rounded-xl bg-purple-600 text-white text-sm font-bold hover:bg-purple-700 transition-colors"
           >
-            Dismiss — I'm ready to go!
+            Dismiss — I&apos;m ready to go!
           </button>
         </div>
       )}

@@ -126,7 +126,7 @@ export default function SnapshotsPage() {
             <span className="text-4xl mb-4 block">📸</span>
             <p className="text-base font-black text-slate-700 mb-2">No snapshots yet</p>
             <p className="text-sm text-slate-500 mb-4">
-              Go to the Full Report and click <strong>"Save snapshot"</strong> in the sticky filter bar to capture a named point-in-time report.
+              Go to the Full Report and click <strong>&quot;Save snapshot&quot;</strong> in the sticky filter bar to capture a named point-in-time report.
             </p>
             <button
               type="button"

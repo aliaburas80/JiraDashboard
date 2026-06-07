@@ -201,7 +201,7 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
         </div>
 
         <p className="text-xs text-slate-400 mt-3">
-          "Clear All Data" permanently deletes all import logs and snapshots for all users. This cannot be undone.
+          &quot;Clear All Data&quot; permanently deletes all import logs and snapshots for all users. This cannot be undone.
         </p>
       </div>
 

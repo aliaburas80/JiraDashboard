@@ -351,7 +351,7 @@ function CloudBackupList({ savedProvider, setMsg }: {
 
       {!loading && !fetchErr && backups.length === 0 && (
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-500 text-center">
-          No backups found in the {label} bucket yet. Click "Upload backup now" to create the first one.
+          No backups found in the {label} bucket yet. Click &quot;Upload backup now&quot; to create the first one.
         </div>
       )}
 
@@ -599,7 +599,7 @@ function CloudStorageSettings() {
           <span className="text-lg">{providers[savedProvider]?.icon ?? '☁️'}</span>
           <div>
             <p className="text-xs font-black text-green-800">Active: {providers[savedProvider]?.label ?? savedProvider}</p>
-            <p className="text-[10px] text-green-600 font-semibold">Click "Change provider" above to switch to a different provider.</p>
+            <p className="text-[10px] text-green-600 font-semibold">Click &quot;Change provider&quot; above to switch to a different provider.</p>
           </div>
         </div>
       )}

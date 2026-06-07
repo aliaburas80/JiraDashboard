@@ -2178,7 +2178,7 @@ export default function DashboardPage() {
                   )}
                 </div>
                 {presets.length === 0 && !showPresetInput && (
-                  <p className="text-xs text-slate-400 italic">Set your filters above then click "+ Save current filters" to bookmark them.</p>
+                  <p className="text-xs text-slate-400 italic">Set your filters above then click &quot;+ Save current filters&quot; to bookmark them.</p>
                 )}
               </div>
 

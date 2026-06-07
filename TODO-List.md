@@ -1,9 +1,17 @@
 # Delivery Clarity — TODO List
 
-**Last updated:** 2026-06-06  
-**Branch:** fix/preserve-storage-connection  
-**Version:** v4.2.1 (cloud restore hardening + storage credential persistence)  
-**Release status:** PR #3 is merged to main. Cloud restore hardening and saved cloud credential persistence are complete; before Jira integration, remaining work is source-detail visibility, admin sync health, and the Jira integration design document.
+**Last updated:** 2026-06-07  
+**Branch:** codex/flat-admin-settings  
+**Version:** v4.2.2 — Release Candidate  
+**Release status:** P0 reconciliation pass complete. `npm run lint`, `npm test` (469 tests / 48 suites), and `npm run build` all pass as of 2026-06-07. SRS, Use Cases, Developer Guide, Release Notes, README, and Test Cases are reconciled to the verified code state. Cloud storage is implemented and documented consistently as Done across all product docs. Forced first-login password change and the flat admin-settings redesign are in progress on this branch (uncommitted). New P1/P2 roadmap items below (Backend Gateway, User Add-Member Request Workflow, Role-Based Coaching Insights, Retrospective module, Forecasting) are Not Started — do not begin until explicitly approved per the priority model.
+
+### Verified status (2026-06-07)
+
+| Check | Command | Result |
+|---|---|---|
+| Lint | `npm run lint` | ✅ Pass — 0 errors (pre-existing `<img>` / `exhaustive-deps` warnings only; `.eslintrc.json` added, `react/no-unescaped-entities` and `auth.ts` require-import errors fixed) |
+| Tests | `npm test` | ✅ Pass — 469 tests across 48 suites, 0 failed, 0 skipped |
+| Build | `npm run build` | ✅ Pass — compiles and type-checks cleanly |
 
 ---
 
@@ -435,6 +443,31 @@ For every code change (this remains P0 at all times):
 
 ---
 
+## P1 — Current Product Hardening (New, from 2026-06-07 master prompt — Not Started)
+
+> Do not start any of these until the current uncommitted work (forced password change, admin redesign) is committed, pushed, and the P0 documentation gate is closed. Each item requires its own branch per [[feedback_branch_per_feature]] and a full `product/` impact pass before push.
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| HARD-01 | Backend Integration Gateway foundation — `externalGateway.ts`, `providerRegistry.ts`, `endpointPolicy.ts`, `retryPolicy.ts`, `gatewayLogger.ts`, `types.ts`; endpoint allowlisting, SSRF/private-IP blocking, secret redaction, timeout/retry policy, audit logging, single-provider routing with architecture for future round-robin | P1 | ❌ Not started |
+| HARD-02 | User Add-Member Request Workflow — in-app request form (name, email, role, reason), pending-request queue for admin, accept/reject flow, requester notification, duplicate-email and high-privilege-role checks, audit log | P1 | ❌ Not started |
+| HARD-03 | Role-Based Delivery Coaching Insights — per-role (Scrum Master, Product Owner, Engineering Manager, Delivery Manager, C-level, Team Lead, Admin) evidence-based suggestions derived from existing metrics; ceremony advice; dashboard section with role tabs/cards and severity badges | P1 | ❌ Not started |
+
+---
+
+## P2 — Product Intelligence / Forecasting / Retrospective (New, from 2026-06-07 master prompt — Not Started)
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| RETRO-01 | Download Retrospective Template — `.xlsx` template with required columns + Instructions sheet + example rows, downloadable from `/retro`, Upload page, or Help Guide | P2 | ❌ Not started |
+| RETRO-02 | Upload Retrospective File — CSV/XLSX/XLS/Markdown/plain-text upload with column mapping, preview, validation, missing-field detection | P2 | ❌ Not started |
+| RETRO-03 | Fill Retrospective in App — in-app form (Retro Context, What Went Well, What Didn't Go Well, Blockers, Action Items, Next Sprint Suggestions) with draft save and submit | P2 | ❌ Not started |
+| RETRO-04 | Generate Retrospective Insights & Improvement Backlog — themes, repeated blockers, action-item TODO list, owner/due-date gap detection, links to delivery metrics | P2 | ❌ Not started |
+| RETRO-05 | Generate Next Sprint Suggestions from Retro — ceremony advice + prioritised suggestions with expected benefit | P2 | ❌ Not started |
+| FCAST-01 | Forecasting Progress and Delivery Adjustment Report — `DeliveryForecast` model, on-track/at-risk/off-track status, expected completion date, confidence, gap analysis, adjustment options, charts (planned vs actual, forecast line, required vs current throughput), `/forecasting` dashboard section | P2 | ❌ Not started |
+
+---
+
 ## P2 — Architecture / Backlog Design
 
 > Cloud storage design has moved into implementation (P3-01). Jira integration remains design-first: do NOT implement Jira API/OAuth/write-back until the integration design is documented and reviewed.
@@ -475,5 +508,5 @@ For every code change (this remains P0 at all times):
 
 ---
 
-*Delivery Clarity v4.0 (in progress) — Ali Delivery Intelligence — © 2025 Ali Abu Ras — aburasali80@gmail.com*  
+*Delivery Clarity v4.2.2 (Release Candidate) — Ali Delivery Intelligence — © 2025 Ali Abu Ras — aburasali80@gmail.com*  
 *Slogan: From messy boards to measurable delivery confidence*

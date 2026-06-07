@@ -120,7 +120,7 @@ const STATS = [
   { value: '28+',  label: 'Metrics calculated',    color: '#2563eb' },
   { value: '17',   label: 'Excel export sheets',    color: '#16a34a' },
   { value: '14',   label: 'Dashboard sections',     color: '#7c3aed' },
-  { value: '310+', label: 'Automated tests',        color: '#f59e0b' },
+  { value: '469+', label: 'Automated tests',        color: '#f59e0b' },
 ] as const;
 
 // ── Components ────────────────────────────────────────────────────────────────

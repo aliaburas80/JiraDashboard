@@ -5,6 +5,21 @@
 
 ---
 
+## v4.2.2 — P0 Reconciliation & Release Candidate Verification (2026-06-07)
+
+### Status reconciliation (P0 — documentation/code alignment pass)
+- **Lint**: Fixed — `next lint` had no ESLint configuration (`next/core-web-vitals` added via `.eslintrc.json`); 22 pre-existing `react/no-unescaped-entities` errors and 2 unresolvable `@typescript-eslint/no-require-imports` directives fixed. `npm run lint` now passes with only pre-existing `<img>`/`exhaustive-deps` warnings remaining.
+- **Build**: Fixed — `npm run build` was failing to compile because of the same lint errors once ESLint was configured (Next.js runs lint during build). Build now compiles and type-checks cleanly.
+- **Tests**: Verified — `npm test` passes **469 tests across 48 suites** (was previously documented inconsistently as 253/21, 280+/22, 310+, and 375/36 across different files). All product docs and the `/landing` stats strip are now normalised to **469 tests / 48 suites**, verified 2026-06-07.
+- **SRS**: P1.1 (Calculation Reference), P1.2 (Clear Local Data), and P1.3 (Dashboard Section Switcher) were marked "Done" in the FR section but contradicted by a "Planned P1 (queued — not yet started)" list earlier in the same document — corrected to a single "Done / Verified" status. SRS version bumped to 4.2.2 and footer corrected from "v1.0.0" to "v4.2.2".
+- **USE_CASES**: Introduction/scope still described "Delivery Clarity v1.0" with "40 use cases only" and listed "User authentication and multi-user workspaces" and "Historical sprint-over-sprint comparison" as out of scope — both have been implemented for several releases. Scope section rewritten for v4.2.x: authentication, role-based access, admin user management, snapshots/trends, cloud storage, Clear Local Data, Dashboard Section Switcher, and Calculation Reference are now listed as in scope and implemented; only the not-yet-built P1/P2 roadmap items (Backend Gateway, User Add-Member Request Workflow, Role-Based Coaching Insights, Retrospective module, Forecasting) remain out of scope.
+- **Storage status**: `product/DEVELOPER_GUIDE.md` still described Cloud Storage as "Design and backlog planning only — Do NOT implement" with a "(Planned)" interface, while BRD/SRS/RELEASE_NOTES/TODO/TEST_CASES already documented it as implemented and shipped (PR #3, hardened in v4.2.1). Replaced the stale planning section with the actual implemented architecture (`StorageProvider` interface, four providers, bucket-first metrics startup, cloud-backed user authority, backup/restore hardening, credential security, fallback behaviour, current limitations).
+- **TODO-List.md**: Rewritten to reflect current branch (`codex/flat-admin-settings`), version (v4.2.2), and a P0–P4 priority structure with explicit status values; added the new P1/P2 roadmap items from the Delivery Clarity master prompt (Backend Integration Gateway, User Add-Member Request Workflow, Role-Based Delivery Coaching Insights, Retrospective Upload/Template/In-App Form, Forecasting & Delivery Adjustment Report) as Not Started.
+
+**Release candidate verdict:** v4.2.2 is marked **Release Candidate** — lint, tests, and build all pass; SRS, Use Cases, Developer Guide, Release Notes, README, Test Cases, and TODO are reconciled to the verified code state as of 2026-06-07.
+
+---
+
 ## v4.2.2 — Admin User Management & Role Scope (2026-06-06)
 
 ### Auth / users
@@ -189,7 +204,7 @@
 ### P2 — In-App Landing Page (9.38)
 - New **`/landing`** page — full product showcase accessible from the nav (Reference → About)
 - **Hero**: Delivery Clarity logo + headline "From messy boards to measurable delivery confidence" + Upload and Dashboard CTAs
-- **Stats strip**: 4 cards — 28+ metrics, 17 Excel sheets, 14 dashboard sections, 310+ tests
+- **Stats strip**: 4 cards — 28+ metrics, 17 Excel sheets, 14 dashboard sections, 469+ tests (count corrected 2026-06-07 to match the verified test suite)
 - **How it works**: 3-step process — Export from Jira → Upload in seconds → Act on insights
 - **Feature grid**: 12 clickable feature cards (Sprint Throughput, Work Item Explorer, Trends, Team Health, Portfolio, Release Readiness, Visual Analytics, Customer View, Smart Export, Snapshots, Data Quality, Admin Diagnostics) — each links directly to its page
 - **CTA footer**: Dark gradient section with brand mark, upload button, developer portal link
