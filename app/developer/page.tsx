@@ -611,7 +611,7 @@ When loading, a blue banner appears below the header: "Loading data from Amazon 
 
 ## Startup Auto-Restore
 
-\`instrumentation.ts register()\` runs once on Node.js server start. If local DB is empty: find latest cloud backup → download → \`restoreBackup()\`. Uses \`new Function('m','return import(m)')\` to prevent webpack from tracing into cloud SDK packages at build time.`,
+\`instrumentation.ts register()\` runs once on Node.js server start. If local DB is empty: find latest cloud backup → download → \`restoreBackup()\`. Cloud SDK packages are kept external by \`next.config.js\` and loaded by the provider layer at runtime.`,
 };
 
 // ─── Nav config ───────────────────────────────────────────────────────────────

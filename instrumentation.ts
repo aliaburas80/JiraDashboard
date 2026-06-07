@@ -3,10 +3,6 @@
 // Checks local database state and auto-restores from cloud if needed.
 // https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
 //
-// IMPORTANT: We use new Function('m','return import(m)') to load the storage
-// module so webpack cannot statically trace into cloud SDK packages.
-// Cloud SDKs use Node.js built-ins (http, https, stream) that webpack can't bundle.
-
 export async function register() {
   // Only run on the Node.js runtime (not Edge)
   if (process.env.NEXT_RUNTIME !== 'nodejs') return;
@@ -14,11 +10,7 @@ export async function register() {
   console.log('[Delivery Clarity] Server starting — checking database state…');
 
   try {
-    // Use indirect import to prevent webpack from tracing into cloud SDK deps
-    const modulePath = './src/services/storage/autoRestore';
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    const mod = await (new Function('m', 'return import(m)'))(modulePath) as any;
-    const { autoRestoreFromCloud } = mod;
+    const { autoRestoreFromCloud } = await import('@/services/storage/autoRestore');
     const result = await autoRestoreFromCloud();
 
     switch (result.action) {

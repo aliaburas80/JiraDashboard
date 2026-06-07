@@ -12,6 +12,7 @@
 - Added admin delete-user support with confirmation, self-delete protection, audit events, and cloud sync after user removal.
 - Expanded `/profile` into an editable team profile: name, position, profile picture URL, telephone, contact email, address, certificates, and shared team info.
 - Added S3-backed profile image upload from `/profile`; images are stored under `images/profile/` and served through authenticated `/api/profile/image` URLs.
+- Fixed production startup with standalone output: `npm start` now runs `.next/standalone/server.js`, and auto-restore instrumentation resolves its bundled module path correctly.
 - Added `/members` for logged-in users: searchable member cards with position/role, plus a detail popup for contact info and shared profile details.
 - Added roles: `admin`, `scrum_master`, `product_owner`, `manager`, and `c_level`; existing `user` remains supported for legacy/open-registration accounts.
 - Added `GET/POST/PATCH/DELETE /api/admin/users` with admin-only access, password-strength checks, duplicate-email protection, first-login password-change enforcement, and audit events.

@@ -56,6 +56,7 @@ npm run dev
 
 # Production build
 npm run build
+# Runs .next/standalone/server.js because next.config.js uses output: 'standalone'
 npm start
 
 # Lint
