@@ -5,6 +5,23 @@
 
 ---
 
+## v4.2.2 — TRACE-01 Traceability: Admin/Member/Password-Change Documentation (2026-06-07, P0 — documentation only)
+
+### Traceability matrix (TRACE-01) — first pass and gap closure
+- Compiled and inserted the **first-pass full traceability matrix** required by `TRACE-01` into `TODO-List.md` Section 12 — ~50 rows cross-referencing every shipped Feature 1–4 / UX item against SRS FR IDs, Use Cases, Scenarios, User Journeys, Test Cases, and Release Notes. The pass found **~38% of cross-reference cells missing** (`GAP — not found`) and produced a prioritized Gaps Summary punch-list.
+- **Closed the highest-priority gap cluster** identified by the matrix — Feature 3 admin/user/member items `F3-14` (Admin User Management), `F3-15` (Member Directory `/members`), and `F3-16` (Forced First-Login Password Change) — which previously had **zero** Use Case, Scenario, User Journey, or formally-numbered Test Case anchoring.
+- Added Use Cases **`UC-084`** (Admin Manages User Accounts), **`UC-085`** (Browse Member Directory), **`UC-086`** (Complete Forced First-Login Password Change) to `product/USE_CASES.md`, each documenting the actual implemented flows, alternate flows (duplicate email 409, self-disable/self-delete 400, password-mismatch, weak/repeated-password 400, wrong-temporary-password 401), and Related FRs (`FR-235A`, `FR-235B`, `FR-235C`, `FR-235D`, `FR-235G`).
+- Added Scenarios **`SCN-039`**–**`SCN-042`** to `product/SCENARIOS.md` narrating: an admin onboarding a new Scrum Master, an admin attempting to disable/delete their own account (self-protection), a new Product Owner looking up a colleague's contact info, and a new hire completing the forced password-change flow end to end.
+- Added User Journeys **`UJ-024`**–**`UJ-026`** to `product/USER_JOURNEYS.md` (Section 10, "v4.2.2 — Admin & Member Management Journeys") mapping the same three flows step-by-step with emotional-state annotations.
+- Added formal Test Case IDs **`TC-AU-01`–`TC-AU-07`**, **`TC-MD-01`–`TC-MD-08`**, **`TC-PW-01`–`TC-PW-10`** to `product/TEST_CASES.md` §9.43 — mapping `TC-AU-01–05` to the existing `adminUsers.test.ts` suite, `TC-MD-01–04`/`TC-PW-01–04` to existing `roles.test.ts` route-access checks, and `TC-PW-05–06` to existing `auth.test.ts` password-strength/hash tests (cross-referenced to `TC-A-00a–d`/`TC-A-08a–c`). The remaining 14 IDs (`TC-AU-06/07`, `TC-MD-05–08`, `TC-PW-07–10`) are recorded as `❌ Not Run` with exact file/line references to the untested code branches — converting what were open documentation gaps into a concrete, locatable test-writing backlog.
+
+### Known limitations / what remains open
+- `TRACE-01` itself remains 🔧 **In progress**, not ✅ Done — three further gap clusters identified by the matrix are still open: Feature 2 Explorer visuals/filters (`F2-05/06/07/09/11/12/13`), Excel export sheet documentation (`F4-05/06/08`), and UX items (`UX-02/03/05/11/13`, especially `UX-14` flat admin-settings redesign which has zero anchoring).
+- The 14 newly-identified `❌ Not Run` test cases above are documentation/planning entries only in this pass — the actual test code has not yet been written. `npm test` count (469/48) is unchanged by this pass since no test files were added or modified.
+- This is a **documentation-only** change; no application code, routes, schemas, or UI were modified. Lint/build/test status is unaffected (carried over from the prior v4.2.2 P0 reconciliation pass below).
+
+---
+
 ## v4.2.2 — P0 Reconciliation & Release Candidate Verification (2026-06-07)
 
 ### Status reconciliation (P0 — documentation/code alignment pass)

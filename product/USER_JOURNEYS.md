@@ -1450,3 +1450,63 @@ All personas now experience a two-step flow after uploading:
 ## 9. Current Code Alignment — 2026-06-06
 
 Returning-user journeys now include bucket-first metrics restoration. After login/register or direct analytics-page navigation, the app tries `/api/metrics/latest`, which syncs from the configured bucket/cache and returns `data/latest-metrics.json` when available. If the server/bucket payload is missing, the user falls back to the browser `dc_metrics_v2` copy and sees the `localStorage fallback` source badge. This replaces the older journey assumption that refresh always requires a new upload.
+
+---
+
+## 10. v4.2.2 — Admin & Member Management Journeys (2026-06-07)
+
+*(Added to close TRACE-01 traceability gaps for F3-14, F3-15, F3-16 — see TODO-List.md Section 12.)*
+
+### UJ-024 — Admin Onboards and Manages a Teammate's Account
+
+**Persona:** Ali, administrator  
+**Goal:** Create a role-correct account for a new teammate and keep the roster accurate over time  
+**Entry point:** `/admin/settings` → Users tab
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens Users tab | Table loads: name/email, role, imports, snapshots, status, actions | Oriented |
+| 2 | Clicks "Add User", fills name/email/temp password/role | `POST /api/admin/users` validates fields and email uniqueness | Focused |
+| 3 | Submits with a duplicate email by mistake | HTTP 409 "An account with this email already exists" — form stays open | Mildly annoyed |
+| 4 | Corrects the email and resubmits | User created with `mustChangePassword=true`; `admin_user_create` audit event written | Satisfied |
+| 5 | Later, edits the user's display name inline and changes their role | `PATCH /api/admin/users` saves on blur; `admin_user_update` audit event written | In control |
+| 6 | Tries to disable or delete their own account by mistake | HTTP 400 self-protection response; account untouched | Reassured |
+
+**Pain point resolved:** Admins can confidently manage the whole roster from one screen — duplicate accounts and accidental self-lockout are prevented by the system, not by careful clicking.
+
+---
+
+### UJ-025 — Team Member Looks Up a Colleague in the Directory
+
+**Persona:** Marcus, Product Owner  
+**Goal:** Find a teammate's role and contact details without interrupting an admin  
+**Entry point:** Navigation → Members
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Clicks "Members" in navigation | `GET /api/members` returns active users sorted by name as cards | Curious |
+| 2 | Types a partial name into search | Grid filters in real time across name/email/position/role/bio | Efficient |
+| 3 | Clicks a matching card | Detail popup opens with email, phone, address, certificates, notes | Informed |
+| 4 | Notices no dedicated contact email is set for one member | Popup falls back to that member's account email automatically | Unblocked |
+| 5 | Calls the colleague directly using the listed phone number | — | Goal achieved |
+
+**Pain point resolved:** No more "who do I even ask" — every active teammate's role and contact info is one click away, without admin involvement.
+
+---
+
+### UJ-026 — New User Completes the Forced Password Change
+
+**Persona:** Dana, newly onboarded Scrum Master  
+**Goal:** Replace the admin-issued temporary password with a private one and start using the app  
+**Entry point:** `/login` (first sign-in with temporary credentials)
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Signs in with the temporary password | Login succeeds; `session.mustChangePassword = true` | Hopeful |
+| 2 | Tries to open `/dashboard` directly | Middleware redirects to `/change-password` — every route does, except this one | Slightly confused |
+| 3 | Enters a new password and a confirmation that don't match | Form blocks submission: "Passwords do not match" | Corrects course |
+| 4 | Re-enters the temporary password as the "new" one | API returns 400 — new password must differ from the temporary one | Understands the rule |
+| 5 | Enters a strong, different password (8+ chars, 1 uppercase, 1 number) that matches its confirmation | `POST /api/auth/change-password` succeeds; `mustChangePassword` cleared; `password_change` audit event written | Relieved |
+| 6 | Is redirected to `/dashboard` | Full route access restored without re-login | Confident |
+
+**Pain point resolved:** New users are guaranteed to set a private password before touching real data, with clear, specific guidance at each misstep — not a generic "error occurred" message.

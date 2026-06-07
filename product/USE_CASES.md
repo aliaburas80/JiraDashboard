@@ -2562,3 +2562,81 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 7. Dashboard renders without requiring a fresh Jira upload.
 **Alternative Flow:** If `/api/metrics/latest` returns `{ available:false }`, the client falls back to `dc_metrics_v2` and shows `localStorage fallback`.
 **Related FR:** FR-307, FR-308, FR-309
+
+---
+
+## v4.2.2 — Admin & Member Management Use Cases (2026-06-07)
+
+*(Added to close TRACE-01 traceability gaps for F3-14, F3-15, F3-16 — see TODO-List.md Section 12.)*
+
+### UC-084 — Admin Manages User Accounts
+
+**Actor:** Admin user  
+**Trigger:** Admin opens `/admin/settings` → Users tab  
+**Main Flow:**
+1. Admin views the user table: name/email (inline-editable), role dropdown, import count, snapshot count, Active/Disabled status badge, and row actions
+2. Admin opens "Add User", enters full name, email, temporary password, and selects a role from `ASSIGNABLE_ROLES` (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`)
+3. `POST /api/admin/users` validates name/email/password/role, checks the email is not already taken, hashes the password, and creates the user with `mustChangePassword = true`
+4. System writes an `admin_user_create` AuditEvent and pushes an updated backup to cloud storage when configured
+5. Admin edits a user's display name inline (saved on blur), changes their role via the row dropdown, or toggles their Active/Disabled status — each change calls `PATCH /api/admin/users` and writes an `admin_user_update` AuditEvent
+6. Admin removes a user via the row delete action (with confirmation) — `DELETE /api/admin/users` writes an `admin_user_delete` AuditEvent and pushes an updated cloud backup
+
+**Alternate Flow A — Email already exists:**  
+3a. `POST /api/admin/users` returns HTTP 409 "An account with this email already exists" — no user created
+
+**Alternate Flow B — Self-disable attempt:**  
+5a. Admin tries to set `isActive = false` on their own account → `PATCH /api/admin/users` returns HTTP 400; account remains active
+
+**Alternate Flow C — Self-delete attempt:**  
+6a. Admin tries to delete their own account → `DELETE /api/admin/users` returns HTTP 400 "You cannot delete your own account."; no deletion occurs
+
+**Alternate Flow D — Non-admin access:**  
+1a. `session.role !== 'admin'` → `GET/POST/PATCH/DELETE /api/admin/users` return HTTP 403; the Users tab is not reachable
+
+**Postcondition:** The user roster reflects the admin's changes; every create/update/delete is recorded in `AuditEvent`; password hashes are never present in any API response (`safeUser()` strips `passwordHash`)  
+**Related FR:** FR-235A, FR-235B, FR-235C
+
+---
+
+### UC-085 — Browse Member Directory
+
+**Actor:** Any authenticated user (any role)  
+**Trigger:** User navigates to `/members`  
+**Main Flow:**
+1. Page calls `GET /api/auth/me`; anonymous users (HTTP 401) are redirected to `/login`
+2. `GET /api/members` returns active users (`isActive: true`) sorted by name, each with name, position (falls back to role label), role badge, contact email, avatar, and a bio/certificates preview
+3. User types in the search box — the member grid filters in real time across name, email, position, role label, and bio (case-insensitive)
+4. User clicks a member card — a detail popup opens showing contact email, telephone (or "Not shared"), address, certificates, and team-facing notes
+
+**Alternate Flow — No dedicated contact email set:**  
+2a. `contactEmailFor()` falls back to the member's account `email` when `contactEmail` is empty
+
+**Postcondition:** User finds a teammate's role and contact details without leaving the app; disabled accounts never appear in the directory  
+**Related FR:** FR-235G
+
+---
+
+### UC-086 — Complete Forced First-Login Password Change
+
+**Actor:** Newly created user with `mustChangePassword = true`  
+**Trigger:** User signs in for the first time using the admin-issued temporary password  
+**Main Flow:**
+1. `POST /api/auth/login` succeeds; `session.mustChangePassword` is set to `true` from the user record
+2. Middleware redirects every protected-route request — except `/change-password` itself — to `/change-password` while the flag is set
+3. User enters the temporary password, a new password, and a confirmation on `/change-password`
+4. Client validates that the new password and confirmation match
+5. `POST /api/auth/change-password` verifies the temporary password against the stored hash, checks the new password meets strength rules (8+ chars, 1 uppercase, 1 number) via `validatePasswordStrength()`, and confirms the new password differs from the temporary one
+6. System hashes and stores the new password, sets `mustChangePassword = false`, writes a `password_change` AuditEvent, updates `session.mustChangePassword`, and attempts a cloud backup push (non-blocking on failure)
+7. User is redirected to `/dashboard` with full route access restored — no re-login required
+
+**Alternate Flow A — Passwords don't match:**  
+4a. Client blocks submission with "Passwords do not match"; no API call made
+
+**Alternate Flow B — New password too weak, or identical to the temporary password:**  
+5a. `POST /api/auth/change-password` returns HTTP 400 with the specific validation message (e.g. "Password must be at least 8 characters", "New password must be different from your current password"); the user corrects and resubmits
+
+**Alternate Flow C — Wrong temporary password entered:**  
+5b. `POST /api/auth/change-password` returns HTTP 401; `mustChangePassword` remains `true` and the user stays on `/change-password`
+
+**Postcondition:** User has a private password known only to them, `mustChangePassword = false`, and unrestricted access to all routes their role permits  
+**Related FR:** FR-235D

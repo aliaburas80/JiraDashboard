@@ -1059,3 +1059,80 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Outcome:** Sarah can resume analysis without re-uploading unless she wants a fresher Jira export.
 
 **Related:** UC-083, TC-CS-09–12
+
+---
+
+## v4.2.2 — Admin & Member Management Scenarios (2026-06-07)
+
+*(Added to close TRACE-01 traceability gaps for F3-14, F3-15, F3-16 — see TODO-List.md Section 12.)*
+
+### SCN-039 — Admin Onboards a New Scrum Master
+
+**Persona:** Ali, administrator  
+**Context:** A new Scrum Master, Dana, is joining the team and needs an account before Monday's sprint planning.
+
+**Scenario:**
+1. Ali opens `/admin/settings` → Users and clicks "Add User"
+2. Ali enters Dana's name and work email, sets a temporary password, and selects role "Scrum Master"
+3. The system rejects a duplicate email on the first try (Dana's personal email was already registered by mistake) — Ali switches to her work email and the user is created
+4. The new account is created with `mustChangePassword = true`; an `admin_user_create` audit event is written
+5. Ali messages Dana the temporary password and login URL outside the app
+
+**Outcome:** Dana has a role-scoped account ready for first login; Ali's action is fully audited and the change is pushed to cloud backup.
+
+**Related:** UC-084, TC-AU-01–05
+
+---
+
+### SCN-040 — Admin Tries to Lock Themselves Out
+
+**Persona:** Ali, the only active administrator  
+**Context:** While cleaning up the user list, Ali accidentally selects their own row.
+
+**Scenario:**
+1. Ali toggles their own account to "Disabled" in the user table
+2. `PATCH /api/admin/users` rejects the change with HTTP 400 — the row stays Active
+3. Ali then clicks "Delete" on their own row
+4. `DELETE /api/admin/users` rejects the request with "You cannot delete your own account." — no audit event for deletion is written
+5. Ali realizes the self-protection is intentional and moves on to the correct row
+
+**Outcome:** The team never loses its only administrator account, even from an accidental click.
+
+**Related:** UC-084 (Alternate Flows B & C), TC-AU-04
+
+---
+
+### SCN-041 — New Hire Looks Up a Teammate's Contact Details
+
+**Persona:** Marcus, newly added Product Owner  
+**Context:** Marcus needs to reach the Engineering Manager about a blocked sprint item but doesn't have her phone number.
+
+**Scenario:**
+1. Marcus signs in and opens `/members` from the navigation
+2. He types "Sarah" into the search box — the grid filters to one matching card in real time
+3. He clicks Sarah's card — a detail popup shows her contact email, telephone, address, and certificates
+4. Sarah hasn't set a dedicated contact email, so the popup shows her account email instead
+5. Marcus copies the phone number and calls her directly
+
+**Outcome:** Marcus resolves the blocker within minutes without pinging an admin for contact info.
+
+**Related:** UC-085
+
+---
+
+### SCN-042 — Newly Created User Completes Forced Password Setup
+
+**Persona:** Dana, newly onboarded Scrum Master (continuing from SCN-039)  
+**Context:** Dana has just received her temporary password and login URL from Ali.
+
+**Scenario:**
+1. Dana signs in with the temporary password — `session.mustChangePassword` is `true`
+2. She tries to open `/dashboard` directly but middleware redirects her to `/change-password` every time
+3. On her first attempt she types the new password and a confirmation that don't match — the form blocks submission with "Passwords do not match"
+4. On her second attempt she reuses the temporary password as her "new" password — the API returns 400 because the new password must differ from the temporary one
+5. She enters a new password meeting the strength rules (8+ chars, 1 uppercase, 1 number) and a matching confirmation
+6. `POST /api/auth/change-password` succeeds, `mustChangePassword` is cleared, a `password_change` audit event is recorded, and Dana is redirected to `/dashboard` with full access
+
+**Outcome:** Dana is now using a private password of her own choosing, and the forced-change flow has produced an auditable record without ever exposing the temporary password to anyone but Ali.
+
+**Related:** UC-086
