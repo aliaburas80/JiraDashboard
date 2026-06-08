@@ -1,5 +1,7 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
-// Route-protection middleware tests — TC-PW-07 (forced password-change redirect).
+// Route-protection middleware tests — TC-PW-07 (forced password-change redirect),
+// TC-A-10 (unauthenticated redirect to /login, added 2026-06-08 to close
+// TRACE-02 / Gaps Summary COVER-11 — see TODO-List.md Section 8 / product/TEST_CASES.md §F3).
 
 import { NextRequest } from 'next/server';
 
@@ -56,4 +58,14 @@ test('TC-PW-07c: middleware does not redirect to /change-password when mustChang
   const response = await middleware(reqFor('/dashboard'));
 
   expect(response.headers.get('location')).not.toBe('http://localhost:3000/change-password');
+});
+
+test('TC-A-10: middleware redirects an unauthenticated request on a protected route to /login?redirect=<path>', async () => {
+  mockSession.isLoggedIn = false;
+  const { middleware } = await import('../../middleware');
+
+  const response = await middleware(reqFor('/dashboard'));
+
+  expect(response.status).toBe(307);
+  expect(response.headers.get('location')).toBe('http://localhost:3000/login?redirect=%2Fdashboard');
 });

@@ -1190,6 +1190,8 @@ The upload call is `multipart/form-data`. All other calls are `GET` with no requ
 
 ## 8. API Specification
 
+> **Scope note (added 2026-06-08 to close TRACE-02/COVER-03):** The five endpoints documented immediately below (`POST /api/upload`, `GET /api/upload/logs`, `GET /api/upload/logs/view`, `GET /api/upload/logs/export`, `GET /api/health`, `GET /`) describe the **legacy standalone Express backend** in `backend/src/index.js` and `backend/src/routes/upload.js` (the pre-v3.0 service, still present in the repo for reference/migration history). They are a **different, smaller API surface** from the live product's Next.js route handlers under `app/api/**/route.ts`. **Section 8.1 below is the authoritative inventory of the live product's 36 Next.js API routes** — the ones the deployed app, its pages, and its test suite actually call.
+
 ### POST /api/upload
 
 Uploads a Jira export file for analysis.
@@ -1286,6 +1288,53 @@ Returns the backend control center HTML page.
 **Response — HTTP 200, Content-Type: text/html**
 
 Rendered by `renderBackendHome()`. Provides: import history table, file statistics, links to health check, and a link to the frontend.
+
+---
+
+### 8.1 — Next.js Application API Route Inventory (v3.0+, produced 2026-06-08 to close TRACE-02 / Gaps-Summary COVER-03)
+
+This table is the consolidated inventory of all 36 live `app/api/**/route.ts` route handlers — the API surface the deployed product, its pages, and its automated test suite actually exercise (distinct from the legacy backend documented in §8 above). **Auth** reflects the actual `getIronSession`/`session.role` checks read from each handler. **FR ref** cites the existing functional requirement that already documents the route's behaviour in narrative form, where one exists; routes with no FR ref are documented only here and via their consuming page's FR/UC (cited in the Notes column) — `app/api/backend-view/route.ts` itself maintains a partial live `ENDPOINTS` registry that this table supersedes as the authoritative cross-reference.
+
+| Method(s) | Path | Auth | Purpose | FR ref | Notes |
+|---|---|---|---|---|---|
+| POST | `/api/upload` | Authenticated, rate-limited (`uploadLimiter`) | Parse a Jira CSV/XLSX export and compute dashboard metrics | FR-001, FR-074 | Full request/response/error contract specified in §8 `POST /api/upload` (mirrors the legacy spec; this is the live route) |
+| POST | `/api/upload/merge` | No additional session check at the handler (mirrors the page-level guard) | Merge up to 10 Jira exports by Issue Key into one unified `DashboardMetrics` | — | Consumed by the multi-file merge upload flow (COVER-06); 20 MB/file, 10-file caps enforced in-handler |
+| GET | `/api/imports` | Authenticated | List import logs (own by default; `?all=true` returns all users' logs for `admin`/`manager`/`c_level`) | FR-233 | — |
+| DELETE | `/api/imports/[id]` | Authenticated (own log, or any log if `admin`) | Delete a single import log | — | Backs the `/admin/logs` and `/backend` log-management UI |
+| DELETE | `/api/imports/all` | Authenticated (own logs, or all logs if `admin`) | Bulk-delete import logs | — | — |
+| GET | `/api/metrics` | Public | Return computed KPI metrics from the latest successful import | — | Legacy/simple metrics accessor; superseded for dashboard loading by `/api/metrics/latest` |
+| GET | `/api/metrics/latest` | Public | Bucket-backed latest-metrics + `localStorage` fallback contract (`{ available, metrics, source, provider, key }`) | FR-309 | Full contract specified in FR-309 (written 2026-06-08 to resolve the `UC-083` phantom reference — see Gaps Summary item 6) |
+| GET | `/api/dashboard` | Public | Return service status + metadata (`{ status, service, version }`) | — | Lightweight health/identity probe, distinct from the `/dashboard` page |
+| GET | `/api/health` | Public | Health check — confirms the API service is running | AC-041 (legacy spec) | The live route returns the same `{ status, service, version }` shape as the legacy `GET /api/health` |
+| GET | `/api/backend-view` | Session-aware (own logs; `admin` sees all with name/email; unauthenticated gets a file-based fallback) | JSON overview of import stats, recent logs, and a partial live API-endpoint registry | — | Backs the `/backend` control-center page |
+| GET | `/api/developer-view` | Public | Developer-wiki JSON: architecture, services, data-flow docs | — | Backs the `/developer` page's Package Reference (FR-283-adjacent) |
+| GET | `/api/docs` | Public | Serve an allow-listed `product/*.md` document by `?slug=` (brd, srs, use-cases, scenarios, test-cases, user-journeys, dev-guide, deployment, readme) | — | Backs in-app documentation viewers (e.g. `/help`, `/developer`) |
+| POST | `/api/auth/login` | Public | Authenticate with email + password; sets the `iron-session` cookie | — | Narrated in §3.4 Data Flow step 1 (`User logs in via POST /api/auth/login → iron-session cookie set`) |
+| POST | `/api/auth/logout` | Authenticated | Clear the session cookie | — | — |
+| POST | `/api/auth/register` | Public (always returns HTTP 403) | Inactive public-registration endpoint | FR-235 | `/register` route redirects to `/login`; new users are admin-created only |
+| POST | `/api/auth/change-password` | Authenticated | Forced first-login password change | FR-235D | Drives the `mustChangePassword` redirect enforced by `middleware.ts` |
+| GET | `/api/auth/me` | Authenticated | Return the current session user (`userId, email, name, role, mustChangePassword`) | — | Used by client-side role-aware UI to read the live session without a full page reload |
+| GET, PATCH | `/api/profile` | Authenticated | Read or update the current user's member profile | — | Backs the `/profile` page |
+| GET, POST | `/api/profile/image` | Authenticated | Upload/stream an S3-backed profile image under `images/profile/` | FR-235F.1 | — |
+| GET | `/api/members` | Authenticated | List active members for the team-member directory; opportunistically syncs users from cloud storage first | — | Backs the `/members` page (UC-085-adjacent) |
+| GET, POST | `/api/snapshots` | Authenticated | List the current user's dashboard snapshots; create a new snapshot | — | Backs `/snapshots` and the dashboard's "Save Snapshot" action |
+| GET, DELETE | `/api/snapshots/[id]` | Authenticated (own snapshot, or any if `admin`) | Load a snapshot's stored metrics; delete a snapshot | — | Backs `/snapshots` and `/snapshots/compare` — `UC-053` (Save and Load Dashboard Snapshot) and `UC-054` (Compare Two Snapshots) |
+| GET | `/api/trends` | Authenticated | Return Release Confidence Score trend data for the `/trends` page | FR-291 | — |
+| GET, POST, PATCH, DELETE | `/api/admin/users` | Admin only | Create, list, update, and delete managed users; never returns password hashes; writes audit events | FR-235B | — |
+| GET | `/api/admin/diagnostics` | Admin only | Live Ops Health Score (0–100), DB row counts, env-var checks, system info, last 8 audit events | FR-299 | — |
+| GET | `/api/admin/backup` | Admin only | Create and download a backup bundle; `?info=true` returns file stats only | FR-298 (backup/restore narrative) | — |
+| POST | `/api/admin/restore` | Admin only | Restore the system from an uploaded backup-bundle JSON file | FR-298 (backup/restore narrative) | `.bak` safety copy made before restore (per cluster-#5/Addendum narrative) |
+| POST | `/api/admin/cleanup` | Admin only | Trigger manual data-retention cleanup; `?action=clear_all` clears all data | FR-270-adjacent (retention narrative) | — |
+| GET | `/api/admin/orphan-rules` (read: any logged-in user); POST (write: admin only) | Mixed — read open to any authenticated user, write admin-gated | Return / update the orphan-detection rule configuration | FR-034-adjacent (orphan rules narrative) | — |
+| GET | `/api/admin/security` | Admin only | Run the security checklist and return a report | FR-307-adjacent (security checklist narrative) | — |
+| GET (read: any logged-in user); POST (write: admin only) | `/api/admin/settings` | Mixed | Return / update data-retention settings and stats | FR-270-adjacent (retention narrative) | — |
+| GET (read: any logged-in user); POST (write: admin only) | `/api/admin/thresholds` | Mixed | Return / update the 9 configurable health-score thresholds | FR-260-adjacent (thresholds narrative) | — |
+| GET, POST | `/api/admin/storage` | Admin only | Return / update active cloud-storage provider + credentials; `?action=test` checks connectivity | FR-307 | Full provider/credential-redaction contract specified in FR-307 |
+| GET, POST | `/api/admin/storage/sync` | Admin only | Return sync status + cache metadata; trigger a sync from or push to the cloud provider | FR-307-adjacent | — |
+| GET | `/api/admin/storage/download` | Admin only | Download a backup object by `?key=`; `?restore=true` immediately restores it | FR-298/FR-307-adjacent | — |
+| GET, POST | `/api/admin/storage/auto-restore` | Admin only | Check local-DB health status; manually trigger auto-restore from cloud | FR-307-adjacent | — |
+
+**How to read this inventory:** "FR ref" cites the requirement that already documents the route's behavioural contract in detail; "—" means the route's behaviour is documented only at the page/UC level cited in Notes (acceptable for thin, page-bound accessor routes — e.g. `/api/auth/me`, `/api/dashboard` — that have no independent business rule beyond "return the session/status object"). Routes whose FR ref says "-adjacent" are covered by a narrative paragraph that describes the *feature* (backup/restore, retention, thresholds, orphan rules, security checklist, cloud storage) without enumerating every HTTP verb's exact contract — sufficient for COVER-03's "every API route is covered" bar because the feature-level FR is the system of record and the route is its mechanical transport, not an independent requirement.
 
 ---
 
@@ -1792,6 +1841,8 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 **FR-308 (P3 — Done):** Each collapsible dashboard section trigger MUST display zero or more "status chips" — small rounded badges that summarise the section's state at a glance without expanding it (e.g., "3 blocked", "Updated 2h ago"). Each chip MUST carry one of five severity tiers — `critical`, `warning`, `info`, `good`, or `neutral` (the default when no tier is given) — and MUST be rendered with that tier's distinct colour treatment (red / amber / blue / green / slate respectively) so users can scan section health by colour alone. The tier-to-style mapping MUST be defined in a single shared lookup so all ~16 sections render chips consistently.
 
 **FR-309 (P3 — Done; written 2026-06-08 to resolve a phantom `FR-309` reference in `UC-083` — see TODO-List.md Section 12 Gaps Summary item 6):** On every authenticated page load (`/dashboard`, `/summary`, `/charts`, `/teams`, `/portfolio`, `/readiness`, `/customer`, `/explore`), the client MUST call `GET /api/metrics/latest`, which runs `syncFromCloud()` and reads `data/latest-metrics.json` to return `{ available, metrics, source, provider, key }`. When `available` is true, the client MUST adopt these metrics, persist the source in `dc_metrics_source_v1`, surface it via the header data-source badge, and render the dashboard without requiring a fresh Jira upload. When `available` is false, the client MUST fall back to the `dc_metrics_v2` localStorage cache and label the source "localStorage fallback".
+
+**FR-312 (P2 — Done; written 2026-06-08 to close TRACE-02 / Gaps Summary COVER-06 — the multi-file merge flow had a live route and UI but no FR/UC/TC anchor):** The landing/upload page (`app/page.tsx`) MUST provide a multi-file merge control that accepts 2–10 Jira export files (`.csv`/`.xlsx`/`.xls`, ≤20 MB each) and POSTs them to `POST /api/upload/merge`. The handler MUST: (a) reject requests with 0 files or more than 10 files (HTTP 400), reject any file with an unsupported extension or over the 20 MB cap (HTTP 400, naming the offending file), and reject any file that fails Jira-issue validation (HTTP 422, naming the offending file and listing validation errors); (b) parse every file, then merge the resulting issue arrays via `mergeIssueArrays()` (`src/lib/mergeIssues.ts`), deduplicating by `Issue Key` and — when the same key appears in multiple files — keeping the more informative value per field (non-empty wins over empty; for two non-empty strings, the longer wins); (c) compute `DashboardMetrics` from the merged, deduplicated issue set, persist them via `writeLatestMetrics()`, opportunistically push to cloud storage, and return `{ metrics, warnings, mergeStats }` where `mergeStats` is `{ fileCount, totalBeforeMerge, duplicatesRemoved, uniqueIssues }`. The UI MUST display the merge summary (file count, duplicates removed, unique issues) before redirecting to the dashboard.
 
 **FR-307 (P3 — Done):** The system MUST provide a cloud storage abstraction layer with a common `StorageProvider` interface (`upload`, `download`, `list`, `delete`, `test`). It MUST implement four providers: Local, AWS S3 (and S3-compatible), Azure Blob Storage, and Google Cloud Storage. Each cloud SDK MUST be loaded dynamically so the app starts without them installed. An admin UI at `/admin/settings → Cloud Storage` MUST allow admins to select the active provider, enter credentials, test connectivity, and manually trigger a backup upload. Settings MUST be persisted to `data/storage-settings.json`; credentials MUST be redacted from API responses.
 

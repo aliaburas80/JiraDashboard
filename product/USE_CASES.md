@@ -2760,3 +2760,28 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 **Related FR:** FR-306, BR-110
 
 ---
+
+### UC-094 — User Merges Multiple Jira Exports into One Unified Report
+
+*(Written 2026-06-08 to close TRACE-02 / Gaps Summary COVER-06 — the multi-file merge control had a live route, UI, and pure merge function with zero FR/UC/TC anchor.)*
+
+**Actor:** Engineering Manager, Scrum Master, or Product Owner who exports overlapping date ranges or per-team Jira backlogs separately
+**Trigger:** User has 2–10 separate Jira export files (e.g., one per team or sprint window) covering overlapping issues and wants one combined dashboard rather than uploading and reviewing them one at a time
+**Main Flow:**
+1. User opens the landing/upload page and expands the "Combine multiple exports" panel
+2. User adds 2–10 `.csv`/`.xlsx`/`.xls` files (≤20 MB each) via the file picker or drag-and-drop; the panel shows the running file count
+3. User clicks "Merge & Analyse" — the browser POSTs all files as `multipart/form-data` to `POST /api/upload/merge`
+4. System parses and validates every file individually (same parsing/validation pipeline as a single upload — FR-001/FR-003/FR-001-adjacent validation rules)
+5. System merges the parsed issue arrays via `mergeIssueArrays()`: issues are deduplicated by `Issue Key`, and when the same key appears in more than one file, each field keeps whichever file's value is more complete (a non-empty value wins over an empty one; between two non-empty strings, the longer one wins)
+6. System computes `DashboardMetrics` from the deduplicated, merged issue set, persists them via `writeLatestMetrics()`, and opportunistically pushes the result to cloud storage
+7. System returns `{ metrics, warnings, mergeStats: { fileCount, totalBeforeMerge, duplicatesRemoved, uniqueIssues } }`
+8. User sees a brief merge summary ("4 files combined — 37 duplicates removed, 412 unique issues") before the page redirects to the dashboard rendered from the unified metrics
+**Alternate Flow A — Validation/format failure on one file:**
+4a. One file is the wrong extension, exceeds 20 MB, or fails Jira-issue validation → the system returns HTTP 400/422 naming that specific file and the reason; no merge or metrics computation occurs and the other files' data is discarded (all-or-nothing — the user re-selects and retries)
+**Alternate Flow B — File-count limits:**
+2a. User selects fewer than 2 files → the "Merge & Analyse" action is disabled with a "Add at least 2 files to merge" hint
+2b. User selects more than 10 files → the system rejects the request with HTTP 400 ("Maximum 10 files allowed")
+**Postcondition:** A single unified `DashboardMetrics` object — built from every unique issue across all uploaded files, with cross-file duplicates resolved field-by-field toward the most complete data — is persisted as the latest metrics and rendered on the dashboard, without the user needing to manually reconcile overlapping exports
+**Related FR:** FR-312, FR-001
+
+---
