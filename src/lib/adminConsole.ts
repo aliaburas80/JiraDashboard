@@ -7,10 +7,11 @@ import type { HealthThresholds } from '@/types/thresholds';
 import type { OrphanRules } from '@/types/orphanRules';
 import type { AdminConsoleStat } from '@/components/admin/AdminConsoleLayout';
 
-export type Tab = 'users' | 'retention' | 'thresholds' | 'orphan' | 'backup' | 'cloud' | 'browser';
+export type Tab = 'users' | 'requests' | 'retention' | 'thresholds' | 'orphan' | 'backup' | 'cloud' | 'browser';
 
 export const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; description: string }> = [
   { id: 'users',      label: 'User Management',     icon: '👥', description: 'Accounts, roles, access state' },
+  { id: 'requests',   label: 'Member Requests',     icon: '📬', description: 'Pending add-member requests' },
   { id: 'retention',  label: 'Privacy & Retention', icon: '🔒', description: 'Data windows and cleanup' },
   { id: 'thresholds', label: 'Health Thresholds',   icon: '⚡', description: 'Delivery health rules' },
   { id: 'orphan',     label: 'Orphan Rules',        icon: '👻', description: 'Hierarchy detection rules' },
@@ -90,6 +91,13 @@ export function buildSettingsStats({
         { icon: '✓', label: 'Backup State', value: latestBackup, note: backupFiles?.length ? 'Backup available' : 'No backup found' },
         { icon: '↥', label: 'Local Bundles', value: String(backupFiles?.length ?? 0), note: 'Known backup files' },
         { icon: '▣', label: 'Recovery', value: 'Ready', note: 'Test provider first' },
+      ];
+    case 'requests':
+      return [
+        { icon: '📬', label: 'Requests', value: 'Inbox', note: 'Pending add-member requests', tone: 'bg-amber-50 text-amber-700' },
+        { icon: '✓', label: 'Accept', value: 'Creates account', note: 'With first-login password' },
+        { icon: '✕', label: 'Reject', value: 'Notifies requester', note: 'Optional decision note' },
+        { icon: '🔒', label: 'Self-approval', value: 'Blocked', note: 'Admin cannot approve own' },
       ];
     case 'browser':
       return [

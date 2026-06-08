@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import RequestAddMemberModal from '@/components/admin/RequestAddMemberModal';
 import { type Member, initialsFor, contactEmailFor, matchesMemberQuery } from '@/lib/members';
 
 export default function MembersPage() {
@@ -13,6 +14,15 @@ export default function MembersPage() {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [myRole, setMyRole] = useState<string | null>(null);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setMyRole(data?.role ?? null))
+      .catch(() => setMyRole(null));
+  }, []);
 
   useEffect(() => {
     fetch('/api/members')
@@ -52,6 +62,15 @@ export default function MembersPage() {
               <p className="text-xs font-black uppercase text-slate-500">Roles</p>
               <p className="text-2xl font-black text-slate-950">{roleCount}</p>
             </div>
+            {myRole && myRole !== 'admin' && (
+              <button
+                type="button"
+                onClick={() => setShowRequestModal(true)}
+                className="col-span-2 sm:col-span-1 flex items-center gap-2 rounded-[14px] border border-blue-200 bg-blue-50 px-5 py-3 text-sm font-bold text-blue-700 hover:bg-blue-100 transition-colors shadow-[0_3px_12px_rgba(15,23,42,0.04)]"
+              >
+                <span className="text-base">＋</span> Request add member
+              </button>
+            )}
           </div>
         </section>
 
@@ -181,6 +200,12 @@ export default function MembersPage() {
           </div>
         )}
       </main>
+
+      {showRequestModal && (
+        <RequestAddMemberModal
+          onClose={() => setShowRequestModal(false)}
+        />
+      )}
     </AppShell>
   );
 }
