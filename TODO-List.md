@@ -41,13 +41,15 @@ Do not expose source code, algorithms, diagrams, patent language, credentials, p
 
 ## 1. Priority Model
 
+> **Sequencing policy (updated 2026-06-08 by explicit user direction):** P0 work no longer strictly *blocks* P1–P4 work. Going forward, run P0 in **parallel and in balance** with P1/P2/P3/P4 — pick up whichever item best fits the moment rather than gating everything behind P0 closure first. P0 still carries the highest *priority weight* (when choosing between competing items, P0 wins), but it is no longer a hard sequencing gate that forces P1–P4 to sit idle. (Historical context: `TRACE-01`/`TRACE-02` — the two items that most justified strict gating — are both ✅ Done as of 2026-06-08, so the original blocking rationale has also largely resolved itself.)
+
 | Priority | Meaning | Rule |
 |---|---|---|
-| P0 | Critical release-control gate | Blocks everything else. Must be completed before new feature coding. |
-| P1 | Current product hardening / UX / internal architecture | Start only after P0 gates are closed. |
-| P2 | Product intelligence / forecasting / retrospective / architecture planning | Valuable, but only after P1 items are stable or explicitly approved. |
-| P3 | Future full external integrations | Do not start until P2 design is approved. |
-| P4 | Future communication/governance layer | Planning only unless explicitly approved. |
+| P0 | Critical release-control gate | Highest priority weight — wins when choosing between competing items — but no longer a hard block on P1–P4 (balanced/parallel sequencing per 2026-06-08 direction). |
+| P1 | Current product hardening / UX / internal architecture | May be picked up in parallel with P0; weigh against other open items rather than waiting for a full P0 close-out. |
+| P2 | Product intelligence / forecasting / retrospective / architecture planning | May be picked up in parallel with P0/P1 when it's the best-fitting next item; still generally follows P1 stability or explicit approval as a design consideration, not a hard gate. |
+| P3 | Future full external integrations | May be planned/started in parallel once P2 design direction exists; "do not start until P2 design is approved" is now a design dependency, not a sequencing block. |
+| P4 | Future communication/governance layer | Planning may proceed in parallel with other priorities; implementation still needs explicit approval. |
 
 ---
 
@@ -70,7 +72,7 @@ Do not expose source code, algorithms, diagrams, patent language, credentials, p
 
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
-| ABS-01 | Do not start new feature coding until P0 reconciliation is complete | P0 | 🔍 Needs verification | P0 is not fully complete until documentation alignment, traceability, product-folder impact review, test count normalization, and release-candidate gate are all verified. |
+| ABS-01 | ~~Do not start new feature coding until P0 reconciliation is complete~~ Balance P0 work in parallel with P1–P4 (superseded 2026-06-08) | P0 | ✅ Superseded by explicit user direction | Original hard-gate rule replaced 2026-06-08: P0 (documentation alignment, traceability, product-folder impact review, test count normalization, release-candidate gate) now runs in **parallel and balance** with P1–P4 rather than blocking it outright — see Section 1 Priority Model sequencing-policy note. P0 retains the highest priority *weight* when choosing between competing items. |
 | ABS-02 | Treat documentation as part of Definition of Done | P0 | ✅ Done / Permanent | Code cannot move ahead of product documentation. |
 | ABS-03 | Keep export-first / zero-credential positioning strong | P0 | ✅ Permanent | Jira API and cloud integrations are optional/future. Core value remains upload/export-based private intelligence. |
 | ABS-04 | Do not implement P3/P4 features without explicit approval | P0 | ✅ Permanent | Jira write-back, full Jira API, browser push, email/Slack/Teams channels, maintenance mode, PostgreSQL migration, and full CI/CD automation are controlled future work. |
@@ -287,7 +289,7 @@ Scope of this change: closed the final TRACE-01 gap cluster — the "UX narrativ
 | DAILY-02 | Include current date, branch, version, code status | P0 | ✅ Permanent | Must reflect actual repository state. |
 | DAILY-03 | Include documentation, TODO, release-notes, lint/test/build status | P0 | ✅ Permanent | Must show what is current and what is behind. |
 | DAILY-04 | Include what changed yesterday and what remains behind | P0 | ✅ Permanent | Any behind document becomes P0 immediately. |
-| DAILY-05 | Include today’s P0 and what must not be started yet | P0 | ✅ Permanent | Prevents jumping into features before gates close. |
+| DAILY-05 | Include today's P0 status alongside the P1–P4 work planned for the day | P0 | ✅ Permanent | Updated 2026-06-08: P0 no longer gates P1–P4 — the daily prompt should show P0 status *and* the balanced/parallel P1–P4 work for the day side by side, not frame P0 as something to "wait out" before features can begin. |
 | DAILY-06 | Include updated execution order and Definition of Done | P0 | ✅ Permanent | Every day begins from current reality. |
 
 ---
@@ -1050,8 +1052,8 @@ Follow this order exactly.
 | 16 | Update Release Notes with verification result | P0 | 🔍 Needs verification |
 | 17 | Update TODO with final status | P0 | ✅ Done — this file created |
 | 18 | Decide if project can be marked Release Candidate | P0 | ⚠️ Conflict / Needs verification |
-| 19 | Push only if no product file is behind code | P0 | 🚫 Blocked until matrix is done |
-| 20 | If P0 is clean, implement Backend Integration Gateway | P1 | ❌ Not started |
+| 19 | Push only if no product file is behind code | P0 | 🔍 Needs verification | Updated 2026-06-08: re-framed from a hard "Blocked until matrix is done" to a per-push verification check (does this specific push leave any product file behind code?), consistent with the balanced/parallel P0↔P1-P4 sequencing policy — see Section 1. |
+| 20 | Implement Backend Integration Gateway in balance with ongoing P0 work | P1 | ❌ Not started |
 | 21 | Add/update tests for Backend Gateway | P1 | ❌ Not started |
 | 22 | Review every file inside `product/` again | P0/P1 | ❌ Not started |
 | 23 | Update all docs for Backend Gateway | P1 | ❌ Not started |
@@ -1115,7 +1117,7 @@ Follow this order exactly.
 | NEXT-03 | Produce actual product documentation impact matrix | P0 | ❌ Not started | The template exists, but the filled matrix must be produced before push. |
 | NEXT-04 | Verify storage docs and open storage gates | P0 | 🔍 Needs verification | JIRA-GATE-03/04/05/07 remain open and must be considered before Jira integration. |
 | NEXT-05 | Re-run lint/test/build and update normalized test count | P0 | ✅ Verified 2026-06-07 | Test count is now 492 tests / 52 suites (was 469/48 — 23 new tests across 4 new files: `members.test.ts`, `middleware.test.ts`, `changePassword.test.ts`, `adminSettingsConsole.test.ts`, plus 2 added to `adminUsers.test.ts`). Lint clean (pre-existing warnings only); build compiles successfully. |
-| NEXT-06 | Then begin HARD-01 Backend Integration Gateway if P0 is clean | P1 | 🚫 Blocked | Depends on P0 closure. |
+| NEXT-06 | Begin HARD-01 Backend Integration Gateway in balance with remaining P0 items | P1 | ❌ Not started | Updated 2026-06-08: no longer gated on P0 closure — may be picked up in parallel per the balanced/parallel sequencing policy (Section 1). `NEXT-03` (doc impact matrix) remains the one open P0 item but does not block this. |
 
 ---
 
