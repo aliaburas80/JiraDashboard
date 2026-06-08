@@ -5,6 +5,27 @@
 
 ---
 
+## v4.4 — USERREQ-07–14, USERREQ-28: User Add-Member Request Workflow — Backend Foundation (2026-06-09, P1)
+
+### Closed USERREQ-07–14 and USERREQ-28 (TODO-List.md Section 15) — built the Prisma schema, five API routes, and 14 automated tests for the User Add-Member Request Workflow
+
+- **Scope:** The `UserAddRequest` approval pipeline — the backend data model + API surface that lets any logged-in user formally submit a request to add a new colleague, and allows admins to accept or reject that request in an audited, notification-aware way. This is the backend foundation only; the admin queue UI page (`/admin/settings → User Requests`) and the requester UX widget are P1 follow-up items (USERREQ-16–27).
+- **Prisma schema additions** (`prisma/schema.prisma`, USERREQ-07/09 → FR-314/FR-315):
+  - New `UserAddRequest` model: `id`, `requestedName`, `requestedEmail`, `requestedRole`, `reason`, `teamOrProject?`, `notes?`, `status` (default `"pending"`), `requestedByUserId` → `User`, `adminDecisionById?`, `adminDecisionAt?`, `adminDecisionNote?`, `createdUserId?`, `createdAt`, `updatedAt`.
+  - New `Notification` model: `id`, `recipientUserId` → `User`, `type`, `title`, `message`, `relatedEntityType?`, `relatedEntityId?`, `readAt?`, `createdAt`.
+  - `User` model gains two new back-reference relations: `userAddRequests UserAddRequest[] @relation("UserAddRequestRequester")` and `notifications Notification[] @relation("UserNotifications")`.
+- **New API routes** (all use the existing `getIronSession`/`SESSION_OPTIONS`/`prisma` patterns matching `app/api/admin/users/route.ts`):
+  - `POST /api/user-add-requests` (FR-316): authenticated; validates name/email/role/reason; guards duplicate user email (409) and duplicate pending request (409); creates `UserAddRequest` with `status: "pending"`; writes `user_add_request_submit` AuditEvent (non-blocking).
+  - `GET /api/user-add-requests/mine` (FR-317): authenticated; returns the caller's own requests filtered by `requestedByUserId`, max 50 desc.
+  - `GET /api/admin/user-add-requests` (FR-318): admin-only; returns all requests with `requestedBy` user info; optional `?status=` filter; max 200 desc.
+  - `PATCH /api/admin/user-add-requests/[id]/accept` (FR-319): admin-only; validates `status === "pending"` (409 otherwise); re-checks email availability (409 if taken); creates user with `mustChangePassword: true` + bcrypt-hashed temp password; marks request accepted with decision metadata; creates `Notification` for requester; writes audit event; returns `{ ok: true, createdUser }`.
+  - `PATCH /api/admin/user-add-requests/[id]/reject` (FR-319): admin-only; validates `status === "pending"` (409 otherwise); marks rejected; creates `Notification` for requester; writes audit event; returns `{ ok: true }`.
+- **Product docs added:** `SRS.md` Addendum B (FR-314–FR-319) + §8.1 inventory updated with 5 new routes; `USE_CASES.md` UC-095/UC-096; `TEST_CASES.md` §9.50 (TC-REQ-01–14); `RELEASE_NOTES.md` (this entry); `TODO-List.md` (USERREQ-07–14 and USERREQ-28 flipped to ✅ Done with impact matrix).
+- **Test suite grew from 550 tests / 61 suites → 564 tests / 62 suites** — new `userAddRequests.test.ts` (14 tests: TC-REQ-01–14) covering the full requester + admin API surface with mocked Prisma and session.
+- `npm run lint` and `npm run build` remain clean.
+
+---
+
 ## v4.3 — HARD-01 Closure: Backend Integration Gateway Foundation (2026-06-08, P1 — controlled chokepoint for all future external calls)
 
 ### Closed `HARD-01`/`NEXT-06` (TODO-List.md Section 14, `GW-01`–`GW-25`) — built the routing/security/retry/audit foundation that every future external integration (Jira live API, cloud storage over raw HTTP, email, Slack, Teams, push notifications) MUST route through

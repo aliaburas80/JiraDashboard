@@ -5,8 +5,8 @@
 | Field | Detail |
 |---|---|
 | **Document Title** | Delivery Clarity — Use Cases |
-| **Version** | 4.2.2 |
-| **Date** | 2026-06-07 |
+| **Version** | 4.4.0 |
+| **Date** | 2026-06-09 |
 | **Author** | Ali Abu Ras |
 | **Status** | Active |
 | **Classification** | Internal |
@@ -20,6 +20,7 @@
 | 1.0 | 2026-05-30 | Ali Abu Ras | Final review — approved as baseline |
 | 4.0 | 2026-06-03 | Ali Abu Ras | v4 addendum: UC-051–059 — data quality, confidence, snapshots, thresholds, clear data, section switcher, calculation reference |
 | 4.2.2 | 2026-06-07 | Ali Abu Ras | P0 reconciliation — scope updated from v1.0 baseline language to current v4.2.x reality: authentication, role-based access, admin user management, snapshots/trends, cloud-backed metrics, Clear Local Data, Dashboard Section Switcher, Calculation Reference, and System Tour are now in scope and implemented |
+| 4.4.0 | 2026-06-09 | Ali Abu Ras | P1 — User Add-Member Request Workflow added to scope (implemented): UC-095 (Submit Request), UC-096 (Admin Accept/Reject); related FR-314–FR-319; USERREQ-10–14 closed |
 
 ---
 
@@ -56,7 +57,8 @@ Out of scope for this document (consistent with BRD Section 6 roadmap classifica
 - Jira write-back / ticket creation (P3 roadmap)
 - Scheduled email or Slack report delivery (P4 roadmap)
 - In-app Notification Center, Maintenance Mode, browser push notifications (P4 roadmap)
-- User Add-Member Request Workflow, Role-Based Delivery Coaching Insights, Retrospective Upload/Template/In-App Form, and Forecasting & Delivery Adjustment Report (P1/P2 roadmap — not yet implemented; see TODO-List.md)
+- Role-Based Delivery Coaching Insights, Retrospective Upload/Template/In-App Form, and Forecasting & Delivery Adjustment Report (P1/P2 roadmap — not yet implemented; see TODO-List.md)
+- ~~User Add-Member Request Workflow~~ — **now in scope and implemented** (v4.4, 2026-06-09): `UC-095`/`UC-096`, `FR-314`–`FR-319`; see Addendum B in `product/SRS.md`
 
 > **Backend Integration Gateway (FR-313 — foundation implemented 2026-06-08):** the routing/policy/retry/audit chokepoint that future external integrations (Jira, cloud storage, email, Slack, Teams, push) will route through is now built (`src/server/gateway/`), but it has **no end-user-facing UI or use case** — it is a server-only foundation with zero live providers wired up. There is intentionally no UC for it here (consistent with this document's "no UC for vaporware" principle); see `product/DEVELOPER_GUIDE.md` § "Backend Integration Gateway" for its architecture and `FR-313` in `product/SRS.md` for its behavioural contract.
 
@@ -2785,5 +2787,77 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 2b. User selects more than 10 files → the system rejects the request with HTTP 400 ("Maximum 10 files allowed")
 **Postcondition:** A single unified `DashboardMetrics` object — built from every unique issue across all uploaded files, with cross-file duplicates resolved field-by-field toward the most complete data — is persisted as the latest metrics and rendered on the dashboard, without the user needing to manually reconcile overlapping exports
 **Related FR:** FR-312, FR-001
+
+---
+
+## v4.4 — User Add-Member Request Workflow Use Cases (2026-06-09, P1)
+
+*(Added to close USERREQ-10–14, REC-12 from TODO-List.md. Related FR: FR-314–FR-319.)*
+
+### UC-095 — Submit a User Add-Member Request
+
+**Actor:** Any authenticated user (any role)  
+**Trigger:** User wants a new colleague to be added to Delivery Clarity but lacks admin rights to create accounts directly  
+**Precondition:** User is logged in; the colleague does not yet have a Delivery Clarity account  
+**Main Flow:**
+1. User clicks "Request Add Member" in the team area, member directory, or profile/header quick action
+2. A request modal opens with fields: Full Name (required), Email (required), Requested Role (required), Business Reason (required), Team/Project (optional), Notes (optional)
+3. User fills in the form; system performs real-time client-side validation (non-empty required fields, valid email format)
+4. User submits; browser POSTs to `POST /api/user-add-requests`
+5. System checks: no existing user account for that email (HTTP 409 "An account with this email already exists."); no existing pending request for that email (HTTP 409 "A pending request for this email already exists.")
+6. System creates the `UserAddRequest` with `status: "pending"` and writes a `user_add_request_submit` audit event
+7. System returns HTTP 201 with the new request summary; modal closes and user sees a success notice: "Request submitted — an admin will review it shortly"
+8. User later navigates to their request history (via `GET /api/user-add-requests/mine`) and can see the request status as `pending`, `accepted`, or `rejected`
+
+**Alternate Flow A — Role requires high-privilege confirmation:**  
+2a. User selects `admin` or `c_level` as the requested role → an inline warning appears ("This role grants elevated system access — the admin will review carefully") before submission
+
+**Alternate Flow B — Duplicate email check:**  
+5a. The `requestedEmail` already belongs to a registered user → HTTP 409 "An account with this email already exists."; user is asked to verify the email or choose a different address
+
+**Alternate Flow C — Pending request already exists:**  
+5b. A pending `UserAddRequest` for this email already exists → HTTP 409 "A pending request for this email already exists."; user sees this and may wait for the admin's decision or contact the admin directly
+
+**Exception Flow — Unauthenticated:**  
+0a. If the session is not active, `POST /api/user-add-requests` returns 401 and the modal shows a session-expired notice
+
+**Postcondition:** A `UserAddRequest` record in `pending` status exists in the database, awaiting admin review; the requester can track it from their own requests list  
+**Related FR:** FR-316, FR-317
+
+---
+
+### UC-096 — Admin Reviews and Acts on User Add-Member Requests
+
+**Actor:** Admin user  
+**Trigger:** Admin receives an in-app notification or navigates to the user-request queue in `/admin/settings → User Requests`  
+**Precondition:** One or more `UserAddRequest` records with `status: "pending"` exist in the database  
+**Main Flow:**
+1. Admin navigates to `/admin/settings` → "User Requests" tab; `GET /api/admin/user-add-requests` returns all requests with requester name/email and requested role, ordered newest first
+2. Admin reviews the pending request: requested name, email, role, business reason, requester, date submitted, and any duplicate/high-privilege warning flags
+3. **Accept path:** Admin clicks "Accept" (optionally adds a decision note) → `PATCH /api/admin/user-add-requests/:id/accept`:
+   - System validates `status === "pending"` and the email is still available
+   - System creates the `User` account with `mustChangePassword: true` and a securely-generated temporary password (bcrypt 12 rounds)
+   - System marks the request `accepted`, records `adminDecisionById`/`adminDecisionAt`/`adminDecisionNote`/`createdUserId`
+   - System creates a `Notification` for the requester: "Your request to add [email] as [role] has been approved"
+   - System writes a `user_add_request_accept` audit event
+   - Response: HTTP 200 `{ ok: true, createdUser: { id, name, email, role, mustChangePassword: true } }`
+4. **Reject path:** Admin clicks "Reject" (optionally provides a reason) → `PATCH /api/admin/user-add-requests/:id/reject`:
+   - System validates `status === "pending"`
+   - System marks the request `rejected`, records decision metadata
+   - System creates a `Notification` for the requester: "Your request was not approved" with the optional reason note
+   - System writes a `user_add_request_reject` audit event
+   - Response: HTTP 200 `{ ok: true }`
+
+**Alternate Flow A — Request already decided:**  
+3a./4a. `status !== "pending"` → HTTP 409 "Request is already accepted/rejected and cannot be accepted/rejected."; no double-processing occurs
+
+**Alternate Flow B — Email taken at decision time:**  
+3b. The `requestedEmail` was registered by another admin in the window between submission and acceptance → HTTP 409 "An account with this email already exists."; admin must reject or coordinate manually
+
+**Alternate Flow C — Non-admin access attempt:**  
+1a. `session.role !== "admin"` → HTTP 403 "Admin access required."; the User Requests tab is not reachable from the UI
+
+**Postcondition:** The request is either accepted (a new user account exists, the requester is notified, both events are audited) or rejected (the requester is notified, the event is audited); `status` is now immutable for normal flows  
+**Related FR:** FR-318, FR-319, FR-235B, FR-235D
 
 ---

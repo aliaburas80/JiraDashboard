@@ -7,8 +7,8 @@
 | Field | Value |
 |---|---|
 | **Document Title** | Software Requirements Specification — Delivery Clarity |
-| **Version** | 4.2.2 |
-| **Date** | 2026-06-07 |
+| **Version** | 4.4.0 |
+| **Date** | 2026-06-09 |
 | **Author** | Ali Abu Ras (aburasali80@gmail.com) |
 | **Status** | Active — Release Candidate (lint, tests, and build verified 2026-06-07) |
 | **Repository** | https://github.com/aliaburas80/JiraDashboard |
@@ -28,6 +28,7 @@
 | 4.0 | 2026-06-03 | Ali Abu Ras | v4 Quality & Trust Layer; see Section 4.12–4.15 and Addendum A |
 | 4.2.1 | 2026-06-06 | Ali Abu Ras | Cloud restore hardening, saved cloud-credential persistence |
 | 4.2.2 | 2026-06-07 | Ali Abu Ras | P0 reconciliation pass — P1.1/P1.2/P1.3 marked Done/Verified, storage status reconciled as Implemented, test count normalised to 469 tests / 48 suites, lint/build failures fixed |
+| 4.4.0 | 2026-06-09 | Ali Abu Ras | P1 — User Add-Member Request Workflow: FR-314–FR-319 (Prisma models + 5 API routes), Addendum B, §8.1 routes updated, TC-REQ-01–14 automated |
 
 ---
 
@@ -1334,6 +1335,12 @@ This table is the consolidated inventory of all 36 live `app/api/**/route.ts` ro
 | GET | `/api/admin/storage/download` | Admin only | Download a backup object by `?key=`; `?restore=true` immediately restores it | FR-298/FR-307-adjacent | — |
 | GET, POST | `/api/admin/storage/auto-restore` | Admin only | Check local-DB health status; manually trigger auto-restore from cloud | FR-307-adjacent | — |
 
+| POST | `/api/user-add-requests` | Authenticated | Submit a request to add a new team member (name, email, role, reason); guards duplicate email and duplicate pending request | FR-316 | UC-095 |
+| GET | `/api/user-add-requests/mine` | Authenticated | Return the calling user's own submitted add-member requests (max 50, desc) | FR-317 | UC-095 |
+| GET | `/api/admin/user-add-requests` | Admin only | List all user add requests with requester info; optional `?status=` filter | FR-318 | UC-096 |
+| PATCH | `/api/admin/user-add-requests/[id]/accept` | Admin only | Accept a pending request: create user with `mustChangePassword=true`, notify requester, audit | FR-319 | UC-096 |
+| PATCH | `/api/admin/user-add-requests/[id]/reject` | Admin only | Reject a pending request: notify requester with optional reason note, audit | FR-319 | UC-096 |
+
 *Note on FR-313 (Backend Integration Gateway):* `src/server/gateway/` is an internal server-only module with no dedicated API route — it has nothing to list in this inventory because no provider is wired up yet (it exists for future routes/integrations to call through, not as an endpoint itself). It is documented in full in FR-313 and `product/DEVELOPER_GUIDE.md` § "Backend Integration Gateway".
 
 **How to read this inventory:** "FR ref" cites the requirement that already documents the route's behavioural contract in detail; "—" means the route's behaviour is documented only at the page/UC level cited in Notes (acceptable for thin, page-bound accessor routes — e.g. `/api/auth/me`, `/api/dashboard` — that have no independent business rule beyond "return the session/status object"). Routes whose FR ref says "-adjacent" are covered by a narrative paragraph that describes the *feature* (backup/restore, retention, thresholds, orphan rules, security checklist, cloud storage) without enumerating every HTTP verb's exact contract — sufficient for COVER-03's "every API route is covered" bar because the feature-level FR is the system of record and the route is its mechanical transport, not an independent requirement.
@@ -1883,3 +1890,27 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 **FR-291 (P2 — Done):** On every successful upload the system MUST compute a Release Confidence Score (0–100) using the formula: completion rate × 0.55 + (1 − blocked/total) × 25 + (1 − critical/total) × 12 + max(0, 8 − defects × 2). The score MUST be persisted in `ImportLog.metadataJson` as `releaseConfidenceScore` and returned by `GET /api/trends`. The `/trends` page MUST display it as a trend chart, a summary stat card, and a column in the upload log table.
 
 **FR-290 (P2 — Done):** The `/explore` Work Item Explorer MUST provide an Export dropdown button once a graph is loaded. It MUST offer two formats: (1) Excel (.xlsx) — 5-sheet workbook: Summary (focus stats + insights + largest branch), All Issues (all connected nodes + orphans), Risk Items (blocked/critical/risk-path only), Orphans, and Insights; (2) CSV — flat table of all nodes. Files MUST be named `explorer-{key}-{date}.xlsx / .csv`.
+
+---
+
+## Addendum B — v4.4 User Add-Member Request Workflow (2026-06-09, P1)
+
+*(Added to close USERREQ-07–14, USERREQ-28 from TODO-List.md Section 15.)*
+
+### B.1 — Prisma Schema: UserAddRequest and Notification Models
+
+**FR-314 (P1 — Done, 2026-06-09):** The Prisma schema MUST include a `UserAddRequest` model with the following fields: `id` (cuid PK), `requestedName` (String), `requestedEmail` (String), `requestedRole` (String — validated against `AppRole`), `reason` (String), `teamOrProject` (String?), `notes` (String?), `status` (String, default `"pending"` — one of: `"pending"`, `"accepted"`, `"rejected"`, `"cancelled"`, `"expired"`), `requestedByUserId` (String FK → User), `adminDecisionById` (String?), `adminDecisionAt` (DateTime?), `adminDecisionNote` (String?), `createdUserId` (String?), `createdAt` (DateTime, now()), `updatedAt` (DateTime, @updatedAt). The User model MUST carry a `userAddRequests UserAddRequest[] @relation("UserAddRequestRequester")` back-reference.
+
+**FR-315 (P1 — Done, 2026-06-09):** The Prisma schema MUST include a `Notification` model with the following fields: `id` (cuid PK), `recipientUserId` (String FK → User), `type` (String — e.g. `"user_add_request_accepted"`, `"user_add_request_rejected"`), `title` (String), `message` (String), `relatedEntityType` (String?), `relatedEntityId` (String?), `readAt` (DateTime?), `createdAt` (DateTime, now()). The User model MUST carry a `notifications Notification[] @relation("UserNotifications")` back-reference.
+
+### B.2 — Requester API
+
+**FR-316 (P1 — Done, 2026-06-09):** `POST /api/user-add-requests` MUST be authenticated (HTTP 401 for unauthenticated requests). The request body MUST include `requestedName`, `requestedEmail`, `requestedRole`, and `reason` (all required, HTTP 400 if absent). The system MUST: (a) validate that `requestedRole` is a member of `ASSIGNABLE_ROLES`; (b) check that no `User` record already exists for the `requestedEmail` (HTTP 409 "An account with this email already exists."); (c) check that no pending `UserAddRequest` already exists for the `requestedEmail` (HTTP 409 "A pending request for this email already exists."); then (d) create the `UserAddRequest` with `status: "pending"` and `requestedByUserId: session.userId`. On success, return HTTP 201 `{ ok: true, request: { id, requestedName, requestedEmail, requestedRole, reason, status, createdAt } }`. MUST write a `user_add_request_submit` `AuditEvent` on success (non-blocking — never fails the request on audit write error).
+
+**FR-317 (P1 — Done, 2026-06-09):** `GET /api/user-add-requests/mine` MUST be authenticated (HTTP 401 for unauthenticated). Return the calling user's own `UserAddRequest` records ordered by `createdAt` descending (max 50), each serialised as `{ id, requestedName, requestedEmail, requestedRole, reason, teamOrProject, notes, status, adminDecisionAt, adminDecisionNote, createdAt, updatedAt }`. The endpoint MUST NOT return requests belonging to other users.
+
+### B.3 — Admin API
+
+**FR-318 (P1 — Done, 2026-06-09):** `GET /api/admin/user-add-requests` MUST require `session.role === "admin"` (HTTP 401 not authenticated, HTTP 403 non-admin). Returns all `UserAddRequest` rows, each including the `requestedBy` user's `id`, `name`, `email`, and `role`. Accepts an optional `?status=` query parameter to filter by status. Returns max 200 rows ordered by `createdAt` descending.
+
+**FR-319 (P1 — Done, 2026-06-09):** `PATCH /api/admin/user-add-requests/:id/accept` MUST require admin. The handler MUST: (a) load the `UserAddRequest` by id (HTTP 404 if not found); (b) verify `status === "pending"` (HTTP 409 if not); (c) re-validate the `requestedRole` is a supported `AppRole` (HTTP 400 if stale); (d) check the `requestedEmail` is not already taken by an existing `User` (HTTP 409 if so); (e) create a new `User` with `name`, `email`, `role` from the request and `mustChangePassword: true`, with a securely generated temporary password hashed at ≥12 bcrypt rounds; (f) update the `UserAddRequest` to `status: "accepted"`, setting `adminDecisionById`, `adminDecisionAt`, `adminDecisionNote` (optional), and `createdUserId`; (g) create a `Notification` for the requester (`type: "user_add_request_accepted"`); (h) write a `user_add_request_accept` `AuditEvent` (non-blocking); (i) return HTTP 200 `{ ok: true, createdUser: { id, name, email, role, mustChangePassword: true } }`. `PATCH /api/admin/user-add-requests/:id/reject` follows the same auth/validation pattern except it updates `status: "rejected"`, creates a `user_add_request_rejected` notification with an optional `decisionNote` message, and returns `{ ok: true }` without creating a user.
