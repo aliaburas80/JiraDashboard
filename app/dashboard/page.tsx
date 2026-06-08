@@ -32,6 +32,7 @@ import { DASHBOARD_SECTIONS, OVERVIEW_KEYS, type SectionMode } from '@/lib/dashb
 import SectionNav from '@/components/ui/SectionNav';
 import SaveSnapshotButton from '@/components/dashboard/SaveSnapshotButton';
 import { getInitialViewId, saveViewId, getView, isTierHidden } from '@/lib/dashboardView';
+import { chipClass, type Chip } from '@/lib/dashboardChips';
 import { allowedDashboardViewsForRole, isDashboardViewLockedForRole } from '@/lib/roles';
 import type { ViewId } from '@/types/dashboardView';
 import dynamic from 'next/dynamic';
@@ -188,14 +189,6 @@ function DistributionDonut({ title, rows, labelKey = 'name', valueKey = 'count',
 }
 
 // ─── collapsible section ──────────────────────────────────────────────────────
-interface Chip { label: string; type?: 'good' | 'warning' | 'critical' | 'neutral' | 'info' }
-const CHIP_CLS: Record<string, string> = {
-  good: 'bg-green-50 text-green-700 border border-green-200',
-  warning: 'bg-amber-50 text-amber-700 border border-amber-200',
-  critical: 'bg-red-50 text-red-700 border border-red-200',
-  info: 'bg-blue-50 text-blue-700 border border-blue-200',
-  neutral: 'bg-slate-100 text-slate-600 border border-slate-200',
-};
 function CollapsibleTrigger({ id, icon, title, chips, accent, expanded, onToggle, hidden = false }: {
   id: string; icon: string; title: string; chips: Chip[]; accent: string; expanded: boolean; onToggle: () => void; hidden?: boolean;
 }) {
@@ -214,7 +207,7 @@ function CollapsibleTrigger({ id, icon, title, chips, accent, expanded, onToggle
         <span className="text-base" aria-hidden="true">{icon}</span>
         <span className="text-sm font-black text-slate-800">{title}</span>
         {chips.map((c, i) => (
-          <span key={i} className={cn('text-xs font-semibold rounded-full px-2 py-0.5', CHIP_CLS[c.type ?? 'neutral'])}>{c.label}</span>
+          <span key={i} className={cn('text-xs font-semibold rounded-full px-2 py-0.5', chipClass(c.type))}>{c.label}</span>
         ))}
       </div>
       <span className={cn('text-slate-400 transition-transform duration-200', expanded && 'rotate-180')} aria-hidden="true">▾</span>

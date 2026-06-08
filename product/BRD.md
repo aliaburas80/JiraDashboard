@@ -771,6 +771,8 @@ The following metrics define product success and will be measured at 30, 90, and
 
 **BR-110 (Should — P3 — Done):** Different users prioritise different charts — a Scrum Master needs Sprint Velocity front and centre; a Director needs the Timeline and Label Distribution. Allowing per-user chart customisation (which charts to show, how wide each one is) personalises the analytics view without requiring a separate page or configuration by an admin.
 
+**BR-112 (Should — P3 — Done):** With ~16 collapsible sections on the dashboard, users need to gauge a section's health without opening it — scanning a long page to find the one section that needs attention is slow. Status chips on each section trigger, colour-coded by severity, let users spot what needs attention at a glance and decide which sections to expand first. This is a scanability and time-to-insight requirement.
+
 **BR-109 (Should — P3 — Done):** Different users have different needs from the dashboard. A Scrum Master cares about Sprint and Risks; a Director cares about Readiness and Throughput. Allowing each user to reorder and hide sections puts their most important data first without requiring a separate role-based view to be configured by an admin.
 
 **BR-108 (Should — P3 — Done):** Teams using Delivery Clarity across different departments or brands want the tool to feel like their own. Advanced theme customization — accent colour, border radius, and font size — gives each team/individual a personalised experience without requiring a code change or rebuild.

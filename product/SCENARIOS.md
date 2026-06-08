@@ -1199,3 +1199,70 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Outcome:** Marcus produces one offline-readable artifact that reproduces the dashboard's risk, data-quality, cycle-time, and readiness analysis — turning a live-dashboard walkthrough into a forwardable file.
 
 **Related:** UC-049, UC-089, FR-236, FR-242, FR-243, TC-X-09–TC-X-13b
+
+---
+
+## v4.2.2 — Dashboard Status Chips Scenario (2026-06-08)
+
+### SCN-046 — Scrum Master Triages a Long Dashboard by Chip Colour Alone
+
+**Persona:** Dana, Scrum Master, opening the dashboard at the start of standup with five minutes before the meeting  
+**Context:** Dana's dashboard has 16 collapsible sections, most of them collapsed from her last visit; she needs to know which ones changed overnight without expanding each one.
+
+**Scenario:**
+1. Dana scrolls down the page slowly, reading only the trigger bars — each shows a title plus a row of small rounded chips like "2 critical", "5 actions", "Updated 3h ago".
+2. She immediately spots a red `critical` chip on the "Smart Recommendations" trigger and a red chip reading "3 blocked" on the "Flow & Risk" trigger — both jump out against the otherwise green and slate chips on the other 14 sections.
+3. She clicks the "Flow & Risk" trigger first; it expands in place, the chevron rotates, and she confirms the three blocked items are the ones she needs to raise in standup.
+4. She collapses it again, opens "Smart Recommendations" next, and leaves the remaining sections — all showing only green `good` or slate `neutral` chips — collapsed, trusting the colour signal that nothing there needs her attention this morning.
+
+**Outcome:** Dana triages a 16-section dashboard in under a minute by scanning chip colour alone, opening only the two sections that actually need her attention before standup.
+
+**Related:** UC-090, FR-308, BR-112, TC-CH-01–TC-CH-03
+
+---
+
+---
+
+## v4.1 — Advanced Theme Customization Scenario (2026-06-08)
+
+### SCN-047 — Engineering Manager Personalises the App to Match Her Team's Brand Colour
+
+**Persona:** Sofia, Engineering Manager, whose team uses purple as their internal brand accent across Slack, Confluence, and dashboards  
+**Context:** Sofia spends hours a day in Delivery Clarity and wants the interface to feel like "her" workspace, with her team's colour and a font size comfortable for her external monitor.
+
+**Scenario:**
+1. Sofia clicks the 🎨 palette icon beside the dark-mode toggle in the app header; the Theme Customizer panel opens showing 7 accent-colour swatches, 3 corner-radius options, and 3 text-size options.
+2. She clicks the "Purple" swatch; every primary button, active nav indicator, and accent highlight across the app switches to purple instantly — no page reload.
+3. She selects the "Rounded" radius preset; cards and buttons throughout the dashboard pick up softer corners in the same instant.
+4. She picks "Large" text size for her external monitor; body and label text scale up app-wide.
+5. She clicks outside the panel to close it, refreshes the page, and confirms her purple/rounded/large combination is still applied — the settings persisted to local storage and survived the reload.
+6. The next day she opens the panel again and clicks "Reset"; the app instantly returns to the blue/default/medium baseline.
+
+**Outcome:** Sofia makes Delivery Clarity feel like her team's own tool — in under a minute, with zero admin involvement, and the choice sticks across sessions until she decides to change it again.
+
+**Related:** UC-081, FR-304, BR-108, TC-TC-01–TC-TC-08
+
+---
+
+---
+
+## v4.1 — Advanced Chart Customization Scenario (2026-06-08)
+
+### SCN-048 — Director Reshapes the Charts Page Around the Two Metrics That Matter to the Board
+
+**Persona:** Raj, Director of Engineering, who presents the `/charts` page live in monthly board reviews and only ever references two of the eleven charts  
+**Context:** The default `/charts` layout shows all 11 charts at their registry spans — useful for a generalist, but cluttered for a board presentation that should spotlight Sprint Velocity and the Release Timeline.
+
+**Scenario:**
+1. Raj opens `/charts` ahead of the board meeting and clicks the Chart Customizer control; the panel lists all 11 charts with visibility toggles, span controls (1/3, 2/3, Full width), and ▲▼ reorder arrows.
+2. He toggles off the eight charts he never references — Label Distribution, Capacity, Quarters, and the rest vanish from the page instantly.
+3. He sets "Sprint Velocity" to "Full width" and moves it to position 1 with the ▲ control; he sets "Release Timeline" to "2/3" and leaves it second.
+4. He closes the panel — `/charts` now shows exactly two charts, full-width-then-two-thirds, in presentation order.
+5. He refreshes the page right before walking into the meeting room; the layout is exactly as he left it, persisted from `dc_chart_prefs` in local storage.
+6. After the board meeting, he opens the panel and clicks "Reset" to restore the full 11-chart view for his own day-to-day analysis.
+
+**Outcome:** Raj walks into the board meeting with a `/charts` page that shows only the two metrics he's presenting, in the order and emphasis he wants — and switches back to his full working view with one click afterward.
+
+**Related:** UC-091, FR-306, BR-110, TC-CC-01–TC-CC-08
+
+---

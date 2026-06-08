@@ -2711,3 +2711,48 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 **Postcondition:** User holds a single offline workbook that reproduces the dashboard's risk, data-quality, cycle-time, and release-readiness analysis without needing the app open or a live Jira connection  
 **Related FR:** FR-236, FR-242, FR-243
+
+---
+
+## v4.2.2 — Dashboard Status Chips Use Case (2026-06-08)
+
+### UC-090 — Scan Section Health via Status Chips Before Expanding
+
+**Actor:** Scrum Master, Product Owner, Delivery Manager, C-level stakeholder
+**Trigger:** User lands on `/dashboard` with most of the ~16 collapsible sections collapsed and wants to decide which to open first
+**Main Flow:**
+1. User scans down the page without expanding any section; each section's trigger bar shows its icon, title, and zero or more small rounded "status chips" summarising that section's state (e.g., "3 actions", "2 critical", "Updated 2h ago")
+2. User reads each chip's colour — red for `critical`, amber for `warning`, blue for `info`, green for `good`, slate for `neutral` — and immediately identifies the sections that need attention without opening them
+3. User clicks the trigger of the section whose chips show the most severe (red/critical) summary; the section expands in place and the chevron rotates to indicate the open state
+4. User repeats the scan-then-expand pattern down the page, using chip colour as the primary signal for where to focus first
+
+**Alternate Flow A — Section has no chips:**
+1a. A section has nothing noteworthy to summarise (e.g., an empty filter state) → its trigger renders with no chips, signalling "nothing to scan here" by omission
+
+**Postcondition:** User identifies which of the ~16 dashboard sections need attention and in what order, without having to expand each one individually  
+**Related FR:** FR-308, BR-112
+
+---
+
+---
+
+## v4.1 — Advanced Chart Customization Use Case (2026-06-08)
+
+### UC-091 — User Personalises the Charts Page Layout
+
+**Actor:** Any authenticated user viewing `/charts` (Scrum Master, Director, Engineering Manager, etc.)
+**Trigger:** User finds the default 11-chart layout doesn't match what matters most to their role
+**Main Flow:**
+1. User opens `/charts` and clicks the Chart Customizer control
+2. Chart Customizer panel opens — all 11 charts are listed with a visibility toggle, a column-span control (1/3, 2/3, Full width), and ▲▼ reorder controls
+3. User toggles off charts they never reference (e.g., "Label Distribution") — those charts disappear from the page immediately
+4. User sets "Sprint Velocity" to "Full width" so it's the most prominent chart on the page
+5. User moves "Timeline" to the top of the order using the ▲ control
+6. Panel closes — the page now renders only the chosen charts, in the chosen order and widths
+7. Settings persist to `dc_chart_prefs` in local storage and are re-applied on every subsequent visit
+**Alternate Flow A — Reset to defaults:**
+6a. User clicks "Reset" in the panel → all charts become visible again at their registry-default span and order
+**Postcondition:** User's `/charts` page reliably shows only the charts they care about, sized and ordered the way they prefer, every time they return — without any admin configuration
+**Related FR:** FR-306, BR-110
+
+---
