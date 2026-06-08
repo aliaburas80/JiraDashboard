@@ -612,6 +612,66 @@ When loading, a blue banner appears below the header: "Loading data from Amazon 
 ## Startup Auto-Restore
 
 \`instrumentation.ts register()\` runs once on Node.js server start. If local DB is empty: find latest cloud backup → download → \`restoreBackup()\`. Cloud SDK packages are kept external by \`next.config.js\` and loaded by the provider layer at runtime.`,
+
+  gateway: `# Backend Integration Gateway (Foundation — v4.3)
+
+> **Server-only module** — \`src/server/gateway/\`. No dedicated API route. No live providers wired up by default. This is the chokepoint that every future outbound call (Jira live API, email, Slack, Teams, push, custom HTTP) MUST route through.
+
+---
+
+## Goal
+
+Provide a single, controlled, auditable entry point for all future external HTTP calls — with SSRF protection, host allowlisting, credential isolation, retry/backoff, and secret-redacted observability built in from day one.
+
+## Module Map
+
+| File | Role |
+|------|------|
+| \`types.ts\` | Full type contract (\`GatewayResult<T>\`, \`GatewayProviderType\`, \`GatewayRoutingStrategy\`, \`GatewayLogRecord\`, ...) |
+| \`endpointPolicy.ts\` | \`validateEndpoint()\` — protocol allowlist, host allowlist, SSRF, path safety. Never throws |
+| \`retryPolicy.ts\` | Timeout (10s), 2 retries, exponential backoff, retryable/non-retryable status tables |
+| \`gatewayLogger.ts\` | \`redact()\` + \`logGatewayCall()\` → \`data/gateway-audit.jsonl\` JSONL |
+| \`providerRegistry.ts\` | Config-file-driven provider resolution — reads \`data/gateway-providers.json\` |
+| \`externalGateway.ts\` | \`callExternal<T>()\` — the single entry point. Never throws |
+
+## Zero-Code-Change Config
+
+Provider env-var names, host allowlist additions, and kill-switches live in \`data/gateway-providers.json\` — not in source. Edit the file and the next call picks it up (no redeploy). Credential *values* stay in \`process.env\` only — never in the config file.
+
+\`\`\`json
+{
+  "version": "1.0",
+  "providers": {
+    "jira": {
+      "baseUrlEnvVar": "MY_JIRA_URL",
+      "credentialEnvVars": ["MY_JIRA_TOKEN"],
+      "allowedHosts": ["jira.mycompany.com"],
+      "enabled": true
+    }
+  }
+}
+\`\`\`
+
+## Security Model
+
+| Check | Where |
+|-------|-------|
+| https-only in production | \`endpointPolicy.validateEndpoint()\` |
+| Host allowlist | per-provider from registry + config file |
+| Private/internal IP block (SSRF) | RFC 1918 + link-local + loopback patterns |
+| Localhost block in production | \`LOCAL_HOSTNAMES\` set + isProduction guard |
+| Path traversal (pre-parse) | \`TRAVERSAL_PATTERN\` on raw URL string before \`new URL()\` |
+| Secret redaction | \`gatewayLogger.redact()\` — 9 patterns before any log write |
+
+## Why JSONL, Not AuditEvent Table
+
+Gateway calls are high-volume operational telemetry — every retry would be a row. Routing them through \`prisma.auditEvent\` would pollute the admin-facing audit trail and require a migration. Records append to \`data/gateway-audit.jsonl\` (same convention as \`storage-settings.json\`). Write failures are swallowed.
+
+## Tests — 23 passing (TC-GW-01–TC-GW-21 + TC-GW-05b/TC-GW-15b)
+
+\`src/__tests__/gateway.test.ts\` covers endpoint policy (SSRF/allowlist/traversal), retry/backoff math, secret redaction + JSONL logging, config-file-driven provider resolution, and \`callExternal()\` end-to-end (happy path, policy rejection, SSRF-via-path-injection, retry-then-succeed, retry-exhaustion, non-retryable immediate fail).
+
+See **FR-313** in \`product/SRS.md\` and the full architecture section in \`product/DEVELOPER_GUIDE.md\`.`,
 };
 
 // ─── Nav config ───────────────────────────────────────────────────────────────
@@ -634,6 +694,7 @@ const SECTIONS = [
   { id: 'dev-guide',     label: '📖 Developer Guide',        group: 'Product Docs'    },
   { id: 'deployment',   label: '🚢 Deployment Guide',        group: 'Product Docs'    },
   { id: 'cloud-sync',  label: '🔄 Cloud Sync Architecture', group: 'Technical'       },
+  { id: 'gateway',     label: '🌐 Backend Gateway',         group: 'Technical'       },
 ];
 
 // ── Package Reference data ────────────────────────────────────────────────────

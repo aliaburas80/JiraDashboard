@@ -1060,6 +1060,93 @@ Covered by `cloudStorage.test.ts`, `cloudRestoreHardening.test.ts`, `storageSett
 
 ---
 
+## Backend Integration Gateway (Implemented — Foundation, v4.3)
+
+**Status:** Foundation implemented and tested. **This is not full Jira integration and not full cloud integration** — it is the controlled routing/security/retry/audit layer that *all future* external HTTP calls (Jira API, cloud providers, email, Slack, Teams, push notifications) must be routed through once they're built. No live providers are registered yet; the gateway ships with zero enabled providers and is exercised entirely through its test suite today.
+
+### Goal
+Today the app makes **zero live external HTTP calls** — Jira import is file-upload/parse only (`src/services/jira/parser.ts`), and cloud storage talks to provider SDKs directly (`src/services/storage/providers/`), not raw HTTP. Before any future feature (Jira live sync, write-back, notifications, coaching evidence fetches, etc.) is allowed to make outbound calls, it must go through one disciplined chokepoint that enforces endpoint allowlisting/SSRF protection, timeout and retry policy, secret redaction, and structured observability — so a single security review covers every future integration instead of one per feature.
+
+### Gateway Interface (`src/server/gateway/`)
+```typescript
+// types.ts
+export type GatewayProviderType =
+  | 'jira' | 'aws_s3' | 'azure_blob' | 'gcp_storage'
+  | 'email' | 'slack' | 'teams' | 'push_notification' | 'custom';
+
+export type GatewayErrorCategory =
+  | 'validation' | 'policy_rejected' | 'timeout' | 'network'
+  | 'retryable_http' | 'non_retryable_http' | 'unknown';
+
+export type GatewayRoutingStrategy =
+  | 'single' | 'round_robin' | 'weighted_round_robin' | 'failover' | 'least_error_rate';
+
+export interface GatewayRequestOptions {
+  provider: GatewayProviderType;
+  operation: string;            // e.g. "jira.fetchIssues" — human-readable label, logged
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  path?: string;                // appended to the provider's allowlisted base URL — never a raw attacker-controlled URL
+  query?: Record<string, string>;
+  headers?: Record<string, string>;
+  body?: unknown;
+  userId?: string | null;
+  correlationId?: string;
+  idempotencyKey?: string;
+  routingStrategy?: GatewayRoutingStrategy;
+  timeoutMs?: number;
+  maxRetries?: number;
+}
+
+export interface GatewayResult<T> {
+  ok: boolean;
+  data?: T;
+  status?: number;
+  errorCategory?: GatewayErrorCategory;
+  error?: string;               // redacted, safe-to-log message
+  requestId: string;
+  correlationId?: string;
+  durationMs: number;
+  retryCount: number;
+  provider: GatewayProviderType;
+  operation: string;
+}
+```
+`callExternal<T>(options): Promise<GatewayResult<T>>` (`externalGateway.ts`) is the **single entry point** — it resolves the provider, policy-validates the endpoint, picks a routing target, executes with timeout/retry, logs every attempt, and returns a typed, redacted result. It never throws; failures come back as `{ ok: false, errorCategory, error }`.
+
+### Implemented Modules (`src/server/gateway/`)
+- **`types.ts`** — the shared contract above (`GatewayRequestOptions`, `GatewayResult<T>`, `GatewayLogRecord`, provider/error/routing-strategy unions)
+- **`endpointPolicy.ts`** — `validateEndpoint()`: SSRF protection. Enforces `https`-only outside local dev, validates the host against the provider's allowlist, blocks private/internal IP ranges (`10.x`, `172.16-31.x`, `192.168.x`, link-local, etc.) and `localhost` in production, and sanitizes the request path. Returns a structured `{ allowed, reason }` — never throws, never performs a network call when rejected
+- **`retryPolicy.ts`** — `DEFAULT_RETRY_POLICY` (10000ms timeout, 2 max retries, exponential backoff), `isRetryable()` (retries `408/429/500/502/503/504`, never retries `400/401/403/404/409/422`), `computeBackoffDelay()`
+- **`gatewayLogger.ts`** — `redact()` masks secret-shaped values (tokens, API keys, passwords, cookies, connection strings, service-account JSON) with `[REDACTED]` before anything is logged; `logGatewayCall()` appends a structured `GatewayLogRecord` as a JSON-Lines entry to `data/gateway-audit.jsonl` and silently swallows write errors (mirrors the `.catch(() => {})` convention used for `prisma.auditEvent.create` in `app/api/auth/logout/route.ts`)
+- **`providerRegistry.ts`** — `getProviderConfig(type)` / `listRegisteredProviders()` resolve each provider's *blueprint* (which env vars hold its base URL/credentials, extra allowlist hosts, and an `enabled` kill-switch) from **`data/gateway-providers.json`** — falling back to built-in defaults when that file doesn't exist, so the gateway works out of the box. **Nothing about the provider set is static or hard-coded for change purposes**: an operator can repoint a provider to different env-var names, extend its host allowlist, or kill-switch it entirely by editing that JSON file — zero code changes, zero redeploy (`writeProviderConfigFile()` is provided for a future admin UI to manage it). Credential and base-URL *values* are still read from `process.env` **at call time only** — mirroring the `process.env.X ?? default` convention in `src/lib/session.ts` / `src/services/settings/securityCheck.service.ts` — and are never persisted to the config file or returned to the browser. A provider with no configured env vars (or an explicit `"enabled": false` in the config file) reports `enabled: false`, and `callExternal` rejects calls to it before any policy/network step
+- **`externalGateway.ts`** — `callExternal<T>()`: looks up the provider → policy-validates the resolved endpoint (SSRF/protocol/host/path) → `resolveRoutingTarget()` picks a candidate (routing strategy) → executes via `fetch` + `AbortController` with timeout and exponential-backoff retry → logs every attempt (redacted) → returns the typed `GatewayResult<T>`
+
+### Why Gateway Records Don't Use the `AuditEvent` Table
+Gateway calls are high-volume *operational* telemetry (every outbound HTTP attempt, including retries), not human-readable *user-audit* events like login/logout/upload that the admin UI's audit trail surfaces. Writing every gateway attempt into `AuditEvent` would both pollute that admin-facing trail and require a Prisma migration. Instead, `gatewayLogger.ts` appends redacted JSON-Lines records to `data/gateway-audit.jsonl`, mirroring the existing local-file convention for operational/cache data (`storage-settings.json`, `.cloud-cache-meta.json`) — reversible, schema-free, and keeps the user audit trail clean.
+
+### Security Model (SSRF & Secret Protection)
+- **Protocol allowlist** — `https` required outside local development; `http`/`file`/`ftp`/`javascript`/`data` always rejected
+- **Host allowlist** — only hosts explicitly registered for a provider may be called; arbitrary hostnames are rejected with `errorCategory: 'policy_rejected'`
+- **SSRF protection** — private/internal IP ranges and `localhost` are blocked in production (the registry's allowlisted hosts are the only exception, and only when explicitly configured for local dev)
+- **Path/query sanitization** — request paths are validated against the provider's expected pattern before being appended to the allowlisted base URL; raw user-supplied URLs are never dereferenced
+- **Secrets never reach the frontend** — the gateway lives entirely under `src/server/`, is imported only from server-side code (API routes / services), reads credentials from `process.env` per call, and `redact()` masks every secret-shaped field before it can be logged or returned in an error message
+
+### Retry, Timeout & Observability
+- Defaults: **10000ms timeout**, **2 retries** with exponential backoff; only `408/429/500/502/503/504` are retried, `400/401/403/404/409/422` fail immediately
+- Every attempt is logged with: `requestId`, `correlationId`, `userId`, `provider`, `operation`, resolved endpoint, method, start/end timestamps, `durationMs`, HTTP `status`, `retryCount`, `errorCategory`, and a redacted `error` message
+- `requestId`/`correlationId`/`idempotencyKey` are present on every request and result — laying the groundwork for future load-balanced/multi-instance deployment (stateless handling, shared config, idempotent retries) without committing to a specific load-balancer architecture today
+- `routingStrategy` currently supports only `'single'` (the first registered candidate is used); the type contract already includes `round_robin | weighted_round_robin | failover | least_error_rate` so future routing strategies are additive, not breaking changes
+
+### Current Limitations (Foundation Scope)
+- **No live providers are registered.** `listRegisteredProviders()` returns an empty/disabled set until a future feature configures the relevant `process.env` variables — by design, so this closure doesn't over-claim a working Jira/Slack/cloud integration that doesn't exist
+- **Existing cloud-storage SDK calls are not yet migrated onto the gateway** — `s3Provider.ts`/`azureProvider.ts`/`gcpProvider.ts` continue to use their native SDKs directly; migrating them is a future hardening task, not part of this foundation
+- Only the `single` routing strategy is implemented; `round_robin`/`weighted_round_robin`/`failover`/`least_error_rate` are typed but not yet implemented
+
+### Tests
+Covered by `gateway.test.ts` (see `product/TEST_CASES.md`, `TC-GW-01` onward) — endpoint-policy allow/reject decisions (including SSRF cases), retry/backoff behavior, redaction, and an end-to-end `callExternal` happy path against a mocked `fetch`.
+
+---
+
 ## P2/P3 — Optional Jira API Integration (Architecture Design Only)
 
 **Status:** Design and backlog planning only. Export-first model remains default.

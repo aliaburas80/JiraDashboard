@@ -56,7 +56,9 @@ Out of scope for this document (consistent with BRD Section 6 roadmap classifica
 - Jira write-back / ticket creation (P3 roadmap)
 - Scheduled email or Slack report delivery (P4 roadmap)
 - In-app Notification Center, Maintenance Mode, browser push notifications (P4 roadmap)
-- Backend Integration Gateway, User Add-Member Request Workflow, Role-Based Delivery Coaching Insights, Retrospective Upload/Template/In-App Form, and Forecasting & Delivery Adjustment Report (P1/P2 roadmap — not yet implemented; see TODO-List.md)
+- User Add-Member Request Workflow, Role-Based Delivery Coaching Insights, Retrospective Upload/Template/In-App Form, and Forecasting & Delivery Adjustment Report (P1/P2 roadmap — not yet implemented; see TODO-List.md)
+
+> **Backend Integration Gateway (FR-313 — foundation implemented 2026-06-08):** the routing/policy/retry/audit chokepoint that future external integrations (Jira, cloud storage, email, Slack, Teams, push) will route through is now built (`src/server/gateway/`), but it has **no end-user-facing UI or use case** — it is a server-only foundation with zero live providers wired up. There is intentionally no UC for it here (consistent with this document's "no UC for vaporware" principle); see `product/DEVELOPER_GUIDE.md` § "Backend Integration Gateway" for its architecture and `FR-313` in `product/SRS.md` for its behavioural contract.
 
 ### 1.3 How to Read Use Cases
 
