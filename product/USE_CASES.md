@@ -1934,9 +1934,11 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 ---
 
-### UC-043: Return from Full Report to Summary
+### UC-092: Return from Full Report to Summary
 
-- **ID:** UC-043
+*(Renumbered 2026-06-08 from a colliding `UC-043` — see TODO-List.md Section 12 Gaps Summary item 6.)*
+
+- **ID:** UC-092
 - **Name:** Return from Full Report to Summary
 - **Actor(s):** Engineering Manager, Scrum Master
 - **Trigger:** Clicks "← Back to Overview" breadcrumb in DashboardPage
@@ -1955,9 +1957,11 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 ---
 
-### UC-044: Direct URL Access to Protected Route Without Data
+### UC-093: Direct URL Access to Protected Route Without Data
 
-- **ID:** UC-044
+*(Renumbered 2026-06-08 from a colliding `UC-044` — see TODO-List.md Section 12 Gaps Summary item 6.)*
+
+- **ID:** UC-093
 - **Name:** Redirect When No Data Loaded
 - **Actor(s):** Any user
 - **Trigger:** User types /summary or /dashboard directly in browser address bar
@@ -2561,7 +2565,7 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 6. Header data source badge shows the cloud/cache source.
 7. Dashboard renders without requiring a fresh Jira upload.
 **Alternative Flow:** If `/api/metrics/latest` returns `{ available:false }`, the client falls back to `dc_metrics_v2` and shows `localStorage fallback`.
-**Related FR:** FR-307, FR-308, FR-309
+**Related FR:** FR-307, FR-309 *(corrected 2026-06-08 — `FR-308` was a stale copy-paste reference to the unrelated status-chip FR; `FR-309` was a phantom reference until newly written this same pass to formally document this restore-and-fallback flow — see TODO-List.md Section 12 Gaps Summary item 6)*
 
 ---
 
@@ -2710,7 +2714,7 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 2b. `localStorage` or the onboarding module is unavailable (e.g. private browsing, server-side context) → the workbook still downloads normally; the onboarding-step write is swallowed silently and never blocks or fails the export
 
 **Postcondition:** User holds a single offline workbook that reproduces the dashboard's risk, data-quality, cycle-time, and release-readiness analysis without needing the app open or a live Jira connection  
-**Related FR:** FR-236, FR-242, FR-243
+**Related FR:** FR-236, FR-310, FR-311 *(FR-310/FR-311 renumbered 2026-06-08 from colliding `FR-242`/`FR-243` — see TODO-List.md Section 12 Gaps Summary item 6)*
 
 ---
 

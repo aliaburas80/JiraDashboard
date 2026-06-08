@@ -1198,7 +1198,7 @@ You click "← Back" and you're back on the dashboard, right where you were.
 
 **Outcome:** Marcus produces one offline-readable artifact that reproduces the dashboard's risk, data-quality, cycle-time, and readiness analysis — turning a live-dashboard walkthrough into a forwardable file.
 
-**Related:** UC-049, UC-089, FR-236, FR-242, FR-243, TC-X-09–TC-X-13b
+**Related:** UC-049, UC-089, FR-236, FR-310, FR-311, TC-X-09–TC-X-13b *(FR-310/FR-311 renumbered 2026-06-08 from colliding `FR-242`/`FR-243` — see TODO-List.md Section 12 Gaps Summary item 6)*
 
 ---
 
