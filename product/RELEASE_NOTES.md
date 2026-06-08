@@ -5,6 +5,18 @@
 
 ---
 
+## v4.2.2 — TRACE-01 Cluster #4 Closure: Throughput Data-Contract Anchoring (2026-06-08, P0 — documentation + test coverage)
+
+### Closed TRACE-01 gap cluster #4 — F1-07/F1-08 (`src/types/throughput.ts` types and the `DashboardMetrics.throughput` field)
+- **Anchored two long-standing data-model gaps to their existing consumer flow** rather than declaring them "not independently traceable": `src/types/throughput.ts` (F1-07 — the `ThroughputMetrics`/`SprintThroughputSummary`/`KanbanFlowSummary`/`MidSprintInsight` types) and `DashboardMetrics.throughput` (F1-08 — required by the existing `FR-215`) are exactly the data contract that `UC-043`'s `SprintThroughputPanel`/`MidSprintDeliveryPanel`/`KanbanThroughputPanel` flow, `SCN-012`'s retrospective-prep scenario, and `UJ-010`'s throughput-review journey already walk through end to end — so rather than minting redundant new docs, the existing anchors were extended to name the data layer they depend on.
+- **Extended `UC-043`'s Related-FR range** in `product/USE_CASES.md` from "FR-207 to FR-214" to "FR-207 to FR-215", with an explanatory clause naming each panel as a consumer of the `metrics.throughput: ThroughputMetrics` bundle and pointing at the new `TC-T-11` for its shape-contract test.
+- **Added a `**Related:**` line to `SCN-012`** in `product/SCENARIOS.md` (`UC-043, UJ-010, FR-207–FR-215, TC-T-01–TC-T-11`) — the first such cross-reference on this older scenario, bringing it in line with the convention already used on 23 other scenarios. `UJ-010` needed no change — User Journeys in this project don't carry `**Related:**` footer lines, and its step-by-step table already covers the same panels.
+- **Wrote and automated 1 new test case `TC-T-11`** in the existing `src/__tests__/throughput.test.ts` (now 11 tests): calls `calculateDashboardMetrics(issues)` and asserts `metrics.throughput` conforms to the full `ThroughputMetrics` contract — `sprint: SprintThroughputSummary` (sprintName, committedCount, completionPct, goalOutcome, deliveryPattern, deliveryConfidence, totalSprints, averageThroughputCount, trendDirection), `kanban: KanbanFlowSummary` (hasKanbanData, periods[], overallFlowHealth), and `midSprint: MidSprintInsight[]` (sprintName, midSprintPct, pattern, isEndLoaded, isScopeUnstable, isBlocked) — directly proving `FR-215`'s data-contract requirement at the integration level (not just the formula level the existing `TC-T-01–10` cover).
+- Test suite count rose from **508 tests / 54 suites → 509 tests / 54 suites** (same file, +1 test). `npm run lint` and `npm run build` remain clean.
+- Updated the `F1-07/08` rows, `F1-TRACE`, `TRACE-01`, `NEXT-01`, and Gaps Summary item 4 in `TODO-List.md` Section 12/13 to reflect that **TRACE-01 gap cluster #4 is now fully closed** — the smallest of the five clusters, closed via anchoring-and-cross-referencing rather than new FR/UC/SCN authorship since the existing requirement and use case already fully covered this data layer.
+
+---
+
 ## v4.2.2 — TRACE-01 Cluster #3 Closure: Smart Excel Export Sheets & Trigger (2026-06-08, P0 — documentation + test coverage)
 
 ### Closed TRACE-01 gap cluster #3 — F4-05/06/08 (Smart Excel export Risks & Blockers / Orphan & Data Quality / Cycle & Lead Time / Release Readiness sheets, plus the export-trigger flow)

@@ -583,6 +583,8 @@ You click "← Back" and you're back on the dashboard, right where you were.
 
 **Outcome:** Sarah runs a data-backed retrospective focused on the end-loading pattern and velocity decline.
 
+**Related:** UC-043, UJ-010, FR-207–FR-215, TC-T-01–TC-T-11
+
 ---
 
 ### SCN-013 — Product Owner Explores Epic Structure Before Sprint Planning

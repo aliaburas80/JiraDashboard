@@ -1997,7 +1997,7 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 3b. Pattern classification defaults to "Unknown"
 
 **Postcondition:** User understands team sprint performance and delivery trend  
-**Related FR:** FR-207 to FR-214
+**Related FR:** FR-207 to FR-215 — every panel in this flow (`SprintThroughputPanel`, `MidSprintDeliveryPanel`, `KanbanThroughputPanel`) reads its data from the `metrics.throughput: ThroughputMetrics` bundle (`src/types/throughput.ts`) that `FR-215` requires `POST /api/upload` to populate; see `TC-T-11` for the shape-contract test covering this data layer.
 
 ---
 
