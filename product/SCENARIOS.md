@@ -1292,3 +1292,37 @@ Meanwhile, Omar's flow (earlier, on the same day):
 **Outcome:** The whole workflow — request, review, mandatory password entry, accept, notification — ran through the app with zero back-channel ambiguity and a full audit trail.
 
 **Related:** UC-097, UC-098, UC-099, UJ-034, FR-319, FR-320, FR-321, FR-322, FR-323
+
+---
+
+### SCN-050 — Admin Accepts Request, Welcome Email Sent, New User Logs In and Changes Password
+
+**Persona:** Omar (Admin) accepts Alex Chen's add-member request; Alex receives the welcome email and onboards.
+
+**Scenario:**
+
+Omar's flow (Admin Panel):
+1. Omar expands Alex's pending request card in Admin Settings → Member Requests. The Accept button is disabled — the password field shows the amber "required" state.
+2. Omar clicks "Generate" next to the temp password field. The field auto-fills with a 14-character password (e.g., `K9!mRqZ#nTpL2w`) meeting all complexity rules; the Accept button activates.
+3. Omar clicks Accept. The panel calls `PATCH /api/admin/user-add-requests/[id]/accept` with the temp password. The API:
+   - Creates Alex's user record (bcrypt-hashed password, `mustChangePassword: true`)
+   - Sends an in-app notification to the requester (Priya)
+   - Calls `sendEmail()` → dispatches the welcome HTML email to Alex's inbox
+   - Returns `{ ok: true, emailSent: true }` — password is NOT in the response
+4. The panel shows a green ✅ "Welcome email sent to alex.chen@company.com" badge confirming delivery.
+5. The card flips to accepted state. The amber banner disappears (no more pending requests).
+
+Alex's flow (New User — First Login):
+1. Alex receives the welcome email in their inbox within seconds. Subject: "Welcome to JiraDashboard — Your Account is Ready". The HTML email shows their name, login email, temporary password, and a "Log In Now" button.
+2. Alex clicks "Log In Now". The app opens at the login page.
+3. Alex enters their email and the temporary password. The server authenticates and detects `mustChangePassword: true`.
+4. Alex is redirected to `/change-password`. They set a new password and submit.
+5. Alex lands on the dashboard — fully onboarded, no admin back-channel required.
+
+**Alternate — SMTP not configured:**
+- Step 4 (Omar's flow) instead shows ⚠️ "Email not sent — SMTP not configured"
+- Omar must share the temp password via in-app notification message (which Priya already received) or a secure external channel
+
+**Outcome:** Password generation, welcome email delivery, and forced first-login password change all ran end-to-end with zero manual handoffs and a full audit trail in the database.
+
+**Related:** UC-097, UC-098, UC-099, UC-100, UJ-034, UJ-035, FR-319, FR-320, FR-321, FR-322, FR-323, FR-325, TC-EMAIL-01–TC-EMAIL-03, TC-REQ-17

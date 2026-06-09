@@ -7,7 +7,7 @@
 | Field | Value |
 |---|---|
 | **Document Title** | Software Requirements Specification — Delivery Clarity |
-| **Version** | 4.5.1 |
+| **Version** | 4.5.2 |
 | **Date** | 2026-06-09 |
 | **Author** | Ali Abu Ras (aburasali80@gmail.com) |
 | **Status** | Active — Release Candidate (lint, tests, and build verified 2026-06-07) |
@@ -31,6 +31,7 @@
 | 4.4.0 | 2026-06-09 | Ali Abu Ras | P1 — User Add-Member Request Workflow: FR-314–FR-319 (Prisma models + 5 API routes), Addendum B, §8.1 routes updated, TC-REQ-01–14 automated |
 | 4.5.0 | 2026-06-09 | Ali Abu Ras | P1 — USERREQ UI layer: FR-320–FR-324, Addendum C, Notification Bell, Bulk User Management |
 | 4.5.1 | 2026-06-09 | Ali Abu Ras | P1 — Auto-generate password UX + welcome email on accept: FR-319/FR-321 updated, FR-325 added, Addendum D, nodemailer wired |
+| 4.5.2 | 2026-06-10 | Ali Abu Ras | P1 — Clickable notifications + admin settings tab deep-link: FR-323 updated, Addendum E, BR-113/BR-114, TC-NOTIF-06/07, UC-100, UJ-035, SCN-050 |
 
 ---
 
@@ -1939,7 +1940,7 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 ### C.4 — In-App Notification Bell
 
-**FR-323 (P1 — Done, 2026-06-09):** The `NotificationBell` component MUST be rendered in the `AppShell` header for all authenticated pages (next to `UserMenu`). The component MUST: (a) poll `GET /api/notifications` every 30 seconds while mounted; (b) for `role === "admin"`, also poll `GET /api/admin/user-add-requests?status=pending` every 30 seconds; (c) display a **red badge** on the bell icon showing `unreadCount + (isAdmin ? pendingRequests : 0)` — hidden when the total is zero; (d) apply a wiggle CSS animation (`animate-wiggle`) to the bell emoji when the badge count is > 0 (defined as a custom keyframe in `tailwind.config.ts`); (e) add a `animate-ping` pulsing ring behind the badge; (f) for admin with `pendingRequests > 0`, render a **persistent amber strip banner** fixed below the navigation header (at `top: 56px`, `z-index: 30`) with a pulsing white dot and a link to `/admin/settings#requests` — this banner is always visible without opening the dropdown; (g) clicking the bell icon opens a dropdown listing the current user's notifications newest-first; each item shows icon (✅/❌/🔔 per type), title, truncated message (3-line clamp, `whitespace-pre-line` to preserve newlines including the embedded temp password), and timestamp; clicking an item marks it read via `PATCH /api/notifications/[id]/read`; (h) a "Mark all read" button in the dropdown header bulk-marks all unread notifications; (i) the dropdown also shows an amber inline panel when admin has pending requests.
+**FR-323 (P1 — Done, 2026-06-09; updated 2026-06-10 — clickable notification routing + tab deep-link):** The `NotificationBell` component MUST be rendered in the `AppShell` header for all authenticated pages (next to `UserMenu`). The component MUST: (a) poll `GET /api/notifications` every 30 seconds while mounted; (b) for `role === "admin"`, also poll `GET /api/admin/user-add-requests?status=pending` every 30 seconds; (c) display a **red badge** on the bell icon showing `unreadCount + (isAdmin ? pendingRequests : 0)` — hidden when the total is zero; (d) apply a wiggle CSS animation (`animate-wiggle`) to the bell emoji when the badge count is > 0; (e) add a `animate-ping` pulsing ring behind the badge; (f) for admin with `pendingRequests > 0`, render a **persistent amber strip banner** fixed below the navigation header linking to `/admin/settings?tab=requests`; (g) clicking the bell icon opens a dropdown; each notification item MUST: show the appropriate icon (✅/❌/🔔), mark itself read on click, close the dropdown, and **navigate to the contextually correct page** via `router.push()` — `user_add_request_accepted` → `/members` for requester or `/admin/settings?tab=requests` for admin; `user_add_request_rejected` → `/members`; unknown types mark read only with no navigation; navigable items MUST display a `→` arrow hint; (h) a "Mark all read" button bulk-marks all unread notifications; (i) `AdminSettingsPage` (`app/admin/settings/page.tsx`) MUST read the `?tab=` search param via `useSearchParams()` on mount and set the initial tab state — valid values: `users | requests | retention | thresholds | orphan | backup | cloud | browser`; unrecognised values fall back to `'users'`.
 
 ### C.5 — Bulk User Management
 
@@ -1957,4 +1958,27 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 ### D.2 — Welcome Email
 
-**FR-325 (P1 — Done, 2026-06-09):** When a `UserAddRequest` is accepted the system MUST attempt to send a welcome email to the newly created user's address using `sendEmail()` from `src/lib/email.ts`. The email MUST include: (a) the user's name and email address; (b) the `tempPassword` in both plain-text and HTML body; (c) a link to `/login`; (d) a note that the password must be changed on first login. The sending MUST be **graceful**: wrapped in `try/catch`, never causing the HTTP response to fail. If `SMTP_HOST`, `SMTP_USER`, or `SMTP_PASS` env vars are absent the utility MUST log a `console.warn` and return without attempting a connection. Configuration is via five env vars: `SMTP_HOST`, `SMTP_PORT` (default `587`), `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` (default `JiraDashboard <noreply@jiradashboard.local>`). Port 465 uses TLS (`secure: true`); all other ports use STARTTLS. `buildWelcomeEmail(name, email, tempPassword)` produces a reusable `{ subject, text, html }` triple — the HTML is inline-styled for maximum email-client compatibility.
+**FR-325 (P1 — Done, 2026-06-09):** When a `UserAddRequest` is accepted the system MUST attempt to send a welcome email to the newly created user's address using `sendEmail()` from `src/lib/email.ts`. The email MUST include: (a) the user's name and email address; (b) the `tempPassword` in both plain-text and HTML body; (c) a link to `/login`; (d) a note that the password must be changed on first login. The sending MUST be **graceful**: wrapped in `try/catch`, never causing the HTTP response to fail. If `SMTP_HOST`, `SMTP_USER`, or `SMTP_PASS` env vars are absent the utility MUST log a `console.warn` and return without attempting a connection. Configuration is via five env vars: `SMTP_HOST`, `SMTP_PORT` (default `587`), `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` (default `JiraDashboard <noreply@jiradashboard.local>`). Port 465 uses TLS (`secure: true`); all other ports use STARTTLS. `buildWelcomeEmail(name, email, tempPassword)` produces a reusable `{ subject, text, html }` triple — the HTML is inline-styled for maximum email-client compatibility. The accept route MUST return `emailSent: boolean` in the HTTP 200 response; the admin UI MUST display ✅ "Welcome email sent" or ⚠️ "Email not sent — SMTP not configured" accordingly. The `tempPassword` field MUST NOT appear in the API response — the admin UI reads the password from its own React state (`adminPasswords[id]`).
+
+---
+
+## Addendum E — v4.5.2 Clickable Notifications + Admin Settings Tab Deep-Link (2026-06-10, P1)
+
+*(Added to close remaining USERREQ-01 scope: notification UX completion and admin settings navigation.)*
+
+### E.1 — Clickable Notification Routing
+
+**FR-323** (see C.4 above, updated 2026-06-10). The `resolveNotificationUrl(n, isAdmin)` helper in `NotificationBell.tsx` maps notification types to destination routes. Current routing table:
+
+| `n.type` | Recipient role | Destination |
+|---|---|---|
+| `user_add_request_accepted` | Requester (non-admin) | `/members` |
+| `user_add_request_accepted` | Admin | `/admin/settings?tab=requests` |
+| `user_add_request_rejected` | Any | `/members` |
+| All other types | Any | No navigation (mark read only) |
+
+A single click on a notification item MUST: (1) mark the notification read (fire-and-forget PATCH); (2) close the dropdown (`setOpen(false)`); (3) navigate to `dest` via `router.push(dest)` if `dest !== null`. Items with a destination MUST show a `→` arrow and use `hover:bg-blue-50` hover state to signal interactivity.
+
+### E.2 — Admin Settings Deep-Link
+
+`AdminSettingsPage` initialises its `tab` state from `useSearchParams().get('tab')` cast to `Tab`. All links from `NotificationBell` (amber banner, dropdown admin panel) now use `/admin/settings?tab=requests` — the hash-based `#requests` anchor is deprecated. Valid `tab` values: `users | requests | retention | thresholds | orphan | backup | cloud | browser`; unrecognised values default to `'users'`.

@@ -2948,3 +2948,33 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 **Postcondition:** Notification is marked `readAt: <timestamp>`; `GET /api/notifications` no longer counts it as unread  
 **Related FR:** FR-322, FR-323, FR-314, FR-315
+
+---
+
+### UC-100 — New User Receives Welcome Email and Logs In for the First Time
+
+- **ID:** UC-100
+- **Title:** New User First Login via Welcome Email
+- **Actor:** New user (just created by admin via `UserAddRequest` accept)
+- **Precondition:** Admin has accepted the request; `sendEmail()` returned `true`; new user record exists with `mustChangePassword: true`
+- **Trigger:** New user opens welcome email delivered to their inbox
+
+**Main Flow:**
+1. New user receives an HTML welcome email from `JiraDashboard <aburasali80@gmail.com>` with subject "Welcome to JiraDashboard — Your Account is Ready"
+2. Email body contains full name, login email, temporary password, and a "Log In Now" button/link pointing to the app login page
+3. User clicks the login link; opens the app in their browser
+4. User enters their email and the temporary password from the email; submits the login form
+5. Server authenticates; detects `mustChangePassword: true`; redirects to `/change-password`
+6. User enters a new password (confirmed twice); submits
+7. Server hashes the new password, sets `mustChangePassword: false`, returns the user to the app
+8. User lands on the dashboard — fully onboarded
+
+**Alternate Flow — Email Not Sent (SMTP not configured):**
+3a. Admin panel shows ⚠️ "Email not sent — SMTP not configured"; admin must share the temp password manually (via in-app notification or secure channel)
+
+**Alternate Flow — Wrong Credentials:**
+5a. If user misreads the temp password, login returns 401; user can retry or request admin to reset
+
+**Postcondition:** User is authenticated, `mustChangePassword = false`, and has set their own password  
+**Related FR:** FR-319, FR-321, FR-325  
+**Related:** UC-097, UC-098, UJ-035, SCN-050

@@ -1077,7 +1077,44 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 27. Troubleshooting
+  // 27. Member Requests & Email
+  {
+    id: 'member-requests',
+    icon: '👤',
+    title: 'Member Requests & Email',
+    items: [
+      {
+        q: 'How do I request a new user to be added to the platform?',
+        a: 'Go to /members and click "Request add member" (visible to non-admin users). Fill in the new user\'s full name, email, requested role, and a business reason. Submit the form — the request is sent to the admin queue. You will receive an in-app notification when the admin accepts or rejects it.',
+      },
+      {
+        q: 'How does the admin accept a member request?',
+        a: 'Go to Admin Settings → Member Requests tab. Expand the pending card. Click "Generate" to auto-fill a secure 14-character temporary password (or type one manually). Click Accept. The new user account is created, the requester receives an in-app notification, and a welcome email is sent to the new user automatically.',
+      },
+      {
+        q: 'What is the "Generate" button in the accept panel?',
+        a: 'The Generate button auto-fills the temporary password field with a cryptographically secure 14-character password. It meets all complexity rules: at least 2 uppercase letters, 2 digits, and 2 special characters. You can click it multiple times to get a different password. The Accept button activates as soon as a valid password is present.',
+      },
+      {
+        q: 'Does the new user receive an email with their credentials?',
+        a: 'Yes — when an admin accepts a request, a welcome email is automatically sent to the new user\'s email address. The email contains their login email, temporary password, and a "Log In Now" link. The admin panel shows a green ✅ "Welcome email sent" badge on success, or an amber ⚠️ badge if SMTP is not configured.',
+      },
+      {
+        q: 'What does the new user need to do after receiving the welcome email?',
+        a: 'The new user clicks the "Log In Now" link in the email, enters their email and temporary password, and is redirected to /change-password. They must set a new permanent password before accessing the dashboard. After changing it, they land on the dashboard — fully onboarded.',
+      },
+      {
+        q: 'Why did I receive a notification when my request was accepted?',
+        a: 'In-app notifications are sent automatically on both accept and reject. An accepted notification includes the new user\'s email and role. Click the notification to navigate directly to /members (as the requester) or to Admin Settings → Member Requests (as an admin).',
+      },
+      {
+        q: 'Do notifications navigate me somewhere when I click them?',
+        a: 'Yes. Clicking a navigable notification (one with a → arrow) marks it as read, closes the dropdown, and routes you to the relevant page. Accepted/rejected request notifications take non-admin users to /members and admin users to Admin Settings → Member Requests.',
+      },
+    ],
+  },
+
+  // 28. Troubleshooting
   {
     id: 'troubleshooting',
     icon: '🛠️',

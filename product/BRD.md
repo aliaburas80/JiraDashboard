@@ -801,6 +801,10 @@ The following metrics define product success and will be measured at 30, 90, and
 
 **BR-096 (Should — P2 — Done):** The Work Item Explorer (`/explore`) MUST allow users to export the current graph as an Excel workbook or CSV. This is a reporting and stakeholder-sharing requirement — users need to take explorer findings offline or embed them in delivery reports without re-entering data manually.
 
+**BR-113 (Must — P1 — Done 2026-06-10):** When an admin accepts a user add-member request, the system MUST deliver a welcome email to the newly created user's email address containing their temporary password and a login link. Email delivery MUST be graceful — if SMTP is not configured the acceptance still succeeds and the admin is shown a warning. The admin MUST receive a clear confirmation of whether the email was sent (✅/⚠️ status badge). This is an onboarding communication requirement; without it, new users have no automated way to receive their credentials.
+
+**BR-114 (Should — P1 — Done 2026-06-10):** In-app notifications relating to add-member request outcomes MUST be actionable — clicking a notification MUST navigate the user to the most relevant page: accepted-request notifications take the requester to `/members` (to see the new colleague); admin notifications take the admin to the Member Requests tab in Admin Settings. Notification links to admin settings MUST use a `?tab=requests` query parameter so the correct tab opens immediately. A non-navigable notification that requires a separate manual navigation step reduces time-to-action and creates friction in the admin workflow.
+
 ---
 
 ## Revision Note — v4.2.2 Reconciliation (2026-06-07)

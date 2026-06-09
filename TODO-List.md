@@ -509,7 +509,7 @@ Claude must output the following after each pass.
 | STORAGE-DEC-10 | Add admin sync health check in diagnostics | P0 | ❌ Not started | Latest metrics availability + cloud copy freshness. This was `JIRA-GATE-04`. |
 | STORAGE-DEC-11 | Add Cloud Storage initial-load guard | P0 | ❌ Not started | Disable provider cards/forms/actions until `/api/admin/storage` loads; prevent temporary default flash. This was `JIRA-GATE-05`. |
 | STORAGE-DEC-12 | Verify cloud-backed user authority | P0 | ✅ Done / Needs regression | Uploaded TODO says done: sync from cloud before auth/admin reads/writes; push after user create/update/password change. |
-| STORAGE-DEC-13 | Add email access notifications for created users | P0 | ❌ Not started | SMTP/email provider, send access URL/role, log delivery status/errors. This was `JIRA-GATE-07`. |
+| STORAGE-DEC-13 | Add email access notifications for created users | P0 | ✅ Done (2026-06-10) | Implemented via nodemailer (`src/lib/email.ts`). On accept, `sendEmail()` delivers a styled HTML+text welcome email with credentials and login link. Graceful: skips silently if SMTP not configured. `emailSent` flag in API response; admin UI shows ✅/⚠️ delivery status. FR-325. |
 
 ---
 
@@ -812,7 +812,7 @@ The following items are in the uploaded TODO as Done. Keep them, but verify trac
 
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
-| USERREQ-01 | Decide implementation scope | P1 | ✅ Done (2026-06-09) | Implemented: in-app request modal, admin queue panel with mandatory temp password entry, in-app notification bell, first-login password change. No browser push/email/Slack. |
+| USERREQ-01 | Decide implementation scope | P1 | ✅ Done (2026-06-10) | Implemented: in-app request modal, admin queue panel with mandatory temp password + **Generate button** (crypto.getRandomValues, 14-char), **welcome email** via nodemailer (FR-325), in-app notification bell with **clickable redirect** (accepted→/members, admin→/admin/settings?tab=requests), first-login forced password change. No browser push/Slack/Teams. |
 | USERREQ-02 | Add requester button: `Request Add User` / `Request Add Member` | P1 | ✅ Done (2026-06-09) | "Request add member" button on `/members` page — visible only for non-admin roles. FR-320. |
 | USERREQ-03 | Build request modal | P1 | ✅ Done (2026-06-09) | `src/components/admin/RequestAddMemberModal.tsx` — full name, email, requested role, reason (required), team/project (optional), notes (optional). FR-320. |
 | USERREQ-04 | Validate requester form | P1 | ✅ Done (2026-06-09) | Client-side validation in RequestAddMemberModal: all required fields, valid email, high-privilege reason ≥ 20 chars. Server-side validation in FR-316. |

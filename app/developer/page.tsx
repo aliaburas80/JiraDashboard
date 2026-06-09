@@ -724,7 +724,7 @@ const PACKAGES = [
   { name:'@azure/storage-blob',     version:'—', usedFor:'Azure Blob Storage',               feature:'P3 Cloud Storage',    scope:'Server',  status:'Planned', risk:'N/A — not yet implemented' },
   { name:'@google-cloud/storage',   version:'—', usedFor:'Google Cloud Storage',             feature:'P3 Cloud Storage',    scope:'Server',  status:'Planned', risk:'N/A — not yet implemented' },
   { name:'jira-api-client (TBD)',   version:'—', usedFor:'Jira REST API integration',        feature:'P3 Jira Integration', scope:'Server',  status:'Planned', risk:'N/A — not yet implemented' },
-  { name:'nodemailer (TBD)',         version:'—', usedFor:'Email notification channel',       feature:'P4 Notifications',    scope:'Server',  status:'Planned', risk:'N/A — not yet implemented' },
+  { name:'nodemailer',               version:'^8.0.10', usedFor:'Welcome email on user-add-request accept', feature:'P1 USERREQ', scope:'Server', status:'Installed', risk:'Gmail App Password rotation breaks email delivery' },
 ];
 
 // ── Calculation Reference data ────────────────────────────────────────────────

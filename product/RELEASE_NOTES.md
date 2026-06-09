@@ -5,6 +5,16 @@
 
 ---
 
+## v4.5.2 — Clickable Notifications with Smart Redirect + Tab Navigation Fix (2026-06-10, P1)
+
+### Closed USERREQ-01 (final) — notification UX completion + admin settings deep-link
+
+- **Clickable notifications**: each notification item in `NotificationBell` now navigates on click — `user_add_request_accepted` takes the requester to `/members`; admin gets `/admin/settings?tab=requests`. A small `→` arrow hint is shown on navigable notifications. Click also marks the notification read and closes the dropdown in one action.
+- **Admin settings deep-link via `?tab=requests`**: replaced broken `#requests` hash with `?tab=requests` query param. `AdminSettingsPage` reads `useSearchParams()` on mount and sets the initial tab state directly — navigation from the amber banner, notification bell, and in-app links all land on the **Member Requests** tab immediately.
+- **Product docs updated:** SRS FR-323 updated, Addendum E added; BRD BR-113/BR-114; TEST_CASES §9.54 (TC-NOTIF-06/07); USE_CASES UC-100; USER_JOURNEYS UJ-035; SCENARIOS SCN-050; APPENDIX new terms; /help, /developer, /glossary in-app routes; TODO-List.md STORAGE-DEC-13 ✅ Done.
+
+---
+
 ## v4.5.1 — Auto-Generate Password + Welcome Email on Member Request Accept (2026-06-09, P1)
 
 ### Closed USERREQ-01 (partial) — password generation UX + email delivery for new accounts

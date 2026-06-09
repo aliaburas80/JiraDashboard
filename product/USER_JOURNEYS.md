@@ -1685,3 +1685,25 @@ Returning-user journeys now include bucket-first metrics restoration. After logi
 **Related:** UC-097, UC-099, FR-320, FR-322, FR-323, SCN-049, TC-REQ-01–TC-REQ-16, TC-NOTIF-01–TC-NOTIF-05
 
 ---
+
+### UJ-035 — New User Receives Welcome Email, Clicks Login Link, and Changes Password
+
+**Persona:** Alex Chen, brand-new backend developer — account just created by admin  
+**Goal:** Access the platform for the first time using the credentials emailed to them  
+**Context:** Priya (Scrum Master) submitted an add-member request; admin accepted; welcome email was sent automatically
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Alex checks email inbox | Sees "Welcome to JiraDashboard — Your Account is Ready" from `JiraDashboard <aburasali80@gmail.com>` | Surprised, curious |
+| 2 | Opens the email | HTML email shows name, login email, temporary password, and a "Log In Now" button | Ready to proceed |
+| 3 | Clicks "Log In Now" button | Browser opens the app login page (styled correctly, not a stale build) | Engaged |
+| 4 | Types login email + temporary password from email; clicks Sign In | Server validates credentials; detects `mustChangePassword: true` | Slightly puzzled |
+| 5 | Redirected to `/change-password` | Page explains they must set a permanent password before continuing | Understands |
+| 6 | Enters and confirms a new password; submits | Server hashes password, clears `mustChangePassword`, issues session cookie | Relieved |
+| 7 | Lands on the dashboard | Full app available — projects, sprints, members, charts | Confident, onboarded |
+
+**Pain point resolved:** No admin handoff, no Slack DM with a password, no confusion about which temp password to use — one email contains everything and the login link takes the new user directly to first-login password change.
+
+**Related:** UC-100, SCN-050, FR-319, FR-321, FR-325, TC-EMAIL-01–TC-EMAIL-03
+
+---
