@@ -46,6 +46,9 @@ model Session {
   ipAddress        String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model ImportLog {
@@ -67,6 +70,8 @@ model ImportLog {
 
   user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   snapshots DashboardSnapshot[]
+
+  @@index([userId])
 }
 
 model DashboardSnapshot {
@@ -79,6 +84,8 @@ model DashboardSnapshot {
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   importLog ImportLog? @relation(fields: [importLogId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
 }
 
 model AuditEvent {
@@ -91,6 +98,9 @@ model AuditEvent {
   userAgent        String?
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 // ── User Add-Member Request Workflow (USERREQ-07–09) ─────────────────────────
@@ -114,6 +124,9 @@ model UserAddRequest {
   updatedAt          DateTime  @updatedAt
 
   requestedBy User @relation("UserAddRequestRequester", fields: [requestedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([requestedByUserId])
+  @@index([status])
 }
 
 model Notification {
@@ -128,4 +141,7 @@ model Notification {
   createdAt         DateTime  @default(now())
 
   recipient User @relation("UserNotifications", fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId])
+  @@index([readAt])
 }

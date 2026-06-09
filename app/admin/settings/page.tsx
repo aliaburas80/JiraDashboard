@@ -820,7 +820,7 @@ function CloudStorageSettings() {
   );
 }
 
-function UserManagementSettings() {
+function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: ManagedUser[]) => void }) {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -854,6 +854,7 @@ function UserManagementSettings() {
   }
 
   useEffect(() => { loadUsers(); }, []);
+  useEffect(() => { onUsersChange(users); }, [users]); // keep parent stat cards in sync
 
   async function createUser() {
     setSaving(true); setMsg(null);
@@ -1343,7 +1344,15 @@ export default function AdminSettingsPage() {
         {error && <div className="mb-6 rounded-[14px] border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div>}
 
         <section>
-          {tab === 'users' && <UserManagementSettings />}
+          {tab === 'users' && (
+            <UserManagementSettings
+              onUsersChange={users => setUserSummary({
+                total:  users.length,
+                active: users.filter(u => u.isActive).length,
+                admins: users.filter(u => u.role === 'admin').length,
+              })}
+            />
+          )}
           {tab === 'requests' && <UserAddRequestsPanel />}
           {tab === 'retention' && settings && (
             <DataRetentionSettings settings={settings} stats={stats} onSave={handleSaveRetention} onCleanup={handleCleanup} onClearAll={handleClearAll} />

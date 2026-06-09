@@ -24,7 +24,7 @@ function normaliseSqliteDatabaseUrl(): void {
 
 normaliseSqliteDatabaseUrl();
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient; prismaWalReady?: boolean };
 
 export const prisma: PrismaClient =
   globalForPrisma.prisma ??
@@ -33,3 +33,11 @@ export const prisma: PrismaClient =
   });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+// Enable WAL mode once per process — dramatically improves concurrent read/write performance.
+if (!globalForPrisma.prismaWalReady) {
+  globalForPrisma.prismaWalReady = true;
+  prisma.$executeRawUnsafe('PRAGMA journal_mode=WAL;')
+    .then(() => prisma.$executeRawUnsafe('PRAGMA synchronous=NORMAL;'))
+    .catch(() => { /* non-fatal: WAL unavailable in some read-only/edge environments */ });
+}
