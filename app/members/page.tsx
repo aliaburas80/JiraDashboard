@@ -54,11 +54,11 @@ export default function MembersPage() {
             <p className="mt-3 text-lg text-slate-600">Team directory, roles, profile details, and contact info.</p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
-            <div className="rounded-[14px] border border-slate-200 bg-white px-5 py-3 shadow-[0_3px_12px_rgba(15,23,42,0.04)]">
+            <div className="rounded-[14px] border border-slate-200 bg-white px-5 py-3 shadow-[0_3px_12px_rgba(15,23,42,0.04)] text-center">
               <p className="text-xs font-black uppercase text-slate-500">Members</p>
               <p className="text-2xl font-black text-slate-950">{members.length}</p>
             </div>
-            <div className="rounded-[14px] border border-slate-200 bg-white px-5 py-3 shadow-[0_3px_12px_rgba(15,23,42,0.04)]">
+            <div className="rounded-[14px] border border-slate-200 bg-white px-5 py-3 shadow-[0_3px_12px_rgba(15,23,42,0.04)] text-center">
               <p className="text-xs font-black uppercase text-slate-500">Roles</p>
               <p className="text-2xl font-black text-slate-950">{roleCount}</p>
             </div>
