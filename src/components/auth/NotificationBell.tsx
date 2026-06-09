@@ -26,7 +26,7 @@ function resolveNotificationUrl(n: AppNotification, isAdmin: boolean): string | 
     case 'user_add_request_accepted':
       // Requester: their request was approved → see the new member on the Members page
       // Admin: go back to the requests queue
-      return isAdmin ? '/admin/settings#requests' : '/members';
+      return isAdmin ? '/admin/settings?tab=requests' : '/members';
     case 'user_add_request_rejected':
       // Both roles: go to Members page (requester can re-submit there)
       return '/members';
@@ -116,7 +116,7 @@ export default function NotificationBell({ role }: Props) {
       {isAdmin && pendingRequests > 0 && (
         <div className="fixed left-0 right-0 z-30" style={{ top: 56 }}>
           <a
-            href="/admin/settings#requests"
+            href="/admin/settings?tab=requests"
             className="flex items-center justify-center gap-2 bg-amber-500 px-4 py-1.5 text-xs font-black text-white shadow-md hover:bg-amber-600 transition-colors"
           >
             <span className="relative flex h-2 w-2">

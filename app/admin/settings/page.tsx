@@ -1,7 +1,7 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import DataRetentionSettings from '@/components/admin/DataRetentionSettings';
 import HealthThresholdSettings from '@/components/admin/HealthThresholdSettings';
@@ -1243,7 +1243,13 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
 
 export default function AdminSettingsPage() {
   const router = useRouter();
-  const [tab, setTab]                 = useState<Tab>('users');
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get('tab') as Tab | null);
+  const [tab, setTab] = useState<Tab>(
+    initialTab && ['users','requests','retention','thresholds','orphan','backup','cloud','browser'].includes(initialTab)
+      ? initialTab
+      : 'users'
+  );
   const [settings, setSettings]       = useState<RetentionSettings | null>(null);
   const [stats, setStats]             = useState<RetentionStats | null>(null);
   const [thresholds, setThresholds]   = useState<HealthThresholds | null>(null);
