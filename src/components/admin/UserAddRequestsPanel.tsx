@@ -36,6 +36,9 @@ export default function UserAddRequestsPanel() {
   const [tempPasswords, setTempPasswords] = useState<Record<string, string>>({});
   const [copied, setCopied]         = useState<string | null>(null);
   const [decisionNote, setDecisionNote] = useState<Record<string, string>>({});
+  const [adminPasswords, setAdminPasswords] = useState<Record<string, string>>({});
+  const [showAdminPw, setShowAdminPw] = useState<Record<string, boolean>>({});
+  const [pwError, setPwError]       = useState<Record<string, string>>({});
   const [expanded, setExpanded]     = useState<string | null>(null);
 
   const load = useCallback(() => {
@@ -54,12 +57,28 @@ export default function UserAddRequestsPanel() {
   useEffect(() => { load(); }, [load]);
 
   async function decide(id: string, action: 'accept' | 'reject') {
+    if (action === 'accept') {
+      const pw = adminPasswords[id]?.trim() ?? '';
+      if (!pw) {
+        setPwError(e => ({ ...e, [id]: 'You must set a temporary password before accepting.' }));
+        return;
+      }
+      // basic client-side strength check mirrors server validation
+      if (pw.length < 8 || !/[A-Z]/.test(pw) || !/[0-9]/.test(pw)) {
+        setPwError(e => ({ ...e, [id]: 'Password must be ≥ 8 chars with at least one uppercase letter and one number.' }));
+        return;
+      }
+      setPwError(e => ({ ...e, [id]: '' }));
+    }
     setActing(id);
     try {
+      const payload: Record<string, string> = {};
+      if (decisionNote[id]?.trim()) payload.adminDecisionNote = decisionNote[id].trim();
+      if (action === 'accept') payload.tempPassword = adminPasswords[id].trim();
       const res = await fetch(`/api/admin/user-add-requests/${id}/${action}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminDecisionNote: decisionNote[id]?.trim() || undefined }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -187,6 +206,44 @@ export default function UserAddRequestsPanel() {
 
                   {req.status === 'pending' && (
                     <div className="pt-1 space-y-3">
+                      {/* Mandatory: admin sets the temporary password */}
+                      <div className="rounded-[10px] border border-amber-200 bg-amber-50 px-4 py-3">
+                        <label className="block text-xs font-black uppercase text-amber-700 mb-1.5">
+                          Temporary password <span className="text-red-600">*</span>{' '}
+                          <span className="text-amber-600 font-normal normal-case">— required before accepting</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type={showAdminPw[req.id] ? 'text' : 'password'}
+                            value={adminPasswords[req.id] ?? ''}
+                            onChange={e => {
+                              setAdminPasswords(p => ({ ...p, [req.id]: e.target.value }));
+                              if (pwError[req.id]) setPwError(er => ({ ...er, [req.id]: '' }));
+                            }}
+                            placeholder="Min 8 chars, 1 uppercase, 1 number"
+                            className={`flex-1 rounded-[9px] border px-3 py-2 text-sm outline-none transition focus:ring-4 ${
+                              pwError[req.id]
+                                ? 'border-red-400 bg-red-50 focus:border-red-400 focus:ring-red-100'
+                                : 'border-amber-300 bg-white focus:border-amber-400 focus:ring-amber-100'
+                            }`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowAdminPw(s => ({ ...s, [req.id]: !s[req.id] }))}
+                            className="px-2 py-2 rounded-[8px] border border-amber-200 bg-white text-amber-700 text-xs hover:bg-amber-50 transition-colors shrink-0"
+                            aria-label={showAdminPw[req.id] ? 'Hide password' : 'Show password'}
+                          >
+                            {showAdminPw[req.id] ? '🙈' : '👁'}
+                          </button>
+                        </div>
+                        {pwError[req.id] && (
+                          <p className="text-xs text-red-600 font-semibold mt-1.5">{pwError[req.id]}</p>
+                        )}
+                        <p className="text-[11px] text-amber-600 mt-1.5">
+                          This password will be shared with the requester in their in-app notification. The user must change it on first login.
+                        </p>
+                      </div>
+
                       <div>
                         <label className="block text-xs font-black uppercase text-slate-500 mb-1.5">
                           Decision note <span className="text-slate-400 font-normal">(optional)</span>
@@ -202,9 +259,9 @@ export default function UserAddRequestsPanel() {
                       <div className="flex gap-2">
                         <button
                           type="button"
-                          disabled={acting === req.id}
+                          disabled={acting === req.id || !adminPasswords[req.id]?.trim()}
                           onClick={() => decide(req.id, 'accept')}
-                          className="px-4 py-2 rounded-xl text-sm font-bold bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                          className="px-4 py-2 rounded-xl text-sm font-bold bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                         >
                           {acting === req.id ? <Spinner /> : '✓'} Accept & create account
                         </button>

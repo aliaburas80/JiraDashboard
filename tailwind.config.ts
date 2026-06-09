@@ -16,6 +16,18 @@ const config: Config = {
         danger:  {'50':'#fff1f2','500':'#ef4444','700':'#b91c1c'},
       },
       fontFamily: { sans: ['var(--font-inter)','ui-sans-serif','system-ui','sans-serif'] },
+      keyframes: {
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(0deg)' },
+          '20%': { transform: 'rotate(-15deg)' },
+          '40%': { transform: 'rotate(15deg)' },
+          '60%': { transform: 'rotate(-10deg)' },
+          '80%': { transform: 'rotate(10deg)' },
+        },
+      },
+      animation: {
+        wiggle: 'wiggle 0.6s ease-in-out',
+      },
     },
   },
   plugins: [],

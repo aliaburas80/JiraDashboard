@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
-import { hashPassword } from '@/lib/auth';
+import { hashPassword, validatePasswordStrength } from '@/lib/auth';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { isAppRole, roleLabel } from '@/lib/roles';
 
@@ -18,16 +18,6 @@ async function requireAdmin(): Promise<SessionData | NextResponse> {
   return session;
 }
 
-/** Generate a random temporary password that passes validatePasswordStrength. */
-function generateTempPassword(): string {
-  const chars = 'abcdefghijkmnpqrstuvwxyz';
-  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  const digits = '23456789';
-  const rand = (s: string) => s[Math.floor(Math.random() * s.length)];
-  const base = Array.from({ length: 6 }, () => rand(chars)).join('');
-  return `${rand(upper)}${base}${rand(digits)}${rand(digits)}`;
-}
-
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } },
@@ -35,12 +25,21 @@ export async function PATCH(
   const session = await requireAdmin();
   if (session instanceof NextResponse) return session;
 
-  let body: { decisionNote?: string } = {};
+  let body: { decisionNote?: string; tempPassword?: string } = {};
   try {
     const raw = await req.text();
     if (raw.trim()) body = JSON.parse(raw);
   } catch {
-    // decisionNote is optional; ignore parse errors on empty body
+    // ignore parse errors
+  }
+
+  const tempPassword = body.tempPassword?.trim() ?? '';
+  if (!tempPassword) {
+    return NextResponse.json({ error: 'A temporary password is required.' }, { status: 400 });
+  }
+  const strengthError = validatePasswordStrength(tempPassword);
+  if (strengthError) {
+    return NextResponse.json({ error: strengthError }, { status: 400 });
   }
 
   const requestId = params.id;
@@ -75,7 +74,6 @@ export async function PATCH(
     );
   }
 
-  const tempPassword = generateTempPassword();
   const passwordHash = await hashPassword(tempPassword);
 
   // Atomic sequence: create user → update request → notify → audit.

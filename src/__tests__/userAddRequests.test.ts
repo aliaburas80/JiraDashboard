@@ -284,11 +284,12 @@ test('TC-REQ-10: PATCH accept — creates user, marks request accepted, creates 
 
   const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
 
-  const res = await PATCH(makeReq({}), { params: { id: 'req-1' } });
+  const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: { id: 'req-1' } });
   const body = await res.json();
 
   expect(res.status).toBe(200);
   expect(body.ok).toBe(true);
+  expect(body.tempPassword).toBe('ValidPass1');
   expect(body.createdUser.email).toBe('jane@example.com');
   expect(body.createdUser.mustChangePassword).toBe(true);
   expect(prisma.user.create).toHaveBeenCalledWith(
@@ -315,7 +316,7 @@ test('TC-REQ-11: PATCH accept — returns 404 when request does not exist', asyn
 
   const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
 
-  const res = await PATCH(makeReq({}), { params: { id: 'nonexistent' } });
+  const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: { id: 'nonexistent' } });
   expect(res.status).toBe(404);
 });
 
@@ -330,7 +331,7 @@ test('TC-REQ-12: PATCH accept — returns 409 when request is already accepted o
 
   const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
 
-  const res = await PATCH(makeReq({}), { params: { id: 'req-1' } });
+  const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: { id: 'req-1' } });
   const body = await res.json();
 
   expect(res.status).toBe(409);

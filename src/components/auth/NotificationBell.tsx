@@ -95,6 +95,24 @@ export default function NotificationBell({ role }: Props) {
   }
 
   return (
+    <>
+      {/* Persistent amber strip below the header — shown outside dropdown, always visible */}
+      {isAdmin && pendingRequests > 0 && (
+        <div className="fixed left-0 right-0 z-30" style={{ top: 56 }}>
+          <a
+            href="/admin/settings#requests"
+            className="flex items-center justify-center gap-2 bg-amber-500 px-4 py-1.5 text-xs font-black text-white shadow-md hover:bg-amber-600 transition-colors"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+            </span>
+            {pendingRequests} pending member request{pendingRequests !== 1 ? 's' : ''} — click to review
+            <span className="ml-1 opacity-70">→</span>
+          </a>
+        </div>
+      )}
+
     <div ref={ref} className="relative">
       <button
         type="button"
@@ -102,10 +120,11 @@ export default function NotificationBell({ role }: Props) {
         className="relative flex items-center justify-center w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors"
         aria-label="Notifications"
       >
-        <span className="text-lg">🔔</span>
+        <span className={`text-lg ${totalBadge > 0 ? 'animate-wiggle' : ''}`}>🔔</span>
         {totalBadge > 0 && (
           <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center leading-none">
             {totalBadge > 99 ? '99+' : totalBadge}
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75 -z-10" />
           </span>
         )}
       </button>
@@ -114,7 +133,14 @@ export default function NotificationBell({ role }: Props) {
         <div className="absolute right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 w-80 max-h-[480px] flex flex-col overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
-            <span className="text-sm font-black text-slate-900">Notifications</span>
+            <span className="text-sm font-black text-slate-900">
+              Notifications
+              {totalBadge > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-red-500 text-white text-[10px] font-black">
+                  {totalBadge}
+                </span>
+              )}
+            </span>
             {unreadCount > 0 && (
               <button
                 type="button"
@@ -188,5 +214,6 @@ export default function NotificationBell({ role }: Props) {
         </div>
       )}
     </div>
+    </>
   );
 }
