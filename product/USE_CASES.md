@@ -2861,3 +2861,90 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 **Related FR:** FR-318, FR-319, FR-235B, FR-235D
 
 ---
+
+---
+
+## v4.5 — USERREQ UI: Request Modal, Admin Queue, Notification Bell (2026-06-09, P1)
+
+### UC-097 — Non-Admin User Submits a Member Add Request via the Members Page
+
+- **ID:** UC-097
+- **Title:** Non-Admin User Submits a Member Add Request
+- **Actor:** Non-admin authenticated user (Scrum Master, Product Owner, Manager, C-level, User)
+- **Precondition:** User is logged in with a non-admin role; the candidate to be added does not yet have an account
+- **Trigger:** User clicks "Request add member" on the Members page (`/members`)
+
+**Main Flow:**
+1. System shows the "Request add member" button on `/members` only for non-admin users
+2. User clicks the button; `RequestAddMemberModal` opens
+3. User fills in Full Name, Email Address, Requested Role, and Business Reason (required); optionally Team/Project and Notes
+4. If Requested Role is `admin` or `c_level`, system shows a high-privilege warning and requires Reason ≥ 20 characters
+5. User clicks Submit; client validates all required fields; if valid, POSTs to `POST /api/user-add-requests`
+6. System validates: email not already registered (409), no pending request for same email (409), role in ASSIGNABLE_ROLES (400)
+7. On success, system creates a `UserAddRequest` with `status: "pending"`, writes audit event, returns HTTP 201
+8. Modal replaces the form with a ✅ "Request submitted" confirmation message
+9. User closes the modal
+
+**Alternate Flow A — Validation failure:**
+5a. Required field missing or email format invalid → client-side inline error; Submit remains disabled
+
+**Alternate Flow B — Duplicate email:**
+7b. Server returns HTTP 409 "An account with this email already exists." → modal displays error inline; user corrects and resubmits
+
+**Postcondition:** A `UserAddRequest` with `status: "pending"` exists; admin will see it in the Member Requests panel  
+**Related FR:** FR-316, FR-320, FR-235B
+
+---
+
+### UC-098 — Admin Reviews, Enters Temp Password, and Acts on a Member Add Request
+
+- **ID:** UC-098
+- **Title:** Admin Accepts or Rejects a Member Add Request with Mandatory Temp Password Entry
+- **Actor:** Admin
+- **Precondition:** At least one `UserAddRequest` with `status: "pending"` exists
+- **Trigger:** Admin navigates to Admin Settings → Member Requests tab (or clicks the amber notification banner)
+
+**Main Flow:**
+1. Admin opens `/admin/settings` → "Member Requests" tab; `UserAddRequestsPanel` loads pending requests via `GET /api/admin/user-add-requests?status=pending`
+2. Admin expands a request card to review requested name, email, role, business reason, requester details, and submission date
+3. **Accept path:** Admin types a temporary password into the mandatory amber field (≥ 8 chars, ≥ 1 uppercase, ≥ 1 digit); field shows inline error if strength fails; Accept button is disabled until the field is non-empty
+4. Admin optionally types a decision note; clicks Accept
+5. System calls `PATCH /api/admin/user-add-requests/[id]/accept` with `{ tempPassword, adminDecisionNote? }`
+6. Server validates pending status, email availability, and password strength; creates user with `mustChangePassword: true`; marks request accepted; notifies requester; audits
+7. Panel shows a green copyable password box; admin copies it to share via secure channel if needed
+
+**Reject path (alternative to steps 3–7):**
+3r. Admin optionally types a decision note; clicks Reject
+4r. System calls `PATCH /api/admin/user-add-requests/[id]/reject`; marks rejected; notifies requester; audits
+
+**Alternate Flow A — Password strength fails:**
+4a. Server returns HTTP 400 with strength error → panel shows error inline; admin corrects and retries
+
+**Alternate Flow B — Email taken between submission and acceptance:**
+6b. Server returns HTTP 409 "An account with this email already exists." → panel shows error; admin must reject or coordinate
+
+**Postcondition:** Request is accepted (new user account exists, temp password shared, requester notified) or rejected (requester notified); both outcomes audited  
+**Related FR:** FR-319, FR-321
+
+---
+
+### UC-099 — User Receives and Views an In-App Notification About Their Request Outcome
+
+- **ID:** UC-099
+- **Title:** User Views In-App Notification for Request Accept/Reject
+- **Actor:** Authenticated user (any role, the requester)
+- **Precondition:** Admin has accepted or rejected the user's `UserAddRequest`; a `Notification` record now exists with `recipientUserId = session.userId`
+- **Trigger:** User is anywhere in the app; `NotificationBell` polls and detects an unread notification
+
+**Main Flow:**
+1. `NotificationBell` polls `GET /api/notifications` every 30s; finds unread notification; badge count increments
+2. Bell icon wiggles; pulsing red ring appears on badge
+3. User clicks the bell icon; dropdown opens showing the notification with ✅ or ❌ icon, title, and message (including temp password if accepted)
+4. User reads the message; system calls `PATCH /api/notifications/[id]/read` on click; badge count decrements; notification moves to read state
+5. User can also click "Mark all read" to bulk-clear all unread notifications
+
+**Admin-specific sub-flow:**
+1a. If `role === "admin"` and `pendingRequests > 0`, a persistent amber strip banner appears fixed below the nav header; clicking it navigates to `/admin/settings` (Member Requests tab)
+
+**Postcondition:** Notification is marked `readAt: <timestamp>`; `GET /api/notifications` no longer counts it as unread  
+**Related FR:** FR-322, FR-323, FR-314, FR-315

@@ -385,3 +385,33 @@ test('TC-REQ-14: PATCH reject — returns 409 when request is not pending', asyn
   expect(res.status).toBe(409);
   expect(body.error).toMatch(/already rejected/i);
 });
+
+// ── TC-REQ-15: PATCH accept — 400 when tempPassword missing ───────────────────
+
+test('TC-REQ-15: PATCH accept — returns 400 when tempPassword is not supplied', async () => {
+  mockSession.role = 'admin';
+
+  const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
+
+  const res = await PATCH(makeReq({}), { params: { id: 'req-1' } });
+  const body = await res.json();
+
+  expect(res.status).toBe(400);
+  expect(body.error).toMatch(/temporary password is required/i);
+});
+
+// ── TC-REQ-16: PATCH accept — 400 when tempPassword fails strength check ──────
+
+test('TC-REQ-16: PATCH accept — returns 400 when tempPassword fails strength validation', async () => {
+  mockSession.role = 'admin';
+  const { validatePasswordStrength } = await import('@/lib/auth');
+  (validatePasswordStrength as jest.Mock).mockReturnValueOnce('Password must be at least 8 characters.');
+
+  const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
+
+  const res = await PATCH(makeReq({ tempPassword: 'weak' }), { params: { id: 'req-1' } });
+  const body = await res.json();
+
+  expect(res.status).toBe(400);
+  expect(body.error).toMatch(/8 characters/i);
+});

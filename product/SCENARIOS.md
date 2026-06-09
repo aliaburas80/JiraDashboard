@@ -1266,3 +1266,29 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Related:** UC-091, FR-306, BR-110, TC-CC-01–TC-CC-08
 
 ---
+
+---
+
+## v4.5 — USERREQ UI: Member Add Request and Notification Scenarios (2026-06-09, P1)
+
+### SCN-049 — Scrum Master Spots the Notification Banner, Reviews the Temp Password, and Onboards the New Developer
+
+**Persona:** Priya (Scrum Master) submitted an add-member request for a new hire yesterday. Today she logs in and the admin (Omar) has already acted on it.
+
+**Scenario:**
+1. Priya logs in; the `NotificationBell` polls `/api/notifications` within 30 seconds and finds one unread notification from when Omar accepted the request. The bell badge shows "1" with a pulsing red ring; the bell emoji wiggles once.
+2. Priya clicks the bell. The dropdown opens showing "✅ User request approved" with Alex Chen's email, role (Scrum Master), and the temporary password `OmarP4ss7` embedded in the message body (`whitespace-pre-line` preserves the multi-line layout).
+3. Priya copies the password, marks the notification read (badge clears), then sends the password to Alex via a secure internal channel.
+4. Alex logs in with the temporary password. The login page detects `mustChangePassword: true` and redirects to `/change-password`. Alex sets a new password and completes onboarding.
+
+Meanwhile, Omar's flow (earlier, on the same day):
+1. Omar logs in; the amber strip banner fixed below the nav header reads "1 pending member request — click to review". The pulsing white dot on the banner is hard to miss.
+2. Omar clicks the banner; navigates directly to Admin Settings → Member Requests tab. `UserAddRequestsPanel` loads the pending card for Alex Chen.
+3. Omar expands the card; reviews the business reason and requester details. The Accept button is disabled — the amber password field shows "Temporary password * — required before accepting".
+4. Omar types `OmarP4ss7` into the field; the field validates client-side (length ✓, uppercase ✓, digit ✓); Accept button activates.
+5. Omar clicks Accept. The panel calls `PATCH /api/admin/user-add-requests/[id]/accept` with `{ tempPassword: "OmarP4ss7" }`. Server creates Alex's account, marks request accepted, sends Priya a notification.
+6. The card flips to accepted state; a green "Temporary password — share with user" box appears with the password and a Copy button. The amber notification banner disappears (no more pending requests).
+
+**Outcome:** The whole workflow — request, review, mandatory password entry, accept, notification — ran through the app with zero back-channel ambiguity and a full audit trail.
+
+**Related:** UC-097, UC-098, UC-099, UJ-034, FR-319, FR-320, FR-321, FR-322, FR-323

@@ -1370,3 +1370,31 @@ Set `client_max_body_size 25M;` in the nginx site config. Without this, Jira CSV
 - `ProductTour` listens for `dc:start-tour` and sets `active = true`
 
 **Reset for development:** Run `resetTour()` from the browser console, or clear `dc_tour_dismissed` and `dc_tour_completed` from localStorage.
+
+---
+
+### In-App Notification Bell and APIs (Implemented — v4.5)
+
+**API routes:**
+- `GET /api/notifications` (`app/api/notifications/route.ts`) — authenticated; returns current user's `Notification` records, max 50, newest first. Uses `getIronSession` + `prisma.notification.findMany({ where: { recipientUserId: session.userId } })`.
+- `PATCH /api/notifications/[id]/read` (`app/api/notifications/[id]/read/route.ts`) — authenticated; validates `notification.recipientUserId === session.userId` before update; returns 404 on mismatch or missing record.
+
+**Component:** `src/components/auth/NotificationBell.tsx`
+- Rendered in `src/components/layout/AppShell.tsx` next to `UserMenu` when `showNav` is true
+- Uses `useCallback` + `setInterval` for 30-second polling; cleans up on unmount
+- Admin role also polls `GET /api/admin/user-add-requests?status=pending` for the pending request count
+- Persistent amber strip: `position: fixed`, `top: 56px` (header height), `z-index: 30`; only shown when `isAdmin && pendingRequests > 0`
+- Bell wiggle keyframe defined in `tailwind.config.ts` under `theme.extend.keyframes.wiggle` and `theme.extend.animation.wiggle`
+
+**Testing:** `src/__tests__/notifications.test.ts` — 5 tests (TC-NOTIF-01–05)
+
+---
+
+### User Management — Multi-Select Bulk Operations (Implemented — v4.5)
+
+The User Management table (`UserManagementSettings` in `app/admin/settings/page.tsx`) supports per-row checkbox selection and bulk operations:
+- `selected: Set<string>` state tracks selected user IDs
+- `useRef<HTMLInputElement>` drives the `indeterminate` property on the select-all checkbox via a `useEffect` watching `selected` and `filteredUsers`
+- Bulk action bar renders above the table when `selected.size > 0`; bulk role change calls `PATCH /api/admin/users` per user; bulk delete calls `DELETE /api/admin/users` per user with a shared `ConfirmDeleteDialog`
+- Selection clears via `useEffect([query, roleFilter])` on filter changes
+- Delete (🗑) and pause (⏸/▶) buttons are co-located with the status badge in the final "Status & Actions" column — no horizontal scroll required

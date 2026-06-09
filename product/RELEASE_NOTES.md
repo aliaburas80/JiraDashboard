@@ -5,6 +5,22 @@
 
 ---
 
+## v4.5 — USERREQ UI: Request Modal, Admin Queue, Notification Bell, Bulk User Management (2026-06-09, P1)
+
+### Closed USERREQ-02/03/04/05/06/15/16/17/18/19/20/21/22/23/24/26/29/30 — shipped the full USERREQ UI layer and all related product documentation
+
+- **RequestAddMemberModal** (FR-320): Non-admin users on `/members` see a "Request add member" button that opens a validated modal (name, email, role, reason, optional team/project/notes). High-privilege roles (admin, c_level) require ≥ 20 char reason with warning. On success shows ✅ confirmation.
+- **UserAddRequestsPanel** (FR-321): Admin Settings → Member Requests tab — expandable request cards, filter bar (pending/all/decided), decision note input. Accept now requires a **mandatory admin-entered temp password** (amber field with show/hide toggle, strength-validated client and server-side); Accept button is disabled until a valid password is entered. After acceptance, a green copyable password box appears with a Copy button.
+- **Updated FR-319 / accept route**: `PATCH /api/admin/user-add-requests/[id]/accept` now requires `tempPassword` in the body (HTTP 400 if missing or weak). Returns `{ ok: true, tempPassword, createdUser }` — password echoed for the UI display.
+- **Notification APIs** (FR-322): `GET /api/notifications` returns current user's notifications (max 50, newest first). `PATCH /api/notifications/[id]/read` marks a notification read with ownership guard (404 if not owned).
+- **NotificationBell** (FR-323):  header component polls every 30s; red pulsing badge () + bell wiggle (); persistent amber strip banner fixed below the nav header for admins with pending requests (always visible, not just inside dropdown); dropdown with mark-read and mark-all-read.
+- **Bulk User Management** (FR-324): Multi-select checkboxes in Users table (select-all with indeterminate state), blue row highlight, bulk action bar (bulk role change + bulk delete with confirm dialog). Delete (🗑) and pause (⏸/▶) buttons merged into the "Status & Actions" column — no horizontal scroll.
+- **Product docs added:** SRS Addendum C (FR-320–324) + FR-319 updated + §8.1 inventory updated; USE_CASES UC-097/UC-098/UC-099; USER_JOURNEYS UJ-034; SCENARIOS SCN-049; TEST_CASES §9.51/§9.52 (TC-NOTIF-01–05, TC-REQ-15–16); DEVELOPER_GUIDE notification bell + bulk-select sections; RELEASE_NOTES (this entry); TODO-List.md (USERREQ status rows + impact matrix).
+- **Test suite grew from 564 tests / 62 suites → 571 tests / 63 suites** — new `notifications.test.ts` (5 tests: TC-NOTIF-01–05) + TC-REQ-15/16 added to `userAddRequests.test.ts` (now 16 tests).
+- `npm run lint` and `npm run build` remain clean.
+
+---
+
 ## v4.4 — USERREQ-07–14, USERREQ-28: User Add-Member Request Workflow — Backend Foundation (2026-06-09, P1)
 
 ### Closed USERREQ-07–14 and USERREQ-28 (TODO-List.md Section 15) — built the Prisma schema, five API routes, and 14 automated tests for the User Add-Member Request Workflow

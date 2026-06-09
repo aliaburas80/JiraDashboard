@@ -1659,3 +1659,29 @@ Returning-user journeys now include bucket-first metrics restoration. After logi
 **Related:** UC-091, SCN-048, FR-306, BR-110, TC-CC-01–TC-CC-08
 
 ---
+
+---
+
+## 17. v4.5 — USERREQ UI: Member Add Request Workflow Journeys (2026-06-09, P1)
+
+### UJ-034 — Scrum Master Requests a New Team Member and Receives an In-App Notification
+
+**Persona:** Priya, Scrum Master — has been onboarded for months, knows the tool, manages team delivery  
+**Goal:** Get a new backend developer added to the platform quickly so they can see sprint progress  
+**Context:** The team just hired a developer who starts Monday; Priya doesn't have admin access to create the user herself
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Priya opens `/members` to find the new hire's profile — they don't see it | Members list loads; a "Request add member" button is visible at the top (non-admin view) | Slightly frustrated by the gap |
+| 2 | Clicks "Request add member" | `RequestAddMemberModal` opens with Full Name, Email, Requested Role, Reason fields | Focused, taking action |
+| 3 | Fills in the form: Name="Alex Chen", email, Role=Scrum Master, Reason="New backend hire starting Monday" | Client validates; Submit activates | Methodical |
+| 4 | Clicks Submit | Modal shows ✅ "Request submitted" | Satisfied — done in under 30 seconds |
+| 5 | Later that day, the bell icon in the header shows a red badge with a pulsing ring and wiggles | `NotificationBell` polled `/api/notifications` and found a new unread notification | Curious, mildly surprised |
+| 6 | Clicks the bell | Dropdown shows "✅ User request approved" with Alex's email, role, and the temporary password embedded | Relieved, ready to onboard |
+| 7 | Reads the temp password from the notification; shares it securely with Alex | Notification clicked; `readAt` set; badge clears | Efficient, professional |
+
+**Pain point resolved:** Non-admin team leads no longer need to interrupt the admin to create accounts — a structured request flow handles the handoff with full audit trail and in-app notification on both sides.
+
+**Related:** UC-097, UC-099, FR-320, FR-322, FR-323, SCN-049, TC-REQ-01–TC-REQ-16, TC-NOTIF-01–TC-NOTIF-05
+
+---
