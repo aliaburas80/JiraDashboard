@@ -37,7 +37,7 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 // Enable WAL mode once per process — dramatically improves concurrent read/write performance.
 if (!globalForPrisma.prismaWalReady) {
   globalForPrisma.prismaWalReady = true;
-  prisma.$executeRawUnsafe('PRAGMA journal_mode=WAL;')
-    .then(() => prisma.$executeRawUnsafe('PRAGMA synchronous=NORMAL;'))
+  prisma.$queryRawUnsafe('PRAGMA journal_mode=WAL;')
+    .then(() => prisma.$queryRawUnsafe('PRAGMA synchronous=NORMAL;'))
     .catch(() => { /* non-fatal: WAL unavailable in some read-only/edge environments */ });
 }
