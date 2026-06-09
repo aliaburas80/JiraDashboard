@@ -33,6 +33,8 @@ export default function UserAddRequestsPanel() {
   const [error, setError]           = useState('');
   const [filter, setFilter]         = useState<'all' | 'pending' | 'decided'>('pending');
   const [acting, setActing]         = useState<string | null>(null);
+  const [tempPasswords, setTempPasswords] = useState<Record<string, string>>({});
+  const [copied, setCopied]         = useState<string | null>(null);
   const [decisionNote, setDecisionNote] = useState<Record<string, string>>({});
   const [expanded, setExpanded]     = useState<string | null>(null);
 
@@ -64,17 +66,28 @@ export default function UserAddRequestsPanel() {
         setError(data.error ?? `Could not ${action} request.`);
         return;
       }
+      if (action === 'accept' && data.tempPassword) {
+        setTempPasswords(p => ({ ...p, [id]: data.tempPassword }));
+      }
       setRequests(prev => prev.map(r =>
         r.id === id
           ? { ...r, status: action === 'accept' ? 'accepted' : 'rejected', adminDecisionNote: decisionNote[id] ?? null }
           : r,
       ));
-      setExpanded(null);
     } catch {
       setError(`Network error while trying to ${action}.`);
     } finally {
       setActing(null);
     }
+  }
+
+  function copyPassword(id: string) {
+    const pw = tempPasswords[id];
+    if (!pw) return;
+    navigator.clipboard.writeText(pw).then(() => {
+      setCopied(id);
+      setTimeout(() => setCopied(c => c === id ? null : c), 2000);
+    }).catch(() => {});
   }
 
   const shown = filter === 'decided'
@@ -204,6 +217,28 @@ export default function UserAddRequestsPanel() {
                           {acting === req.id ? <Spinner /> : '✕'} Reject
                         </button>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Temp password revealed after accept */}
+                  {req.status === 'accepted' && tempPasswords[req.id] && (
+                    <div className="mt-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+                      <p className="text-xs font-black uppercase text-green-700 mb-1.5">Temporary password — share with user</p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 rounded-lg bg-white border border-green-200 px-3 py-2 text-sm font-mono font-bold text-slate-900 select-all">
+                          {tempPasswords[req.id]}
+                        </code>
+                        <button
+                          type="button"
+                          onClick={() => copyPassword(req.id)}
+                          className="px-3 py-2 rounded-lg text-xs font-bold border border-green-200 bg-white hover:bg-green-50 text-green-700 transition-colors shrink-0"
+                        >
+                          {copied === req.id ? '✓ Copied' : 'Copy'}
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-green-600 mt-1.5">
+                        The requester has also received this password in their in-app notification. The user must change it on first login.
+                      </p>
                     </div>
                   )}
                 </div>

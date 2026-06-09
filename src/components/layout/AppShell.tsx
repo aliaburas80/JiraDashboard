@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { getInitialTheme, applyTheme } from '@/lib/theme';
 import { initThemeCustom } from '@/lib/themeCustomizer';
 import UserMenu from '@/components/auth/UserMenu';
+import NotificationBell from '@/components/auth/NotificationBell';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import ThemeCustomizerPanel from '@/components/ui/ThemeCustomizerPanel';
 import { DataSourceBadge } from '@/components/ui/DataSourceBadge';
@@ -249,6 +250,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
             )}
 
             {showNav && <OnboardingChecklist compact />}
+            {showNav && <NotificationBell role={role} />}
             <UserMenu />
 
             {/* Data source indicator — shows where current data comes from */}

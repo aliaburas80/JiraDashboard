@@ -106,8 +106,8 @@ export async function PATCH(
       data: {
         recipientUserId: userAddRequest.requestedByUserId,
         type: 'user_add_request_accepted',
-        title: 'User request accepted',
-        message: `Your request to add ${userAddRequest.requestedEmail} as ${roleLabel(userAddRequest.requestedRole)} has been approved. The account is ready for first login.`,
+        title: '✅ User request approved',
+        message: `Your request to add ${userAddRequest.requestedEmail} as ${roleLabel(userAddRequest.requestedRole)} has been approved.\n\nTemporary password: ${tempPassword}\n\nThe user should log in and change their password immediately on first login.`,
         relatedEntityType: 'UserAddRequest',
         relatedEntityId: requestId,
       },
@@ -128,6 +128,7 @@ export async function PATCH(
 
   return NextResponse.json({
     ok: true,
+    tempPassword,
     createdUser: {
       id: newUser.id,
       name: newUser.name,
