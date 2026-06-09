@@ -1,6 +1,6 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import DataRetentionSettings from '@/components/admin/DataRetentionSettings';
@@ -831,6 +831,14 @@ function UserManagementSettings() {
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'scrum_master' as AppRole });
 
+  // ── Multi-select state ──────────────────────────────────────────────────────
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkRole, setBulkRole] = useState<AppRole>('scrum_master');
+  const [bulkApplying, setBulkApplying] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const selectAllRef = useRef<HTMLInputElement>(null);
+
   async function loadUsers() {
     setLoading(true);
     try {
@@ -907,6 +915,84 @@ function UserManagementSettings() {
 
   const filteredUsers = users.filter(user => matchesUserFilter(user, query, roleFilter));
 
+  // Clear selection when filters change
+  useEffect(() => { setSelected(new Set()); }, [query, roleFilter]);
+
+  // Drive the select-all checkbox indeterminate state
+  useEffect(() => {
+    if (!selectAllRef.current || filteredUsers.length === 0) return;
+    const anySelected = filteredUsers.some(u => selected.has(u.id));
+    const allSelected = filteredUsers.every(u => selected.has(u.id));
+    selectAllRef.current.indeterminate = anySelected && !allSelected;
+  }, [selected, filteredUsers]);
+
+  function toggleSelect(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    const allSelected = filteredUsers.every(u => selected.has(u.id));
+    setSelected(allSelected ? new Set() : new Set(filteredUsers.map(u => u.id)));
+  }
+
+  async function bulkUpdateRole() {
+    const ids = filteredUsers.filter(u => selected.has(u.id)).map(u => u.id);
+    if (ids.length === 0) return;
+    setBulkApplying(true); setMsg(null);
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch('/api/admin/users', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, role: bulkRole }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setUsers(prev => prev.map(u => u.id === id ? data.user : u));
+        } else {
+          failed++;
+        }
+      } catch { failed++; }
+    }
+    setBulkApplying(false);
+    setSelected(new Set());
+    setMsg(failed === 0
+      ? { ok: true,  text: `Role updated for ${ids.length} user${ids.length !== 1 ? 's' : ''}.` }
+      : { ok: false, text: `${failed} update${failed !== 1 ? 's' : ''} failed.` });
+  }
+
+  async function bulkDeleteUsers() {
+    const ids = filteredUsers.filter(u => selected.has(u.id)).map(u => u.id);
+    if (ids.length === 0) return;
+    setBulkDeleting(true); setMsg(null);
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch('/api/admin/users', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
+        });
+        if (res.ok) {
+          setUsers(prev => prev.filter(u => u.id !== id));
+        } else {
+          failed++;
+        }
+      } catch { failed++; }
+    }
+    setBulkDeleting(false);
+    setShowBulkDeleteConfirm(false);
+    setSelected(new Set());
+    setMsg(failed === 0
+      ? { ok: true,  text: `${ids.length} user${ids.length !== 1 ? 's' : ''} deleted.` }
+      : { ok: false, text: `${failed} deletion${failed !== 1 ? 's' : ''} failed.` });
+  }
+
   return (
     <div className="space-y-6">
       {deleteTarget && (
@@ -917,6 +1003,17 @@ function UserManagementSettings() {
           onConfirm={deleteUser}
           onCancel={() => setDeleteTarget(null)}
           loading={deleting}
+        />
+      )}
+
+      {showBulkDeleteConfirm && (
+        <ConfirmDeleteDialog
+          title={`Delete ${selected.size} user${selected.size !== 1 ? 's' : ''}?`}
+          message={`This permanently removes ${selected.size} user${selected.size !== 1 ? 's' : ''} from the account. All their access will stop immediately. This cannot be undone.`}
+          confirmLabel={`Delete ${selected.size} user${selected.size !== 1 ? 's' : ''}`}
+          onConfirm={bulkDeleteUsers}
+          onCancel={() => setShowBulkDeleteConfirm(false)}
+          loading={bulkDeleting}
         />
       )}
 
@@ -991,6 +1088,50 @@ function UserManagementSettings() {
             </button>
           </div>
         </div>
+        {/* Bulk action bar — visible only when rows are selected */}
+        {selected.size > 0 && (
+          <div className="flex flex-wrap items-center gap-3 border-b border-blue-100 bg-blue-50 px-5 py-3">
+            <span className="text-sm font-black text-blue-800">
+              {selected.size} user{selected.size !== 1 ? 's' : ''} selected
+            </span>
+            <div className="flex flex-wrap items-center gap-2 ml-auto">
+              {/* Bulk role change */}
+              <select
+                value={bulkRole}
+                onChange={e => setBulkRole(e.target.value as AppRole)}
+                className="h-[34px] rounded-[8px] border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              >
+                {ASSIGNABLE_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
+              </select>
+              <button
+                type="button"
+                onClick={bulkUpdateRole}
+                disabled={bulkApplying}
+                className="inline-flex h-[34px] items-center gap-1.5 rounded-[8px] border border-slate-300 bg-white px-3 text-xs font-extrabold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                {bulkApplying ? '...' : '✎'} Change role
+              </button>
+              {/* Bulk delete */}
+              <button
+                type="button"
+                onClick={() => setShowBulkDeleteConfirm(true)}
+                disabled={bulkDeleting}
+                className="inline-flex h-[34px] items-center gap-1.5 rounded-[8px] bg-red-600 px-3 text-xs font-extrabold text-white transition hover:bg-red-700 disabled:opacity-50"
+              >
+                🗑 Delete {selected.size}
+              </button>
+              {/* Clear selection */}
+              <button
+                type="button"
+                onClick={() => setSelected(new Set())}
+                className="text-xs font-bold text-slate-400 hover:text-slate-700 transition-colors px-1"
+              >
+                ✕ Clear
+              </button>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="p-5 text-sm text-slate-400 animate-pulse">Loading users...</div>
         ) : (
@@ -998,6 +1139,16 @@ function UserManagementSettings() {
             <table className="w-full border-collapse text-sm">
               <thead className="bg-slate-50">
                 <tr>
+                  <th className="w-10 px-4 py-3">
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      checked={filteredUsers.length > 0 && filteredUsers.every(u => selected.has(u.id))}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 accent-blue-600 cursor-pointer"
+                      aria-label="Select all users"
+                    />
+                  </th>
                   <th className="px-5 py-3 text-left text-xs font-black text-slate-600">User</th>
                   <th className="w-44 px-5 py-3 text-left text-xs font-black text-slate-600">Role</th>
                   <th className="w-20 px-5 py-3 text-left text-xs font-black text-slate-600">Imports</th>
@@ -1022,7 +1173,16 @@ function UserManagementSettings() {
                   ][index % 5];
 
                   return (
-                    <tr key={user.id} className="border-t border-slate-200 group">
+                    <tr key={user.id} className={`border-t border-slate-200 group transition-colors ${selected.has(user.id) ? 'bg-blue-50/60' : ''}`}>
+                      <td className="px-4 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(user.id)}
+                          onChange={() => toggleSelect(user.id)}
+                          className="h-4 w-4 rounded border-slate-300 text-blue-600 accent-blue-600 cursor-pointer"
+                          aria-label={`Select ${user.name}`}
+                        />
+                      </td>
                       <td className="px-5 py-4">
                         <div className="flex min-w-0 items-center gap-3">
                           <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-black ${avatarTone}`}>{initials}</span>
