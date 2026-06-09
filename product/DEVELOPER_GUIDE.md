@@ -1001,7 +1001,7 @@ Last verified: 2026-06-02
 | Package | Purpose | Feature | Priority |
 |---------|---------|---------|---------|
 | Jira API client (TBD) | Jira REST API integration | P3 Jira Integration | P3 |
-| `nodemailer` (TBD) | Email notification channel | P4 Notifications | P4 |
+| `nodemailer` ✅ **Installed** | Welcome email on member-request accept | FR-325 | P1 — Done 2026-06-09 |
 
 ---
 
@@ -1184,6 +1184,33 @@ Jira API response → Jira API adapter → Normalised JiraIssue[] → Existing m
 
 ### Future Jira Events (Planned)
 `JIRA_CONNECTION_TEST_STARTED | JIRA_CONNECTION_TEST_SUCCESS | JIRA_CONNECTION_TEST_FAILED | JIRA_SYNC_STARTED | JIRA_SYNC_SUCCESS | JIRA_SYNC_FAILED | JIRA_FIELD_MAPPING_UPDATED | JIRA_TICKET_SUGGESTION_CREATED | JIRA_TICKET_SUGGESTION_APPROVED | JIRA_TICKET_SUGGESTION_REJECTED | JIRA_TICKET_CREATE_STARTED | JIRA_TICKET_CREATE_SUCCESS | JIRA_TICKET_CREATE_FAILED | JIRA_PERMISSION_DENIED`
+
+---
+
+## Email — Welcome Email on Member-Request Accept (Implemented — v4.5.1)
+
+**Status:** Implemented (FR-325). Sends a welcome email to the newly created user when an admin accepts a `UserAddRequest`.
+
+### Configuration
+
+Five env vars in `.env` / `.env.local`. All are optional — if `SMTP_HOST`, `SMTP_USER`, or `SMTP_PASS` is absent, `sendEmail()` logs a `console.warn` and returns without attempting a connection. The accept request still succeeds.
+
+| Env var | Default | Notes |
+|---------|---------|-------|
+| `SMTP_HOST` | _(empty — email skipped)_ | SMTP server hostname, e.g. `smtp.sendgrid.net` |
+| `SMTP_PORT` | `587` | Use `465` for TLS (sets `secure: true` automatically) |
+| `SMTP_USER` | _(empty — email skipped)_ | SMTP auth username |
+| `SMTP_PASS` | _(empty — email skipped)_ | SMTP auth password |
+| `SMTP_FROM` | `JiraDashboard <noreply@jiradashboard.local>` | Sender display name + address |
+
+### Key Files
+
+- `src/lib/email.ts` — `sendEmail(opts)` (nodemailer wrapper) + `buildWelcomeEmail(name, email, tempPassword)` (returns `{ subject, text, html }`)
+- `app/api/admin/user-add-requests/[id]/accept/route.ts` — calls `buildWelcomeEmail` + `sendEmail` after account creation (lines ~116–121), wrapped in `try/catch`
+
+### Testing Locally
+
+Point `SMTP_HOST` at a local SMTP sink such as [Mailpit](https://github.com/axllent/mailpit) (`smtp://localhost:1025`, web UI at `http://localhost:8025`) or [MailHog](https://github.com/mailhog/MailHog). No real emails will be sent.
 
 ---
 

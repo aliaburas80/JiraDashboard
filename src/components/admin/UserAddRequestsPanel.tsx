@@ -2,6 +2,31 @@
 // USERREQ-16–20 — Admin panel to review, accept, and reject add-member requests.
 'use client';
 import { useCallback, useEffect, useState } from 'react';
+
+function generateTempPassword(): string {
+  const upper   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lower   = 'abcdefghijklmnopqrstuvwxyz';
+  const digits  = '0123456789';
+  const special = '!@#$%^&*';
+  const all     = upper + lower + digits + special;
+  const buf     = crypto.getRandomValues(new Uint8Array(32));
+  let bi = 0;
+  const rand = (n: number) => buf[bi++ % 32] % n;
+  const chars: string[] = [
+    upper[rand(upper.length)],
+    upper[rand(upper.length)],
+    digits[rand(digits.length)],
+    digits[rand(digits.length)],
+    special[rand(special.length)],
+    special[rand(special.length)],
+    ...Array.from({ length: 8 }, () => all[rand(all.length)]),
+  ];
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = rand(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join('');
+}
 import { roleLabel } from '@/lib/roles';
 
 interface UserAddRequest {
@@ -229,6 +254,19 @@ export default function UserAddRequestsPanel() {
                           />
                           <button
                             type="button"
+                            onClick={() => {
+                              const pw = generateTempPassword();
+                              setAdminPasswords(p => ({ ...p, [req.id]: pw }));
+                              setShowAdminPw(s => ({ ...s, [req.id]: true }));
+                              setPwError(er => ({ ...er, [req.id]: '' }));
+                            }}
+                            className="px-2.5 py-2 rounded-[8px] border border-amber-300 bg-amber-50 text-amber-800 text-[11px] font-bold hover:bg-amber-100 transition-colors shrink-0"
+                            title="Auto-generate a strong password"
+                          >
+                            Generate
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setShowAdminPw(s => ({ ...s, [req.id]: !s[req.id] }))}
                             className="px-2 py-2 rounded-[8px] border border-amber-200 bg-white text-amber-700 text-xs hover:bg-amber-50 transition-colors shrink-0"
                             aria-label={showAdminPw[req.id] ? 'Hide password' : 'Show password'}
@@ -240,7 +278,7 @@ export default function UserAddRequestsPanel() {
                           <p className="text-xs text-red-600 font-semibold mt-1.5">{pwError[req.id]}</p>
                         )}
                         <p className="text-[11px] text-amber-600 mt-1.5">
-                          This password will be shared with the requester in their in-app notification. The user must change it on first login.
+                          This password will be shared with the requester via in-app notification and sent to the new user by email. The user must change it on first login.
                         </p>
                       </div>
 
@@ -294,7 +332,7 @@ export default function UserAddRequestsPanel() {
                         </button>
                       </div>
                       <p className="text-[11px] text-green-600 mt-1.5">
-                        The requester has also received this password in their in-app notification. The user must change it on first login.
+                        The requester received this password via in-app notification. The new user has been sent a welcome email with their credentials. They must change the password on first login.
                       </p>
                     </div>
                   )}

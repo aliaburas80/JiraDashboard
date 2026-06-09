@@ -8,6 +8,7 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, validatePasswordStrength } from '@/lib/auth';
+import { sendEmail, buildWelcomeEmail } from '@/lib/email';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { isAppRole, roleLabel } from '@/lib/roles';
 
@@ -111,6 +112,13 @@ export async function PATCH(
       },
     });
   } catch { /* swallow notification write errors */ }
+
+  try {
+    const welcome = buildWelcomeEmail(newUser.name, newUser.email, tempPassword);
+    await sendEmail({ to: newUser.email, toName: newUser.name, ...welcome });
+  } catch (err) {
+    console.warn('[email] Failed to send welcome email:', err);
+  }
 
   try {
     await prisma.auditEvent.create({

@@ -5,6 +5,21 @@
 
 ---
 
+## v4.5.1 — Auto-Generate Password + Welcome Email on Member Request Accept (2026-06-09, P1)
+
+### Closed USERREQ-01 (partial) — password generation UX + email delivery for new accounts
+
+- **Generate button** in `UserAddRequestsPanel`: clicking "Generate" next to the temp-password field auto-fills a cryptographically random 14-character password (2 uppercase + 2 digits + 2 symbols + 8 mixed, Fisher-Yates shuffled via `crypto.getRandomValues`). The field becomes visible immediately so the admin can review or edit before accepting.
+- **Welcome email to new user**: on successful accept, `PATCH /api/admin/user-add-requests/[id]/accept` now calls `sendEmail()` (new `src/lib/email.ts`) delivering a styled HTML + plain-text email to the created user's address containing their email address and temporary password. Sending is **graceful**: if `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` are not configured, the request still succeeds and a `console.warn` is logged — no error is returned to the admin.
+- **In-app notification** to the requester remains unchanged and continues to embed the temp password.
+- Updated helper text in the password field: "This password will be shared with the requester via in-app notification and sent to the new user by email."
+- Updated success banner text after accept to reflect both channels.
+- **New `src/lib/email.ts`**: thin nodemailer wrapper; exports `sendEmail()` and `buildWelcomeEmail()`. Configured via five env vars (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`); all documented in `.env.example`.
+- **`src/lib/auth.ts`** gains `generateTempPassword()` (server-side, Node `crypto.randomBytes`) for future use.
+- **Product docs updated:** SRS Addendum D (FR-319 and FR-321 updated, new FR-325 for email); DEVELOPER_GUIDE SMTP section; RELEASE_NOTES (this entry).
+
+---
+
 ## v4.5 — USERREQ UI: Request Modal, Admin Queue, Notification Bell, Bulk User Management (2026-06-09, P1)
 
 ### Closed USERREQ-02/03/04/05/06/15/16/17/18/19/20/21/22/23/24/26/29/30 — shipped the full USERREQ UI layer and all related product documentation
