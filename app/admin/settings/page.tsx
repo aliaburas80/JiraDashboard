@@ -995,15 +995,14 @@ function UserManagementSettings() {
           <div className="p-5 text-sm text-slate-400 animate-pulse">Loading users...</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[880px] table-fixed border-collapse text-sm">
+            <table className="w-full border-collapse text-sm">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="w-[32%] px-5 py-3 text-left text-xs font-black text-slate-600">User</th>
-                  <th className="w-[20%] px-5 py-3 text-left text-xs font-black text-slate-600">Role</th>
-                  <th className="px-5 py-3 text-left text-xs font-black text-slate-600">Imports</th>
-                  <th className="px-5 py-3 text-left text-xs font-black text-slate-600">Snapshots</th>
-                  <th className="px-5 py-3 text-left text-xs font-black text-slate-600">Status</th>
-                  <th className="w-[12%] px-5 py-3 text-left text-xs font-black text-slate-600">Actions</th>
+                  <th className="px-5 py-3 text-left text-xs font-black text-slate-600">User</th>
+                  <th className="w-44 px-5 py-3 text-left text-xs font-black text-slate-600">Role</th>
+                  <th className="w-20 px-5 py-3 text-left text-xs font-black text-slate-600">Imports</th>
+                  <th className="w-24 px-5 py-3 text-left text-xs font-black text-slate-600">Snapshots</th>
+                  <th className="w-48 px-5 py-3 text-left text-xs font-black text-slate-600">Status &amp; Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -1023,7 +1022,7 @@ function UserManagementSettings() {
                   ][index % 5];
 
                   return (
-                    <tr key={user.id} className="border-t border-slate-200">
+                    <tr key={user.id} className="border-t border-slate-200 group">
                       <td className="px-5 py-4">
                         <div className="flex min-w-0 items-center gap-3">
                           <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-black ${avatarTone}`}>{initials}</span>
@@ -1037,27 +1036,28 @@ function UserManagementSettings() {
                       </td>
                       <td className="px-5 py-4">
                         <select value={user.role} onChange={e => updateUser(user.id, { role: e.target.value as AppRole })}
-                          className="h-[38px] w-44 rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100">
+                          className="h-[38px] w-full rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100">
                           {roleOptionsFor(user).map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
                         </select>
                       </td>
                       <td className="px-5 py-4 font-bold text-slate-700">{user.importCount}</td>
                       <td className="px-5 py-4 font-bold text-slate-700">{user.snapshotCount}</td>
-                      <td className="px-5 py-4">
-                        <span className={`inline-flex h-7 items-center gap-2 rounded-full border px-3 text-xs font-black ${user.isActive ? 'border-green-200 bg-green-50 text-green-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${user.isActive ? 'bg-green-600' : 'bg-slate-400'}`} />
-                          {user.isActive ? 'Active' : 'Disabled'}
-                        </span>
-                      </td>
+                      {/* Status + inline action buttons — always visible, no horizontal scroll needed */}
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
+                          <span className={`inline-flex h-7 shrink-0 items-center gap-2 rounded-full border px-3 text-xs font-black ${user.isActive ? 'border-green-200 bg-green-50 text-green-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${user.isActive ? 'bg-green-600' : 'bg-slate-400'}`} />
+                            {user.isActive ? 'Active' : 'Disabled'}
+                          </span>
                           <button type="button" onClick={() => updateUser(user.id, { isActive: !user.isActive })}
-                            className="grid h-8 w-8 place-items-center rounded-[8px] text-lg text-slate-700 transition hover:bg-slate-100"
+                            title={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] text-base text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
                             aria-label={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}>
                             {user.isActive ? '⏸' : '▶'}
                           </button>
                           <button type="button" onClick={() => setDeleteTarget(user)}
-                            className="grid h-8 w-8 place-items-center rounded-[8px] text-lg text-red-600 transition hover:bg-red-50"
+                            title={`Delete ${user.name}`}
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] text-base text-red-500 transition hover:bg-red-50 hover:text-red-700"
                             aria-label={`Delete ${user.name}`}>
                             🗑
                           </button>
