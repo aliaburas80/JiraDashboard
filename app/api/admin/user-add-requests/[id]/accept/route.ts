@@ -113,9 +113,10 @@ export async function PATCH(
     });
   } catch { /* swallow notification write errors */ }
 
+  let emailSent = false;
   try {
     const welcome = buildWelcomeEmail(newUser.name, newUser.email, tempPassword);
-    await sendEmail({ to: newUser.email, toName: newUser.name, ...welcome });
+    emailSent = await sendEmail({ to: newUser.email, toName: newUser.name, ...welcome });
   } catch (err) {
     console.warn('[email] Failed to send welcome email:', err);
   }
@@ -134,7 +135,7 @@ export async function PATCH(
 
   return NextResponse.json({
     ok: true,
-    tempPassword,
+    emailSent,
     createdUser: {
       id: newUser.id,
       name: newUser.name,

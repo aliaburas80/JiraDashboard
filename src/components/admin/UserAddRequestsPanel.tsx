@@ -59,6 +59,7 @@ export default function UserAddRequestsPanel() {
   const [filter, setFilter]         = useState<'all' | 'pending' | 'decided'>('pending');
   const [acting, setActing]         = useState<string | null>(null);
   const [tempPasswords, setTempPasswords] = useState<Record<string, string>>({});
+  const [emailSentMap, setEmailSentMap] = useState<Record<string, boolean>>({});
   const [copied, setCopied]         = useState<string | null>(null);
   const [decisionNote, setDecisionNote] = useState<Record<string, string>>({});
   const [adminPasswords, setAdminPasswords] = useState<Record<string, string>>({});
@@ -110,8 +111,10 @@ export default function UserAddRequestsPanel() {
         setError(data.error ?? `Could not ${action} request.`);
         return;
       }
-      if (action === 'accept' && data.tempPassword) {
-        setTempPasswords(p => ({ ...p, [id]: data.tempPassword }));
+      if (action === 'accept') {
+        // Use the password already in state — never echo sensitive data from the response
+        setTempPasswords(p => ({ ...p, [id]: adminPasswords[id].trim() }));
+        setEmailSentMap(m => ({ ...m, [id]: !!data.emailSent }));
       }
       setRequests(prev => prev.map(r =>
         r.id === id
@@ -317,8 +320,8 @@ export default function UserAddRequestsPanel() {
 
                   {/* Temp password revealed after accept */}
                   {req.status === 'accepted' && tempPasswords[req.id] && (
-                    <div className="mt-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
-                      <p className="text-xs font-black uppercase text-green-700 mb-1.5">Temporary password — share with user</p>
+                    <div className="mt-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 space-y-2">
+                      <p className="text-xs font-black uppercase text-green-700">Temporary password — share with user</p>
                       <div className="flex items-center gap-2">
                         <code className="flex-1 rounded-lg bg-white border border-green-200 px-3 py-2 text-sm font-mono font-bold text-slate-900 select-all">
                           {tempPasswords[req.id]}
@@ -331,8 +334,19 @@ export default function UserAddRequestsPanel() {
                           {copied === req.id ? '✓ Copied' : 'Copy'}
                         </button>
                       </div>
-                      <p className="text-[11px] text-green-600 mt-1.5">
-                        The requester received this password via in-app notification. The new user has been sent a welcome email with their credentials. They must change the password on first login.
+                      {/* Email delivery status */}
+                      {emailSentMap[req.id] === true && (
+                        <p className="text-[11px] font-semibold text-green-700 flex items-center gap-1">
+                          ✅ Welcome email sent to {req.requestedEmail}
+                        </p>
+                      )}
+                      {emailSentMap[req.id] === false && (
+                        <p className="text-[11px] font-semibold text-amber-700 flex items-center gap-1">
+                          ⚠️ Email not sent — SMTP not configured. Share the password manually.
+                        </p>
+                      )}
+                      <p className="text-[11px] text-green-600">
+                        The requester received this password via in-app notification. They must change the password on first login.
                       </p>
                     </div>
                   )}

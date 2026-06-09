@@ -11,7 +11,8 @@ interface EmailOptions {
   html?: string;
 }
 
-export async function sendEmail(opts: EmailOptions): Promise<void> {
+// Returns true if sent, false if skipped (not configured), throws on send failure.
+export async function sendEmail(opts: EmailOptions): Promise<boolean> {
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT ?? '587', 10);
   const user = process.env.SMTP_USER;
@@ -20,15 +21,22 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
 
   if (!host || !user || !pass) {
     console.warn(`[email] SMTP not configured — skipping email to ${opts.to}`);
-    return;
+    return false;
   }
 
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-  });
+  // Use Gmail's built-in service preset when the host is smtp.gmail.com —
+  // it sets the correct TLS/port settings and avoids ETIMEDOUT handshake failures.
+  const isGmail = host.toLowerCase() === 'smtp.gmail.com';
+  const transporter = isGmail
+    ? nodemailer.createTransport({ service: 'gmail', auth: { user, pass } })
+    : nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass },
+        connectionTimeout: 10_000,
+        greetingTimeout: 10_000,
+      });
 
   await transporter.sendMail({
     from,
@@ -37,6 +45,8 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
     text: opts.text,
     html: opts.html,
   });
+
+  return true;
 }
 
 export function buildWelcomeEmail(
