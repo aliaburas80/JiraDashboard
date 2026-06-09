@@ -4,6 +4,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface AppNotification {
   id: string;
@@ -20,7 +21,22 @@ interface Props {
   role?: string | null;
 }
 
+function resolveNotificationUrl(n: AppNotification, isAdmin: boolean): string | null {
+  switch (n.type) {
+    case 'user_add_request_accepted':
+      // Requester: their request was approved → see the new member on the Members page
+      // Admin: go back to the requests queue
+      return isAdmin ? '/admin/settings#requests' : '/members';
+    case 'user_add_request_rejected':
+      // Both roles: go to Members page (requester can re-submit there)
+      return '/members';
+    default:
+      return null;
+  }
+}
+
 export default function NotificationBell({ role }: Props) {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [pendingRequests, setPendingRequests] = useState(0);
   const [open, setOpen]   = useState(false);
@@ -179,36 +195,46 @@ export default function NotificationBell({ role }: Props) {
                 <p className="text-xs text-slate-400 font-semibold">No notifications yet</p>
               </div>
             ) : (
-              notifications.map(n => (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => markRead(n.id)}
-                  className={`w-full text-left flex gap-3 px-4 py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors ${!n.readAt ? 'bg-blue-50/40' : ''}`}
-                >
-                  <span className="text-base shrink-0 mt-0.5">
-                    {n.type === 'user_add_request_accepted' ? '✅'
-                      : n.type === 'user_add_request_rejected' ? '❌'
-                      : '🔔'}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-1">
-                      <p className={`text-xs font-bold text-slate-900 leading-snug ${!n.readAt ? 'text-blue-900' : ''}`}>
-                        {n.title}
+              notifications.map(n => {
+                const dest = resolveNotificationUrl(n, isAdmin);
+                return (
+                  <button
+                    key={n.id}
+                    type="button"
+                    onClick={() => {
+                      if (!n.readAt) markRead(n.id);
+                      setOpen(false);
+                      if (dest) router.push(dest);
+                    }}
+                    className={`w-full text-left flex gap-3 px-4 py-3 border-b border-slate-50 last:border-0 transition-colors ${
+                      dest ? 'hover:bg-blue-50 cursor-pointer' : 'hover:bg-slate-50'
+                    } ${!n.readAt ? 'bg-blue-50/40' : ''}`}
+                  >
+                    <span className="text-base shrink-0 mt-0.5">
+                      {n.type === 'user_add_request_accepted' ? '✅'
+                        : n.type === 'user_add_request_rejected' ? '❌'
+                        : '🔔'}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-1">
+                        <p className={`text-xs font-bold leading-snug ${!n.readAt ? 'text-blue-900' : 'text-slate-900'}`}>
+                          {n.title}
+                        </p>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {!n.readAt && <span className="w-2 h-2 rounded-full bg-blue-500 mt-1" />}
+                          {dest && <span className="text-[10px] text-blue-400 mt-0.5">→</span>}
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug line-clamp-3 whitespace-pre-line">
+                        {n.message}
                       </p>
-                      {!n.readAt && (
-                        <span className="shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-1" />
-                      )}
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        {new Date(n.createdAt).toLocaleString()}
+                      </p>
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5 leading-snug line-clamp-3 whitespace-pre-line">
-                      {n.message}
-                    </p>
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      {new Date(n.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                </button>
-              ))
+                  </button>
+                );
+              })
             )}
           </div>
         </div>
