@@ -323,7 +323,7 @@ export default function GlossaryPage() {
           </p>
         </div>
 
-        {/* ── Sticky section nav ── */}
+        {/* ── Sticky letter-jump nav ── */}
         <div
           id="glossary-nav"
           className="sticky top-14 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 mb-8 print:hidden"
@@ -334,45 +334,32 @@ export default function GlossaryPage() {
             boxShadow: '0 4px 16px rgba(24,43,77,0.07)',
           }}
         >
-          <div className="flex flex-wrap items-end gap-0.5 py-1">
+          <div className="flex items-center gap-1.5 py-2 overflow-x-auto">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">Jump to</span>
             {SECTIONS.map(s => {
+              const letter = s.title.split(' — ')[0].replace(/[^A-Z]/g, '');
               const active = activeId === s.id;
               return (
                 <button
                   key={s.id}
                   type="button"
                   onClick={() => goTo(s.id)}
+                  title={s.title}
                   style={{
                     position: 'relative',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '8px 10px 10px',
-                    borderRadius: 12,
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    fontFamily: 'inherit',
-                    whiteSpace: 'nowrap',
-                    background: active
-                      ? 'linear-gradient(180deg, rgba(239,246,255,0.95), rgba(241,245,249,0.72))'
-                      : 'transparent',
-                    color: active ? '#2563eb' : '#64748b',
-                    transition: 'background 150ms, color 150ms',
+                    display: 'inline-flex', flexDirection: 'column', alignItems: 'center',
+                    padding: '4px 8px 6px',
+                    borderRadius: 8, border: 'none', cursor: 'pointer',
+                    minWidth: 36, fontFamily: 'inherit',
+                    background: active ? 'rgba(239,246,255,.95)' : 'transparent',
+                    transition: 'background 150ms',
                   }}
                 >
-                  <span style={{ fontSize: 13, lineHeight: 1 }}>{s.icon}</span>
-                  {s.title.split(' — ')[1]}
-                  {active && (
-                    <span style={{
-                      position: 'absolute',
-                      left: 10, right: 10, bottom: 2,
-                      height: 3, borderRadius: 999,
-                      background: '#2563eb',
-                      boxShadow: '0 0 0 4px rgba(37,99,235,0.10)',
-                    }} aria-hidden="true" />
-                  )}
+                  <span style={{ fontSize: 11, lineHeight: 1, marginBottom: 2 }}>{s.icon}</span>
+                  <span style={{ fontSize: 10.5, fontWeight: active ? 800 : 600, color: active ? '#2563eb' : '#94a3b8', letterSpacing: '0.02em' }}>
+                    {letter}
+                  </span>
+                  {active && <span style={{ position:'absolute', left:4, right:4, bottom:1, height:2, borderRadius:999, background:'#2563eb' }} aria-hidden />}
                 </button>
               );
             })}

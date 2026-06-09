@@ -1156,6 +1156,20 @@ const SECTIONS: Section[] = [
   },
 ];
 
+// ─── Section groups — 9 categories so the nav shows ≤9 group pills + sub-pills ──
+
+const SECTION_GROUPS: { id: string; label: string; icon: string; sectionIds: string[] }[] = [
+  { id: 'start',    label: 'Getting Started', icon: '🚀', sectionIds: ['welcome'] },
+  { id: 'dash',     label: 'Dashboard',       icon: '📊', sectionIds: ['summary','filters','attention','kpi','charts','composition','controls'] },
+  { id: 'planning', label: 'Planning',        icon: '📅', sectionIds: ['quarters','kanban','sprint','ownership','readiness'] },
+  { id: 'analysis', label: 'Analysis',        icon: '🔍', sectionIds: ['justification','flow','labels','relations','teams','portfolio','release-confidence','filter-bar'] },
+  { id: 'export',   label: 'Export & Data',   icon: '📤', sectionIds: ['export-guide','aliases','api','explorer-export','export-sheets','executive-pdf'] },
+  { id: 'system',   label: 'System',          icon: '☁️', sectionIds: ['cloud-sync','cloud-storage','diagnostics','deployment','about','branding'] },
+  { id: 'ux',       label: 'Customization',   icon: '🎨', sectionIds: ['chart-customization','layout-builder','theme-customization','product-tour'] },
+  { id: 'people',   label: 'People',          icon: '👥', sectionIds: ['member-requests','rec-owners'] },
+  { id: 'support',  label: 'Troubleshooting', icon: '🛠️', sectionIds: ['troubleshooting'] },
+];
+
 // ─── Accordion item ───────────────────────────────────────────────────────────
 
 function AccordionItem({ item, isOpen, onToggle }: { item: Item; isOpen: boolean; onToggle: () => void }) {
@@ -1323,52 +1337,73 @@ export default function HelpPage() {
             />
           </div>
 
-          {/* Section tabs — shown only when not searching */}
-          {!search && (
-            <div className="flex flex-wrap items-end gap-0.5 py-0.5">
-              {SECTIONS.map(s => {
-                const active = activeId === s.id;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => goTo(s.id)}
-                    style={{
-                      position: 'relative',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      padding: '7px 9px 9px',
-                      borderRadius: 12,
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: 11.5,
-                      fontWeight: 700,
-                      fontFamily: 'inherit',
-                      whiteSpace: 'nowrap',
-                      background: active
-                        ? 'linear-gradient(180deg, rgba(239,246,255,0.95), rgba(241,245,249,0.72))'
-                        : 'transparent',
-                      color: active ? '#2563eb' : '#64748b',
-                      transition: 'background 150ms, color 150ms',
-                    }}
-                  >
-                    <span style={{ fontSize: 12, lineHeight: 1 }}>{s.icon}</span>
-                    {s.title.split(' — ')[0].replace(/^\S+\s/, '')}
-                    {active && (
-                      <span style={{
-                        position: 'absolute',
-                        left: 9, right: 9, bottom: 2,
-                        height: 3, borderRadius: 999,
-                        background: '#2563eb',
-                        boxShadow: '0 0 0 4px rgba(37,99,235,0.10)',
-                      }} aria-hidden="true" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          {/* Two-level grouped nav — shown only when not searching */}
+          {!search && (() => {
+            const activeGroup = SECTION_GROUPS.find(g => g.sectionIds.includes(activeId)) ?? SECTION_GROUPS[0];
+            const subSections = activeGroup.sectionIds
+              .map(id => SECTIONS.find(s => s.id === id))
+              .filter(Boolean) as Section[];
+            return (
+              <div>
+                {/* Row 1: category group pills */}
+                <div className="flex flex-wrap gap-0.5 py-1">
+                  {SECTION_GROUPS.map(group => {
+                    const isActive = group.id === activeGroup.id;
+                    return (
+                      <button
+                        key={group.id}
+                        type="button"
+                        onClick={() => goTo(group.sectionIds[0])}
+                        style={{
+                          position: 'relative',
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          padding: '5px 10px 7px',
+                          borderRadius: 10, border: 'none', cursor: 'pointer',
+                          fontSize: 11.5, fontWeight: 700, fontFamily: 'inherit', whiteSpace: 'nowrap',
+                          background: isActive ? 'linear-gradient(180deg,rgba(239,246,255,.95),rgba(241,245,249,.72))' : 'transparent',
+                          color: isActive ? '#2563eb' : '#64748b',
+                          transition: 'background 150ms, color 150ms',
+                        }}
+                      >
+                        <span style={{ fontSize: 11, lineHeight: 1 }}>{group.icon}</span>
+                        {group.label}
+                        {isActive && <span style={{ position:'absolute', left:8, right:8, bottom:2, height:3, borderRadius:999, background:'#2563eb', boxShadow:'0 0 0 4px rgba(37,99,235,.10)' }} aria-hidden />}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Row 2: sub-section pills for active group */}
+                {subSections.length > 1 && (
+                  <div className="flex flex-wrap gap-0.5 py-0.5 border-t border-slate-100">
+                    {subSections.map(s => {
+                      const isActive = activeId === s.id;
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => goTo(s.id)}
+                          style={{
+                            position: 'relative',
+                            display: 'inline-flex', alignItems: 'center', gap: 3,
+                            padding: '3px 8px 5px',
+                            borderRadius: 8, border: 'none', cursor: 'pointer',
+                            fontSize: 10.5, fontWeight: isActive ? 700 : 500, fontFamily: 'inherit', whiteSpace: 'nowrap',
+                            background: isActive ? 'rgba(239,246,255,.9)' : 'transparent',
+                            color: isActive ? '#2563eb' : '#94a3b8',
+                            transition: 'background 150ms, color 150ms',
+                          }}
+                        >
+                          <span style={{ fontSize: 10 }}>{s.icon}</span>
+                          {s.title.split(' — ')[0]}
+                          {isActive && <span style={{ position:'absolute', left:6, right:6, bottom:1, height:2, borderRadius:999, background:'#93c5fd' }} aria-hidden />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* No results */}

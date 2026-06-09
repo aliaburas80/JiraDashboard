@@ -1,6 +1,8 @@
 # Delivery Clarity — Master TODO List
 
-**Last updated:** 2026-06-09 (**v4.5 USERREQ UI ✅ FULLY SHIPPED AND DOCUMENTED** — all USERREQ-02/03/04/05/06/15/16/17/18/19/20/21/22/23/24/26/29/30 closed. RequestAddMemberModal (FR-320), UserAddRequestsPanel with mandatory admin-entered temp password (FR-321), GET/PATCH notification APIs (FR-322), NotificationBell with pulsing badge + amber admin strip (FR-323), bulk user multi-select/delete/role-change (FR-324), UC-097–099, UJ-034, SCN-049, TC-NOTIF-01–05, TC-REQ-15–16, SRS Addendum C, RELEASE_NOTES v4.5. Suite: **571/63 passing**, lint and build clean. NEXT-03 + TRACE-01 + TRACE-02 all ✅ FULLY CLOSED. USERREQ-07–14, USERREQ-28 ✅ CLOSED 2026-06-09 (backend foundation). TRACE-01 **and** TRACE-02 were both ✅ FULLY CLOSED 2026-06-08. TRACE-01: all six gap clusters plus UX-14 done — cluster #5 closed UX-02/03/05/11/13 narrative residue (new FR-308/BR-112 + UC-090/091, SCN-046/047/048, UJ-030/031/032/033, TC-CH-01–03/TC-X-14 via new src/lib/dashboardChips.ts and buildReportHtml() extractions); cluster #6 resolved the FR↔UC bundling item by fixing four real ID collisions it surfaced (duplicate FR-242/243 → FR-310/311, duplicate FR-235D → FR-235H, duplicate UC-043/044 → UC-092/093, phantom FR-309 → newly written) and adding TRACE-01 Appendix B, the FR→UC Ownership Index — matrix has zero GAP cells and zero ID collisions. TRACE-02: all 22 COVER-XX full-app-coverage rows closed via a survey-first pass — 2 stale-framing false positives re-verified (COVER-02/05), 2 genuine gaps closed (COVER-03 new SRS §8.1 API route inventory; COVER-06 new FR-312/UC-094/mergeIssues.test.ts), 1 TC-ID collision cluster resolved (COVER-11 — F3 Authentication Tests table renumbered TC-A-10–14 + 7 new tests), 1 error-state gap closed (COVER-12 — snapshotLoadErrors.test.ts TC-SN-09–11), and 5 roadmap items confirmed correctly-scoped with no speculative docs (COVER-17–21). Suite now **527/60 passing**, lint and build clean)  
+**Last updated:** 2026-06-10 (**v4.6 ROADMAP/FORECAST/RETRO/NAV-UX ✅ SHIPPED** — /roadmap, /forecast, /retro pages live; help + glossary nav UX redesigned; encrypted S3 config shipped; nav items added to Delivery group in AppShell. RETRO-01/02/03/23/24/25/26/27/28/31/32 ✅ Done. FCAST-01–18 ✅ Done. NAV-01/NAV-02 ✅ Done. ROADMAP-01 ✅ Done. COVER-19/20/22 re-opened → re-closed as implemented. Branch: feat/s3-encrypted-config.)  
+
+**Previous:** 2026-06-09 (**v4.5 USERREQ UI ✅ FULLY SHIPPED AND DOCUMENTED** — all USERREQ-02/03/04/05/06/15/16/17/18/19/20/21/22/23/24/26/29/30 closed. RequestAddMemberModal (FR-320), UserAddRequestsPanel with mandatory admin-entered temp password (FR-321), GET/PATCH notification APIs (FR-322), NotificationBell with pulsing badge + amber admin strip (FR-323), bulk user multi-select/delete/role-change (FR-324), UC-097–099, UJ-034, SCN-049, TC-NOTIF-01–05, TC-REQ-15–16, SRS Addendum C, RELEASE_NOTES v4.5. Suite: **571/63 passing**, lint and build clean. NEXT-03 + TRACE-01 + TRACE-02 all ✅ FULLY CLOSED. USERREQ-07–14, USERREQ-28 ✅ CLOSED 2026-06-09 (backend foundation). TRACE-01 **and** TRACE-02 were both ✅ FULLY CLOSED 2026-06-08. TRACE-01: all six gap clusters plus UX-14 done — cluster #5 closed UX-02/03/05/11/13 narrative residue (new FR-308/BR-112 + UC-090/091, SCN-046/047/048, UJ-030/031/032/033, TC-CH-01–03/TC-X-14 via new src/lib/dashboardChips.ts and buildReportHtml() extractions); cluster #6 resolved the FR↔UC bundling item by fixing four real ID collisions it surfaced (duplicate FR-242/243 → FR-310/311, duplicate FR-235D → FR-235H, duplicate UC-043/044 → UC-092/093, phantom FR-309 → newly written) and adding TRACE-01 Appendix B, the FR→UC Ownership Index — matrix has zero GAP cells and zero ID collisions. TRACE-02: all 22 COVER-XX full-app-coverage rows closed via a survey-first pass — 2 stale-framing false positives re-verified (COVER-02/05), 2 genuine gaps closed (COVER-03 new SRS §8.1 API route inventory; COVER-06 new FR-312/UC-094/mergeIssues.test.ts), 1 TC-ID collision cluster resolved (COVER-11 — F3 Authentication Tests table renumbered TC-A-10–14 + 7 new tests), 1 error-state gap closed (COVER-12 — snapshotLoadErrors.test.ts TC-SN-09–11), and 5 roadmap items confirmed correctly-scoped with no speculative docs (COVER-17–21). Suite now **527/60 passing**, lint and build clean)  
 **Product:** Delivery Clarity  
 **Brand:** Ali Delivery Intelligence  
 **Product line:** From Jira Exports to Delivery Confidence  
@@ -882,9 +884,9 @@ The following items are in the uploaded TODO as Done. Keep them, but verify trac
 
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
-| RETRO-01 | Create separate retrospective area | P2 | ❌ Not started | `/retro`, dashboard Retrospective section, or Upload page secondary option. |
-| RETRO-02 | Add three clear actions | P2 | ❌ Not started | Upload Retrospective File, Download Retrospective Template, Fill Retrospective in App. |
-| RETRO-03 | Design three-card layout | P2 | ❌ Not started | Left: Upload Retro File; Middle: Download Template; Right: Fill in App. Each card explains when to use it. |
+| RETRO-01 | Create separate retrospective area | P1 | ✅ Done 2026-06-10 | `/retro` page live — three-card landing (Fill in App, Download Template, Upload coming soon). |
+| RETRO-02 | Add three clear actions | P1 | ✅ Done 2026-06-10 | All three CTAs present: Fill in App (active), Download Template (CSV), Upload Retro File (coming soon). |
+| RETRO-03 | Design three-card layout | P1 | ✅ Done 2026-06-10 | Three-card grid with icon, title, description, and CTA per card. |
 | RETRO-04 | Support retrospective file upload | P2 | ❌ Not started | CSV, XLSX, XLS, Markdown, plain text. |
 | RETRO-05 | Define supported columns | P2 | ❌ Not started | Sprint Name, Team Name, Date, What Went Well, What Did Not Go Well, Blockers, Root Cause, Action Item, Owner, Due Date, Priority, Category, Status, Notes. |
 | RETRO-06 | Validate file structure | P2 | ❌ Not started | Required headers present or mappable. |
@@ -897,23 +899,23 @@ The following items are in the uploaded TODO as Done. Keep them, but verify trac
 | RETRO-13 | Generate suggested next sprint actions | P2 | ❌ Not started | Ceremony-linked suggestions with expected benefit. |
 | RETRO-14 | Link retro items to delivery metrics where possible | P2 | ❌ Not started | Example: carryover/blocked ratio/scope change linked to retro theme. |
 | RETRO-15 | Save retrospective record if persistence is available | P2 | ❌ Not started | Save source, insights, actions, draft/final state. |
-| RETRO-16 | Add `Download Retrospective Template` button | P2 | ❌ Not started | Locations: `/retro`, Upload page, Dashboard Retro section, Help Guide/System Tour. |
-| RETRO-17 | Generate `.xlsx` template | P2 | ❌ Not started | Preferred: `Retrospective_Template.xlsx`. |
-| RETRO-18 | Add optional `.csv` template | P2 | ❌ Not started | Nice-to-have. |
+| RETRO-16 | Add `Download Retrospective Template` button | P1 | ✅ Done 2026-06-10 | Download button on /retro landing card triggers CSV download. |
+| RETRO-17 | Generate `.xlsx` template | P2 | ❌ Not started | Preferred: `Retrospective_Template.xlsx` (currently CSV). |
+| RETRO-18 | Add optional `.csv` template | P1 | ✅ Done 2026-06-10 | `Retrospective_Template.csv` generated client-side with example rows. |
 | RETRO-19 | Add optional `.md` template | P2 | ❌ Not started | Nice-to-have. |
 | RETRO-20 | Add required template columns | P2 | ❌ Not started | Sprint Name required; Action Item required if improvement exists; Owner/Due Date recommended. |
 | RETRO-21 | Add `Instructions` sheet to `.xlsx` | P2 | ❌ Not started | Explain how to fill, required fields, examples, usage, upload outcome, privacy note. |
 | RETRO-22 | Add example rows to template | P2 | ❌ Not started | Carryover/large stories, blockers found late, scope changed mid-sprint. |
-| RETRO-23 | Add `Fill Retrospective in App` / `Create Retrospective` button | P2 | ❌ Not started | Clear CTA. |
-| RETRO-24 | Build Retro Context form section | P2 | ❌ Not started | Sprint Name, Team Name, Retro Date, Facilitator/Scrum Master, Sprint Goal, Sprint Goal Met Yes/No/Partially. |
-| RETRO-25 | Build What Went Well section | P2 | ❌ Not started | Multiple entries: description, category, related metric optional. |
-| RETRO-26 | Build What Did Not Go Well section | P2 | ❌ Not started | Multiple entries: description, impact, root cause, category. |
-| RETRO-27 | Build Blockers/Impediments section | P2 | ❌ Not started | Description, owner, status, impact, suggested prevention. |
-| RETRO-28 | Build Action Items section | P2 | ❌ Not started | Title, description, owner, due date, priority, status, related issue/metric optional. |
+| RETRO-23 | Add `Fill Retrospective in App` / `Create Retrospective` button | P1 | ✅ Done 2026-06-10 | First card on landing: "Fill in App → Start" CTA navigates to form view. |
+| RETRO-24 | Build Retro Context form section | P1 | ✅ Done 2026-06-10 | Sprint Name, Team Name, Retro Date, Sprint Goal, Sprint Goal Met (yes/partial/no). |
+| RETRO-25 | Build What Went Well section | P1 | ✅ Done 2026-06-10 | Multi-entry list with add/remove per item. |
+| RETRO-26 | Build What Did Not Go Well section | P1 | ✅ Done 2026-06-10 | Multi-entry list with add/remove per item. |
+| RETRO-27 | Build Blockers/Impediments section | P1 | ✅ Done 2026-06-10 | Multi-entry list with add/remove per item. |
+| RETRO-28 | Build Action Items section | P1 | ✅ Done 2026-06-10 | Per-action: text, owner, due date, priority (H/M/L) with add/remove. |
 | RETRO-29 | Build Next Sprint Suggestions section | P2 | ❌ Not started | System-generated and manually added suggestions; priority, owner, ceremony, expected benefit. |
 | RETRO-30 | Add save draft | P2 | ❌ Not started | If persistence is available. |
-| RETRO-31 | Add submit final retrospective | P2 | ❌ Not started | Analysis triggers after submit. |
-| RETRO-32 | Validate in-app form | P2 | ❌ Not started | Sprint Name, at least one observation/action, valid priority/date, missing owner/due date highlighted. |
+| RETRO-31 | Add submit final retrospective | P1 | ✅ Done 2026-06-10 | "Submit & Get Suggestions" button triggers `generateInsights()` and navigates to insights view. |
+| RETRO-32 | Validate in-app form | P1 | ✅ Done 2026-06-10 | Sprint Name required to enable submit; insights flag missing owners/due dates and unresolved blockers. |
 | RETRO-33 | Detect duplicate action items | P2 | ❌ Not started | Flag duplicates before import/submit. |
 | RETRO-34 | Identify common themes | P2 | ❌ Not started | Process, communication, requirements, QA/release, dependency, technical, planning. |
 | RETRO-35 | Identify repeated blockers | P2 | ❌ Not started | Include repeated unresolved actions from previous retros if available. |
@@ -932,24 +934,24 @@ The following items are in the uploaded TODO as Done. Keep them, but verify trac
 
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
-| FCAST-01 | Define `DeliveryForecast` type | P2 | ❌ Not started | forecastStatus, expectedCompletionDate, targetDate, confidence, remainingWork, requiredThroughput, currentThroughput, gapAnalysis, adjustmentOptions, chartData. |
-| FCAST-02 | Calculate forecast status | P2 | ❌ Not started | on_track, at_risk, off_track, insufficient_data. |
-| FCAST-03 | Calculate expected completion date | P2 | ❌ Not started | Based on throughput/velocity and remaining work. |
-| FCAST-04 | Calculate confidence | P2 | ❌ Not started | Low/medium/high based on data quality, history, missing fields, volatility. |
-| FCAST-05 | Calculate remaining work | P2 | ❌ Not started | Item count and story points if available. |
-| FCAST-06 | Calculate required throughput | P2 | ❌ Not started | Items/day, SP/day, items/sprint, SP/sprint if applicable. |
-| FCAST-07 | Calculate current throughput | P2 | ❌ Not started | Items/day, SP/day, items/sprint, SP/sprint if applicable. |
-| FCAST-08 | Generate gap analysis | P2 | ❌ Not started | Throughput gap, scope risk, blocker risk, confidence reason. |
-| FCAST-09 | Generate adjustment options | P2 | ❌ Not started | Reduce scope, remove blockers, increase capacity, reduce WIP, split work, improve refinement. |
-| FCAST-10 | Generate chart data | P2 | ❌ Not started | date, planned, actual, forecast. |
-| FCAST-11 | Add Planned vs Actual progress chart | P2 | ❌ Not started | Dashboard section. |
-| FCAST-12 | Add forecast completion line chart | P2 | ❌ Not started | Dashboard section. |
-| FCAST-13 | Add remaining work burn-up/burn-down | P2 | ❌ Not started | Dashboard section. |
+| FCAST-01 | Define `DeliveryForecast` type | P1 | ✅ Done 2026-06-10 | `ForecastResult` in app/forecast/page.tsx: status, avgThroughput, sprintsRemaining, weeksRemaining, confidence, adjustments, sprintPoints, blockedCount, criticalCount. |
+| FCAST-02 | Calculate forecast status | P1 | ✅ Done 2026-06-10 | on_track / at_risk / off_track / complete / insufficient_data computed in `computeForecast()`. |
+| FCAST-03 | Calculate expected completion date | P1 | ✅ Done 2026-06-10 | `weeksRemaining` from sprint throughput × remaining issues, 2-week sprint assumption. |
+| FCAST-04 | Calculate confidence | P1 | ✅ Done 2026-06-10 | High (< 3 sprints), medium (< 6), low (≥ 6), none (insufficient data). |
+| FCAST-05 | Calculate remaining work | P1 | ✅ Done 2026-06-10 | Remaining = total − done issues; story points if present. |
+| FCAST-06 | Calculate required throughput | P1 | ✅ Done 2026-06-10 | Derived from sprint completion history via `metrics.sprint.sprints`. |
+| FCAST-07 | Calculate current throughput | P1 | ✅ Done 2026-06-10 | `avgThroughput` = mean of completedCount per sprint across valid sprint records. |
+| FCAST-08 | Generate gap analysis | P1 | ✅ Done 2026-06-10 | Adjustments list flags throughput gap, blockers, critical items, capacity need. |
+| FCAST-09 | Generate adjustment options | P1 | ✅ Done 2026-06-10 | Actionable `adjustments[]` string list in ForecastResult, rendered as recommendations. |
+| FCAST-10 | Generate chart data | P1 | ✅ Done 2026-06-10 | `sprintPoints: SprintPoint[]` for burn-up chart (actual + forecast + target). |
+| FCAST-11 | Add Planned vs Actual progress chart | P1 | ✅ Done 2026-06-10 | Burn-up chart shows actual (solid blue) + forecast extension (dashed blue) + target (grey dashed). |
+| FCAST-12 | Add forecast completion line chart | P1 | ✅ Done 2026-06-10 | Dashed forecast line extends from last actual point to target. |
+| FCAST-13 | Add remaining work burn-up/burn-down | P1 | ✅ Done 2026-06-10 | Inline SVG burn-up chart in BurnUpChart component — no external library. |
 | FCAST-14 | Add required vs current throughput chart | P2 | ❌ Not started | Dashboard section. |
 | FCAST-15 | Add delivery risk trend | P2 | ❌ Not started | Dashboard section. |
 | FCAST-16 | Add scope change trend | P2 | ❌ Not started | Dashboard section. |
 | FCAST-17 | Add blocker impact chart | P2 | ❌ Not started | Dashboard section. |
-| FCAST-18 | Add dashboard section `Forecasting & Delivery Adjustment` | P2 | ❌ Not started | Status card, expected completion, confidence badge, charts, weakest point, adjustments, executive summary, delivery manager action plan. |
+| FCAST-18 | Add dedicated `/forecast` page | P1 | ✅ Done 2026-06-10 | `/forecast` page live: status banner, KPI row, burn-up chart, next-quarter plan, risk signals, recommendations. |
 | FCAST-19 | Answer “Are we on track?” | P2 | ❌ Not started | Must explain why. |
 | FCAST-20 | Identify weakest delivery point | P2 | ❌ Not started | Throughput, blockers, scope, WIP, refinement, capacity, data quality. |
 | FCAST-21 | Recommend adjustment to deliver on time | P2 | ❌ Not started | Scope/capacity/WIP/blockers/splitting/refinement/sprint goal renegotiation. |
@@ -958,6 +960,26 @@ The following items are in the uploaded TODO as Done. Keep them, but verify trac
 | FCAST-24 | Add tests | P2 | ❌ Not started | See TEST-FCAST. |
 | FCAST-25 | Update all related product docs | P2 | ❌ Not started | SRS, BRD, Use Cases, User Journeys, Scenarios, Test Cases, Developer Guide, Release Notes, README, Algorithm Spec, Technical Method, Appendix, TODO. |
 | FCAST-26 | Produce product documentation impact matrix before push | P0/P2 | ❌ Not started | Required gate. |
+
+---
+
+## 18b. P1 — Roadmap Page
+
+| ID | Task | Priority | Status | Details / Acceptance Criteria |
+|---|---|---:|---|---|
+| ROADMAP-01 | Create `/roadmap` page — epic progress + delivery forecast | P1 | ✅ Done 2026-06-10 | Epic cards with progress bar, health indicator, forecast label (complete/weeks/months/insufficient data), confidence badge; filter tabs (In Progress/All/Critical/Done); sort (Forecast/Progress/Name); summary KPI cards; throughput context strip; click to expand shows remaining issues, sprints est., critical count. Uses `computePortfolioHealth()` + `loadMetricsWithSource()`. |
+| ROADMAP-02 | P0 doc pass for /roadmap | P0 | ❌ Not started | SRS, USE_CASES, USER_JOURNEYS, SCENARIOS, TEST_CASES, ALGORITHM_SPEC, help page, developer page, glossary, RELEASE_NOTES, BRD, APPENDIX. |
+| ROADMAP-03 | Add tests for roadmap forecast logic | P1 | ❌ Not started | `forecastEpic()` unit tests — complete/within-2-weeks/months/insufficient-data paths. |
+
+---
+
+## 18c. P1 — Navigation UX
+
+| ID | Task | Priority | Status | Details / Acceptance Criteria |
+|---|---|---:|---|---|
+| NAV-01 | Redesign /help navigation — replace 34 flat tabs with grouped two-level nav | P1 | ✅ Done 2026-06-10 | 9 category group pills (Getting Started, Dashboard, Planning, Analysis, Export & Data, System, Customization, People, Troubleshooting); clicking a group shows sub-section pills; active group derived from IntersectionObserver activeId; row 2 hidden when group has only 1 section. |
+| NAV-02 | Redesign /glossary navigation — replace 12 flat tabs with compact letter-jump nav | P1 | ✅ Done 2026-06-10 | Single row of letter chips (A–L) with section icon + letter label; click scrolls to section; tooltip shows full section title. |
+| NAV-03 | P0 doc pass for help/glossary nav changes | P0 | ❌ Not started | Update help page FAQ for new nav structure; glossary page sections unchanged. |
 
 ---
 
