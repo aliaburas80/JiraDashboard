@@ -9,6 +9,7 @@ import OrphanRulesSettings from '@/components/admin/OrphanRulesSettings';
 import BackupRestoreSettings from '@/components/admin/BackupRestoreSettings';
 import ClearLocalDataPanel from '@/components/admin/ClearLocalDataPanel';
 import UserAddRequestsPanel from '@/components/admin/UserAddRequestsPanel';
+import AppConfigPanel from '@/components/admin/AppConfigPanel';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import { ASSIGNABLE_ROLES, roleLabel, type AppRole } from '@/lib/roles';
@@ -1246,7 +1247,7 @@ export default function AdminSettingsPage() {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get('tab') as Tab | null);
   const [tab, setTab] = useState<Tab>(
-    initialTab && ['users','requests','retention','thresholds','orphan','backup','cloud','browser'].includes(initialTab)
+    initialTab && ['users','requests','config','retention','thresholds','orphan','backup','cloud','browser'].includes(initialTab)
       ? initialTab
       : 'users'
   );
@@ -1360,6 +1361,7 @@ export default function AdminSettingsPage() {
             />
           )}
           {tab === 'requests' && <UserAddRequestsPanel />}
+          {tab === 'config'   && <AppConfigPanel />}
           {tab === 'retention' && settings && (
             <DataRetentionSettings settings={settings} stats={stats} onSave={handleSaveRetention} onCleanup={handleCleanup} onClearAll={handleClearAll} />
           )}

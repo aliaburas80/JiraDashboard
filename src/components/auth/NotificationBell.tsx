@@ -171,7 +171,7 @@ export default function NotificationBell({ role }: Props) {
           {/* Admin pending requests banner */}
           {isAdmin && pendingRequests > 0 && (
             <Link
-              href="/admin/settings"
+              href="/admin/settings?tab=requests"
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-3 bg-amber-50 border-b border-amber-100 hover:bg-amber-100 transition-colors"
             >
