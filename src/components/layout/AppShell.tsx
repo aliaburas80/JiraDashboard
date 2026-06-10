@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { getInitialTheme, applyTheme } from '@/lib/theme';
-import { initThemeCustom } from '@/lib/themeCustomizer';
+import { initThemeCustom, loadBranding } from '@/lib/themeCustomizer';
 import UserMenu from '@/components/auth/UserMenu';
 import NotificationBell from '@/components/auth/NotificationBell';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
@@ -50,10 +50,11 @@ const NAV_GROUPS = [
   {
     label: 'Administration',
     items: [
-      { href: '/admin/settings',     label: 'Settings',    icon: '⚙️', desc: 'Users, storage, retention'      },
-      { href: '/admin/diagnostics',  label: 'Diagnostics', icon: '🩺', desc: 'System health & admin stats'    },
-      { href: '/admin/security',     label: 'Security',    icon: '🔐', desc: 'Production security checks'     },
-      { href: '/admin/logs',         label: 'Import Logs', icon: '🧾', desc: 'All user import activity'       },
+      { href: '/admin/settings',     label: 'Settings',         icon: '⚙️', desc: 'Users, storage, retention'      },
+      { href: '/admin/theme',        label: 'Theme & Branding', icon: '🎨', desc: 'Palette, logo, app name'          },
+      { href: '/admin/diagnostics',  label: 'Diagnostics',      icon: '🩺', desc: 'System health & admin stats'    },
+      { href: '/admin/security',     label: 'Security',         icon: '🔐', desc: 'Production security checks'     },
+      { href: '/admin/logs',         label: 'Import Logs',      icon: '🧾', desc: 'All user import activity'       },
     ],
   },
   {
@@ -74,6 +75,8 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [role, setRole] = useState<string | null>(null);
+  const [brandLogo, setBrandLogo] = useState('');
+  const [brandName, setBrandName] = useState('Delivery Clarity');
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -81,6 +84,9 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
     setTheme(initial);
     applyTheme(initial);
     initThemeCustom();
+    const b = loadBranding();
+    if (b.logoUrl)  setBrandLogo(b.logoUrl);
+    if (b.appName)  setBrandName(b.appName);
   }, []);
 
   useEffect(() => {
@@ -131,23 +137,30 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
           {/* ── Left: logo + upload restart button ── */}
           <div className="flex items-center gap-3 shrink-0">
             <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/logo/delivery-clarity-logo-horizontal.svg"
-                alt="Delivery Clarity"
-                width={160}
-                height={32}
-                className="hidden sm:block h-8 w-auto dark:brightness-0 dark:invert"
-                style={{ width: 'auto', height: '2rem' }}
-                priority
-              />
-              <Image
-                src="/logo/delivery-clarity-logo-icon.svg"
-                alt="Delivery Clarity"
-                width={32}
-                height={32}
-                className="sm:hidden h-8 w-8"
-                priority
-              />
+              {brandLogo ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={brandLogo} alt={brandName} className="h-8 w-auto max-w-[160px] object-contain" />
+              ) : (
+                <>
+                  <Image
+                    src="/logo/delivery-clarity-logo-horizontal.svg"
+                    alt={brandName}
+                    width={160}
+                    height={32}
+                    className="hidden sm:block h-8 w-auto dark:brightness-0 dark:invert"
+                    style={{ width: 'auto', height: '2rem' }}
+                    priority
+                  />
+                  <Image
+                    src="/logo/delivery-clarity-logo-icon.svg"
+                    alt={brandName}
+                    width={32}
+                    height={32}
+                    className="sm:hidden h-8 w-8"
+                    priority
+                  />
+                </>
+              )}
             </Link>
 
             {showNav && (

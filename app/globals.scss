@@ -2,10 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --font-inter: 'Inter', sans-serif;
+  --font-inter:   'Inter', sans-serif;
+  --font-jakarta: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
   --color-bg: #f8fafc;
   --color-surface: #ffffff;
   --color-border: rgba(203,213,225,0.7);
@@ -14,10 +17,60 @@
   --radius-md: 12px;
   --radius-lg: 18px;
   --radius-full: 9999px;
-  /* Advanced theme customization — overridden by themeCustomizer.ts */
+
+  /* UIUXTemplate palette tokens — default (light). Overridden by themeCustomizer.ts */
+  --dc-bg:            #f8fafc;
+  --dc-s1:            #ffffff;
+  --dc-s2:            #f1f5f9;
+  --dc-s3:            #e2e8f0;
+  --dc-s4:            #cbd5e1;
+  --dc-p1:            #0f172a;
+  --dc-p2:            #64748b;
+  --dc-p3:            #94a3b8;
+  --dc-bdr:           rgba(203,213,225,0.7);
+  --dc-bdr2:          rgba(148,163,184,0.5);
+  --dc-acc2:          #3b82f6;
+  --dc-cta:           #2563eb;
+
+  /* Accent — overridden by themeCustomizer.ts */
   --dc-accent:        #2563eb;
   --dc-accent-hover:  #1d4ed8;
   --dc-accent-shadow: rgba(37,99,235,0.25);
+
+  /* UIUXTemplate motion */
+  --ease:             cubic-bezier(0.22,1,0.36,1);
+  --ease-back:        cubic-bezier(0.34,1.56,0.64,1);
+
+  /* Shared status colours — universal across all palettes */
+  --dc-green:  #22C55E;
+  --dc-amber:  #F59E0B;
+  --dc-red:    #F87171;
+  --dc-orange: #E85D12;
+}
+
+/* When a UIUXTemplate palette is active, body picks up the palette colours */
+html[data-palette] body {
+  background-color: var(--dc-bg);
+  color: var(--dc-p1);
+  font-family: var(--font-jakarta);
+}
+
+/* Palette-aware card override */
+html[data-palette] .card {
+  background: var(--dc-s2);
+  border-color: var(--dc-bdr);
+  color: var(--dc-p1);
+}
+
+/* Palette-aware nav/surface override */
+html[data-palette] .nav-surface {
+  background: var(--dc-s1);
+  border-color: var(--dc-bdr);
+}
+
+/* Mono font for metric numbers when palette is active */
+html[data-palette] .metric-num {
+  font-family: var(--font-mono);
 }
 
 @layer components {

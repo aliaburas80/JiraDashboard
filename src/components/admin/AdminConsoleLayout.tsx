@@ -23,10 +23,11 @@ export interface AdminConsoleNavItem {
 }
 
 export const ADMINISTRATION_NAV: AdminConsoleNavItem[] = [
-  { id: 'settings',    label: 'Settings',    icon: '⚙️', href: '/admin/settings' },
-  { id: 'diagnostics', label: 'Diagnostics', icon: '🩺', href: '/admin/diagnostics' },
-  { id: 'security',    label: 'Security',    icon: '🔐', href: '/admin/security' },
-  { id: 'logs',        label: 'Import Logs', icon: '🧾', href: '/admin/logs' },
+  { id: 'settings',    label: 'Settings',         icon: '⚙️', href: '/admin/settings' },
+  { id: 'theme',       label: 'Theme & Branding',  icon: '🎨', href: '/admin/theme' },
+  { id: 'diagnostics', label: 'Diagnostics',       icon: '🩺', href: '/admin/diagnostics' },
+  { id: 'security',    label: 'Security',          icon: '🔐', href: '/admin/security' },
+  { id: 'logs',        label: 'Import Logs',       icon: '🧾', href: '/admin/logs' },
 ];
 
 export function AdminConsoleLayout({
