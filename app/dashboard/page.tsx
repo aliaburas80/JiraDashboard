@@ -268,6 +268,7 @@ export default function DashboardPage() {
   const [openAgeMaxFilter, setOpenAgeMaxFilter] = useState('');
   const [reasonFilter, setReasonFilter] = useState('');
   const [labelFilter, setLabelFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [activeQuickFilter, setActiveQuickFilter] = useState('all');
   const [flowPanelOpen, setFlowPanelOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(100);
@@ -391,6 +392,7 @@ export default function DashboardPage() {
         // New upload — reset all filters, collapsed sections, URL params
         setKeyFilter(''); setSummaryFilter(''); setStatusFilter('all');
         setSprintFilter('all'); setAssigneeFilter('all'); setHealthFilter('all');
+        setTypeFilter('all');
         setLeadMaxFilter(''); setCycleMaxFilter(''); setOpenAgeMaxFilter('');
         setReasonFilter(''); setLabelFilter(''); setActiveQuickFilter('all');
         setFlowPanelOpen(false);
@@ -489,6 +491,7 @@ export default function DashboardPage() {
     matchSel(item.status, statusFilter) &&
     matchSel(item.sprint, sprintFilter) &&
     matchSel(item.assignee, assigneeFilter) &&
+    matchSel(item.type, typeFilter) &&
     withinMax(item.leadTimeDays, leadMaxFilter) &&
     withinMax(item.cycleTimeDays, cycleMaxFilter) &&
     withinMax(item.ageDays, openAgeMaxFilter) &&
@@ -496,12 +499,12 @@ export default function DashboardPage() {
     matchText(item.reason, reasonFilter) &&
     (!labelFilter || (item.labels || '').toLowerCase().includes(labelFilter.toLowerCase()))
   ), [flowItems, keyFilter, summaryFilter, statusFilter, sprintFilter, assigneeFilter,
-    leadMaxFilter, cycleMaxFilter, openAgeMaxFilter, healthFilter, reasonFilter, labelFilter]);
+    typeFilter, leadMaxFilter, cycleMaxFilter, openAgeMaxFilter, healthFilter, reasonFilter, labelFilter]);
 
   const visibleFlowItems = filteredFlowItems.slice(0, visibleCount);
   const activeFilterCount =
     [keyFilter, summaryFilter, reasonFilter, labelFilter].filter(s => s !== '').length +
-    [statusFilter, sprintFilter, assigneeFilter, healthFilter].filter(s => s !== 'all').length +
+    [statusFilter, sprintFilter, assigneeFilter, healthFilter, typeFilter].filter(s => s !== 'all').length +
     [leadMaxFilter, cycleMaxFilter, openAgeMaxFilter].filter(s => s !== '').length;
 
   // epic readiness — guard metrics?.epics so hook runs even before metrics loads
@@ -594,6 +597,7 @@ export default function DashboardPage() {
   const sprintOptions = uniqueSorted(flowItems, 'sprint');
   const assigneeOptions = uniqueSorted(flowItems, 'assignee');
   const healthOptions = uniqueSorted(flowItems, 'health');
+  const typeOptions = uniqueSorted(flowItems, 'type');
   const topBlockers = flowItems.filter(i => norm(i.reason).includes('block')).slice(0, 5);
   const topOverdue = flowItems.filter(i => Number(i.ageDays) > 10 && !DONE_STATUSES.includes(norm(i.status))).slice(0, 5);
   const topOrphans = flowItems.filter(i => i.isOrphan).slice(0, 5);
@@ -616,7 +620,7 @@ export default function DashboardPage() {
   const applyQuickFilter = (type: string) => {
     setActiveQuickFilter(type);
     setKeyFilter(''); setSummaryFilter(''); setStatusFilter('all'); setSprintFilter('all');
-    setAssigneeFilter('all'); setLeadMaxFilter(''); setCycleMaxFilter('');
+    setAssigneeFilter('all'); setTypeFilter('all'); setLeadMaxFilter(''); setCycleMaxFilter('');
     setOpenAgeMaxFilter(''); setHealthFilter('all'); setReasonFilter(''); setLabelFilter('');
     if (type === 'high-risk') setHealthFilter('critical');
     if (type === 'needs-review') setStatusFilter('in progress');
@@ -2040,6 +2044,7 @@ export default function DashboardPage() {
                   { label: 'Sprint', value: sprintFilter, setter: setSprintFilter, opts: sprintOptions, allLabel: 'All sprints' },
                   { label: 'Assignee', value: assigneeFilter, setter: setAssigneeFilter, opts: assigneeOptions, allLabel: 'All assignees' },
                   { label: 'Health', value: healthFilter, setter: setHealthFilter, opts: healthOptions, allLabel: 'All health' },
+                  { label: 'Item Type', value: typeFilter, setter: setTypeFilter, opts: typeOptions, allLabel: 'All types' },
                 ].map(({ label, value, setter, opts, allLabel }) => (
                   <label key={label} className="flex flex-col gap-1">
                     <span className="text-xs font-bold text-slate-500">{label}</span>
@@ -2058,7 +2063,7 @@ export default function DashboardPage() {
                     type="button"
                     onClick={() => {
                       setKeyFilter(''); setSummaryFilter(''); setStatusFilter('all'); setSprintFilter('all');
-                      setAssigneeFilter('all'); setLeadMaxFilter(''); setCycleMaxFilter('');
+                      setAssigneeFilter('all'); setTypeFilter('all'); setLeadMaxFilter(''); setCycleMaxFilter('');
                       setOpenAgeMaxFilter(''); setHealthFilter('all'); setReasonFilter(''); setLabelFilter('');
                       setActiveQuickFilter('all');
                     }}
@@ -2091,6 +2096,7 @@ export default function DashboardPage() {
                           setKeyFilter(f.keyFilter); setSummaryFilter(f.summaryFilter);
                           setStatusFilter(f.statusFilter); setSprintFilter(f.sprintFilter);
                           setAssigneeFilter(f.assigneeFilter); setHealthFilter(f.healthFilter);
+                          setTypeFilter(f.typeFilter ?? 'all');
                           setLeadMaxFilter(f.leadMaxFilter); setCycleMaxFilter(f.cycleMaxFilter);
                           setOpenAgeMaxFilter(f.openAgeMaxFilter); setReasonFilter(f.reasonFilter);
                           setLabelFilter(f.labelFilter); setActiveQuickFilter(f.activeQuickFilter);
@@ -2129,7 +2135,7 @@ export default function DashboardPage() {
                           if (e.key === 'Enter' && presetName.trim()) {
                             savePreset(presetName, {
                               keyFilter, summaryFilter, statusFilter, sprintFilter, assigneeFilter,
-                              healthFilter, leadMaxFilter, cycleMaxFilter, openAgeMaxFilter,
+                              healthFilter, typeFilter, leadMaxFilter, cycleMaxFilter, openAgeMaxFilter,
                               reasonFilter, labelFilter, activeQuickFilter,
                             });
                             setPresets(loadPresets());
@@ -2148,7 +2154,7 @@ export default function DashboardPage() {
                         onClick={() => {
                           savePreset(presetName, {
                             keyFilter, summaryFilter, statusFilter, sprintFilter, assigneeFilter,
-                            healthFilter, leadMaxFilter, cycleMaxFilter, openAgeMaxFilter,
+                            healthFilter, typeFilter, leadMaxFilter, cycleMaxFilter, openAgeMaxFilter,
                             reasonFilter, labelFilter, activeQuickFilter,
                           });
                           setPresets(loadPresets());
@@ -2199,6 +2205,7 @@ export default function DashboardPage() {
                 storageKey="flow-items"
                 columns={[
                   { key: 'key', label: 'Key' },
+                  { key: 'type', label: 'Type' },
                   { key: 'summary', label: 'Story / Task' },
                   { key: 'status', label: 'Status' },
                   { key: 'sprint', label: 'Sprint' },

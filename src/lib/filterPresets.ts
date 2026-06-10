@@ -10,6 +10,7 @@ export interface FilterState {
   sprintFilter: string;
   assigneeFilter: string;
   healthFilter: string;
+  typeFilter: string;
   leadMaxFilter: string;
   cycleMaxFilter: string;
   openAgeMaxFilter: string;
@@ -54,6 +55,7 @@ export function deletePreset(id: string): void {
 export const EMPTY_FILTERS: FilterState = {
   keyFilter: '', summaryFilter: '', statusFilter: 'all',
   sprintFilter: 'all', assigneeFilter: 'all', healthFilter: 'all',
+  typeFilter: 'all',
   leadMaxFilter: '', cycleMaxFilter: '', openAgeMaxFilter: '',
   reasonFilter: '', labelFilter: '', activeQuickFilter: 'all',
 };
