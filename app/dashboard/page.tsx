@@ -99,14 +99,14 @@ interface ColDef { key: string; label: string; render?: (row: any) => React.Reac
 function MetricTable({ columns, rows, emptyMessage, rowClassName }: {
   columns: ColDef[]; rows: any[]; emptyMessage: string; rowClassName?: (row: any) => string;
 }) {
-  if (!rows?.length) return <p className="text-sm text-slate-500 italic py-2">{emptyMessage}</p>;
+  if (!rows?.length) return <p className="text-sm italic py-2" style={{ color: 'var(--dc-p2, #64748b)' }}>{emptyMessage}</p>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-slate-200 bg-slate-50">
+          <tr style={{ borderBottom: '1px solid var(--dc-bdr, rgba(203,213,225,0.5))' }}>
             {columns.map(c => (
-              <th key={c.key} className="px-3 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{c.label}</th>
+              <th key={c.key} className="px-3 py-2 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: 'var(--dc-p3, #94a3b8)' }}>{c.label}</th>
             ))}
           </tr>
         </thead>
@@ -114,10 +114,11 @@ function MetricTable({ columns, rows, emptyMessage, rowClassName }: {
           {rows.map((row, idx) => (
             <tr
               key={row.id || row.key || row.name || row.assignee || row.epic || idx}
-              className={cn('border-b border-slate-100', idx % 2 === 1 && 'bg-slate-50/50', rowClassName?.(row))}
+              className={cn(rowClassName?.(row))}
+              style={{ borderBottom: '1px solid var(--dc-bdr, rgba(203,213,225,0.3))' }}
             >
               {columns.map(c => (
-                <td key={c.key} className="px-3 py-2 text-slate-700 whitespace-nowrap">{c.render ? c.render(row) : (row as any)[c.key]}</td>
+                <td key={c.key} className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--dc-p1, #334155)' }}>{c.render ? c.render(row) : (row as any)[c.key]}</td>
               ))}
             </tr>
           ))}
@@ -216,12 +217,13 @@ function CollapsibleTrigger({ id, icon, title, chips, accent, expanded, onToggle
 }
 
 // ─── tier separator ───────────────────────────────────────────────────────────
-const TIER_COLORS = ['var(--dc-acc, #E85D12)', 'rgba(232,93,18,0.18)', 'rgba(232,93,18,0.14)', 'rgba(232,93,18,0.10)'] as const;
+const TIER_BG    = ['var(--dc-acc, #E85D12)', 'rgba(255,138,76,0.18)', 'rgba(245,158,11,0.18)', 'rgba(232,93,18,0.10)'] as const;
+const TIER_TEXT  = ['#ffffff',                'var(--dc-acc2, #FF8A4C)', '#fcd34d',              'var(--dc-acc2, #FF8A4C)'] as const;
 function TierSep({ icon, label, tier }: { icon: string; label: string; tier: 0 | 1 | 2 | 3 }) {
   return (
     <div
       className="flex items-center gap-2 my-6 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest"
-      style={{ background: TIER_COLORS[tier], color: tier === 0 ? '#fff' : 'var(--dc-acc2, #FF8A4C)' }}
+      style={{ background: TIER_BG[tier], color: TIER_TEXT[tier] }}
     >
       <span aria-hidden="true">{icon}</span>
       {label}
@@ -675,11 +677,11 @@ export default function DashboardPage() {
   ).length;
   const otherBucket = Math.max(totalIssues - doneBucket - critBucket - warnBucket - activeBucket, 0);
   const donutSegs = [
-    { key: 'done', label: 'Done', value: doneBucket, color: '#16a34a' },
-    { key: 'active', label: 'In Progress', value: activeBucket, color: '#2563eb' },
-    { key: 'warning', label: 'At Risk', value: warnBucket, color: '#f59e0b' },
-    { key: 'critical', label: 'Critical', value: critBucket, color: '#dc2626' },
-    { key: 'other', label: 'Backlog / Other', value: otherBucket, color: '#cbd5e1' },
+    { key: 'done', label: 'Done', value: doneBucket, color: '#22C55E' },
+    { key: 'active', label: 'In Progress', value: activeBucket, color: '#FF8A4C' },
+    { key: 'warning', label: 'At Risk', value: warnBucket, color: '#F59E0B' },
+    { key: 'critical', label: 'Critical', value: critBucket, color: '#F87171' },
+    { key: 'other', label: 'Backlog / Other', value: otherBucket, color: '#323232' },
   ].filter(s => s.value > 0);
   const segTotal = Math.max(donutSegs.reduce((a, s) => a + s.value, 0), 1);
   let donutCursor = 0;
@@ -692,7 +694,7 @@ export default function DashboardPage() {
   const hmTotal = Math.max(hmGood + hmWarn + hmCrit, 1);
   const hmGoodEnd = (hmGood / hmTotal) * 100;
   const hmWarnEnd = hmGoodEnd + (hmWarn / hmTotal) * 100;
-  const healthMixBg = `conic-gradient(#16a34a 0 ${hmGoodEnd}%, #f59e0b ${hmGoodEnd}% ${hmWarnEnd}%, #dc2626 ${hmWarnEnd}% 100%)`;
+  const healthMixBg = `conic-gradient(#22C55E 0 ${hmGoodEnd}%, #F59E0B ${hmGoodEnd}% ${hmWarnEnd}%, #F87171 ${hmWarnEnd}% 100%)`;
 
   // quarter chart max
   const qMax = Math.max(...quarters.map((q: any) => q.issues || 0), 1);
@@ -1337,27 +1339,42 @@ export default function DashboardPage() {
         {sectionVisible('attention') && (
         <section id="section-attention" className="dashboard-section grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 animate-slide-up">
           {[
-            { id: 'blockers', title: 'Top Blockers', tag: 'Blockers', items: topBlockers, color: 'border-red-400 bg-red-50', tagCls: 'bg-red-100 text-red-700' },
-            { id: 'overdue', title: 'Top Overdue', tag: 'Schedule', items: topOverdue, color: 'border-amber-400 bg-amber-50', tagCls: 'bg-amber-100 text-amber-700' },
-            { id: 'orphans', title: 'Top Orphans', tag: 'Ownership', items: topOrphans, color: 'border-violet-400 bg-violet-50', tagCls: 'bg-violet-100 text-violet-700' },
-          ].map(({ id, title, tag, items, color, tagCls }) => (
-            <div key={id} className={cn('rounded-xl border-l-4 p-4 shadow-sm', color, 'border border-slate-200')}>
+            {
+              id: 'blockers', title: 'Top Blockers', tag: 'BLOCKERS', items: topBlockers,
+              cardStyle: { background: 'rgba(232,93,18,0.08)', border: '1px solid rgba(232,93,18,0.18)', borderRadius: 9 },
+              tagStyle: { background: 'rgba(232,93,18,0.2)', color: '#fb923c' },
+              countColor: 'var(--dc-acc, #E85D12)',
+            },
+            {
+              id: 'overdue', title: 'Top Overdue', tag: 'SCHEDULE', items: topOverdue,
+              cardStyle: { background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 9 },
+              tagStyle: { background: 'rgba(245,158,11,0.18)', color: '#fcd34d' },
+              countColor: 'var(--dc-amber, #F59E0B)',
+            },
+            {
+              id: 'orphans', title: 'Top Orphans', tag: 'OWNERSHIP', items: topOrphans,
+              cardStyle: { background: 'rgba(255,138,76,0.06)', border: '1px solid rgba(255,138,76,0.15)', borderRadius: 9 },
+              tagStyle: { background: 'rgba(255,138,76,0.18)', color: 'var(--dc-acc2, #FF8A4C)' },
+              countColor: 'var(--dc-acc2, #FF8A4C)',
+            },
+          ].map(({ id, title, tag, items, cardStyle, tagStyle, countColor }) => (
+            <div key={id} className="p-4 shadow-sm" style={cardStyle}>
               <div className="flex items-center justify-between mb-2">
-                <span className={cn('text-xs font-black uppercase tracking-wider rounded-full px-2 py-0.5', tagCls)}>{tag}</span>
-                <strong className="text-lg font-black text-slate-900">{items.length}</strong>
+                <span className="text-xs font-black uppercase tracking-wider rounded px-2 py-0.5" style={tagStyle}>{tag}</span>
+                <strong style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 22, color: countColor }}>{items.length}</strong>
               </div>
-              <h3 className="text-sm font-black text-slate-800 mb-2">{title}</h3>
+              <h3 className="text-sm font-black mb-2" style={{ color: 'var(--dc-p1, #0f172a)' }}>{title}</h3>
               {items.length ? (
                 <ul className="space-y-1.5">
                   {items.map((item, idx) => (
                     <li key={`${id}-${item.key ?? idx}`} className="flex items-start gap-2 text-xs">
-                      <span className="font-mono font-bold text-blue-700 shrink-0">{item.key}</span>
-                      <span className="text-slate-600 truncate">{item.summary || (item as any).reason || (item as any).epic || 'No epic'}</span>
+                      <span className="font-mono font-bold shrink-0" style={{ color: 'var(--dc-acc2, #FF8A4C)' }}>{item.key}</span>
+                      <span className="truncate" style={{ color: 'var(--dc-p2, #64748b)' }}>{item.summary || (item as any).reason || (item as any).epic || 'No epic'}</span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-xs text-slate-400 italic">None found.</p>
+                <p className="text-xs italic" style={{ color: 'var(--dc-p3, #94a3b8)' }}>None found.</p>
               )}
             </div>
           ))}
@@ -1384,12 +1401,12 @@ export default function DashboardPage() {
         {sectionVisible('overview') && (
         <section id="section-overview" className="dashboard-section mb-6 animate-slide-up">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <KpiCard label="Completion" value={`${metrics.completionRate}%`} detail={`${metrics.doneIssues} of ${metrics.totalIssues} done`} accent="#16a34a" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.healthScore} />
-            <KpiCard label="Health Alerts" value={(flow.critical || 0) + (flow.warning || 0)} detail={`${flow.critical || 0} critical · ${flow.warning || 0} warning`} accent="#dc2626" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
-            <KpiCard label="Active Work" value={metrics.activeIssues || 0} detail="In progress, review, QA, UAT" accent="#f59e0b" confidence={metrics.confidence?.teamCapacity} />
-            <KpiCard label="Lead Time" value={`${flow.averageLeadTimeDays || 0}d`} detail={`${flow.leadTimeSampleSize || 0} completed items`} accent="#2563eb" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.leadTime} />
-            <KpiCard label="Cycle Time" value={`${flow.averageCycleTimeDays || 0}d`} detail={`${flow.cycleTimeSampleSize || 0} items w/ start dates`} accent="#0f766e" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.cycleTime} />
-            <KpiCard label="Story Points" value={storyPoints.totalStoryPoints || 0} detail={`${storyPoints.pointCompletionRate || 0}% complete`} accent="#7c3aed" confidence={metrics.confidence?.storyPoints} />
+            <KpiCard label="Completion" value={`${metrics.completionRate}%`} detail={`${metrics.doneIssues} of ${metrics.totalIssues} done`} accent="var(--dc-green, #22C55E)" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.healthScore} />
+            <KpiCard label="Health Alerts" value={(flow.critical || 0) + (flow.warning || 0)} detail={`${flow.critical || 0} critical · ${flow.warning || 0} warning`} accent="var(--dc-red, #F87171)" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} />
+            <KpiCard label="Active Work" value={metrics.activeIssues || 0} detail="In progress, review, QA, UAT" accent="var(--dc-amber, #F59E0B)" confidence={metrics.confidence?.teamCapacity} />
+            <KpiCard label="Lead Time" value={`${flow.averageLeadTimeDays || 0}d`} detail={`${flow.leadTimeSampleSize || 0} completed items`} accent="var(--dc-acc2, #FF8A4C)" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.leadTime} />
+            <KpiCard label="Cycle Time" value={`${flow.averageCycleTimeDays || 0}d`} detail={`${flow.cycleTimeSampleSize || 0} items w/ start dates`} accent="var(--dc-amber, #F59E0B)" onClick={hideFlowPanel ? undefined : () => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 100); }} confidence={metrics.confidence?.cycleTime} />
+            <KpiCard label="Story Points" value={storyPoints.totalStoryPoints || 0} detail={`${storyPoints.pointCompletionRate || 0}% complete`} accent="var(--dc-acc2, #FF8A4C)" confidence={metrics.confidence?.storyPoints} />
           </div>
         </section>
         )}
@@ -1415,10 +1432,10 @@ export default function DashboardPage() {
                 role="img"
                 aria-label="Delivery composition ring"
               />
-              <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full" style={{ background: 'radial-gradient(circle, white 52%, transparent 52%)' }}>
-                <span className="text-2xl font-black text-slate-900">{metrics.completionRate || 0}%</span>
-                <span className="text-xs text-slate-500">complete</span>
-                <span className="text-xs text-slate-400">{metrics.doneIssues || 0} of {totalIssues}</span>
+              <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full" style={{ background: 'radial-gradient(circle, var(--dc-s2, #1E1E1E) 52%, transparent 52%)' }}>
+                <span className="text-2xl font-black" style={{ color: 'var(--dc-p1, #0f172a)' }}>{metrics.completionRate || 0}%</span>
+                <span className="text-xs" style={{ color: 'var(--dc-p2)' }}>complete</span>
+                <span className="text-xs" style={{ color: 'var(--dc-p3)' }}>{metrics.doneIssues || 0} of {totalIssues}</span>
               </div>
             </div>
             <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1460,13 +1477,13 @@ export default function DashboardPage() {
               <h3 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-4">Health Mix</h3>
               <div className="flex items-center gap-5">
                 <div className="w-24 h-24 rounded-full shrink-0 relative" style={{ background: healthMixBg }}>
-                  <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center" style={{ background: 'radial-gradient(circle, white 52%, transparent 52%)' }}>
-                    <span className="text-base font-black text-slate-900">{hmTotal}</span>
-                    <span className="text-xs text-slate-400">items</span>
+                  <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center" style={{ background: 'radial-gradient(circle, var(--dc-s2, #1E1E1E) 52%, transparent 52%)' }}>
+                    <span className="text-base font-black" style={{ color: 'var(--dc-p1)' }}>{hmTotal}</span>
+                    <span className="text-xs" style={{ color: 'var(--dc-p3)' }}>items</span>
                   </div>
                 </div>
                 <div className="space-y-1.5 text-xs">
-                  {[['Good', '#16a34a', hmGood], ['Warning', '#f59e0b', hmWarn], ['Critical', '#dc2626', hmCrit]].map(([lbl, clr, val]) => (
+                  {[['Good', '#22C55E', hmGood], ['Warning', '#F59E0B', hmWarn], ['Critical', '#F87171', hmCrit]].map(([lbl, clr, val]) => (
                     <div key={lbl as string} className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full" style={{ background: clr as string }} />
                       <span className="text-slate-600">{lbl}</span>
@@ -1538,7 +1555,7 @@ export default function DashboardPage() {
         />
         {sectionVisible('delivery') && (
           <section id="section-delivery-controls" className="dashboard-section mb-4 animate-slide-up">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl" style={{ background: 'var(--dc-s2, #fff)', border: '1px solid var(--dc-bdr)' }}>
               <Card className="p-4">
                 <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Flow Efficiency</h4>
                 <dl className="space-y-2 text-sm">
@@ -1589,15 +1606,17 @@ export default function DashboardPage() {
           onToggle={() => toggleSection('quarters')}
         />
         {sectionVisible('quarters') && (
-          <section id="section-quarters" className="dashboard-section mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-slide-up">
+          <section id="section-quarters" className="dashboard-section mb-4 p-4 rounded-xl animate-slide-up" style={{ background: 'var(--dc-s2, #fff)', border: '1px solid var(--dc-bdr)' }}>
             <MetricTable
               columns={[
-                { key: 'quarter', label: 'Quarter' }, { key: 'issues', label: 'Issues' },
+                { key: 'quarter', label: 'Quarter', render: (r: any) => <span style={{ color: 'var(--dc-acc2, #FF8A4C)', fontFamily: 'var(--font-mono, monospace)' }}>{r.quarter}</span> },
+                { key: 'issues', label: 'Issues' },
                 { key: 'doneIssues', label: 'Done' }, { key: 'activeIssues', label: 'Active' },
-                { key: 'completionRate', label: 'Completion', render: (r: any) => `${r.completionRate}%` },
+                { key: 'completionRate', label: 'Completion', render: (r: any) => <span style={{ color: r.completionRate >= 80 ? 'var(--dc-green, #22C55E)' : 'var(--dc-amber, #F59E0B)', fontFamily: 'var(--font-mono, monospace)' }}>{r.completionRate}%</span> },
                 { key: 'averageLeadTimeDays', label: 'Lead', render: (r: any) => formatDays(r.averageLeadTimeDays) },
                 { key: 'averageCycleTimeDays', label: 'Cycle', render: (r: any) => formatDays(r.averageCycleTimeDays) },
-                { key: 'critical', label: 'Critical' }, { key: 'warning', label: 'Warning' },
+                { key: 'critical', label: 'Critical', render: (r: any) => <span style={{ color: r.critical > 0 ? 'var(--dc-red, #F87171)' : 'var(--dc-p2)' }}>{r.critical}</span> },
+                { key: 'warning', label: 'Warning' },
                 { key: 'storyPoints', label: 'Points' },
               ]}
               rows={quarters}
@@ -1621,7 +1640,7 @@ export default function DashboardPage() {
           onToggle={() => toggleSection('kanban')}
         />
         {sectionVisible('kanban') && (
-          <section id="section-kanban" className="dashboard-section mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4 animate-slide-up">
+          <section id="section-kanban" className="dashboard-section mb-4 p-4 rounded-xl space-y-4 animate-slide-up" style={{ background: 'var(--dc-s2, #fff)', border: '1px solid var(--dc-bdr)' }}>
             <DistributionDonut title="Kanban Share" rows={(kanban?.byStatus || []).slice(0, 6)} emptyMessage="No status data." />
             <CompactBarChart rows={(kanban?.byStatus || []).slice(0, 8)} emptyMessage="No status data." />
             <MetricTable
@@ -1654,7 +1673,7 @@ export default function DashboardPage() {
           onToggle={() => toggleSection('sprint')}
         />
         {sectionVisible('sprint') && (
-          <section id="section-sprint" className="dashboard-section mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4 animate-slide-up">
+          <section id="section-sprint" className="dashboard-section mb-4 p-4 rounded-xl space-y-4 animate-slide-up" style={{ background: 'var(--dc-s2, #fff)', border: '1px solid var(--dc-bdr)' }}>
             <DistributionDonut title="Sprint Share" rows={(sprint.sprints || []).slice(0, 6)} labelKey="name" valueKey="issues" emptyMessage="No sprint data." />
             <MetricTable
               columns={[
@@ -1686,7 +1705,7 @@ export default function DashboardPage() {
           onToggle={() => toggleSection('ownership')}
         />
         {sectionVisible('ownership') && (
-          <section id="section-ownership" className="dashboard-section mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-slide-up">
+          <section id="section-ownership" className="dashboard-section mb-4 p-4 rounded-xl animate-slide-up" style={{ background: 'var(--dc-s2, #fff)', border: '1px solid var(--dc-bdr)' }}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card id="capacity-section" className="p-4">
                 <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Capacity By Assignee</h4>
