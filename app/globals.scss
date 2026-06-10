@@ -48,29 +48,162 @@
   --dc-orange: #E85D12;
 }
 
-/* When a UIUXTemplate palette is active, body picks up the palette colours */
-html[data-palette] body {
+/* ─────────────────────────────────────────────────────────────────────────────
+   UIUXTemplate Palette — global Tailwind override
+   When data-palette is active on <html>, every Tailwind colour utility is
+   remapped to the active design-token CSS variable.  Placed after
+   @tailwind utilities so these rules win via source-order + !important.
+   ───────────────────────────────────────────────────────────────────────────── */
+html[data-palette] {
   background-color: var(--dc-bg);
-  color: var(--dc-p1);
-  font-family: var(--font-jakarta);
-}
+  color:            var(--dc-p1);
+  font-family:      var(--font-jakarta);
 
-/* Palette-aware card override */
-html[data-palette] .card {
-  background: var(--dc-s2);
-  border-color: var(--dc-bdr);
-  color: var(--dc-p1);
-}
+  /* ── Body / page ───────────────────────────────────────────────────────── */
+  body { background-color: var(--dc-bg) !important; color: var(--dc-p1) !important; font-family: var(--font-jakarta) !important; }
 
-/* Palette-aware nav/surface override */
-html[data-palette] .nav-surface {
-  background: var(--dc-s1);
-  border-color: var(--dc-bdr);
-}
+  /* ── Background utilities ──────────────────────────────────────────────── */
+  .bg-white,
+  .bg-gray-50,
+  .bg-slate-50              { background-color: var(--dc-s2)  !important; }
+  .bg-slate-100,
+  .bg-gray-100,
+  .bg-zinc-100,
+  .bg-neutral-100           { background-color: var(--dc-s2)  !important; }
+  .bg-slate-200,
+  .bg-gray-200              { background-color: var(--dc-s3)  !important; }
+  .bg-slate-700,
+  .bg-slate-800,
+  .bg-gray-700,
+  .bg-gray-800              { background-color: var(--dc-s3)  !important; }
+  .bg-slate-900,
+  .bg-slate-950,
+  .bg-gray-900,
+  .bg-black                 { background-color: var(--dc-s1)  !important; }
 
-/* Mono font for metric numbers when palette is active */
-html[data-palette] .metric-num {
-  font-family: var(--font-mono);
+  /* ── Text utilities ────────────────────────────────────────────────────── */
+  .text-slate-950, .text-slate-900, .text-slate-800,
+  .text-gray-950,  .text-gray-900,  .text-gray-800,
+  .text-zinc-900,  .text-neutral-900, .text-black  { color: var(--dc-p1) !important; }
+
+  .text-slate-700, .text-slate-600,
+  .text-gray-700,  .text-gray-600                  { color: var(--dc-p2) !important; }
+
+  .text-slate-500, .text-slate-400,
+  .text-gray-500,  .text-gray-400                  { color: var(--dc-p3) !important; }
+
+  .text-slate-300, .text-slate-200, .text-slate-100,
+  .text-gray-300                                   { color: var(--dc-bdr2) !important; }
+
+  /* ── Border utilities ──────────────────────────────────────────────────── */
+  .border-slate-100, .border-slate-200, .border-slate-300,
+  .border-gray-100,  .border-gray-200,  .border-gray-300   { border-color: var(--dc-bdr)  !important; }
+  .border-slate-600, .border-slate-700, .border-slate-800,
+  .border-gray-600,  .border-gray-700,  .border-gray-800   { border-color: var(--dc-bdr2) !important; }
+
+  /* ── Divide utilities ──────────────────────────────────────────────────── */
+  .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+  .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+  .divide-gray-200  > :not([hidden]) ~ :not([hidden])  { border-color: var(--dc-bdr) !important; }
+
+  /* ── Shadows ───────────────────────────────────────────────────────────── */
+  .shadow-sm { box-shadow: 0 1px 3px  rgba(0,0,0,0.35) !important; }
+  .shadow    { box-shadow: 0 2px 8px  rgba(0,0,0,0.35) !important; }
+  .shadow-md { box-shadow: 0 4px 16px rgba(0,0,0,0.4)  !important; }
+  .shadow-lg { box-shadow: 0 8px 32px rgba(0,0,0,0.5)  !important; }
+
+  /* ── Rings ─────────────────────────────────────────────────────────────── */
+  .ring-1, .ring-2 { --tw-ring-color: var(--dc-bdr) !important; }
+
+  /* ── Accent / interactive (blue → palette accent) ──────────────────────── */
+  .bg-blue-600, .bg-blue-500    { background-color: var(--dc-accent)       !important; }
+  .bg-blue-700                  { background-color: var(--dc-accent-hover)  !important; }
+  .bg-blue-50                   { background-color: rgba(0,0,0,0.15)        !important; }
+  .text-blue-600, .text-blue-700,
+  .text-blue-800, .text-blue-500 { color: var(--dc-acc2) !important; }
+  .border-blue-600, .border-blue-500 { border-color: var(--dc-accent) !important; }
+  .border-blue-200, .border-blue-300 { border-color: rgba(255,255,255,0.15) !important; }
+
+  /* ── Status colours — semantic, adapted for dark ───────────────────────── */
+  .bg-green-50, .bg-emerald-50  { background-color: rgba(34,197,94,0.12)   !important; }
+  .bg-amber-50, .bg-yellow-50   { background-color: rgba(245,158,11,0.12)  !important; }
+  .bg-red-50, .bg-rose-50       { background-color: rgba(248,113,113,0.12) !important; }
+  .bg-orange-50                 { background-color: rgba(232,93,18,0.12)   !important; }
+  .bg-purple-50, .bg-violet-50  { background-color: rgba(139,92,246,0.12)  !important; }
+  .bg-indigo-50, .bg-sky-50     { background-color: rgba(99,102,241,0.12)  !important; }
+
+  .text-green-700, .text-green-600, .text-green-800,
+  .text-emerald-700, .text-emerald-600               { color: #4ade80  !important; }
+  .text-amber-700, .text-amber-600, .text-amber-800,
+  .text-yellow-700                                   { color: #fcd34d  !important; }
+  .text-red-700, .text-red-600, .text-red-800,
+  .text-rose-700                                     { color: #fca5a5  !important; }
+  .text-orange-700, .text-orange-600, .text-orange-800 { color: var(--dc-cta) !important; }
+  .text-purple-700, .text-purple-600                 { color: #c4b5fd  !important; }
+
+  .border-green-200, .border-green-300, .border-emerald-200  { border-color: rgba(34,197,94,0.25)   !important; }
+  .border-amber-200, .border-amber-300, .border-yellow-200   { border-color: rgba(245,158,11,0.25)  !important; }
+  .border-red-200,   .border-red-300,   .border-rose-200     { border-color: rgba(248,113,113,0.25) !important; }
+  .border-orange-200, .border-orange-300                     { border-color: rgba(232,93,18,0.25)   !important; }
+
+  /* ── Hover states ──────────────────────────────────────────────────────── */
+  .hover\:bg-white:hover,
+  .hover\:bg-slate-50:hover,
+  .hover\:bg-gray-50:hover       { background-color: var(--dc-s3) !important; }
+  .hover\:bg-slate-100:hover,
+  .hover\:bg-gray-100:hover      { background-color: var(--dc-s4) !important; }
+  .hover\:bg-slate-200:hover     { background-color: var(--dc-s4) !important; }
+  .hover\:text-slate-900:hover,
+  .hover\:text-gray-900:hover    { color: var(--dc-p1) !important; }
+  .hover\:text-slate-700:hover,
+  .hover\:text-gray-700:hover    { color: var(--dc-p2) !important; }
+  .hover\:border-slate-300:hover { border-color: var(--dc-bdr2) !important; }
+
+  /* ── Form inputs ───────────────────────────────────────────────────────── */
+  input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
+  textarea, select {
+    background-color: var(--dc-s3) !important;
+    color:            var(--dc-p1) !important;
+    border-color:     var(--dc-bdr) !important;
+  }
+  ::placeholder { color: var(--dc-p3) !important; opacity: 1 !important; }
+
+  /* ── Specific component classes ────────────────────────────────────────── */
+  .card {
+    background-color: var(--dc-s2) !important;
+    border-color:     var(--dc-bdr) !important;
+    color:            var(--dc-p1)  !important;
+  }
+  .badge-neutral {
+    background-color: var(--dc-s3) !important;
+    color:            var(--dc-p2) !important;
+    border-color:     var(--dc-bdr) !important;
+  }
+  .btn-secondary {
+    background-color: var(--dc-s3) !important;
+    color:            var(--dc-p1) !important;
+    border-color:     var(--dc-bdr) !important;
+    &:hover { background-color: var(--dc-s4) !important; }
+  }
+  .btn-ghost {
+    color: var(--dc-p2) !important;
+    &:hover { background-color: var(--dc-s3) !important; color: var(--dc-p1) !important; }
+  }
+  .btn-dark {
+    background-color: var(--dc-s3) !important;
+    color:            var(--dc-p1) !important;
+    &:hover { background-color: var(--dc-s4) !important; }
+  }
+
+  /* ── Scrollbar ─────────────────────────────────────────────────────────── */
+  * {
+    scrollbar-color: var(--dc-s3) var(--dc-bg);
+    scrollbar-width: thin;
+  }
+  ::-webkit-scrollbar       { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--dc-bg); }
+  ::-webkit-scrollbar-thumb { background: var(--dc-s4); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--dc-bdr2); }
 }
 
 @layer components {

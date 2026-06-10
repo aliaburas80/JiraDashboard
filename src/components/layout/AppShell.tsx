@@ -130,8 +130,8 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
     .filter(group => group.items.length > 0);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 dark:text-slate-100 flex flex-col">
-      <header ref={navRef} className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700 shadow-sm">
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--dc-bg, #f8fafc)', color: 'var(--dc-p1, #0f172a)' }}>
+      <header ref={navRef} className="sticky top-0 z-40 backdrop-blur-sm" style={{ background: 'var(--dc-s1, rgba(255,255,255,0.95))', borderBottom: '1px solid var(--dc-bdr, rgba(203,213,225,0.7))', boxShadow: '0 1px 6px rgba(0,0,0,0.08)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-14 gap-3">
 
           {/* ── Left: logo + upload restart button ── */}
@@ -192,11 +192,10 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                         <button
                           type="button"
                           onClick={() => setOpenGroup(open ? null : group.label)}
-                          className={
-                            'inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ' +
-                            (active
-                              ? 'bg-blue-600 text-white'
-                              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800')
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap"
+                          style={active
+                            ? { background: 'var(--dc-accent, #2563eb)', color: '#fff' }
+                            : { color: 'var(--dc-p2, #64748b)' }
                           }
                         >
                           {group.label}
@@ -206,7 +205,8 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                         </button>
 
                         {open && (
-                          <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg p-1.5 z-50 min-w-[200px]">
+                          <div className="absolute top-full left-0 mt-1.5 rounded-xl p-1.5 z-50 min-w-[200px]"
+                            style={{ background: 'var(--dc-s2, #ffffff)', border: '1px solid var(--dc-bdr, rgba(203,213,225,0.7))', boxShadow: '0 8px 28px rgba(0,0,0,0.18)' }}>
                             {group.items.map(item => {
                               const itemActive = pathname === item.href;
                               return (
@@ -224,12 +224,10 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                                     textDecoration: 'none',
                                     position: 'relative',
                                     transition: 'background 150ms, color 150ms',
-                                    background: itemActive
-                                      ? 'linear-gradient(180deg, rgba(239,246,255,0.95), rgba(241,245,249,0.72))'
-                                      : 'transparent',
-                                    color: itemActive ? '#2563eb' : '#334155',
+                                    background: itemActive ? 'var(--dc-s3, rgba(239,246,255,0.95))' : 'transparent',
+                                    color: itemActive ? 'var(--dc-acc2, #2563eb)' : 'var(--dc-p1, #334155)',
                                   }}
-                                  onMouseEnter={e => { if (!itemActive) (e.currentTarget as HTMLElement).style.background = 'rgba(241,245,249,0.8)'; }}
+                                  onMouseEnter={e => { if (!itemActive) (e.currentTarget as HTMLElement).style.background = 'var(--dc-s3, rgba(241,245,249,0.8))'; }}
                                   onMouseLeave={e => { if (!itemActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                                 >
                                   <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>{item.icon}</span>
@@ -237,7 +235,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                                   {itemActive && (
                                     <span style={{
                                       width: 6, height: 6, borderRadius: '50%',
-                                      background: '#2563eb', flexShrink: 0,
+                                      background: 'var(--dc-accent, #2563eb)', flexShrink: 0,
                                     }} aria-hidden="true" />
                                   )}
                                 </Link>
@@ -300,7 +298,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
 
         {/* Mobile nav panel — slides in below header */}
         {showNav && mobileOpen && (
-          <div className="md:hidden border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3">
+          <div className="md:hidden px-4 py-3" style={{ borderTop: '1px solid var(--dc-bdr, rgba(203,213,225,0.7))', background: 'var(--dc-s1, #ffffff)' }}>
             {visibleGroups.map(group => (
               <div key={group.label} className="mb-3">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1 px-1">
@@ -313,11 +311,10 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={
-                          'inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ' +
-                          (itemActive
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800')
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-colors"
+                        style={itemActive
+                          ? { background: 'var(--dc-s3, rgba(239,246,255,0.95))', color: 'var(--dc-acc2, #2563eb)' }
+                          : { color: 'var(--dc-p1, #334155)' }
                         }
                       >
                         <span>{item.icon}</span>
@@ -334,8 +331,8 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">{children}</main>
 
-      <footer className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-        <p className="max-w-7xl mx-auto px-4 sm:px-6 py-3 text-xs text-slate-400 dark:text-slate-500 text-center">
+      <footer style={{ borderTop: '1px solid var(--dc-bdr, rgba(203,213,225,0.7))', background: 'var(--dc-s1, #ffffff)' }}>
+        <p className="max-w-7xl mx-auto px-4 sm:px-6 py-3 text-xs text-center" style={{ color: 'var(--dc-p3, #94a3b8)' }}>
           © 2026 Ali Abu Ras · aliaburas80@gmail.com · Delivery Clarity v4.1
         </p>
       </footer>
