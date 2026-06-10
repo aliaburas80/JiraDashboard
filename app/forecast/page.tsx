@@ -1,5 +1,5 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
-// /forecast — Delivery forecasting: velocity trend, burn-up, and milestone estimates.
+// /forecast — Delivery forecasting: velocity trend, burn-up, completion ring, sprint analytics.
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -7,155 +7,248 @@ import AppShell from '@/components/layout/AppShell';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics } from '@/types/metrics';
 
-// ── Forecast engine ────────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 type ForecastStatus = 'on_track' | 'at_risk' | 'off_track' | 'complete' | 'insufficient_data';
 
 interface SprintPoint { sprint: string; done: number; total: number; cumDone: number; }
+
 interface ForecastResult {
-  status:              ForecastStatus;
-  totalIssues:         number;
-  doneIssues:          number;
-  remainingIssues:     number;
-  completionPct:       number;
-  avgThroughput:       number;   // items/sprint
-  sprintsRemaining:    number;
-  weeksRemaining:      number;
-  confidence:          'high' | 'medium' | 'low';
-  adjustments:         string[];
-  sprintPoints:        SprintPoint[];
-  blockedCount:        number;
-  criticalCount:       number;
+  status:           ForecastStatus;
+  totalIssues:      number;
+  doneIssues:       number;
+  remainingIssues:  number;
+  completionPct:    number;
+  avgThroughput:    number;
+  sprintsRemaining: number;
+  weeksRemaining:   number;
+  confidence:       'high' | 'medium' | 'low';
+  velocityTrend:    'improving' | 'stable' | 'declining';
+  adjustments:      string[];
+  sprintPoints:     SprintPoint[];
+  blockedCount:     number;
+  criticalCount:    number;
+  estimatedEndDate: string;
 }
 
+// ── Engine ─────────────────────────────────────────────────────────────────────
+
 function computeForecast(metrics: DashboardMetrics): ForecastResult {
-  const flow   = (metrics.flow?.items ?? []) as any[];
+  const flow    = (metrics.flow?.items ?? []) as any[];
   const sprints = (metrics.sprint?.sprints ?? []) as any[];
 
-  const totalIssues    = flow.length;
-  const doneIssues     = flow.filter((i: any) => /^done|complete|closed|resolved/i.test(i.status ?? '')).length;
+  const totalIssues     = flow.length;
+  const doneIssues      = flow.filter((i: any) => /^done|complete|closed|resolved/i.test(i.status ?? '')).length;
   const remainingIssues = Math.max(0, totalIssues - doneIssues);
-  const blockedCount   = flow.filter((i: any) => i.blocked || /block/i.test(i.status ?? '') || (i.labels ?? '').includes('blocked')).length;
-  const criticalCount  = flow.filter((i: any) => /critical|highest/i.test(i.priority ?? '')).length;
-  const completionPct  = totalIssues > 0 ? Math.round(doneIssues / totalIssues * 100) : 0;
+  const blockedCount    = flow.filter((i: any) => i.blocked || /block/i.test(i.status ?? '')).length;
+  const criticalCount   = flow.filter((i: any) => /critical|highest/i.test(i.priority ?? '')).length;
+  const completionPct   = totalIssues > 0 ? Math.round(doneIssues / totalIssues * 100) : 0;
 
-  // Sprint-level throughput
-  const validSprints   = sprints.filter((s: any) => s.completedCount > 0);
-  const avgThroughput  = validSprints.length > 0
+  const validSprints  = sprints.filter((s: any) => (s.completedCount ?? 0) > 0);
+  const avgThroughput = validSprints.length > 0
     ? validSprints.reduce((s: number, x: any) => s + x.completedCount, 0) / validSprints.length
     : 0;
 
-  // Sprint burn-up points
   let cum = 0;
   const sprintPoints: SprintPoint[] = sprints.slice(-12).map((s: any) => {
     cum += s.completedCount ?? 0;
     return { sprint: s.sprint ?? s.name ?? '?', done: s.completedCount ?? 0, total: totalIssues, cumDone: cum };
   });
 
-  if (totalIssues === 0 || avgThroughput === 0) {
-    return { status: 'insufficient_data', totalIssues, doneIssues, remainingIssues, completionPct, avgThroughput: 0, sprintsRemaining: 0, weeksRemaining: 0, confidence: 'low', adjustments: [], sprintPoints, blockedCount, criticalCount };
+  let velocityTrend: ForecastResult['velocityTrend'] = 'stable';
+  if (validSprints.length >= 3) {
+    const recent    = validSprints.slice(-3).map((s: any) => s.completedCount as number);
+    const older     = validSprints.slice(0, -3).map((s: any) => s.completedCount as number);
+    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+    const olderAvg  = older.length > 0 ? older.reduce((a, b) => a + b, 0) / older.length : recentAvg;
+    velocityTrend   = recentAvg > olderAvg * 1.1 ? 'improving' : recentAvg < olderAvg * 0.9 ? 'declining' : 'stable';
   }
 
+  if (totalIssues === 0 || avgThroughput === 0) {
+    return { status: 'insufficient_data', totalIssues, doneIssues, remainingIssues, completionPct, avgThroughput: 0, sprintsRemaining: 0, weeksRemaining: 0, confidence: 'low', velocityTrend, adjustments: [], sprintPoints, blockedCount, criticalCount, estimatedEndDate: '—' };
+  }
   if (remainingIssues === 0) {
-    return { status: 'complete', totalIssues, doneIssues, remainingIssues: 0, completionPct: 100, avgThroughput, sprintsRemaining: 0, weeksRemaining: 0, confidence: 'high', adjustments: [], sprintPoints, blockedCount, criticalCount };
+    return { status: 'complete', totalIssues, doneIssues, remainingIssues: 0, completionPct: 100, avgThroughput, sprintsRemaining: 0, weeksRemaining: 0, confidence: 'high', velocityTrend, adjustments: [], sprintPoints, blockedCount, criticalCount, estimatedEndDate: 'Complete' };
   }
 
   const sprintsRemaining = remainingIssues / avgThroughput;
   const weeksRemaining   = Math.ceil(sprintsRemaining * 2);
-
-  // Velocity trend (improving / stable / declining)
-  let velocityTrend: 'improving' | 'stable' | 'declining' = 'stable';
-  if (validSprints.length >= 3) {
-    const recent = validSprints.slice(-3).map((s: any) => s.completedCount);
-    const older  = validSprints.slice(0, -3).map((s: any) => s.completedCount);
-    const recentAvg = recent.reduce((a: number, b: number) => a + b, 0) / recent.length;
-    const olderAvg  = older.length > 0 ? older.reduce((a: number, b: number) => a + b, 0) / older.length : recentAvg;
-    velocityTrend   = recentAvg > olderAvg * 1.1 ? 'improving' : recentAvg < olderAvg * 0.9 ? 'declining' : 'stable';
-  }
 
   const confidence: ForecastResult['confidence'] =
     validSprints.length >= 4 && velocityTrend !== 'declining' && blockedCount === 0 ? 'high' :
     validSprints.length >= 2 && blockedCount < 3 ? 'medium' : 'low';
 
   const status: ForecastStatus =
-    sprintsRemaining <= 1 ? 'on_track' :
-    sprintsRemaining <= 3 ? 'on_track' :
-    criticalCount > 2 || blockedCount > 3 ? 'off_track' : 'at_risk';
+    remainingIssues === 0                          ? 'complete'   :
+    criticalCount > 2 || blockedCount > 3          ? 'off_track'  :
+    sprintsRemaining <= 6                          ? 'on_track'   :
+    sprintsRemaining <= 12                         ? 'at_risk'    : 'off_track';
 
   const adjustments: string[] = [];
-  if (blockedCount > 0)    adjustments.push(`Unblock ${blockedCount} blocked item${blockedCount > 1 ? 's' : ''} to recover ${Math.ceil(blockedCount * 0.8)} issues.`);
-  if (criticalCount > 0)   adjustments.push(`Address ${criticalCount} critical item${criticalCount > 1 ? 's' : ''} first — they affect confidence.`);
-  if (velocityTrend === 'declining') adjustments.push('Throughput is declining. Reduce WIP and improve sprint planning.');
-  if (remainingIssues > avgThroughput * 10) adjustments.push('Consider descoping low-priority items to hit nearer-term milestones.');
-  if (adjustments.length === 0) adjustments.push('Velocity is stable. Maintain current pace to deliver on forecast.');
+  if (blockedCount > 0)               adjustments.push(`Unblock ${blockedCount} blocked item${blockedCount > 1 ? 's' : ''} to recover capacity.`);
+  if (criticalCount > 0)              adjustments.push(`Address ${criticalCount} critical item${criticalCount > 1 ? 's' : ''} — they affect forecast confidence.`);
+  if (velocityTrend === 'declining')  adjustments.push('Throughput is declining. Reduce WIP and review sprint commitments.');
+  if (velocityTrend === 'improving')  adjustments.push('Throughput is improving. Current trajectory is positive.');
+  if (remainingIssues > avgThroughput * 10) adjustments.push('Consider descoping low-priority items to hit nearer milestones.');
+  if (adjustments.length === 0)       adjustments.push('Velocity is stable. Maintain current pace to deliver on forecast.');
 
-  return { status, totalIssues, doneIssues, remainingIssues, completionPct, avgThroughput: parseFloat(avgThroughput.toFixed(1)), sprintsRemaining: parseFloat(sprintsRemaining.toFixed(1)), weeksRemaining, confidence, adjustments, sprintPoints, blockedCount, criticalCount };
+  const endDate = new Date(Date.now() + weeksRemaining * 7 * 86_400_000);
+  const estimatedEndDate = endDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  return { status, totalIssues, doneIssues, remainingIssues, completionPct, avgThroughput: parseFloat(avgThroughput.toFixed(1)), sprintsRemaining: parseFloat(sprintsRemaining.toFixed(1)), weeksRemaining, confidence, velocityTrend, adjustments, sprintPoints, blockedCount, criticalCount, estimatedEndDate };
 }
 
-// ── Components ─────────────────────────────────────────────────────────────────
+// ── Chart: Completion Ring ─────────────────────────────────────────────────────
 
-const STATUS_META = {
-  on_track:         { label: 'On Track',         color: '#22c55e', bg: 'bg-green-50  border-green-200  text-green-700',  icon: '✅' },
-  at_risk:          { label: 'At Risk',           color: '#f59e0b', bg: 'bg-amber-50  border-amber-200  text-amber-700',  icon: '⚠️' },
-  off_track:        { label: 'Off Track',         color: '#ef4444', bg: 'bg-red-50    border-red-200    text-red-700',    icon: '❌' },
-  complete:         { label: 'Complete',          color: '#2563eb', bg: 'bg-blue-50   border-blue-200   text-blue-700',   icon: '🎉' },
-  insufficient_data:{ label: 'Insufficient Data', color: '#94a3b8', bg: 'bg-slate-50  border-slate-200  text-slate-600',  icon: 'ℹ️' },
-};
-
-const CONF_META = {
-  high:   'text-green-700 bg-green-50  border-green-200',
-  medium: 'text-amber-700 bg-amber-50  border-amber-200',
-  low:    'text-slate-600 bg-slate-50  border-slate-200',
-};
-
-function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }) {
-  if (points.length < 2) return <p className="text-xs text-slate-400 text-center py-6">Not enough sprint data for burn-up chart (need ≥ 2 sprints).</p>;
-  const maxVal  = Math.max(total, ...points.map(p => p.cumDone));
-  const w = 480; const h = 140; const pad = { t: 10, r: 16, b: 28, l: 36 };
-  const xScale = (i: number) => pad.l + (i / (points.length - 1)) * (w - pad.l - pad.r);
-  const yScale = (v: number) => h - pad.b - (v / maxVal) * (h - pad.t - pad.b);
-
-  const totalPath = `M ${xScale(0)},${yScale(total)} L ${xScale(points.length - 1)},${yScale(total)}`;
-  const burnPath  = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xScale(i)},${yScale(p.cumDone)}`).join(' ');
-
-  // Forecast line from last point
-  const last = points[points.length - 1];
-  const throughputPerPoint = last.cumDone / Math.max(points.length, 1);
-  const sprintsLeft = throughputPerPoint > 0 ? (total - last.cumDone) / throughputPerPoint : 0;
-  const forecastEnd = points.length - 1 + sprintsLeft;
-  const forecastPath = `M ${xScale(points.length - 1)},${yScale(last.cumDone)} L ${Math.min(w - pad.r, xScale(forecastEnd))},${yScale(total)}`;
-
+function CompletionRing({ pct, color }: { pct: number; color: string }) {
+  const r = 52, cx = 68, cy = 68, stroke = 12;
+  const circ  = 2 * Math.PI * r;
+  const fill  = circ * (pct / 100);
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ maxHeight: 160 }}>
-      {/* Grid lines */}
-      {[0, 0.25, 0.5, 0.75, 1].map(v => (
-        <g key={v}>
-          <line x1={pad.l} x2={w - pad.r} y1={yScale(maxVal * v)} y2={yScale(maxVal * v)} stroke="#f1f5f9" strokeWidth="1" />
-          <text x={pad.l - 4} y={yScale(maxVal * v) + 4} fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round(maxVal * v)}</text>
-        </g>
-      ))}
-      {/* Sprint labels */}
-      {points.filter((_, i) => i === 0 || i === points.length - 1 || i % Math.ceil(points.length / 4) === 0).map((p, _, arr) => {
-        const idx = points.indexOf(p);
-        return <text key={idx} x={xScale(idx)} y={h - 6} fontSize="7" fill="#94a3b8" textAnchor="middle">{p.sprint.replace(/sprint\s*/i, 'S')}</text>;
-      })}
-      {/* Target line */}
-      <path d={totalPath} stroke="#e2e8f0" strokeWidth="1.5" strokeDasharray="4 2" fill="none" />
-      {/* Forecast line */}
-      {sprintsLeft > 0 && <path d={forecastPath} stroke="#93c5fd" strokeWidth="1.5" strokeDasharray="5 3" fill="none" />}
-      {/* Burn-up line */}
-      <path d={burnPath} stroke="#2563eb" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      {/* Data points */}
-      {points.map((p, i) => <circle key={i} cx={xScale(i)} cy={yScale(p.cumDone)} r="3" fill="#2563eb" />)}
+    <svg viewBox="0 0 136 136" style={{ width: 136, height: 136 }}>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f1f5f9" strokeWidth={stroke} />
+      <circle
+        cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={stroke}
+        strokeDasharray={`${fill} ${circ - fill}`}
+        strokeLinecap="round"
+        transform={`rotate(-90 ${cx} ${cy})`}
+        style={{ transition: 'stroke-dasharray 0.6s ease' }}
+      />
+      <text x={cx} y={cy - 8}  textAnchor="middle" fontSize="22" fontWeight="800" fill="#0f172a">{pct}%</text>
+      <text x={cx} y={cy + 11} textAnchor="middle" fontSize="9"  fill="#94a3b8">COMPLETE</text>
     </svg>
   );
 }
+
+// ── Chart: Velocity Bars ───────────────────────────────────────────────────────
+
+function VelocityChart({ points, avg }: { points: SprintPoint[]; avg: number }) {
+  if (points.length === 0) return <p className="text-xs text-slate-400 text-center py-6">No sprint data</p>;
+  const maxDone = Math.max(...points.map(p => p.done), 1);
+  const W = 480; const H = 120; const PL = 28; const PB = 24; const PT = 8; const PR = 8;
+  const chartW = W - PL - PR;
+  const chartH = H - PT - PB;
+  const barW = Math.max(6, chartW / points.length * 0.6);
+  const gap   = chartW / points.length;
+
+  function barX(i: number) { return PL + i * gap + gap / 2 - barW / 2; }
+  function barH(v: number) { return (v / maxDone) * chartH; }
+  function barY(v: number) { return PT + chartH - barH(v); }
+
+  const avgY = PT + chartH - (avg / maxDone) * chartH;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+      {/* Grid lines */}
+      {[0, 0.25, 0.5, 0.75, 1].map(v => {
+        const y = PT + chartH * (1 - v);
+        return (
+          <g key={v}>
+            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="#f1f5f9" strokeWidth="1" />
+            <text x={PL - 3} y={y + 3} fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round(maxDone * v)}</text>
+          </g>
+        );
+      })}
+
+      {/* Avg throughput line */}
+      <line x1={PL} x2={W - PR} y1={avgY} y2={avgY} stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.6" />
+      <text x={W - PR - 2} y={avgY - 3} fontSize="7.5" fill="#3b82f6" textAnchor="end">avg {avg}</text>
+
+      {/* Bars */}
+      {points.map((p, i) => {
+        const bh = Math.max(2, barH(p.done));
+        const by = barY(p.done);
+        const isRecent = i >= points.length - 3;
+        return (
+          <g key={i}>
+            <rect x={barX(i)} y={by} width={barW} height={bh} rx="3"
+              fill={isRecent ? '#3b82f6' : '#bfdbfe'} opacity="0.9" />
+            {bh > 14 && (
+              <text x={barX(i) + barW / 2} y={by + bh / 2 + 3.5} fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">
+                {p.done}
+              </text>
+            )}
+            <text x={barX(i) + barW / 2} y={H - 6} fontSize="7" fill="#94a3b8" textAnchor="middle">
+              {p.sprint.replace(/sprint\s*/i, 'S').slice(0, 6)}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// ── Chart: Burn-up ─────────────────────────────────────────────────────────────
+
+function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }) {
+  if (points.length < 2) return <p className="text-xs text-slate-400 text-center py-6">Need ≥ 2 sprints for burn-up chart.</p>;
+  const maxVal = Math.max(total, ...points.map(p => p.cumDone));
+  const W = 480; const H = 150; const PL = 36; const PB = 30; const PT = 12; const PR = 20;
+  const chartW = W - PL - PR; const chartH = H - PT - PB;
+
+  function xOf(i: number) { return PL + (i / (points.length - 1)) * chartW; }
+  function yOf(v: number) { return PT + chartH - (v / maxVal) * chartH; }
+
+  const burnPath   = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xOf(i)},${yOf(p.cumDone)}`).join(' ');
+  const targetPath = `M${xOf(0)},${yOf(total)} L${xOf(points.length - 1)},${yOf(total)}`;
+
+  const last = points[points.length - 1];
+  const tpp  = last.cumDone / Math.max(points.length, 1);
+  const fEnd = tpp > 0 ? (total - last.cumDone) / tpp : 0;
+  const fX   = Math.min(W - PR, xOf(points.length - 1 + fEnd));
+  const forecastPath = `M${xOf(points.length - 1)},${yOf(last.cumDone)} L${fX},${yOf(total)}`;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+      {[0, 0.25, 0.5, 0.75, 1].map(v => (
+        <g key={v}>
+          <line x1={PL} x2={W - PR} y1={yOf(maxVal * v)} y2={yOf(maxVal * v)} stroke="#f1f5f9" strokeWidth="1" />
+          <text x={PL - 4} y={yOf(maxVal * v) + 4} fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round(maxVal * v)}</text>
+        </g>
+      ))}
+      {points.filter((_, i) => i === 0 || i === points.length - 1 || i % Math.ceil(points.length / 4) === 0).map(p => {
+        const idx = points.indexOf(p);
+        return <text key={idx} x={xOf(idx)} y={H - 8} fontSize="7.5" fill="#94a3b8" textAnchor="middle">{p.sprint.replace(/sprint\s*/i, 'S').slice(0, 6)}</text>;
+      })}
+
+      {/* Area fill under actual */}
+      <path d={`${burnPath} L${xOf(points.length - 1)},${PT + chartH} L${xOf(0)},${PT + chartH} Z`} fill="#3b82f6" opacity="0.08" />
+
+      <path d={targetPath}   stroke="#e2e8f0" strokeWidth="1.5" strokeDasharray="5 3" fill="none" />
+      {fEnd > 0 && <path d={forecastPath} stroke="#93c5fd" strokeWidth="2" strokeDasharray="6 3" fill="none" />}
+      <path d={burnPath}    stroke="#2563eb" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      {points.map((p, i) => <circle key={i} cx={xOf(i)} cy={yOf(p.cumDone)} r="3.5" fill="#2563eb" stroke="#fff" strokeWidth="1.5" />)}
+    </svg>
+  );
+}
+
+// ── Status meta ────────────────────────────────────────────────────────────────
+
+const STATUS_META = {
+  on_track:          { label: 'On Track',          color: '#22c55e', bg: '#f0fdf4', border: '#bbf7d0', text: '#15803d', icon: '✅' },
+  at_risk:           { label: 'At Risk',            color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', text: '#b45309', icon: '⚠️' },
+  off_track:         { label: 'Off Track',          color: '#ef4444', bg: '#fef2f2', border: '#fecaca', text: '#b91c1c', icon: '❌' },
+  complete:          { label: 'Complete',           color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', text: '#1d4ed8', icon: '🎉' },
+  insufficient_data: { label: 'Insufficient Data',  color: '#94a3b8', bg: '#f8fafc', border: '#e2e8f0', text: '#475569', icon: 'ℹ️' },
+};
+
+const CONF_META = {
+  high:   { cls: 'text-green-700 bg-green-50 border-green-200', label: 'High confidence' },
+  medium: { cls: 'text-amber-700 bg-amber-50 border-amber-200', label: 'Medium confidence' },
+  low:    { cls: 'text-slate-600 bg-slate-50 border-slate-200', label: 'Low confidence' },
+};
+
+const TREND_META = {
+  improving: { icon: '↑', color: 'text-green-600', label: 'Velocity improving' },
+  stable:    { icon: '→', color: 'text-blue-600',  label: 'Velocity stable' },
+  declining: { icon: '↓', color: 'text-red-600',   label: 'Velocity declining' },
+};
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function ForecastPage() {
   const router  = useRouter();
-  const [result, setResult] = useState<ForecastResult | null>(null);
+  const [result,  setResult]  = useState<ForecastResult | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -172,108 +265,202 @@ export default function ForecastPage() {
   if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Computing forecast…</div></AppShell>;
   if (!result)  return null;
 
-  const meta = STATUS_META[result.status];
+  const meta  = STATUS_META[result.status];
+  const trend = TREND_META[result.velocityTrend];
 
   return (
     <AppShell showNav>
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
 
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-5">
           <div className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-full px-3 py-1 text-xs font-bold text-indigo-700 mb-3">
-            🔮 Delivery
+            🔮 Planning
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-1">Forecast</h1>
-          <p className="text-sm text-slate-500">
-            Velocity-based delivery forecast — based on your uploaded Jira sprint data.
-          </p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-1">Delivery Forecast</h1>
+          <p className="text-sm text-slate-500">Velocity-based delivery outlook — shareable in meetings.</p>
         </div>
 
-        {/* Status banner */}
-        <div className={`flex items-center gap-3 rounded-2xl border px-5 py-4 mb-5 ${meta.bg}`}>
-          <span className="text-2xl">{meta.icon}</span>
-          <div className="flex-1">
-            <p className="font-black text-base">{meta.label}</p>
-            {result.status === 'insufficient_data'
-              ? <p className="text-sm mt-0.5 opacity-75">Forecast confidence is low — upload more sprints for accurate projections.</p>
-              : <p className="text-sm mt-0.5 opacity-75">~{result.weeksRemaining} weeks to complete {result.remainingIssues} remaining items at {result.avgThroughput} items/sprint.</p>
-            }
+        {/* ── Status Hero Banner ── */}
+        <div className="rounded-2xl border p-5 mb-5 flex items-center gap-5"
+          style={{ background: meta.bg, borderColor: meta.border }}>
+          <div className="text-5xl leading-none">{meta.icon}</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-1">
+              <h2 className="text-xl font-black" style={{ color: meta.text }}>{meta.label}</h2>
+              <span className={`text-xs font-bold border rounded-full px-2.5 py-0.5 ${CONF_META[result.confidence].cls}`}>
+                {CONF_META[result.confidence].label}
+              </span>
+            </div>
+            {result.status === 'insufficient_data' ? (
+              <p className="text-sm" style={{ color: meta.text, opacity: 0.75 }}>Upload Jira data with sprint history to generate a forecast.</p>
+            ) : result.status === 'complete' ? (
+              <p className="text-sm font-semibold" style={{ color: meta.text }}>All {result.totalIssues} issues are complete. 🎉</p>
+            ) : (
+              <p className="text-sm" style={{ color: meta.text, opacity: 0.85 }}>
+                <strong>~{result.weeksRemaining} weeks</strong> to complete {result.remainingIssues} remaining issues
+                at <strong>{result.avgThroughput} items/sprint</strong>.
+                Estimated completion: <strong>{result.estimatedEndDate}</strong>.
+              </p>
+            )}
           </div>
-          <span className={`text-xs font-bold border rounded-full px-3 py-1 ${CONF_META[result.confidence]}`}>
-            {result.confidence} confidence
-          </span>
+          {result.status !== 'insufficient_data' && result.status !== 'complete' && (
+            <div className="text-center shrink-0 bg-white rounded-2xl px-5 py-3 border" style={{ borderColor: meta.border }}>
+              <p className="text-3xl font-black" style={{ color: meta.color }}>{result.weeksRemaining}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">weeks est.</p>
+            </div>
+          )}
         </div>
 
-        {/* KPI row */}
+        {/* ── KPI Row ── */}
         <div className="grid grid-cols-4 gap-3 mb-5">
           {[
-            { label: 'Total Issues',   value: result.totalIssues,              icon: '📋' },
-            { label: 'Done',           value: `${result.doneIssues} (${result.completionPct}%)`, icon: '✅' },
-            { label: 'Remaining',      value: result.remainingIssues,          icon: '⏳' },
-            { label: 'Avg Throughput', value: result.avgThroughput > 0 ? `${result.avgThroughput}/sprint` : '—', icon: '⚡' },
+            { label: 'Total Issues',   value: result.totalIssues,  icon: '📋', color: 'text-slate-900' },
+            { label: `Done (${result.completionPct}%)`, value: result.doneIssues, icon: '✅', color: 'text-green-600' },
+            { label: 'Remaining',      value: result.remainingIssues, icon: '⏳', color: result.remainingIssues > 0 ? 'text-amber-600' : 'text-slate-400' },
+            { label: 'Avg / Sprint',   value: result.avgThroughput > 0 ? `${result.avgThroughput}` : '—', icon: '⚡', color: 'text-blue-600' },
           ].map(c => (
             <div key={c.label} className="bg-white border border-slate-200 rounded-2xl p-4 text-center shadow-sm">
               <p className="text-lg mb-1">{c.icon}</p>
-              <p className="text-base font-black text-slate-900">{c.value}</p>
+              <p className={`text-2xl font-black ${c.color}`}>{c.value}</p>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">{c.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Burn-up chart */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-black text-slate-900">Burn-up Chart</h2>
-            <div className="flex items-center gap-3 text-[10px] text-slate-400">
-              <span className="flex items-center gap-1"><span className="inline-block w-4 h-0.5 bg-blue-500 rounded" /> Actual</span>
-              <span className="flex items-center gap-1"><span className="inline-block w-4 h-0.5 bg-blue-200 rounded border-dashed border border-blue-200" /> Forecast</span>
-              <span className="flex items-center gap-1"><span className="inline-block w-4 h-0.5 bg-slate-200 rounded" /> Target</span>
+        {/* ── Two-column: Ring + Burn-up ── */}
+        <div className="grid grid-cols-3 gap-4 mb-5">
+
+          {/* Left: Completion ring + trend */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col items-center justify-center gap-4">
+            <CompletionRing pct={result.completionPct} color={meta.color} />
+
+            {/* Trend pill */}
+            <div className={`flex items-center gap-1.5 text-sm font-bold ${trend.color}`}>
+              <span className="text-base">{trend.icon}</span>
+              {trend.label}
+            </div>
+
+            {/* Mini risk row */}
+            <div className="w-full grid grid-cols-2 gap-2 mt-1">
+              <div className={`text-center rounded-xl p-2 ${result.blockedCount > 0 ? 'bg-red-50 border border-red-200' : 'bg-slate-50 border border-slate-100'}`}>
+                <p className={`text-lg font-black ${result.blockedCount > 0 ? 'text-red-600' : 'text-slate-400'}`}>{result.blockedCount}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Blocked</p>
+              </div>
+              <div className={`text-center rounded-xl p-2 ${result.criticalCount > 0 ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50 border border-slate-100'}`}>
+                <p className={`text-lg font-black ${result.criticalCount > 0 ? 'text-amber-600' : 'text-slate-400'}`}>{result.criticalCount}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Critical</p>
+              </div>
             </div>
           </div>
-          <BurnUpChart points={result.sprintPoints} total={result.totalIssues} />
+
+          {/* Right: Burn-up chart */}
+          <div className="col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-black text-slate-900">Burn-up Chart</h2>
+              <div className="flex items-center gap-4 text-[10px] text-slate-400">
+                <span className="flex items-center gap-1"><span className="w-5 h-0.5 inline-block bg-blue-500 rounded" /> Actual</span>
+                <span className="flex items-center gap-1"><span className="w-5 h-0.5 inline-block bg-blue-200 rounded" style={{ borderStyle:'dashed', borderWidth:0, borderTopWidth:1 }} /> Forecast</span>
+                <span className="flex items-center gap-1"><span className="w-5 h-0.5 inline-block bg-slate-200 rounded" /> Target</span>
+              </div>
+            </div>
+            <BurnUpChart points={result.sprintPoints} total={result.totalIssues} />
+          </div>
         </div>
 
-        {/* Risk signals */}
-        {(result.blockedCount > 0 || result.criticalCount > 0) && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-5">
-            <h2 className="text-sm font-black text-amber-800 mb-2">⚠️ Risk Signals</h2>
-            <div className="flex gap-4">
-              {result.blockedCount > 0 && <p className="text-xs text-amber-700"><strong>{result.blockedCount}</strong> blocked item{result.blockedCount > 1 ? 's' : ''}</p>}
-              {result.criticalCount > 0 && <p className="text-xs text-amber-700"><strong>{result.criticalCount}</strong> critical priority item{result.criticalCount > 1 ? 's' : ''}</p>}
+        {/* ── Velocity Bar Chart ── */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-black text-slate-900">Sprint Velocity</h2>
+            <div className="flex items-center gap-3 text-[10px] text-slate-400">
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded inline-block bg-blue-500" /> Last 3 sprints</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded inline-block bg-blue-200" /> Earlier</span>
+              <span className={`font-bold ${trend.color}`}>{trend.icon} {trend.label}</span>
+            </div>
+          </div>
+          <VelocityChart points={result.sprintPoints} avg={result.avgThroughput} />
+        </div>
+
+        {/* ── Sprint performance table ── */}
+        {result.sprintPoints.length > 0 && (
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-5">
+            <h2 className="text-sm font-black text-slate-900 mb-3">Sprint Performance</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-slate-600 border-collapse">
+                <thead>
+                  <tr className="bg-slate-50">
+                    <th className="text-left px-3 py-2 border border-slate-100 font-semibold text-slate-700">Sprint</th>
+                    <th className="text-right px-3 py-2 border border-slate-100 font-semibold text-slate-700">Completed</th>
+                    <th className="text-right px-3 py-2 border border-slate-100 font-semibold text-slate-700">Cumulative</th>
+                    <th className="text-right px-3 py-2 border border-slate-100 font-semibold text-slate-700">vs Avg</th>
+                    <th className="px-3 py-2 border border-slate-100 font-semibold text-slate-700">Pace</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.sprintPoints.map((p, i) => {
+                    const vs     = result.avgThroughput > 0 ? ((p.done - result.avgThroughput) / result.avgThroughput * 100) : 0;
+                    const vsColor = vs > 10 ? 'text-green-600' : vs < -10 ? 'text-red-600' : 'text-slate-500';
+                    const barPct  = result.avgThroughput > 0 ? Math.min(100, (p.done / (result.avgThroughput * 1.5)) * 100) : 0;
+                    return (
+                      <tr key={i} className="hover:bg-slate-50">
+                        <td className="px-3 py-2 border border-slate-100 font-medium text-slate-800 whitespace-nowrap">{p.sprint.replace(/sprint\s*/i, 'Sprint ')}</td>
+                        <td className="px-3 py-2 border border-slate-100 text-right font-bold text-slate-900">{p.done}</td>
+                        <td className="px-3 py-2 border border-slate-100 text-right text-slate-600">{p.cumDone}</td>
+                        <td className={`px-3 py-2 border border-slate-100 text-right font-bold ${vsColor}`}>{vs >= 0 ? '+' : ''}{Math.round(vs)}%</td>
+                        <td className="px-3 py-2 border border-slate-100 min-w-[100px]">
+                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full transition-all" style={{ width: `${barPct}%`, background: vs > 10 ? '#22c55e' : vs < -10 ? '#ef4444' : '#3b82f6' }} />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
 
-        {/* Next quarter plan */}
+        {/* ── Next Quarter Plan ── */}
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-5">
           <h2 className="text-sm font-black text-slate-900 mb-3">📅 Next Quarter Plan</h2>
           {result.avgThroughput > 0 ? (
-            <div className="space-y-2 text-sm text-slate-600">
-              <p>At <strong>{result.avgThroughput} items/sprint</strong> across 6 sprints, you can complete approximately <strong>{Math.round(result.avgThroughput * 6)} items</strong> next quarter.</p>
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: 'Capacity (6 sprints)', value: Math.round(result.avgThroughput * 6), color: 'text-blue-600' },
+                  { label: 'Remaining backlog',    value: result.remainingIssues,               color: result.remainingIssues > result.avgThroughput * 6 ? 'text-red-600' : 'text-green-600' },
+                  { label: 'Gap',                  value: Math.max(0, result.remainingIssues - Math.round(result.avgThroughput * 6)), color: 'text-amber-600' },
+                ].map(s => (
+                  <div key={s.label} className="text-center bg-slate-50 rounded-xl p-3">
+                    <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">{s.label}</p>
+                  </div>
+                ))}
+              </div>
               {result.remainingIssues <= result.avgThroughput * 6
-                ? <p className="text-green-700 font-semibold">✅ Current backlog is achievable within one quarter at this velocity.</p>
-                : <p className="text-amber-700 font-semibold">⚠️ Backlog exceeds one quarter of capacity — consider descoping or splitting into milestones.</p>
+                ? <p className="text-sm text-green-700 font-semibold bg-green-50 rounded-xl px-4 py-2.5 border border-green-200">✅ Full backlog is achievable within one quarter at current velocity.</p>
+                : <p className="text-sm text-amber-700 font-semibold bg-amber-50 rounded-xl px-4 py-2.5 border border-amber-200">⚠️ Backlog exceeds quarterly capacity — consider descoping or splitting into milestones.</p>
               }
             </div>
           ) : (
-            <p className="text-sm text-slate-400">Upload Jira data with sprint history to see quarterly planning.</p>
+            <p className="text-sm text-slate-400">Upload Jira data with sprint history for quarterly planning.</p>
           )}
         </div>
 
-        {/* Adjustment recommendations */}
+        {/* ── Recommendations ── */}
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
           <h2 className="text-sm font-black text-slate-900 mb-3">💡 Recommendations</h2>
           <ul className="space-y-2">
             {result.adjustments.map((a, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                <span className="text-blue-400 mt-0.5 shrink-0">→</span>
+              <li key={i} className="flex items-start gap-2 text-sm text-slate-600 bg-slate-50 rounded-xl px-4 py-2.5">
+                <span className="text-blue-400 mt-0.5 shrink-0 font-bold">→</span>
                 {a}
               </li>
             ))}
           </ul>
           <p className="text-[10px] text-slate-400 mt-4 pt-3 border-t border-slate-100">
-            Forecast model: linear velocity extrapolation based on completed items per sprint. 2-week sprint assumption.
-            Low data quality reduces confidence. This is an estimate, not a guarantee.
+            Model: linear velocity extrapolation · 2-week sprints assumed · Confidence reflects data completeness and velocity stability.
           </p>
         </div>
 
