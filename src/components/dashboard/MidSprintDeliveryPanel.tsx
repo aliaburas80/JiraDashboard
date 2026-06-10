@@ -2,72 +2,72 @@
 'use client';
 import type { MidSprintInsight, SprintDeliveryPattern } from '@/types/throughput';
 
-function patternStyle(pattern: SprintDeliveryPattern): {
-  border: string; bg: string; badge: string; icon: string;
-} {
+function patternChip(pattern: SprintDeliveryPattern): { cls: string; icon: string; borderLeft?: string } {
   switch (pattern) {
-    case 'Healthy Early Progress':
-      return { border: 'border-green-200', bg: 'bg-green-50', badge: 'bg-green-100 text-green-800 border-green-200', icon: '✅' };
-    case 'End-Loaded Sprint':
-      return { border: 'border-amber-200', bg: 'bg-amber-50', badge: 'bg-amber-100 text-amber-800 border-amber-200', icon: '⏱' };
-    case 'Late Delivery Risk':
-      return { border: 'border-orange-200', bg: 'bg-orange-50', badge: 'bg-orange-100 text-orange-800 border-orange-200', icon: '⚠️' };
-    case 'Scope Instability':
-      return { border: 'border-purple-200', bg: 'bg-purple-50', badge: 'bg-purple-100 text-purple-800 border-purple-200', icon: '🔀' };
-    case 'Blocked Sprint':
-      return { border: 'border-red-200', bg: 'bg-red-50', badge: 'bg-red-100 text-red-800 border-red-200', icon: '🚫' };
-    default:
-      return { border: 'border-slate-200', bg: 'bg-slate-50', badge: 'bg-slate-100 text-slate-600 border-slate-200', icon: '❓' };
+    case 'Healthy Early Progress': return { cls: 'chip c-gr',  icon: '✅' };
+    case 'End-Loaded Sprint':      return { cls: 'chip c-am',  icon: '⏱', borderLeft: '3px solid var(--dc-amber, #F59E0B)' };
+    case 'Late Delivery Risk':     return { cls: 'chip c-am',  icon: '⚠️', borderLeft: '3px solid var(--dc-amber, #F59E0B)' };
+    case 'Scope Instability':      return { cls: 'chip c-or',  icon: '🔀' };
+    case 'Blocked Sprint':         return { cls: 'chip c-rd',  icon: '🚫', borderLeft: '3px solid var(--dc-red, #F87171)' };
+    default:                       return { cls: 'chip c-nt',  icon: '❓' };
   }
 }
 
+function midBarColor(pct: number): string {
+  if (pct >= 50) return 'var(--dc-green, #22C55E)';
+  if (pct >= 30) return 'var(--dc-amber, #F59E0B)';
+  return 'var(--dc-acc, #E85D12)';
+}
+
 function MidSprintCard({ insight }: { insight: MidSprintInsight }) {
-  const style = patternStyle(insight.pattern);
+  const { cls, icon, borderLeft } = patternChip(insight.pattern);
   const hasDates = insight.sprintMidpoint !== null;
 
   return (
-    <div className={`border rounded-xl p-4 ${style.border} ${style.bg} flex flex-col gap-2`}>
+    <div className="rounded-xl p-4 flex flex-col gap-2"
+      style={{
+        background: 'var(--dc-s2, #1E1E1E)',
+        border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
+        borderLeft: borderLeft ?? '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
+        borderRadius: 9,
+      }}>
       {/* Sprint name + pattern badge */}
       <div className="flex items-start justify-between gap-2 flex-wrap">
-        <p className="text-xs font-black text-slate-800 leading-snug flex-1 min-w-0">
+        <p className="text-xs font-black leading-snug flex-1 min-w-0" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>
           <span className="truncate block" title={insight.sprintName}>{insight.sprintName}</span>
           {insight.team && insight.team !== 'Unknown' && (
-            <span className="text-[10px] font-normal text-slate-500">{insight.team}</span>
+            <span className="text-[10px] font-normal" style={{ color: 'var(--dc-p3, #505050)' }}>{insight.team}</span>
           )}
         </p>
-        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${style.badge} shrink-0`}>
-          <span>{style.icon}</span>
-          {insight.pattern}
+        <span className={`${cls} shrink-0`} style={{ fontSize: 10 }}>
+          <span>{icon}</span> {insight.pattern}
         </span>
       </div>
 
       {/* Mid-sprint gauge */}
       {hasDates ? (
         <div>
-          <div className="flex justify-between text-[10px] text-slate-500 mb-1">
+          <div className="flex justify-between text-[10px] mb-1" style={{ color: 'var(--dc-p3, #505050)' }}>
             <span>By midpoint</span>
-            <span className="font-bold">{insight.midSprintPct}%</span>
+            <span className="font-bold" style={{ color: 'var(--dc-p2, #909090)' }}>{insight.midSprintPct}%</span>
           </div>
-          <div className="h-2 rounded-full bg-white/60 border border-white overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all"
-              style={{
-                width: `${insight.midSprintPct}%`,
-                background: insight.midSprintPct >= 50 ? '#16a34a' : insight.midSprintPct >= 30 ? '#d97706' : '#dc2626',
-              }}
-            />
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--dc-s3, #282828)' }}>
+            <div className="h-full rounded-full transition-all"
+              style={{ width: `${insight.midSprintPct}%`, background: midBarColor(insight.midSprintPct) }} />
           </div>
-          <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+          <div className="flex justify-between text-[10px] mt-1" style={{ color: 'var(--dc-p3, #505050)' }}>
             <span>{insight.midDoneCount} done by mid</span>
-            <span>Final: {insight.finalCompletionPct}%</span>
+            <span className="font-bold" style={{ color: 'var(--dc-acc2, #FF8A4C)', fontFamily: 'var(--font-mono, monospace)' }}>
+              Final: {insight.finalCompletionPct}%
+            </span>
           </div>
         </div>
       ) : (
-        <p className="text-[11px] text-slate-400 italic">Sprint date fields missing — add Sprint Start and Sprint End to enable mid-sprint analysis.</p>
+        <p className="text-[11px] italic" style={{ color: 'var(--dc-p3, #505050)' }}>Sprint date fields missing — add Sprint Start and Sprint End to enable mid-sprint analysis.</p>
       )}
 
       {/* Interpretation */}
-      <p className="text-[11px] text-slate-600 leading-snug">{insight.interpretation}</p>
+      <p className="text-[11px] leading-snug" style={{ color: 'var(--dc-p2, #909090)' }}>{insight.interpretation}</p>
     </div>
   );
 }
@@ -77,37 +77,41 @@ interface Props { insights: MidSprintInsight[] }
 export default function MidSprintDeliveryPanel({ insights }: Props) {
   if (!insights.length) {
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 text-sm text-slate-400 italic shadow-sm">
+      <div className="rounded-2xl p-6 text-sm italic shadow-sm"
+        style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr)', color: 'var(--dc-p3, #505050)' }}>
         No sprint data available for mid-sprint analysis.
       </div>
     );
   }
 
-  const endLoaded  = insights.filter(i => i.isEndLoaded).length;
-  const blocked    = insights.filter(i => i.isBlocked).length;
-  const healthy    = insights.filter(i => i.pattern === 'Healthy Early Progress').length;
-  const withDates  = insights.filter(i => i.sprintMidpoint !== null).length;
-  const avgMid     = withDates
+  const endLoaded = insights.filter(i => i.isEndLoaded).length;
+  const blocked   = insights.filter(i => i.isBlocked).length;
+  const healthy   = insights.filter(i => i.pattern === 'Healthy Early Progress').length;
+  const withDates = insights.filter(i => i.sprintMidpoint !== null).length;
+  const avgMid    = withDates
     ? Math.round(insights.filter(i => i.sprintMidpoint !== null).reduce((s, i) => s + i.midSprintPct, 0) / withDates)
     : null;
 
+  const avgMidCls = avgMid === null ? '' : avgMid >= 50 ? 'chip c-gr' : avgMid >= 30 ? 'chip c-am' : 'chip c-rd';
+
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+    <div className="rounded-2xl shadow-sm overflow-hidden"
+      style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
+        style={{ borderBottom: '1px solid var(--dc-bdr)', background: 'var(--dc-s1, #141414)' }}>
         <div>
-          <h3 className="text-sm font-black uppercase tracking-wider text-slate-700">Mid-Sprint Delivery</h3>
-          <p className="text-xs text-slate-500 mt-0.5">{insights.length} sprint{insights.length !== 1 ? 's' : ''} · delivery pattern analysis</p>
+          <h3 className="text-sm font-black uppercase tracking-wider" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Mid-Sprint Delivery</h3>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--dc-p3, #505050)' }}>{insights.length} sprint{insights.length !== 1 ? 's' : ''} · delivery pattern analysis</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {avgMid !== null && (
-            <span className={`text-xs font-bold px-3 py-1 rounded-full border ${avgMid >= 50 ? 'bg-green-50 text-green-700 border-green-200' : avgMid >= 30 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-              Avg midpoint: {avgMid}%
-            </span>
+            <span className={avgMidCls} style={{ fontSize: 10, borderRadius: 100 }}>Avg midpoint: {avgMid}%</span>
           )}
-          {healthy > 0 && <span className="text-xs bg-green-50 text-green-700 border border-green-200 rounded-full px-3 py-1 font-semibold">✅ {healthy} healthy</span>}
-          {endLoaded > 0 && <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-3 py-1 font-semibold">⏱ {endLoaded} end-loaded</span>}
-          {blocked > 0 && <span className="text-xs bg-red-50 text-red-700 border border-red-200 rounded-full px-3 py-1 font-semibold">🚫 {blocked} blocked</span>}
+          {healthy   > 0 && <span className="chip c-gr"  style={{ fontSize: 10, borderRadius: 100 }}>✅ {healthy} healthy</span>}
+          {endLoaded > 0 && <span className="chip c-am"  style={{ fontSize: 10, borderRadius: 100 }}>⏱ {endLoaded} end-loaded</span>}
+          {blocked   > 0 && <span className="chip c-rd"  style={{ fontSize: 10, borderRadius: 100 }}>🚫 {blocked} blocked</span>}
         </div>
       </div>
 
