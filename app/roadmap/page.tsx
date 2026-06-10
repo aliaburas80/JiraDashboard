@@ -301,6 +301,7 @@ export default function RoadmapPage() {
   const [timelines,  setTimelines]  = useState<EpicTimeline[]>([]);
   const [throughput, setThroughput] = useState(0);
   const [loading,    setLoading]    = useState(true);
+  const [noData,     setNoData]     = useState(false);
   const [view,       setView]       = useState<'gantt' | 'cards'>('gantt');
   const [filter,     setFilter]     = useState<'all' | 'active' | 'critical' | 'done'>('active');
   const [sort,       setSort]       = useState<'progress' | 'name' | 'forecast'>('forecast');
@@ -309,7 +310,7 @@ export default function RoadmapPage() {
     async function load() {
       const result    = await loadMetricsWithSource();
       const metrics   = result.metrics as DashboardMetrics | null;
-      if (!metrics) { router.replace('/'); return; }
+      if (!metrics) { setNoData(true); setLoading(false); return; }
 
       const sprints      = (metrics.sprint?.sprints ?? []) as any[];
       const valid        = sprints.filter((s: any) => (s.completedCount ?? 0) > 0);
@@ -325,13 +326,40 @@ export default function RoadmapPage() {
       setThroughput(parseFloat(avgThroughput.toFixed(1)));
       setLoading(false);
     }
-    load().catch(() => router.replace('/'));
+    load().catch(() => { setNoData(true); setLoading(false); });
   }, [router]);
 
   if (loading) return (
     <AppShell showNav>
       <div className="flex items-center justify-center h-64 animate-pulse" style={{ color: 'var(--dc-p3, #505050)' }}>
         Building roadmap…
+      </div>
+    </AppShell>
+  );
+
+  if (noData) return (
+    <AppShell showNav>
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-5">
+          <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold mb-3"
+            style={{ background: 'rgba(232,93,18,0.10)', color: 'var(--dc-acc2, #FF8A4C)' }}>
+            🗺️ Planning
+          </div>
+          <h1 className="text-2xl font-black tracking-tight mb-1" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Roadmap</h1>
+        </div>
+        <div className="text-center py-20 rounded-2xl"
+          style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+          <p className="text-5xl mb-4">🗺️</p>
+          <p className="text-base font-black mb-2" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>No data uploaded yet</p>
+          <p className="text-sm max-w-sm mx-auto mb-6" style={{ color: 'var(--dc-p3, #505050)' }}>
+            Upload a Jira export to see your epic roadmap and delivery forecast.
+          </p>
+          <button onClick={() => router.push('/')}
+            className="px-5 py-2 rounded-xl text-sm font-bold"
+            style={{ background: 'var(--dc-acc, #E85D12)', color: '#fff' }}>
+            Upload data
+          </button>
+        </div>
       </div>
     </AppShell>
   );
