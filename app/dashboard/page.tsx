@@ -129,61 +129,68 @@ function MetricTable({ columns, rows, emptyMessage, rowClassName }: {
 }
 
 // ─── compact bar chart ────────────────────────────────────────────────────────
-function CompactBarChart({ rows, labelKey = 'name', valueKey = 'count', emptyMessage = 'No data.' }: {
+function CompactBarChart({ rows, labelKey = 'name', valueKey = 'count', emptyMessage = 'No data.', getBarColor, formatValue }: {
   rows: any[]; labelKey?: string; valueKey?: string; emptyMessage?: string;
+  getBarColor?: (row: any, value: number) => string;
+  formatValue?: (row: any, value: number) => string;
 }) {
-  const items = (rows || []).map(r => ({ label: r[labelKey], value: Number(r[valueKey]) || 0 })).filter(r => r.label && r.value >= 0);
+  const items = (rows || []).map(r => ({ label: r[labelKey], value: Number(r[valueKey]) || 0, row: r })).filter(r => r.label && r.value >= 0);
   const max = Math.max(...items.map(r => r.value), 1);
-  if (!items.length) return <p className="text-sm text-slate-500 italic">{emptyMessage}</p>;
+  if (!items.length) return <p className="text-sm italic" style={{ color: 'var(--dc-p2)' }}>{emptyMessage}</p>;
   return (
     <div className="space-y-2">
-      {items.map(item => (
-        <div key={item.label} className="flex items-center gap-2 text-xs">
-          <span className="w-32 shrink-0 text-slate-600 truncate" title={item.label}>{item.label}</span>
-          <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--dc-s3, #e2e8f0)' }}>
-            <div className="h-full rounded-full transition-all" style={{ width: `${(item.value / max) * 100}%`, background: 'var(--dc-acc2, #FF8A4C)' }} />
+      {items.map(item => {
+        const barColor = getBarColor ? getBarColor(item.row, item.value) : 'var(--dc-acc2, #FF8A4C)';
+        const display  = formatValue ? formatValue(item.row, item.value) : String(item.value);
+        return (
+          <div key={item.label} className="flex items-center gap-2 text-xs">
+            <span className="w-32 shrink-0 truncate" style={{ color: 'var(--dc-p1)' }} title={item.label}>{item.label}</span>
+            <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--dc-s3, #e2e8f0)' }}>
+              <div className="h-full rounded-full transition-all" style={{ width: `${(item.value / max) * 100}%`, background: barColor }} />
+            </div>
+            <strong className="w-10 text-right shrink-0" style={{ fontFamily: 'var(--font-mono, monospace)', color: barColor }}>{display}</strong>
           </div>
-          <strong className="w-8 text-right text-slate-800 shrink-0">{item.value}</strong>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
 // ─── distribution donut ───────────────────────────────────────────────────────
 const PALETTE = ['#E85D12', '#FF8A4C', '#F59E0B', '#F87171', '#22C55E', '#909090'];
-function DistributionDonut({ title, rows, labelKey = 'name', valueKey = 'count', emptyMessage = 'No data.' }: {
-  title: string; rows: any[]; labelKey?: string; valueKey?: string; emptyMessage?: string;
+function DistributionDonut({ title, rows, labelKey = 'name', valueKey = 'count', emptyMessage = 'No data.', colors }: {
+  title: string; rows: any[]; labelKey?: string; valueKey?: string; emptyMessage?: string; colors?: string[];
 }) {
-  const items = (rows || []).map((r, i) => ({ label: r[labelKey], value: Number(r[valueKey]) || 0, color: PALETTE[i % PALETTE.length] })).filter(r => r.label && r.value > 0).slice(0, 6);
+  const palette = colors ?? PALETTE;
+  const items = (rows || []).map((r, i) => ({ label: r[labelKey], value: Number(r[valueKey]) || 0, color: palette[i % palette.length] })).filter(r => r.label && r.value > 0).slice(0, 6);
   const total = items.reduce((s, r) => s + r.value, 0);
   let cursor = 0;
   const bg = items.length
     ? `conic-gradient(${items.map(r => { const s = cursor; cursor += (r.value / Math.max(total, 1)) * 100; return `${r.color} ${s}% ${cursor}%`; }).join(', ')})`
-    : '#e2e8f0';
+    : 'var(--dc-s3, #e2e8f0)';
   return (
     <div className="mb-4">
-      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{title}</p>
+      <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--dc-p2)' }}>{title}</p>
       {items.length ? (
         <div className="flex items-center gap-5">
           <div className="w-20 h-20 rounded-full shrink-0 relative" style={{ background: bg }}>
-            <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center" style={{ background: 'radial-gradient(circle, white 52%, transparent 52%)' }}>
-              <span className="text-sm font-black text-slate-900">{total}</span>
-              <span className="text-xs text-slate-500">items</span>
+            <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center" style={{ background: 'radial-gradient(circle, var(--dc-s2, #1E1E1E) 52%, transparent 52%)' }}>
+              <span className="text-sm font-black" style={{ fontFamily: 'var(--font-mono, monospace)', color: 'var(--dc-p1)' }}>{total}</span>
+              <span className="text-xs" style={{ color: 'var(--dc-p2, #909090)', fontSize: 11 }}>items</span>
             </div>
           </div>
           <div className="space-y-1 text-xs flex-1 min-w-0">
             {items.map(r => (
               <div key={r.label} className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ background: r.color }} />
-                <span className="text-slate-600 truncate flex-1">{r.label}</span>
-                <strong className="text-slate-800">{r.value}</strong>
+                <span className="truncate flex-1" style={{ color: 'var(--dc-p2)' }}>{r.label}</span>
+                <strong style={{ fontFamily: 'var(--font-mono, monospace)', color: 'var(--dc-p1)' }}>{r.value}</strong>
               </div>
             ))}
           </div>
         </div>
       ) : (
-        <p className="text-sm text-slate-500 italic">{emptyMessage}</p>
+        <p className="text-sm italic" style={{ color: 'var(--dc-p2)' }}>{emptyMessage}</p>
       )}
     </div>
   );
@@ -1635,13 +1642,15 @@ export default function DashboardPage() {
             { label: `${(kanban?.byStatus || []).length} statuses`, type: 'neutral' },
             { label: `${flow.critical || 0} critical`, type: (flow.critical || 0) > 0 ? 'critical' : 'good' },
           ]}
-          accent="#0f766e"
+          accent="var(--dc-acc2, #FF8A4C)"
           expanded={expandedSections.has('kanban')}
           onToggle={() => toggleSection('kanban')}
         />
         {sectionVisible('kanban') && (
           <section id="section-kanban" className="dashboard-section mb-4 p-4 rounded-xl space-y-4 animate-slide-up" style={{ background: 'var(--dc-s2, #fff)', border: '1px solid var(--dc-bdr)' }}>
-            <DistributionDonut title="Kanban Share" rows={(kanban?.byStatus || []).slice(0, 6)} emptyMessage="No status data." />
+            <DistributionDonut title="Kanban Share" rows={(kanban?.byStatus || []).slice(0, 6)} emptyMessage="No status data."
+              colors={['#22C55E', '#FF8A4C', '#323232', '#F59E0B', '#E85D12', '#909090']}
+            />
             <CompactBarChart rows={(kanban?.byStatus || []).slice(0, 8)} emptyMessage="No status data." />
             <MetricTable
               columns={[
@@ -1668,21 +1677,31 @@ export default function DashboardPage() {
             { label: `${sprint.sprintCount || 0} sprints`, type: 'neutral' },
             ...(sprint.sprints?.[0] ? [{ label: `${sprint.sprints[0].completionRate}% recent`, type: (sprint.sprints[0].completionRate >= 80 ? 'good' : sprint.sprints[0].completionRate >= 60 ? 'warning' : 'critical') as Chip['type'] }] : []),
           ]}
-          accent="#7c3aed"
+          accent="var(--dc-acc2, #FF8A4C)"
           expanded={expandedSections.has('sprint')}
           onToggle={() => toggleSection('sprint')}
         />
         {sectionVisible('sprint') && (
           <section id="section-sprint" className="dashboard-section mb-4 p-4 rounded-xl space-y-4 animate-slide-up" style={{ background: 'var(--dc-s2, #fff)', border: '1px solid var(--dc-bdr)' }}>
-            <DistributionDonut title="Sprint Share" rows={(sprint.sprints || []).slice(0, 6)} labelKey="name" valueKey="issues" emptyMessage="No sprint data." />
+            <DistributionDonut
+              title="Sprint Share"
+              rows={(sprint.sprints || []).slice(0, 6)}
+              labelKey="name" valueKey="issues"
+              emptyMessage="No sprint data."
+              colors={['#E85D12', '#FF8A4C', '#505050', '#505050', '#505050', '#505050']}
+            />
             <MetricTable
               columns={[
-                { key: 'name', label: 'Sprint' }, { key: 'issues', label: 'Issues' },
+                { key: 'name', label: 'Sprint', render: (r: any) => <span style={{ color: 'var(--dc-acc2)', fontFamily: 'var(--font-mono, monospace)' }}>{r.name}</span> },
+                { key: 'issues', label: 'Issues' },
                 { key: 'completedIssues', label: 'Done' }, { key: 'completedPoints', label: 'Done Points' },
                 { key: 'averageLeadTimeDays', label: 'Lead', render: (r: any) => formatDays(r.averageLeadTimeDays) },
                 { key: 'averageCycleTimeDays', label: 'Cycle', render: (r: any) => formatDays(r.averageCycleTimeDays) },
-                { key: 'critical', label: 'Critical' }, { key: 'warning', label: 'Warning' },
-                { key: 'completionRate', label: 'Completion', render: (r: any) => `${r.completionRate}%` },
+                { key: 'critical', label: 'Critical', render: (r: any) => <span style={{ color: r.critical > 0 ? 'var(--dc-red)' : 'var(--dc-p2)' }}>{r.critical}</span> },
+                { key: 'warning', label: 'Warning', render: (r: any) => <span style={{ color: r.warning > 0 ? 'var(--dc-amber)' : 'var(--dc-p2)' }}>{r.warning}</span> },
+                { key: 'completionRate', label: 'Completion', render: (r: any) => (
+                  <span style={{ color: r.completionRate === 100 ? 'var(--dc-green)' : r.completionRate === 0 ? 'var(--dc-red)' : 'var(--dc-amber)', fontFamily: 'var(--font-mono, monospace)' }}>{r.completionRate}%</span>
+                )},
               ]}
               rows={sprint.sprints || []}
               emptyMessage="No sprint field was found in this Jira export."
@@ -1700,7 +1719,7 @@ export default function DashboardPage() {
             { label: `${(metrics.capacity || []).length} assignees`, type: 'neutral' },
             ...((metrics.capacity || [])[0] ? [{ label: `${(metrics.capacity || [])[0].assignee}: ${(metrics.capacity || [])[0].loadShare}%`, type: ((metrics.capacity || [])[0].loadShare > 35 ? 'critical' : 'good') as Chip['type'] }] : []),
           ]}
-          accent="#0f766e"
+          accent="var(--dc-acc2, #FF8A4C)"
           expanded={expandedSections.has('ownership')}
           onToggle={() => toggleSection('ownership')}
         />
@@ -1708,14 +1727,23 @@ export default function DashboardPage() {
           <section id="section-ownership" className="dashboard-section mb-4 p-4 rounded-xl animate-slide-up" style={{ background: 'var(--dc-s2, #fff)', border: '1px solid var(--dc-bdr)' }}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card id="capacity-section" className="p-4">
-                <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Capacity By Assignee</h4>
-                <CompactBarChart rows={(metrics.capacity || []).slice(0, 8)} labelKey="assignee" valueKey="issues" emptyMessage="No assignee data." />
+                <h4 className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: 'var(--dc-p2)' }}>Capacity By Assignee</h4>
+                <CompactBarChart
+                  rows={(metrics.capacity || []).slice(0, 8)}
+                  labelKey="assignee"
+                  valueKey="loadShare"
+                  emptyMessage="No assignee data."
+                  getBarColor={(row) => row.loadShare > 30 ? 'var(--dc-acc, #E85D12)' : row.loadShare >= 15 ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p3, #505050)'}
+                  formatValue={(row) => `${row.loadShare}%`}
+                />
                 <div className="mt-4">
                   <MetricTable
                     columns={[
                       { key: 'assignee', label: 'Assignee' }, { key: 'issues', label: 'Issues' },
                       { key: 'activeIssues', label: 'Active' }, { key: 'storyPoints', label: 'Points' },
-                      { key: 'loadShare', label: 'Load', render: (r: any) => `${r.loadShare}%` },
+                      { key: 'loadShare', label: 'Load', render: (r: any) => (
+                        <span style={{ fontFamily: 'var(--font-mono, monospace)', color: r.loadShare > 30 ? 'var(--dc-acc)' : r.loadShare >= 15 ? 'var(--dc-acc2)' : 'var(--dc-p3)' }}>{r.loadShare}%</span>
+                      )},
                     ]}
                     rows={metrics.capacity || []}
                     emptyMessage="No assignee data found."
@@ -1723,18 +1751,20 @@ export default function DashboardPage() {
                 </div>
               </Card>
               <Card className="p-4">
-                <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Epic / Parent Performance</h4>
+                <h4 className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: 'var(--dc-p2)' }}>Epic / Parent Performance</h4>
                 <MetricTable
                   columns={[
-                    { key: 'epic', label: 'Epic or Parent' }, { key: 'issues', label: 'Issues' },
+                    { key: 'epic', label: 'Epic or Parent', render: (r: any) => <span style={{ color: 'var(--dc-acc2)', fontFamily: 'var(--font-mono, monospace)' }}>{r.epic}</span> },
+                    { key: 'issues', label: 'Issues' },
                     { key: 'completedIssues', label: 'Done' },
                     { key: 'averageLeadTimeDays', label: 'Lead', render: (r: any) => formatDays(r.averageLeadTimeDays) },
                     { key: 'averageCycleTimeDays', label: 'Cycle', render: (r: any) => formatDays(r.averageCycleTimeDays) },
-                    { key: 'critical', label: 'Critical' }, { key: 'warning', label: 'Warning' },
+                    { key: 'critical', label: 'Critical', render: (r: any) => <span style={{ color: r.critical > 0 ? 'var(--dc-red)' : 'var(--dc-p2)' }}>{r.critical}</span> },
+                    { key: 'warning', label: 'Warning', render: (r: any) => <span style={{ color: r.warning > 0 ? 'var(--dc-amber)' : 'var(--dc-p2)' }}>{r.warning}</span> },
                     { key: 'progress', label: 'Progress', render: (r: any) => (
                       <div className="flex items-center gap-2 min-w-[80px]">
                         <ProgressBar value={r.progress || 0} />
-                        <span className="text-xs text-slate-600 w-8 shrink-0">{r.progress || 0}%</span>
+                        <span className="text-xs w-8 shrink-0" style={{ color: 'var(--dc-p2)' }}>{r.progress || 0}%</span>
                       </div>
                     )},
                   ]}
