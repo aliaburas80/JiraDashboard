@@ -79,11 +79,12 @@ function csvFromRows(rows: FlowItem[], cols: { key: string; label: string }[]): 
 }
 
 // ─── progress bar ─────────────────────────────────────────────────────────────
-function ProgressBar({ value }: { value: number }) {
+function ProgressBar({ value, fillColor }: { value: number; fillColor?: string }) {
   const w = Math.max(0, Math.min(value, 100));
+  const fill = fillColor ?? 'var(--dc-acc, #E85D12)';
   return (
     <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--dc-s3, #e2e8f0)' }} aria-label={`${value}%`}>
-      <div className="h-full rounded-full transition-all" style={{ width: `${w}%`, background: 'var(--dc-acc, #E85D12)' }} />
+      <div className="h-full rounded-full transition-all" style={{ width: `${w}%`, background: fill }} />
     </div>
   );
 }
@@ -131,7 +132,7 @@ function MetricTable({ columns, rows, emptyMessage, rowClassName }: {
 // ─── compact bar chart ────────────────────────────────────────────────────────
 function CompactBarChart({ rows, labelKey = 'name', valueKey = 'count', emptyMessage = 'No data.', getBarColor, formatValue }: {
   rows: any[]; labelKey?: string; valueKey?: string; emptyMessage?: string;
-  getBarColor?: (row: any, value: number) => string;
+  getBarColor?: (row: any, value: number, max: number) => string;
   formatValue?: (row: any, value: number) => string;
 }) {
   const items = (rows || []).map(r => ({ label: r[labelKey], value: Number(r[valueKey]) || 0, row: r })).filter(r => r.label && r.value >= 0);
@@ -140,7 +141,7 @@ function CompactBarChart({ rows, labelKey = 'name', valueKey = 'count', emptyMes
   return (
     <div className="space-y-2">
       {items.map(item => {
-        const barColor = getBarColor ? getBarColor(item.row, item.value) : 'var(--dc-acc2, #FF8A4C)';
+        const barColor = getBarColor ? getBarColor(item.row, item.value, max) : 'var(--dc-acc2, #FF8A4C)';
         const display  = formatValue ? formatValue(item.row, item.value) : String(item.value);
         return (
           <div key={item.label} className="flex items-center gap-2 text-xs">
@@ -1733,7 +1734,7 @@ export default function DashboardPage() {
                   labelKey="assignee"
                   valueKey="loadShare"
                   emptyMessage="No assignee data."
-                  getBarColor={(row) => row.loadShare > 30 ? 'var(--dc-acc, #E85D12)' : row.loadShare >= 15 ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p3, #505050)'}
+                  getBarColor={(row, _v, _m) => row.loadShare > 30 ? 'var(--dc-acc, #E85D12)' : row.loadShare >= 15 ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p3, #505050)'}
                   formatValue={(row) => `${row.loadShare}%`}
                 />
                 <div className="mt-4">
@@ -1786,49 +1787,72 @@ export default function DashboardPage() {
           icon="🏷️"
           title="Labels, Types & Projects"
           chips={[{ label: 'Classification', type: 'neutral' }]}
-          accent="#0891b2"
+          accent="var(--dc-acc2, #FF8A4C)"
           expanded={expandedSections.has('labels')}
           onToggle={() => toggleSection('labels')}
         />
-        {sectionVisible('labels') && (
+        {sectionVisible('labels') && (() => {
+          // Type-to-color map for Issue Type donut
+          const TYPE_COLORS: Record<string, string> = {
+            task: '#E85D12', story: '#FF8A4C', bug: '#F87171',
+            epic: '#F59E0B', spike: '#505050', subtask: '#909090',
+          };
+          const typeColors = (metrics.types as any[] || []).map((r: any) =>
+            TYPE_COLORS[String(r.type || '').toLowerCase()] ?? '#909090'
+          );
+          // Orange gradient bar color based on relative rank
+          const orangeBarColor = (_row: any, value: number, max: number): string => {
+            const pct = max > 0 ? value / max : 0;
+            return pct >= 0.6 ? 'var(--dc-acc, #E85D12)' : pct >= 0.3 ? 'var(--dc-acc2, #FF8A4C)' : '#323232';
+          };
+          return (
         <section id="section-labels" className="dashboard-section mb-6 animate-slide-up">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <Card className="p-4">
-              <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Label Distribution</h4>
+              <h4 className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: 'var(--dc-p2)' }}>Label Distribution</h4>
               {(metrics.labels as any)?.labelStats?.filter((l: any) => l.label !== '(unlabeled)').length ? (
                 <>
                   <div className="flex gap-2 mb-3">
-                    <span className="text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5">{(metrics.labels as any).uniqueLabels} unique labels</span>
-                    <span className="text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 rounded-full px-2.5 py-0.5">{(metrics.labels as any).totalUnlabeled} unlabeled</span>
+                    <span className="text-xs font-bold rounded-full px-2.5 py-0.5" style={{ background: 'rgba(232,93,18,0.12)', color: 'var(--dc-acc2)', border: '1px solid rgba(232,93,18,0.22)' }}>{(metrics.labels as any).uniqueLabels} unique labels</span>
+                    <span className="text-xs font-bold rounded-full px-2.5 py-0.5" style={{ background: 'var(--dc-s3)', color: 'var(--dc-p2)', border: '1px solid var(--dc-bdr)' }}>{(metrics.labels as any).totalUnlabeled} unlabeled</span>
                   </div>
-                  <CompactBarChart rows={(metrics.labels as any).labelStats.filter((l: any) => l.label !== '(unlabeled)').slice(0, 8)} labelKey="label" valueKey="count" emptyMessage="No labels found." />
+                  <CompactBarChart
+                    rows={(metrics.labels as any).labelStats.filter((l: any) => l.label !== '(unlabeled)').slice(0, 8)}
+                    labelKey="label" valueKey="count"
+                    emptyMessage="No labels found."
+                    getBarColor={orangeBarColor}
+                  />
                 </>
-              ) : <p className="text-sm text-slate-500 italic">No label data found in this export.</p>}
+              ) : <p className="text-sm italic" style={{ color: 'var(--dc-p2)' }}>No label data found in this export.</p>}
             </Card>
             <Card className="p-4">
-              <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Issue Type Breakdown</h4>
+              <h4 className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: 'var(--dc-p2)' }}>Issue Type Breakdown</h4>
               {(metrics.types as any[])?.length ? (
                 <>
-                  <DistributionDonut title="Type Share" rows={metrics.types as any[]} labelKey="type" valueKey="count" emptyMessage="No type data." />
-                  <CompactBarChart rows={metrics.types as any[]} labelKey="type" valueKey="count" emptyMessage="No type data." />
+                  <DistributionDonut title="Type Share" rows={metrics.types as any[]} labelKey="type" valueKey="count" emptyMessage="No type data." colors={typeColors} />
+                  <CompactBarChart rows={metrics.types as any[]} labelKey="type" valueKey="count" emptyMessage="No type data."
+                    getBarColor={(_row, _v, _m) => TYPE_COLORS[String(_row.type || '').toLowerCase()] ?? '#909090'}
+                  />
                 </>
-              ) : <p className="text-sm text-slate-500 italic">No issue type data found.</p>}
+              ) : <p className="text-sm italic" style={{ color: 'var(--dc-p2)' }}>No issue type data found.</p>}
             </Card>
           </div>
           {(metrics.labels as any)?.labelStats?.filter((l: any) => l.label !== '(unlabeled)').length > 0 && (
             <Card className="p-4 mb-4">
-              <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Label Health &amp; Completion</h4>
+              <h4 className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: 'var(--dc-p2)' }}>Label Health &amp; Completion</h4>
               <MetricTable
                 columns={[
-                  { key: 'label', label: 'Label' }, { key: 'count', label: 'Issues' },
+                  { key: 'label', label: 'Label', render: (r: any) => <span style={{ color: 'var(--dc-acc2)' }}>{r.label}</span> },
+                  { key: 'count', label: 'Issues' },
                   { key: 'done', label: 'Done' },
                   { key: 'completionRate', label: 'Completion', render: (r: any) => (
                     <div className="flex items-center gap-2 min-w-[100px]">
-                      <ProgressBar value={r.completionRate} />
-                      <span className="text-xs">{r.completionRate}%</span>
+                      <ProgressBar value={r.completionRate} fillColor={r.completionRate === 100 ? 'var(--dc-green, #22C55E)' : r.completionRate === 0 ? 'var(--dc-s4, #323232)' : 'var(--dc-amber, #F59E0B)'} />
+                      <span className="text-xs" style={{ color: 'var(--dc-p2)' }}>{r.completionRate}%</span>
                     </div>
                   )},
-                  { key: 'critical', label: 'Critical' }, { key: 'warning', label: 'Warning' },
+                  { key: 'critical', label: 'Critical', render: (r: any) => <span style={{ color: r.critical > 0 ? 'var(--dc-red)' : 'var(--dc-p2)' }}>{r.critical}</span> },
+                  { key: 'warning', label: 'Warning', render: (r: any) => <span style={{ color: r.warning > 0 ? 'var(--dc-amber)' : 'var(--dc-p2)' }}>{r.warning}</span> },
                   { key: 'storyPoints', label: 'Points' },
                   { key: 'averageLeadTimeDays', label: 'Avg Lead', render: (r: any) => formatDays(r.averageLeadTimeDays) },
                   { key: 'averageCycleTimeDays', label: 'Avg Cycle', render: (r: any) => formatDays(r.averageCycleTimeDays) },
@@ -1842,15 +1866,17 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {(metrics.parents as any[])?.length > 0 && (
                 <Card className="p-4">
-                  <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Parent Key Breakdown</h4>
-                  <CompactBarChart rows={(metrics.parents as any[]).slice(0, 8)} labelKey="parent" valueKey="count" emptyMessage="No parent data." />
+                  <h4 className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: 'var(--dc-p2)' }}>Parent Key Breakdown</h4>
+                  <CompactBarChart rows={(metrics.parents as any[]).slice(0, 8)} labelKey="parent" valueKey="count" emptyMessage="No parent data." getBarColor={orangeBarColor} />
                   <div className="mt-3">
                     <MetricTable
                       columns={[
-                        { key: 'parent', label: 'Parent' }, { key: 'count', label: 'Issues' },
+                        { key: 'parent', label: 'Parent', render: (r: any) => <span style={{ color: 'var(--dc-acc2)', fontFamily: 'var(--font-mono, monospace)' }}>{r.parent}</span> },
+                        { key: 'count', label: 'Issues' },
                         { key: 'done', label: 'Done' },
-                        { key: 'completionRate', label: 'Completion', render: (r: any) => `${r.completionRate}%` },
-                        { key: 'critical', label: 'Critical' }, { key: 'warning', label: 'Warning' },
+                        { key: 'completionRate', label: 'Completion', render: (r: any) => <span style={{ color: r.completionRate >= 80 ? 'var(--dc-green)' : 'var(--dc-amber)' }}>{r.completionRate}%</span> },
+                        { key: 'critical', label: 'Critical', render: (r: any) => <span style={{ color: r.critical > 0 ? 'var(--dc-red)' : 'var(--dc-p2)' }}>{r.critical}</span> },
+                        { key: 'warning', label: 'Warning', render: (r: any) => <span style={{ color: r.warning > 0 ? 'var(--dc-amber)' : 'var(--dc-p2)' }}>{r.warning}</span> },
                         { key: 'storyPoints', label: 'Points' },
                       ]}
                       rows={metrics.parents as any[]}
@@ -1861,14 +1887,15 @@ export default function DashboardPage() {
               )}
               {(metrics.projects as any[])?.length > 1 && (
                 <Card className="p-4">
-                  <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3">Project Breakdown</h4>
+                  <h4 className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: 'var(--dc-p2)' }}>Project Breakdown</h4>
                   <DistributionDonut title="Project Share" rows={metrics.projects as any[]} labelKey="project" valueKey="count" emptyMessage="No project data." />
                   <MetricTable
                     columns={[
                       { key: 'project', label: 'Project' }, { key: 'count', label: 'Issues' },
                       { key: 'done', label: 'Done' },
-                      { key: 'completionRate', label: 'Completion', render: (r: any) => `${r.completionRate}%` },
-                      { key: 'critical', label: 'Critical' }, { key: 'warning', label: 'Warning' },
+                      { key: 'completionRate', label: 'Completion', render: (r: any) => <span style={{ color: r.completionRate >= 80 ? 'var(--dc-green)' : 'var(--dc-amber)' }}>{r.completionRate}%</span> },
+                      { key: 'critical', label: 'Critical', render: (r: any) => <span style={{ color: r.critical > 0 ? 'var(--dc-red)' : 'var(--dc-p2)' }}>{r.critical}</span> },
+                      { key: 'warning', label: 'Warning', render: (r: any) => <span style={{ color: r.warning > 0 ? 'var(--dc-amber)' : 'var(--dc-p2)' }}>{r.warning}</span> },
                     ]}
                     rows={metrics.projects as any[]}
                     emptyMessage="No project data found."
@@ -1878,7 +1905,8 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
-        )}
+          );
+        })()}
 
         {/* ── 9b. RELATIONS ────────────────────────────────────────────────────── */}
         <CollapsibleTrigger
