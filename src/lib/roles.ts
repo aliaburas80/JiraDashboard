@@ -55,6 +55,7 @@ export function allowedDashboardViewsForRole(role: string | null | undefined): V
 }
 
 const COMMON_ROUTES = ['/profile', '/members', '/help', '/glossary', '/landing', '/change-password'];
+const PLANNING_ROUTES = ['/roadmap', '/forecast', '/retro'];
 
 export function allowedRoutePrefixesForRole(role: string | null | undefined): string[] {
   switch (role) {
@@ -62,18 +63,18 @@ export function allowedRoutePrefixesForRole(role: string | null | undefined): st
       return [
         '/dashboard', '/summary', '/charts', '/explore', '/backend', '/customer',
         '/snapshots', '/trends', '/readiness', '/teams', '/portfolio', '/developer', '/admin',
-        ...COMMON_ROUTES,
+        ...PLANNING_ROUTES, ...COMMON_ROUTES,
       ];
     case 'scrum_master':
-      return ['/dashboard', '/summary', '/charts', '/trends', '/teams', '/readiness', '/explore', '/snapshots', ...COMMON_ROUTES];
+      return ['/dashboard', '/summary', '/charts', '/trends', '/teams', '/readiness', '/explore', '/snapshots', ...PLANNING_ROUTES, ...COMMON_ROUTES];
     case 'product_owner':
-      return ['/dashboard', '/summary', '/readiness', '/portfolio', '/customer', '/explore', '/snapshots', ...COMMON_ROUTES];
+      return ['/dashboard', '/summary', '/readiness', '/portfolio', '/customer', '/explore', '/snapshots', ...PLANNING_ROUTES, ...COMMON_ROUTES];
     case 'manager':
-      return ['/dashboard', '/summary', '/charts', '/trends', '/teams', '/portfolio', '/readiness', '/customer', '/snapshots', '/backend', ...COMMON_ROUTES];
+      return ['/dashboard', '/summary', '/charts', '/trends', '/teams', '/portfolio', '/readiness', '/customer', '/snapshots', '/backend', ...PLANNING_ROUTES, ...COMMON_ROUTES];
     case 'c_level':
-      return ['/dashboard', '/summary', '/portfolio', '/customer', '/trends', ...COMMON_ROUTES];
+      return ['/dashboard', '/summary', '/portfolio', '/customer', '/trends', ...PLANNING_ROUTES, ...COMMON_ROUTES];
     default:
-      return ['/dashboard', '/summary', '/charts', '/explore', '/customer', '/snapshots', '/trends', '/readiness', '/teams', '/portfolio', ...COMMON_ROUTES];
+      return ['/dashboard', '/summary', '/charts', '/explore', '/customer', '/snapshots', '/trends', '/readiness', '/teams', '/portfolio', ...PLANNING_ROUTES, ...COMMON_ROUTES];
   }
 }
 
