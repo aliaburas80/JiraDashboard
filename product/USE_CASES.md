@@ -2978,3 +2978,160 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 **Postcondition:** User is authenticated, `mustChangePassword = false`, and has set their own password  
 **Related FR:** FR-319, FR-321, FR-325  
 **Related:** UC-097, UC-098, UJ-035, SCN-050
+
+---
+
+## v4.6 Use Cases — Roadmap, Forecast, Retro (2026-06-10)
+
+---
+
+### UC-101 — View Delivery Roadmap
+
+- **ID:** UC-101
+- **Title:** View Epic Roadmap with Delivery Forecasts
+- **Actor:** Any authenticated user
+- **Precondition:** User is logged in; metrics data has been uploaded (Jira export with epic data)
+- **Trigger:** User navigates to `/roadmap` via the Planning nav group
+
+**Main Flow:**
+1. Page loads, calls `loadMetricsWithSource()` and `computePortfolioSummary()`
+2. Average throughput calculated from sprint completion history
+3. Each epic is passed through `forecastEpic()` → remaining issues, sprints est., weeks est., forecast label, confidence
+4. Summary KPI strip shows: Total Epics, Complete, Avg Progress, Critical
+5. Throughput context banner shows avg items/sprint and forecasting assumptions
+6. Epic cards rendered with progress bar (green/amber/red by health), forecast label, confidence badge
+7. User applies filter (In Progress / All / Critical / Done) and sort (Forecast / Progress / Name)
+8. User clicks an epic card to expand detail: remaining issues, sprints est., critical count
+
+**Alternate Flow — No epic data:**
+3a. Empty state shown: "No epic data found — upload a Jira export with Epic Link/Epic Name column"
+
+**Alternate Flow — No sprint data:**
+2a. `avgThroughput = 0`; all forecasts show "Insufficient data" with low confidence
+
+**Postcondition:** User has visibility into epic progress, health, and estimated completion dates  
+**Related FR:** FR-326, FR-327  
+**Related:** UC-102, BR-115, SCN-051
+
+---
+
+### UC-102 — View Delivery Forecast
+
+- **ID:** UC-102
+- **Title:** View Velocity-Based Delivery Forecast and Burn-Up Chart
+- **Actor:** Any authenticated user
+- **Precondition:** User is logged in; metrics data uploaded
+- **Trigger:** User navigates to `/forecast` via the Planning nav group
+
+**Main Flow:**
+1. Page loads and calls `computeForecast(metrics)`
+2. Status banner displayed: on_track (green) / at_risk (amber) / off_track (red) / complete (blue) / insufficient_data (grey)
+3. KPI row shows: Total Issues, Done, Remaining, Avg Throughput
+4. Burn-up chart renders: solid blue actual line, dashed blue forecast extension, grey dashed target line
+5. Next Quarter Plan section shows: achievable item count at 6 sprints × avgThroughput vs remaining
+6. Risk signals highlight blocked and critical issue counts
+7. Recommendations list shows prioritised actionable adjustments
+
+**Alternate Flow — Insufficient data:**
+2a. Status banner shows "Insufficient data" with grey styling and a message explaining what data is missing
+
+**Postcondition:** User understands current delivery trajectory, confidence level, and next actions  
+**Related FR:** FR-328, FR-329  
+**Related:** UC-101, BR-116, SCN-052
+
+---
+
+### UC-103 — Run a Sprint Retrospective in App
+
+- **ID:** UC-103
+- **Title:** Fill Out Sprint Retrospective and Receive Suggestions
+- **Actor:** Any authenticated user (typically Scrum Master or team lead)
+- **Precondition:** User is logged in; sprint has completed
+- **Trigger:** User navigates to `/retro` via Planning nav and clicks "Fill in App"
+
+**Main Flow:**
+1. User lands on three-card menu; clicks "Fill in App → Start"
+2. Form view shown: Sprint Name, Team Name, Retro Date, Sprint Goal Met, Sprint Goal
+3. User fills What Went Well, What Did Not Go Well, Blockers entries (multi-item lists with add/remove)
+4. User fills Action Items: text, owner, due date, priority per item
+5. User clicks "Submit & Get Suggestions" (disabled until Sprint Name filled)
+6. `generateInsights(form)` runs; insights view shown
+7. Goal-status banner (green/amber/red) shown; suggestions list rendered
+8. Colour-coded action item summary shown (red=high, amber=medium, green=low)
+
+**Alternate Flow — Missing owners:**
+7a. Insight: "N action items are missing an owner — assign owners to ensure accountability."
+
+**Alternate Flow — Sprint goal not met:**
+7a. Insight: "Sprint goal was not met. Review capacity planning and scope commitment for the next sprint."
+
+**Postcondition:** Team has a recorded retrospective with actionable improvement suggestions  
+**Related FR:** FR-330, FR-331, FR-332  
+**Related:** UC-104, UC-105, BR-117, SCN-053
+
+---
+
+### UC-104 — Download Retrospective Template
+
+- **ID:** UC-104
+- **Title:** Download Retrospective CSV Template
+- **Actor:** Any authenticated user
+- **Precondition:** User is logged in
+- **Trigger:** User navigates to `/retro` and clicks "Download CSV →"
+
+**Main Flow:**
+1. User lands on `/retro` menu view
+2. Clicks "Download CSV →" on the Download Template card
+3. `downloadTemplate()` executes client-side: builds CSV string, creates a `Blob`, triggers browser download
+4. File `Retrospective_Template.csv` saves to user's downloads folder with header row + 2 example rows
+
+**Postcondition:** User has a template they can fill offline and share with their team  
+**Related FR:** FR-333  
+**Related:** UC-103
+
+---
+
+### UC-105 — Navigate to Planning Pages via Header
+
+- **ID:** UC-105
+- **Title:** Access Roadmap, Forecast, or Retro via Planning Header Group
+- **Actor:** Any authenticated user (any role)
+- **Precondition:** User is logged in; `showNav` is true
+- **Trigger:** User clicks the "Planning" dropdown in the AppShell header
+
+**Main Flow:**
+1. User clicks "Planning" button in the desktop header nav
+2. Dropdown opens showing: 🗺️ Roadmap, 🔮 Forecast, 🔄 Retro
+3. User clicks the desired page link
+4. Dropdown closes; page navigates
+
+**Alternate Flow — Mobile:**
+2a. User taps the hamburger icon → mobile nav panel opens → Planning section visible with all three links in a 2-column grid
+
+**Postcondition:** User arrives at the selected planning page  
+**Related FR:** FR-334, FR-335  
+**Related:** UC-101, UC-102, UC-103
+
+---
+
+### UC-106 — Use Grouped Help Navigation
+
+- **ID:** UC-106
+- **Title:** Navigate /help Using Category Groups and Sub-section Pills
+- **Actor:** Any authenticated user
+- **Precondition:** User is on the `/help` page
+- **Trigger:** User wants to find a specific help section
+
+**Main Flow:**
+1. User sees Row 1: 9 category group pills (Getting Started, Dashboard, Planning, Analysis, Export & Data, System, Customization, People, Troubleshooting)
+2. User clicks a group pill; page scrolls to the first section in that group
+3. Row 2 appears (if group has > 1 section) showing sub-section pills for that group only
+4. User clicks a sub-section pill to scroll directly to that section
+5. As the user scrolls, the active group pill updates via IntersectionObserver
+
+**Alternate Flow — Single-section group:**
+3a. Row 2 is hidden; clicking the group pill is sufficient to reach the only section
+
+**Postcondition:** User finds the relevant help section with at most 2 clicks  
+**Related FR:** FR-336  
+**Related:** NAV-01

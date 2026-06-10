@@ -229,6 +229,24 @@ const SECTIONS = [
       { term: 'UserAddRequest', full: 'User Add-Member Request', meaning: 'A Prisma model representing a pending request to create a new platform user. Submitted by non-admin members; accepted or rejected by an admin.' },
     ],
   },
+  {
+    id: 'planning',
+    title: 'M — Planning & Forecasting Terms',
+    icon: '🗺️',
+    description: 'Terms related to the v4.6 Roadmap, Forecast, and Retro pages and the Planning nav group.',
+    rows: [
+      { term: 'Roadmap Page', full: '/roadmap', meaning: 'Delivery Clarity page showing every epic as a card with progress bar, health indicator, forecast label, and confidence badge. Accessible via the Planning header group.' },
+      { term: 'Epic Forecast', full: '—', meaning: 'Velocity-based delivery estimate per epic: remaining ÷ avgThroughput = sprintsRemaining; ceil(sprints × 2) = weeksRemaining (2-week sprint assumption). Labels: Complete, Within 2 weeks, ~N weeks, ~N months, Insufficient data.' },
+      { term: 'Forecast Confidence', full: '—', meaning: 'Reliability of an epic forecast: High = < 2 sprints; Medium = 2–5 sprints; Low = ≥ 5 sprints or no data. Displayed as a coloured badge on each epic card.' },
+      { term: 'Avg Throughput', full: 'Average Throughput', meaning: 'Mean issues completed per sprint, computed from sprint history. Used as the velocity baseline for all delivery forecasts. 0 if no sprint data is available.' },
+      { term: 'Forecast Page', full: '/forecast', meaning: 'Delivery Clarity page showing overall delivery status, burn-up chart, KPI row, next-quarter plan, risk signals, and recommendations. Accessible via Planning nav.' },
+      { term: 'Burn-Up Chart', full: '—', meaning: 'Inline SVG chart on the Forecast page. Shows actual cumulative done (solid blue), forecast extension (dashed blue), and target (grey dashed). No external charting library.' },
+      { term: 'Forecast Status', full: '—', meaning: 'Delivery health classification: Complete, On Track (≤ 6 sprints), At Risk (7–12 sprints), Off Track (> 12 sprints), Insufficient Data (no sprint history).' },
+      { term: 'Retro Page', full: '/retro', meaning: 'Sprint retrospective tool at /retro. Three-card landing: Fill in App (form + insights), Download Template (CSV), Upload Retro File (coming soon).' },
+      { term: 'Retro Insights', full: 'Retrospective Insights', meaning: 'Suggestions generated on retro submit by generateInsights(). Evaluates goal outcome, blockers, missing owners/due-dates, and zero action items.' },
+      { term: 'Planning Nav Group', full: '—', meaning: 'Top-level "Planning" dropdown in the AppShell header containing Roadmap, Forecast, and Retro. Visible to all authenticated roles. Added in v4.6.' },
+    ],
+  },
 ];
 
 // ── Components ────────────────────────────────────────────────────────────────

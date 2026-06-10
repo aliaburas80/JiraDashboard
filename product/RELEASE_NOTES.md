@@ -5,6 +5,33 @@
 
 ---
 
+## v4.6 — Roadmap, Forecast, Retro Pages + Planning Nav Group + Help/Glossary UX Redesign (2026-06-10, P1)
+
+### New Pages
+- **/roadmap** — Epic-level delivery roadmap: progress bars, health indicators, velocity-based delivery forecasts (complete / within 2 weeks / ~N weeks / ~N months), confidence badges (high/medium/low), expandable detail (remaining issues, sprints est., critical count). Filter tabs: In Progress / All / Critical / Done. Sort by: Forecast / Progress / Name. KPI summary strip + throughput context banner.
+- **/forecast** — Delivery forecast page: status banner (on_track / at_risk / off_track / complete / insufficient_data), KPI row (total/done/remaining/avg throughput), inline SVG burn-up chart (actual + forecast + target lines), next-quarter capacity plan, risk signals (blocked/critical counts), actionable recommendations list.
+- **/retro** — Sprint retrospective tool: three-card landing (Fill in App, Download Template CSV, Upload coming soon). In-app form: sprint context, What Went Well, What Did Not Go Well, Blockers/Impediments, Action Items (owner + due date + priority). Submit → insights view with suggestions, goal status, action item summary.
+
+### Navigation
+- New **Planning** header dropdown group: Roadmap 🗺️, Forecast 🔮, Retro 🔄 — visible to all roles.
+- `/roadmap`, `/forecast`, `/retro` added to every role's `allowedRoutePrefixesForRole` allowlist in `src/lib/roles.ts`.
+- Delivery group now contains: Readiness, Explore, Customer.
+
+### UX Improvements
+- **/help** navigation redesigned: 34 flat tabs → 9 grouped category pills (Getting Started, Dashboard, Planning, Analysis, Export & Data, System, Customization, People, Troubleshooting) with contextual sub-section row. Active group derived from IntersectionObserver.
+- **/glossary** navigation redesigned: 12 flat tab pills → compact letter-jump chips (A–L) with icon + letter; tooltip shows full section title.
+
+### Technical
+- `computePortfolioSummary()` from `src/lib/portfolioHealth.ts` reused for epic data in roadmap and forecast (no new library).
+- Burn-up chart rendered as pure inline SVG — no external charting dependency.
+- `forecastEpic()` uses linear velocity extrapolation: `remaining / avgThroughput = sprintsRemaining`, `sprintsRemaining × 2 = weeksRemaining` (2-week sprint assumption).
+- Retro template downloaded client-side as CSV with example rows (no server endpoint needed).
+
+### IDs
+FR-326–336 · BR-115–117 · UC-101–106 · UJ-036–038 · SCN-051–053
+
+---
+
 ## v4.5.2 — Clickable Notifications with Smart Redirect + Tab Navigation Fix (2026-06-10, P1)
 
 ### Closed USERREQ-01 (final) — notification UX completion + admin settings deep-link

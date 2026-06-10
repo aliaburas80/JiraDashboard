@@ -819,3 +819,13 @@ This BRD carried several "v1.0" baseline statements forward into the v4.0+ docum
 - Document version bumped to 4.2.2 and status updated to reflect the Release Candidate verification (lint/test/build all passing, 469 tests / 48 suites).
 
 No business requirement IDs (BR-xxx) were renumbered or removed; only scope-framing and assumption/constraint language that contradicted the shipped v4.x product was corrected.
+
+---
+
+## Revision Note — v4.6 Roadmap, Forecast, Retro Pages + Planning Navigation (2026-06-10, P1)
+
+**BR-115 (Must — P1 — Done 2026-06-10):** The application MUST provide a delivery roadmap view (`/roadmap`) that shows the progress and estimated completion for every epic derived from uploaded Jira data. Users need a single page where they can see which epics are on track, which are critical, and roughly when each will complete — without manually calculating from raw issue counts. Roadmap visibility is a core stakeholder expectation for any team tracking multi-epic delivery work.
+
+**BR-116 (Must — P1 — Done 2026-06-10):** The application MUST provide a delivery forecast page (`/forecast`) that computes velocity-based delivery outlook from sprint history, renders a burn-up chart (actual + forecast + target), and gives actionable recommendations. Forecasting transforms raw throughput data into a forward-looking answer to "are we on track?" — the primary question delivery managers and C-level stakeholders ask. Without it, the dashboard is entirely backward-looking.
+
+**BR-117 (Should — P1 — Done 2026-06-10):** The application SHOULD provide a sprint retrospective tool (`/retro`) that allows teams to record observations and action items, download a CSV template for offline use, and receive automated improvement suggestions on submit. Retrospective data captures learning from delivery patterns; integrating it with the existing delivery metrics tool closes the Plan → Deliver → Review cycle in one workspace.

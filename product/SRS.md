@@ -1982,3 +1982,41 @@ A single click on a notification item MUST: (1) mark the notification read (fire
 ### E.2 — Admin Settings Deep-Link
 
 `AdminSettingsPage` initialises its `tab` state from `useSearchParams().get('tab')` cast to `Tab`. All links from `NotificationBell` (amber banner, dropdown admin panel) now use `/admin/settings?tab=requests` — the hash-based `#requests` anchor is deprecated. Valid `tab` values: `users | requests | retention | thresholds | orphan | backup | cloud | browser`; unrecognised values default to `'users'`.
+
+---
+
+## Addendum F — v4.6 Roadmap, Forecast, Retro Pages + Planning Navigation (2026-06-10, P1)
+
+*(Closes ROADMAP-01, FCAST-01–18, RETRO-01–03/16/18/23–28/31/32, NAV-01/NAV-02.)*
+
+### F.1 — Delivery Roadmap Page (`/roadmap`)
+
+**FR-326 (P1 — Done, 2026-06-10):** The application MUST provide a `/roadmap` page visible to all authenticated roles. The page MUST: (a) load metrics via `loadMetricsWithSource()` and compute portfolio data via `computePortfolioSummary()` from `src/lib/portfolioHealth.ts`; (b) calculate average throughput from `metrics.sprint.sprints[].completedCount` (mean of all sprints with `completedCount > 0`); (c) apply `forecastEpic(epic, avgThroughput)` to each `EpicSummary` to produce an `EpicForecast` — remaining issues, sprints remaining (`remaining / avgThroughput`), weeks remaining (`ceil(sprintsRemaining × 2)`, assuming 2-week sprints), a human forecast label (Complete / Within 2 weeks / ~N weeks / ~N months / Insufficient data), and confidence (high < 2 sprints, medium < 5, low ≥ 5); (d) display four KPI summary cards: Total Epics, Complete, Avg Progress, Critical; (e) show a throughput context strip; (f) provide filter tabs — In Progress / All / Critical / Done; (g) provide sort controls — Forecast / Progress / Name; (h) render each epic as an `EpicCard` with progress bar (colour-coded by health), forecast label, confidence badge, and an expandable detail panel (remaining issues, sprints est., critical count); (i) redirect to `/` if no metrics are available.
+
+**FR-327 (P1 — Done, 2026-06-10):** The `forecastEpic()` function MUST return `forecastLabel: 'Complete'` when `epic.progress >= 100`, `'Insufficient data'` when `avgThroughput <= 0` or `remaining <= 0`, `'Within 2 weeks'` when `weeksRemaining <= 2`, `'~N weeks'` when `weeksRemaining <= 6`, and `'~N months'` otherwise (N = `round(weeksRemaining / 4)`).
+
+### F.2 — Delivery Forecast Page (`/forecast`)
+
+**FR-328 (P1 — Done, 2026-06-10):** The application MUST provide a `/forecast` page visible to all authenticated roles. The page MUST: (a) compute `ForecastResult` from loaded metrics via `computeForecast(metrics)`; (b) calculate status: `complete` if `done >= total`, `insufficient_data` if `avgThroughput <= 0`, `on_track` if `sprintsRemaining <= 6`, `at_risk` if `sprintsRemaining <= 12`, `off_track` otherwise; (c) derive confidence: `high` if `sprintsRemaining < 3`, `medium` if `< 6`, `low` if `>= 6`, `none` if insufficient data; (d) generate `adjustments: string[]` — actionable recommendations based on blocked items, critical count, throughput level, and confidence; (e) build `sprintPoints: SprintPoint[]` for the burn-up chart — each point has actual cumulative done count, plus a forecast extension from the last actual point to the total; (f) display a status banner with icon and description; (g) display KPI row: Total Issues, Done, Remaining, Avg Throughput; (h) render a `BurnUpChart` component — pure inline SVG, no external charting library — showing actual burn-up (solid blue line), forecast extension (dashed blue), and target line (grey dashed); (i) show a "Next Quarter Plan" section: 6 sprints × avgThroughput achievable items vs remaining; (j) show risk signals for blocked count and critical count; (k) list recommendations.
+
+**FR-329 (P1 — Done, 2026-06-10):** The `BurnUpChart` MUST be a pure inline SVG component requiring no external dependency. It MUST use linear `xScale` and `yScale` functions, render gridlines, and plot: the actual burn-up line (solid `#3b82f6`), the forecast extension (dashed `#3b82f6`), and the target horizontal line (dashed `#94a3b8`). The chart MUST gracefully render an empty state when `sprintPoints.length === 0`.
+
+### F.3 — Sprint Retrospective Page (`/retro`)
+
+**FR-330 (P1 — Done, 2026-06-10):** The application MUST provide a `/retro` page visible to all authenticated roles. The page MUST have three views controlled by local state: (a) **menu** — three-card landing: "Fill in App" (navigates to form view), "Download Template" (triggers client-side CSV download of `Retrospective_Template.csv`), "Upload Retro File" (visible but marked coming soon); (b) **form** — multi-section retrospective form; (c) **insights** — submission result with suggestions and action summary.
+
+**FR-331 (P1 — Done, 2026-06-10):** The retro form MUST capture: Sprint Name (required), Team Name, Retro Date (default today), Sprint Goal, Sprint Goal Met (yes / partial / no), What Went Well (multi-entry list), What Did Not Go Well (multi-entry list), Blockers/Impediments (multi-entry list), Action Items (text, owner, due date, priority H/M/L). Each list section MUST support add/remove per entry. The "Submit & Get Suggestions" button MUST be disabled until Sprint Name has a non-empty value.
+
+**FR-332 (P1 — Done, 2026-06-10):** On submit, `generateInsights(form)` MUST produce a `string[]` of actionable suggestions by evaluating: sprint goal outcome (not met / partial → specific advice); blocker count (> 0 → escalation advice); high-priority action count; action items missing owner; action items missing due date; zero action items recorded; any "what went well" entries present. The insights view MUST also display a goal-status banner, and a colour-coded action item summary (red = high, amber = medium, green = low priority).
+
+**FR-333 (P1 — Done, 2026-06-10):** The retrospective CSV template downloaded from `/retro` MUST include columns: Sprint Name, Team Name, Retro Date, Sprint Goal Met, Sprint Goal, What Went Well, What Did Not Go Well, Blocker/Impediment, Action Item, Action Owner, Action Due Date, Action Priority. The file MUST include two example rows demonstrating common retrospective scenarios.
+
+### F.4 — Planning Navigation Group
+
+**FR-334 (P1 — Done, 2026-06-10):** The `AppShell` header navigation MUST include a top-level **Planning** dropdown group containing: Roadmap (🗺️ `/roadmap`), Forecast (🔮 `/forecast`), Retro (🔄 `/retro`). This group MUST appear between the Delivery group and the Data group. The Delivery group MUST contain: Readiness, Explore, Customer.
+
+**FR-335 (P1 — Done, 2026-06-10):** `allowedRoutePrefixesForRole()` in `src/lib/roles.ts` MUST include `/roadmap`, `/forecast`, and `/retro` for every defined role (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`, `default/user`). These routes share the `PLANNING_ROUTES` constant.
+
+### F.5 — Help & Glossary Navigation UX
+
+**FR-336 (P1 — Done, 2026-06-10):** The `/help` page navigation MUST replace the flat 34-tab grid with a two-level grouped nav: Row 1 contains 9 category group pills (Getting Started, Dashboard, Planning, Analysis, Export & Data, System, Customization, People, Troubleshooting); Row 2 (shown only when the active group has > 1 section) contains sub-section pills for sections within the active group only. The active group MUST be derived by finding which group contains the current `activeId` (tracked via `IntersectionObserver`). Clicking a group pill MUST scroll to the first section in that group. The `/glossary` page navigation MUST replace the 12-tab pill grid with a compact letter-jump nav: a single row of letter chips (A–L) each showing the section icon and letter; clicking scrolls to the section; hovering shows the full section title via the HTML `title` attribute.

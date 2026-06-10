@@ -1326,3 +1326,67 @@ Alex's flow (New User — First Login):
 **Outcome:** Password generation, welcome email delivery, and forced first-login password change all ran end-to-end with zero manual handoffs and a full audit trail in the database.
 
 **Related:** UC-097, UC-098, UC-099, UC-100, UJ-034, UJ-035, FR-319, FR-320, FR-321, FR-322, FR-323, FR-325, TC-EMAIL-01–TC-EMAIL-03, TC-REQ-17
+
+---
+
+## v4.6 Scenarios — Roadmap, Forecast, Retro (2026-06-10)
+
+---
+
+### SCN-051 — Delivery Manager Uses Roadmap to Identify At-Risk Epics
+
+**Context:** Ali is a delivery manager. The team has just finished upload week and he wants to know which epics are behind and when they'll realistically complete.
+
+**Flow:**
+1. Ali clicks Planning → Roadmap in the header
+2. The roadmap loads and shows 8 epics. 2 are marked critical (red dot), 4 are in progress (amber/green)
+3. Ali sets the filter to "Critical" — 2 epics shown
+4. Epic "Checkout Flow Redesign" shows: 12 remaining issues, ~4 months, low confidence
+5. Ali clicks the card → detail panel: 12 remaining, 8 sprints est., 3 critical issues
+6. He switches filter to "All" and sort to "Forecast" — epics ordered by weeks remaining
+7. He screenshots the sorted list and brings it to the stakeholder meeting
+
+**Outcome:** Ali identified the two critical epics in under 90 seconds and has concrete remaining-issue counts to discuss.
+
+**Related:** UC-101, UJ-036, FR-326, FR-327, BR-115
+
+---
+
+### SCN-052 — Scrum Master Checks Forecast Before Quarterly Planning
+
+**Context:** Sara is a Scrum Master. The quarter is ending and leadership wants to know if the team will hit the release target.
+
+**Flow:**
+1. Sara navigates to Planning → Forecast
+2. Status banner shows "⚠️ At Risk" in amber — `sprintsRemaining = 9`
+3. KPI row: 120 total, 74 done, 46 remaining, 5.1 items/sprint average throughput
+4. Burn-up chart shows actual line diverging slightly below the target line from sprint 6 onwards
+5. Next Quarter Plan: "At 6 sprints × 5 items you can complete 30 items; you have 46 remaining" → not achievable this quarter
+6. Recommendations: "Consider reducing scope by ~16 items to hit the target within the next 6 sprints." "Address 3 blocked items — each blocker typically delays multiple dependent stories."
+7. Sara copies the recommendations into her planning doc and presents the options to the team
+
+**Outcome:** Leadership sees a data-backed forecast, not a gut feeling. Scope trade-off is clearly quantified.
+
+**Related:** UC-102, UJ-037, FR-328, FR-329, BR-116
+
+---
+
+### SCN-053 — Team Runs Post-Sprint Retrospective and Gets Improvement Suggestions
+
+**Context:** The Backend Team has just completed Sprint 42. Goal was to ship the login redesign. Goal was partially met — one story carried over.
+
+**Flow:**
+1. Ana (Scrum Master) opens Planning → Retro
+2. Clicks "Fill in App → Start"
+3. Fills: Sprint Name "Sprint 42", Team "Backend Team", Goal Met "Partially", Goal "Ship login redesign"
+4. Adds What Went Well: "Good team collaboration", "Automated tests caught regressions"
+5. Adds What Did Not Go Well: "Sprint planning was too long", "Story points underestimated"
+6. Adds Blocker: "Dependency on infra team blocked 3 stories"
+7. Adds Action Items: "Schedule shorter planning sessions" (owner: Ana, due: next sprint, High), "Add complexity review to refinement" (owner: Tech Lead, Medium)
+8. Clicks "Submit & Get Suggestions"
+9. Insights view: ⚠️ goal-partially-achieved banner; suggestions include "Sprint goal was partially achieved. Identify which stories caused slippage and prioritise them first next sprint." and "1 blocker recorded. Escalate unresolved blockers to the next planning session."
+10. Action summary: 2 items listed — 1 red (high), 1 amber (medium) — both have owners and due dates
+
+**Outcome:** Retrospective completed in 5 minutes; team leaves with 2 owned action items and data-backed improvement advice.
+
+**Related:** UC-103, UC-104, UJ-038, FR-330, FR-331, FR-332, FR-333, BR-117

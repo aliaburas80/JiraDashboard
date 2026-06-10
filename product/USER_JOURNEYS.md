@@ -1707,3 +1707,64 @@ Returning-user journeys now include bucket-first metrics restoration. After logi
 **Related:** UC-100, SCN-050, FR-319, FR-321, FR-325, TC-EMAIL-01–TC-EMAIL-03
 
 ---
+
+---
+
+## v4.6 User Journeys — Roadmap, Forecast, Retro (2026-06-10)
+
+---
+
+### UJ-036 — Delivery Manager Reviews Epic Roadmap
+
+| Step | Actor | Action | System Response | Notes |
+|------|-------|--------|-----------------|-------|
+| 1 | Delivery Manager | Clicks "Planning" in header nav | Dropdown shows Roadmap / Forecast / Retro | All roles can access |
+| 2 | Delivery Manager | Clicks "Roadmap" | `/roadmap` loads; computes portfolio + throughput | Redirects to `/` if no data |
+| 3 | System | Calculates avg throughput from sprint history | KPI strip + throughput banner rendered | 0 if no sprint data |
+| 4 | Delivery Manager | Reviews KPI strip | Sees Total Epics, Complete, Avg Progress, Critical | |
+| 5 | Delivery Manager | Scans epic cards | Progress bars, forecast labels, confidence badges visible | Expandable detail per card |
+| 6 | Delivery Manager | Sets filter to "Critical" | Only critical-health epics shown | |
+| 7 | Delivery Manager | Clicks an epic card | Detail panel expands: remaining issues, sprints est., critical count | |
+| 8 | Delivery Manager | Sets sort to "Forecast" | Epics ordered by weeks remaining (lowest first) | Null forecast sorted last |
+
+**Outcome:** Delivery manager has a prioritised view of epics by delivery risk in under 2 minutes.  
+**Related:** UC-101, FR-326, FR-327, SCN-051
+
+---
+
+### UJ-037 — Scrum Master Checks Delivery Forecast Before Sprint Planning
+
+| Step | Actor | Action | System Response | Notes |
+|------|-------|--------|-----------------|-------|
+| 1 | Scrum Master | Navigates to `/forecast` via Planning menu | Page loads, `computeForecast()` runs | |
+| 2 | System | Determines forecast status | Status banner displayed (on_track/at_risk/off_track/complete/insufficient_data) | |
+| 3 | Scrum Master | Reads status banner | Sees status, description, and icon | |
+| 4 | Scrum Master | Reviews KPI row | Total, Done, Remaining, Avg Throughput visible | |
+| 5 | Scrum Master | Reads burn-up chart | Actual line (solid), forecast extension (dashed), target (grey dashed) | Pure SVG — no library |
+| 6 | Scrum Master | Reads Next Quarter Plan | "At 6 sprints × N items/sprint you can complete M items" vs remaining | |
+| 7 | Scrum Master | Reviews recommendations | Prioritised list of actionable adjustments | |
+| 8 | Scrum Master | Uses insights in sprint planning | Adjusts scope or capacity based on forecast status | |
+
+**Outcome:** Sprint planning is informed by objective velocity data and a clear answer to "are we on track?"  
+**Related:** UC-102, FR-328, FR-329, SCN-052
+
+---
+
+### UJ-038 — Team Runs Sprint Retrospective in App
+
+| Step | Actor | Action | System Response | Notes |
+|------|-------|--------|-----------------|-------|
+| 1 | Scrum Master | Navigates to `/retro` via Planning menu | Three-card menu shown | |
+| 2 | Scrum Master | Clicks "Fill in App → Start" | Form view shown | |
+| 3 | Scrum Master | Fills Sprint Name, Team, Date, Goal, Goal Met | Form updates in React state | Sprint Name required to submit |
+| 4 | Scrum Master | Adds What Went Well entries (multi-item) | List grows with each "+ Add another" click | |
+| 5 | Scrum Master | Adds What Did Not Go Well entries | List grows | |
+| 6 | Scrum Master | Adds Blockers | List grows | |
+| 7 | Scrum Master | Adds Action Items with owner, due date, priority | Row per action item | H/M/L priority selector |
+| 8 | Scrum Master | Clicks "Submit & Get Suggestions" | `generateInsights()` runs; insights view shown | |
+| 9 | System | Evaluates form | Goal banner, suggestions list, action item summary rendered | Colour-coded by priority |
+| 10 | Scrum Master | Reviews suggestions | Sees missing-owner/due-date flags, goal advice, escalation advice | |
+| 11 | Scrum Master | Clicks "New Retrospective" | Form resets; menu view shown | |
+
+**Outcome:** Team has a structured retrospective with automated improvement suggestions and no spreadsheet required.  
+**Related:** UC-103, FR-330, FR-331, FR-332, SCN-053

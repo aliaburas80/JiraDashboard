@@ -1114,7 +1114,86 @@ const SECTIONS: Section[] = [
     ],
   },
 
-  // 28. Troubleshooting
+  // 28. Roadmap
+  {
+    id: 'roadmap',
+    icon: '🗺️',
+    title: 'Roadmap',
+    items: [
+      {
+        q: 'What does the Roadmap page show?',
+        a: 'The Roadmap page (/roadmap) shows every epic from your uploaded Jira data as a card with a progress bar, health indicator, delivery forecast label, and confidence badge. It is accessible from the Planning dropdown in the header.',
+      },
+      {
+        q: 'How are delivery forecasts calculated?',
+        a: 'Forecasts use linear velocity extrapolation: remaining issues ÷ average throughput (items completed per sprint) = sprints remaining. Weeks = ceil(sprints × 2), assuming 2-week sprints. Labels are: Complete, Within 2 weeks, ~N weeks, ~N months, or Insufficient data.',
+      },
+      {
+        q: 'What is forecast confidence?',
+        a: 'Confidence reflects how reliable the estimate is based on remaining work: High = less than 2 sprints remaining; Medium = 2–5 sprints; Low = 5 or more sprints, or no sprint data available.',
+      },
+      {
+        q: 'Why do some epics show "Insufficient data"?',
+        a: 'If no sprint history is available in your upload (no Sprint column or no completed sprints), average throughput is 0 and no forecast can be calculated. Upload a Jira export that includes sprint data to enable forecasts.',
+      },
+      {
+        q: 'Can I filter or sort epics?',
+        a: 'Yes. Use the filter tabs to show: In Progress, All, Critical, or Done epics. Use the sort control to order by Forecast (soonest first), Progress (most complete first), or Name.',
+      },
+    ],
+  },
+
+  // 29. Forecast
+  {
+    id: 'forecast',
+    icon: '🔮',
+    title: 'Forecast',
+    items: [
+      {
+        q: 'What does the Forecast page show?',
+        a: 'The Forecast page (/forecast) shows your overall delivery status (On Track / At Risk / Off Track / Complete / Insufficient Data), a burn-up chart of actual vs forecast vs target, a KPI row, a next-quarter capacity plan, risk signals, and actionable recommendations.',
+      },
+      {
+        q: 'What do the forecast statuses mean?',
+        a: 'Complete = all issues done. On Track = 6 or fewer sprints remaining at current velocity. At Risk = 7–12 sprints remaining. Off Track = more than 12 sprints remaining. Insufficient Data = no sprint throughput history available.',
+      },
+      {
+        q: 'What is the burn-up chart?',
+        a: 'The chart shows three lines: a solid blue line for actual cumulative completed issues per sprint, a dashed blue line extending the forecast forward, and a grey dashed target line showing where you need to be to complete all work.',
+      },
+      {
+        q: 'What is the Next Quarter Plan?',
+        a: 'It shows how many issues you can realistically complete in 6 sprints at your current throughput, compared to how many remain. If the achievable count is less than remaining, the plan flags that the quarter target is not achievable at current velocity.',
+      },
+    ],
+  },
+
+  // 30. Retro
+  {
+    id: 'retro',
+    icon: '🔄',
+    title: 'Retrospective',
+    items: [
+      {
+        q: 'What does the Retrospective page do?',
+        a: 'The Retro page (/retro) is a sprint retrospective tool. You can fill out a retrospective directly in the app, download a CSV template to fill offline, or upload a completed file (coming soon). On submit, the app generates improvement suggestions based on your inputs.',
+      },
+      {
+        q: 'How do I run a retrospective in the app?',
+        a: 'Click "Fill in App" on the Retro landing page. Fill in: Sprint Name (required), Team Name, Retro Date, Sprint Goal, Sprint Goal Met (yes/partial/no), What Went Well entries, What Did Not Go Well entries, Blockers, and Action Items (each with owner, due date, and priority). Click "Submit & Get Suggestions" when done.',
+      },
+      {
+        q: 'What suggestions does the app generate?',
+        a: 'The app evaluates your inputs and flags: sprint goal not met or only partially met, unresolved blockers, high-priority action items, action items missing an owner, action items missing a due date, and zero action items recorded. Each finding becomes an actionable suggestion.',
+      },
+      {
+        q: 'How do I download the retro template?',
+        a: 'Click "Download CSV →" on the Download Template card on the Retro landing page. The file Retrospective_Template.csv downloads to your browser with all supported columns and two example rows.',
+      },
+    ],
+  },
+
+  // 31. Troubleshooting
   {
     id: 'troubleshooting',
     icon: '🛠️',
@@ -1166,6 +1245,7 @@ const SECTION_GROUPS: { id: string; label: string; icon: string; sectionIds: str
   { id: 'export',   label: 'Export & Data',   icon: '📤', sectionIds: ['export-guide','aliases','api','explorer-export','export-sheets','executive-pdf'] },
   { id: 'system',   label: 'System',          icon: '☁️', sectionIds: ['cloud-sync','cloud-storage','diagnostics','deployment','about','branding'] },
   { id: 'ux',       label: 'Customization',   icon: '🎨', sectionIds: ['chart-customization','layout-builder','theme-customization','product-tour'] },
+  { id: 'delivery', label: 'Delivery Intel',  icon: '🗺️', sectionIds: ['roadmap','forecast','retro'] },
   { id: 'people',   label: 'People',          icon: '👥', sectionIds: ['member-requests','rec-owners'] },
   { id: 'support',  label: 'Troubleshooting', icon: '🛠️', sectionIds: ['troubleshooting'] },
 ];

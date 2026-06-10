@@ -125,9 +125,12 @@ npm run lint        # lint check
 | /summary | Executive summary — health score + KPIs |
 | /charts | Visual analytics — 11 chart widgets |
 | /dashboard | Full delivery report — all sections |
+| /roadmap | Roadmap — epic progress + delivery forecasts |
+| /forecast | Forecast — burn-up chart + delivery status |
+| /retro | Retrospective — form, template download, insights |
 | /developer | This page — documentation portal |
 | /backend | Backend status — import logs + API health |
-| /help | User guide — 21 sections |
+| /help | User guide — 31 sections + grouped nav |
 
 ## Jira Export Tips
 
@@ -1106,6 +1109,45 @@ const CALCULATIONS = [
     limitations:'Does not account for import volume context — 1 failure on 1 total import is different from 1 failure on 1000. Score resets to 100 base on each page refresh.',
     file:'app/api/admin/diagnostics/route.ts — opsScore computation',
     ref:'ALGORITHM_SPEC.md §System Diagnostics; TECHNICAL_METHOD.md §Admin Diagnostics; SRS.md FR-299', status:'Implemented',
+  },
+  {
+    name:'Epic Delivery Forecast', category:'Delivery Health',
+    formula:'sprintsRemaining = remaining / avgThroughput; weeksRemaining = ceil(sprintsRemaining × 2). Confidence: high < 2 sprints, medium < 5, low ≥ 5. Label: Complete / Within 2 weeks / ~N weeks / ~N months / Insufficient data.',
+    inputs:'EpicSummary (issues, completedIssues, progress), avgThroughputPerSprint (mean completedCount across valid sprints)',
+    why:'Epic health scores and completion percentages are backward-looking. Teams need a forward-looking answer: when will this epic finish at the current velocity?',
+    benefit:'Delivery managers and product owners can identify which epics are on track, which are months out, and which lack enough data to forecast — all in one ranked roadmap view.',
+    alternatives:'Manual estimation by the team is subjective and does not update automatically when new sprint data is uploaded. Gantt-style planning tools require manual input and do not integrate with Jira export data.',
+    usedIn:'/roadmap page — EpicCard forecast label and confidence badge',
+    assumptions:'2-week sprint cadence assumed for weeks calculation. Linear velocity assumed — no seasonality or team-size adjustment.',
+    limitations:'Does not account for scope change mid-epic. Low confidence is expected for large epics or teams with inconsistent sprint data.',
+    file:'app/roadmap/page.tsx — forecastEpic()',
+    ref:'ALGORITHM_SPEC.md §Epic Delivery Forecast; SRS.md FR-326, FR-327; BR-115', status:'Implemented',
+  },
+  {
+    name:'Delivery Forecast Status', category:'Delivery Health',
+    formula:'complete if done≥total; insufficient_data if avgThroughput=0; on_track if sprintsRemaining≤6; at_risk if ≤12; off_track otherwise. Confidence: high<3, medium<6, low≥6 sprints.',
+    inputs:'DashboardMetrics (summary.totalIssues, summary.completedIssues, sprint.sprints[].completedCount)',
+    why:'Delivery managers need a single status answer — "are we on track?" — that accounts for both remaining work and current velocity, not just a completion percentage.',
+    benefit:'Transforms raw sprint throughput into a clear delivery outlook (on_track/at_risk/off_track) with colour-coded status, a burn-up chart, and actionable recommendations.',
+    alternatives:'Completion % alone cannot answer "are we on track?" without knowing the target date and velocity. Sprint burndown requires a target capacity per sprint that Jira exports do not always provide.',
+    usedIn:'/forecast page — status banner, burn-up chart, recommendations',
+    assumptions:'2-week sprint cadence assumed. Linear velocity assumed. Blocked issues not automatically deducted from throughput.',
+    limitations:'Forecast is only as reliable as sprint history quality. Single outlier sprints can skew avgThroughput significantly.',
+    file:'app/forecast/page.tsx — computeForecast()',
+    ref:'ALGORITHM_SPEC.md §Delivery Forecast Status; SRS.md FR-328, FR-329; BR-116', status:'Implemented',
+  },
+  {
+    name:'Retro Insights Engine', category:'Team Health',
+    formula:'Rule-based: evaluate 8 independent conditions on RetroForm, each producing 0 or 1 string suggestion. Output is string[] of all matching suggestions.',
+    inputs:'RetroForm (goalMet, blockers[], actions[], wentWell[])',
+    why:'Retrospective action quality depends on recognising patterns: repeated blockers, missing accountability, unset timelines. A rule-based checker catches what teams commonly overlook under time pressure.',
+    benefit:'Teams get instant objective feedback on their retrospective without a facilitator — missing owners, due dates, and unresolved blockers are flagged automatically on submit.',
+    alternatives:'LLM-based suggestions would produce richer text but add API latency, cost, and privacy risk for team data. A deterministic rule engine is fast, private, and predictable.',
+    usedIn:'/retro page — insights view after form submit',
+    assumptions:'All observations are text-only. No persistence — insights are computed from in-memory form state.',
+    limitations:'Rules are fixed and generic. Does not learn from historical retros or cross-sprint patterns.',
+    file:'app/retro/page.tsx — generateInsights()',
+    ref:'ALGORITHM_SPEC.md §Retro Insights Engine; SRS.md FR-332; BR-117', status:'Implemented',
   },
 ];
 
