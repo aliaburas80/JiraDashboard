@@ -82,8 +82,8 @@ function csvFromRows(rows: FlowItem[], cols: { key: string; label: string }[]): 
 function ProgressBar({ value }: { value: number }) {
   const w = Math.max(0, Math.min(value, 100));
   return (
-    <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden" aria-label={`${value}%`}>
-      <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${w}%` }} />
+    <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--dc-s3, #e2e8f0)' }} aria-label={`${value}%`}>
+      <div className="h-full rounded-full transition-all" style={{ width: `${w}%`, background: 'var(--dc-acc, #E85D12)' }} />
     </div>
   );
 }
@@ -139,8 +139,8 @@ function CompactBarChart({ rows, labelKey = 'name', valueKey = 'count', emptyMes
       {items.map(item => (
         <div key={item.label} className="flex items-center gap-2 text-xs">
           <span className="w-32 shrink-0 text-slate-600 truncate" title={item.label}>{item.label}</span>
-          <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
-            <div className="h-full rounded-full bg-blue-400 transition-all" style={{ width: `${(item.value / max) * 100}%` }} />
+          <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--dc-s3, #e2e8f0)' }}>
+            <div className="h-full rounded-full transition-all" style={{ width: `${(item.value / max) * 100}%`, background: 'var(--dc-acc2, #FF8A4C)' }} />
           </div>
           <strong className="w-8 text-right text-slate-800 shrink-0">{item.value}</strong>
         </div>
@@ -150,7 +150,7 @@ function CompactBarChart({ rows, labelKey = 'name', valueKey = 'count', emptyMes
 }
 
 // ─── distribution donut ───────────────────────────────────────────────────────
-const PALETTE = ['#1d4ed8', '#14b8a6', '#f59e0b', '#dc2626', '#7c3aed', '#0891b2'];
+const PALETTE = ['#E85D12', '#FF8A4C', '#F59E0B', '#F87171', '#22C55E', '#909090'];
 function DistributionDonut({ title, rows, labelKey = 'name', valueKey = 'count', emptyMessage = 'No data.' }: {
   title: string; rows: any[]; labelKey?: string; valueKey?: string; emptyMessage?: string;
 }) {
@@ -200,12 +200,12 @@ function CollapsibleTrigger({ id, icon, title, chips, accent, expanded, onToggle
       aria-expanded={expanded}
       aria-controls={`sec-${id}`}
       onClick={onToggle}
-      className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border-l-4 bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow text-left mb-1"
-      style={{ borderLeftColor: accent }}
+      className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border-l-4 shadow-sm hover:shadow-md transition-shadow text-left mb-1"
+      style={{ borderLeftColor: accent, background: 'var(--dc-s2, #fff)', border: '1px solid var(--dc-bdr, rgba(203,213,225,0.5))', borderLeftColor: accent }}
     >
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-base" aria-hidden="true">{icon}</span>
-        <span className="text-sm font-black text-slate-800">{title}</span>
+        <span className="text-sm font-black" style={{ color: 'var(--dc-p1, #0f172a)' }}>{title}</span>
         {chips.map((c, i) => (
           <span key={i} className={cn('text-xs font-semibold rounded-full px-2 py-0.5', chipClass(c.type))}>{c.label}</span>
         ))}
@@ -216,12 +216,12 @@ function CollapsibleTrigger({ id, icon, title, chips, accent, expanded, onToggle
 }
 
 // ─── tier separator ───────────────────────────────────────────────────────────
-const TIER_COLORS = ['#ef4444', '#3b82f6', '#f97316', '#8b5cf6'] as const;
+const TIER_COLORS = ['var(--dc-acc, #E85D12)', 'rgba(232,93,18,0.18)', 'rgba(232,93,18,0.14)', 'rgba(232,93,18,0.10)'] as const;
 function TierSep({ icon, label, tier }: { icon: string; label: string; tier: 0 | 1 | 2 | 3 }) {
   return (
     <div
-      className="flex items-center gap-2 my-6 px-4 py-2 rounded-lg text-white text-xs font-black uppercase tracking-widest"
-      style={{ background: TIER_COLORS[tier] }}
+      className="flex items-center gap-2 my-6 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest"
+      style={{ background: TIER_COLORS[tier], color: tier === 0 ? '#fff' : 'var(--dc-acc2, #FF8A4C)' }}
     >
       <span aria-hidden="true">{icon}</span>
       {label}
@@ -243,7 +243,8 @@ function ScrollToTopFab() {
       type="button"
       aria-label="Scroll to top"
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 flex items-center justify-center text-lg font-black transition-colors"
+      className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full text-white shadow-lg flex items-center justify-center text-lg font-black transition-colors"
+      style={{ background: 'var(--dc-acc, #E85D12)' }}
     >
       ↑
     </button>
@@ -740,37 +741,32 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => router.push('/charts')}
-              className="text-xs font-bold text-blue-600 hover:text-blue-800 mb-1 block"
+              className="text-xs font-bold mb-1 block"
+              style={{ color: 'var(--dc-acc2, #FF8A4C)' }}
             >
               ← Charts
             </button>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Full Delivery Report</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Flow, sprint, kanban, capacity, story points, and epic performance.</p>
+            <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--dc-p1, #0f172a)' }}>Full Delivery Report</h1>
+            <p className="text-sm mt-0.5" style={{ color: 'var(--dc-p2, #64748b)' }}>Flow, sprint, kanban, capacity, story points, and epic performance.</p>
           </div>
           {/* View selector — top-right of header */}
           <DashboardViewSelector activeViewId={activeViewId} onChange={changeView} allowedViewIds={allowedViewIds} locked={viewLocked} />
           <div className="flex items-center gap-3">
             {metrics.healthScore !== undefined && (
               <div
-                className="flex items-center gap-2 rounded-xl border px-4 py-2 cursor-pointer hover:shadow-md transition-shadow"
-                style={{ borderColor: healthColor, background: healthColor + '12' }}
+                className="rounded-xl cursor-pointer hover:shadow-md transition-shadow text-center px-3 py-2"
+                style={{ background: 'rgba(245,158,11,0.08)', border: '1.5px solid rgba(245,158,11,0.25)', borderRadius: 9 }}
               >
-                <div
-                  className="w-10 h-10 rounded-full flex flex-col items-center justify-center text-white font-black text-sm"
-                  style={{ background: `conic-gradient(${healthColor} 0 ${metrics.healthScore}%, #e2e8f0 ${metrics.healthScore}% 100%)` }}
-                >
-                  <span className="sr-only">{metrics.healthScore}</span>
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-600">Health Score</p>
-                  <p className="text-sm font-black" style={{ color: healthColor }}>{metrics.healthScore} — {band.charAt(0).toUpperCase() + band.slice(1)}</p>
-                </div>
+                <p className="text-xs font-bold mb-1" style={{ color: 'var(--dc-p2, #64748b)' }}>Health Score</p>
+                <p className="font-black text-xl leading-none" style={{ fontFamily: 'var(--font-mono, monospace)', color: band === 'good' || band === 'excellent' ? 'var(--dc-acc2, #FF8A4C)' : '#fcd34d' }}>{metrics.healthScore}</p>
+                <p className="text-xs mt-1 font-bold" style={{ color: band === 'good' || band === 'excellent' ? 'var(--dc-acc2, #FF8A4C)' : '#fcd34d' }}>{band.charAt(0).toUpperCase() + band.slice(1)}</p>
               </div>
             )}
             <button
               type="button"
               onClick={() => router.push('/')}
-              className="btn-secondary px-4 py-2"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
+              style={{ background: 'var(--dc-acc, #E85D12)', borderRadius: 100 }}
             >
               Upload new file
             </button>
@@ -877,7 +873,7 @@ export default function DashboardPage() {
 
         {/* ── STICKY QUICK FILTERS + SECTION SWITCHER ──────────────────────────── */}
         <div id="dashboard-sticky-bar" className="sticky top-14 z-30 mb-4 -mx-4 print:hidden"
-          style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(14px)', borderBottom: '1px solid rgba(198,210,226,0.7)', boxShadow: '0 4px 16px rgba(24,43,77,0.07)' }}>
+          style={{ background: 'var(--dc-s1, rgba(20,20,20,0.96))', backdropFilter: 'blur(14px)', borderBottom: '1px solid var(--dc-bdr, rgba(198,210,226,0.4))', boxShadow: '0 4px 16px rgba(0,0,0,0.18)' }}>
           {/* ── Section nav row ── */}
           <div className="px-5 flex items-center gap-2">
             <div className="flex-1 min-w-0">
@@ -901,17 +897,17 @@ export default function DashboardPage() {
 
           {/* ── Gradient separator + filter row — hidden for views that hide the flow panel ── */}
           {!hideFlowPanel && <>
-          <div aria-hidden="true" style={{ height: 2, background: 'linear-gradient(90deg, rgba(37,99,235,0.45), rgba(139,92,246,0.32), rgba(20,184,166,0.32))' }} />
+          <div aria-hidden="true" style={{ height: 2, background: 'linear-gradient(90deg, rgba(232,93,18,0.55), rgba(255,138,76,0.35), rgba(232,93,18,0.15))' }} />
 
           {/* ── Single action row: filter tabs + tools (NavItem tab style — matches section switcher) ── */}
           <div className="px-4 flex flex-wrap items-center" style={{ gap: 2, paddingTop: 6, paddingBottom: 6 }}>
 
             {/* ── Filter tabs — no border, underline indicator for active ── */}
             {([
-              { f: 'all',          label: 'All',          activeColor: '#2563eb', activeShadow: 'rgba(37,99,235,0.10)',   iconPath: 'M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z',  dot: false },
-              { f: 'high-risk',    label: 'High Risk',    activeColor: '#dc2626', activeShadow: 'rgba(220,38,38,0.10)',   iconPath: 'M12 2 4 5.5v6.1c0 5 3.4 9.6 8 10.8 4.6-1.2 8-5.8 8-10.8V5.5L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V7h2v5Z', dot: ((metrics?.blockedIssues ?? 0) + ((metrics?.flow as any)?.critical ?? 0)) > 0 },
-              { f: 'blocked',      label: 'Blocked',      activeColor: '#ea580c', activeShadow: 'rgba(234,88,12,0.10)',  iconPath: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM7 11h10v2H7v-2Z', dot: false },
-              { f: 'needs-review', label: 'Needs Review', activeColor: '#8b5cf6', activeShadow: 'rgba(139,92,246,0.10)', iconPath: 'M12 5C7 5 3.2 8.1 1.6 12c1.6 3.9 5.4 7 10.4 7s8.8-3.1 10.4-7C20.8 8.1 17 5 12 5Zm0 10.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z', dot: false },
+              { f: 'all',          label: 'All',          activeColor: 'var(--dc-acc2, #FF8A4C)', activeShadow: 'rgba(232,93,18,0.10)',   iconPath: 'M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z',  dot: false },
+              { f: 'high-risk',    label: 'High Risk',    activeColor: 'var(--dc-red, #F87171)',  activeShadow: 'rgba(248,113,113,0.10)',  iconPath: 'M12 2 4 5.5v6.1c0 5 3.4 9.6 8 10.8 4.6-1.2 8-5.8 8-10.8V5.5L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V7h2v5Z', dot: ((metrics?.blockedIssues ?? 0) + ((metrics?.flow as any)?.critical ?? 0)) > 0 },
+              { f: 'blocked',      label: 'Blocked',      activeColor: 'var(--dc-acc, #E85D12)',  activeShadow: 'rgba(232,93,18,0.10)',   iconPath: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM7 11h10v2H7v-2Z', dot: false },
+              { f: 'needs-review', label: 'Needs Review', activeColor: 'var(--dc-amber, #F59E0B)', activeShadow: 'rgba(245,158,11,0.10)', iconPath: 'M12 5C7 5 3.2 8.1 1.6 12c1.6 3.9 5.4 7 10.4 7s8.8-3.1 10.4-7C20.8 8.1 17 5 12 5Zm0 10.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z', dot: false },
             ] as const).map(({ f, label, activeColor, activeShadow, iconPath, dot }) => {
               const isActive = activeQuickFilter === f;
               return (
@@ -924,38 +920,33 @@ export default function DashboardPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 5,
-                    padding: '6px 10px',
-                    borderRadius: 12,
-                    border: 'none',
+                    padding: '6px 12px',
+                    borderRadius: 100,
+                    border: isActive ? 'none' : '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
                     cursor: 'pointer',
                     fontSize: 12,
                     fontWeight: 700,
                     lineHeight: 1,
                     fontFamily: 'inherit',
                     transition: 'background 180ms ease, color 180ms ease',
-                    color: isActive ? activeColor : '#334155',
-                    background: isActive
-                      ? 'linear-gradient(180deg, rgba(239,246,255,0.95), rgba(241,245,249,0.72))'
-                      : 'transparent',
+                    color: isActive ? activeColor : 'var(--dc-p2, #909090)',
+                    background: isActive ? 'rgba(232,93,18,0.12)' : 'transparent',
                   }}
                 >
                   {dot && activeQuickFilter !== f && (
-                    <span style={{ position: 'absolute', top: 6, right: 6, width: 7, height: 7, borderRadius: '50%', background: '#ef4444' }} aria-hidden="true" />
+                    <span style={{ position: 'absolute', top: 6, right: 6, width: 7, height: 7, borderRadius: '50%', background: '#F87171' }} aria-hidden="true" />
                   )}
-                  <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: isActive ? activeColor : '#64748b', flexShrink: 0 }}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: isActive ? activeColor : 'var(--dc-p3, #505050)', flexShrink: 0 }}>
                     <path d={iconPath} />
                   </svg>
                   <span>{label}</span>
-                  {isActive && (
-                    <span style={{ position: 'absolute', left: 10, right: 10, bottom: -4, height: 3, borderRadius: 999, background: activeColor, boxShadow: `0 0 0 4px ${activeShadow}` }} aria-hidden="true" />
-                  )}
                 </button>
               );
             })}
 
             {/* Active count badge */}
             {activeFilterCount > 0 && (
-              <span className="btn-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 font-black">{activeFilterCount} active</span>
+              <span className="text-xs font-black rounded-full px-2 py-0.5" style={{ background: 'rgba(232,93,18,0.12)', color: 'var(--dc-acc2, #FF8A4C)', border: '1px solid rgba(232,93,18,0.2)' }}>{activeFilterCount} active</span>
             )}
 
             {/* Divider */}
@@ -963,16 +954,16 @@ export default function DashboardPage() {
 
             {/* Clear — tab style */}
             <button type="button" onClick={clearFilters}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, minWidth: 'max-content', padding: '6px 10px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, lineHeight: 1, fontFamily: 'inherit', color: '#334155', background: 'transparent', transition: 'background 180ms ease' }}>
-              <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: '#64748b', flexShrink: 0 }}><path d="m19 6.4-1.4-1.4L12 10.6 6.4 5 5 6.4l5.6 5.6L5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4Z" /></svg>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, minWidth: 'max-content', padding: '6px 10px', borderRadius: 100, border: '1px solid var(--dc-bdr)', cursor: 'pointer', fontSize: 12, fontWeight: 700, lineHeight: 1, fontFamily: 'inherit', color: 'var(--dc-p2, #909090)', background: 'transparent', transition: 'background 180ms ease' }}>
+              <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: 'var(--dc-p3, #505050)', flexShrink: 0 }}><path d="m19 6.4-1.4-1.4L12 10.6 6.4 5 5 6.4l5.6 5.6L5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4Z" /></svg>
               Clear
             </button>
 
-            {/* Show filters — tab style, blue accent */}
+            {/* Show filters — .btn-ghost style */}
             {!hideFlowPanel && (
               <button type="button" onClick={() => { setFlowPanelOpen(true); setTimeout(() => scrollTo('flow-health-panel'), 120); }}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, minWidth: 'max-content', padding: '6px 10px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, lineHeight: 1, fontFamily: 'inherit', color: '#2563eb', background: 'transparent', transition: 'background 180ms ease' }}>
-                <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: '#2563eb', flexShrink: 0 }}><path d="M3 5h18l-7 8v5l-4 2v-7L3 5Zm4.4 2 4.6 5.2L16.6 7H7.4Z" /></svg>
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 36, minWidth: 'max-content', padding: '6px 14px', borderRadius: 100, border: '1.5px solid rgba(232,93,18,0.22)', cursor: 'pointer', fontSize: 12, fontWeight: 600, lineHeight: 1, fontFamily: 'inherit', color: 'var(--dc-acc2, #FF8A4C)', background: 'rgba(232,93,18,0.09)', transition: 'background 180ms ease' }}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: 'var(--dc-acc2, #FF8A4C)', flexShrink: 0 }}><path d="M3 5h18l-7 8v5l-4 2v-7L3 5Zm4.4 2 4.6 5.2L16.6 7H7.4Z" /></svg>
                 Show filters
               </button>
             )}
@@ -980,8 +971,8 @@ export default function DashboardPage() {
             {/* Copy link — tab style (only when filters active) */}
             {activeFilterCount > 0 && (
               <button type="button" onClick={() => copyToClipboard(window.location.href)} title="Copy shareable link"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, minWidth: 'max-content', padding: '6px 10px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, lineHeight: 1, fontFamily: 'inherit', color: '#334155', background: 'transparent', transition: 'background 180ms ease' }}>
-                <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: '#64748b', flexShrink: 0 }}><path d="M13.8 10.2a4 4 0 0 0-5.6 0l-4 4a4 4 0 1 0 5.6 5.6l1.1-1.1-1.4-1.4-1.1 1.1a2 2 0 1 1-2.8-2.8l4-4a2 2 0 0 1 2.8 2.8l-.8.8 1.4 1.4.8-.8a4 4 0 0 0 0-5.6Z" /></svg>
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 44, minWidth: 'max-content', padding: '6px 10px', borderRadius: 100, border: '1px solid var(--dc-bdr)', cursor: 'pointer', fontSize: 12, fontWeight: 700, lineHeight: 1, fontFamily: 'inherit', color: 'var(--dc-p2, #909090)', background: 'transparent', transition: 'background 180ms ease' }}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: 'var(--dc-p3, #505050)', flexShrink: 0 }}><path d="M13.8 10.2a4 4 0 0 0-5.6 0l-4 4a4 4 0 1 0 5.6 5.6l1.1-1.1-1.4-1.4-1.1 1.1a2 2 0 1 1-2.8-2.8l4-4a2 2 0 0 1 2.8 2.8l-.8.8 1.4 1.4.8-.8a4 4 0 0 0 0-5.6Z" /></svg>
                 <span className="hidden sm:inline">Copy link</span>
               </button>
             )}
@@ -997,11 +988,11 @@ export default function DashboardPage() {
                 title="Export report"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 5,
-                  padding: '6px 12px', borderRadius: 12, border: 'none',
+                  padding: '6px 14px', borderRadius: 100, border: 'none',
                   cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
-                  minHeight: 44, whiteSpace: 'nowrap', color: '#ffffff',
-                  background: 'linear-gradient(135deg, #059669, #10b981 58%, #14b8a6)',
-                  boxShadow: '0 4px 12px rgba(5,150,105,0.28)',
+                  minHeight: 36, whiteSpace: 'nowrap', color: '#ffffff',
+                  background: 'var(--dc-acc, #E85D12)',
+                  boxShadow: '0 4px 12px rgba(232,93,18,0.28)',
                 }}
               >
                 <svg viewBox="0 0 24 24" style={{ width: 12, height: 12, fill: 'white' }} aria-hidden="true"><path d="M11 3h2v10.2l3.6-3.6L18 11l-6 6-6-6 1.4-1.4 3.6 3.6V3ZM5 19h14v2H5v-2Z" /></svg>
@@ -1100,25 +1091,28 @@ export default function DashboardPage() {
                     return (
                       <div key={i} className="relative group">
                         <button type="button" onClick={() => { if (!muted) handleSmartAction(action); }}
-                          className={cn('w-full text-left rounded-xl border p-4 shadow-sm hover:shadow-md transition-shadow',
-                            muted ? 'opacity-40 grayscale' :
-                              action.type === 'critical' ? 'border-red-200 bg-red-50' :
-                              action.type === 'warning'  ? 'border-amber-200 bg-amber-50' : 'border-blue-200 bg-blue-50')}>
+                          className={cn('w-full text-left rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow', muted ? 'opacity-40 grayscale' : '')}
+                          style={muted ? {} : action.type === 'critical'
+                            ? { background: 'rgba(232,93,18,0.06)', border: '1px solid rgba(232,93,18,0.14)', borderLeft: '3px solid var(--dc-acc, #E85D12)' }
+                            : action.type === 'warning'
+                            ? { background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.11)', borderLeft: '3px solid var(--dc-amber, #F59E0B)' }
+                            : { background: 'rgba(232,93,18,0.04)', border: '1px solid rgba(255,138,76,0.14)', borderLeft: '3px solid var(--dc-acc2, #FF8A4C)' }
+                          }>
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-lg" aria-hidden="true">{action.icon}</span>
-                            <span className={cn('text-xs font-black uppercase tracking-wider rounded-full px-2 py-0.5 border',
-                              action.type === 'critical' ? 'text-red-700 bg-red-100 border-red-200' :
-                                action.type === 'warning' ? 'text-amber-700 bg-amber-100 border-amber-200' :
-                                  'text-blue-700 bg-blue-100 border-blue-200')}>{action.type}</span>
-                            {muted && <span className="text-[10px] text-slate-400 font-semibold ml-1">muted</span>}
+                            <span className={cn('text-xs font-black uppercase tracking-wider rounded px-2 py-0.5',
+                              action.type === 'critical' ? 'text-[#fca5a5] bg-[rgba(248,113,113,0.11)]' :
+                                action.type === 'warning' ? 'text-[#fcd34d] bg-[rgba(245,158,11,0.11)]' :
+                                  'text-[#fb923c] bg-[rgba(232,93,18,0.13)]')}>{action.type}</span>
+                            {muted && <span className="text-[10px] font-semibold ml-1" style={{ color: 'var(--dc-p3)' }}>muted</span>}
                             {isNew && !muted && (
-                              <span className="text-[10px] font-black bg-blue-100 text-blue-700 border border-blue-200 rounded-full px-1.5 py-0.5 ml-1">NEW</span>
+                              <span className="text-[10px] font-black rounded-full px-1.5 py-0.5 ml-1" style={{ background: 'rgba(232,93,18,0.12)', color: 'var(--dc-acc2)' }}>NEW</span>
                             )}
-                            <span className="text-xs text-slate-400 ml-auto">#{i + 1}</span>
+                            <span className="text-xs ml-auto" style={{ color: 'var(--dc-p3, #505050)' }}>#{i + 1}</span>
                           </div>
-                          <p className="text-sm font-bold text-slate-800 mb-1">{action.title}</p>
-                          <p className="text-xs text-slate-600 mb-2">{action.detail}</p>
-                          {!muted && <p className="text-xs font-bold text-blue-600">Go to details →</p>}
+                          <p className="text-sm font-bold mb-1" style={{ color: 'var(--dc-p1, #0f172a)' }}>{action.title}</p>
+                          <p className="text-xs mb-2" style={{ color: 'var(--dc-p2, #64748b)' }}>{action.detail}</p>
+                          {!muted && <p className="text-xs font-bold" style={{ color: 'var(--dc-acc2, #FF8A4C)' }}>Go to details →</p>}
                           {/* Action owner */}
                           {!muted && (() => {
                             const assignedOwner = recOwners[key] ?? '';

@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delivery Clarity — Design Concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D1820;--s1:#1C2B38;--s2:#243347;--s3:#2E4057;
+  --teal:#0B6D68;--teal2:#4DBDAE;--teal3:#A8D8D4;
+  --orange:#E85D12;--amber:#F59E0B;--green:#22C55E;
+  --red:#F87171;--critical:#B42318;
+  --p1:#B0BCCA;--p2:#6B7685;--p3:#3A4A58;
+  --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.13);
+  --font:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;
+  --ease:cubic-bezier(0.22,1,0.36,1);
+}
+
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--p1);line-height:1.6;min-width:320px}
+
+/* ── PAGE LABELS ── */
+.page-section{position:relative}
+.page-label-bar{background:rgba(77,189,174,0.08);border-top:1px solid rgba(77,189,174,0.15);border-bottom:1px solid rgba(77,189,174,0.15);padding:8px 32px;display:flex;align-items:center;gap:10px}
+.page-label-bar span{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal2)}
+.page-label-bar small{font-size:10px;color:var(--p2)}
+
+/* ── NAVIGATION ── */
+.site-nav{position:sticky;top:0;z-index:100;padding:12px 24px;background:rgba(13,24,32,0.95);border-bottom:1px solid var(--bdr);backdrop-filter:blur(14px)}
+.nav-inner{background:rgba(28,43,56,0.9);border:1.5px solid var(--bdr2);border-radius:100px;padding:6px 8px;display:flex;align-items:center;gap:2px}
+.nav-logo{display:flex;align-items:center;gap:7px;padding:4px 14px;margin-right:4px;text-decoration:none}
+.nav-logo span{font-size:14px;font-weight:700;color:#EBF3F8}
+.nav-link{padding:7px 14px;border-radius:100px;font-size:12px;font-weight:500;color:rgba(176,188,202,0.5);cursor:pointer;transition:all 180ms var(--ease);text-decoration:none;border:none;background:none;font-family:var(--font)}
+.nav-link:hover{color:var(--p1)}
+.nav-link.active{background:rgba(77,189,174,0.12);color:var(--teal2)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--s3));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+
+/* ── BUTTONS ── */
+.btn-or{display:inline-flex;align-items:center;gap:6px;background:var(--orange);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;padding:10px 22px;border-radius:100px;border:none;cursor:pointer;transition:all 180ms var(--ease);text-decoration:none}
+.btn-or:hover{background:#c94e0d;transform:translateY(-1px)}
+.btn-or.sm{padding:7px 16px;font-size:12px}
+.btn-or.xs{padding:5px 12px;font-size:11px}
+.btn-gl{display:inline-flex;align-items:center;gap:6px;background:rgba(77,189,174,0.1);color:var(--teal2);font-family:var(--font);font-size:13px;font-weight:600;padding:10px 20px;border-radius:100px;border:1.5px solid rgba(77,189,174,0.3);cursor:pointer;transition:all 180ms var(--ease);text-decoration:none}
+.btn-gl:hover{background:rgba(77,189,174,0.18)}
+.btn-gl.sm{padding:7px 14px;font-size:12px}
+
+/* ── CHIPS ── */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.05em}
+.chip.eyebrow{font-size:10px;margin-bottom:14px}
+.c-tl{background:rgba(77,189,174,0.12);color:var(--teal2)}
+.c-gr{background:rgba(34,197,94,0.12);color:#4ade80}
+.c-am{background:rgba(245,158,11,0.12);color:#fcd34d}
+.c-or{background:rgba(232,93,18,0.12);color:#fb923c}
+.c-rd{background:rgba(248,113,113,0.12);color:#fca5a5}
+.c-nt{background:rgba(176,188,202,0.08);color:var(--p1)}
+
+/* ── CARDS ── */
+.card{background:var(--s2);border:1px solid var(--bdr);border-radius:12px;padding:20px}
+.card.sm{padding:14px}
+.card.xs{padding:10px 12px}
+
+/* ── SECTIONS ── */
+.sec{padding:64px 32px}
+.sec-s1{background:var(--s1)}
+.sec-s2{background:var(--s2)}
+.sec-bg{background:var(--bg)}
+
+/* ── SECTION HEADING ── */
+.sec-title{font-size:28px;font-weight:700;color:#EBF3F8;letter-spacing:-.02em;line-height:1.25;margin-bottom:12px}
+.sec-sub{font-size:14px;color:var(--p2);line-height:1.7;max-width:480px}
+.sec-head-center{text-align:center;margin-bottom:36px}
+.sec-head-center .sec-sub{margin:0 auto}
+
+/* ── APP SHELL ── */
+.app-frame{background:var(--bg);border:1px solid var(--bdr2);border-radius:14px;overflow:hidden}
+.app-topbar{height:46px;background:var(--s1);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0}
+.app-topbar-title{font-size:13px;font-weight:600;color:var(--p1)}
+.app-body{display:flex}
+.app-sidebar{width:158px;background:rgba(13,24,32,0.85);border-right:1px solid var(--bdr);padding:12px 7px;flex-shrink:0;display:flex;flex-direction:column;min-height:420px}
+.app-main{flex:1;padding:16px;background:var(--s1);overflow:auto}
+.si{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:8px;font-size:11px;color:var(--p2);cursor:pointer;transition:all 150ms var(--ease)}
+.si:hover{color:var(--p1);background:rgba(255,255,255,0.04)}
+.si.active{background:rgba(77,189,174,0.1);color:var(--teal2)}
+.si i{font-size:13px}
+.si-sep{height:1px;background:var(--bdr);margin:8px 0}
+.si-spacer{flex:1}
+
+/* ── KPI CARD ── */
+.kpi{background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px}
+.kpi-label{font-size:9px;color:var(--p2);margin-bottom:4px}
+.kpi-val{font-family:var(--mono);font-size:22px;font-weight:500;line-height:1}
+.kpi-sub{margin-top:5px}
+
+/* ── TABLES ── */
+.data-table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+.data-table th{text-align:left;padding:7px 0;font-size:9px;font-weight:700;color:var(--p3);letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--bdr)}
+.data-table td{padding:9px 0;border-bottom:1px solid rgba(58,74,88,0.35);vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+
+/* ── RECOMMENDATIONS ── */
+.rec{border-radius:0 8px 8px 0;padding:10px 13px}
+.rec.high{background:rgba(232,93,18,0.06);border:1px solid rgba(232,93,18,0.15);border-left:3px solid var(--orange)}
+.rec.med{background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.12);border-left:3px solid var(--amber)}
+.rec.low{background:rgba(77,189,174,0.05);border:1px solid rgba(77,189,174,0.1);border-left:3px solid var(--teal2)}
+.rec-title{font-size:11px;color:var(--p1);font-weight:500;line-height:1.4;margin-bottom:6px}
+.evidence-tag{font-size:9px;padding:1px 6px;border-radius:3px;font-family:var(--mono)}
+.ev-tl{background:rgba(77,189,174,0.1);color:var(--teal2)}
+.ev-am{background:rgba(245,158,11,0.1);color:#fcd34d}
+
+/* ── GAUGE ── */
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+
+/* ── SIGNAL BARS ── */
+.sig-row{display:grid;grid-template-columns:130px 1fr 56px 88px;align-items:center;gap:10px;margin-bottom:9px}
+.sig-label{font-size:11px;color:var(--p1)}
+.sig-track{height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.sig-fill{height:100%;border-radius:3px}
+.sig-val{font-family:var(--mono);font-size:11px;text-align:right}
+
+/* ── SETTINGS ROWS ── */
+.settings-row{display:flex;align-items:center;gap:12px;cursor:pointer;transition:background 150ms}
+.settings-row:hover{background:rgba(255,255,255,0.03);border-radius:10px}
+.settings-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── TRUST STRIP ── */
+.trust-strip{background:var(--s1);border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);padding:14px 32px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.trust-chip{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--teal2);background:rgba(77,189,174,0.08);border:1px solid rgba(77,189,174,0.15);padding:5px 13px;border-radius:5px}
+
+/* ── FOOTER ── */
+.site-footer{background:var(--bg);border-top:1px solid var(--bdr);padding:52px 32px 24px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px;margin-bottom:36px}
+.footer-col-title{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--p3);margin-bottom:12px}
+.footer-link{display:block;font-size:12px;color:var(--p2);cursor:pointer;margin-bottom:7px;text-decoration:none;transition:color 150ms}
+.footer-link:hover{color:var(--p1)}
+.footer-bottom{border-top:1px solid var(--bdr);padding-top:16px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.footer-feat-chip{font-size:9px;font-weight:700;background:rgba(77,189,174,0.08);color:rgba(77,189,174,0.6);padding:3px 8px;border-radius:3px;border:1px solid rgba(77,189,174,0.12)}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity 400ms var(--ease),transform 400ms var(--ease)}
+.reveal.in{opacity:1;transform:translateY(0)}
+.reveal-d1{transition-delay:60ms}
+.reveal-d2{transition-delay:120ms}
+.reveal-d3{transition-delay:180ms}
+.reveal-d4{transition-delay:240ms}
+.reveal-d5{transition-delay:300ms}
+
+/* ── PAGE ANCHOR JUMP MENU ── */
+.jump-menu{position:fixed;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:200}
+.jump-dot{width:8px;height:8px;border-radius:50%;background:rgba(77,189,174,0.25);border:1px solid rgba(77,189,174,0.3);cursor:pointer;transition:all 200ms;display:block}
+.jump-dot:hover,.jump-dot.active{background:var(--teal2);transform:scale(1.3)}
+.jump-dot[title]:hover::after{content:attr(title);position:absolute;right:16px;white-space:nowrap;font-size:10px;background:var(--s1);color:var(--p1);padding:3px 8px;border-radius:4px;border:1px solid var(--bdr2)}
+
+@media(max-width:768px){
+  .footer-grid{grid-template-columns:1fr 1fr}
+  .jump-menu{display:none}
+  .sec{padding:48px 20px}
+  .site-nav{padding:10px 16px}
+}
+@media(prefers-reduced-motion:reduce){
+  .reveal{opacity:1;transform:none;transition:none}
+  *{transition-duration:0ms!important}
+}
+</style>
+</head>
+<body>
+
+<!-- JUMP MENU -->
+<nav class="jump-menu" aria-label="Page sections">
+  <a class="jump-dot active" href="#landing" title="Landing page"></a>
+  <a class="jump-dot" href="#login" title="Login"></a>
+  <a class="jump-dot" href="#upload" title="Upload"></a>
+  <a class="jump-dot" href="#dashboard" title="Dashboard"></a>
+  <a class="jump-dot" href="#health" title="Health"></a>
+  <a class="jump-dot" href="#flow" title="Flow & Risk"></a>
+  <a class="jump-dot" href="#forecast" title="Forecast"></a>
+  <a class="jump-dot" href="#recommendations" title="Recommendations"></a>
+  <a class="jump-dot" href="#admin" title="Admin"></a>
+  <a class="jump-dot" href="#settings" title="Settings"></a>
+</nav>
+
+<!-- ════════════════════════════════════════
+     LANDING PAGE
+════════════════════════════════════════ -->
+<div id="landing" class="page-section">
+<div class="page-label-bar"><span>01 — Landing page</span><small>Marketing website · 1440px</small></div>
+
+<!-- NAV -->
+<header class="site-nav">
+  <div class="nav-inner">
+    <a href="#landing" class="nav-logo">
+      <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="13" stroke="#4DBDAE" stroke-width="1.5" opacity=".35"/><path d="M16 4.5A11.5 11.5 0 0 1 27 20" stroke="#4DBDAE" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M27 20A11.5 11.5 0 0 1 9.5 27.5" stroke="#A8D8D4" stroke-width="2" stroke-linecap="round" fill="none" opacity=".7"/><path d="M9.5 27.5A11.5 11.5 0 0 1 5 9" stroke="#4DBDAE" stroke-width="2" stroke-linecap="round" fill="none" opacity=".3"/><path d="M11 16.5l3.5 3.5 6.5-7" stroke="#4DBDAE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      <span>Delivery Clarity</span>
+    </a>
+    <a href="#landing" class="nav-link active">Product</a>
+    <a href="#dashboard" class="nav-link">How It Works</a>
+    <a href="#flow" class="nav-link">Use Cases</a>
+    <a href="#health" class="nav-link">Privacy</a>
+    <a href="#settings" class="nav-link">About</a>
+    <div class="nav-right">
+      <i class="ti ti-search" style="font-size:16px;color:rgba(176,188,202,0.35);padding:0 8px"></i>
+      <div class="avatar">JT</div>
+      <a href="#dashboard" class="btn-gl sm">View Demo</a>
+      <a href="#upload" class="btn-or sm"><i class="ti ti-upload" style="font-size:12px"></i>Upload Export</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="sec sec-bg" style="padding-top:72px;padding-bottom:0;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start">
+  <div style="padding-top:8px">
+    <div class="chip c-tl eyebrow"><i class="ti ti-chart-dots" style="font-size:11px"></i>Delivery Intelligence Platform</div>
+    <h1 style="font-size:42px;font-weight:800;color:#EBF3F8;line-height:1.1;letter-spacing:-.025em;margin-bottom:20px">From Jira Exports to<br><span style="color:var(--teal2)">Delivery Confidence</span></h1>
+    <p style="font-size:15px;color:var(--p2);line-height:1.8;margin-bottom:32px;max-width:440px">Turn messy Jira exports into delivery health, risk visibility, smart recommendations, and forecast-ready insight — without Jira credentials or live API access.</p>
+    <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+      <a href="#upload" class="btn-or"><i class="ti ti-upload" style="font-size:14px"></i>Upload Jira Export</a>
+      <a href="#dashboard" class="btn-gl">Explore Dashboard <i class="ti ti-arrow-right" style="font-size:14px"></i></a>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--teal3);display:flex;align-items:center;gap:5px"><i class="ti ti-check" style="color:var(--teal2)"></i>No Jira credentials</span>
+      <span style="font-size:11px;color:var(--teal3);display:flex;align-items:center;gap:5px"><i class="ti ti-check" style="color:var(--teal2)"></i>Self-hosted</span>
+      <span style="font-size:11px;color:var(--teal3);display:flex;align-items:center;gap:5px"><i class="ti ti-check" style="color:var(--teal2)"></i>Private by design</span>
+    </div>
+  </div>
+  <!-- Hero dashboard mockup -->
+  <div style="background:var(--s1);border:1px solid var(--bdr2);border-radius:14px 14px 0 0;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+    <div style="background:var(--bg);border-bottom:1px solid var(--bdr);padding:9px 14px;display:flex;align-items:center;gap:6px">
+      <div style="width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,0.1)"></div>
+      <div style="width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,0.1)"></div>
+      <div style="width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,0.1)"></div>
+      <div style="flex:1;background:rgba(255,255,255,0.04);border-radius:4px;height:20px;margin:0 10px;display:flex;align-items:center;padding:0 10px"><span style="font-size:9px;color:var(--p3)">delivery-clarity.app/dashboard</span></div>
+    </div>
+    <div style="display:flex;min-height:360px">
+      <div style="width:120px;background:rgba(13,24,32,0.7);border-right:1px solid var(--bdr);padding:10px 7px;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:5px;padding:5px 8px;margin-bottom:12px">
+          <svg width="13" height="13" viewBox="0 0 32 32" fill="none"><path d="M11 16.5l3.5 3.5 6.5-7" stroke="#4DBDAE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          <span style="font-size:10px;font-weight:700;color:var(--p1)">DC</span>
+        </div>
+        <div style="background:rgba(77,189,174,0.1);border-radius:7px;padding:5px 8px;margin-bottom:2px;display:flex;align-items:center;gap:5px"><i class="ti ti-layout-dashboard" style="font-size:11px;color:var(--teal2)"></i><span style="font-size:10px;font-weight:600;color:var(--teal2)">Dashboard</span></div>
+        <div style="padding:5px 8px;margin-bottom:2px;display:flex;align-items:center;gap:5px"><i class="ti ti-gauge" style="font-size:11px;color:var(--p2)"></i><span style="font-size:10px;color:var(--p2)">Health</span></div>
+        <div style="padding:5px 8px;margin-bottom:2px;display:flex;align-items:center;gap:5px"><i class="ti ti-activity" style="font-size:11px;color:var(--p2)"></i><span style="font-size:10px;color:var(--p2)">Flow & Risk</span></div>
+        <div style="padding:5px 8px;margin-bottom:2px;display:flex;align-items:center;gap:5px"><i class="ti ti-bulb" style="font-size:11px;color:var(--p2)"></i><span style="font-size:10px;color:var(--p2)">Recommendations</span></div>
+        <div style="padding:5px 8px;display:flex;align-items:center;gap:5px"><i class="ti ti-chart-line" style="font-size:11px;color:var(--p2)"></i><span style="font-size:10px;color:var(--p2)">Forecast</span></div>
+      </div>
+      <div style="flex:1;padding:13px;background:var(--s1)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+          <div><div style="font-size:11px;font-weight:600;color:var(--p1)">Sprint 24 · Platform Team</div><div style="font-size:9px;color:var(--p2)">Jul 8–21, 2025</div></div>
+          <button class="btn-or xs"><i class="ti ti-upload" style="font-size:10px"></i>Upload</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:9px">
+          <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:7px;padding:8px 9px"><div style="font-size:8px;color:var(--p2);margin-bottom:2px">Health</div><div style="font-family:var(--mono);font-size:17px;font-weight:500;color:var(--teal2)">73</div><div style="font-size:7px;color:var(--teal2);margin-top:2px">Good</div></div>
+          <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:7px;padding:8px 9px"><div style="font-size:8px;color:var(--p2);margin-bottom:2px">Flow Eff.</div><div style="font-family:var(--mono);font-size:17px;font-weight:500;color:var(--p1)">68%</div><div style="font-size:7px;color:var(--p2);margin-top:2px">−4% avg</div></div>
+          <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:7px;padding:8px 9px"><div style="font-size:8px;color:var(--p2);margin-bottom:2px">Blocked</div><div style="font-family:var(--mono);font-size:17px;font-weight:500;color:var(--orange)">4</div><div style="font-size:7px;color:var(--orange);margin-top:2px">At risk</div></div>
+          <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:7px;padding:8px 9px"><div style="font-size:8px;color:var(--p2);margin-bottom:2px">Forecast</div><div style="font-family:var(--mono);font-size:17px;font-weight:500;color:var(--p1)">72%</div><div style="font-size:7px;color:#fcd34d;margin-top:2px">Medium</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:80px 1fr;gap:7px;margin-bottom:8px">
+          <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:7px;padding:9px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <svg width="58" height="37" viewBox="0 0 58 37">
+              <path d="M4 35A24 24 0 0 1 11.2 17" stroke="#B42318" stroke-width="4.5" stroke-linecap="butt" fill="none"/>
+              <path d="M11.2 17A24 24 0 0 1 21.5 9" stroke="#E85D12" stroke-width="4.5" stroke-linecap="butt" fill="none"/>
+              <path d="M21.5 9A24 24 0 0 1 35.5 7" stroke="#F59E0B" stroke-width="4.5" stroke-linecap="butt" fill="none"/>
+              <path d="M35.5 7A24 24 0 0 1 46 12.5" stroke="#0B6D68" stroke-width="4.5" stroke-linecap="butt" fill="none"/>
+              <path d="M46 12.5A24 24 0 0 1 54 35" stroke="#22C55E" stroke-width="4.5" stroke-linecap="butt" fill="none"/>
+              <line x1="29" y1="35" x2="44" y2="13" stroke="#EBF3F8" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="29" cy="35" r="3" fill="#1C2B38" stroke="#4DBDAE" stroke-width="1"/>
+              <text x="29" y="30" text-anchor="middle" font-size="9" font-weight="700" fill="#4DBDAE" font-family="'JetBrains Mono',monospace">73</text>
+            </svg>
+            <span style="font-size:7px;color:var(--teal2);font-weight:600;margin-top:2px">Good</span>
+          </div>
+          <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:7px;padding:9px">
+            <div style="font-size:7px;font-weight:600;color:var(--p1);margin-bottom:5px">Velocity trend</div>
+            <svg width="100%" height="38" viewBox="0 0 130 38">
+              <polyline points="0,30 22,24 44,28 66,18 88,22 110,12 130,16" fill="none" stroke="#4DBDAE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="0,38 0,30 22,24 44,28 66,18 88,22 110,12 130,16 130,38" fill="rgba(77,189,174,0.07)" stroke="none"/>
+              <circle cx="130" cy="16" r="3" fill="#4DBDAE"/>
+            </svg>
+          </div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:7px;padding:9px">
+          <div style="font-size:7px;font-weight:600;color:var(--p1);margin-bottom:6px">Smart recommendations</div>
+          <div style="background:rgba(232,93,18,0.06);border-left:2px solid var(--orange);padding:5px 8px;border-radius:0 4px 4px 0;margin-bottom:4px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px">
+              <span style="font-size:9px;color:var(--p1)">3 items blocked 5+ days — escalate or reassign</span>
+              <span style="font-size:7px;background:rgba(232,93,18,0.15);color:#fb923c;padding:1px 5px;border-radius:2px;flex-shrink:0;margin-left:4px">High</span>
+            </div>
+          </div>
+          <div style="background:rgba(245,158,11,0.05);border-left:2px solid var(--amber);padding:5px 8px;border-radius:0 4px 4px 0">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px">
+              <span style="font-size:9px;color:var(--p1)">Scope grew 18% post-kickoff — completion at 66%</span>
+              <span style="font-size:7px;background:rgba(245,158,11,0.15);color:#fcd34d;padding:1px 5px;border-radius:2px;flex-shrink:0;margin-left:4px">Med</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST STRIP -->
+<div class="trust-strip">
+  <div class="trust-chip"><i class="ti ti-shield-lock" style="font-size:12px"></i>Zero-credential</div>
+  <div class="trust-chip"><i class="ti ti-server" style="font-size:12px"></i>Self-hosted</div>
+  <div class="trust-chip"><i class="ti ti-file-export" style="font-size:12px"></i>Export-based</div>
+  <div class="trust-chip"><i class="ti ti-lock" style="font-size:12px"></i>Private by design</div>
+  <div class="trust-chip"><i class="ti ti-eye" style="font-size:12px"></i>Explainable metrics</div>
+</div>
+
+<!-- PROBLEM -->
+<section class="sec sec-bg reveal">
+  <div class="sec-head-center">
+    <div class="chip c-tl eyebrow">The problem</div>
+    <h2 class="sec-title">Delivery reporting shouldn't depend on<br>messy boards and manual spreadsheets.</h2>
+    <p class="sec-sub">Teams waste hours every sprint translating board noise into decisions that should be automatic.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:900px;margin:0 auto">
+    <div class="card reveal reveal-d1" style="border-top:2px solid rgba(77,189,174,0.3)"><div style="width:38px;height:38px;background:rgba(77,189,174,0.1);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:14px"><i class="ti ti-clock" style="font-size:19px;color:var(--teal2)"></i></div><h3 style="font-size:14px;font-weight:600;color:var(--p1);margin-bottom:7px">Reports take too long</h3><p style="font-size:12px;color:var(--p2);line-height:1.65">Hours lost copying Jira data into spreadsheets every sprint. Insights arrive after the damage is done.</p></div>
+    <div class="card reveal reveal-d2" style="border-top:2px solid rgba(77,189,174,0.3)"><div style="width:38px;height:38px;background:rgba(77,189,174,0.1);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:14px"><i class="ti ti-alert-triangle" style="font-size:19px;color:var(--teal2)"></i></div><h3 style="font-size:14px;font-weight:600;color:var(--p1);margin-bottom:7px">Risks appear too late</h3><p style="font-size:12px;color:var(--p2);line-height:1.65">Blockers and aging WIP pile up invisibly. By the time they surface in a report, recovery is harder.</p></div>
+    <div class="card reveal reveal-d3" style="border-top:2px solid rgba(77,189,174,0.3)"><div style="width:38px;height:38px;background:rgba(77,189,174,0.1);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:14px"><i class="ti ti-adjustments-horizontal" style="font-size:19px;color:var(--teal2)"></i></div><h3 style="font-size:14px;font-weight:600;color:var(--p1);margin-bottom:7px">No shared metric model</h3><p style="font-size:12px;color:var(--p2);line-height:1.65">Velocity and cycle time mean different things to different teams. Consistency is impossible.</p></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="sec sec-s1 reveal">
+  <div class="sec-head-center">
+    <div class="chip c-tl eyebrow">How it works</div>
+    <h2 class="sec-title">Upload a Jira export. Get delivery intelligence in minutes.</h2>
+  </div>
+  <div style="max-width:720px;margin:0 auto">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:16px">
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 8px">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;border:2px solid rgba(77,189,174,0.5);z-index:1;position:relative">1</div>
+        <div style="font-size:10px;font-weight:600;color:var(--teal2);margin-top:8px;line-height:1.4">Upload<br>Export</div>
+        <div style="font-size:10px;color:var(--p2);margin-top:4px;line-height:1.4">CSV, XLS, XLSX</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 8px">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;border:2px solid rgba(77,189,174,0.5)">2</div>
+        <div style="font-size:10px;font-weight:600;color:var(--teal2);margin-top:8px;line-height:1.4">Normalise<br>Fields</div>
+        <div style="font-size:10px;color:var(--p2);margin-top:4px;line-height:1.4">Smart mapping</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 8px">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--teal2);border:2px solid rgba(77,189,174,0.25)">3</div>
+        <div style="font-size:10px;font-weight:600;color:var(--p1);margin-top:8px;line-height:1.4">Calculate<br>Health</div>
+        <div style="font-size:10px;color:var(--p2);margin-top:4px;line-height:1.4">0–100 score</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 8px">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--teal2);border:2px solid rgba(77,189,174,0.25)">4</div>
+        <div style="font-size:10px;font-weight:600;color:var(--p1);margin-top:8px;line-height:1.4">Detect<br>Risks</div>
+        <div style="font-size:10px;color:var(--p2);margin-top:4px;line-height:1.4">Blockers, orphans</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;max-width:540px;margin:0 auto">
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 8px">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--teal2);border:2px solid rgba(77,189,174,0.25)">5</div>
+        <div style="font-size:10px;font-weight:600;color:var(--p1);margin-top:8px;line-height:1.4">Smart<br>Advice</div>
+        <div style="font-size:10px;color:var(--p2);margin-top:4px;line-height:1.4">Evidence-backed</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 8px">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--teal2);border:2px solid rgba(77,189,174,0.25)">6</div>
+        <div style="font-size:10px;font-weight:600;color:var(--p1);margin-top:8px;line-height:1.4">Forecast<br>Confidence</div>
+        <div style="font-size:10px;color:var(--p2);margin-top:4px;line-height:1.4">Sprint probability</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 8px">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff">7</div>
+        <div style="font-size:10px;font-weight:600;color:var(--p1);margin-top:8px;line-height:1.4">Export<br>Report</div>
+        <div style="font-size:10px;color:var(--p2);margin-top:4px;line-height:1.4">Excel / PDF</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULES -->
+<section class="sec sec-bg reveal">
+  <div class="sec-head-center">
+    <div class="chip c-tl eyebrow">Product modules</div>
+    <h2 class="sec-title">One private workspace. Full delivery intelligence.</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:960px;margin:0 auto">
+    <div class="card reveal reveal-d1" style="display:flex;flex-direction:column;gap:9px"><i class="ti ti-gauge" style="font-size:20px;color:var(--teal2)"></i><div style="font-size:13px;font-weight:600;color:var(--p1)">Delivery Health</div><div style="font-size:11px;color:var(--p2);line-height:1.5">0–100 composite score. Sprint trend. Colour-banded gauge.</div></div>
+    <div class="card reveal reveal-d2" style="display:flex;flex-direction:column;gap:9px"><i class="ti ti-activity" style="font-size:20px;color:var(--teal2)"></i><div style="font-size:13px;font-weight:600;color:var(--p1)">Flow & Risk</div><div style="font-size:11px;color:var(--p2);line-height:1.5">WIP age, blocked radar, orphan map, bottleneck status.</div></div>
+    <div class="card reveal reveal-d3" style="display:flex;flex-direction:column;gap:9px"><i class="ti ti-table" style="font-size:20px;color:var(--teal2)"></i><div style="font-size:13px;font-weight:600;color:var(--p1)">Work Item Explorer</div><div style="font-size:11px;color:var(--p2);line-height:1.5">Visual relation graph. Epic/story/task tree. Orphan detection.</div></div>
+    <div class="card reveal reveal-d4" style="display:flex;flex-direction:column;gap:9px"><i class="ti ti-bulb" style="font-size:20px;color:var(--teal2)"></i><div style="font-size:13px;font-weight:600;color:var(--p1)">Smart Recommendations</div><div style="font-size:11px;color:var(--p2);line-height:1.5">Evidence-backed actions. Priority tiers. Role-filtered.</div></div>
+    <div class="card reveal reveal-d1" style="display:flex;flex-direction:column;gap:9px"><i class="ti ti-messages" style="font-size:20px;color:var(--teal2)"></i><div style="font-size:13px;font-weight:600;color:var(--p1)">Retrospective Intelligence</div><div style="font-size:11px;color:var(--p2);line-height:1.5">Pattern detection. Theme analysis. Improvement backlog.</div></div>
+    <div class="card reveal reveal-d2" style="display:flex;flex-direction:column;gap:9px"><i class="ti ti-chart-line" style="font-size:20px;color:var(--teal2)"></i><div style="font-size:13px;font-weight:600;color:var(--p1)">Forecasting</div><div style="font-size:11px;color:var(--p2);line-height:1.5">Monte Carlo. Sprint completion probability. Scenario editor.</div></div>
+    <div class="card reveal reveal-d3" style="display:flex;flex-direction:column;gap:9px"><i class="ti ti-file-description" style="font-size:20px;color:var(--teal2)"></i><div style="font-size:13px;font-weight:600;color:var(--p1)">Executive Report</div><div style="font-size:11px;color:var(--p2);line-height:1.5">One-page summary. Confidence score. Board-ready PDF.</div></div>
+    <div class="card reveal reveal-d4" style="display:flex;flex-direction:column;gap:9px"><i class="ti ti-table-export" style="font-size:20px;color:var(--teal2)"></i><div style="font-size:13px;font-weight:600;color:var(--p1)">Smart Excel Export</div><div style="font-size:11px;color:var(--p2);line-height:1.5">Multi-sheet export. Charts, KPIs, and action tables.</div></div>
+  </div>
+</section>
+
+<!-- ROLES -->
+<section class="sec sec-s1 reveal">
+  <div class="sec-head-center">
+    <div class="chip c-tl eyebrow">Built for your role</div>
+    <h2 class="sec-title">Different intelligence for every role.</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-width:1100px;margin:0 auto">
+    <div class="card" style="border-top:2px solid var(--teal)"><div class="chip c-tl" style="margin-bottom:10px;display:inline-flex">SCRUM MASTER</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--teal2);flex-shrink:0;margin-top:1px"></i>Blocked radar + ceremony advice</li><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--teal2);flex-shrink:0;margin-top:1px"></i>Aging WIP alerts</li><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--teal2);flex-shrink:0;margin-top:1px"></i>Retro pattern detection</li></ul></div>
+    <div class="card" style="border-top:2px solid var(--teal)"><div class="chip c-tl" style="margin-bottom:10px;display:inline-flex">PRODUCT OWNER</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--teal2);flex-shrink:0;margin-top:1px"></i>Backlog readiness score</li><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--teal2);flex-shrink:0;margin-top:1px"></i>Scope creep detection</li><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--teal2);flex-shrink:0;margin-top:1px"></i>Release confidence</li></ul></div>
+    <div class="card" style="border-top:2px solid rgba(77,189,174,0.35)"><div class="chip c-nt" style="margin-bottom:10px;display:inline-flex">ENG MANAGER</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--p1);flex-shrink:0;margin-top:1px"></i>Throughput + bottlenecks</li><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--p1);flex-shrink:0;margin-top:1px"></i>Forecast risk</li><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--p1);flex-shrink:0;margin-top:1px"></i>Team health by sprint</li></ul></div>
+    <div class="card" style="border-top:2px solid rgba(77,189,174,0.35)"><div class="chip c-nt" style="margin-bottom:10px;display:inline-flex">DELIVERY MGR</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--p1);flex-shrink:0;margin-top:1px"></i>Timeline risk + confidence</li><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--p1);flex-shrink:0;margin-top:1px"></i>Dependency detection</li><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--p1);flex-shrink:0;margin-top:1px"></i>Recovery plan</li></ul></div>
+    <div class="card" style="border-top:2px solid var(--orange)"><div class="chip c-or" style="margin-bottom:10px;display:inline-flex">C-LEVEL</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--orange);flex-shrink:0;margin-top:1px"></i>Confidence summary</li><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--orange);flex-shrink:0;margin-top:1px"></i>Business risk + forecast</li><li style="font-size:11px;color:var(--p2);display:flex;gap:5px;align-items:flex-start"><i class="ti ti-check" style="font-size:11px;color:var(--orange);flex-shrink:0;margin-top:1px"></i>Zero technical jargon</li></ul></div>
+  </div>
+</section>
+
+<!-- PRIVATE BY DESIGN -->
+<section class="sec sec-s2 reveal">
+  <div class="sec-head-center">
+    <div class="chip c-tl eyebrow"><i class="ti ti-shield-check" style="font-size:11px"></i>Privacy-first architecture</div>
+    <h2 class="sec-title">Private by design.<br>No Jira credentials required.</h2>
+    <p class="sec-sub" style="margin:0 auto">Your delivery data stays inside your private workspace. No OAuth, no API tokens, no live sync.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:960px;margin:0 auto">
+    <div style="background:rgba(13,24,32,0.7);border:1px solid var(--bdr2);border-radius:12px;padding:20px" class="reveal reveal-d1"><i class="ti ti-lock" style="font-size:22px;color:var(--teal2);display:block;margin-bottom:12px"></i><div style="font-size:13px;font-weight:600;color:var(--p1);margin-bottom:5px">No Jira tokens</div><div style="font-size:11px;color:var(--p2);line-height:1.6">No OAuth, no API keys. Upload exports only.</div></div>
+    <div style="background:rgba(13,24,32,0.7);border:1px solid var(--bdr2);border-radius:12px;padding:20px" class="reveal reveal-d2"><i class="ti ti-server" style="font-size:22px;color:var(--teal2);display:block;margin-bottom:12px"></i><div style="font-size:13px;font-weight:600;color:var(--p1);margin-bottom:5px">Self-hosted workspace</div><div style="font-size:11px;color:var(--p2);line-height:1.6">Deploy inside your infrastructure. Full data ownership.</div></div>
+    <div style="background:rgba(13,24,32,0.7);border:1px solid var(--bdr2);border-radius:12px;padding:20px" class="reveal reveal-d3"><i class="ti ti-file-export" style="font-size:22px;color:var(--teal2);display:block;margin-bottom:12px"></i><div style="font-size:13px;font-weight:600;color:var(--p1);margin-bottom:5px">Export-only core model</div><div style="font-size:11px;color:var(--p2);line-height:1.6">Works from static files. No live sync required.</div></div>
+    <div style="background:rgba(13,24,32,0.7);border:1px solid var(--bdr2);border-radius:12px;padding:20px" class="reveal reveal-d4"><i class="ti ti-eye" style="font-size:22px;color:var(--teal2);display:block;margin-bottom:12px"></i><div style="font-size:13px;font-weight:600;color:var(--p1);margin-bottom:5px">Explainable and auditable</div><div style="font-size:11px;color:var(--p2);line-height:1.6">Every metric has a visible formula. No black boxes.</div></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="13" stroke="#4DBDAE" stroke-width="1.5" opacity=".3"/><path d="M16 4.5A11.5 11.5 0 0 1 27 20" stroke="#4DBDAE" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M27 20A11.5 11.5 0 0 1 9.5 27.5" stroke="#A8D8D4" stroke-width="2" stroke-linecap="round" fill="none" opacity=".7"/><path d="M9.5 27.5A11.5 11.5 0 0 1 5 9" stroke="#4DBDAE" stroke-width="2" stroke-linecap="round" fill="none" opacity=".3"/><path d="M11 16.5l3.5 3.5 6.5-7" stroke="#4DBDAE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        <span style="font-size:15px;font-weight:700;color:#EBF3F8">Delivery Clarity</span>
+      </div>
+      <div style="font-size:10px;color:var(--p3);margin-bottom:8px;letter-spacing:.03em">From Jira Exports to Delivery Confidence</div>
+      <p style="font-size:12px;color:var(--p2);line-height:1.7;margin-bottom:14px;max-width:260px">Transform Jira exports into delivery health, flow-risk visibility, smart recommendations, and forecast-ready insight — without Jira credentials.</p>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
+        <span class="footer-feat-chip">Upload</span><span class="footer-feat-chip">Measure</span><span class="footer-feat-chip">Detect</span><span class="footer-feat-chip">Recommend</span><span class="footer-feat-chip">Forecast</span><span class="footer-feat-chip">Report</span>
+      </div>
+      <div style="font-size:9px;color:var(--p3)">Zero-credential · Self-hosted · Export-based · Explainable · Private by design</div>
+    </div>
+    <div><div class="footer-col-title">Product</div><a class="footer-link" href="#">How it works</a><a class="footer-link" href="#">Modules</a><a class="footer-link" href="#">Role features</a><a class="footer-link" href="#">Private by design</a><a class="footer-link" href="#">Dashboard preview</a></div>
+    <div><div class="footer-col-title">Resources</div><a class="footer-link" href="#">Documentation</a><a class="footer-link" href="#">Help Center</a><a class="footer-link" href="#">Calculation reference</a><a class="footer-link" href="#">Release notes</a></div>
+    <div><div class="footer-col-title">Company</div><a class="footer-link" href="#">About</a><a class="footer-link" href="#">Contact</a><a class="footer-link" href="#">Privacy Policy</a><a class="footer-link" href="#">Terms</a></div>
+  </div>
+  <div class="footer-bottom"><span style="font-size:10px;color:var(--p3)">© 2025 Ali Delivery Intelligence. All rights reserved.</span><span style="font-size:10px;color:var(--p3)">Built with care for teams that deliver.</span></div>
+</footer>
+</div>
+
+<!-- ════════════════════════════════════════
+     APP PAGES
+════════════════════════════════════════ -->
+
+<!-- LOGIN -->
+<div id="login" class="page-section">
+<div class="page-label-bar"><span>02 — Login page</span><small>Authentication screen</small></div>
+<div style="background:linear-gradient(145deg,#0D1820 0%,#1C2B38 60%,#0D1820 100%);padding:60px 32px;display:flex;align-items:center;justify-content:center;min-height:520px">
+  <div style="background:rgba(28,43,56,0.95);border:1.5px solid var(--bdr2);border-radius:20px;padding:36px 32px;width:340px;box-shadow:0 24px 64px rgba(0,0,0,0.5)">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px">
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="13" stroke="#4DBDAE" stroke-width="1.5" opacity=".4"/><path d="M16 4.5A11.5 11.5 0 0 1 27 20" stroke="#4DBDAE" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M27 20A11.5 11.5 0 0 1 9.5 27.5" stroke="#A8D8D4" stroke-width="2" stroke-linecap="round" fill="none" opacity=".7"/><path d="M9.5 27.5A11.5 11.5 0 0 1 5 9" stroke="#4DBDAE" stroke-width="2" stroke-linecap="round" fill="none" opacity=".3"/><path d="M11 16.5l3.5 3.5 6.5-7" stroke="#4DBDAE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        <span style="font-size:17px;font-weight:800;color:#EBF3F8">Delivery Clarity</span>
+      </div>
+      <div style="font-size:13px;color:var(--p2)">Sign in to your workspace</div>
+    </div>
+    <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:var(--p2);margin-bottom:6px">Email address</div><div style="background:rgba(13,24,32,0.6);border:1px solid var(--bdr2);border-radius:9px;padding:11px 13px;font-size:12px;color:var(--p2)">jo.turner@company.com</div></div>
+    <div style="margin-bottom:22px"><div style="font-size:11px;font-weight:600;color:var(--p2);margin-bottom:6px">Password</div><div style="background:rgba(13,24,32,0.6);border:1.5px solid var(--teal2);border-radius:9px;padding:11px 13px;font-size:12px;color:var(--p2);display:flex;justify-content:space-between;align-items:center"><span>••••••••••</span><i class="ti ti-eye" style="font-size:14px;color:var(--p2)"></i></div></div>
+    <button class="btn-or" style="width:100%;justify-content:center;border-radius:100px;padding:12px;font-size:13px;margin-bottom:12px">Sign in to workspace</button>
+    <div style="text-align:center;font-size:11px;color:var(--p2);cursor:pointer;margin-bottom:18px">Forgot password?</div>
+    <div style="background:rgba(77,189,174,0.05);border:1px solid rgba(77,189,174,0.15);border-radius:8px;padding:9px 12px;display:flex;align-items:flex-start;gap:7px"><i class="ti ti-shield-lock" style="font-size:13px;color:var(--teal2);flex-shrink:0;margin-top:1px"></i><span style="font-size:10px;color:var(--p2);line-height:1.55">Private workspace. No Jira credentials required. Your data stays in your environment.</span></div>
+  </div>
+</div>
+</div>
+
+<!-- UPLOAD -->
+<div id="upload" class="page-section">
+<div class="page-label-bar"><span>03 — Upload / Import page</span><small>File ingestion screen</small></div>
+<div class="app-frame">
+  <div class="app-topbar"><i class="ti ti-upload" style="font-size:15px;color:var(--teal2)"></i><span class="app-topbar-title">Upload Jira Export</span><div style="margin-left:auto;display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--p2);border:1px solid var(--bdr);border-radius:5px;padding:3px 8px">Sprint 24 · Platform Team</span><div class="avatar">JT</div></div></div>
+  <div style="padding:24px;background:var(--bg);display:grid;grid-template-columns:1fr 270px;gap:16px">
+    <div>
+      <div style="border:2px dashed rgba(77,189,174,0.35);border-radius:14px;padding:44px 24px;text-align:center;background:rgba(28,43,56,0.4);margin-bottom:14px">
+        <div style="width:56px;height:56px;background:rgba(77,189,174,0.1);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><i class="ti ti-cloud-upload" style="font-size:26px;color:var(--teal2)"></i></div>
+        <div style="font-size:15px;font-weight:600;color:var(--p1);margin-bottom:6px">Drag and drop your Jira export</div>
+        <div style="font-size:12px;color:var(--p2);margin-bottom:18px">or click to browse your files</div>
+        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:18px"><span class="chip c-tl">.CSV</span><span class="chip c-tl">.XLS</span><span class="chip c-tl">.XLSX</span></div>
+        <button class="btn-or"><i class="ti ti-upload" style="font-size:13px"></i>Choose File</button>
+      </div>
+      <div class="card sm" style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;color:var(--p1);margin-bottom:10px">Recent uploads</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--s2);border-radius:8px;border:1px solid var(--bdr)"><i class="ti ti-file-spreadsheet" style="font-size:16px;color:var(--teal2)"></i><div style="flex:1"><div style="font-size:12px;color:var(--p1)">platform-sprint-24.xlsx</div><div style="font-size:10px;color:var(--p2)">Jul 8 · 142 items · Score: 73</div></div><span class="chip c-tl">Good</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--s2);border-radius:8px;border:1px solid var(--bdr)"><i class="ti ti-file-spreadsheet" style="font-size:16px;color:var(--p2)"></i><div style="flex:1"><div style="font-size:12px;color:var(--p1)">platform-sprint-23.xlsx</div><div style="font-size:10px;color:var(--p2)">Jun 24 · 138 items · Score: 69</div></div><span class="chip c-am">Moderate</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--s2);border-radius:8px;border:1px solid var(--bdr)"><i class="ti ti-file-spreadsheet" style="font-size:16px;color:var(--p2)"></i><div style="flex:1"><div style="font-size:12px;color:var(--p1)">platform-sprint-22.xlsx</div><div style="font-size:10px;color:var(--p2)">Jun 10 · 151 items · Score: 61</div></div><span class="chip c-am">Moderate</span></div>
+        </div>
+      </div>
+      <div style="background:rgba(77,189,174,0.06);border:1px solid rgba(77,189,174,0.15);border-radius:9px;padding:10px 14px;display:flex;align-items:flex-start;gap:8px"><i class="ti ti-shield-check" style="font-size:14px;color:var(--teal2);flex-shrink:0;margin-top:1px"></i><div style="font-size:11px;color:var(--teal2);line-height:1.55">Your data stays in your workspace. No Jira credentials required. Files are processed locally.</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card sm"><div style="font-size:11px;font-weight:600;color:var(--p1);margin-bottom:10px">First-time checklist</div><div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:8px;align-items:flex-start"><i class="ti ti-check" style="font-size:13px;color:var(--green);flex-shrink:0;margin-top:1px"></i><span style="font-size:11px;color:var(--p1)">Export from Jira via CSV/XLS export</span></div><div style="display:flex;gap:8px;align-items:flex-start"><i class="ti ti-check" style="font-size:13px;color:var(--green);flex-shrink:0;margin-top:1px"></i><span style="font-size:11px;color:var(--p1)">Include sprint fields and status columns</span></div><div style="display:flex;gap:8px;align-items:flex-start"><i class="ti ti-circle" style="font-size:13px;color:var(--p2);flex-shrink:0;margin-top:1px"></i><span style="font-size:11px;color:var(--p2)">Upload your file here</span></div><div style="display:flex;gap:8px;align-items:flex-start"><i class="ti ti-circle" style="font-size:13px;color:var(--p2);flex-shrink:0;margin-top:1px"></i><span style="font-size:11px;color:var(--p2)">Review your delivery health dashboard</span></div></div></div>
+      <div style="background:rgba(77,189,174,0.07);border:1px solid rgba(77,189,174,0.15);border-radius:9px;padding:12px 14px"><div style="font-size:9px;font-weight:700;color:var(--teal2);letter-spacing:.05em;text-transform:uppercase;margin-bottom:7px">Supported formats</div><div style="font-size:11px;color:var(--p2);line-height:1.7">Jira cloud export (CSV)<br>Jira server export (XLS/XLSX)<br>Custom Jira report exports<br>Multi-file merge supported</div></div>
+      <div class="card sm"><div style="font-size:11px;font-weight:600;color:var(--p1);margin-bottom:8px">Multi-file merge</div><div style="font-size:11px;color:var(--p2);line-height:1.6;margin-bottom:10px">Combine multiple sprint exports into one analysis session.</div><button class="btn-gl sm" style="width:100%;justify-content:center"><i class="ti ti-plus" style="font-size:12px"></i>Add another file</button></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="page-section">
+<div class="page-label-bar"><span>04 — Summary dashboard</span><small>Main delivery overview</small></div>
+<div class="app-frame">
+  <div class="app-topbar"><span class="app-topbar-title">Sprint 24 · Platform Team</span><span style="font-size:11px;color:var(--p2)">Jul 8–21, 2025</span><div style="margin-left:auto;display:flex;align-items:center;gap:8px"><span style="font-size:10px;color:var(--p2);border:1px solid var(--bdr);border-radius:4px;padding:3px 8px"><i class="ti ti-refresh" style="font-size:10px"></i> 4m ago</span><button class="btn-or xs"><i class="ti ti-upload" style="font-size:11px"></i>Upload</button><div class="avatar">JT</div></div></div>
+  <div class="app-body">
+    <div class="app-sidebar">
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 9px;margin-bottom:14px"><svg width="14" height="14" viewBox="0 0 32 32" fill="none"><path d="M11 16.5l3.5 3.5 6.5-7" stroke="#4DBDAE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span style="font-size:11px;font-weight:700;color:var(--p1)">DC</span></div>
+      <a class="si active" href="#dashboard"><i class="ti ti-layout-dashboard"></i>Dashboard</a>
+      <a class="si" href="#health"><i class="ti ti-gauge"></i>Health</a>
+      <a class="si" href="#dashboard"><i class="ti ti-chart-bar"></i>Trends</a>
+      <a class="si" href="#flow"><i class="ti ti-activity"></i>Flow & Risk</a>
+      <a class="si" href="#dashboard"><i class="ti ti-list-search"></i>Work Items</a>
+      <a class="si" href="#recommendations"><i class="ti ti-bulb"></i>Recommendations</a>
+      <a class="si" href="#dashboard"><i class="ti ti-messages"></i>Retrospective</a>
+      <a class="si" href="#forecast"><i class="ti ti-chart-line"></i>Forecast</a>
+      <a class="si" href="#dashboard"><i class="ti ti-user-check"></i>Coaching</a>
+      <a class="si" href="#dashboard"><i class="ti ti-file-description"></i>Reports</a>
+      <div class="si-spacer"></div>
+      <div class="si-sep"></div>
+      <a class="si" href="#settings"><i class="ti ti-settings"></i>Settings</a>
+      <a class="si" href="#admin"><i class="ti ti-shield-check"></i>Admin</a>
+    </div>
+    <div class="app-main">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px">
+        <div class="kpi"><div class="kpi-label">Delivery Score</div><div class="kpi-val" style="color:var(--teal2)">73</div><div class="kpi-sub"><span class="chip c-tl"><i class="ti ti-circle-check" style="font-size:9px"></i>Good</span></div></div>
+        <div class="kpi"><div class="kpi-label">Flow Efficiency</div><div class="kpi-val" style="color:var(--p1)">68<span style="font-size:12px;color:var(--p2)">%</span></div><div class="kpi-sub"><span class="chip c-am">Moderate</span></div></div>
+        <div class="kpi"><div class="kpi-label">Blocked Items</div><div class="kpi-val" style="color:var(--orange)">4</div><div class="kpi-sub"><span class="chip c-or">At Risk</span></div></div>
+        <div class="kpi"><div class="kpi-label">Data Quality</div><div class="kpi-val" style="color:var(--p1)">91<span style="font-size:12px;color:var(--p2)">%</span></div><div class="kpi-sub"><span class="chip c-gr">Strong</span></div></div>
+        <div class="kpi"><div class="kpi-label">Forecast</div><div class="kpi-val" style="color:var(--p1)">72<span style="font-size:12px;color:var(--p2)">%</span></div><div class="kpi-sub"><span class="chip c-am">Medium</span></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:106px 1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px">
+          <svg width="80" height="52" viewBox="0 0 80 52">
+            <path d="M7 49A33 33 0 0 1 16 26" stroke="#B42318" stroke-width="6" stroke-linecap="butt" fill="none"/>
+            <path d="M16 26A33 33 0 0 1 28.5 13.5" stroke="#E85D12" stroke-width="6" stroke-linecap="butt" fill="none"/>
+            <path d="M28.5 13.5A33 33 0 0 1 47 11" stroke="#F59E0B" stroke-width="6" stroke-linecap="butt" fill="none"/>
+            <path d="M47 11A33 33 0 0 1 61 18.5" stroke="#0B6D68" stroke-width="6" stroke-linecap="butt" fill="none"/>
+            <path d="M61 18.5A33 33 0 0 1 73 49" stroke="#22C55E" stroke-width="6" stroke-linecap="butt" fill="none"/>
+            <line x1="40" y1="49" x2="60" y2="21" stroke="#EBF3F8" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="40" cy="49" r="5" fill="#1C2B38" stroke="#4DBDAE" stroke-width="1.5"/>
+            <circle cx="40" cy="49" r="2" fill="#4DBDAE"/>
+            <text x="40" y="43" text-anchor="middle" font-size="13" font-weight="700" fill="#4DBDAE" font-family="'JetBrains Mono',monospace">73</text>
+          </svg>
+          <span class="chip c-tl" style="margin-top:6px"><i class="ti ti-circle-check" style="font-size:9px"></i>Good</span>
+        </div>
+        <div class="card">
+          <div style="font-size:10px;font-weight:600;color:var(--p1);margin-bottom:10px">Signal breakdown</div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <div><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:var(--p1)">Completion rate</span><span style="font-family:var(--mono);color:var(--teal2)">78%</span></div><div style="height:5px;background:var(--s3);border-radius:3px"><div style="width:78%;height:100%;background:var(--green);border-radius:3px"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:var(--p1)">Flow efficiency</span><span style="font-family:var(--mono);color:var(--teal2)">68%</span></div><div style="height:5px;background:var(--s3);border-radius:3px"><div style="width:68%;height:100%;background:var(--teal2);border-radius:3px"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:var(--p1)">Cycle time</span><span style="font-family:var(--mono);color:var(--amber)">3.2d</span></div><div style="height:5px;background:var(--s3);border-radius:3px"><div style="width:45%;height:100%;background:var(--amber);border-radius:3px"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:var(--p1)">Blocked ratio</span><span style="font-family:var(--mono);color:var(--orange)">12%</span></div><div style="height:5px;background:var(--s3);border-radius:3px"><div style="width:24%;height:100%;background:var(--orange);border-radius:3px"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:var(--p1)">Orphan ratio</span><span style="font-family:var(--mono);color:var(--p2)">6%</span></div><div style="height:5px;background:var(--s3);border-radius:3px"><div style="width:12%;height:100%;background:var(--p2);border-radius:3px"></div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size:10px;font-weight:600;color:var(--p1);margin-bottom:8px">Velocity trend — 6 sprints</div>
+          <svg width="100%" height="72" viewBox="0 0 220 72">
+            <line x1="0" y1="64" x2="220" y2="64" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <line x1="0" y1="44" x2="220" y2="44" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <line x1="0" y1="24" x2="220" y2="24" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <polyline points="0,56 44,46 88,52 132,32 176,38 220,22" fill="none" stroke="#4DBDAE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="0,72 0,56 44,46 88,52 132,32 176,38 220,22 220,72" fill="rgba(77,189,174,0.07)" stroke="none"/>
+            <circle cx="220" cy="22" r="4" fill="#4DBDAE"/>
+            <text x="0" y="72" font-size="8" fill="#6B7685" font-family="monospace">S19</text>
+            <text x="166" y="72" font-size="8" fill="#6B7685" font-family="monospace">S23</text>
+            <text x="205" y="72" font-size="8" fill="#4DBDAE" font-family="monospace" text-anchor="end">S24</text>
+          </svg>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:var(--p1)">Smart recommendations</div><span style="font-size:10px;color:var(--teal2);cursor:pointer">View all 7 →</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="rec high"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:7px"><span class="rec-title">3 items blocked for 5+ days — escalate or reassign</span><span class="chip c-or" style="flex-shrink:0">High</span></div><div style="display:flex;gap:4px"><span class="evidence-tag ev-tl">cycle=6.2d</span><span class="evidence-tag ev-tl">avg=2.8d</span></div></div>
+          <div class="rec med"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:7px"><span class="rec-title">Scope grew 18% post-kickoff — completion at 66%</span><span class="chip c-am" style="flex-shrink:0">Med</span></div><div style="display:flex;gap:4px"><span class="evidence-tag ev-am">scope=+18%</span><span class="evidence-tag ev-am">proj=66%</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- HEALTH PAGE -->
+<div id="health" class="page-section">
+<div class="page-label-bar"><span>05 — Delivery health page</span><small>Score breakdown and improvement actions</small></div>
+<div class="app-frame">
+  <div class="app-topbar"><i class="ti ti-gauge" style="font-size:15px;color:var(--teal2)"></i><span class="app-topbar-title">Delivery Health</span><div style="margin-left:auto;display:flex;gap:8px;align-items:center"><span style="font-size:10px;color:var(--p2);border:1px solid var(--bdr);border-radius:4px;padding:3px 8px">Sprint 24</span><div class="avatar">JT</div></div></div>
+  <div class="app-body">
+    <div class="app-sidebar">
+      <a class="si" href="#dashboard"><i class="ti ti-layout-dashboard"></i>Dashboard</a>
+      <a class="si active" href="#health"><i class="ti ti-gauge"></i>Health</a>
+      <a class="si" href="#dashboard"><i class="ti ti-chart-bar"></i>Trends</a>
+      <a class="si" href="#flow"><i class="ti ti-activity"></i>Flow & Risk</a>
+      <a class="si" href="#dashboard"><i class="ti ti-list-search"></i>Work Items</a>
+      <a class="si" href="#recommendations"><i class="ti ti-bulb"></i>Recommendations</a>
+      <a class="si" href="#forecast"><i class="ti ti-chart-line"></i>Forecast</a>
+      <a class="si" href="#dashboard"><i class="ti ti-file-description"></i>Reports</a>
+      <div class="si-spacer"></div><div class="si-sep"></div>
+      <a class="si" href="#settings"><i class="ti ti-settings"></i>Settings</a>
+    </div>
+    <div class="app-main">
+      <div style="display:grid;grid-template-columns:168px 1fr;gap:14px;margin-bottom:14px">
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px">
+          <svg width="128" height="82" viewBox="0 0 128 82">
+            <path d="M9 78A55 55 0 0 1 23 40" stroke="#B42318" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
+            <path d="M23 40A55 55 0 0 1 44.5 22" stroke="#E85D12" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
+            <path d="M44.5 22A55 55 0 0 1 71 16.5" stroke="#F59E0B" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
+            <path d="M71 16.5A55 55 0 0 1 97 23.5" stroke="#0B6D68" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
+            <path d="M97 23.5A55 55 0 0 1 119 78" stroke="#22C55E" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
+            <line x1="64" y1="78" x2="93" y2="30" stroke="#EBF3F8" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="64" cy="78" r="7" fill="#1C2B38" stroke="#4DBDAE" stroke-width="2"/>
+            <circle cx="64" cy="78" r="3" fill="#4DBDAE"/>
+            <text x="64" y="70" text-anchor="middle" font-size="20" font-weight="700" fill="#4DBDAE" font-family="'JetBrains Mono',monospace">73</text>
+          </svg>
+          <div style="font-size:11px;color:var(--p2);margin-top:8px">out of 100</div>
+          <span class="chip c-tl" style="margin-top:8px"><i class="ti ti-circle-check" style="font-size:9px"></i>Good</span>
+          <div style="margin-top:14px;padding:8px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.12);border-radius:7px;text-align:center;width:100%"><div style="font-size:10px;color:var(--amber)">↓ from 77 last sprint</div></div>
+        </div>
+        <div class="card">
+          <div style="font-size:11px;font-weight:600;color:var(--p1);margin-bottom:14px">Six signal breakdown</div>
+          <div class="sig-row"><span class="sig-label">Completion rate</span><div class="sig-track"><div class="sig-fill" style="width:78%;background:var(--green)"></div></div><span class="sig-val" style="color:var(--teal2)">78%</span><span class="chip c-gr">Excellent</span></div>
+          <div class="sig-row"><span class="sig-label">Flow efficiency</span><div class="sig-track"><div class="sig-fill" style="width:68%;background:var(--teal2)"></div></div><span class="sig-val" style="color:var(--teal2)">68%</span><span class="chip c-tl">Good</span></div>
+          <div class="sig-row"><span class="sig-label">Cycle time</span><div class="sig-track"><div class="sig-fill" style="width:45%;background:var(--amber)"></div></div><span class="sig-val" style="color:var(--amber)">3.2d</span><span class="chip c-am">Moderate</span></div>
+          <div class="sig-row"><span class="sig-label">Throughput</span><div class="sig-track"><div class="sig-fill" style="width:71%;background:var(--teal2)"></div></div><span class="sig-val" style="color:var(--teal2)">41pts</span><span class="chip c-tl">Good</span></div>
+          <div class="sig-row"><span class="sig-label">Blocked ratio</span><div class="sig-track"><div class="sig-fill" style="width:24%;background:var(--orange)"></div></div><span class="sig-val" style="color:var(--orange)">12%</span><span class="chip c-or">At Risk</span></div>
+          <div class="sig-row" style="margin-bottom:0"><span class="sig-label">Orphan ratio</span><div class="sig-track"><div class="sig-fill" style="width:12%;background:var(--p2)"></div></div><span class="sig-val" style="color:var(--p2)">6%</span><span class="chip c-tl">Good</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:11px;font-weight:600;color:var(--p1);margin-bottom:12px">Improvement actions to raise score</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div style="background:rgba(232,93,18,0.06);border:1px solid rgba(232,93,18,0.15);border-radius:8px;padding:12px"><div style="font-size:9px;font-weight:700;color:var(--orange);margin-bottom:6px;letter-spacing:.04em">PRIORITY 1</div><div style="font-size:11px;color:var(--p1);line-height:1.4;margin-bottom:7px">Resolve 4 blocked items to improve blocked ratio</div><span class="evidence-tag ev-tl">+8 score pts</span></div>
+          <div style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.12);border-radius:8px;padding:12px"><div style="font-size:9px;font-weight:700;color:var(--amber);margin-bottom:6px;letter-spacing:.04em">PRIORITY 2</div><div style="font-size:11px;color:var(--p1);line-height:1.4;margin-bottom:7px">Reduce cycle time from 3.2d toward team average 2.8d</div><span class="evidence-tag ev-am">+5 score pts</span></div>
+          <div style="background:rgba(77,189,174,0.05);border:1px solid rgba(77,189,174,0.1);border-radius:8px;padding:12px"><div style="font-size:9px;font-weight:700;color:var(--teal2);margin-bottom:6px;letter-spacing:.04em">PRIORITY 3</div><div style="font-size:11px;color:var(--p1);line-height:1.4;margin-bottom:7px">Link 3 orphan items to epics before sprint end</div><span class="evidence-tag ev-tl">+3 score pts</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- FLOW & RISK -->
+<div id="flow" class="page-section">
+<div class="page-label-bar"><span>06 — Flow & Risk page</span><small>Blockers, aging WIP, orphan detection</small></div>
+<div class="app-frame">
+  <div class="app-topbar"><i class="ti ti-activity" style="font-size:15px;color:var(--teal2)"></i><span class="app-topbar-title">Flow & Risk</span><div style="margin-left:auto;display:flex;gap:8px;align-items:center"><div class="avatar">JT</div></div></div>
+  <div class="app-body">
+    <div class="app-sidebar">
+      <a class="si" href="#dashboard"><i class="ti ti-layout-dashboard"></i>Dashboard</a>
+      <a class="si" href="#health"><i class="ti ti-gauge"></i>Health</a>
+      <a class="si active" href="#flow"><i class="ti ti-activity"></i>Flow & Risk</a>
+      <a class="si" href="#dashboard"><i class="ti ti-list-search"></i>Work Items</a>
+      <a class="si" href="#recommendations"><i class="ti ti-bulb"></i>Recommendations</a>
+      <a class="si" href="#forecast"><i class="ti ti-chart-line"></i>Forecast</a>
+      <div class="si-spacer"></div><div class="si-sep"></div>
+      <a class="si" href="#settings"><i class="ti ti-settings"></i>Settings</a>
+    </div>
+    <div class="app-main">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+        <div class="kpi" style="border-top:2px solid var(--orange)"><div class="kpi-label">Blocked items</div><div class="kpi-val" style="color:var(--orange)">4</div><div class="kpi-sub" style="font-size:10px;color:var(--orange)">+2 since last upload</div></div>
+        <div class="kpi" style="border-top:2px solid var(--amber)"><div class="kpi-label">Aging WIP (5d+)</div><div class="kpi-val" style="color:var(--amber)">7</div><div class="kpi-sub" style="font-size:10px;color:var(--amber)">Above threshold</div></div>
+        <div class="kpi" style="border-top:2px solid var(--p2)"><div class="kpi-label">Orphan items</div><div class="kpi-val" style="color:var(--p1)">9</div><div class="kpi-sub"><span class="chip c-tl">6% ratio</span></div></div>
+        <div class="kpi" style="border-top:2px solid var(--teal2)"><div class="kpi-label">Flow efficiency</div><div class="kpi-val" style="color:var(--p1)">68<span style="font-size:12px;color:var(--p2)">%</span></div><div class="kpi-sub"><span class="chip c-am">Moderate</span></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="card">
+          <div style="font-size:11px;font-weight:600;color:var(--p1);margin-bottom:10px">Blocked items</div>
+          <table class="data-table">
+            <thead><tr><th style="width:36%">Issue</th><th style="width:24%">Assignee</th><th style="width:22%">Blocked for</th><th style="text-align:right;width:18%">Risk</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--teal2);font-family:var(--mono);font-size:10px">PLAT-441</td><td style="color:var(--p1)">S. Müller</td><td style="font-family:var(--mono);color:var(--orange)">8.9d</td><td style="text-align:right"><span class="chip c-rd">Critical</span></td></tr>
+              <tr><td style="color:var(--teal2);font-family:var(--mono);font-size:10px">PLAT-438</td><td style="color:var(--p1)">K. Okafor</td><td style="font-family:var(--mono);color:var(--orange)">6.2d</td><td style="text-align:right"><span class="chip c-or">At Risk</span></td></tr>
+              <tr><td style="color:var(--teal2);font-family:var(--mono);font-size:10px">PLAT-422</td><td style="color:var(--p1)">L. Santos</td><td style="font-family:var(--mono);color:var(--amber)">4.5d</td><td style="text-align:right"><span class="chip c-am">Moderate</span></td></tr>
+              <tr><td style="color:var(--teal2);font-family:var(--mono);font-size:10px">PLAT-419</td><td style="color:var(--p1)">M. Chen</td><td style="font-family:var(--mono);color:var(--amber)">3.8d</td><td style="text-align:right"><span class="chip c-am">Moderate</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div style="font-size:11px;font-weight:600;color:var(--p1);margin-bottom:10px">WIP age distribution</div>
+          <svg width="100%" height="100" viewBox="0 0 220 100">
+            <rect x="0" y="60" width="30" height="40" rx="3" fill="var(--teal2)" opacity=".7"/>
+            <rect x="36" y="40" width="30" height="60" rx="3" fill="var(--teal2)" opacity=".7"/>
+            <rect x="72" y="50" width="30" height="50" rx="3" fill="var(--amber)" opacity=".8"/>
+            <rect x="108" y="30" width="30" height="70" rx="3" fill="var(--amber)" opacity=".8"/>
+            <rect x="144" y="55" width="30" height="45" rx="3" fill="var(--orange)" opacity=".85"/>
+            <rect x="180" y="20" width="30" height="80" rx="3" fill="var(--orange)" opacity=".85"/>
+            <text x="15" y="100" text-anchor="middle" font-size="8" fill="#6B7685" font-family="monospace">0–1d</text>
+            <text x="51" y="100" text-anchor="middle" font-size="8" fill="#6B7685" font-family="monospace">1–2d</text>
+            <text x="87" y="100" text-anchor="middle" font-size="8" fill="#6B7685" font-family="monospace">2–3d</text>
+            <text x="123" y="100" text-anchor="middle" font-size="8" fill="#fcd34d" font-family="monospace">3–5d</text>
+            <text x="159" y="100" text-anchor="middle" font-size="8" fill="#fb923c" font-family="monospace">5–7d</text>
+            <text x="195" y="100" text-anchor="middle" font-size="8" fill="#fb923c" font-family="monospace">7d+</text>
+          </svg>
+          <div style="font-size:10px;color:var(--orange);margin-top:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-alert-triangle" style="font-size:11px"></i>7 items aged beyond 5 days</div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:11px;font-weight:600;color:var(--p1);margin-bottom:10px">Flow risk recommendations</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="rec high"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:7px"><span class="rec-title">PLAT-441 blocked 8.9 days — owner unresponsive, escalate to EM</span><span class="chip c-rd" style="flex-shrink:0">Critical</span></div><div style="display:flex;gap:4px"><span class="evidence-tag ev-tl">blocked=8.9d</span><span class="evidence-tag ev-tl">threshold=5d</span></div></div>
+          <div class="rec med"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:7px"><span class="rec-title">7 items in WIP 5+ days — review in next standup</span><span class="chip c-am" style="flex-shrink:0">Med</span></div><div style="display:flex;gap:4px"><span class="evidence-tag ev-am">aging_count=7</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- FORECAST -->
+<div id="forecast" class="page-section">
+<div class="page-label-bar"><span>07 — Forecasting page</span><small>Sprint completion probability and gap analysis</small></div>
+<div class="app-frame">
+  <div class="app-topbar"><i class="ti ti-chart-line" style="font-size:15px;color:var(--teal2)"></i><span class="app-topbar-title">Forecast & Confidence</span><div style="margin-left:auto;display:flex;gap:8px;align-items:center"><div class="avatar">JT</div></div></div>
+  <div class="app-body">
+    <div class="app-sidebar">
+      <a class="si" href="#dashboard"><i class="ti ti-layout-dashboard"></i>Dashboard</a>
+      <a class="si" href="#health"><i class="ti ti-gauge"></i>Health</a>
+      <a class="si" href="#flow"><i class="ti ti-activity"></i>Flow & Risk</a>
+      <a class="si" href="#recommendations"><i class="ti ti-bulb"></i>Recommendations</a>
+      <a class="si active" href="#forecast"><i class="ti ti-chart-line"></i>Forecast</a>
+      <a class="si" href="#dashboard"><i class="ti ti-file-description"></i>Reports</a>
+      <div class="si-spacer"></div><div class="si-sep"></div>
+      <a class="si" href="#settings"><i class="ti ti-settings"></i>Settings</a>
+    </div>
+    <div class="app-main">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+        <div class="kpi"><div class="kpi-label">Forecast confidence</div><div class="kpi-val" style="color:var(--p1)">72<span style="font-size:12px;color:var(--p2)">%</span></div><div class="kpi-sub"><span class="chip c-am">Medium</span></div></div>
+        <div class="kpi"><div class="kpi-label">Expected completion</div><div class="kpi-val" style="font-size:16px;color:var(--p1)">Jul 19</div><div class="kpi-sub" style="font-size:10px;color:var(--amber)">2 days before end</div></div>
+        <div class="kpi"><div class="kpi-label">Required throughput</div><div class="kpi-val" style="color:var(--orange)">52<span style="font-size:12px;color:var(--p2)">pts</span></div><div class="kpi-sub" style="font-size:10px;color:var(--p2)">Current: 41pts</div></div>
+        <div class="kpi"><div class="kpi-label">Throughput gap</div><div class="kpi-val" style="color:var(--orange)">−11<span style="font-size:12px;color:var(--p2)">pts</span></div><div class="kpi-sub"><span class="chip c-or">At Risk</span></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:10px;margin-bottom:10px">
+        <div class="card">
+          <div style="font-size:11px;font-weight:600;color:var(--p1);margin-bottom:10px">Sprint completion forecast</div>
+          <svg width="100%" height="120" viewBox="0 0 380 120">
+            <defs><linearGradient id="fg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4DBDAE" stop-opacity=".15"/><stop offset="100%" stop-color="#4DBDAE" stop-opacity="0"/></linearGradient></defs>
+            <line x1="0" y1="20" x2="380" y2="20" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <line x1="0" y1="60" x2="380" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <line x1="0" y1="100" x2="380" y2="100" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <!-- Actual line -->
+            <polyline points="0,100 60,88 120,78 180,62 240,52" fill="none" stroke="#4DBDAE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Forecast dashed -->
+            <polyline points="240,52 300,38 360,24" fill="none" stroke="#4DBDAE" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/>
+            <!-- Confidence band -->
+            <polygon points="240,52 300,28 360,14 360,38 300,50 240,58" fill="rgba(77,189,174,0.06)"/>
+            <circle cx="240" cy="52" r="4" fill="#4DBDAE"/>
+            <!-- Target line -->
+            <line x1="0" y1="16" x2="380" y2="16" stroke="var(--orange)" stroke-width="1.5" stroke-dasharray="4,3" opacity=".5"/>
+            <text x="0" y="110" font-size="8" fill="#6B7685" font-family="monospace">Day 1</text>
+            <text x="220" y="110" font-size="8" fill="#4DBDAE" font-family="monospace">Today</text>
+            <text x="355" y="110" font-size="8" fill="#6B7685" font-family="monospace" text-anchor="end">Day 14</text>
+            <text x="360" y="12" font-size="8" fill="rgba(232,93,18,0.7)" font-family="monospace" text-anchor="end">Target</text>
+          </svg>
+          <div style="display:flex;gap:16px;margin-top:10px">
+            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--p2)"><div style="width:16px;height:2px;background:var(--teal2)"></div>Actual</div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--p2)"><div style="width:16px;height:2px;background:var(--teal2);opacity:.5;border-top:2px dashed var(--teal2)"></div>Forecast</div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--p2)"><div style="width:16px;height:2px;background:var(--orange);opacity:.6"></div>Target</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="card sm">
+            <div style="font-size:11px;font-weight:600;color:var(--p1);margin-bottom:10px">Gap analysis</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:var(--p1)">Current throughput</span><span style="font-family:var(--mono);color:var(--teal2)">41 pts</span></div><div style="height:5px;background:var(--s3);border-radius:3px"><div style="width:79%;height:100%;background:var(--teal2);border-radius:3px"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:var(--p1)">Required throughput</span><span style="font-family:var(--mono);color:var(--orange)">52 pts</span></div><div style="height:5px;background:var(--s3);border-radius:3px"><div style="width:100%;height:100%;background:var(--orange);border-radius:3px"></div></div></div>
+            </div>
+            <div style="margin-top:10px;padding:8px;background:rgba(232,93,18,0.06);border:1px solid rgba(232,93,18,0.12);border-radius:7px;font-size:10px;color:var(--orange)">Gap: 11 pts — at current velocity, 3 items may not complete</div>
+          </div>
+          <div class="card sm">
+            <div style="font-size:11px;font-weight:600;color:var(--p1);margin-bottom:8px">Adjustment options</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="font-size:10px;color:var(--p1);display:flex;gap:6px;align-items:flex-start"><i class="ti ti-arrow-right" style="color:var(--teal2);font-size:11px;margin-top:1px;flex-shrink:0"></i>Remove 2 lower-priority items from scope</div>
+              <div style="font-size:10px;color:var(--p1);display:flex;gap:6px;align-items:flex-start"><i class="ti ti-arrow-right" style="color:var(--teal2);font-size:11px;margin-top:1px;flex-shrink:0"></i>Unblock 4 items to recover 11+ pts</div>
+              <div style="font-size:10px;color:var(--p1);display:flex;gap:6px;align-items:flex-start"><i class="ti ti-arrow-right" style="color:var(--teal2);font-size:11px;margin-top:1px;flex-shrink:0"></i>Extend sprint by 2 days if stakeholders agree</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- RECOMMENDATIONS -->
+<div id="recommendations" class="page-section">
+<div class="page-label-bar"><span>08 — Smart recommendations page</span><small>Evidence-backed actions</small></div>
+<div class="app-frame">
+  <div class="app-topbar"><i class="ti ti-bulb" style="font-size:15px;color:var(--teal2)"></i><span class="app-topbar-title">Smart Recommendations</span><div style="margin-left:auto;display:flex;gap:8px;align-items:center"><div class="avatar">JT</div></div></div>
+  <div class="app-body">
+    <div class="app-sidebar">
+      <a class="si" href="#dashboard"><i class="ti ti-layout-dashboard"></i>Dashboard</a>
+      <a class="si" href="#health"><i class="ti ti-gauge"></i>Health</a>
+      <a class="si" href="#flow"><i class="ti ti-activity"></i>Flow & Risk</a>
+      <a class="si active" href="#recommendations"><i class="ti ti-bulb"></i>Recommendations</a>
+      <a class="si" href="#forecast"><i class="ti ti-chart-line"></i>Forecast</a>
+      <div class="si-spacer"></div><div class="si-sep"></div>
+      <a class="si" href="#settings"><i class="ti ti-settings"></i>Settings</a>
+    </div>
+    <div class="app-main">
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <button style="background:rgba(232,93,18,0.12);color:#fb923c;border:1px solid rgba(232,93,18,0.2);padding:5px 14px;border-radius:100px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)"><i class="ti ti-alert-triangle" style="font-size:10px"></i> High (3)</button>
+        <button style="background:rgba(245,158,11,0.1);color:#fcd34d;border:1px solid rgba(245,158,11,0.15);padding:5px 14px;border-radius:100px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)">Medium (2)</button>
+        <button style="background:rgba(77,189,174,0.08);color:var(--teal2);border:1px solid rgba(77,189,174,0.15);padding:5px 14px;border-radius:100px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)">Low (2)</button>
+        <button style="background:transparent;color:var(--p2);border:1px solid var(--bdr);padding:5px 14px;border-radius:100px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--font)">All (7)</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="rec high">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px"><span style="font-size:13px;font-weight:500;color:var(--p1);line-height:1.4">3 items blocked for 5+ days — escalate or reassign before next standup</span><div style="display:flex;align-items:center;gap:6px;flex-shrink:0"><span class="chip c-or">High</span><i class="ti ti-chevron-down" style="font-size:13px;color:var(--p2)"></i></div></div>
+          <div style="font-size:11px;color:var(--p2);line-height:1.6;margin-bottom:8px">Blocked item cycle time is 3× team average. PLAT-441 has been blocked for 8.9 days with no status change. Escalation or reassignment is the fastest path to recovery.</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px"><span class="evidence-tag ev-tl">cycle_time=6.2d</span><span class="evidence-tag ev-tl">team_avg=2.8d</span><span class="evidence-tag ev-tl">blocked_count=3</span><span class="evidence-tag ev-tl">oldest=8.9d</span></div>
+          <div style="display:flex;gap:8px"><button style="font-size:10px;background:rgba(77,189,174,0.1);color:var(--teal2);border:1px solid rgba(77,189,174,0.2);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font)">Mark reviewed</button><button style="font-size:10px;background:transparent;color:var(--p2);border:1px solid var(--bdr);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font)">Snooze</button></div>
+        </div>
+        <div class="rec high">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px"><span style="font-size:13px;font-weight:500;color:var(--p1);line-height:1.4">Sprint scope grew 18% post-kickoff — forecast now shows 66% completion probability</span><div style="display:flex;align-items:center;gap:6px;flex-shrink:0"><span class="chip c-or">High</span><i class="ti ti-chevron-down" style="font-size:13px;color:var(--p2)"></i></div></div>
+          <div style="font-size:11px;color:var(--p2);line-height:1.6;margin-bottom:8px">4 items added after sprint kickoff. Team threshold for completion is 75%. Review added scope with PO and consider moving 2 lower-priority items to backlog.</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px"><span class="evidence-tag ev-am">scope_delta=+18%</span><span class="evidence-tag ev-am">proj_completion=66%</span><span class="evidence-tag ev-am">threshold=75%</span></div>
+          <div style="display:flex;gap:8px"><button style="font-size:10px;background:rgba(77,189,174,0.1);color:var(--teal2);border:1px solid rgba(77,189,174,0.2);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font)">Mark reviewed</button><button style="font-size:10px;background:transparent;color:var(--p2);border:1px solid var(--bdr);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font)">Snooze</button></div>
+        </div>
+        <div class="rec low">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:7px"><span style="font-size:13px;font-weight:500;color:var(--p1);line-height:1.4">9 orphan items have no epic link — affects data quality and traceability</span><div style="display:flex;align-items:center;gap:6px;flex-shrink:0"><span class="chip c-tl">Low</span><i class="ti ti-chevron-down" style="font-size:13px;color:var(--p2)"></i></div></div>
+          <div style="display:flex;gap:5px"><span class="evidence-tag ev-tl">orphan_count=9</span><span class="evidence-tag ev-tl">ratio=6%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ADMIN -->
+<div id="admin" class="page-section">
+<div class="page-label-bar"><span>09 — Admin user management</span><small>User table, roles, invitations</small></div>
+<div class="app-frame">
+  <div class="app-topbar"><i class="ti ti-shield-check" style="font-size:15px;color:var(--teal2)"></i><span class="app-topbar-title">Admin — User Management</span><div style="margin-left:auto"><div class="avatar">JT</div></div></div>
+  <div class="app-body">
+    <div class="app-sidebar">
+      <a class="si" href="#dashboard"><i class="ti ti-layout-dashboard"></i>Overview</a>
+      <a class="si active" href="#admin"><i class="ti ti-users"></i>Users</a>
+      <a class="si" href="#admin"><i class="ti ti-lock"></i>Roles</a>
+      <a class="si" href="#admin"><i class="ti ti-list-check"></i>Audit Logs</a>
+      <a class="si" href="#admin"><i class="ti ti-database"></i>Storage</a>
+      <a class="si" href="#admin"><i class="ti ti-archive"></i>Backup</a>
+      <a class="si" href="#admin"><i class="ti ti-trash"></i>Retention</a>
+      <a class="si" href="#admin"><i class="ti ti-heart-rate-monitor"></i>Diagnostics</a>
+    </div>
+    <div class="app-main">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px">
+        <div class="kpi"><div class="kpi-label">Total users</div><div class="kpi-val" style="color:var(--p1)">12</div></div>
+        <div class="kpi"><div class="kpi-label">Active</div><div class="kpi-val" style="color:var(--green)">9</div></div>
+        <div class="kpi"><div class="kpi-label">Pending</div><div class="kpi-val" style="color:var(--amber)">2</div></div>
+        <div class="kpi"><div class="kpi-label">Inactive</div><div class="kpi-val" style="color:var(--p2)">1</div></div>
+        <div class="kpi"><div class="kpi-label">Admins</div><div class="kpi-val" style="color:var(--teal2)">2</div></div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:var(--p1)">Users</div><button class="btn-or xs"><i class="ti ti-plus" style="font-size:10px"></i>Add User</button></div>
+        <table class="data-table">
+          <thead><tr><th style="width:26%">Name</th><th style="width:24%">Role</th><th style="width:20%">Email</th><th style="width:16%">Last active</th><th style="text-align:right;width:14%">Status</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--p1)">Jo Turner</td><td><span class="chip c-tl">Admin</span></td><td style="color:var(--p2);font-size:10px">jo@company.com</td><td style="color:var(--p2)">Just now</td><td style="text-align:right"><span class="chip c-gr">Active</span></td></tr>
+            <tr><td style="color:var(--p1)">Layla Ahmed</td><td><span class="chip c-tl">Manager</span></td><td style="color:var(--p2);font-size:10px">layla@company.com</td><td style="color:var(--p2)">2h ago</td><td style="text-align:right"><span class="chip c-gr">Active</span></td></tr>
+            <tr><td style="color:var(--p1)">Rami Khalil</td><td><span class="chip c-nt">Scrum Master</span></td><td style="color:var(--p2);font-size:10px">rami@company.com</td><td style="color:var(--p2)">Yesterday</td><td style="text-align:right"><span class="chip c-gr">Active</span></td></tr>
+            <tr><td style="color:var(--p1)">Sara Nour</td><td><span class="chip c-nt">Viewer</span></td><td style="color:var(--p2);font-size:10px">sara@company.com</td><td style="color:var(--p2)">Invited</td><td style="text-align:right"><span class="chip c-am">Pending</span></td></tr>
+            <tr><td style="color:var(--p2)">Omar Hassan</td><td><span class="chip c-nt">Viewer</span></td><td style="color:var(--p3);font-size:10px">omar@company.com</td><td style="color:var(--p3)">14 days ago</td><td style="text-align:right"><span class="chip" style="background:rgba(107,118,133,0.1);color:var(--p2)">Inactive</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="page-section">
+<div class="page-label-bar"><span>10 — Settings page</span><small>Preferences and configuration</small></div>
+<div class="app-frame">
+  <div class="app-topbar"><i class="ti ti-settings" style="font-size:15px;color:var(--teal2)"></i><span class="app-topbar-title">Settings</span><div style="margin-left:auto;display:flex;align-items:center;gap:8px"><div class="avatar">JT</div><div><div style="font-size:11px;font-weight:600;color:var(--p1)">Jo Turner</div><div style="font-size:9px;color:var(--p2)">Engineering Manager</div></div></div></div>
+  <div class="app-body">
+    <div class="app-sidebar">
+      <a class="si active" href="#settings"><i class="ti ti-user"></i>General</a>
+      <a class="si" href="#settings"><i class="ti ti-database"></i>Data & Upload</a>
+      <a class="si" href="#settings"><i class="ti ti-calculator"></i>Calculations</a>
+      <a class="si" href="#settings"><i class="ti ti-bell"></i>Notifications</a>
+      <a class="si" href="#settings"><i class="ti ti-shield"></i>Security</a>
+      <a class="si" href="#settings"><i class="ti ti-palette"></i>Appearance</a>
+      <a class="si" href="#settings"><i class="ti ti-plug"></i>Integrations</a>
+      <a class="si" href="#settings"><i class="ti ti-archive"></i>Backup</a>
+      <a class="si" href="#settings"><i class="ti ti-info-circle"></i>About</a>
+    </div>
+    <div class="app-main">
+      <div style="font-size:13px;font-weight:600;color:var(--p1);margin-bottom:14px">General settings</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="card settings-row"><div class="settings-icon" style="background:rgba(77,189,174,0.1)"><i class="ti ti-user" style="font-size:17px;color:var(--teal2)"></i></div><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--p1)">Profile information</div><div style="font-size:10px;color:var(--p2)">Name, email, role, and avatar</div></div><i class="ti ti-chevron-right" style="font-size:14px;color:var(--p3)"></i></div>
+        <div class="card settings-row"><div class="settings-icon" style="background:rgba(77,189,174,0.1)"><i class="ti ti-world" style="font-size:17px;color:var(--teal2)"></i></div><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--p1)">Language and region</div><div style="font-size:10px;color:var(--p2)">English (UK) · UTC+3</div></div><i class="ti ti-chevron-right" style="font-size:14px;color:var(--p3)"></i></div>
+        <div class="card settings-row"><div class="settings-icon" style="background:rgba(77,189,174,0.1)"><i class="ti ti-lock" style="font-size:17px;color:var(--teal2)"></i></div><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--p1)">Password and security</div><div style="font-size:10px;color:var(--p2)">Change password, active sessions</div></div><i class="ti ti-chevron-right" style="font-size:14px;color:var(--p3)"></i></div>
+        <div class="card settings-row"><div class="settings-icon" style="background:rgba(77,189,174,0.1)"><i class="ti ti-bell" style="font-size:17px;color:var(--teal2)"></i></div><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--p1)">Notification preferences</div><div style="font-size:10px;color:var(--p2)">Alerts, digest frequency, email settings</div></div><i class="ti ti-chevron-right" style="font-size:14px;color:var(--p3)"></i></div>
+        <div class="card settings-row"><div class="settings-icon" style="background:rgba(77,189,174,0.1)"><i class="ti ti-palette" style="font-size:17px;color:var(--teal2)"></i></div><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--p1)">Appearance</div><div style="font-size:10px;color:var(--p2)">Theme, density, chart colours</div></div><i class="ti ti-chevron-right" style="font-size:14px;color:var(--p3)"></i></div>
+        <div class="card settings-row" style="border:1px solid rgba(232,93,18,0.18)"><div class="settings-icon" style="background:rgba(232,93,18,0.08)"><i class="ti ti-trash" style="font-size:17px;color:var(--orange)"></i></div><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--orange)">Clear local data</div><div style="font-size:10px;color:var(--p2)">Reset browser storage and cached imports</div></div><i class="ti ti-chevron-right" style="font-size:14px;color:var(--p3)"></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// Scroll reveal
+const revealEls = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('in'); observer.unobserve(e.target); } });
+}, { threshold: 0.1 });
+revealEls.forEach(el => observer.observe(el));
+
+// Jump dot active state
+const sections = ['landing','login','upload','dashboard','health','flow','forecast','recommendations','admin','settings'];
+const dots = document.querySelectorAll('.jump-dot');
+const ioSec = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting) {
+      dots.forEach(d => d.classList.remove('active'));
+      const idx = sections.indexOf(e.target.id);
+      if(idx >= 0 && dots[idx]) dots[idx].classList.add('active');
+    }
+  });
+}, { threshold: 0.3 });
+sections.forEach(id => { const el = document.getElementById(id); if(el) ioSec.observe(el); });
+</script>
+</body>
+</html>
