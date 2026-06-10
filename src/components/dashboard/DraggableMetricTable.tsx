@@ -105,7 +105,7 @@ export default function DraggableMetricTable({ columns, rows, emptyMessage, stor
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50">
+            <tr style={{ borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))', background: 'var(--dc-s1, #141414)' }}>
               {orderedColumns.map(c => (
                 <th
                   key={c.key}
@@ -115,11 +115,12 @@ export default function DraggableMetricTable({ columns, rows, emptyMessage, stor
                   onDragOver={e => handleDragOver(e, c.key)}
                   onDrop={() => handleDrop(c.key)}
                   className={[
-                    'px-3 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap',
+                    'px-3 py-2 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap',
                     'cursor-grab active:cursor-grabbing select-none transition-all',
                     dragKey === c.key  ? 'opacity-40' : '',
-                    overKey === c.key && dragKey !== c.key ? 'border-l-2 border-blue-500 bg-blue-50' : '',
+                    overKey === c.key && dragKey !== c.key ? 'border-l-2 border-orange-500' : '',
                   ].join(' ')}
+                  style={{ color: 'var(--dc-p3, #505050)' }}
                 >
                   <span className="flex items-center gap-1">
                     <span className="text-slate-300 text-base leading-none">⠿</span>
@@ -133,14 +134,14 @@ export default function DraggableMetricTable({ columns, rows, emptyMessage, stor
             {rows.map((row, idx) => (
               <tr
                 key={row.id || row.key || row.name || row.assignee || row.epic || idx}
-                className={[
-                  'border-b border-slate-100',
-                  idx % 2 === 1 ? 'bg-slate-50/50' : '',
-                  rowClassName?.(row) ?? '',
-                ].join(' ')}
+                className={[rowClassName?.(row) ?? ''].join(' ')}
+                style={{
+                  borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
+                  background: idx % 2 === 1 ? 'var(--dc-s1, #141414)' : 'transparent',
+                }}
               >
                 {orderedColumns.map(c => (
-                  <td key={c.key} className="px-3 py-2 text-slate-700 whitespace-nowrap">
+                  <td key={c.key} className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>
                     {c.render ? c.render(row) : (row as any)[c.key]}
                   </td>
                 ))}

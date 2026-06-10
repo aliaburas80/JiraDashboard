@@ -1522,7 +1522,19 @@ export default function DashboardPage() {
             {/* work state bars */}
             <Card className="p-5">
               <h3 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-4">Work State Distribution</h3>
-              <CompactBarChart rows={wsRows} valueKey="value" emptyMessage="No work state data." />
+              <CompactBarChart
+                rows={wsRows}
+                valueKey="value"
+                emptyMessage="No work state data."
+                getBarColor={(row) => {
+                  const n = (row as { name: string }).name;
+                  if (n === 'Done') return 'var(--dc-green, #22C55E)';
+                  if (n === 'To Do') return 'var(--dc-acc2, #FF8A4C)';
+                  if (n === 'In Progress') return 'var(--dc-acc, #E85D12)';
+                  if (n === 'Code Review') return 'var(--dc-amber, #F59E0B)';
+                  return 'var(--dc-s4, #323232)';
+                }}
+              />
             </Card>
           </div>
           {/* secondary row */}
@@ -2016,22 +2028,23 @@ export default function DashboardPage() {
               {epicReadiness.filter(e => e.risk === 'critical' || e.completion < 60).length ? (
                 <ul className="space-y-3">
                   {epicReadiness.filter(e => e.risk === 'critical' || e.completion < 60).slice(0, 8).map(e => (
-                    <li key={e.epic || e.id} className="border border-slate-200 rounded-lg p-3">
+                    <li key={e.epic || e.id} style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 9, padding: '12px 14px' }}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-bold text-slate-800">{e.epic || e.id}</span>
+                        <span className="text-sm font-bold" style={{ color: 'var(--dc-acc2, #FF8A4C)', fontFamily: 'var(--font-mono, monospace)' }}>{e.epic || e.id}</span>
                         <Badge
                           label={e.risk}
                           variant={e.risk === 'critical' ? 'danger' : e.risk === 'warning' ? 'warning' : 'success'}
                         />
                       </div>
                       <div className="flex items-center gap-2">
-                        <ProgressBar value={e.completion} />
-                        <span className="text-xs font-bold text-slate-700 w-10 shrink-0">{e.completion}%</span>
+                        <ProgressBar value={e.completion} fillColor={e.completion > 80 ? 'var(--dc-green, #22C55E)' : e.completion >= 60 ? 'var(--dc-amber, #F59E0B)' : 'var(--dc-acc, #E85D12)'} />
+                        <span className="text-xs font-bold w-10 shrink-0" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{e.completion}%</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => setDetailPanel({ title: `Epic ${e.epic || e.id}`, description: 'Issues in this epic', items: flowItems.filter(i => (i.epic || i.parent) === (e.epic || e.id)) })}
-                        className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-800 underline"
+                        className="mt-2 text-xs font-semibold underline"
+                        style={{ color: 'var(--dc-acc2, #FF8A4C)' }}
                       >
                         View items
                       </button>
@@ -2039,7 +2052,7 @@ export default function DashboardPage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-500 italic">No at-risk epics detected.</p>
+                <p className="text-sm italic" style={{ color: 'var(--dc-p3, #505050)' }}>No at-risk epics detected.</p>
               )}
             </Card>
             <Card className="p-4">
@@ -2049,14 +2062,14 @@ export default function DashboardPage() {
                 <ul className="space-y-2">
                   {flowItems.filter(i => (i as any).dependsOn || (i as any).externalEpic).slice(0, 10).map(it => (
                     <li key={it.key || it.summary} className="text-xs text-slate-700">
-                      <span className="font-mono font-bold text-blue-700">{it.key}</span>: {it.summary}
+                      <span style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: 'var(--dc-acc2, #FF8A4C)' }}>{it.key}</span>: {it.summary}
                       {(it as any).dependsOn && <span className="text-slate-500"> — depends on {(it as any).dependsOn}</span>}
                       {(it as any).externalEpic && <span className="text-slate-500"> — external epic {(it as any).externalEpic}</span>}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-500 italic">No dependency callouts detected.</p>
+                <p className="text-sm italic" style={{ color: 'var(--dc-p3, #505050)' }}>No dependency callouts detected.</p>
               )}
             </Card>
           </div>
@@ -2071,7 +2084,8 @@ export default function DashboardPage() {
             aria-expanded={flowPanelOpen}
             aria-controls="flow-health-body"
             onClick={() => setFlowPanelOpen(v => !v)}
-            className="w-full flex items-center justify-between gap-3 px-5 py-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow text-left mb-2"
+            className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-xl shadow-sm hover:shadow-md transition-shadow text-left mb-2"
+            style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
           >
             <div>
               <h3 className="text-sm font-black text-slate-800">Story / Task Flow Health</h3>
@@ -2084,7 +2098,7 @@ export default function DashboardPage() {
           </button>
 
           {flowPanelOpen && (
-            <div id="flow-health-body" className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-5">
+            <div id="flow-health-body" className="rounded-xl shadow-sm p-5 space-y-5" style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
               <p className="text-xs text-slate-500 italic">The graph and table below show only items matching selected filters.</p>
 
               {/* filters */}
@@ -2106,7 +2120,8 @@ export default function DashboardPage() {
                       min={type === 'number' ? '0' : undefined}
                       placeholder={placeholder}
                       onChange={e => setter(e.target.value)}
-                      className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      className="px-3 py-1.5 text-sm focus:outline-none"
+                      style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, color: 'var(--dc-p1, #F2F2F2)' }}
                     />
                   </label>
                 ))}
@@ -2122,7 +2137,8 @@ export default function DashboardPage() {
                     <select
                       value={value}
                       onChange={e => setter(e.target.value)}
-                      className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      className="px-3 py-1.5 text-sm focus:outline-none"
+                      style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, color: 'var(--dc-p1, #F2F2F2)' }}
                     >
                       <option value="all">{allLabel}</option>
                       {opts.map(o => <option key={o} value={o}>{o}</option>)}
@@ -2138,14 +2154,16 @@ export default function DashboardPage() {
                       setOpenAgeMaxFilter(''); setHealthFilter('all'); setReasonFilter(''); setLabelFilter('');
                       setActiveQuickFilter('all');
                     }}
-                    className="btn-secondary text-xs px-3 py-1.5"
+                    className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+                    style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }}
                   >
                     Reset
                   </button>
                   <button
                     type="button"
                     onClick={exportCsv}
-                    className="btn-primary text-xs px-3 py-1.5"
+                    className="text-xs px-3 py-1.5 rounded-lg font-semibold text-white"
+                    style={{ background: 'var(--dc-acc, #E85D12)' }}
                   >
                     Export CSV
                   </button>
@@ -2191,7 +2209,8 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => setShowPresetInput(true)}
-                      className="btn-ghost text-xs px-3 py-0.5 border border-dashed border-slate-300 hover:border-blue-400 hover:text-blue-600"
+                      className="text-xs px-3 py-0.5 border border-dashed"
+                      style={{ color: 'var(--dc-acc2, #FF8A4C)', borderColor: 'var(--dc-acc2, #FF8A4C)' }}
                     >
                       + Save current filters
                     </button>
