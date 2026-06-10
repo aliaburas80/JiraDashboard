@@ -91,19 +91,19 @@ export default function DraggableMetricTable({ columns, rows, emptyMessage, stor
     <div>
       {/* Reorder hint + reset */}
       <div className="flex items-center gap-2 mb-2">
-        <p className="text-[10px] text-slate-400 flex items-center gap-1">
+        <p className="text-[10px] flex items-center gap-1" style={{ color: 'var(--dc-p3, #505050)' }}>
           <span>⠿</span> Drag column headers to reorder
         </p>
         {isReordered && (
           <button type="button" onClick={resetOrder}
-            className="text-[10px] font-semibold text-blue-600 hover:underline">
+            className="text-[10px] font-semibold hover:underline" style={{ color: 'var(--dc-acc2, #FF8A4C)' }}>
             Reset columns
           </button>
         )}
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="flow-table w-full text-sm">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))', background: 'var(--dc-s1, #141414)' }}>
               {orderedColumns.map(c => (

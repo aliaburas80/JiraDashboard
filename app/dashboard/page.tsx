@@ -2279,14 +2279,29 @@ export default function DashboardPage() {
                     filteredFlowItems.reduce((acc: Record<string, number>, i) => { acc[i.status] = (acc[i.status] || 0) + 1; return acc; }, {})
                   ).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count)}
                   emptyMessage="No items match the selected filters."
+                  getBarColor={(row) => {
+                    const s = ((row as { name: string }).name || '').toLowerCase();
+                    if (s === 'done' || s === 'closed' || s === 'resolved') return 'var(--dc-green, #22C55E)';
+                    if (s === 'in progress') return 'var(--dc-acc, #E85D12)';
+                    if (s === 'code review') return 'var(--dc-amber, #F59E0B)';
+                    return 'var(--dc-acc2, #FF8A4C)';
+                  }}
                 />
               </div>
 
               {/* summary */}
-              <div className="text-xs text-slate-600 bg-slate-50 rounded-lg px-4 py-2">
-                Showing <strong>{visibleFlowItems.length}</strong> of <strong>{filteredFlowItems.length}</strong> matching items from <strong>{flowItems.length}</strong> total.
+              <div className="text-xs rounded-lg px-4 py-2" style={{ color: 'var(--dc-p2, #909090)', background: 'var(--dc-s1, #141414)' }}>
+                Showing{' '}
+                <strong style={{ color: 'var(--dc-p1, #F2F2F2)', fontWeight: 600 }}>{visibleFlowItems.length}</strong>
+                {' '}of{' '}
+                <strong style={{ color: 'var(--dc-p1, #F2F2F2)', fontWeight: 600 }}>{filteredFlowItems.length}</strong>
+                {' '}matching items from{' '}
+                <strong style={{ color: 'var(--dc-p1, #F2F2F2)', fontWeight: 600 }}>{flowItems.length}</strong>
+                {' '}total.
                 {filteredFlowItems.some(i => i.isOrphan) && (
-                  <span className="ml-2 text-violet-600 font-bold">{filteredFlowItems.filter(i => i.isOrphan).length} orphan items highlighted</span>
+                  <button type="button" className="ml-2 font-bold underline" style={{ color: 'var(--dc-acc2, #FF8A4C)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                    {filteredFlowItems.filter(i => i.isOrphan).length} orphan items highlighted
+                  </button>
                 )}
               </div>
 
@@ -2294,13 +2309,32 @@ export default function DashboardPage() {
               <DraggableMetricTable
                 storageKey="flow-items"
                 columns={[
-                  { key: 'key', label: 'Key' },
+                  { key: 'key', label: 'Key', render: (row: any) => (
+                    <span style={{ color: 'var(--dc-acc2, #FF8A4C)', fontFamily: 'var(--font-mono, monospace)', fontSize: 10 }}>{row.key}</span>
+                  ) },
                   { key: 'type', label: 'Type' },
-                  { key: 'summary', label: 'Story / Task' },
-                  { key: 'status', label: 'Status' },
-                  { key: 'sprint', label: 'Sprint' },
-                  { key: 'epic', label: 'Epic / Parent', render: (row: any) => row.epic || 'Orphan' },
-                  { key: 'assignee', label: 'Assignee' },
+                  { key: 'summary', label: 'Story / Task', render: (row: any) => (
+                    <span style={{ color: row.isOrphan ? 'var(--dc-p3, #505050)' : 'var(--dc-p1, #F2F2F2)', fontWeight: 400 }}>{row.summary}</span>
+                  ) },
+                  { key: 'status', label: 'Status', render: (row: any) => {
+                    const s = (row.status || '').toLowerCase();
+                    const cls = (s === 'done' || s === 'closed' || s === 'resolved') ? 'c-gr'
+                      : s === 'in progress' ? 'c-acc'
+                      : s === 'code review' ? 'c-am'
+                      : (s === 'to do' || s === 'todo' || s === 'selected for development' || s === 'backlog') ? 'c-nt'
+                      : s === 'open' ? 'c-or'
+                      : 'c-nt';
+                    return <span className={`chip ${cls}`}>{row.status}</span>;
+                  } },
+                  { key: 'sprint', label: 'Sprint', render: (row: any) => (
+                    <span style={{ color: row.isOrphan ? 'var(--dc-p3, #505050)' : 'var(--dc-p2, #909090)' }}>{row.sprint || 'No sprint'}</span>
+                  ) },
+                  { key: 'epic', label: 'Epic / Parent', render: (row: any) => (
+                    <span style={{ color: row.epic ? 'var(--dc-p2, #909090)' : 'var(--dc-p3, #505050)' }}>{row.epic || 'Orphan'}</span>
+                  ) },
+                  { key: 'assignee', label: 'Assignee', render: (row: any) => (
+                    <span style={{ color: row.isOrphan ? 'var(--dc-p3, #505050)' : 'var(--dc-p2, #909090)' }}>{row.assignee || 'Unassigned'}</span>
+                  ) },
                   { key: 'labels', label: 'Labels' },
                   { key: 'linkedTo', label: 'Linked To' },
                   { key: 'leadTimeDays', label: 'Lead', render: (row: any) => formatDays(row.leadTimeDays) },
@@ -2311,7 +2345,7 @@ export default function DashboardPage() {
                 ]}
                 rows={visibleFlowItems}
                 emptyMessage="No story or task data found."
-                rowClassName={(row: any) => row.isOrphan ? 'bg-violet-50/60' : ''}
+                rowClassName={(row: any) => row.isOrphan ? 'row-orphan' : ''}
               />
 
               {filteredFlowItems.length > visibleCount && (
