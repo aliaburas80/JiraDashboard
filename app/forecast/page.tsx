@@ -178,46 +178,184 @@ function VelocityChart({ points, avg }: { points: SprintPoint[]; avg: number }) 
   );
 }
 
-// ── Chart: Burn-up ─────────────────────────────────────────────────────────────
+// ── Chart: Burn-up (velocity-aware with confidence band) ──────────────────────
 
 function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }) {
   if (points.length < 2) return <p className="text-xs text-slate-400 text-center py-6">Need ≥ 2 sprints for burn-up chart.</p>;
-  const maxVal = Math.max(total, ...points.map(p => p.cumDone));
-  const W = 480; const H = 150; const PL = 36; const PB = 30; const PT = 12; const PR = 20;
+
+  // Recent velocity = avg of last 3 sprints; overall = all-time avg
+  const recentN   = Math.min(3, points.length);
+  const recentVel = points.slice(-recentN).reduce((s, p) => s + p.done, 0) / recentN;
+
+  const last      = points[points.length - 1];
+  const remaining = Math.max(0, total - last.cumDone);
+
+  // Three forecast scenarios from last actual point
+  const sprintsExp  = recentVel > 0 ? remaining / recentVel          : 0;
+  const sprintsOpt  = recentVel > 0 ? remaining / (recentVel * 1.3)  : 0;
+  const sprintsPess = recentVel > 0 ? remaining / (recentVel * 0.7)  : 0;
+
+  // X-axis extended to cover pessimistic scenario
+  const maxI  = Math.max(points.length, points.length + Math.ceil(sprintsPess) + 1);
+  const W = 480; const H = 155; const PL = 36; const PB = 30; const PT = 12; const PR = 20;
   const chartW = W - PL - PR; const chartH = H - PT - PB;
 
-  function xOf(i: number) { return PL + (i / (points.length - 1)) * chartW; }
-  function yOf(v: number) { return PT + chartH - (v / maxVal) * chartH; }
+  function xOf(i: number) { return PL + (i / (maxI - 1)) * chartW; }
+  function yOf(v: number) { return PT + chartH - (v / total) * chartH; }
 
-  const burnPath   = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xOf(i)},${yOf(p.cumDone)}`).join(' ');
-  const targetPath = `M${xOf(0)},${yOf(total)} L${xOf(points.length - 1)},${yOf(total)}`;
+  const actualPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xOf(i)},${yOf(p.cumDone)}`).join(' ');
 
-  const last = points[points.length - 1];
-  const tpp  = last.cumDone / Math.max(points.length, 1);
-  const fEnd = tpp > 0 ? (total - last.cumDone) / tpp : 0;
-  const fX   = Math.min(W - PR, xOf(points.length - 1 + fEnd));
-  const forecastPath = `M${xOf(points.length - 1)},${yOf(last.cumDone)} L${fX},${yOf(total)}`;
+  const lx = xOf(points.length - 1);
+  const ly = yOf(last.cumDone);
+  const ty = yOf(total);
+
+  // Clamp forecast end X to chart right edge
+  const expX  = Math.min(W - PR, xOf(points.length - 1 + sprintsExp));
+  const optX  = Math.min(W - PR, xOf(points.length - 1 + sprintsOpt));
+  const pessX = Math.min(W - PR, xOf(points.length - 1 + sprintsPess));
+
+  // Confidence band polygon (opt → pess fan)
+  const bandPoly = remaining > 0
+    ? `M${lx},${ly} L${optX},${ty} L${pessX},${ty} Z`
+    : '';
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+      {/* Grid */}
       {[0, 0.25, 0.5, 0.75, 1].map(v => (
         <g key={v}>
-          <line x1={PL} x2={W - PR} y1={yOf(maxVal * v)} y2={yOf(maxVal * v)} stroke="#f1f5f9" strokeWidth="1" />
-          <text x={PL - 4} y={yOf(maxVal * v) + 4} fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round(maxVal * v)}</text>
+          <line x1={PL} x2={W - PR} y1={yOf(total * v)} y2={yOf(total * v)} stroke="#f1f5f9" strokeWidth="1" />
+          <text x={PL - 4} y={yOf(total * v) + 4} fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round(total * v)}</text>
         </g>
       ))}
-      {points.filter((_, i) => i === 0 || i === points.length - 1 || i % Math.ceil(points.length / 4) === 0).map(p => {
+
+      {/* Sprint X labels */}
+      {points.filter((_, i) => i === 0 || i === points.length - 1 || i % Math.ceil(points.length / 5) === 0).map(p => {
         const idx = points.indexOf(p);
-        return <text key={idx} x={xOf(idx)} y={H - 8} fontSize="7.5" fill="#94a3b8" textAnchor="middle">{p.sprint.replace(/sprint\s*/i, 'S').slice(0, 6)}</text>;
+        return <text key={idx} x={xOf(idx)} y={H - 8} fontSize="7.5" fill="#94a3b8" textAnchor="middle">{p.sprint.replace(/sprint\s*/i, 'S').slice(0, 7)}</text>;
       })}
 
-      {/* Area fill under actual */}
-      <path d={`${burnPath} L${xOf(points.length - 1)},${PT + chartH} L${xOf(0)},${PT + chartH} Z`} fill="#3b82f6" opacity="0.08" />
+      {/* Target scope line */}
+      <line x1={PL} x2={W - PR} y1={ty} y2={ty} stroke="#e2e8f0" strokeWidth="1.5" strokeDasharray="5 3" />
+      <text x={W - PR - 2} y={ty - 3} fontSize="7.5" fill="#94a3b8" textAnchor="end">Scope {total}</text>
 
-      <path d={targetPath}   stroke="#e2e8f0" strokeWidth="1.5" strokeDasharray="5 3" fill="none" />
-      {fEnd > 0 && <path d={forecastPath} stroke="#93c5fd" strokeWidth="2" strokeDasharray="6 3" fill="none" />}
-      <path d={burnPath}    stroke="#2563eb" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Confidence band */}
+      {remaining > 0 && bandPoly && <path d={bandPoly} fill="#3b82f6" opacity="0.09" />}
+
+      {/* Forecast: pessimistic */}
+      {remaining > 0 && recentVel > 0 && (
+        <line x1={lx} y1={ly} x2={pessX} y2={ty} stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="5 3" opacity="0.75" />
+      )}
+      {/* Forecast: optimistic */}
+      {remaining > 0 && recentVel > 0 && (
+        <line x1={lx} y1={ly} x2={optX} y2={ty} stroke="#22c55e" strokeWidth="1.5" strokeDasharray="5 3" opacity="0.75" />
+      )}
+      {/* Forecast: expected (recent velocity) */}
+      {remaining > 0 && recentVel > 0 && (
+        <line x1={lx} y1={ly} x2={expX} y2={ty} stroke="#2563eb" strokeWidth="2" strokeDasharray="7 3" />
+      )}
+
+      {/* Actual/forecast separator */}
+      {remaining > 0 && <line x1={lx} x2={lx} y1={PT} y2={PT + chartH} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="3 2" />}
+
+      {/* Area under actual */}
+      <path d={`${actualPath} L${xOf(points.length - 1)},${PT + chartH} L${xOf(0)},${PT + chartH} Z`} fill="#3b82f6" opacity="0.07" />
+
+      {/* Actual burn-up line */}
+      <path d={actualPath} stroke="#2563eb" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* Data point dots */}
       {points.map((p, i) => <circle key={i} cx={xOf(i)} cy={yOf(p.cumDone)} r="3.5" fill="#2563eb" stroke="#fff" strokeWidth="1.5" />)}
+    </svg>
+  );
+}
+
+// ── Chart: Combined Burn-up + Burn-down (all sprints) ─────────────────────────
+
+function CombinedBurnChart({ points, total }: { points: SprintPoint[]; total: number }) {
+  if (points.length < 2) return <p className="text-xs text-slate-400 text-center py-6">Need ≥ 2 sprints for combined chart.</p>;
+
+  const W = 520; const H = 175; const PL = 38; const PB = 30; const PT = 14; const PR = 20;
+  const chartW = W - PL - PR; const chartH = H - PT - PB;
+  const n = points.length;
+
+  function xOf(i: number) { return PL + (i / (n - 1)) * chartW; }
+  function yOf(v: number) { return PT + chartH - (v / total) * chartH; }
+
+  const upPath   = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xOf(i)},${yOf(p.cumDone)}`).join(' ');
+  const downPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xOf(i)},${yOf(total - p.cumDone)}`).join(' ');
+  const scopeY   = yOf(total);
+  const zeroY    = yOf(0);
+
+  // Find where burn-up reaches total (project complete)
+  const doneIdx = points.findIndex(p => p.cumDone >= total);
+
+  // Ideal burn-down diagonal (linear from total to 0)
+  const idealDown = `M${xOf(0)},${yOf(total)} L${xOf(n - 1)},${yOf(0)}`;
+
+  // Sprint x-labels: show first, last, and evenly spaced
+  const labelIdx = new Set([0, n - 1]);
+  const step = Math.ceil(n / 5);
+  for (let i = step; i < n - 1; i += step) labelIdx.add(i);
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+      {/* Grid */}
+      {[0, 0.25, 0.5, 0.75, 1].map(v => {
+        const y = yOf(total * v);
+        return (
+          <g key={v}>
+            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="#f1f5f9" strokeWidth="1" />
+            <text x={PL - 4} y={y + 4} fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round(total * v)}</text>
+          </g>
+        );
+      })}
+
+      {/* Sprint x-labels */}
+      {[...labelIdx].map(idx => (
+        <text key={idx} x={xOf(idx)} y={H - 7} fontSize="7.5" fill="#94a3b8" textAnchor="middle">
+          {points[idx].sprint.replace(/sprint\s*/i, 'S').slice(0, 7)}
+        </text>
+      ))}
+
+      {/* Scope / zero reference lines */}
+      <line x1={PL} x2={W - PR} y1={scopeY} y2={scopeY} stroke="#e2e8f0" strokeWidth="1.5" strokeDasharray="5 3" />
+      <line x1={PL} x2={W - PR} y1={zeroY}  y2={zeroY}  stroke="#e2e8f0" strokeWidth="1" />
+
+      {/* Ideal burn-down guide */}
+      <path d={idealDown} stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" fill="none" />
+
+      {/* Burn-down area */}
+      <path d={`${downPath} L${xOf(n - 1)},${scopeY} L${xOf(0)},${scopeY} Z`} fill="#ef4444" opacity="0.05" />
+
+      {/* Burn-up area */}
+      <path d={`${upPath} L${xOf(n - 1)},${zeroY} L${xOf(0)},${zeroY} Z`} fill="#3b82f6" opacity="0.07" />
+
+      {/* Burn-down line */}
+      <path d={downPath} stroke="#ef4444" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* Burn-up line */}
+      <path d={upPath}   stroke="#2563eb" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* Dots */}
+      {points.map((p, i) => (
+        <g key={i}>
+          <circle cx={xOf(i)} cy={yOf(p.cumDone)}          r="3.5" fill="#2563eb" stroke="#fff" strokeWidth="1.5" />
+          <circle cx={xOf(i)} cy={yOf(total - p.cumDone)}  r="3.5" fill="#ef4444" stroke="#fff" strokeWidth="1.5" />
+        </g>
+      ))}
+
+      {/* Convergence marker (when lines meet = project done) */}
+      {doneIdx >= 0 && (
+        <g>
+          <circle cx={xOf(doneIdx)} cy={yOf(total / 2)} r="8" fill="#22c55e" opacity="0.2" />
+          <circle cx={xOf(doneIdx)} cy={yOf(total / 2)} r="4" fill="#22c55e" />
+          <line x1={xOf(doneIdx)} x2={xOf(doneIdx)} y1={PT} y2={PT + chartH} stroke="#22c55e" strokeWidth="1" strokeDasharray="4 2" opacity="0.5" />
+        </g>
+      )}
+
+      {/* Scope label */}
+      <text x={W - PR - 2} y={scopeY - 3} fontSize="7.5" fill="#94a3b8" textAnchor="end">Scope {total}</text>
     </svg>
   );
 }
@@ -328,6 +466,22 @@ export default function ForecastPage() {
           ))}
         </div>
 
+        {/* ── Combined Burn-up + Burn-down ── */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-sm font-black text-slate-900">Sprint Burn-up &amp; Burn-down</h2>
+              <p className="text-[11px] text-slate-400 mt-0.5">All sprints — rising blue = work done · falling red = work remaining · lines converge at project completion</p>
+            </div>
+            <div className="flex items-center gap-4 text-[10px] text-slate-500 shrink-0">
+              <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-0.5 bg-blue-500 rounded" /> Burn-up (done)</span>
+              <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-0.5 bg-red-400 rounded" /> Burn-down (remaining)</span>
+              <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-0.5 bg-slate-300 rounded" style={{ borderStyle:'dashed' }} /> Ideal</span>
+            </div>
+          </div>
+          <CombinedBurnChart points={result.sprintPoints} total={result.totalIssues} />
+        </div>
+
         {/* ── Two-column: Ring + Burn-up ── */}
         <div className="grid grid-cols-3 gap-4 mb-5">
 
@@ -358,10 +512,11 @@ export default function ForecastPage() {
           <div className="col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-black text-slate-900">Burn-up Chart</h2>
-              <div className="flex items-center gap-4 text-[10px] text-slate-400">
-                <span className="flex items-center gap-1"><span className="w-5 h-0.5 inline-block bg-blue-500 rounded" /> Actual</span>
-                <span className="flex items-center gap-1"><span className="w-5 h-0.5 inline-block bg-blue-200 rounded" style={{ borderStyle:'dashed', borderWidth:0, borderTopWidth:1 }} /> Forecast</span>
-                <span className="flex items-center gap-1"><span className="w-5 h-0.5 inline-block bg-slate-200 rounded" /> Target</span>
+              <div className="flex items-center gap-3 text-[10px] text-slate-400 flex-wrap">
+                <span className="flex items-center gap-1"><span className="w-4 h-0.5 inline-block bg-blue-500 rounded" /> Actual</span>
+                <span className="flex items-center gap-1"><span className="w-4 h-0.5 inline-block bg-blue-400 rounded" style={{ borderTop:'2px dashed #60a5fa' }} /> Expected</span>
+                <span className="flex items-center gap-1"><span className="w-4 h-0.5 inline-block bg-green-400" /> Optimistic</span>
+                <span className="flex items-center gap-1"><span className="w-4 h-0.5 inline-block bg-amber-400" /> Pessimistic</span>
               </div>
             </div>
             <BurnUpChart points={result.sprintPoints} total={result.totalIssues} />
