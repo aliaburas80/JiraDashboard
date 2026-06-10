@@ -27,12 +27,17 @@ const NAV_GROUPS = [
   {
     label: 'Delivery',
     items: [
-      { href: '/readiness', label: 'Readiness', icon: '🚀', desc: 'Go / No-Go per release'      },
-      { href: '/roadmap',   label: 'Roadmap',   icon: '🗺️', desc: 'Epic progress & delivery ETA' },
-      { href: '/forecast',  label: 'Forecast',  icon: '🔮', desc: 'Velocity & burn-up outlook'   },
-      { href: '/retro',     label: 'Retro',     icon: '🔄', desc: 'Sprint retrospective tool'    },
-      { href: '/explore',   label: 'Explore',   icon: '🔗', desc: 'Work item dependency graph'   },
-      { href: '/customer',  label: 'Customer',  icon: '👤', desc: 'Customer-visible progress'    },
+      { href: '/readiness', label: 'Readiness', icon: '🚀', desc: 'Go / No-Go per release'     },
+      { href: '/explore',   label: 'Explore',   icon: '🔗', desc: 'Work item dependency graph'  },
+      { href: '/customer',  label: 'Customer',  icon: '👤', desc: 'Customer-visible progress'   },
+    ],
+  },
+  {
+    label: 'Planning',
+    items: [
+      { href: '/roadmap',  label: 'Roadmap',  icon: '🗺️', desc: 'Epic progress & delivery ETA'  },
+      { href: '/forecast', label: 'Forecast', icon: '🔮', desc: 'Velocity & burn-up outlook'    },
+      { href: '/retro',    label: 'Retro',    icon: '🔄', desc: 'Sprint retrospective tool'     },
     ],
   },
   {
