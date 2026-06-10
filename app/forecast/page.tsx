@@ -102,11 +102,11 @@ function computeForecast(metrics: DashboardMetrics): ForecastResult {
 
 function CompletionRing({ pct, color }: { pct: number; color: string }) {
   const r = 52, cx = 68, cy = 68, stroke = 12;
-  const circ  = 2 * Math.PI * r;
-  const fill  = circ * (pct / 100);
+  const circ = 2 * Math.PI * r;
+  const fill = circ * (pct / 100);
   return (
     <svg viewBox="0 0 136 136" style={{ width: 136, height: 136 }}>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f1f5f9" strokeWidth={stroke} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#323232" strokeWidth={stroke} />
       <circle
         cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={stroke}
         strokeDasharray={`${fill} ${circ - fill}`}
@@ -114,8 +114,8 @@ function CompletionRing({ pct, color }: { pct: number; color: string }) {
         transform={`rotate(-90 ${cx} ${cy})`}
         style={{ transition: 'stroke-dasharray 0.6s ease' }}
       />
-      <text x={cx} y={cy - 8}  textAnchor="middle" fontSize="22" fontWeight="800" fill="#0f172a">{pct}%</text>
-      <text x={cx} y={cy + 11} textAnchor="middle" fontSize="9"  fill="#94a3b8">COMPLETE</text>
+      <text x={cx} y={cy - 8}  textAnchor="middle" fontSize="22" fontWeight="800" fontFamily="var(--font-mono, monospace)" fill="#F2F2F2">{pct}%</text>
+      <text x={cx} y={cy + 11} textAnchor="middle" fontSize="9"  fill="#505050">COMPLETE</text>
     </svg>
   );
 }
@@ -123,13 +123,13 @@ function CompletionRing({ pct, color }: { pct: number; color: string }) {
 // ── Chart: Velocity Bars ───────────────────────────────────────────────────────
 
 function VelocityChart({ points, avg }: { points: SprintPoint[]; avg: number }) {
-  if (points.length === 0) return <p className="text-xs text-slate-400 text-center py-6">No sprint data</p>;
+  if (points.length === 0) return <p className="text-xs text-center py-6" style={{ color: 'var(--dc-p3, #505050)' }}>No sprint data</p>;
   const maxDone = Math.max(...points.map(p => p.done), 1);
   const W = 480; const H = 120; const PL = 28; const PB = 24; const PT = 8; const PR = 8;
   const chartW = W - PL - PR;
   const chartH = H - PT - PB;
   const barW = Math.max(6, chartW / points.length * 0.6);
-  const gap   = chartW / points.length;
+  const gap  = chartW / points.length;
 
   function barX(i: number) { return PL + i * gap + gap / 2 - barW / 2; }
   function barH(v: number) { return (v / maxDone) * chartH; }
@@ -139,22 +139,17 @@ function VelocityChart({ points, avg }: { points: SprintPoint[]; avg: number }) 
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
-      {/* Grid lines */}
       {[0, 0.25, 0.5, 0.75, 1].map(v => {
         const y = PT + chartH * (1 - v);
         return (
           <g key={v}>
-            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="#f1f5f9" strokeWidth="1" />
-            <text x={PL - 3} y={y + 3} fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round(maxDone * v)}</text>
+            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+            <text x={PL - 3} y={y + 3} fontSize="8" fill="#505050" textAnchor="end">{Math.round(maxDone * v)}</text>
           </g>
         );
       })}
-
-      {/* Avg throughput line */}
-      <line x1={PL} x2={W - PR} y1={avgY} y2={avgY} stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.6" />
-      <text x={W - PR - 2} y={avgY - 3} fontSize="7.5" fill="#3b82f6" textAnchor="end">avg {avg}</text>
-
-      {/* Bars */}
+      <line x1={PL} x2={W - PR} y1={avgY} y2={avgY} stroke="#FF8A4C" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.6" />
+      <text x={W - PR - 2} y={avgY - 3} fontSize="7.5" fill="#FF8A4C" textAnchor="end">avg {avg}</text>
       {points.map((p, i) => {
         const bh = Math.max(2, barH(p.done));
         const by = barY(p.done);
@@ -162,13 +157,13 @@ function VelocityChart({ points, avg }: { points: SprintPoint[]; avg: number }) 
         return (
           <g key={i}>
             <rect x={barX(i)} y={by} width={barW} height={bh} rx="3"
-              fill={isRecent ? '#3b82f6' : '#bfdbfe'} opacity="0.9" />
+              fill={isRecent ? '#FF8A4C' : '#323232'} opacity="0.9" />
             {bh > 14 && (
               <text x={barX(i) + barW / 2} y={by + bh / 2 + 3.5} fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">
                 {p.done}
               </text>
             )}
-            <text x={barX(i) + barW / 2} y={H - 6} fontSize="7" fill="#94a3b8" textAnchor="middle">
+            <text x={barX(i) + barW / 2} y={H - 6} fontSize="7" fill="#505050" textAnchor="middle">
               {p.sprint.replace(/sprint\s*/i, 'S').slice(0, 6)}
             </text>
           </g>
@@ -181,21 +176,18 @@ function VelocityChart({ points, avg }: { points: SprintPoint[]; avg: number }) 
 // ── Chart: Burn-up (velocity-aware with confidence band) ──────────────────────
 
 function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }) {
-  if (points.length < 2) return <p className="text-xs text-slate-400 text-center py-6">Need ≥ 2 sprints for burn-up chart.</p>;
+  if (points.length < 2) return <p className="text-xs text-center py-6" style={{ color: 'var(--dc-p3, #505050)' }}>Need ≥ 2 sprints for burn-up chart.</p>;
 
-  // Recent velocity = avg of last 3 sprints; overall = all-time avg
   const recentN   = Math.min(3, points.length);
   const recentVel = points.slice(-recentN).reduce((s, p) => s + p.done, 0) / recentN;
 
   const last      = points[points.length - 1];
   const remaining = Math.max(0, total - last.cumDone);
 
-  // Three forecast scenarios from last actual point
   const sprintsExp  = recentVel > 0 ? remaining / recentVel          : 0;
   const sprintsOpt  = recentVel > 0 ? remaining / (recentVel * 1.3)  : 0;
   const sprintsPess = recentVel > 0 ? remaining / (recentVel * 0.7)  : 0;
 
-  // X-axis extended to cover pessimistic scenario
   const maxI  = Math.max(points.length, points.length + Math.ceil(sprintsPess) + 1);
   const W = 480; const H = 155; const PL = 36; const PB = 30; const PT = 12; const PR = 20;
   const chartW = W - PL - PR; const chartH = H - PT - PB;
@@ -209,63 +201,40 @@ function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }
   const ly = yOf(last.cumDone);
   const ty = yOf(total);
 
-  // Clamp forecast end X to chart right edge
   const expX  = Math.min(W - PR, xOf(points.length - 1 + sprintsExp));
   const optX  = Math.min(W - PR, xOf(points.length - 1 + sprintsOpt));
   const pessX = Math.min(W - PR, xOf(points.length - 1 + sprintsPess));
 
-  // Confidence band polygon (opt → pess fan)
-  const bandPoly = remaining > 0
-    ? `M${lx},${ly} L${optX},${ty} L${pessX},${ty} Z`
-    : '';
+  const bandPoly = remaining > 0 ? `M${lx},${ly} L${optX},${ty} L${pessX},${ty} Z` : '';
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
-      {/* Grid */}
       {[0, 0.25, 0.5, 0.75, 1].map(v => (
         <g key={v}>
-          <line x1={PL} x2={W - PR} y1={yOf(total * v)} y2={yOf(total * v)} stroke="#f1f5f9" strokeWidth="1" />
-          <text x={PL - 4} y={yOf(total * v) + 4} fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round(total * v)}</text>
+          <line x1={PL} x2={W - PR} y1={yOf(total * v)} y2={yOf(total * v)} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+          <text x={PL - 4} y={yOf(total * v) + 4} fontSize="8" fill="#505050" textAnchor="end">{Math.round(total * v)}</text>
         </g>
       ))}
-
-      {/* Sprint X labels */}
       {points.filter((_, i) => i === 0 || i === points.length - 1 || i % Math.ceil(points.length / 5) === 0).map(p => {
         const idx = points.indexOf(p);
-        return <text key={idx} x={xOf(idx)} y={H - 8} fontSize="7.5" fill="#94a3b8" textAnchor="middle">{p.sprint.replace(/sprint\s*/i, 'S').slice(0, 7)}</text>;
+        return <text key={idx} x={xOf(idx)} y={H - 8} fontSize="7.5" fill="#505050" textAnchor="middle">{p.sprint.replace(/sprint\s*/i, 'S').slice(0, 7)}</text>;
       })}
-
-      {/* Target scope line */}
-      <line x1={PL} x2={W - PR} y1={ty} y2={ty} stroke="#e2e8f0" strokeWidth="1.5" strokeDasharray="5 3" />
-      <text x={W - PR - 2} y={ty - 3} fontSize="7.5" fill="#94a3b8" textAnchor="end">Scope {total}</text>
-
-      {/* Confidence band */}
-      {remaining > 0 && bandPoly && <path d={bandPoly} fill="#3b82f6" opacity="0.09" />}
-
-      {/* Forecast: pessimistic */}
+      <line x1={PL} x2={W - PR} y1={ty} y2={ty} stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeDasharray="5 3" />
+      <text x={W - PR - 2} y={ty - 3} fontSize="7.5" fill="#505050" textAnchor="end">Scope {total}</text>
+      {remaining > 0 && bandPoly && <path d={bandPoly} fill="#FF8A4C" opacity="0.07" />}
       {remaining > 0 && recentVel > 0 && (
-        <line x1={lx} y1={ly} x2={pessX} y2={ty} stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="5 3" opacity="0.75" />
+        <line x1={lx} y1={ly} x2={pessX} y2={ty} stroke="#F87171" strokeWidth="1.5" strokeDasharray="5 3" opacity="0.75" />
       )}
-      {/* Forecast: optimistic */}
       {remaining > 0 && recentVel > 0 && (
-        <line x1={lx} y1={ly} x2={optX} y2={ty} stroke="#22c55e" strokeWidth="1.5" strokeDasharray="5 3" opacity="0.75" />
+        <line x1={lx} y1={ly} x2={optX} y2={ty} stroke="#22C55E" strokeWidth="1.5" strokeDasharray="5 3" opacity="0.75" />
       )}
-      {/* Forecast: expected (recent velocity) */}
       {remaining > 0 && recentVel > 0 && (
-        <line x1={lx} y1={ly} x2={expX} y2={ty} stroke="#2563eb" strokeWidth="2" strokeDasharray="7 3" />
+        <line x1={lx} y1={ly} x2={expX} y2={ty} stroke="#909090" strokeWidth="2" strokeDasharray="7 3" />
       )}
-
-      {/* Actual/forecast separator */}
-      {remaining > 0 && <line x1={lx} x2={lx} y1={PT} y2={PT + chartH} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="3 2" />}
-
-      {/* Area under actual */}
-      <path d={`${actualPath} L${xOf(points.length - 1)},${PT + chartH} L${xOf(0)},${PT + chartH} Z`} fill="#3b82f6" opacity="0.07" />
-
-      {/* Actual burn-up line */}
-      <path d={actualPath} stroke="#2563eb" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-
-      {/* Data point dots */}
-      {points.map((p, i) => <circle key={i} cx={xOf(i)} cy={yOf(p.cumDone)} r="3.5" fill="#2563eb" stroke="#fff" strokeWidth="1.5" />)}
+      {remaining > 0 && <line x1={lx} x2={lx} y1={PT} y2={PT + chartH} stroke="rgba(255,255,255,0.13)" strokeWidth="1" strokeDasharray="3 2" />}
+      <path d={`${actualPath} L${xOf(points.length - 1)},${PT + chartH} L${xOf(0)},${PT + chartH} Z`} fill="#FF8A4C" opacity="0.06" />
+      <path d={actualPath} stroke="#FF8A4C" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      {points.map((p, i) => <circle key={i} cx={xOf(i)} cy={yOf(p.cumDone)} r="3.5" fill="#FF8A4C" stroke="#0A0A0A" strokeWidth="1.5" />)}
     </svg>
   );
 }
@@ -273,7 +242,7 @@ function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }
 // ── Chart: Combined Burn-up + Burn-down (all sprints) ─────────────────────────
 
 function CombinedBurnChart({ points, total }: { points: SprintPoint[]; total: number }) {
-  if (points.length < 2) return <p className="text-xs text-slate-400 text-center py-6">Need ≥ 2 sprints for combined chart.</p>;
+  if (points.length < 2) return <p className="text-xs text-center py-6" style={{ color: 'var(--dc-p3, #505050)' }}>Need ≥ 2 sprints for combined chart.</p>;
 
   const W = 520; const H = 175; const PL = 38; const PB = 30; const PT = 14; const PR = 20;
   const chartW = W - PL - PR; const chartH = H - PT - PB;
@@ -282,80 +251,54 @@ function CombinedBurnChart({ points, total }: { points: SprintPoint[]; total: nu
   function xOf(i: number) { return PL + (i / (n - 1)) * chartW; }
   function yOf(v: number) { return PT + chartH - (v / total) * chartH; }
 
-  const upPath   = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xOf(i)},${yOf(p.cumDone)}`).join(' ');
-  const downPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xOf(i)},${yOf(total - p.cumDone)}`).join(' ');
-  const scopeY   = yOf(total);
-  const zeroY    = yOf(0);
-
-  // Find where burn-up reaches total (project complete)
-  const doneIdx = points.findIndex(p => p.cumDone >= total);
-
-  // Ideal burn-down diagonal (linear from total to 0)
+  const upPath    = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xOf(i)},${yOf(p.cumDone)}`).join(' ');
+  const downPath  = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${xOf(i)},${yOf(total - p.cumDone)}`).join(' ');
+  const scopeY    = yOf(total);
+  const zeroY     = yOf(0);
+  const doneIdx   = points.findIndex(p => p.cumDone >= total);
   const idealDown = `M${xOf(0)},${yOf(total)} L${xOf(n - 1)},${yOf(0)}`;
 
-  // Sprint x-labels: show first, last, and evenly spaced
   const labelIdx = new Set([0, n - 1]);
   const step = Math.ceil(n / 5);
   for (let i = step; i < n - 1; i += step) labelIdx.add(i);
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
-      {/* Grid */}
       {[0, 0.25, 0.5, 0.75, 1].map(v => {
         const y = yOf(total * v);
         return (
           <g key={v}>
-            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="#f1f5f9" strokeWidth="1" />
-            <text x={PL - 4} y={y + 4} fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round(total * v)}</text>
+            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+            <text x={PL - 4} y={y + 4} fontSize="8" fill="#505050" textAnchor="end">{Math.round(total * v)}</text>
           </g>
         );
       })}
-
-      {/* Sprint x-labels */}
       {[...labelIdx].map(idx => (
-        <text key={idx} x={xOf(idx)} y={H - 7} fontSize="7.5" fill="#94a3b8" textAnchor="middle">
+        <text key={idx} x={xOf(idx)} y={H - 7} fontSize="7.5" fill="#505050" textAnchor="middle">
           {points[idx].sprint.replace(/sprint\s*/i, 'S').slice(0, 7)}
         </text>
       ))}
-
-      {/* Scope / zero reference lines */}
-      <line x1={PL} x2={W - PR} y1={scopeY} y2={scopeY} stroke="#e2e8f0" strokeWidth="1.5" strokeDasharray="5 3" />
-      <line x1={PL} x2={W - PR} y1={zeroY}  y2={zeroY}  stroke="#e2e8f0" strokeWidth="1" />
-
-      {/* Ideal burn-down guide */}
-      <path d={idealDown} stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" fill="none" />
-
-      {/* Burn-down area */}
-      <path d={`${downPath} L${xOf(n - 1)},${scopeY} L${xOf(0)},${scopeY} Z`} fill="#ef4444" opacity="0.05" />
-
-      {/* Burn-up area */}
-      <path d={`${upPath} L${xOf(n - 1)},${zeroY} L${xOf(0)},${zeroY} Z`} fill="#3b82f6" opacity="0.07" />
-
-      {/* Burn-down line */}
-      <path d={downPath} stroke="#ef4444" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-
-      {/* Burn-up line */}
-      <path d={upPath}   stroke="#2563eb" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-
-      {/* Dots */}
+      <line x1={PL} x2={W - PR} y1={scopeY} y2={scopeY} stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeDasharray="5 3" />
+      <line x1={PL} x2={W - PR} y1={zeroY}  y2={zeroY}  stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+      <path d={idealDown} stroke="#505050" strokeWidth="1" strokeDasharray="4 3" opacity="0.6" fill="none" />
+      <path d={`${downPath} L${xOf(n - 1)},${scopeY} L${xOf(0)},${scopeY} Z`} fill="#E85D12" opacity="0.05" />
+      <path d={`${upPath} L${xOf(n - 1)},${zeroY} L${xOf(0)},${zeroY} Z`} fill="#22C55E" opacity="0.07" />
+      <path d={downPath} stroke="#E85D12" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={upPath}   stroke="#22C55E" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
       {points.map((p, i) => (
         <g key={i}>
-          <circle cx={xOf(i)} cy={yOf(p.cumDone)}          r="3.5" fill="#2563eb" stroke="#fff" strokeWidth="1.5" />
-          <circle cx={xOf(i)} cy={yOf(total - p.cumDone)}  r="3.5" fill="#ef4444" stroke="#fff" strokeWidth="1.5" />
+          <circle cx={xOf(i)} cy={yOf(p.cumDone)}         r="3.5" fill="#22C55E" stroke="#0A0A0A" strokeWidth="1.5" />
+          <circle cx={xOf(i)} cy={yOf(total - p.cumDone)} r="3.5" fill="#E85D12" stroke="#0A0A0A" strokeWidth="1.5" />
         </g>
       ))}
-
-      {/* Convergence marker (when lines meet = project done) */}
       {doneIdx >= 0 && (
         <g>
-          <circle cx={xOf(doneIdx)} cy={yOf(total / 2)} r="8" fill="#22c55e" opacity="0.2" />
-          <circle cx={xOf(doneIdx)} cy={yOf(total / 2)} r="4" fill="#22c55e" />
-          <line x1={xOf(doneIdx)} x2={xOf(doneIdx)} y1={PT} y2={PT + chartH} stroke="#22c55e" strokeWidth="1" strokeDasharray="4 2" opacity="0.5" />
+          <circle cx={xOf(doneIdx)} cy={yOf(total / 2)} r="8" fill="#22C55E" opacity="0.2" />
+          <circle cx={xOf(doneIdx)} cy={yOf(total / 2)} r="4" fill="#22C55E" />
+          <line x1={xOf(doneIdx)} x2={xOf(doneIdx)} y1={PT} y2={PT + chartH} stroke="#22C55E" strokeWidth="1" strokeDasharray="4 2" opacity="0.5" />
         </g>
       )}
-
-      {/* Scope label */}
-      <text x={W - PR - 2} y={scopeY - 3} fontSize="7.5" fill="#94a3b8" textAnchor="end">Scope {total}</text>
+      <text x={W - PR - 2} y={scopeY - 3} fontSize="7.5" fill="#505050" textAnchor="end">Scope {total}</text>
     </svg>
   );
 }
@@ -363,23 +306,23 @@ function CombinedBurnChart({ points, total }: { points: SprintPoint[]; total: nu
 // ── Status meta ────────────────────────────────────────────────────────────────
 
 const STATUS_META = {
-  on_track:          { label: 'On Track',          color: '#22c55e', bg: '#f0fdf4', border: '#bbf7d0', text: '#15803d', icon: '✅' },
-  at_risk:           { label: 'At Risk',            color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', text: '#b45309', icon: '⚠️' },
-  off_track:         { label: 'Off Track',          color: '#ef4444', bg: '#fef2f2', border: '#fecaca', text: '#b91c1c', icon: '❌' },
-  complete:          { label: 'Complete',           color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', text: '#1d4ed8', icon: '🎉' },
-  insufficient_data: { label: 'Insufficient Data',  color: '#94a3b8', bg: '#f8fafc', border: '#e2e8f0', text: '#475569', icon: 'ℹ️' },
+  on_track:          { label: 'On Track',         color: '#22C55E', bg: 'rgba(34,197,94,0.07)',   border: 'rgba(34,197,94,0.18)',   text: '#4ade80', icon: '✅' },
+  at_risk:           { label: 'At Risk',           color: '#F59E0B', bg: 'rgba(245,158,11,0.07)',  border: 'rgba(245,158,11,0.18)',  text: '#fcd34d', icon: '⚠️' },
+  off_track:         { label: 'Off Track',         color: '#F87171', bg: 'rgba(248,113,113,0.07)', border: 'rgba(248,113,113,0.18)', text: '#fca5a5', icon: '❌' },
+  complete:          { label: 'Complete',          color: '#FF8A4C', bg: 'rgba(232,93,18,0.07)',   border: 'rgba(232,93,18,0.18)',   text: '#FF8A4C', icon: '🎉' },
+  insufficient_data: { label: 'Insufficient Data', color: '#F59E0B', bg: 'rgba(245,158,11,0.05)',  border: 'rgba(245,158,11,0.18)',  text: '#F59E0B', icon: 'ℹ️' },
 };
 
 const CONF_META = {
-  high:   { cls: 'text-green-700 bg-green-50 border-green-200', label: 'High confidence' },
-  medium: { cls: 'text-amber-700 bg-amber-50 border-amber-200', label: 'Medium confidence' },
-  low:    { cls: 'text-slate-600 bg-slate-50 border-slate-200', label: 'Low confidence' },
+  high:   { cls: 'chip c-gr', label: 'High confidence' },
+  medium: { cls: 'chip c-am', label: 'Medium confidence' },
+  low:    { cls: 'chip c-am', label: 'Low confidence' },
 };
 
 const TREND_META = {
-  improving: { icon: '↑', color: 'text-green-600', label: 'Velocity improving' },
-  stable:    { icon: '→', color: 'text-blue-600',  label: 'Velocity stable' },
-  declining: { icon: '↓', color: 'text-red-600',   label: 'Velocity declining' },
+  improving: { icon: '↑', color: 'var(--dc-green, #22C55E)', label: 'Velocity improving' },
+  stable:    { icon: '→', color: 'var(--dc-acc2, #FF8A4C)',  label: 'Velocity stable' },
+  declining: { icon: '↓', color: 'var(--dc-red, #F87171)',   label: 'Velocity declining' },
 };
 
 // ── Page ───────────────────────────────────────────────────────────────────────
@@ -400,7 +343,7 @@ export default function ForecastPage() {
     load().catch(() => router.replace('/'));
   }, [router]);
 
-  if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Computing forecast…</div></AppShell>;
+  if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 animate-pulse" style={{ color: 'var(--dc-p3, #505050)' }}>Computing forecast…</div></AppShell>;
   if (!result)  return null;
 
   const meta  = STATUS_META[result.status];
@@ -412,26 +355,27 @@ export default function ForecastPage() {
 
         {/* Header */}
         <div className="mb-5">
-          <div className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-full px-3 py-1 text-xs font-bold text-indigo-700 mb-3">
+          <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold mb-3"
+            style={{ background: 'rgba(232,93,18,0.10)', color: 'var(--dc-acc2, #FF8A4C)' }}>
             🔮 Planning
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-1">Delivery Forecast</h1>
-          <p className="text-sm text-slate-500">Velocity-based delivery outlook — shareable in meetings.</p>
+          <h1 className="text-2xl font-black tracking-tight mb-1" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Delivery Forecast</h1>
+          <p className="text-sm" style={{ color: 'var(--dc-p2, #909090)' }}>Velocity-based delivery outlook — shareable in meetings.</p>
         </div>
 
         {/* ── Status Hero Banner ── */}
-        <div className="rounded-2xl border p-5 mb-5 flex items-center gap-5"
-          style={{ background: meta.bg, borderColor: meta.border }}>
+        <div className="rounded-2xl p-5 mb-5 flex items-center gap-5"
+          style={{ background: meta.bg, border: `1px solid ${meta.border}` }}>
           <div className="text-5xl leading-none">{meta.icon}</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-1">
               <h2 className="text-xl font-black" style={{ color: meta.text }}>{meta.label}</h2>
-              <span className={`text-xs font-bold border rounded-full px-2.5 py-0.5 ${CONF_META[result.confidence].cls}`}>
+              <span className={CONF_META[result.confidence].cls} style={{ fontSize: 10, borderRadius: 100 }}>
                 {CONF_META[result.confidence].label}
               </span>
             </div>
             {result.status === 'insufficient_data' ? (
-              <p className="text-sm" style={{ color: meta.text, opacity: 0.75 }}>Upload Jira data with sprint history to generate a forecast.</p>
+              <p className="text-sm" style={{ color: 'var(--dc-p2, #909090)' }}>Upload Jira data with sprint history to generate a forecast.</p>
             ) : result.status === 'complete' ? (
               <p className="text-sm font-semibold" style={{ color: meta.text }}>All {result.totalIssues} issues are complete. 🎉</p>
             ) : (
@@ -443,9 +387,10 @@ export default function ForecastPage() {
             )}
           </div>
           {result.status !== 'insufficient_data' && result.status !== 'complete' && (
-            <div className="text-center shrink-0 bg-white rounded-2xl px-5 py-3 border" style={{ borderColor: meta.border }}>
+            <div className="text-center shrink-0 rounded-2xl px-5 py-3"
+              style={{ background: 'var(--dc-s1, #141414)', border: `1px solid ${meta.border}` }}>
               <p className="text-3xl font-black" style={{ color: meta.color }}>{result.weeksRemaining}</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">weeks est.</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: 'var(--dc-p3, #505050)' }}>weeks est.</p>
             </div>
           )}
         </div>
@@ -453,30 +398,32 @@ export default function ForecastPage() {
         {/* ── KPI Row ── */}
         <div className="grid grid-cols-4 gap-3 mb-5">
           {[
-            { label: 'Total Issues',   value: result.totalIssues,  icon: '📋', color: 'text-slate-900' },
-            { label: `Done (${result.completionPct}%)`, value: result.doneIssues, icon: '✅', color: 'text-green-600' },
-            { label: 'Remaining',      value: result.remainingIssues, icon: '⏳', color: result.remainingIssues > 0 ? 'text-amber-600' : 'text-slate-400' },
-            { label: 'Avg / Sprint',   value: result.avgThroughput > 0 ? `${result.avgThroughput}` : '—', icon: '⚡', color: 'text-blue-600' },
+            { label: 'Total Issues',                             value: result.totalIssues,                                         icon: '📋', color: 'var(--dc-p1, #F2F2F2)' },
+            { label: `Done (${result.completionPct}%)`,          value: result.doneIssues,                                          icon: '✅', color: 'var(--dc-green, #22C55E)' },
+            { label: 'Remaining',                                value: result.remainingIssues,                                     icon: '⏳', color: result.remainingIssues > 0 ? 'var(--dc-amber, #F59E0B)' : 'var(--dc-p3, #505050)' },
+            { label: 'Avg / Sprint',                             value: result.avgThroughput > 0 ? `${result.avgThroughput}` : '—', icon: '⚡', color: 'var(--dc-acc2, #FF8A4C)' },
           ].map(c => (
-            <div key={c.label} className="bg-white border border-slate-200 rounded-2xl p-4 text-center shadow-sm">
+            <div key={c.label} className="rounded-2xl p-4 text-center"
+              style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
               <p className="text-lg mb-1">{c.icon}</p>
-              <p className={`text-2xl font-black ${c.color}`}>{c.value}</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">{c.label}</p>
+              <p className="text-2xl font-black" style={{ color: c.color }}>{c.value}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide mt-0.5" style={{ color: 'var(--dc-p3, #505050)' }}>{c.label}</p>
             </div>
           ))}
         </div>
 
         {/* ── Combined Burn-up + Burn-down ── */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-5">
+        <div className="rounded-2xl p-5 mb-5"
+          style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-sm font-black text-slate-900">Sprint Burn-up &amp; Burn-down</h2>
-              <p className="text-[11px] text-slate-400 mt-0.5">All sprints — rising blue = work done · falling red = work remaining · lines converge at project completion</p>
+              <h2 className="text-sm font-black" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Sprint Burn-up &amp; Burn-down</h2>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--dc-p3, #505050)' }}>All sprints — rising green = work done · falling orange = work remaining · lines converge at project completion</p>
             </div>
-            <div className="flex items-center gap-4 text-[10px] text-slate-500 shrink-0">
-              <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-0.5 bg-blue-500 rounded" /> Burn-up (done)</span>
-              <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-0.5 bg-red-400 rounded" /> Burn-down (remaining)</span>
-              <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-0.5 bg-slate-300 rounded" style={{ borderStyle:'dashed' }} /> Ideal</span>
+            <div className="flex items-center gap-4 text-[10px] shrink-0" style={{ color: 'var(--dc-p3, #505050)' }}>
+              <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-0.5 rounded" style={{ background: '#22C55E' }} /> Burn-up</span>
+              <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-0.5 rounded" style={{ background: '#E85D12' }} /> Burn-down</span>
+              <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-0.5" style={{ background: '#505050' }} /> Ideal</span>
             </div>
           </div>
           <CombinedBurnChart points={result.sprintPoints} total={result.totalIssues} />
@@ -486,37 +433,47 @@ export default function ForecastPage() {
         <div className="grid grid-cols-3 gap-4 mb-5">
 
           {/* Left: Completion ring + trend */}
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col items-center justify-center gap-4">
-            <CompletionRing pct={result.completionPct} color={meta.color} />
+          <div className="rounded-2xl p-5 flex flex-col items-center justify-center gap-4"
+            style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+            <CompletionRing pct={result.completionPct} color="var(--dc-acc2, #FF8A4C)" />
 
             {/* Trend pill */}
-            <div className={`flex items-center gap-1.5 text-sm font-bold ${trend.color}`}>
+            <div className="flex items-center gap-1.5 text-sm font-bold" style={{ color: trend.color }}>
               <span className="text-base">{trend.icon}</span>
               {trend.label}
             </div>
 
             {/* Mini risk row */}
             <div className="w-full grid grid-cols-2 gap-2 mt-1">
-              <div className={`text-center rounded-xl p-2 ${result.blockedCount > 0 ? 'bg-red-50 border border-red-200' : 'bg-slate-50 border border-slate-100'}`}>
-                <p className={`text-lg font-black ${result.blockedCount > 0 ? 'text-red-600' : 'text-slate-400'}`}>{result.blockedCount}</p>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Blocked</p>
+              <div className="text-center rounded-xl p-2"
+                style={{
+                  background: result.blockedCount > 0 ? 'rgba(248,113,113,0.08)' : 'var(--dc-s1, #141414)',
+                  border: result.blockedCount > 0 ? '1px solid rgba(248,113,113,0.18)' : '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
+                }}>
+                <p className="text-lg font-black" style={{ color: result.blockedCount > 0 ? 'var(--dc-red, #F87171)' : 'var(--dc-p3, #505050)' }}>{result.blockedCount}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: 'var(--dc-p3, #505050)' }}>Blocked</p>
               </div>
-              <div className={`text-center rounded-xl p-2 ${result.criticalCount > 0 ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50 border border-slate-100'}`}>
-                <p className={`text-lg font-black ${result.criticalCount > 0 ? 'text-amber-600' : 'text-slate-400'}`}>{result.criticalCount}</p>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Critical</p>
+              <div className="text-center rounded-xl p-2"
+                style={{
+                  background: result.criticalCount > 0 ? 'rgba(245,158,11,0.08)' : 'var(--dc-s1, #141414)',
+                  border: result.criticalCount > 0 ? '1px solid rgba(245,158,11,0.18)' : '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
+                }}>
+                <p className="text-lg font-black" style={{ color: result.criticalCount > 0 ? 'var(--dc-amber, #F59E0B)' : 'var(--dc-p3, #505050)' }}>{result.criticalCount}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: 'var(--dc-p3, #505050)' }}>Critical</p>
               </div>
             </div>
           </div>
 
           {/* Right: Burn-up chart */}
-          <div className="col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+          <div className="col-span-2 rounded-2xl p-5"
+            style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-black text-slate-900">Burn-up Chart</h2>
-              <div className="flex items-center gap-3 text-[10px] text-slate-400 flex-wrap">
-                <span className="flex items-center gap-1"><span className="w-4 h-0.5 inline-block bg-blue-500 rounded" /> Actual</span>
-                <span className="flex items-center gap-1"><span className="w-4 h-0.5 inline-block bg-blue-400 rounded" style={{ borderTop:'2px dashed #60a5fa' }} /> Expected</span>
-                <span className="flex items-center gap-1"><span className="w-4 h-0.5 inline-block bg-green-400" /> Optimistic</span>
-                <span className="flex items-center gap-1"><span className="w-4 h-0.5 inline-block bg-amber-400" /> Pessimistic</span>
+              <h2 className="text-sm font-black" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Burn-up Chart</h2>
+              <div className="flex items-center gap-3 text-[10px] flex-wrap" style={{ color: 'var(--dc-p3, #505050)' }}>
+                <span className="flex items-center gap-1"><span className="w-4 h-0.5 inline-block rounded" style={{ background: '#FF8A4C' }} /> Actual</span>
+                <span className="flex items-center gap-1"><span className="w-4 h-0.5 inline-block" style={{ borderTop: '2px dashed #909090' }} /> Expected</span>
+                <span className="flex items-center gap-1"><span className="w-4 h-0.5 inline-block" style={{ background: '#22C55E' }} /> Optimistic</span>
+                <span className="flex items-center gap-1"><span className="w-4 h-0.5 inline-block" style={{ background: '#F87171' }} /> Pessimistic</span>
               </div>
             </div>
             <BurnUpChart points={result.sprintPoints} total={result.totalIssues} />
@@ -524,13 +481,14 @@ export default function ForecastPage() {
         </div>
 
         {/* ── Velocity Bar Chart ── */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-5">
+        <div className="rounded-2xl p-5 mb-5"
+          style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-black text-slate-900">Sprint Velocity</h2>
-            <div className="flex items-center gap-3 text-[10px] text-slate-400">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded inline-block bg-blue-500" /> Last 3 sprints</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded inline-block bg-blue-200" /> Earlier</span>
-              <span className={`font-bold ${trend.color}`}>{trend.icon} {trend.label}</span>
+            <h2 className="text-sm font-black" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Sprint Velocity</h2>
+            <div className="flex items-center gap-3 text-[10px]" style={{ color: 'var(--dc-p3, #505050)' }}>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded inline-block" style={{ background: '#FF8A4C' }} /> Last 3 sprints</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded inline-block" style={{ background: '#323232' }} /> Earlier</span>
+              <span className="font-bold" style={{ color: trend.color }}>{trend.icon} {trend.label}</span>
             </div>
           </div>
           <VelocityChart points={result.sprintPoints} avg={result.avgThroughput} />
@@ -538,33 +496,35 @@ export default function ForecastPage() {
 
         {/* ── Sprint performance table ── */}
         {result.sprintPoints.length > 0 && (
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-5">
-            <h2 className="text-sm font-black text-slate-900 mb-3">Sprint Performance</h2>
+          <div className="rounded-2xl p-5 mb-5"
+            style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+            <h2 className="text-sm font-black mb-3" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Sprint Performance</h2>
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-slate-600 border-collapse">
+              <table className="w-full text-xs border-collapse">
                 <thead>
-                  <tr className="bg-slate-50">
-                    <th className="text-left px-3 py-2 border border-slate-100 font-semibold text-slate-700">Sprint</th>
-                    <th className="text-right px-3 py-2 border border-slate-100 font-semibold text-slate-700">Completed</th>
-                    <th className="text-right px-3 py-2 border border-slate-100 font-semibold text-slate-700">Cumulative</th>
-                    <th className="text-right px-3 py-2 border border-slate-100 font-semibold text-slate-700">vs Avg</th>
-                    <th className="px-3 py-2 border border-slate-100 font-semibold text-slate-700">Pace</th>
+                  <tr style={{ background: 'var(--dc-s1, #141414)', borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))' }}>
+                    <th className="text-left px-3 py-2 font-bold uppercase tracking-wider text-[10px]" style={{ color: 'var(--dc-p3, #505050)' }}>Sprint</th>
+                    <th className="text-right px-3 py-2 font-bold uppercase tracking-wider text-[10px]" style={{ color: 'var(--dc-p3, #505050)' }}>Completed</th>
+                    <th className="text-right px-3 py-2 font-bold uppercase tracking-wider text-[10px]" style={{ color: 'var(--dc-p3, #505050)' }}>Cumulative</th>
+                    <th className="text-right px-3 py-2 font-bold uppercase tracking-wider text-[10px]" style={{ color: 'var(--dc-p3, #505050)' }}>vs Avg</th>
+                    <th className="px-3 py-2 font-bold uppercase tracking-wider text-[10px]" style={{ color: 'var(--dc-p3, #505050)' }}>Pace</th>
                   </tr>
                 </thead>
                 <tbody>
                   {result.sprintPoints.map((p, i) => {
-                    const vs     = result.avgThroughput > 0 ? ((p.done - result.avgThroughput) / result.avgThroughput * 100) : 0;
-                    const vsColor = vs > 10 ? 'text-green-600' : vs < -10 ? 'text-red-600' : 'text-slate-500';
+                    const vs      = result.avgThroughput > 0 ? ((p.done - result.avgThroughput) / result.avgThroughput * 100) : 0;
+                    const vsColor = vs > 10 ? 'var(--dc-green, #22C55E)' : vs < -10 ? 'var(--dc-red, #F87171)' : 'var(--dc-p3, #505050)';
                     const barPct  = result.avgThroughput > 0 ? Math.min(100, (p.done / (result.avgThroughput * 1.5)) * 100) : 0;
                     return (
-                      <tr key={i} className="hover:bg-slate-50">
-                        <td className="px-3 py-2 border border-slate-100 font-medium text-slate-800 whitespace-nowrap">{p.sprint.replace(/sprint\s*/i, 'Sprint ')}</td>
-                        <td className="px-3 py-2 border border-slate-100 text-right font-bold text-slate-900">{p.done}</td>
-                        <td className="px-3 py-2 border border-slate-100 text-right text-slate-600">{p.cumDone}</td>
-                        <td className={`px-3 py-2 border border-slate-100 text-right font-bold ${vsColor}`}>{vs >= 0 ? '+' : ''}{Math.round(vs)}%</td>
-                        <td className="px-3 py-2 border border-slate-100 min-w-[100px]">
-                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full rounded-full transition-all" style={{ width: `${barPct}%`, background: vs > 10 ? '#22c55e' : vs < -10 ? '#ef4444' : '#3b82f6' }} />
+                      <tr key={i} style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
+                        className="transition-colors hover:[&>td]:bg-[rgba(255,255,255,0.025)]">
+                        <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--dc-p2, #909090)' }}>{p.sprint.replace(/sprint\s*/i, 'Sprint ')}</td>
+                        <td className="px-3 py-2 text-right font-bold" style={{ color: 'var(--dc-green, #22C55E)' }}>{p.done}</td>
+                        <td className="px-3 py-2 text-right" style={{ color: 'var(--dc-p2, #909090)' }}>{p.cumDone}</td>
+                        <td className="px-3 py-2 text-right font-bold" style={{ color: vsColor }}>{vs >= 0 ? '+' : ''}{Math.round(vs)}%</td>
+                        <td className="px-3 py-2 min-w-[100px]">
+                          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--dc-s3, #282828)' }}>
+                            <div className="h-full rounded-full transition-all" style={{ width: `${barPct}%`, background: vs > 10 ? '#22C55E' : vs < -10 ? '#F87171' : '#FF8A4C' }} />
                           </div>
                         </td>
                       </tr>
@@ -577,44 +537,50 @@ export default function ForecastPage() {
         )}
 
         {/* ── Next Quarter Plan ── */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-5">
-          <h2 className="text-sm font-black text-slate-900 mb-3">📅 Next Quarter Plan</h2>
+        <div className="rounded-2xl p-5 mb-5"
+          style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+          <h2 className="text-sm font-black mb-3" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>📅 Next Quarter Plan</h2>
           {result.avgThroughput > 0 ? (
             <div className="space-y-3">
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: 'Capacity (6 sprints)', value: Math.round(result.avgThroughput * 6), color: 'text-blue-600' },
-                  { label: 'Remaining backlog',    value: result.remainingIssues,               color: result.remainingIssues > result.avgThroughput * 6 ? 'text-red-600' : 'text-green-600' },
-                  { label: 'Gap',                  value: Math.max(0, result.remainingIssues - Math.round(result.avgThroughput * 6)), color: 'text-amber-600' },
+                  { label: 'Capacity (6 sprints)', value: Math.round(result.avgThroughput * 6), color: 'var(--dc-acc2, #FF8A4C)' },
+                  { label: 'Remaining backlog',    value: result.remainingIssues,               color: result.remainingIssues > result.avgThroughput * 6 ? 'var(--dc-red, #F87171)' : 'var(--dc-green, #22C55E)' },
+                  { label: 'Gap',                  value: Math.max(0, result.remainingIssues - Math.round(result.avgThroughput * 6)), color: 'var(--dc-amber, #F59E0B)' },
                 ].map(s => (
-                  <div key={s.label} className="text-center bg-slate-50 rounded-xl p-3">
-                    <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">{s.label}</p>
+                  <div key={s.label} className="text-center rounded-xl p-3"
+                    style={{ background: 'var(--dc-s1, #141414)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+                    <p className="text-2xl font-black" style={{ color: s.color }}>{s.value}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide mt-0.5" style={{ color: 'var(--dc-p3, #505050)' }}>{s.label}</p>
                   </div>
                 ))}
               </div>
               {result.remainingIssues <= result.avgThroughput * 6
-                ? <p className="text-sm text-green-700 font-semibold bg-green-50 rounded-xl px-4 py-2.5 border border-green-200">✅ Full backlog is achievable within one quarter at current velocity.</p>
-                : <p className="text-sm text-amber-700 font-semibold bg-amber-50 rounded-xl px-4 py-2.5 border border-amber-200">⚠️ Backlog exceeds quarterly capacity — consider descoping or splitting into milestones.</p>
+                ? <p className="text-sm font-semibold rounded-xl px-4 py-2.5"
+                    style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.15)', color: '#4ade80' }}>✅ Full backlog is achievable within one quarter at current velocity.</p>
+                : <p className="text-sm font-semibold rounded-xl px-4 py-2.5"
+                    style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.15)', color: '#fcd34d' }}>⚠️ Backlog exceeds quarterly capacity — consider descoping or splitting into milestones.</p>
               }
             </div>
           ) : (
-            <p className="text-sm text-slate-400">Upload Jira data with sprint history for quarterly planning.</p>
+            <p className="text-sm" style={{ color: 'var(--dc-p3, #505050)' }}>Upload Jira data with sprint history for quarterly planning.</p>
           )}
         </div>
 
         {/* ── Recommendations ── */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-          <h2 className="text-sm font-black text-slate-900 mb-3">💡 Recommendations</h2>
+        <div className="rounded-2xl p-5"
+          style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+          <h2 className="text-sm font-black mb-3" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>💡 Recommendations</h2>
           <ul className="space-y-2">
             {result.adjustments.map((a, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-slate-600 bg-slate-50 rounded-xl px-4 py-2.5">
-                <span className="text-blue-400 mt-0.5 shrink-0 font-bold">→</span>
+              <li key={i} className="flex items-start gap-2 text-sm rounded-xl px-4 py-2.5"
+                style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }}>
+                <span className="mt-0.5 shrink-0 font-bold" style={{ color: 'var(--dc-acc2, #FF8A4C)' }}>→</span>
                 {a}
               </li>
             ))}
           </ul>
-          <p className="text-[10px] text-slate-400 mt-4 pt-3 border-t border-slate-100">
+          <p className="text-[10px] mt-4 pt-3" style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p3, #505050)' }}>
             Model: linear velocity extrapolation · 2-week sprints assumed · Confidence reflects data completeness and velocity stability.
           </p>
         </div>
