@@ -5,6 +5,25 @@
 
 ---
 
+## v4.6.7 — Theme D Restyle P19: Developer Portal (2026-06-11, P1 — UI)
+
+### Changed
+- **Sidebar**: dark `rgba(5,5,5,0.95)` bg + bdr right border; header p1 12px/700; subtitle p2 11px; category labels p3 9px uppercase; nav items active = `rgba(232,93,18,0.11)` bg + acc2 text + acc left border; inactive = transparent/p2; search input dc-s2/bdr r8.
+- **Mobile toggle**: blue-600 → `var(--dc-acc, #E85D12)`.
+- **Breadcrumb**: "Developer Portal" p2/500; active section p1/600; "From product/" badge → acc orange.
+- **Code blocks**: `renderMd()` now outputs `background:var(--dc-s2)` + bdr + r10 + 14px 16px padding + mono 11px 1.8 line-height; syntax: bash commands green, inline comments acc2; text blocks `(required)` → chip-rd inline, parens → acc2.
+- **Tables**: dark header dc-s1/bdr2 + p3 uppercase 10px; rows bdr; first-column cells that match route/code pattern → acc2 mono; other first-col → p1; data cols → p2.
+- **Headings**: h1 p1 22px/800, h2 p1 16px/800 + bdr2 underline, h3 p1 13px/700 + bdr underline, h4 p1 12px/700.
+- **Inline elements**: `<strong>` → p1; `<code>` → dc-s3 bg + acc2 text.
+- **Lists/hr/paragraphs**: p2 text; hr bdr.
+- **Loading**: acc spinner border; p3 text.
+- **Error state**: dark red `rgba(248,113,113,0.07)` bg.
+- **Global search results**: dark dc-s2/bdr cards; chip c-gr/c-am status badges; section chips → dark hover acc2.
+- **Package Reference**: dc-s2/bdr table container; dc-s1/bdr2 header; rows bdr; package name acc2 mono; scope/status dark badges; feature tag acc orange; filter inputs dark.
+- **Calculation Reference**: dc-s2/bdr cards; expanded border acc; dc-s1 expanded bg; formula pre dc-s2/bdr; file ref acc2/mono; labels p3 9px uppercase.
+
+---
+
 ## v4.6.6 — Theme D Restyle P18: Glossary & Appendix (2026-06-11, P1 — UI)
 
 ### Changed

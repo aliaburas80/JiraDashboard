@@ -1,17 +1,42 @@
 'use client';
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 
 import { useState, useEffect, useCallback } from 'react';
 import AppShell from '@/components/layout/AppShell';
+
+// ─── Bash syntax highlighter ──────────────────────────────────────────────────
+
+function colorizeCmd(part: string): string {
+  return part.replace(/^(git|npm|npx|cp|node|cd|mkdir|echo|export|curl|cat)\b/,
+    m => `<span style="color:var(--dc-green,#22C55E)">${m}</span>`);
+}
+
+function highlightBash(raw: string): string {
+  if (/^\s*#/.test(raw)) return `<span style="color:var(--dc-acc2,#FF8A4C)">${raw}</span>`;
+  const ci = raw.indexOf('  #');
+  if (ci > 0) {
+    return colorizeCmd(raw.slice(0, ci)) + `<span style="color:var(--dc-acc2,#FF8A4C)">${raw.slice(ci)}</span>`;
+  }
+  return colorizeCmd(raw);
+}
+
+function highlightText(raw: string): string {
+  return raw.replace(/(\([^)]+\))/g, (_, group) => {
+    if (group.toLowerCase() === '(required)') {
+      return `<span style="background:rgba(248,113,113,0.11);color:#fca5a5;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700">(required)</span>`;
+    }
+    return `<span style="color:var(--dc-acc2,#FF8A4C)">${group}</span>`;
+  });
+}
 
 // ─── Simple markdown renderer ─────────────────────────────────────────────────
 
 function inlineMd(text: string): string {
   return text
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-slate-800">$1</strong>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight:700;color:var(--dc-p1,#F2F2F2)">$1</strong>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code class="bg-slate-100 text-blue-700 px-1 py-0.5 rounded text-xs font-mono">$1</code>');
+    .replace(/`([^`]+)`/g, '<code style="background:var(--dc-s3,#282828);color:var(--dc-acc2,#FF8A4C);padding:1px 6px;border-radius:3px;font-size:10px;font-family:var(--font-mono,monospace)">$1</code>');
 }
 
 function renderMd(md: string): string {
@@ -22,11 +47,12 @@ function renderMd(md: string): string {
   let inTable = false;
   let inUl = false;
   let inOl = false;
+  let codeLang = 'text';
 
   const closeOpenBlocks = () => {
-    if (inUl)  { out.push('</ul>');    inUl = false; }
-    if (inOl)  { out.push('</ol>');    inOl = false; }
-    if (inTable){ out.push('</table>'); inTable = false; }
+    if (inUl)   { out.push('</ul>'); inUl = false; }
+    if (inOl)   { out.push('</ol>'); inOl = false; }
+    if (inTable) { out.push('</tbody></table></div>'); inTable = false; }
   };
 
   for (let i = 0; i < lines.length; i++) {
@@ -35,8 +61,8 @@ function renderMd(md: string): string {
     if (line.startsWith('```')) {
       if (!inCode) {
         closeOpenBlocks();
-        const lang = line.slice(3).trim() || 'text';
-        out.push(`<pre class="bg-slate-900 text-green-300 rounded-lg p-4 overflow-x-auto text-xs my-4 font-mono leading-relaxed whitespace-pre"><code class="language-${lang}">`);
+        codeLang = line.slice(3).trim() || 'text';
+        out.push(`<pre style="background:var(--dc-s2,#1E1E1E);border:1px solid var(--dc-bdr,rgba(255,255,255,0.07));border-radius:10px;padding:14px 16px;overflow-x:auto;margin:14px 0;font-family:var(--font-mono,monospace);font-size:11px;line-height:1.8;color:var(--dc-p1,#F2F2F2);white-space:pre"><code>`);
         inCode = true;
       } else {
         out.push('</code></pre>');
@@ -44,52 +70,66 @@ function renderMd(md: string): string {
       }
       continue;
     }
-    if (inCode) { out.push(line.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '\n'); continue; }
+    if (inCode) {
+      const esc = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      out.push((codeLang === 'bash' ? highlightBash(esc) : codeLang === 'text' ? highlightText(esc) : esc) + '\n');
+      continue;
+    }
 
-    if (line.startsWith('#### ')) { closeOpenBlocks(); out.push(`<h4 class="text-sm font-bold text-slate-800 mt-4 mb-1">${inlineMd(line.slice(5))}</h4>`); continue; }
-    if (line.startsWith('### '))  { closeOpenBlocks(); out.push(`<h3 class="text-base font-bold text-slate-800 mt-5 mb-2 border-b border-slate-100 pb-1">${inlineMd(line.slice(4))}</h3>`); continue; }
-    if (line.startsWith('## '))   { closeOpenBlocks(); out.push(`<h2 class="text-lg font-black text-slate-900 mt-7 mb-3 border-b-2 border-blue-100 pb-2">${inlineMd(line.slice(3))}</h2>`); continue; }
-    if (line.startsWith('# '))    { closeOpenBlocks(); out.push(`<h1 class="text-2xl font-black text-slate-900 mt-6 mb-4">${inlineMd(line.slice(2))}</h1>`); continue; }
+    if (line.startsWith('#### ')) { closeOpenBlocks(); out.push(`<h4 style="font-size:12px;font-weight:700;color:var(--dc-p1,#F2F2F2);margin:14px 0 4px">${inlineMd(line.slice(5))}</h4>`); continue; }
+    if (line.startsWith('### '))  { closeOpenBlocks(); out.push(`<h3 style="font-size:13px;font-weight:700;color:var(--dc-p1,#F2F2F2);margin:18px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--dc-bdr,rgba(255,255,255,0.07))">${inlineMd(line.slice(4))}</h3>`); continue; }
+    if (line.startsWith('## '))   { closeOpenBlocks(); out.push(`<h2 style="font-size:16px;font-weight:800;color:var(--dc-p1,#F2F2F2);margin:24px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--dc-bdr2,rgba(255,255,255,0.13))">${inlineMd(line.slice(3))}</h2>`); continue; }
+    if (line.startsWith('# '))    { closeOpenBlocks(); out.push(`<h1 style="font-size:22px;font-weight:800;color:var(--dc-p1,#F2F2F2);margin:20px 0 14px;letter-spacing:-0.02em">${inlineMd(line.slice(2))}</h1>`); continue; }
 
     if (line.startsWith('|')) {
       if (inUl || inOl) closeOpenBlocks();
       if (!inTable) {
-        out.push('<div class="overflow-x-auto my-4"><table class="w-full text-xs border border-slate-200 rounded-lg overflow-hidden">');
+        out.push('<div style="overflow-x:auto;margin:14px 0"><table style="width:100%;border-collapse:collapse">');
         inTable = true;
       }
       if (line.match(/^\|[-| :]+\|$/)) continue;
       const cells = line.split('|').filter((_c, idx, arr) => idx > 0 && idx < arr.length - 1);
       const nextLine = lines[i + 1] || '';
-      const isHeader = nextLine.match(/^\|[-| :]+\|$/);
-      const tag = isHeader ? 'th' : 'td';
-      const cls = isHeader
-        ? 'bg-slate-50 font-bold text-slate-600 uppercase tracking-wide px-3 py-2 border-b border-slate-200 text-left text-xs'
-        : 'px-3 py-2 border-b border-slate-100 text-slate-700';
-      out.push(`<tr>${cells.map(c => `<${tag} class="${cls}">${inlineMd(c.trim())}</${tag}>`).join('')}</tr>`);
+      const isHeader = !!nextLine.match(/^\|[-| :]+\|$/);
+      if (isHeader) {
+        out.push(`<thead><tr style="background:var(--dc-s1,#141414);border-bottom:1px solid var(--dc-bdr2,rgba(255,255,255,0.13))">${cells.map(c => `<th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--dc-p3,#505050);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap">${inlineMd(c.trim())}</th>`).join('')}</tr></thead><tbody>`);
+      } else {
+        const row = cells.map((c, ci) => {
+          const val = c.trim();
+          const isCode = ci === 0 && (val.startsWith('/') || /^[A-Z]{2,}$/.test(val) || /^\d{3}$/.test(val) || /^(GET|POST|PUT|DELETE|PATCH)$/.test(val));
+          const s = isCode
+            ? 'padding:7px 12px;font-size:10px;color:var(--dc-acc2,#FF8A4C);font-family:var(--font-mono,monospace);white-space:nowrap'
+            : ci === 0
+            ? 'padding:7px 12px;font-size:12px;color:var(--dc-p1,#F2F2F2);font-weight:600;white-space:nowrap'
+            : 'padding:7px 12px;font-size:12px;color:var(--dc-p2,#909090)';
+          return `<td style="${s}">${inlineMd(val)}</td>`;
+        }).join('');
+        out.push(`<tr style="border-bottom:1px solid var(--dc-bdr,rgba(255,255,255,0.07))">${row}</tr>`);
+      }
       continue;
     }
-    if (inTable && !line.startsWith('|')) { out.push('</table></div>'); inTable = false; }
+    if (inTable && !line.startsWith('|')) { out.push('</tbody></table></div>'); inTable = false; }
 
     if (line.match(/^[-*] /)) {
       if (inOl) { out.push('</ol>'); inOl = false; }
-      if (!inUl) { out.push('<ul class="list-disc list-inside space-y-1 my-3 text-sm text-slate-700 ml-2">'); inUl = true; }
-      out.push(`<li class="leading-relaxed">${inlineMd(line.slice(2))}</li>`);
+      if (!inUl) { out.push('<ul style="padding-left:18px;margin:8px 0;list-style:disc">'); inUl = true; }
+      out.push(`<li style="font-size:13px;color:var(--dc-p2,#909090);line-height:1.65;margin:3px 0">${inlineMd(line.slice(2))}</li>`);
       continue;
     }
     if (line.match(/^\d+\. /)) {
       if (inUl) { out.push('</ul>'); inUl = false; }
-      if (!inOl) { out.push('<ol class="list-decimal list-inside space-y-1 my-3 text-sm text-slate-700 ml-2">'); inOl = true; }
-      out.push(`<li class="leading-relaxed">${inlineMd(line.replace(/^\d+\. /,''))}</li>`);
+      if (!inOl) { out.push('<ol style="padding-left:18px;margin:8px 0;list-style:decimal">'); inOl = true; }
+      out.push(`<li style="font-size:13px;color:var(--dc-p2,#909090);line-height:1.65;margin:3px 0">${inlineMd(line.replace(/^\d+\. /,''))}</li>`);
       continue;
     }
-    if ((inUl || inOl) && line.trim() === '') { closeOpenBlocks(); out.push('<div class="my-1"></div>'); continue; }
-    if (line.match(/^---+$/)) { closeOpenBlocks(); out.push('<hr class="my-5 border-slate-200" />'); continue; }
-    if (line.trim() === '') { closeOpenBlocks(); out.push('<div class="my-2"></div>'); continue; }
+    if ((inUl || inOl) && line.trim() === '') { closeOpenBlocks(); out.push('<div style="margin:4px 0"></div>'); continue; }
+    if (line.match(/^---+$/)) { closeOpenBlocks(); out.push('<hr style="border:none;border-top:1px solid var(--dc-bdr,rgba(255,255,255,0.07));margin:20px 0" />'); continue; }
+    if (line.trim() === '') { closeOpenBlocks(); out.push('<div style="margin:8px 0"></div>'); continue; }
 
-    out.push(`<p class="text-sm text-slate-700 leading-relaxed my-1.5">${inlineMd(line)}</p>`);
+    out.push(`<p style="font-size:13px;color:var(--dc-p2,#909090);line-height:1.7;margin:6px 0">${inlineMd(line)}</p>`);
   }
   if (inCode)  out.push('</code></pre>');
-  if (inTable) out.push('</table></div>');
+  if (inTable) out.push('</tbody></table></div>');
   if (inUl)    out.push('</ul>');
   if (inOl)    out.push('</ol>');
   return out.join('\n');
@@ -1216,27 +1256,30 @@ export default function DeveloperPage() {
         {/* Mobile toggle */}
         <button
           onClick={() => setNavOpen(v => !v)}
-          className="lg:hidden fixed bottom-5 right-5 z-50 w-12 h-12 rounded-full bg-blue-600 text-white shadow-xl flex items-center justify-center font-bold"
+          className="lg:hidden fixed bottom-5 right-5 z-50 w-12 h-12 rounded-full text-white shadow-xl flex items-center justify-center font-bold"
+          style={{ background: 'var(--dc-acc, #E85D12)' }}
           aria-label="Toggle navigation"
         >
           {navOpen ? '✕' : '☰'}
         </button>
 
         {/* Sidebar */}
-        <aside className={[
-          // mobile: fixed, starts BELOW the 56px (h-14) app header so header is never covered
-          'fixed lg:sticky lg:top-0',
-          'top-14 bottom-0 left-0',
-          'z-30',                        // below header z-40
-          'w-60 shrink-0',
-          'bg-slate-900 text-slate-200 overflow-y-auto',
-          'px-2 py-4 flex flex-col gap-0.5',
-          'transition-transform duration-200',
-          navOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-        ].join(' ')}>
-          <div className="px-3 pb-3 mb-2 border-b border-slate-700">
-            <p className="text-xs font-black text-white uppercase tracking-widest">Developer Portal</p>
-            <p className="text-xs text-slate-400 mt-0.5">Delivery Clarity v4.0</p>
+        <aside
+          className={[
+            'fixed lg:sticky lg:top-0',
+            'top-14 bottom-0 left-0',
+            'z-30',
+            'w-60 shrink-0',
+            'overflow-y-auto',
+            'px-2 py-4 flex flex-col gap-0.5',
+            'transition-transform duration-200',
+            navOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          ].join(' ')}
+          style={{ background: 'rgba(5,5,5,0.95)', borderRight: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
+        >
+          <div className="px-3 pb-3 mb-2" style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-p1, #F2F2F2)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Developer Portal</p>
+            <p style={{ fontSize: 11, color: 'var(--dc-p2, #909090)', marginTop: 2 }}>Delivery Clarity v4.6</p>
             {/* Global search */}
             <div className="relative mt-2">
               <input
@@ -1244,38 +1287,50 @@ export default function DeveloperPage() {
                 value={globalSearch}
                 onChange={e => setGlobalSearch(e.target.value)}
                 placeholder="Search portal…"
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-[rgba(232,93,18,0.4)]"
+                style={{
+                  background: 'var(--dc-s2, #1E1E1E)',
+                  border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
+                  borderRadius: 8,
+                  color: 'var(--dc-p1, #F2F2F2)',
+                }}
               />
               {globalSearch && (
                 <button type="button" onClick={() => setGlobalSearch('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">✕</button>
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs"
+                  style={{ color: 'var(--dc-p3, #505050)' }}>✕</button>
               )}
             </div>
           </div>
 
           {groups.map(group => (
             <div key={group} className="mb-3">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider px-3 py-1">{group}</p>
-              {SECTIONS.filter(s => s.group === group).map(s => (
-                <button
-                  key={s.id}
-                  onClick={() => go(s.id)}
-                  className={[
-                    'w-full text-left px-3 py-2 rounded-lg text-sm font-medium mb-0.5 transition-colors',
-                    active === s.id
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white',
-                  ].join(' ')}
-                >
-                  {s.label}
-                </button>
-              ))}
+              <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.09em', padding: '4px 12px' }}>{group}</p>
+              {SECTIONS.filter(s => s.group === group).map(s => {
+                const isActive = active === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => go(s.id)}
+                    className="w-full text-left py-2 rounded-lg text-xs font-medium mb-0.5 transition-all"
+                    style={{
+                      background: isActive ? 'rgba(232,93,18,0.11)' : 'transparent',
+                      color: isActive ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p2, #909090)',
+                      borderLeft: isActive ? '2px solid var(--dc-acc, #E85D12)' : '2px solid transparent',
+                      paddingLeft: isActive ? 10 : 12,
+                      paddingRight: 12,
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
             </div>
           ))}
 
-          <div className="mt-auto pt-3 border-t border-slate-700 px-3">
-            <p className="text-xs text-slate-500">© 2026 Ali Abu Ras</p>
-            <p className="text-xs text-slate-600 truncate">aburasali80@gmail.com</p>
+          <div className="mt-auto pt-3 px-3" style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+            <p style={{ fontSize: 10, color: 'var(--dc-p3, #505050)' }}>© 2026 Ali Abu Ras</p>
+            <p className="truncate" style={{ fontSize: 10, color: 'var(--dc-p3, #505050)' }}>aliaburas80@gmail.com</p>
           </div>
         </aside>
 
@@ -1285,7 +1340,7 @@ export default function DeveloperPage() {
           {/* ── Global Search Results ───────────────────────────────────────── */}
           {globalSearch.trim() && (() => {
             const q = globalSearch.trim().toLowerCase();
-            const matchedCalcs    = CALCULATIONS.filter(c =>
+            const matchedCalcs = CALCULATIONS.filter(c =>
               c.name.toLowerCase().includes(q) ||
               c.formula.toLowerCase().includes(q) ||
               c.why.toLowerCase().includes(q) ||
@@ -1293,7 +1348,7 @@ export default function DeveloperPage() {
               c.file.toLowerCase().includes(q) ||
               c.category.toLowerCase().includes(q)
             );
-            const matchedPkgs  = PACKAGES.filter(p =>
+            const matchedPkgs = PACKAGES.filter(p =>
               p.name.toLowerCase().includes(q) ||
               p.usedFor.toLowerCase().includes(q) ||
               p.feature.toLowerCase().includes(q)
@@ -1307,24 +1362,29 @@ export default function DeveloperPage() {
             return (
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <h2 className="text-sm font-black text-slate-800">Search results for &quot;{globalSearch}&quot;</h2>
-                  <span className="text-xs text-slate-400">{total} match{total !== 1 ? 'es' : ''}</span>
+                  <h2 style={{ fontSize: 14, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)' }}>Search results for &quot;{globalSearch}&quot;</h2>
+                  <span style={{ fontSize: 12, color: 'var(--dc-p3, #505050)' }}>{total} match{total !== 1 ? 'es' : ''}</span>
                   <button type="button" onClick={() => setGlobalSearch('')}
-                    className="ml-auto text-xs text-blue-600 hover:underline font-semibold">Clear search</button>
+                    className="ml-auto text-xs font-semibold"
+                    style={{ color: 'var(--dc-acc2, #FF8A4C)' }}>Clear search</button>
                 </div>
 
                 {total === 0 && (
-                  <div className="text-sm text-slate-500 py-8 text-center">No results found for &quot;{globalSearch}&quot;</div>
+                  <div className="py-8 text-center" style={{ fontSize: 13, color: 'var(--dc-p3, #505050)' }}>No results found for &quot;{globalSearch}&quot;</div>
                 )}
 
                 {matchedSects.length > 0 && (
                   <div className="mb-5">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Sections ({matchedSects.length})</p>
+                    <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Sections ({matchedSects.length})</p>
                     <div className="flex flex-wrap gap-2">
                       {matchedSects.map(s => (
                         <button key={s.id} type="button"
                           onClick={() => { setGlobalSearch(''); go(s.id); }}
-                          className="text-xs font-semibold bg-slate-100 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg px-3 py-1.5 text-slate-700 hover:text-blue-700 transition-colors">
+                          className="text-xs font-semibold rounded-lg px-3 py-1.5 transition-all"
+                          style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }}
+                          onMouseEnter={e => { e.currentTarget.style.color = 'var(--dc-acc2, #FF8A4C)'; e.currentTarget.style.border = '1px solid rgba(232,93,18,0.22)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.color = 'var(--dc-p2, #909090)'; e.currentTarget.style.border = '1px solid var(--dc-bdr, rgba(255,255,255,0.07))'; }}
+                        >
                           {s.label}
                         </button>
                       ))}
@@ -1334,18 +1394,22 @@ export default function DeveloperPage() {
 
                 {matchedCalcs.length > 0 && (
                   <div className="mb-5">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Calculations ({matchedCalcs.length})</p>
+                    <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Calculations ({matchedCalcs.length})</p>
                     <div className="space-y-2">
                       {matchedCalcs.map(c => (
                         <button key={c.name} type="button"
                           onClick={() => { setGlobalSearch(''); setExpandedCalc(c.name); go('calculations'); }}
-                          className="w-full text-left bg-white border border-slate-200 hover:border-blue-300 rounded-xl p-3 transition-colors group">
+                          className="w-full text-left rounded-xl p-3 transition-all"
+                          style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
+                          onMouseEnter={e => (e.currentTarget.style.border = '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))')}
+                          onMouseLeave={e => (e.currentTarget.style.border = '1px solid var(--dc-bdr, rgba(255,255,255,0.07))')}
+                        >
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-black text-slate-800 group-hover:text-blue-700">{c.name}</span>
-                            <span className="text-[10px] bg-slate-100 text-slate-500 rounded-full px-2 py-0.5 font-semibold">{c.category}</span>
-                            <span className={`text-[10px] rounded-full px-2 py-0.5 font-bold ml-auto ${c.status === 'Implemented' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>{c.status}</span>
+                            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)' }}>{c.name}</span>
+                            <span className="chip c-nt" style={{ fontSize: 9, borderRadius: 4 }}>{c.category}</span>
+                            <span className={c.status === 'Implemented' ? 'chip c-gr' : 'chip c-am'} style={{ fontSize: 9, borderRadius: 4, marginLeft: 'auto' }}>{c.status}</span>
                           </div>
-                          <p className="text-[10px] text-slate-500 font-mono truncate">{c.formula.slice(0, 80)}</p>
+                          <p style={{ fontSize: 10, color: 'var(--dc-p3, #505050)', fontFamily: 'var(--font-mono, monospace)' }} className="truncate">{c.formula.slice(0, 80)}</p>
                         </button>
                       ))}
                     </div>
@@ -1354,18 +1418,22 @@ export default function DeveloperPage() {
 
                 {matchedPkgs.length > 0 && (
                   <div className="mb-5">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Packages ({matchedPkgs.length})</p>
+                    <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Packages ({matchedPkgs.length})</p>
                     <div className="space-y-2">
                       {matchedPkgs.map(p => (
                         <button key={p.name} type="button"
                           onClick={() => { setGlobalSearch(''); setPkgSearch(p.name); go('packages'); }}
-                          className="w-full text-left bg-white border border-slate-200 hover:border-blue-300 rounded-xl p-3 transition-colors group">
+                          className="w-full text-left rounded-xl p-3 transition-all"
+                          style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
+                          onMouseEnter={e => (e.currentTarget.style.border = '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))')}
+                          onMouseLeave={e => (e.currentTarget.style.border = '1px solid var(--dc-bdr, rgba(255,255,255,0.07))')}
+                        >
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-black font-mono text-slate-800 group-hover:text-blue-700">{p.name}</span>
-                            <span className="text-[10px] text-slate-400">{p.version}</span>
-                            <span className={`text-[10px] rounded-full px-2 py-0.5 font-bold ml-auto ${p.status === 'Installed' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>{p.status}</span>
+                            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--dc-acc2, #FF8A4C)', fontFamily: 'var(--font-mono, monospace)' }}>{p.name}</span>
+                            <span style={{ fontSize: 11, color: 'var(--dc-p3, #505050)' }}>{p.version}</span>
+                            <span className={p.status === 'Installed' ? 'chip c-gr' : 'chip c-am'} style={{ fontSize: 9, borderRadius: 4, marginLeft: 'auto' }}>{p.status}</span>
                           </div>
-                          <p className="text-[10px] text-slate-500 truncate">{p.usedFor}</p>
+                          <p style={{ fontSize: 11, color: 'var(--dc-p2, #909090)' }} className="truncate">{p.usedFor}</p>
                         </button>
                       ))}
                     </div>
@@ -1377,14 +1445,15 @@ export default function DeveloperPage() {
 
           {/* Breadcrumb — always visible */}
           {!globalSearch.trim() && (
-          <div className="flex items-center gap-2 text-xs text-slate-400 mb-5 flex-wrap">
-            <span className="font-medium text-slate-500">Developer Portal</span>
-            <span>›</span>
-            <span className="text-blue-600 font-semibold">
+          <div className="flex items-center gap-2 mb-5 flex-wrap" style={{ fontSize: 12 }}>
+            <span style={{ fontWeight: 500, color: 'var(--dc-p2, #909090)' }}>Developer Portal</span>
+            <span style={{ color: 'var(--dc-p3, #505050)' }}>›</span>
+            <span style={{ fontWeight: 600, color: 'var(--dc-p1, #F2F2F2)' }}>
               {SECTIONS.find(s => s.id === active)?.label ?? active}
             </span>
             {DOC_SLUGS.has(active) && (
-              <span className="ml-auto bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+              <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(232,93,18,0.10)', border: '1px solid rgba(232,93,18,0.20)', color: 'var(--dc-acc2, #FF8A4C)' }}>
                 From product/
               </span>
             )}
@@ -1393,90 +1462,104 @@ export default function DeveloperPage() {
 
           {!globalSearch.trim() && <>
           {loading && (
-            <div className="flex items-center gap-3 text-slate-500 py-16 justify-center">
-              <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-              <span className="text-sm font-medium">Loading document…</span>
+            <div className="flex items-center gap-3 py-16 justify-center" style={{ color: 'var(--dc-p3, #505050)' }}>
+              <div className="w-6 h-6 rounded-full animate-spin"
+                style={{ border: '2px solid rgba(232,93,18,0.2)', borderTopColor: 'var(--dc-acc, #E85D12)' }} />
+              <span style={{ fontSize: 13, fontWeight: 500 }}>Loading document…</span>
             </div>
           )}
 
           {error && !loading && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-5 my-4">
-              <p className="text-sm font-bold text-red-700 mb-1">⚠ Failed to load document</p>
-              <p className="text-sm text-red-600">{error}</p>
+            <div className="rounded-xl p-5 my-4"
+              style={{ background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.18)' }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#fca5a5', marginBottom: 4 }}>⚠ Failed to load document</p>
+              <p style={{ fontSize: 13, color: '#fca5a5' }}>{error}</p>
             </div>
           )}
 
           {/* ── Package Reference ── */}
           {active === 'packages' && (
             <div className="max-w-5xl">
-              <h2 className="text-xl font-black text-slate-900 mb-1">Package Reference</h2>
-              <p className="text-sm text-slate-500 mb-4">All packages used by Delivery Clarity — version, purpose, scope, and risk if removed.</p>
+              <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)', marginBottom: 4 }}>Package Reference</h2>
+              <p style={{ fontSize: 13, color: 'var(--dc-p2, #909090)', marginBottom: 14 }}>All packages used by Delivery Clarity — version, purpose, scope, and risk if removed.</p>
               {/* Filters */}
               <div className="flex flex-wrap gap-3 mb-4">
                 <input type="text" placeholder="Search packages…" value={pkgSearch} onChange={e => setPkgSearch(e.target.value)}
-                  className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm flex-1 min-w-[180px] focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                  className="flex-1 min-w-[180px] px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[rgba(232,93,18,0.3)]"
+                  style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, color: 'var(--dc-p1, #F2F2F2)' }} />
                 <select value={pkgScope} onChange={e => setPkgScope(e.target.value)}
-                  className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none">
+                  className="px-3 py-1.5 text-sm outline-none"
+                  style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, color: 'var(--dc-p2, #909090)' }}>
                   {['all','Client','Server','Shared','Dev-only'].map(s => <option key={s} value={s}>{s === 'all' ? 'All scopes' : s}</option>)}
                 </select>
                 <select value={pkgStatus} onChange={e => setPkgStatus(e.target.value)}
-                  className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none">
+                  className="px-3 py-1.5 text-sm outline-none"
+                  style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, color: 'var(--dc-p2, #909090)' }}>
                   {['all','Installed','Planned'].map(s => <option key={s} value={s}>{s === 'all' ? 'All statuses' : s}</option>)}
                 </select>
               </div>
-              <div className="overflow-x-auto bg-white border border-slate-200 rounded-2xl shadow-sm">
+              <div className="overflow-x-auto rounded-2xl"
+                style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-left">
+                    <tr style={{ background: 'var(--dc-s1, #141414)', borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))' }}>
                       {['Package','Version','Used For','Feature / Area','Scope','Status','Risk if Removed'].map(h => (
-                        <th key={h} className="py-2.5 px-3 text-[10px] font-black uppercase tracking-wider text-slate-500 whitespace-nowrap">{h}</th>
+                        <th key={h} style={{ padding: '10px 12px', fontSize: 10, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', textAlign: 'left' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody>
                     {PACKAGES.filter(p =>
                       (!pkgSearch || p.name.toLowerCase().includes(pkgSearch.toLowerCase()) || p.usedFor.toLowerCase().includes(pkgSearch.toLowerCase())) &&
                       (pkgScope === 'all' || p.scope === pkgScope) &&
                       (pkgStatus === 'all' || p.status === pkgStatus)
                     ).map(p => (
-                      <tr key={p.name} className="hover:bg-slate-50">
-                        <td className="py-2 px-3 font-mono font-bold text-blue-700 whitespace-nowrap">{p.name}</td>
-                        <td className="py-2 px-3 font-mono text-slate-600 whitespace-nowrap">{p.version}</td>
-                        <td className="py-2 px-3 text-slate-700 max-w-[200px]">{p.usedFor}</td>
-                        <td className="py-2 px-3 whitespace-nowrap">
-                          <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5 font-semibold">{p.feature}</span>
+                      <tr key={p.name}
+                        style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.025)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <td style={{ padding: '8px 12px', fontFamily: 'var(--font-mono,monospace)', fontWeight: 700, color: 'var(--dc-acc2, #FF8A4C)', whiteSpace: 'nowrap' }}>{p.name}</td>
+                        <td style={{ padding: '8px 12px', fontFamily: 'var(--font-mono,monospace)', color: 'var(--dc-p3, #505050)', whiteSpace: 'nowrap' }}>{p.version}</td>
+                        <td style={{ padding: '8px 12px', color: 'var(--dc-p2, #909090)', maxWidth: 200 }}>{p.usedFor}</td>
+                        <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
+                          <span style={{ background: 'rgba(232,93,18,0.10)', color: 'var(--dc-acc2, #FF8A4C)', padding: '1px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>{p.feature}</span>
                         </td>
-                        <td className="py-2 px-3 whitespace-nowrap">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${p.scope === 'Client' ? 'bg-green-50 text-green-700 border-green-200' : p.scope === 'Server' ? 'bg-purple-50 text-purple-700 border-purple-200' : p.scope === 'Dev-only' ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-teal-50 text-teal-700 border-teal-200'}`}>
-                            {p.scope}
-                          </span>
+                        <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, padding: '1px 8px', borderRadius: 4,
+                            ...(p.scope === 'Client'   ? { background: 'rgba(34,197,94,0.10)',  color: '#4ade80'  } :
+                                p.scope === 'Server'   ? { background: 'rgba(124,58,237,0.10)', color: '#c4b5fd' } :
+                                p.scope === 'Dev-only' ? { background: 'rgba(255,255,255,0.06)', color: 'var(--dc-p3, #505050)' } :
+                                                         { background: 'rgba(20,184,166,0.10)', color: '#5eead4' }),
+                          }}>{p.scope}</span>
                         </td>
-                        <td className="py-2 px-3">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${p.status === 'Installed' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-amber-100 text-amber-800 border-amber-200'}`}>
-                            {p.status}
-                          </span>
+                        <td style={{ padding: '8px 12px' }}>
+                          <span className={p.status === 'Installed' ? 'chip c-gr' : 'chip c-am'} style={{ borderRadius: 4 }}>{p.status}</span>
                         </td>
-                        <td className="py-2 px-3 text-slate-600 max-w-[200px]">{p.risk}</td>
+                        <td style={{ padding: '8px 12px', color: 'var(--dc-p2, #909090)', maxWidth: 200, fontSize: 11 }}>{p.risk}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-slate-400 mt-3">{PACKAGES.filter(p => p.status === 'Installed').length} installed · {PACKAGES.filter(p => p.status === 'Planned').length} planned</p>
+              <p style={{ fontSize: 11, color: 'var(--dc-p3, #505050)', marginTop: 10 }}>{PACKAGES.filter(p => p.status === 'Installed').length} installed · {PACKAGES.filter(p => p.status === 'Planned').length} planned</p>
             </div>
           )}
 
           {/* ── Calculation Reference ── */}
           {active === 'calculations' && (
             <div className="max-w-5xl">
-              <h2 className="text-xl font-black text-slate-900 mb-1">Calculation Reference</h2>
-              <p className="text-sm text-slate-500 mb-4">Every major metric, formula, and calculation used by Delivery Clarity — with purpose, assumptions, and code location.</p>
+              <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)', marginBottom: 4 }}>Calculation Reference</h2>
+              <p style={{ fontSize: 13, color: 'var(--dc-p2, #909090)', marginBottom: 14 }}>Every major metric, formula, and calculation used by Delivery Clarity — with purpose, assumptions, and code location.</p>
               {/* Filters */}
               <div className="flex flex-wrap gap-3 mb-5">
                 <input type="text" placeholder="Search metrics…" value={calcSearch} onChange={e => setCalcSearch(e.target.value)}
-                  className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm flex-1 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                  className="flex-1 min-w-[200px] px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[rgba(232,93,18,0.3)]"
+                  style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, color: 'var(--dc-p1, #F2F2F2)' }} />
                 <select value={calcCategory} onChange={e => setCalcCategory(e.target.value)}
-                  className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none">
+                  className="px-3 py-1.5 text-sm outline-none"
+                  style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, color: 'var(--dc-p2, #909090)' }}>
                   <option value="all">All categories</option>
                   {CALC_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -1488,30 +1571,36 @@ export default function DeveloperPage() {
                 ).map(calc => {
                   const isExpanded = expandedCalc === calc.name;
                   return (
-                    <div key={calc.name} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <div key={calc.name} className="rounded-xl overflow-hidden"
+                      style={{ background: 'var(--dc-s2, #1E1E1E)', border: isExpanded ? '1px solid rgba(232,93,18,0.2)' : '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
                       <button type="button" onClick={() => setExpandedCalc(isExpanded ? null : calc.name)}
-                        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-slate-50 transition-colors">
+                        className="w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors"
+                        onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = 'rgba(255,255,255,0.025)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-black text-slate-800">{calc.name}</span>
-                            <span className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5">{calc.category}</span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${calc.status === 'Implemented' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-amber-100 text-amber-800 border-amber-200'}`}>{calc.status}</span>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)' }}>{calc.name}</span>
+                            <span className="chip c-nt" style={{ fontSize: 9, borderRadius: 4 }}>{calc.category}</span>
+                            <span className={calc.status === 'Implemented' ? 'chip c-gr' : 'chip c-am'} style={{ fontSize: 9, borderRadius: 4 }}>{calc.status}</span>
                           </div>
-                          <p className="text-xs font-mono text-slate-500 mt-0.5 truncate">{calc.formula.split('\n')[0]}</p>
+                          <p style={{ fontSize: 10, color: 'var(--dc-p3, #505050)', fontFamily: 'var(--font-mono,monospace)', marginTop: 2 }} className="truncate">{calc.formula.split('\n')[0]}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <button type="button" onClick={e => { e.stopPropagation(); navigator.clipboard?.writeText(calc.formula).catch(() => {}); }}
-                            className="text-[10px] font-bold bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 rounded px-2 py-0.5 border border-slate-200 transition-colors" title="Copy formula">
+                            className="text-[10px] font-bold rounded px-2 py-0.5 transition-colors"
+                            style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }}
+                            title="Copy formula">
                             Copy formula
                           </button>
-                          <span className={`text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>▾</span>
+                          <span style={{ color: 'var(--dc-p3, #505050)', transition: 'transform 0.15s', display: 'inline-block', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
                         </div>
                       </button>
                       {isExpanded && (
-                        <div className="px-5 pb-5 border-t border-slate-100 bg-slate-50/50 space-y-3 pt-4">
+                        <div className="px-5 pb-5 pt-4 space-y-3"
+                          style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', background: 'var(--dc-s1, #141414)' }}>
                           <div>
-                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Formula</p>
-                            <pre className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 whitespace-pre-wrap">{calc.formula}</pre>
+                            <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>Formula</p>
+                            <pre style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, padding: '10px 14px', fontSize: 11, fontFamily: 'var(--font-mono,monospace)', color: 'var(--dc-p1, #F2F2F2)', whiteSpace: 'pre-wrap' }}>{calc.formula}</pre>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {[
@@ -1524,19 +1613,19 @@ export default function DeveloperPage() {
                               ['Limitations', calc.limitations],
                             ].map(([label, value]) => (
                               <div key={label as string}>
-                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">{label}</p>
-                                <p className="text-xs text-slate-700 leading-snug">{value}</p>
+                                <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>{label}</p>
+                                <p style={{ fontSize: 11, color: 'var(--dc-p2, #909090)', lineHeight: 1.5 }}>{value}</p>
                               </div>
                             ))}
                           </div>
-                          <div className="flex flex-wrap gap-4 pt-2 border-t border-slate-100">
+                          <div className="flex flex-wrap gap-4 pt-2" style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
                             <div>
-                              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Related File</p>
-                              <code className="text-[10px] font-mono text-blue-700 bg-blue-50 px-2 py-0.5 rounded">{calc.file}</code>
+                              <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Related File</p>
+                              <code style={{ fontSize: 10, fontFamily: 'var(--font-mono,monospace)', color: 'var(--dc-acc2, #FF8A4C)', background: 'rgba(232,93,18,0.08)', padding: '1px 6px', borderRadius: 3 }}>{calc.file}</code>
                             </div>
                             <div>
-                              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Reference</p>
-                              <p className="text-xs text-slate-600">{calc.ref}</p>
+                              <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Reference</p>
+                              <p style={{ fontSize: 11, color: 'var(--dc-p2, #909090)' }}>{calc.ref}</p>
                             </div>
                           </div>
                         </div>
@@ -1545,7 +1634,7 @@ export default function DeveloperPage() {
                   );
                 })}
               </div>
-              <p className="text-xs text-slate-400 mt-4">{CALCULATIONS.length} calculations documented · {CALCULATIONS.filter(c => c.status === 'Implemented').length} implemented</p>
+              <p style={{ fontSize: 11, color: 'var(--dc-p3, #505050)', marginTop: 14 }}>{CALCULATIONS.length} calculations documented · {CALCULATIONS.filter(c => c.status === 'Implemented').length} implemented</p>
             </div>
           )}
 
