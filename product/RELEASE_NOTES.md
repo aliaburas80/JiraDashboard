@@ -5,6 +5,17 @@
 
 ---
 
+## v4.6.1 — Theme D Restyle P13: Admin User Management (2026-06-11, P1 — UI)
+
+### Changed
+- **Admin sidebar** (`AdminConsoleLayout`): active nav item → `rgba(232,93,18,0.11)` bg + acc2 color + orange left bar; inactive items → dc-p2; "Operational" status badge → `chip c-gr` pill with green dot; search input → dc-s3/bdr; "Open Diagnostics" link → acc2 orange; kbd badge → dc-s1.
+- **Stats row** (`buildSettingsStats` users tab): Total Users=dc-p1, Active Users=green, Admin Users=acc2, Role Types=dc-p1; icon containers use per-stat `toneStyle` (dark-compatible inline styles).
+- **Add User form**: container → dc-s2/bdr; icon badge → dc-s3; title → p1; subtitle → p2; all inputs/select → dc-s3/bdr/p1 with acc focus ring; "Create User" button → dc-acc background, emoji removed.
+- **Feedback toast**: ok → green rgba chip; error → red rgba chip (dark-compatible, no Tailwind light classes).
+- **User table**: container → dc-s2/bdr; header section → p1/p2 text; search/filter/refresh → dc-s3/bdr dark inputs; bulk action bar → dc-s1 bg, bulk delete → red rgba; table header → dc-s1/bdr2; avatar circles → acc→#8B2D00 gradient; selected row → `rgba(232,93,18,0.08)`; name inline-edit → p1 with dc-s1 focus; email → p3; role select → dc-s3/bdr/p1; import/snapshot counts → p1; status badge → chip c-gr / chip c-nt; pause button → p2 with amber hover; delete button → p2 with red hover; pagination → acc2 mono.
+
+---
+
 ## v4.6 — Roadmap, Forecast, Retro Pages + Planning Nav Group + Help/Glossary UX Redesign (2026-06-10, P1)
 
 ### New Pages
