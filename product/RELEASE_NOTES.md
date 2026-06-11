@@ -5,6 +5,27 @@
 
 ---
 
+## v4.6.9 — Theme D Restyle P21: Admin Import Logs (2026-06-11, P1 — UI)
+
+### Changed
+- **healthChipClass helper**: >80=`chip c-gr`; 60–79=`chip c-acc`; 40–59=`chip c-am`; <40=`chip c-or` — standardises inconsistent prior banding.
+- **KPI stat cards**: Import Logs → p1; Successful → dc-green; Failed → dc-red (or p3 when 0); Avg Health → acc2; icon areas use matching toneStyle backgrounds.
+- **Loading state**: `text-slate-400` → `var(--dc-p3)`.
+- **Error state**: `bg-red-50 border-red-200 text-red-700` → `rgba(248,113,113,0.07)` bg + `rgba(248,113,113,0.18)` border + `#fca5a5` text.
+- **Table container**: `bg-white border-slate-200` → dc-s2/bdr r14.
+- **Table header**: `bg-slate-50 border-slate-200` → dc-s1/bdr2; header text p3 10px uppercase 0.07em tracking.
+- **User column**: name p1 11px/600; email p3 9px.
+- **Filename**: p2 10px truncate ellipsis.
+- **Type badge**: `chip c-nt` + mono 9px (was plain uppercase text).
+- **Issues**: p1 mono bold.
+- **Health chip**: threshold system via healthChipClass.
+- **Status badge**: `chip c-gr` / `chip c-rd`.
+- **Timestamp**: p3 mono 9px.
+- **Row hover**: `rgba(255,255,255,0.025)` via onMouseEnter/Leave.
+- **Empty state**: p3 italic.
+
+---
+
 ## v4.6.8 — Theme D Restyle P20: Help & Documentation (2026-06-11, P1 — UI)
 
 ### Changed
