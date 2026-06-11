@@ -5,6 +5,19 @@
 
 ---
 
+## v4.6.5 — Theme D Restyle P17: Landing Page (2026-06-11, P1 — UI)
+
+### Changed
+- **Zero-credential badge**: `chip c-acc` border-radius 100px (replaced blue pill).
+- **Headline accent**: `var(--dc-acc2, #FF8A4C)` (replaced `text-blue-600`).
+- **CTA buttons**: Primary → dc-acc `#E85D12`; Secondary → ghost `rgba(232,93,18,0.09)` bg + acc2 text + acc border.
+- **Stats strip**: 28+/14 = acc2, 17 = green, 469+ = amber; mono 22px; containers dc-s2/bdr.
+- **How it works cards**: dc-s2/bdr; "STEP XX" label → `chip c-acc` 9px; title p1; description p2.
+- **Feature grid**: `FeatureCard` dc-s2/bdr with `onMouseEnter` → bdr2 + `translateY(-2px)` + shadow; title p1; description p2; "Open →" acc2.
+- **CTA footer**: dark blue gradient removed → `rgba(232,93,18,0.04)` bg + acc border; icon box `rgba(232,93,18,0.12)` with acc2 SVG fill; title p1; subtitle p2; Developer Portal → ghost style; copyright p3.
+
+---
+
 ## v4.6.4 — Theme D Restyle P16: Customer View PDF (2026-06-11, P1 — UI)
 
 ### Changed — Light mode preserved (print-safe)
