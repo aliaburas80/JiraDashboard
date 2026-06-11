@@ -5,6 +5,30 @@
 
 ---
 
+## v4.6.4 — Theme D Restyle P16: Customer View PDF (2026-06-11, P1 — UI)
+
+### Changed — Light mode preserved (print-safe)
+- **Health badge**: border-4 → 2px, score font mono 28px, dynamic health color kept (orange for "Needs Attention").
+- **Status banner**: `border-l-8` → `border-l-[3px]`, static `#FFF7ED` background, `#E85D12` border accent, text `#222`.
+- **MetricPill**: container `border: 1px solid #E8E8E8` (no Tailwind shadow); label `#888` 9px uppercase; value mono 20px. Color updates: Completion=`#111`, In Progress=`#E85D12`, Story Points=`#111`, Blocked=`#DC2626`/green.
+- **RiskRow**: all inline styles — high `#DC2626`/`#FEF2F2`, medium `#E85D12`/`#FFF7ED`, low `#6B7280`/`#F8FAFC`.
+- **Delivery area bars**: `barColor = pct >= 100 ? #16A34A : #1D4ED8` (blue for partial per stakeholder convention, green for 100%); track `#E8E8E8`.
+- **Key Highlights**: container `border: 1px solid #E8E8E8`; insight dots `#1D4ED8`; text `#333`.
+- **Print CSS**: `@media print` adds `font-family: 'Plus Jakarta Sans', sans-serif !important`.
+
+---
+
+## v4.6.3 — Theme D Restyle P15: Members Directory (2026-06-11, P1 — UI)
+
+### Changed
+- **Header**: title p1 28px/800; subtitle p2 13px; Members/Roles stats → rounded-100px dc-s2/bdr with acc2 values; Request add member → acc orange theme.
+- **Search bar**: container removed; input dc-s2/bdr r12 p1 text, p3 icon, focus acc ring.
+- **Member cards**: dc-s2/bdr; onMouseEnter → bdr2 + `translateY(-2px)` + shadow; avatar 40px `rounded-full` acc→`#8B2D00` gradient (5-color array); name p1 13px/600; role subtitle p2 10px; role badge `chip c-acc` (admin) / `chip c-am` (manager) / `chip c-nt` (others); email p2 10px; bio p3 10px italic when empty.
+- **Skeleton/empty state**: dc-s2/bdr dark.
+- **Modal**: dc-s2 + bdr2 + dark shadow; large avatar gradient; role badge chip; close button dark with hover; Detail component dc-s3/bdr, p3 label, p1 value.
+
+---
+
 ## v4.6.2 — Theme D Restyle P14: Privacy & Retention (2026-06-11, P1 — UI)
 
 ### Changed
