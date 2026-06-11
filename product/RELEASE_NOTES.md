@@ -5,6 +5,19 @@
 
 ---
 
+## v4.6.6 — Theme D Restyle P18: Glossary & Appendix (2026-06-11, P1 — UI)
+
+### Changed
+- **Hero**: `chip c-acc` "REFERENCE" badge (borderRadius 100); title p1 28px/800; subtitle p2 14px; stat KPI cards dc-s2/bdr r8 with acc2 mono values.
+- **Search bar**: dc-s2/bdr r12 full-width; p3 🔍 icon; p1 text; focus ring `rgba(232,93,18,0.25)`.
+- **Category filter tabs**: active → `rgba(232,93,18,0.12)` bg + acc2 text + 1.5px `rgba(232,93,18,0.22)` border + 100px radius; inactive → transparent + bdr + p2 text; hover p1 text.
+- **Term cards**: dc-s2/bdr r9 p3; hover bdr2 via onMouseEnter/Leave; expanded → `rgba(232,93,18,0.2)` border; title p1 13px/600; definition p2 12px/1.6; "Click to expand" prompt p3 10px with ⚡.
+- **Tag color system**: P0 → `rgba(232,93,18,0.18)` bg / acc / mono; P1 → `rgba(255,138,76,0.15)` / acc2; P2 → `rgba(245,158,11,0.12)` / `#fcd34d`; P3 → `rgba(255,255,255,0.08)` / p1; delivery → `rgba(34,197,94,0.11)` / `#4ade80`; people → `chip c-nt`; reference/other → `rgba(255,255,255,0.08)` / p2.
+- **Empty state & footer**: p3 neutral text; footer bdr top.
+- **Removed**: all Tailwind color classes (`bg-white`, `bg-purple-600`, `bg-teal-600`, `text-[#1A1A18]`, `border-[#E4E3DE]`, `CATS.color`, `CAT_ACTIVE`, `BADGE_COLOR`).
+
+---
+
 ## v4.6.5 — Theme D Restyle P17: Landing Page (2026-06-11, P1 — UI)
 
 ### Changed

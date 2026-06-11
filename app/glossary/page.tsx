@@ -1,6 +1,6 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type CSSProperties } from 'react';
 import AppShell from '@/components/layout/AppShell';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -89,27 +89,27 @@ const SECTIONS: GlossarySection[] = [
     id: 'goal-outcomes', title: 'F — Sprint Goal Outcomes', icon: '🏁', category: 'delivery',
     description: 'How Delivery Clarity classifies whether a sprint achieved its goal.',
     rows: [
-      { term: 'Met',          full: 'Goal Met',      meaning: 'Sprint completion ≥ 90%. The sprint goal was fully achieved.' },
+      { term: 'Met',           full: 'Goal Met',      meaning: 'Sprint completion ≥ 90%. The sprint goal was fully achieved.' },
       { term: 'Partially Met', full: 'Partially Met', meaning: 'Sprint completion ≥ 60%. Most of the sprint goal was achieved.' },
-      { term: 'Missed',       full: 'Goal Missed',   meaning: 'Sprint completion < 60% and the sprint has ended. Goal was not achieved.' },
-      { term: 'At Risk',      full: 'Goal At Risk',  meaning: 'Sprint completion < 60% but sprint is still active. Time to recover.' },
+      { term: 'Missed',        full: 'Goal Missed',   meaning: 'Sprint completion < 60% and the sprint has ended. Goal was not achieved.' },
+      { term: 'At Risk',       full: 'Goal At Risk',  meaning: 'Sprint completion < 60% but sprint is still active. Time to recover.' },
     ],
   },
   {
     id: 'doc-codes', title: 'G — Document Codes', icon: '📄', category: 'reference',
     description: 'Reference codes used in Delivery Clarity product documentation.',
     rows: [
-      { term: 'BRD',  full: 'Business Requirements Document',    meaning: 'Explains what the product must do and why, in business language.' },
+      { term: 'BRD',  full: 'Business Requirements Document',     meaning: 'Explains what the product must do and why, in business language.' },
       { term: 'SRS',  full: 'Software Requirements Specification', meaning: 'Detailed technical requirements numbered as FR-xxx.' },
-      { term: 'FR',   full: 'Functional Requirement',            meaning: 'A specific numbered requirement. e.g. FR-207.' },
-      { term: 'UC',   full: 'Use Case',                          meaning: 'A step-by-step description of how a user achieves a goal. e.g. UC-043.' },
-      { term: 'SCN',  full: 'Scenario',                          meaning: 'A real-world story of how a specific persona uses the product. e.g. SCN-012.' },
-      { term: 'UJ',   full: 'User Journey',                      meaning: 'A step-by-step walkthrough of a user\'s experience. e.g. UJ-010.' },
-      { term: 'TC',   full: 'Test Case',                         meaning: 'A documented test that verifies a specific behaviour.' },
-      { term: 'TC-T', full: 'Test Case — Throughput',            meaning: 'Tests for sprint throughput formula calculations. e.g. TC-T-01.' },
-      { term: 'TC-E', full: 'Test Case — Explorer',              meaning: 'Tests for the Work Item Explorer / relation graph. e.g. TC-E-01.' },
-      { term: 'TC-A', full: 'Test Case — Auth',                  meaning: 'Tests for login, logout, password, session. e.g. TC-A-01.' },
-      { term: 'TC-X', full: 'Test Case — Excel',                 meaning: 'Tests for the 17-sheet Excel workbook. e.g. TC-X-01.' },
+      { term: 'FR',   full: 'Functional Requirement',             meaning: 'A specific numbered requirement. e.g. FR-207.' },
+      { term: 'UC',   full: 'Use Case',                           meaning: 'A step-by-step description of how a user achieves a goal. e.g. UC-043.' },
+      { term: 'SCN',  full: 'Scenario',                           meaning: 'A real-world story of how a specific persona uses the product. e.g. SCN-012.' },
+      { term: 'UJ',   full: 'User Journey',                       meaning: 'A step-by-step walkthrough of a user\'s experience. e.g. UJ-010.' },
+      { term: 'TC',   full: 'Test Case',                          meaning: 'A documented test that verifies a specific behaviour.' },
+      { term: 'TC-T', full: 'Test Case — Throughput',             meaning: 'Tests for sprint throughput formula calculations. e.g. TC-T-01.' },
+      { term: 'TC-E', full: 'Test Case — Explorer',               meaning: 'Tests for the Work Item Explorer / relation graph. e.g. TC-E-01.' },
+      { term: 'TC-A', full: 'Test Case — Auth',                   meaning: 'Tests for login, logout, password, session. e.g. TC-A-01.' },
+      { term: 'TC-X', full: 'Test Case — Excel',                  meaning: 'Tests for the 17-sheet Excel workbook. e.g. TC-X-01.' },
     ],
   },
   {
@@ -126,30 +126,30 @@ const SECTIONS: GlossarySection[] = [
     id: 'tech', title: 'I — Technology Abbreviations', icon: '💻', category: 'reference',
     description: 'Technical terms used in developer documentation and the app itself.',
     rows: [
-      { term: 'API',       full: 'Application Programming Interface', meaning: 'A way for two software systems to communicate. In this app, it means the /api/... endpoints.' },
-      { term: 'CSV',       full: 'Comma-Separated Values',     meaning: 'A plain text file format for tabular data. One of the Jira export formats this app accepts.' },
-      { term: 'XLSX',      full: 'Excel Open XML Spreadsheet', meaning: 'Microsoft Excel file format. The other Jira export format this app accepts.' },
-      { term: 'DB',        full: 'Database',                   meaning: 'Where data is stored persistently. Delivery Clarity uses SQLite.' },
-      { term: 'ORM',       full: 'Object-Relational Mapper',   meaning: 'A library that lets you write database queries in code. This app uses Prisma.' },
-      { term: 'SSR',       full: 'Server-Side Rendering',      meaning: 'Page HTML is built on the server before sending to the browser.' },
-      { term: 'TTL',       full: 'Time To Live',               meaning: 'How long something is valid before it expires. Sessions have an 8-hour TTL by default.' },
-      { term: 'bcrypt',    full: 'bcrypt hashing algorithm',   meaning: 'A one-way password hashing function. Stored passwords can never be reversed.' },
-      { term: 'SQLite',    full: 'SQLite',                     meaning: 'A lightweight file-based database used for user accounts and import logs.' },
-      { term: 'Prisma',    full: 'Prisma ORM',                 meaning: 'The database library. Handles schema, migrations, and queries.' },
-      { term: 'SESSION_SECRET', full: '—',                     meaning: 'A ≥ 32-character random string used to sign iron-session cookies. Required for production.' },
-      { term: 'nginx',     full: '—',                          meaning: 'Web server used as a reverse proxy. Terminates SSL and forwards requests to the Next.js app on port 3000.' },
+      { term: 'API',            full: 'Application Programming Interface', meaning: 'A way for two software systems to communicate. In this app, it means the /api/... endpoints.' },
+      { term: 'CSV',            full: 'Comma-Separated Values',            meaning: 'A plain text file format for tabular data. One of the Jira export formats this app accepts.' },
+      { term: 'XLSX',           full: 'Excel Open XML Spreadsheet',        meaning: 'Microsoft Excel file format. The other Jira export format this app accepts.' },
+      { term: 'DB',             full: 'Database',                          meaning: 'Where data is stored persistently. Delivery Clarity uses SQLite.' },
+      { term: 'ORM',            full: 'Object-Relational Mapper',          meaning: 'A library that lets you write database queries in code. This app uses Prisma.' },
+      { term: 'SSR',            full: 'Server-Side Rendering',             meaning: 'Page HTML is built on the server before sending to the browser.' },
+      { term: 'TTL',            full: 'Time To Live',                      meaning: 'How long something is valid before it expires. Sessions have an 8-hour TTL by default.' },
+      { term: 'bcrypt',         full: 'bcrypt hashing algorithm',          meaning: 'A one-way password hashing function. Stored passwords can never be reversed.' },
+      { term: 'SQLite',         full: 'SQLite',                            meaning: 'A lightweight file-based database used for user accounts and import logs.' },
+      { term: 'Prisma',         full: 'Prisma ORM',                        meaning: 'The database library. Handles schema, migrations, and queries.' },
+      { term: 'SESSION_SECRET', full: '—',                                 meaning: 'A ≥ 32-character random string used to sign iron-session cookies. Required for production.' },
+      { term: 'nginx',          full: '—',                                 meaning: 'Web server used as a reverse proxy. Terminates SSL and forwards requests to the Next.js app on port 3000.' },
     ],
   },
   {
     id: 'roles', title: 'J — User Roles', icon: '👥', category: 'people',
     description: 'What each role can access in Delivery Clarity.',
     rows: [
-      { term: 'admin',         full: 'Administrator',   meaning: 'Full system access: manage users, see all import logs, access admin pages, retention, backup, restore, and security.' },
-      { term: 'scrum_master',  full: 'Scrum Master',    meaning: 'Defaults to the Scrum Master dashboard view and sees own uploads/import logs.' },
-      { term: 'product_owner', full: 'Product Owner',   meaning: 'Defaults to the Product Owner dashboard view and sees own uploads/import logs.' },
-      { term: 'manager',       full: 'Manager',         meaning: 'Defaults to the Engineering Manager dashboard view and can request all import logs.' },
-      { term: 'c_level',       full: 'C-level',         meaning: 'Defaults to the Executive dashboard view and can request all import logs.' },
-      { term: 'user',          full: 'Regular User',    meaning: 'Legacy/open-registration role. Can upload files, view dashboards, and see own import logs.' },
+      { term: 'admin',         full: 'Administrator',    meaning: 'Full system access: manage users, see all import logs, access admin pages, retention, backup, restore, and security.' },
+      { term: 'scrum_master',  full: 'Scrum Master',     meaning: 'Defaults to the Scrum Master dashboard view and sees own uploads/import logs.' },
+      { term: 'product_owner', full: 'Product Owner',    meaning: 'Defaults to the Product Owner dashboard view and sees own uploads/import logs.' },
+      { term: 'manager',       full: 'Manager',          meaning: 'Defaults to the Engineering Manager dashboard view and can request all import logs.' },
+      { term: 'c_level',       full: 'C-level',          meaning: 'Defaults to the Executive dashboard view and can request all import logs.' },
+      { term: 'user',          full: 'Regular User',     meaning: 'Legacy/open-registration role. Can upload files, view dashboards, and see own import logs.' },
       { term: 'Route Scope',   full: 'Role Route Access', meaning: 'Routes outside the assigned role are hidden from navigation and blocked by middleware if opened directly.' },
     ],
   },
@@ -158,95 +158,105 @@ const SECTIONS: GlossarySection[] = [
     description: 'Composite scores, bands, and UI components introduced in v4.1+.',
     rows: [
       { term: 'Release Confidence', full: 'Release Confidence Score (0–100)', meaning: 'Per-upload score tracking release readiness: completion (55 pts) + no-blockers (25 pts) + no-critical (12 pts) + no-defects (8 pts).' },
-      { term: 'RC Band',    full: 'Release Confidence Band',  meaning: 'High ≥ 80 / Medium ≥ 60 / Low ≥ 40 / Critical < 40.' },
-      { term: 'Team Health', full: 'Team Health Score (0–100)', meaning: 'Per-assignee score: completion (50 pts) + no-critical (30 pts) + no-blocked (20 pts). Shown on /teams.' },
-      { term: 'Team Band',  full: 'Team Health Band',         meaning: 'Healthy ≥ 70 / At Risk ≥ 40 / Critical < 40.' },
-      { term: 'Portfolio Score', full: 'Portfolio Score (0–100)', meaning: 'Cross-team aggregate: epic completion (40%) + project completion (30%) + sprint performance (20%) + data quality (10%).' },
-      { term: 'Portfolio Band', full: '—',                    meaning: 'Excellent ≥ 85 / Good ≥ 70 / Moderate ≥ 55 / At Risk ≥ 35 / Critical < 35.' },
-      { term: 'Executive PDF', full: 'Executive One-Page PDF', meaning: 'Print-optimised single-page HTML (A4 landscape) from /summary. Contains health score, KPIs, epics, team capacity, insights, top 3 recommendations.' },
-      { term: 'StorageProvider', full: 'Cloud Storage Provider Interface', meaning: 'Abstract interface with upload/download/list/delete/test methods. Implemented by Local, S3, Azure, and GCP providers.' },
-      { term: 'Product Tour', full: 'Guided Product Tour',    meaning: '8-step walkthrough of the dashboard. Pulsing ring highlights each section with a popover. State in dc_tour_dismissed + dc_tour_completed (localStorage).' },
-      { term: 'Ops Score',  full: 'Operational Health Score', meaning: '0-100 admin metric on /admin/diagnostics. Penalties: missing SESSION_SECRET (-30), non-production NODE_ENV (-10), open registration (-10), failed imports (-1 each).' },
+      { term: 'RC Band',           full: 'Release Confidence Band',          meaning: 'High ≥ 80 / Medium ≥ 60 / Low ≥ 40 / Critical < 40.' },
+      { term: 'Team Health',       full: 'Team Health Score (0–100)',        meaning: 'Per-assignee score: completion (50 pts) + no-critical (30 pts) + no-blocked (20 pts). Shown on /teams.' },
+      { term: 'Team Band',         full: 'Team Health Band',                 meaning: 'Healthy ≥ 70 / At Risk ≥ 40 / Critical < 40.' },
+      { term: 'Portfolio Score',   full: 'Portfolio Score (0–100)',          meaning: 'Cross-team aggregate: epic completion (40%) + project completion (30%) + sprint performance (20%) + data quality (10%).' },
+      { term: 'Portfolio Band',    full: '—',                                meaning: 'Excellent ≥ 85 / Good ≥ 70 / Moderate ≥ 55 / At Risk ≥ 35 / Critical < 35.' },
+      { term: 'Executive PDF',     full: 'Executive One-Page PDF',           meaning: 'Print-optimised single-page HTML (A4 landscape) from /summary. Contains health score, KPIs, epics, team capacity, insights, top 3 recommendations.' },
+      { term: 'StorageProvider',   full: 'Cloud Storage Provider Interface', meaning: 'Abstract interface with upload/download/list/delete/test methods. Implemented by Local, S3, Azure, and GCP providers.' },
+      { term: 'Product Tour',      full: 'Guided Product Tour',              meaning: '8-step walkthrough of the dashboard. Pulsing ring highlights each section with a popover. State in dc_tour_dismissed + dc_tour_completed (localStorage).' },
+      { term: 'Ops Score',         full: 'Operational Health Score',         meaning: '0-100 admin metric on /admin/diagnostics. Penalties: missing SESSION_SECRET (-30), non-production NODE_ENV (-10), open registration (-10), failed imports (-1 each).' },
     ],
   },
   {
     id: 'email', title: 'L — Email & Member-Request Terms', icon: '✉️', category: 'people',
     description: 'Terms related to the v4.5 user-add-request workflow, welcome email, and SMTP configuration.',
     rows: [
-      { term: 'SMTP',              full: 'Simple Mail Transfer Protocol', meaning: 'The standard internet protocol for sending email. Configured via SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS in .env.' },
-      { term: 'App Password',      full: 'Google App Password',           meaning: 'A 16-character single-purpose password generated by Google for use with Gmail SMTP when 2FA is enabled. Stored in SMTP_PASS.' },
-      { term: 'nodemailer',        full: '—',                             meaning: 'Open-source Node.js email library. Used in src/lib/email.ts to dispatch welcome emails via Gmail SMTP.' },
-      { term: 'Welcome Email',     full: '—',                             meaning: 'HTML email sent automatically to a new user when their add-member request is accepted. Contains login email, temp password, and a "Log In Now" link.' },
-      { term: 'Temp Password',     full: 'Temporary Password',            meaning: 'A 14-character cryptographically generated password assigned to a new user on creation. Must be changed on first login.' },
-      { term: 'Generate',          full: 'Generate Password Button',      meaning: 'Button in the Member Requests accept panel that auto-fills the temp password field. Uses Web Crypto API (crypto.getRandomValues).' },
-      { term: 'emailSent',         full: '—',                             meaning: 'Boolean in the accept API response. true = welcome email delivered; false = SMTP not configured or send failed.' },
-      { term: 'mustChangePassword', full: '—',                            meaning: 'Boolean on the User model. When true, the user is redirected to /change-password on login.' },
-      { term: 'UserAddRequest',    full: 'User Add-Member Request',       meaning: 'A Prisma model representing a pending request to create a new platform user. Accepted or rejected by an admin.' },
+      { term: 'SMTP',               full: 'Simple Mail Transfer Protocol', meaning: 'The standard internet protocol for sending email. Configured via SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS in .env.' },
+      { term: 'App Password',       full: 'Google App Password',           meaning: 'A 16-character single-purpose password generated by Google for use with Gmail SMTP when 2FA is enabled. Stored in SMTP_PASS.' },
+      { term: 'nodemailer',         full: '—',                             meaning: 'Open-source Node.js email library. Used in src/lib/email.ts to dispatch welcome emails via Gmail SMTP.' },
+      { term: 'Welcome Email',      full: '—',                             meaning: 'HTML email sent automatically to a new user when their add-member request is accepted. Contains login email, temp password, and a "Log In Now" link.' },
+      { term: 'Temp Password',      full: 'Temporary Password',            meaning: 'A 14-character cryptographically generated password assigned to a new user on creation. Must be changed on first login.' },
+      { term: 'Generate',           full: 'Generate Password Button',      meaning: 'Button in the Member Requests accept panel that auto-fills the temp password field. Uses Web Crypto API (crypto.getRandomValues).' },
+      { term: 'emailSent',          full: '—',                             meaning: 'Boolean in the accept API response. true = welcome email delivered; false = SMTP not configured or send failed.' },
+      { term: 'mustChangePassword', full: '—',                             meaning: 'Boolean on the User model. When true, the user is redirected to /change-password on login.' },
+      { term: 'UserAddRequest',     full: 'User Add-Member Request',       meaning: 'A Prisma model representing a pending request to create a new platform user. Accepted or rejected by an admin.' },
     ],
   },
   {
     id: 'planning', title: 'M — Planning & Forecasting Terms', icon: '🗺️', category: 'delivery',
     description: 'Terms related to the v4.6 Roadmap, Forecast, and Retro pages and the Planning nav group.',
     rows: [
-      { term: 'Roadmap Page',     full: '/roadmap',              meaning: 'Delivery Clarity page showing every epic as a card with progress bar, health indicator, forecast label, and confidence badge.' },
-      { term: 'Epic Forecast',    full: '—',                     meaning: 'Velocity-based delivery estimate per epic: remaining ÷ avgThroughput = sprintsRemaining; ceil(sprints × 2) = weeksRemaining (2-week sprints).' },
-      { term: 'Forecast Confidence', full: '—',                  meaning: 'Reliability of an epic forecast: High = < 2 sprints; Medium = 2–5 sprints; Low = ≥ 5 sprints or no data.' },
-      { term: 'Avg Throughput',   full: 'Average Throughput',    meaning: 'Mean issues completed per sprint, from sprint history. Used as the velocity baseline for all delivery forecasts.' },
-      { term: 'Forecast Page',    full: '/forecast',             meaning: 'Delivery Clarity page showing overall delivery status, burn-up chart, KPI row, next-quarter plan, risk signals, and recommendations.' },
-      { term: 'Burn-Up Chart',    full: '—',                     meaning: 'Inline SVG chart on the Forecast page. Shows actual cumulative done (solid blue), forecast extension (dashed blue), and target (grey dashed).' },
-      { term: 'Forecast Status',  full: '—',                     meaning: 'Delivery health classification: Complete, On Track (≤ 6 sprints), At Risk (7–12), Off Track (> 12), Insufficient Data.' },
-      { term: 'Retro Page',       full: '/retro',                meaning: 'Sprint retrospective tool. Three-card landing: Fill in App (form + insights), Download Template (CSV), Upload Retro File (coming soon).' },
-      { term: 'Retro Insights',   full: 'Retrospective Insights', meaning: 'Suggestions generated on retro submit by generateInsights(). Evaluates goal outcome, blockers, missing owners/due-dates.' },
-      { term: 'Planning Nav Group', full: '—',                   meaning: 'Top-level "Planning" dropdown in the AppShell header containing Roadmap, Forecast, and Retro. Visible to all authenticated roles.' },
+      { term: 'Roadmap Page',       full: '/roadmap',               meaning: 'Delivery Clarity page showing every epic as a card with progress bar, health indicator, forecast label, and confidence badge.' },
+      { term: 'Epic Forecast',      full: '—',                      meaning: 'Velocity-based delivery estimate per epic: remaining ÷ avgThroughput = sprintsRemaining; ceil(sprints × 2) = weeksRemaining (2-week sprints).' },
+      { term: 'Forecast Confidence', full: '—',                     meaning: 'Reliability of an epic forecast: High = < 2 sprints; Medium = 2–5 sprints; Low = ≥ 5 sprints or no data.' },
+      { term: 'Avg Throughput',     full: 'Average Throughput',     meaning: 'Mean issues completed per sprint, from sprint history. Used as the velocity baseline for all delivery forecasts.' },
+      { term: 'Forecast Page',      full: '/forecast',              meaning: 'Delivery Clarity page showing overall delivery status, burn-up chart, KPI row, next-quarter plan, risk signals, and recommendations.' },
+      { term: 'Burn-Up Chart',      full: '—',                      meaning: 'Inline SVG chart on the Forecast page. Shows actual cumulative done (solid blue), forecast extension (dashed blue), and target (grey dashed).' },
+      { term: 'Forecast Status',    full: '—',                      meaning: 'Delivery health classification: Complete, On Track (≤ 6 sprints), At Risk (7–12), Off Track (> 12), Insufficient Data.' },
+      { term: 'Retro Page',         full: '/retro',                 meaning: 'Sprint retrospective tool. Three-card landing: Fill in App (form + insights), Download Template (CSV), Upload Retro File (coming soon).' },
+      { term: 'Retro Insights',     full: 'Retrospective Insights', meaning: 'Suggestions generated on retro submit by generateInsights(). Evaluates goal outcome, blockers, missing owners/due-dates.' },
+      { term: 'Planning Nav Group', full: '—',                      meaning: 'Top-level "Planning" dropdown in the AppShell header containing Roadmap, Forecast, and Retro. Visible to all authenticated roles.' },
     ],
   },
 ];
 
 // ── Category config ────────────────────────────────────────────────────────────
 const CATS = [
-  { id: 'all',      label: 'All terms',      icon: '📚', color: 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200' },
-  { id: 'priority', label: 'Priority levels', icon: '🎯', color: 'bg-purple-50 text-purple-700 border-purple-300' },
-  { id: 'delivery', label: 'Delivery terms',  icon: '🚀', color: 'bg-teal-50 text-teal-700 border-teal-300' },
-  { id: 'reference', label: 'Reference codes', icon: '📄', color: 'bg-blue-50 text-blue-700 border-blue-300' },
-  { id: 'people',   label: 'People & roles',  icon: '👥', color: 'bg-amber-50 text-amber-700 border-amber-300' },
+  { id: 'all',       label: 'All terms',       icon: '📚' },
+  { id: 'priority',  label: 'Priority levels', icon: '🎯' },
+  { id: 'delivery',  label: 'Delivery terms',  icon: '🚀' },
+  { id: 'reference', label: 'Reference codes', icon: '📄' },
+  { id: 'people',    label: 'People & roles',  icon: '👥' },
 ];
-const CAT_ACTIVE: Record<string, string> = {
-  all:      'bg-slate-700 text-white border-slate-700',
-  priority: 'bg-purple-600 text-white border-purple-600',
-  delivery: 'bg-teal-600 text-white border-teal-600',
-  reference:'bg-blue-600 text-white border-blue-600',
-  people:   'bg-amber-600 text-white border-amber-600',
-};
-const BADGE_COLOR: Record<string, string> = {
-  priority: 'bg-red-50 text-red-700 border border-red-200',
-  delivery: 'bg-teal-50 text-teal-700 border border-teal-200',
-  reference:'bg-blue-50 text-blue-700 border border-blue-200',
-  people:   'bg-amber-50 text-amber-700 border border-amber-200',
-};
+
+// ── Tag badge style helper ─────────────────────────────────────────────────────
+function termBadgeStyle(term: string, category: string): { useChip: boolean; chipClass?: string; style?: CSSProperties } {
+  if (term === 'P0') return { useChip: false, style: { background: 'rgba(232,93,18,0.18)', color: 'var(--dc-acc, #E85D12)', fontFamily: 'var(--font-mono, monospace)', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700 } };
+  if (term === 'P1') return { useChip: false, style: { background: 'rgba(255,138,76,0.15)', color: 'var(--dc-acc2, #FF8A4C)', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700 } };
+  if (term === 'P2') return { useChip: false, style: { background: 'rgba(245,158,11,0.12)', color: '#fcd34d', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700 } };
+  if (term === 'P3') return { useChip: false, style: { background: 'rgba(255,255,255,0.08)', color: 'var(--dc-p1, #F2F2F2)', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700 } };
+  if (category === 'delivery') return { useChip: false, style: { background: 'rgba(34,197,94,0.11)', color: '#4ade80', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700 } };
+  if (category === 'people')   return { useChip: true, chipClass: 'chip c-nt' };
+  return { useChip: false, style: { background: 'rgba(255,255,255,0.08)', color: 'var(--dc-p2, #909090)', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700 } };
+}
 
 // ── FlatTerm type ──────────────────────────────────────────────────────────────
 interface FlatTerm extends GlossaryRow { category: string; sectionId: string; }
 
 // ── TermCard ──────────────────────────────────────────────────────────────────
 function TermCard({ term, expanded, onToggle }: { term: FlatTerm; expanded: boolean; onToggle: () => void }) {
+  const badge = termBadgeStyle(term.term, term.category);
   return (
     <div
       onClick={onToggle}
-      className={`bg-white rounded-xl border cursor-pointer transition-all duration-150 p-4 select-none ${
-        expanded ? 'border-blue-400 shadow-sm' : 'border-[#E4E3DE] hover:border-[#C8C7C0] hover:shadow-md'
-      }`}
+      className="rounded-[9px] cursor-pointer transition-all duration-150 p-3 select-none"
+      style={{
+        background: 'var(--dc-s2, #1E1E1E)',
+        border: expanded ? '1px solid rgba(232,93,18,0.2)' : '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
+      }}
+      onMouseEnter={e => {
+        if (!expanded) e.currentTarget.style.border = '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))';
+      }}
+      onMouseLeave={e => {
+        if (!expanded) e.currentTarget.style.border = '1px solid var(--dc-bdr, rgba(255,255,255,0.07))';
+      }}
     >
-      <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-mono font-semibold mb-3 ${BADGE_COLOR[term.category] ?? 'bg-slate-100 text-slate-600'}`}>
-        {term.term}
-      </span>
-      <div className="text-[13.5px] font-semibold text-[#1A1A18] leading-snug">{term.full !== '—' && term.full !== term.term ? term.full : term.term}</div>
+      {badge.useChip
+        ? <span className={badge.chipClass} style={{ marginBottom: 10, display: 'inline-flex' }}>{term.term}</span>
+        : <span style={{ ...badge.style, display: 'inline-block', marginBottom: 10 }}>{term.term}</span>
+      }
+      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--dc-p1, #F2F2F2)', lineHeight: 1.3 }}>
+        {term.full !== '—' && term.full !== term.term ? term.full : term.term}
+      </div>
       {!expanded && (
-        <div className="flex items-center gap-1 mt-2 text-[11px] text-[#A0A09A]">
-          <span>👆</span> Click to expand
+        <div style={{ marginTop: 6, fontSize: 10, color: 'var(--dc-p3, #505050)', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span>⚡</span> Click to expand
         </div>
       )}
       {expanded && (
-        <div className="mt-3 pt-3 border-t border-[#E4E3DE] text-[12.5px] text-[#6B6B66] leading-relaxed">
+        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', fontSize: 12, color: 'var(--dc-p2, #909090)', lineHeight: 1.6 }}>
           {term.meaning}
         </div>
       )}
@@ -256,8 +266,8 @@ function TermCard({ term, expanded, onToggle }: { term: FlatTerm; expanded: bool
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function GlossaryPage() {
-  const [activeCat, setActiveCat] = useState('all');
-  const [search,    setSearch]    = useState('');
+  const [activeCat,  setActiveCat]  = useState('all');
+  const [search,     setSearch]     = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const totalTerms = useMemo(() => SECTIONS.reduce((n, s) => n + s.rows.length, 0), []);
@@ -286,41 +296,60 @@ export default function GlossaryPage() {
 
   return (
     <AppShell showNav>
-      <div className="max-w-4xl mx-auto" style={{ background: '#F7F7F5', minHeight: '100vh' }}>
+      <div className="max-w-4xl mx-auto" style={{ minHeight: '100vh' }}>
 
         {/* ── Hero ── */}
         <div className="pt-10 pb-8 flex items-start justify-between gap-6 flex-wrap">
           <div className="flex-1">
-            <p className="text-[11px] font-semibold tracking-[.1em] uppercase text-blue-600 mb-2">Reference</p>
-            <h1 className="text-3xl font-semibold tracking-tight text-[#1A1A18] mb-3 leading-tight">Glossary & Appendix</h1>
-            <p className="text-[15px] text-[#6B6B66] max-w-md leading-relaxed">
-              Every term, code, and abbreviation in Delivery Clarity — explained in plain English. Click any card to expand its definition.
+            <div className="chip c-acc mb-3"
+              style={{ borderRadius: 100, fontSize: 9, letterSpacing: '0.08em', display: 'inline-flex' }}>
+              REFERENCE
+            </div>
+            <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: 8 }}>
+              Glossary & Appendix
+            </h1>
+            <p style={{ fontSize: 14, color: 'var(--dc-p2, #909090)', maxWidth: 420, lineHeight: 1.6 }}>
+              Every term, code, and abbreviation in Delivery Clarity — explained in plain English.
             </p>
           </div>
           <div className="flex gap-3 shrink-0 pt-1">
-            <div className="bg-white border border-[#E4E3DE] rounded-xl px-5 py-3.5 text-center min-w-[80px]">
-              <div className="text-2xl font-semibold text-purple-600">{SECTIONS.length}</div>
-              <div className="text-[11px] text-[#A0A09A] font-semibold uppercase tracking-wide mt-1">Sections</div>
+            <div className="text-center"
+              style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, padding: '12px 20px', minWidth: 80 }}>
+              <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--dc-acc2, #FF8A4C)', fontFamily: 'var(--font-mono, monospace)' }}>{SECTIONS.length}</div>
+              <div style={{ fontSize: 10, color: 'var(--dc-p3, #505050)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 4 }}>Sections</div>
             </div>
-            <div className="bg-white border border-[#E4E3DE] rounded-xl px-5 py-3.5 text-center min-w-[80px]">
-              <div className="text-2xl font-semibold text-teal-600">{totalTerms}+</div>
-              <div className="text-[11px] text-[#A0A09A] font-semibold uppercase tracking-wide mt-1">Terms</div>
+            <div className="text-center"
+              style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, padding: '12px 20px', minWidth: 80 }}>
+              <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--dc-acc2, #FF8A4C)', fontFamily: 'var(--font-mono, monospace)' }}>{totalTerms}+</div>
+              <div style={{ fontSize: 10, color: 'var(--dc-p3, #505050)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 4 }}>Terms</div>
             </div>
           </div>
         </div>
 
         {/* ── Search ── */}
         <div className="relative mb-6">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A0A09A] text-base pointer-events-none">🔍</span>
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-base"
+            style={{ color: 'var(--dc-p3, #505050)' }}>🔍</span>
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search terms, e.g. P0, sprint, velocity, SLA…"
-            className="w-full h-11 rounded-xl border border-[#E4E3DE] bg-white pl-10 pr-4 text-sm text-[#1A1A18] placeholder:text-[#A0A09A] outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            className="w-full h-11 pl-10 pr-4 outline-none transition focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
+            style={{
+              background: 'var(--dc-s2, #1E1E1E)',
+              border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
+              borderRadius: 12,
+              color: 'var(--dc-p1, #F2F2F2)',
+              fontSize: 14,
+            }}
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A0A09A] hover:text-[#6B6B66] text-lg">×</button>
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-lg"
+              style={{ color: 'var(--dc-p3, #505050)' }}
+            >×</button>
           )}
         </div>
 
@@ -333,9 +362,18 @@ export default function GlossaryPage() {
                 <button
                   key={cat.id}
                   onClick={() => { setActiveCat(cat.id); setExpandedId(null); }}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium border-[1.5px] transition-all cursor-pointer ${
-                    isActive ? CAT_ACTIVE[cat.id] : cat.color
-                  }`}
+                  className="inline-flex items-center gap-2 cursor-pointer transition-all"
+                  style={{
+                    padding: '5px 14px',
+                    borderRadius: 100,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    border: isActive ? '1.5px solid rgba(232,93,18,0.22)' : '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
+                    background: isActive ? 'rgba(232,93,18,0.12)' : 'transparent',
+                    color: isActive ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p2, #909090)',
+                  }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = 'var(--dc-p1, #F2F2F2)'; }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = 'var(--dc-p2, #909090)'; }}
                 >
                   <span>{cat.icon}</span>
                   {cat.label}
@@ -345,17 +383,17 @@ export default function GlossaryPage() {
           </div>
         )}
         {search && (
-          <p className="text-sm text-[#6B6B66] mb-6">
-            <span className="font-semibold text-[#1A1A18]">{filtered.length}</span> result{filtered.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;
+          <p className="mb-6" style={{ fontSize: 14, color: 'var(--dc-p2, #909090)' }}>
+            <span style={{ fontWeight: 600, color: 'var(--dc-p1, #F2F2F2)' }}>{filtered.length}</span> result{filtered.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;
           </p>
         )}
 
         {/* ── Term grid ── */}
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-[#6B6B66]">
+          <div className="text-center py-16" style={{ color: 'var(--dc-p3, #505050)' }}>
             <div className="text-4xl mb-3">🔍</div>
-            <p className="font-semibold text-[#1A1A18] mb-1">No terms found</p>
-            <p className="text-sm">Try a different search term or browse a category.</p>
+            <p style={{ fontWeight: 600, color: 'var(--dc-p2, #909090)', marginBottom: 4 }}>No terms found</p>
+            <p style={{ fontSize: 13 }}>Try a different search term or browse a category.</p>
           </div>
         ) : (
           <div className="grid gap-3 pb-12" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))' }}>
@@ -374,7 +412,8 @@ export default function GlossaryPage() {
         )}
 
         {/* ── Footer ── */}
-        <div className="text-center py-6 border-t border-[#E4E3DE] text-xs text-[#A0A09A]">
+        <div className="text-center py-6"
+          style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', fontSize: 12, color: 'var(--dc-p3, #505050)' }}>
           © 2026 Ali Abu Ras · aliaburas80@gmail.com · Delivery Clarity v4.6
           <span className="mx-2">·</span>
           Also in <code className="font-mono">product/APPENDIX.md</code>
