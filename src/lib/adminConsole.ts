@@ -60,10 +60,10 @@ export function buildSettingsStats({
       ];
     case 'retention':
       return [
-        { icon: '🔒', label: 'Retention Window', value: retentionLabel(settings), note: settings?.autoDeleteOldLogs ? 'Auto-delete enabled' : 'Manual cleanup' },
-        { icon: '↥', label: 'Import Logs', value: String(stats?.totalLogs ?? 0), note: `${stats?.logsEligible ?? 0} eligible` },
-        { icon: '▣', label: 'Snapshots', value: String(stats?.totalSnapshots ?? 0), note: `${stats?.snapshotsEligible ?? 0} eligible` },
-        { icon: '✓', label: 'Storage Mode', value: settings?.storeUploadLogs ? 'On' : 'Off', note: settings?.storeDashboardSnapshots ? 'Snapshots stored' : 'Snapshots off' },
+        { icon: '🔒', label: 'Retention Window', value: retentionLabel(settings), note: settings?.autoDeleteOldLogs ? 'Auto-delete enabled' : 'Manual cleanup', color: 'var(--dc-acc2, #FF8A4C)', toneStyle: { background: 'rgba(232,93,18,0.12)', color: '#FF8A4C' } },
+        { icon: '↥', label: 'Import Logs', value: String(stats?.totalLogs ?? 0), note: `${stats?.logsEligible ?? 0} eligible`, color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
+        { icon: '▣', label: 'Snapshots', value: String(stats?.totalSnapshots ?? 0), note: `${stats?.snapshotsEligible ?? 0} eligible`, color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
+        { icon: '✓', label: 'Storage Mode', value: settings?.storeUploadLogs ? 'On' : 'Off', note: settings?.storeDashboardSnapshots ? 'Snapshots stored' : 'Snapshots off', color: settings?.storeUploadLogs ? '#22C55E' : 'var(--dc-p2, #909090)', toneStyle: settings?.storeUploadLogs ? { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } : { background: 'rgba(255,255,255,0.06)', color: '#909090' } },
       ];
     case 'thresholds':
       return [
