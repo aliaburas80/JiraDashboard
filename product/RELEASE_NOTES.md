@@ -5,6 +5,24 @@
 
 ---
 
+## v4.6.8 — Theme D Restyle P20: Help & Documentation (2026-06-11, P1 — UI)
+
+### Changed
+- **Hero**: `chip c-acc` "HELP & DOCS" badge (borderRadius 100); title p1 26px/800; subtitle p2 13px; stat chips dc-s1/bdr r8 with acc2 mono numbers and p3 labels.
+- **Search bar**: dc-s2/bdr r12 full-width; p3 🔍 icon; p1 input text; acc focus ring `rgba(232,93,18,0.25)` with 3px box-shadow.
+- **Category cards (4 grid)**: `borderTop: '2px solid var(--dc-acc)'`; dc-s2/bdr r10; icon 22px; title p1 14px/600; desc p2 11px; sub-topic pills `chip c-nt` r999; hover → `chip c-acc` colors via onMouseEnter/Leave.
+- **Active card state**: dc-s3 bg + `0 0 0 1px rgba(232,93,18,0.18)` box-shadow.
+- **Filter pills**: active `chip c-acc` r100; inactive `chip c-nt` + 1px bdr r100.
+- **SectionCard collapsed**: dc-s2/bdr r9; p1 13px/600 title; p2 10px count + chevron; hover → dc-s3 bg.
+- **SectionCard expanded**: `rgba(232,93,18,0.03)` bg + `rgba(232,93,18,0.14)` border + `2px solid var(--dc-acc2)` left border + `border-radius: 0 9px 9px 0`; title acc2; chevron acc2.
+- **AccordionItem rows**: dc-bdr top divider; 5px 8px padding; `rgba(255,255,255,0.04)` hover bg r6; p2 11px/600 question; open state → acc2 text + acc2 chevron.
+- **Expanded answer**: p2 13px / 1.75 line-height.
+- **Search highlight mark**: `rgba(232,93,18,0.3)` bg + p1 text (replaced light-mode yellow).
+- **Inline JSX nodes** (aliases table, API table, export-guide lists, cloud-sync list, export-sheets): converted from Tailwind light-mode classes to dc token inline styles; tables use dc-s1/bdr2 header and dc-bdr row dividers; canonical fields acc2 mono; API routes acc2 mono.
+- **Footer**: dc-bdr top; dc-acc "Back to Top" button; p3 copyright text.
+
+---
+
 ## v4.6.7 — Theme D Restyle P19: Developer Portal (2026-06-11, P1 — UI)
 
 ### Changed
