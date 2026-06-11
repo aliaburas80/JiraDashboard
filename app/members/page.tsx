@@ -7,6 +7,20 @@ import AppShell from '@/components/layout/AppShell';
 import RequestAddMemberModal from '@/components/admin/RequestAddMemberModal';
 import { type Member, initialsFor, contactEmailFor, matchesMemberQuery } from '@/lib/members';
 
+function roleBadgeCls(role: string): string {
+  if (role === 'admin') return 'chip c-acc';
+  if (role === 'manager') return 'chip c-am';
+  return 'chip c-nt';
+}
+
+const AVATAR_GRADIENTS = [
+  'linear-gradient(135deg, var(--dc-acc, #E85D12), #8B2D00)',
+  'linear-gradient(135deg, #7C3AED, #4C1D95)',
+  'linear-gradient(135deg, #0284C7, #1E3A5F)',
+  'linear-gradient(135deg, #0D9488, #134E4A)',
+  'linear-gradient(135deg, #CA8A04, #78350F)',
+];
+
 export default function MembersPage() {
   const router = useRouter();
   const [members, setMembers] = useState<Member[]>([]);
@@ -28,10 +42,7 @@ export default function MembersPage() {
     fetch('/api/members')
       .then(async res => {
         const data = await res.json().catch(() => ({}));
-        if (res.status === 401) {
-          router.replace('/login');
-          return;
-        }
+        if (res.status === 401) { router.replace('/login'); return; }
         if (!res.ok) throw new Error(data.error ?? 'Could not load members.');
         setMembers(data.members ?? []);
       })
@@ -43,30 +54,33 @@ export default function MembersPage() {
     members.filter(member => matchesMemberQuery(member, query))
   ), [members, query]);
 
-  const roleCount = new Set(members.map(member => member.role)).size;
+  const roleCount = new Set(members.map(m => m.role)).size;
 
   return (
     <AppShell showNav>
       <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
+
+        {/* Header */}
         <section className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">Members</h1>
-            <p className="mt-3 text-lg text-slate-600">Team directory, roles, profile details, and contact info.</p>
+            <h1 className="font-black tracking-tight" style={{ fontSize: 28, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)' }}>Members</h1>
+            <p className="mt-2" style={{ fontSize: 13, color: 'var(--dc-p2, #909090)' }}>Team directory, roles, profile details, and contact info.</p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
-            <div className="rounded-[14px] border border-slate-200 bg-white px-5 py-3 shadow-[0_3px_12px_rgba(15,23,42,0.04)] text-center">
-              <p className="text-xs font-black uppercase text-slate-500">Members</p>
-              <p className="text-2xl font-black text-slate-950">{members.length}</p>
+            <div className="rounded-[100px] px-5 py-3 text-center" style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+              <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: 'var(--dc-p3, #505050)' }}>Members</p>
+              <p className="text-2xl font-black" style={{ color: 'var(--dc-acc2, #FF8A4C)' }}>{members.length}</p>
             </div>
-            <div className="rounded-[14px] border border-slate-200 bg-white px-5 py-3 shadow-[0_3px_12px_rgba(15,23,42,0.04)] text-center">
-              <p className="text-xs font-black uppercase text-slate-500">Roles</p>
-              <p className="text-2xl font-black text-slate-950">{roleCount}</p>
+            <div className="rounded-[100px] px-5 py-3 text-center" style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+              <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: 'var(--dc-p3, #505050)' }}>Roles</p>
+              <p className="text-2xl font-black" style={{ color: 'var(--dc-acc2, #FF8A4C)' }}>{roleCount}</p>
             </div>
             {myRole && myRole !== 'admin' && (
               <button
                 type="button"
                 onClick={() => setShowRequestModal(true)}
-                className="col-span-2 sm:col-span-1 flex items-center gap-2 rounded-[14px] border border-blue-200 bg-blue-50 px-5 py-3 text-sm font-bold text-blue-700 hover:bg-blue-100 transition-colors shadow-[0_3px_12px_rgba(15,23,42,0.04)]"
+                className="col-span-2 sm:col-span-1 flex items-center gap-2 rounded-[14px] px-5 py-3 text-sm font-bold transition-colors"
+                style={{ background: 'rgba(232,93,18,0.10)', border: '1px solid rgba(232,93,18,0.20)', color: 'var(--dc-acc2, #FF8A4C)' }}
               >
                 <span className="text-base">＋</span> Request add member
               </button>
@@ -74,92 +88,91 @@ export default function MembersPage() {
           </div>
         </section>
 
-        <section className="mb-6 rounded-[14px] border border-slate-200 bg-white p-4 shadow-[0_3px_12px_rgba(15,23,42,0.04)]">
+        {/* Search bar */}
+        <section className="mb-6">
           <label className="relative block">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">⌕</span>
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--dc-p3, #505050)' }}>⌕</span>
             <input
               value={query}
               onChange={e => setQuery(e.target.value)}
               type="search"
               placeholder="Search members, roles, positions, or shared info"
-              className="h-12 w-full rounded-[10px] border border-slate-300 bg-white pl-11 pr-4 text-base text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+              className="h-12 w-full pl-11 pr-4 text-base outline-none transition focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
+              style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 12, color: 'var(--dc-p1, #F2F2F2)' }}
             />
           </label>
         </section>
 
         {error && (
-          <div className="mb-6 rounded-[14px] border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{error}</div>
+          <div className="mb-6 rounded-[14px] px-4 py-3 text-sm font-bold"
+            style={{ background: 'rgba(248,113,113,0.11)', border: '1px solid rgba(248,113,113,0.25)', color: '#fca5a5' }}>
+            {error}
+          </div>
         )}
 
         {loading ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="h-48 animate-pulse rounded-[14px] border border-slate-200 bg-white" />
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-40 animate-pulse rounded-[14px]"
+                style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }} />
             ))}
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filteredMembers.map((member, index) => {
-              const avatarTone = [
-                'bg-violet-50 text-violet-700',
-                'bg-blue-50 text-blue-700',
-                'bg-cyan-50 text-cyan-700',
-                'bg-amber-50 text-amber-700',
-                'bg-emerald-50 text-emerald-700',
-              ][index % 5];
-
-              return (
-                <button
-                  key={member.id}
-                  type="button"
-                  onClick={() => setSelected(member)}
-                  className="group rounded-[14px] border border-slate-200 bg-white p-5 text-left shadow-[0_3px_12px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)] focus:outline-none focus:ring-4 focus:ring-blue-100"
-                >
-                  <div className="flex items-start gap-4">
-                    {member.avatarUrl ? (
-                      <img src={member.avatarUrl} alt="" className="h-16 w-16 shrink-0 rounded-[14px] object-cover" />
-                    ) : (
-                      <span className={`grid h-16 w-16 shrink-0 place-items-center rounded-[14px] text-lg font-black ${avatarTone}`}>
-                        {initialsFor(member)}
-                      </span>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <h2 className="truncate text-xl font-black tracking-tight text-slate-950">{member.name}</h2>
-                          <p className="mt-1 truncate text-sm font-bold text-slate-600">{member.position || member.roleLabel}</p>
-                        </div>
-                        <span className="shrink-0 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">
-                          {member.roleLabel}
-                        </span>
-                      </div>
-                      <p className="mt-4 truncate text-sm text-slate-500">{contactEmailFor(member)}</p>
-                      <p className="mt-4 line-clamp-2 min-h-10 text-sm leading-5 text-slate-600">
-                        {member.bio || member.certificates || 'No shared profile details yet.'}
-                      </p>
-                    </div>
+            {filteredMembers.map((member, index) => (
+              <button
+                key={member.id}
+                type="button"
+                onClick={() => setSelected(member)}
+                className="group rounded-[14px] p-5 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[rgba(232,93,18,0.30)]"
+                style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
+                onMouseEnter={e => { e.currentTarget.style.border = '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)'; }}
+                onMouseLeave={e => { e.currentTarget.style.border = '1px solid var(--dc-bdr, rgba(255,255,255,0.07))'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                <div className="flex items-start gap-3 mb-3">
+                  {member.avatarUrl ? (
+                    <img src={member.avatarUrl} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-black"
+                      style={{ background: AVATAR_GRADIENTS[index % AVATAR_GRADIENTS.length], color: '#F2F2F2' }}>
+                      {initialsFor(member)}
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <h2 className="truncate font-semibold" style={{ fontSize: 13, color: 'var(--dc-p1, #F2F2F2)' }}>{member.name}</h2>
+                    <p className="truncate" style={{ fontSize: 10, color: 'var(--dc-p2, #909090)' }}>{member.position || member.roleLabel}</p>
                   </div>
-                </button>
-              );
-            })}
+                  <span className={roleBadgeCls(member.role)} style={{ fontSize: 9, flexShrink: 0 }}>
+                    {member.roleLabel}
+                  </span>
+                </div>
+                <p className="truncate mb-2" style={{ fontSize: 10, color: 'var(--dc-p2, #909090)' }}>{contactEmailFor(member)}</p>
+                <p className="line-clamp-2 min-h-8 leading-5" style={{ fontSize: 10, color: 'var(--dc-p3, #505050)', fontStyle: (!member.bio && !member.certificates) ? 'italic' : undefined }}>
+                  {member.bio || member.certificates || 'No shared profile details yet.'}
+                </p>
+              </button>
+            ))}
           </div>
         )}
 
         {!loading && filteredMembers.length === 0 && (
-          <div className="rounded-[14px] border border-slate-200 bg-white p-8 text-center text-sm font-bold text-slate-500">
+          <div className="rounded-[14px] p-8 text-center text-sm font-bold"
+            style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p3, #505050)' }}>
             No members match the current search.
           </div>
         )}
 
+        {/* Member detail modal */}
         {selected && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
             role="dialog"
             aria-modal="true"
             onClick={() => setSelected(null)}
           >
             <div
-              className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[16px] bg-white p-6 shadow-2xl"
+              className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[16px] p-6"
+              style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}
               onClick={e => e.stopPropagation()}
             >
               <div className="mb-6 flex items-start justify-between gap-4">
@@ -167,14 +180,15 @@ export default function MembersPage() {
                   {selected.avatarUrl ? (
                     <img src={selected.avatarUrl} alt="" className="h-20 w-20 shrink-0 rounded-[16px] object-cover" />
                   ) : (
-                    <span className="grid h-20 w-20 shrink-0 place-items-center rounded-[16px] bg-blue-50 text-xl font-black text-blue-700">
+                    <span className="grid h-20 w-20 shrink-0 place-items-center rounded-[16px] text-xl font-black"
+                      style={{ background: 'linear-gradient(135deg, var(--dc-acc, #E85D12), #8B2D00)', color: '#F2F2F2' }}>
                       {initialsFor(selected)}
                     </span>
                   )}
                   <div className="min-w-0">
-                    <h2 className="text-2xl font-black tracking-tight text-slate-950">{selected.name}</h2>
-                    <p className="mt-1 text-sm font-bold text-slate-600">{selected.position || selected.roleLabel}</p>
-                    <span className="mt-3 inline-flex rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">
+                    <h2 className="text-2xl font-black tracking-tight" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{selected.name}</h2>
+                    <p className="mt-1 text-sm font-bold" style={{ color: 'var(--dc-p2, #909090)' }}>{selected.position || selected.roleLabel}</p>
+                    <span className={`mt-3 inline-flex ${roleBadgeCls(selected.role)}`} style={{ fontSize: 10 }}>
                       {selected.roleLabel}
                     </span>
                   </div>
@@ -182,7 +196,10 @@ export default function MembersPage() {
                 <button
                   type="button"
                   onClick={() => setSelected(null)}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border border-slate-200 text-xl font-black text-slate-500 transition hover:bg-slate-50"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] text-xl font-black transition"
+                  style={{ border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--dc-s3, #282828)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   aria-label="Close member details"
                 >
                   ×
@@ -202,9 +219,7 @@ export default function MembersPage() {
       </main>
 
       {showRequestModal && (
-        <RequestAddMemberModal
-          onClose={() => setShowRequestModal(false)}
-        />
+        <RequestAddMemberModal onClose={() => setShowRequestModal(false)} />
       )}
     </AppShell>
   );
@@ -212,9 +227,10 @@ export default function MembersPage() {
 
 function Detail({ label, value, wide = false }: { label: string; value: string; wide?: boolean }) {
   return (
-    <div className={`rounded-[12px] border border-slate-200 bg-slate-50 p-4 ${wide ? 'sm:col-span-2' : ''}`}>
-      <p className="text-xs font-black uppercase text-slate-500">{label}</p>
-      <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-slate-800">{value}</p>
+    <div className={`rounded-[12px] p-4 ${wide ? 'sm:col-span-2' : ''}`}
+      style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+      <p className="text-xs font-black uppercase tracking-wider" style={{ color: 'var(--dc-p3, #505050)' }}>{label}</p>
+      <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-6" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{value}</p>
     </div>
   );
 }
