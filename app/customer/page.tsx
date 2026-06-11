@@ -34,24 +34,26 @@ function norm(v: unknown): string { return String(v ?? '').trim().toLowerCase();
 
 function MetricPill({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color: string }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-6 py-5 text-center">
-      <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{label}</p>
-      <p className="text-3xl font-black leading-none" style={{ color }}>{value}</p>
-      {sub && <p className="text-xs text-slate-400 mt-1.5">{sub}</p>}
+    <div className="rounded-[8px] px-6 py-5 text-center" style={{ background: '#ffffff', border: '1px solid #E8E8E8' }}>
+      <p className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: '#888' }}>{label}</p>
+      <p className="text-[20px] font-black leading-none" style={{ color, fontFamily: 'var(--font-mono, monospace)' }}>{value}</p>
+      {sub && <p className="text-xs mt-1.5" style={{ color: '#888' }}>{sub}</p>}
     </div>
   );
 }
 
 function RiskRow({ text, level }: { text: string; level: 'high' | 'medium' | 'low' }) {
   const styles = {
-    high:   { dot: 'bg-red-500',    bg: 'bg-red-50',    border: 'border-red-200',    label: 'High',   text: 'text-red-800'   },
-    medium: { dot: 'bg-amber-500',  bg: 'bg-amber-50',  border: 'border-amber-200',  label: 'Medium', text: 'text-amber-800' },
-    low:    { dot: 'bg-slate-400',  bg: 'bg-slate-50',  border: 'border-slate-200',  label: 'Low',    text: 'text-slate-700' },
+    high:   { dot: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
+    medium: { dot: '#E85D12', bg: '#FFF7ED', border: '#FED7AA' },
+    low:    { dot: '#6B7280', bg: '#F8FAFC', border: '#E2E8F0' },
   }[level];
   return (
-    <div className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${styles.bg} ${styles.border}`}>
-      <span className={`mt-1.5 w-2.5 h-2.5 rounded-full ${styles.dot} shrink-0`} />
-      <p className={`text-sm leading-snug ${styles.text}`}>{text}</p>
+    <div className="flex items-start gap-3 rounded-xl px-4 py-3"
+      style={{ background: styles.bg, border: `1px solid ${styles.border}` }}>
+      <span className="mt-1.5 w-2.5 h-2.5 rounded-full shrink-0"
+        style={{ background: styles.dot, width: 10, height: 10, minWidth: 10 }} />
+      <p className="text-sm leading-snug" style={{ color: '#333' }}>{text}</p>
     </div>
   );
 }
@@ -163,26 +165,27 @@ export default function CustomerPage() {
           </div>
           {/* Health status badge */}
           <div
-            className="flex flex-col items-center shrink-0 rounded-2xl border-4 px-5 py-4 text-center"
-            style={{ borderColor: color }}
+            className="flex flex-col items-center shrink-0 rounded-[10px] px-5 py-4 text-center"
+            style={{ background: '#ffffff', border: `2px solid ${color}` }}
           >
-            <span className="text-4xl font-black leading-none print:text-3xl" style={{ color }}>
+            <span className="font-black leading-none print:text-2xl"
+              style={{ color, fontSize: 28, fontFamily: 'var(--font-mono, monospace)' }}>
               {metrics.healthScore ?? 0}
             </span>
-            <span className="text-[11px] font-black uppercase tracking-wider mt-1" style={{ color }}>
+            <span className="font-black uppercase tracking-wider mt-1" style={{ color, fontSize: 10, fontWeight: 700 }}>
               {STATUS_LABELS[band] ?? band}
             </span>
-            <span className="text-[10px] text-slate-400 mt-0.5">Delivery Health</span>
+            <span className="mt-0.5" style={{ fontSize: 8, color: '#888' }}>Delivery Health</span>
           </div>
         </div>
 
         {/* ── Status summary ── */}
         <div
-          className="rounded-2xl border-l-8 px-6 py-5 mb-8 print:mb-4"
-          style={{ borderColor: color, background: color + '0D' }}
+          className="rounded-r-xl border-l-[3px] px-6 py-5 mb-8 print:mb-4"
+          style={{ borderColor: '#E85D12', background: '#FFF7ED' }}
         >
-          <p className="text-base font-black mb-1" style={{ color }}>{BAND_MESSAGE[band]}</p>
-          <p className="text-sm text-slate-600">
+          <p className="text-base font-black mb-1" style={{ color: '#E85D12' }}>{BAND_MESSAGE[band]}</p>
+          <p className="text-sm" style={{ color: '#222' }}>
             {metrics.doneIssues ?? 0} of {metrics.totalIssues ?? 0} work items are complete (
             {metrics.completionRate ?? 0}% overall completion).
             {prediction && !prediction.complete && prediction.daysRemaining != null && (
@@ -198,33 +201,33 @@ export default function CustomerPage() {
             label="Completion"
             value={`${metrics.completionRate ?? 0}%`}
             sub={`${metrics.doneIssues} of ${metrics.totalIssues} done`}
-            color={color}
+            color="#111111"
           />
           <MetricPill
             label="In Progress"
             value={activeCount}
             sub="items being worked"
-            color="#2563eb"
+            color="#E85D12"
           />
           <MetricPill
             label="Blocked"
             value={metrics.blockedIssues ?? 0}
             sub={metrics.blockedIssues > 0 ? 'need unblocking' : 'none blocked'}
-            color={metrics.blockedIssues > 0 ? '#dc2626' : '#16a34a'}
+            color={metrics.blockedIssues > 0 ? '#DC2626' : '#16A34A'}
           />
           {sp.totalStoryPoints > 0 ? (
             <MetricPill
               label="Story Points"
               value={`${sp.pointCompletionRate ?? 0}%`}
               sub={`${sp.completedStoryPoints} / ${sp.totalStoryPoints} pts`}
-              color="#7c3aed"
+              color="#111111"
             />
           ) : (
             <MetricPill
               label="Quality Issues"
               value={metrics.openDefects ?? 0}
               sub={metrics.openDefects > 0 ? 'open defects' : 'no open defects'}
-              color={metrics.openDefects > 0 ? '#dc2626' : '#16a34a'}
+              color={metrics.openDefects > 0 ? '#DC2626' : '#16A34A'}
             />
           )}
         </div>
@@ -236,17 +239,17 @@ export default function CustomerPage() {
             <div className="space-y-2">
               {epicList.map((epic: any, i: number) => {
                 const pct = epic.progress ?? 0;
-                const barColor = pct >= 80 ? '#16a34a' : pct >= 50 ? '#2563eb' : '#f59e0b';
+                const barColor = pct >= 100 ? '#16A34A' : '#1D4ED8';
                 return (
-                  <div key={i} className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4">
+                  <div key={i} className="rounded-xl px-5 py-4" style={{ background: '#ffffff', border: '1px solid #E8E8E8' }}>
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-bold text-slate-800 truncate max-w-xs">{epic.epic}</p>
+                      <p className="text-sm font-bold truncate max-w-xs" style={{ color: '#111' }}>{epic.epic}</p>
                       <span className="text-sm font-black ml-4 shrink-0" style={{ color: barColor }}>{pct}%</span>
                     </div>
-                    <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                    <div className="h-2 rounded-full overflow-hidden" style={{ background: '#E8E8E8' }}>
                       <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: barColor }} />
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1.5">
+                    <p className="text-[11px] mt-1.5" style={{ color: '#888' }}>
                       {epic.completedIssues ?? 0} of {epic.issues ?? 0} items complete
                       {(epic.critical ?? 0) > 0 && ` · ${epic.critical} at risk`}
                     </p>
@@ -269,7 +272,8 @@ export default function CustomerPage() {
         {risks.length === 0 && (
           <section className="mb-8 print:mb-4">
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Current Risks</h2>
-            <div className="bg-green-50 border border-green-200 rounded-xl px-5 py-4 text-sm text-green-800 font-semibold">
+            <div className="rounded-xl px-5 py-4 text-sm font-semibold"
+              style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#166534' }}>
               ✓ No significant risks identified at this time.
             </div>
           </section>
@@ -279,11 +283,11 @@ export default function CustomerPage() {
         {(metrics.insights ?? []).length > 0 && (
           <section className="mb-8 print:mb-4">
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Key Highlights</h2>
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-5">
+            <div className="rounded-2xl px-5 py-5" style={{ background: '#ffffff', border: '1px solid #E8E8E8' }}>
               <ul className="space-y-2.5">
                 {(metrics.insights ?? []).slice(0, 4).map((insight: string, i: number) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700">
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                  <li key={i} className="flex items-start gap-2.5 text-sm" style={{ color: '#333' }}>
+                    <span className="mt-1.5 shrink-0 rounded-full" style={{ width: 6, height: 6, minWidth: 6, marginTop: 7, background: '#1D4ED8' }} />
                     {insight}
                   </li>
                 ))}
@@ -307,7 +311,8 @@ export default function CustomerPage() {
       <style jsx global>{`
         @media print {
           .no-print { display: none !important; }
-          body { background: white !important; }
+          body { background: white !important; font-family: 'Plus Jakarta Sans', sans-serif !important; }
+          * { font-family: 'Plus Jakarta Sans', sans-serif !important; }
           @page { margin: 1.5cm; }
         }
       `}</style>
