@@ -5,6 +5,21 @@
 
 ---
 
+## v4.6.2 — Theme D Restyle P14: Privacy & Retention (2026-06-11, P1 — UI)
+
+### Changed
+- **Toggle switches** (`DataRetentionSettings`): ON state → `var(--dc-acc, #E85D12)` background; OFF state → `var(--dc-s4)` + bdr2 border; thumb transitions from p3 (OFF) to white (ON); size 34×18px, border-radius 100px.
+- **Retention period pills**: inactive → transparent bg, bdr border, p2 text, 100px border-radius; active → `rgba(232,93,18,0.12)` bg, 1.5px `rgba(232,93,18,0.3)` border, acc2 text.
+- **Save Settings button**: acc `#E85D12` background, white text (replaces blue `btn-primary`).
+- **Apply Retention Policy**: ghost outline button — transparent bg, bdr2 border, p1 text.
+- **Clear All Data**: `rgba(248,113,113,0.10)` bg + border, `#fca5a5` text; confirm state darkens to 0.20/0.40.
+- **Stat cards**: dc-s2/bdr containers; Import Logs/Snapshots = p1; Eligible counts = red when >0, green when 0.
+- **Cleanup section**: orange-tinted container `rgba(232,93,18,0.04)` with acc border.
+- **Section headers / notes / last-updated**: all → p3 (#505050); warning note is italic.
+- **adminConsole.ts retention tab**: Retention Window=acc2, Import Logs/Snapshots=p1, Storage Mode=green(On)/p2(Off), dark `toneStyle` for all icon containers.
+
+---
+
 ## v4.6.1 — Theme D Restyle P13: Admin User Management (2026-06-11, P1 — UI)
 
 ### Changed
