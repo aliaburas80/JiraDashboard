@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -6,50 +6,63 @@ import AppShell from '@/components/layout/AppShell';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import type { SecurityReport, SecurityCheck, CheckStatus, CheckSeverity } from '@/services/settings/securityCheck.service';
 
-const STATUS_CONFIG: Record<CheckStatus, { icon: string; label: string; cls: string }> = {
-  pass:   { icon: '✓', label: 'Pass',   cls: 'text-green-700 bg-green-100 border-green-300' },
-  fail:   { icon: '✗', label: 'Fail',   cls: 'text-red-700 bg-red-100 border-red-300'       },
-  warn:   { icon: '△', label: 'Warn',   cls: 'text-amber-700 bg-amber-100 border-amber-300' },
-  manual: { icon: '?', label: 'Manual', cls: 'text-slate-600 bg-slate-100 border-slate-300' },
+const STATUS_DOT: Record<CheckStatus, { bg: string; border: string; color: string; icon: string }> = {
+  pass:   { bg: 'rgba(34,197,94,0.12)',   border: '1.5px solid var(--dc-green, #22C55E)', color: '#4ade80',  icon: '✓' },
+  fail:   { bg: 'rgba(248,113,113,0.12)', border: '1.5px solid var(--dc-red, #F87171)',   color: '#fca5a5',  icon: '✗' },
+  warn:   { bg: 'rgba(245,158,11,0.12)',  border: '1.5px solid var(--dc-amber, #F59E0B)', color: '#fcd34d',  icon: '△' },
+  manual: { bg: 'rgba(255,255,255,0.07)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)', icon: '?' },
 };
 
-const SEV_COLOR: Record<CheckSeverity, string> = {
-  critical: 'text-red-600',
-  high:     'text-orange-600',
-  medium:   'text-amber-600',
-  low:      'text-slate-500',
+function sevChipClass(sev: CheckSeverity): string {
+  if (sev === 'critical') return 'chip c-rd';
+  if (sev === 'high')     return 'chip c-or';
+  if (sev === 'medium')   return 'chip c-am';
+  return 'chip c-nt';
+}
+
+const SECTION_HEADER: Record<'fail' | 'warn' | 'pass' | 'manual', { label: string; color: string }> = {
+  fail:   { label: '✗ FAILING',       color: 'var(--dc-red, #F87171)' },
+  warn:   { label: '△ WARNINGS',      color: 'var(--dc-amber, #F59E0B)' },
+  pass:   { label: '✓ PASSING',       color: 'var(--dc-green, #22C55E)' },
+  manual: { label: '? MANUAL REVIEW', color: 'var(--dc-p2, #909090)' },
 };
 
 const CATEGORIES = ['Authentication', 'Access Control', 'Secrets', 'Environment', 'Database', 'Transport', 'Network', 'Privacy', 'Backup', 'Operations'];
 
 function CheckRow({ c }: { c: SecurityCheck }) {
   const [expanded, setExpanded] = useState(c.status === 'fail');
-  const s = STATUS_CONFIG[c.status];
+  const dot = STATUS_DOT[c.status];
+
   return (
-    <div className={`border rounded-xl overflow-hidden ${c.status === 'fail' ? 'border-red-200' : c.status === 'warn' ? 'border-amber-200' : 'border-slate-100'}`}>
-      <button type="button" onClick={() => setExpanded(v => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors">
-        <span className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center text-[11px] font-black ${s.cls}`}>
-          {s.icon}
+    <div style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 9, overflow: 'hidden' }}>
+      <button
+        type="button"
+        onClick={() => setExpanded(v => !v)}
+        style={{ width: '100%', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', textAlign: 'left', background: 'transparent', border: 'none', cursor: 'pointer', transition: 'background 120ms' }}
+        onMouseEnter={e => (e.currentTarget.style.background = 'var(--dc-s3, #282828)')}
+        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+      >
+        <span style={{ width: 18, height: 18, borderRadius: '50%', background: dot.bg, border: dot.border, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, fontSize: 9, color: dot.color, fontWeight: 700 }}>
+          {dot.icon}
         </span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-black text-slate-800">{c.label}</span>
-            <span className="text-[9px] font-bold text-slate-400 uppercase">{c.category}</span>
-            <span className={`text-[9px] font-bold ${SEV_COLOR[c.severity]}`}>{c.severity}</span>
-            {!c.isAuto && <span className="text-[9px] font-bold bg-slate-200 text-slate-600 rounded px-1">manual review</span>}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--dc-p1, #F2F2F2)' }}>{c.label}</span>
+            <span className="chip c-nt" style={{ fontSize: 8 }}>{c.category}</span>
+            <span className={sevChipClass(c.severity)} style={{ fontSize: 8 }}>{c.severity}</span>
+            {!c.isAuto && <span className="chip c-nt" style={{ fontSize: 8 }}>manual review</span>}
           </div>
-          <p className="text-xs text-slate-500 mt-0.5 truncate">{c.detail}</p>
+          <p style={{ fontSize: 10, color: 'var(--dc-p2, #909090)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.detail}</p>
         </div>
-        <span className={`text-slate-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}>▾</span>
+        <span style={{ color: expanded ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p2, #909090)', flexShrink: 0, display: 'inline-block', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms', fontSize: 10 }}>▾</span>
       </button>
       {expanded && (
-        <div className="px-4 pb-4 border-t border-slate-100 bg-slate-50/50 pt-3 space-y-2">
-          <p className="text-xs text-slate-600 leading-snug">{c.description}</p>
+        <div style={{ padding: '8px 12px 12px 12px', borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+          <p style={{ fontSize: 11, color: 'var(--dc-p2, #909090)', lineHeight: 1.6 }}>{c.description}</p>
           {c.fix && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
-              <p className="text-[10px] font-black text-blue-700 mb-0.5">Fix / Action</p>
-              <p className="text-xs text-blue-800">{c.fix}</p>
+            <div style={{ background: 'rgba(232,93,18,0.04)', border: '1px solid rgba(232,93,18,0.12)', borderLeft: '2px solid var(--dc-acc, #E85D12)', borderRadius: '0 7px 7px 0', padding: '9px 12px', marginTop: 8 }}>
+              <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--dc-acc2, #FF8A4C)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Fix / Action</p>
+              <p style={{ fontSize: 11, color: 'var(--dc-p2, #909090)' }}>{c.fix}</p>
             </div>
           )}
         </div>
@@ -78,17 +91,20 @@ export default function SecurityPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Running security checks…</div></AppShell>;
+  if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 animate-pulse" style={{ color: 'var(--dc-p3, #505050)' }}>Running security checks…</div></AppShell>;
 
   const filtered = report?.checks.filter(c =>
     (catFilter === 'all' || c.category === catFilter) &&
     (statusFilter === 'all' || c.status === statusFilter)
   ) ?? [];
+  const scoreColor = report
+    ? report.overallScore >= 80 ? 'var(--dc-green, #22C55E)' : report.overallScore >= 60 ? 'var(--dc-amber, #F59E0B)' : 'var(--dc-red, #F87171)'
+    : 'var(--dc-p2, #909090)';
   const securityStats = report ? [
-    { icon: '🔐', label: 'Security Score', value: String(report.overallScore), note: report.isProductionReady ? 'Production ready' : 'Review required', tone: report.overallScore >= 80 ? 'bg-green-50 text-green-700' : report.overallScore >= 60 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700' },
-    { icon: '✓', label: 'Passing', value: String(report.passCount), note: 'Automated checks' },
-    { icon: '△', label: 'Warnings', value: String(report.warnCount), note: 'Needs attention' },
-    { icon: '?', label: 'Manual Review', value: String(report.manualCount), note: 'Runbook checks' },
+    { icon: '🔐', label: 'Security Score', value: String(report.overallScore), note: report.isProductionReady ? 'Production ready' : 'Review required', color: scoreColor, toneStyle: { background: report.overallScore >= 80 ? 'rgba(34,197,94,0.1)' : report.overallScore >= 60 ? 'rgba(245,158,11,0.1)' : 'rgba(248,113,113,0.1)', color: scoreColor } },
+    { icon: '✓', label: 'Passing',        value: String(report.passCount),   note: 'Automated checks', color: 'var(--dc-green, #22C55E)',   toneStyle: { background: 'rgba(34,197,94,0.1)',   color: 'var(--dc-green, #22C55E)' } },
+    { icon: '△', label: 'Warnings',       value: String(report.warnCount),   note: 'Needs attention',  color: 'var(--dc-amber, #F59E0B)',   toneStyle: { background: 'rgba(245,158,11,0.1)',  color: 'var(--dc-amber, #F59E0B)' } },
+    { icon: '?', label: 'Manual Review',  value: String(report.manualCount), note: 'Runbook checks',   color: 'var(--dc-p2, #909090)',      toneStyle: { background: 'var(--dc-s3, #282828)', color: 'var(--dc-p2, #909090)' } },
   ] : [];
 
   return (
@@ -99,78 +115,84 @@ export default function SecurityPage() {
         stats={securityStats}
         statusLabel={report?.isProductionReady ? 'Production ready' : 'Review required'}
       >
-        {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-4">{error}</div>}
+        {error && (
+          <div style={{ background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.18)', borderRadius: 12, padding: '12px 16px', fontSize: 13, color: '#fca5a5', marginBottom: 16 }}>{error}</div>
+        )}
 
-        {report && (
-          <>
-            {/* Score banner */}
-            <div className={`rounded-2xl border-2 px-6 py-4 mb-6 flex items-center gap-5 ${
-              report.criticalFails > 0 ? 'bg-red-50 border-red-300' :
-              report.failCount > 0     ? 'bg-orange-50 border-orange-300' :
-              report.warnCount > 0     ? 'bg-amber-50 border-amber-300' :
-              'bg-green-50 border-green-300'}`}>
-              <div className="text-center shrink-0">
-                <p className={`text-4xl font-black leading-none ${
-                  report.overallScore >= 80 ? 'text-green-700' :
-                  report.overallScore >= 60 ? 'text-amber-700' : 'text-red-700'}`}>
-                  {report.overallScore}
-                </p>
-                <p className="text-xs text-slate-500 mt-1">/ 100</p>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-black text-slate-800">
-                  {report.isProductionReady ? '✅ Ready for production' : report.criticalFails > 0 ? '🚫 Not production ready' : '⚠️ Review required before production'}
-                </p>
-                <div className="flex flex-wrap gap-3 mt-2 text-xs">
-                  <span className="text-green-700 font-bold">✓ {report.passCount} pass</span>
-                  {report.failCount > 0 && <span className="text-red-700 font-bold">✗ {report.failCount} fail</span>}
-                  {report.warnCount > 0 && <span className="text-amber-700 font-bold">△ {report.warnCount} warn</span>}
-                  <span className="text-slate-500">? {report.manualCount} manual review</span>
+        {report && (() => {
+          const bannerBg = report.criticalFails > 0 || report.failCount > 0
+            ? 'rgba(248,113,113,0.06)' : report.warnCount > 0
+            ? 'rgba(245,158,11,0.06)' : 'rgba(34,197,94,0.06)';
+          const bannerBorder = report.criticalFails > 0 || report.failCount > 0
+            ? 'rgba(248,113,113,0.18)' : report.warnCount > 0
+            ? 'rgba(245,158,11,0.18)' : 'rgba(34,197,94,0.18)';
+          const statusText = report.isProductionReady
+            ? '✅ Ready for production' : report.criticalFails > 0
+            ? '🚫 Not production ready' : '⚠️ Review required before production';
+          const bannerChipCls = report.isProductionReady ? 'chip c-gr' : report.warnCount > 0 && !report.failCount ? 'chip c-am' : 'chip c-rd';
+
+          return (
+            <>
+              {/* Score banner */}
+              <div style={{ background: bannerBg, border: `1px solid ${bannerBorder}`, borderRadius: 10, padding: '13px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ flexShrink: 0, textAlign: 'center' }}>
+                  <div style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 32, fontWeight: 700, color: scoreColor, lineHeight: 1 }}>{report.overallScore}</div>
+                  <div style={{ fontSize: 10, color: 'var(--dc-p2, #909090)', marginTop: 2 }}>/100</div>
                 </div>
-              </div>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-wrap gap-3 mb-4">
-              <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
-                className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none">
-                <option value="all">All categories</option>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-                className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none">
-                {['all','pass','fail','warn','manual'].map(s => (
-                  <option key={s} value={s}>{s === 'all' ? 'All statuses' : s}</option>
-                ))}
-              </select>
-              <span className="text-xs text-slate-400 self-center">{filtered.length} check{filtered.length !== 1 ? 's' : ''}</span>
-            </div>
-
-            {/* Checks grouped by fail/warn/pass/manual */}
-            {(['fail','warn','pass','manual'] as const).map(status => {
-              const group = filtered.filter(c => c.status === status);
-              if (!group.length) return null;
-              const labels = { fail: '✗ Failing', warn: '△ Warnings', pass: '✓ Passing', manual: '? Manual Review' };
-              return (
-                <div key={status} className="mb-5">
-                  <p className={`text-xs font-black uppercase tracking-widest mb-2 ${
-                    status === 'fail' ? 'text-red-600' : status === 'warn' ? 'text-amber-600' :
-                    status === 'pass' ? 'text-green-600' : 'text-slate-500'}`}>
-                    {labels[status]} ({group.length})
-                  </p>
-                  <div className="space-y-2">
-                    {group.map(c => <CheckRow key={c.id} c={c} />)}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: scoreColor, marginBottom: 4 }}>{statusText}</div>
+                  <div style={{ fontSize: 10, color: 'var(--dc-p2, #909090)', display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                    <span>✓ {report.passCount} pass</span>
+                    {report.failCount > 0 && <span>✗ {report.failCount} fail</span>}
+                    {report.warnCount > 0 && <span>△ {report.warnCount} warn</span>}
+                    <span>? {report.manualCount} manual review</span>
                   </div>
                 </div>
-              );
-            })}
+                <span className={bannerChipCls} style={{ borderRadius: 100, flexShrink: 0 }}>
+                  {report.isProductionReady ? 'Production ready' : report.failCount > 0 ? 'Not ready' : 'Review needed'}
+                </span>
+              </div>
 
-            <div className="mt-6 bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-500">
-              <p className="font-bold text-slate-700 mb-1">About this checklist</p>
-              <p>Automated checks are evaluated server-side. Manual review items cannot be automatically verified — mark them as confirmed in your deployment runbook.</p>
-            </div>
-          </>
-        )}
+              {/* Filters */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16, alignItems: 'center' }}>
+                <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
+                  style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, padding: '6px 12px', fontSize: 12, color: 'var(--dc-p2, #909090)', outline: 'none' }}>
+                  <option value="all">All categories</option>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+                  style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, padding: '6px 12px', fontSize: 12, color: 'var(--dc-p2, #909090)', outline: 'none' }}>
+                  {['all','pass','fail','warn','manual'].map(s => (
+                    <option key={s} value={s}>{s === 'all' ? 'All statuses' : s}</option>
+                  ))}
+                </select>
+                <span style={{ fontSize: 11, color: 'var(--dc-p3, #505050)' }}>{filtered.length} check{filtered.length !== 1 ? 's' : ''}</span>
+              </div>
+
+              {/* Checks grouped by status */}
+              {(['fail','warn','pass','manual'] as const).map(status => {
+                const group = filtered.filter(c => c.status === status);
+                if (!group.length) return null;
+                const hdr = SECTION_HEADER[status];
+                return (
+                  <div key={status} style={{ marginBottom: 20 }}>
+                    <p style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: hdr.color, marginBottom: 8 }}>
+                      {hdr.label} ({group.length})
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {group.map(c => <CheckRow key={c.id} c={c} />)}
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div style={{ marginTop: 24, background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 12, padding: 16 }}>
+                <p style={{ fontWeight: 700, color: 'var(--dc-p1, #F2F2F2)', fontSize: 12, marginBottom: 4 }}>About this checklist</p>
+                <p style={{ fontSize: 12, color: 'var(--dc-p2, #909090)', lineHeight: 1.6 }}>Automated checks are evaluated server-side. Manual review items cannot be automatically verified — mark them as confirmed in your deployment runbook.</p>
+              </div>
+            </>
+          );
+        })()}
       </AdminConsoleLayout>
     </AppShell>
   );

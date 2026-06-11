@@ -5,6 +5,29 @@
 
 ---
 
+## v4.7.0 — Theme D Restyle P22: Security Checklist (2026-06-11, P1 — UI)
+
+### Changed
+- **KPI stat cards**: Security Score → scoreColor (green ≥80 / amber ≥60 / red <60) with matching toneStyle; Passing → dc-green; Warnings → dc-amber; Manual Review → p2/dc-s3 icon.
+- **Score banner**: `rgba(34,197,94,0.06)` bg + `rgba(34,197,94,0.18)` border (or amber/red variants for warn/fail); score in mono 32px with scoreColor; status text scoreColor 13px/600; summary p2 10px; `chip c-gr/c-am/c-rd` badge r100.
+- **CHECK ITEM containers**: `bg-white border-slate-*` → dc-s2/bdr r9; hover → dc-s3.
+- **Status dots**: 18px circles — pass `rgba(34,197,94,0.12)` + dc-green border + #4ade80 icon; fail `rgba(248,113,113,0.12)` + dc-red border; warn `rgba(245,158,11,0.12)` + dc-amber border; manual `rgba(255,255,255,0.07)` + bdr.
+- **Title**: `text-slate-800 font-black` → p1 11px/600.
+- **Category badge**: `text-slate-400 uppercase` → `chip c-nt` 8px.
+- **Severity badges**: plain colored text → `chip c-rd/c-or/c-am/c-nt` based on severity (critical/high/medium/low).
+- **Manual review badge**: `bg-slate-200 text-slate-600` → `chip c-nt` 8px.
+- **Description**: `text-slate-500` → p2 10px.
+- **Expanded Fix/Action panel**: `bg-blue-50 border-blue-200 text-blue-*` → `rgba(232,93,18,0.04)` bg + `rgba(232,93,18,0.12)` border + `2px solid var(--dc-acc)` left border + `0 7px 7px 0` radius; "Fix / Action" label acc2 9px uppercase; text p2 11px.
+- **Chevron**: p2 (collapsed) → acc2 (expanded) with rotation.
+- **Section headers**: `text-green-600/amber-600/red-600/slate-500` → dc token colors; 9px uppercase 0.07em tracking.
+- **Filter dropdowns**: `border-slate-200 rounded-lg` → dc-s3/bdr r8 p2 text.
+- **Count label**: `text-slate-400` → p3.
+- **Loading**: `text-slate-400` → p3.
+- **Error state**: light red → `rgba(248,113,113,0.07)` bg + `rgba(248,113,113,0.18)` border + `#fca5a5` text.
+- **About footer**: `bg-slate-50 border-slate-200` → dc-s2/bdr r12.
+
+---
+
 ## v4.6.9 — Theme D Restyle P21: Admin Import Logs (2026-06-11, P1 — UI)
 
 ### Changed
