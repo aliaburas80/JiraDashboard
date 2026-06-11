@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 export interface AdminConsoleStat {
   icon: string;
@@ -11,6 +11,8 @@ export interface AdminConsoleStat {
   value: string;
   note: string;
   tone?: string;
+  color?: string;
+  toneStyle?: CSSProperties;
 }
 
 export interface AdminConsoleNavItem {
@@ -70,8 +72,8 @@ export function AdminConsoleLayout({
               const selected = item.selected ?? (item.href ? pathname === item.href : false);
               const className = `flex min-h-[50px] w-full items-center gap-3 rounded-xl px-3.5 text-left text-sm font-extrabold transition`;
               const itemStyle = selected
-                ? { background: 'var(--dc-s3, rgba(239,246,255,0.95))', color: 'var(--dc-acc2, #2563eb)' }
-                : { color: 'var(--dc-p2, #64748b)' };
+                ? { background: 'rgba(232,93,18,0.11)', color: 'var(--dc-acc2, #FF8A4C)', borderLeft: '3px solid var(--dc-acc, #E85D12)', paddingLeft: 'calc(0.875rem + 1px)' }
+                : { color: 'var(--dc-p2, #909090)' };
               const content = (
                 <>
                   <span className="grid h-6 w-6 shrink-0 place-items-center text-base">{item.icon}</span>
@@ -98,7 +100,7 @@ export function AdminConsoleLayout({
           <div className="mt-8 rounded-[14px] p-4" style={{ background: 'var(--dc-s3, #f1f5f9)', border: '1px solid var(--dc-bdr, rgba(203,213,225,0.7))', boxShadow: '0 3px 12px rgba(0,0,0,0.08)' }}>
             <h3 className="mb-1 text-sm font-black" style={{ color: 'var(--dc-p1, #0f172a)' }}>Need help?</h3>
             <p className="mb-4 text-sm leading-6" style={{ color: 'var(--dc-p2, #64748b)' }}>Review diagnostics before changing roles, storage, retention, or recovery settings.</p>
-            <Link href="/admin/diagnostics" className="inline-flex h-9 w-full items-center justify-center rounded-[10px] text-sm font-extrabold transition" style={{ background: 'var(--dc-s2, #ffffff)', border: '1px solid var(--dc-bdr2, rgba(148,163,184,0.5))', color: 'var(--dc-acc2, #2563eb)' }}>
+            <Link href="/admin/diagnostics" className="inline-flex h-9 w-full items-center justify-center rounded-[10px] text-sm font-extrabold transition" style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-acc2, #FF8A4C)' }}>
               Open Diagnostics ↗
             </Link>
           </div>
@@ -116,8 +118,9 @@ export function AdminConsoleLayout({
                 <label className="relative hidden md:block">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">⌕</span>
                   <input type="search" placeholder="Search administration..." disabled
-                    className="h-[42px] w-72 rounded-xl border border-slate-300 bg-white pl-9 pr-14 text-sm text-slate-500 shadow-[0_3px_12px_rgba(15,23,42,0.035)] outline-none" />
-                  <span className="absolute right-3 top-1/2 grid h-6 min-w-9 -translate-y-1/2 place-items-center rounded-[7px] border border-slate-200 bg-slate-50 px-2 text-xs font-black text-slate-500">⌘ K</span>
+                    className="h-[42px] w-72 rounded-xl pl-9 pr-14 text-sm outline-none"
+                    style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }} />
+                  <span className="absolute right-3 top-1/2 grid h-6 min-w-9 -translate-y-1/2 place-items-center rounded-[7px] px-2 text-xs font-black" style={{ background: 'var(--dc-s1, #141414)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p3, #505050)' }}>⌘ K</span>
                 </label>
                 {actions}
               </div>
@@ -129,8 +132,8 @@ export function AdminConsoleLayout({
               <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--dc-p1, #0f172a)' }}>{title}</h1>
               <p className="mt-2 text-base" style={{ color: 'var(--dc-p2, #64748b)' }}>{description}</p>
             </div>
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3.5 py-2 text-sm font-black text-green-700">
-              <span className="h-2 w-2 rounded-full bg-green-600" />
+            <div className="chip c-gr" style={{ borderRadius: 100, fontSize: 13, padding: '6px 14px', fontWeight: 800 }}>
+              <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: '#22C55E', marginRight: 6 }} />
               {statusLabel}
             </div>
           </section>
@@ -140,9 +143,9 @@ export function AdminConsoleLayout({
               {stats.map(card => (
                 <article key={card.label} className="min-h-[88px] rounded-[14px] p-4" style={{ background: 'var(--dc-s2, #ffffff)', border: '1px solid var(--dc-bdr, rgba(203,213,225,0.7))', boxShadow: '0 3px 12px rgba(0,0,0,0.1)' }}>
                   <div className="flex items-center gap-4">
-                    <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-lg ${card.tone ?? ''}`} style={!card.tone ? { background: 'var(--dc-s3, #f1f5f9)', color: 'var(--dc-p2, #64748b)' } : undefined}>{card.icon}</span>
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-lg" style={card.toneStyle ?? { background: 'var(--dc-s3, #282828)', color: 'var(--dc-p2, #909090)' }}>{card.icon}</span>
                     <span className="min-w-0">
-                      <strong className="block truncate text-2xl font-black tracking-tight" style={{ color: 'var(--dc-p1, #0f172a)' }}>{card.value}</strong>
+                      <strong className="block truncate text-2xl font-black tracking-tight" style={{ color: card.color ?? 'var(--dc-p1, #F2F2F2)' }}>{card.value}</strong>
                       <span className="mt-1 block truncate text-sm font-bold" style={{ color: 'var(--dc-p2, #64748b)' }}>{card.label}</span>
                       <span className="mt-1 block truncate text-xs font-semibold" style={{ color: 'var(--dc-p3, #94a3b8)' }}>{card.note}</span>
                     </span>

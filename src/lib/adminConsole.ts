@@ -53,10 +53,10 @@ export function buildSettingsStats({
   switch (tab) {
     case 'users':
       return [
-        { icon: '👥', label: 'Total Users', value: String(userSummary.total), note: 'All accounts', tone: 'bg-blue-50 text-blue-700' },
-        { icon: '🛡', label: 'Active Users', value: String(userSummary.active), note: userSummary.total ? `${Math.round((userSummary.active / userSummary.total) * 100)}% of total` : 'No users yet' },
-        { icon: '↥', label: 'Admin Users', value: String(userSummary.admins), note: userSummary.total ? `${Math.round((userSummary.admins / userSummary.total) * 100)}% of total` : 'No users yet' },
-        { icon: '▣', label: 'Role Types', value: String(ASSIGNABLE_ROLES.length), note: 'Assignable roles' },
+        { icon: '👥', label: 'Total Users', value: String(userSummary.total), note: 'All accounts', color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
+        { icon: '🛡', label: 'Active Users', value: String(userSummary.active), note: userSummary.total ? `${Math.round((userSummary.active / userSummary.total) * 100)}% of total` : 'No users yet', color: '#22C55E', toneStyle: { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } },
+        { icon: '↥', label: 'Admin Users', value: String(userSummary.admins), note: userSummary.total ? `${Math.round((userSummary.admins / userSummary.total) * 100)}% of total` : 'No users yet', color: 'var(--dc-acc2, #FF8A4C)', toneStyle: { background: 'rgba(232,93,18,0.12)', color: '#FF8A4C' } },
+        { icon: '▣', label: 'Role Types', value: String(ASSIGNABLE_ROLES.length), note: 'Assignable roles', color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
       ];
     case 'retention':
       return [

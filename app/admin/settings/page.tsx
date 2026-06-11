@@ -1019,89 +1019,99 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
         />
       )}
 
-      <section className="rounded-[14px] border border-slate-200 bg-white p-5 shadow-[0_3px_12px_rgba(15,23,42,0.04)]">
+      <section className="rounded-[14px] p-5" style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
         <div className="mb-5 flex items-center gap-3">
-          <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-blue-50 text-blue-700">👤</span>
+          <span className="grid h-8 w-8 place-items-center rounded-[10px]" style={{ background: 'var(--dc-s3, #282828)', color: 'var(--dc-p2, #909090)' }}>👤</span>
           <div>
-            <h3 className="text-lg font-black tracking-tight text-slate-900">Add User</h3>
-            <p className="text-sm text-slate-500">Create a new user account and assign a role.</p>
+            <h3 className="text-lg font-black tracking-tight" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Add User</h3>
+            <p className="text-sm" style={{ color: 'var(--dc-p2, #909090)' }}>Create a new user account and assign a role.</p>
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <label className="grid gap-2 text-xs font-extrabold text-slate-700">
+          <label className="grid gap-2 text-xs font-extrabold" style={{ color: 'var(--dc-p2, #909090)' }}>
             Full Name
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Enter full name"
-              className="h-[42px] min-w-0 rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
+              className="h-[42px] min-w-0 rounded-[9px] px-3 text-sm outline-none transition focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
+              style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }} />
           </label>
-          <label className="grid gap-2 text-xs font-extrabold text-slate-700">
+          <label className="grid gap-2 text-xs font-extrabold" style={{ color: 'var(--dc-p2, #909090)' }}>
             Email Address
             <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Enter email address"
-              className="h-[42px] min-w-0 rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
+              className="h-[42px] min-w-0 rounded-[9px] px-3 text-sm outline-none transition focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
+              style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }} />
           </label>
-          <label className="grid gap-2 text-xs font-extrabold text-slate-700">
+          <label className="grid gap-2 text-xs font-extrabold" style={{ color: 'var(--dc-p2, #909090)' }}>
             Temporary Password
             <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Enter temporary password"
-              className="h-[42px] min-w-0 rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
+              className="h-[42px] min-w-0 rounded-[9px] px-3 text-sm outline-none transition focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
+              style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }} />
           </label>
-          <label className="grid gap-2 text-xs font-extrabold text-slate-700">
+          <label className="grid gap-2 text-xs font-extrabold" style={{ color: 'var(--dc-p2, #909090)' }}>
             Role
             <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
-              className="h-[42px] min-w-0 rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100">
+              className="h-[42px] min-w-0 rounded-[9px] px-3 text-sm outline-none transition focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
+              style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }}>
               {ASSIGNABLE_ROLES.map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
             </select>
           </label>
         </div>
 
-        <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
+        <div className="mt-5 flex justify-end pt-4" style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
           <button type="button" onClick={createUser} disabled={saving}
-            className="inline-flex h-[42px] w-full items-center justify-center gap-2 rounded-[9px] bg-blue-600 px-5 text-sm font-extrabold text-white shadow-[0_8px_18px_rgba(37,99,235,0.20)] transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto">
-            <span>👥</span>{saving ? 'Creating...' : 'Create User'}
+            className="inline-flex h-[42px] w-full items-center justify-center rounded-[9px] px-5 text-sm font-extrabold text-white transition sm:w-auto disabled:cursor-not-allowed"
+            style={{ background: saving ? 'var(--dc-s3, #282828)' : 'var(--dc-acc, #E85D12)', color: saving ? 'var(--dc-p3, #505050)' : '#fff' }}>
+            {saving ? 'Creating...' : 'Create User'}
           </button>
         </div>
       </section>
 
       {msg && (
-        <div className={`rounded-[14px] border px-4 py-3 text-sm font-semibold ${msg.ok ? 'border-green-200 bg-green-50 text-green-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
+        <div className="rounded-[14px] px-4 py-3 text-sm font-semibold" style={msg.ok
+          ? { background: 'rgba(34,197,94,0.11)', border: '1px solid rgba(34,197,94,0.25)', color: '#4ade80' }
+          : { background: 'rgba(248,113,113,0.11)', border: '1px solid rgba(248,113,113,0.25)', color: '#fca5a5' }}>
           {msg.text}
         </div>
       )}
 
-      <section className="overflow-hidden rounded-[14px] border border-slate-200 bg-white shadow-[0_3px_12px_rgba(15,23,42,0.04)]">
-        <div className="flex flex-col gap-4 border-b border-slate-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+      <section className="overflow-hidden rounded-[14px]" style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+        <div className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between" style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
           <div>
-            <h3 className="text-lg font-black tracking-tight text-slate-900">User Management</h3>
-            <p className="text-sm text-slate-500">View and manage all users in your account.</p>
+            <h3 className="text-lg font-black tracking-tight" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>User Management</h3>
+            <p className="text-sm" style={{ color: 'var(--dc-p2, #909090)' }}>View and manage all users in your account.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <label className="relative block">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">⌕</span>
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: 'var(--dc-p3, #505050)' }}>⌕</span>
               <input value={query} onChange={e => setQuery(e.target.value)} type="search" placeholder="Search users"
-                className="h-[38px] w-full rounded-[9px] border border-slate-300 bg-white pl-9 pr-3 text-sm outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100 sm:w-56" />
+                className="h-[38px] w-full rounded-[9px] pl-9 pr-3 text-sm outline-none sm:w-56 focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
+                style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }} />
             </label>
             <select value={roleFilter} onChange={e => setRoleFilter(e.target.value as AppRole | 'all')}
-              className="h-[38px] rounded-[9px] border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100">
+              className="h-[38px] rounded-[9px] px-3 text-sm font-bold outline-none"
+              style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }}>
               <option value="all">All roles</option>
               {roleOptionsFor().map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
             </select>
             <button type="button" onClick={loadUsers} disabled={loading}
-              className="inline-flex h-[38px] items-center justify-center rounded-[9px] border border-slate-300 bg-white px-4 text-sm font-extrabold text-slate-700 transition hover:bg-slate-50 disabled:text-slate-400">
+              className="inline-flex h-[38px] items-center justify-center rounded-[9px] px-4 text-sm font-extrabold transition"
+              style={{ background: 'var(--dc-s1, #141414)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: loading ? 'var(--dc-p3, #505050)' : 'var(--dc-p1, #F2F2F2)' }}>
               {loading ? 'Loading...' : '↻ Refresh'}
             </button>
           </div>
         </div>
         {/* Bulk action bar — visible only when rows are selected */}
         {selected.size > 0 && (
-          <div className="flex flex-wrap items-center gap-3 border-b border-blue-100 bg-blue-50 px-5 py-3">
-            <span className="text-sm font-black text-blue-800">
+          <div className="flex flex-wrap items-center gap-3 px-5 py-3" style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', background: 'var(--dc-s1, #141414)' }}>
+            <span className="text-sm font-black" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>
               {selected.size} user{selected.size !== 1 ? 's' : ''} selected
             </span>
             <div className="flex flex-wrap items-center gap-2 ml-auto">
-              {/* Bulk role change */}
               <select
                 value={bulkRole}
                 onChange={e => setBulkRole(e.target.value as AppRole)}
-                className="h-[34px] rounded-[8px] border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="h-[34px] rounded-[8px] px-2 text-xs font-bold outline-none"
+                style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }}
               >
                 {ASSIGNABLE_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
               </select>
@@ -1109,24 +1119,27 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
                 type="button"
                 onClick={bulkUpdateRole}
                 disabled={bulkApplying}
-                className="inline-flex h-[34px] items-center gap-1.5 rounded-[8px] border border-slate-300 bg-white px-3 text-xs font-extrabold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                className="inline-flex h-[34px] items-center gap-1.5 rounded-[8px] px-3 text-xs font-extrabold transition disabled:opacity-50"
+                style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }}
               >
                 {bulkApplying ? '...' : '✎'} Change role
               </button>
-              {/* Bulk delete */}
               <button
                 type="button"
                 onClick={() => setShowBulkDeleteConfirm(true)}
                 disabled={bulkDeleting}
-                className="inline-flex h-[34px] items-center gap-1.5 rounded-[8px] bg-red-600 px-3 text-xs font-extrabold text-white transition hover:bg-red-700 disabled:opacity-50"
+                className="inline-flex h-[34px] items-center gap-1.5 rounded-[8px] px-3 text-xs font-extrabold transition disabled:opacity-50"
+                style={{ background: 'rgba(248,113,113,0.13)', border: '1px solid rgba(248,113,113,0.25)', color: '#fca5a5' }}
               >
                 🗑 Delete {selected.size}
               </button>
-              {/* Clear selection */}
               <button
                 type="button"
                 onClick={() => setSelected(new Set())}
-                className="text-xs font-bold text-slate-400 hover:text-slate-700 transition-colors px-1"
+                className="text-xs font-bold transition-colors px-1"
+                style={{ color: 'var(--dc-p3, #505050)' }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--dc-p1, #F2F2F2)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--dc-p3, #505050)')}
               >
                 ✕ Clear
               </button>
@@ -1135,91 +1148,95 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
         )}
 
         {loading ? (
-          <div className="p-5 text-sm text-slate-400 animate-pulse">Loading users...</div>
+          <div className="p-5 text-sm animate-pulse" style={{ color: 'var(--dc-p3, #505050)' }}>Loading users...</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
-              <thead className="bg-slate-50">
-                <tr>
+              <thead>
+                <tr style={{ background: 'var(--dc-s1, #141414)', borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))' }}>
                   <th className="w-10 px-4 py-3">
                     <input
                       ref={selectAllRef}
                       type="checkbox"
                       checked={filteredUsers.length > 0 && filteredUsers.every(u => selected.has(u.id))}
                       onChange={toggleSelectAll}
-                      className="h-4 w-4 rounded border-slate-300 text-blue-600 accent-blue-600 cursor-pointer"
+                      className="h-4 w-4 rounded cursor-pointer accent-[#E85D12]"
                       aria-label="Select all users"
                     />
                   </th>
-                  <th className="px-5 py-3 text-left text-xs font-black text-slate-600">User</th>
-                  <th className="w-44 px-5 py-3 text-left text-xs font-black text-slate-600">Role</th>
-                  <th className="w-20 px-5 py-3 text-left text-xs font-black text-slate-600">Imports</th>
-                  <th className="w-24 px-5 py-3 text-left text-xs font-black text-slate-600">Snapshots</th>
-                  <th className="w-48 px-5 py-3 text-left text-xs font-black text-slate-600">Status &amp; Actions</th>
+                  <th className="px-5 py-3 text-left text-xs font-black" style={{ color: 'var(--dc-p3, #505050)' }}>User</th>
+                  <th className="w-44 px-5 py-3 text-left text-xs font-black" style={{ color: 'var(--dc-p3, #505050)' }}>Role</th>
+                  <th className="w-20 px-5 py-3 text-left text-xs font-black" style={{ color: 'var(--dc-p3, #505050)' }}>Imports</th>
+                  <th className="w-24 px-5 py-3 text-left text-xs font-black" style={{ color: 'var(--dc-p3, #505050)' }}>Snapshots</th>
+                  <th className="w-48 px-5 py-3 text-left text-xs font-black" style={{ color: 'var(--dc-p3, #505050)' }}>Status &amp; Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user, index) => {
+                {filteredUsers.map((user) => {
                   const initials = user.name
                     .split(/\s+/)
                     .filter(Boolean)
                     .slice(0, 2)
                     .map(part => part[0]?.toUpperCase())
                     .join('') || user.email.slice(0, 2).toUpperCase();
-                  const avatarTone = [
-                    'bg-violet-50 text-violet-700',
-                    'bg-blue-50 text-blue-700',
-                    'bg-cyan-50 text-cyan-700',
-                    'bg-amber-50 text-amber-700',
-                    'bg-orange-50 text-orange-700',
-                  ][index % 5];
+                  const avatarStyle = { background: 'linear-gradient(135deg, var(--dc-acc, #E85D12), #8B2D00)', color: '#F2F2F2' };
 
                   return (
-                    <tr key={user.id} className={`border-t border-slate-200 group transition-colors ${selected.has(user.id) ? 'bg-blue-50/60' : ''}`}>
+                    <tr key={user.id}
+                      className="transition-colors hover:[&>td]:bg-[rgba(255,255,255,0.025)]"
+                      style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', background: selected.has(user.id) ? 'rgba(232,93,18,0.08)' : 'transparent' }}>
                       <td className="px-4 py-4">
                         <input
                           type="checkbox"
                           checked={selected.has(user.id)}
                           onChange={() => toggleSelect(user.id)}
-                          className="h-4 w-4 rounded border-slate-300 text-blue-600 accent-blue-600 cursor-pointer"
+                          className="h-4 w-4 rounded cursor-pointer accent-[#E85D12]"
                           aria-label={`Select ${user.name}`}
                         />
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex min-w-0 items-center gap-3">
-                          <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-black ${avatarTone}`}>{initials}</span>
+                          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-black" style={avatarStyle}>{initials}</span>
                           <div className="min-w-0">
                             <input value={user.name} onChange={e => setUsers(prev => prev.map(u => u.id === user.id ? { ...u, name: e.target.value } : u))}
-                              onBlur={e => updateUser(user.id, { name: e.target.value })}
-                              className="w-full truncate rounded-[8px] border border-transparent px-2 py-1 text-sm font-black text-slate-900 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100" />
-                            <p className="truncate px-2 text-xs text-slate-500">{user.email}</p>
+                              onFocus={e => { e.currentTarget.style.background = 'var(--dc-s1, #141414)'; e.currentTarget.style.borderColor = 'var(--dc-bdr2, rgba(255,255,255,0.13))'; }}
+                              onBlur={e => { updateUser(user.id, { name: e.target.value }); e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
+                              className="w-full truncate rounded-[8px] border border-transparent px-2 py-1 text-sm font-black outline-none transition"
+                              style={{ color: 'var(--dc-p1, #F2F2F2)', background: 'transparent' }} />
+                            <p className="truncate px-2 text-xs" style={{ color: 'var(--dc-p3, #505050)' }}>{user.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-5 py-4">
                         <select value={user.role} onChange={e => updateUser(user.id, { role: e.target.value as AppRole })}
-                          className="h-[38px] w-full rounded-[9px] border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100">
+                          className="h-[38px] w-full rounded-[9px] px-3 text-sm outline-none"
+                          style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }}>
                           {roleOptionsFor(user).map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
                         </select>
                       </td>
-                      <td className="px-5 py-4 font-bold text-slate-700">{user.importCount}</td>
-                      <td className="px-5 py-4 font-bold text-slate-700">{user.snapshotCount}</td>
-                      {/* Status + inline action buttons — always visible, no horizontal scroll needed */}
+                      <td className="px-5 py-4 font-bold" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{user.importCount}</td>
+                      <td className="px-5 py-4 font-bold" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{user.snapshotCount}</td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
-                          <span className={`inline-flex h-7 shrink-0 items-center gap-2 rounded-full border px-3 text-xs font-black ${user.isActive ? 'border-green-200 bg-green-50 text-green-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${user.isActive ? 'bg-green-600' : 'bg-slate-400'}`} />
+                          <span className={user.isActive ? 'chip c-gr' : 'chip c-nt'} style={{ borderRadius: 100 }}>
+                            <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: user.isActive ? '#22C55E' : '#505050' }} />
                             {user.isActive ? 'Active' : 'Disabled'}
                           </span>
                           <button type="button" onClick={() => updateUser(user.id, { isActive: !user.isActive })}
                             title={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}
-                            className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] text-base text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] text-base transition"
+                            style={{ color: 'var(--dc-p2, #909090)' }}
+                            onMouseEnter={e => (e.currentTarget.style.color = 'var(--dc-amber, #F59E0B)')}
+                            onMouseLeave={e => (e.currentTarget.style.color = 'var(--dc-p2, #909090)')}
                             aria-label={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}>
                             {user.isActive ? '⏸' : '▶'}
                           </button>
                           <button type="button" onClick={() => setDeleteTarget(user)}
                             title={`Delete ${user.name}`}
-                            className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] text-base text-red-500 transition hover:bg-red-50 hover:text-red-700"
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] text-base transition"
+                            style={{ color: 'var(--dc-p2, #909090)' }}
+                            onMouseEnter={e => (e.currentTarget.style.color = 'var(--dc-red, #F87171)')}
+                            onMouseLeave={e => (e.currentTarget.style.color = 'var(--dc-p2, #909090)')}
                             aria-label={`Delete ${user.name}`}>
                             🗑
                           </button>
@@ -1230,10 +1247,10 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
                 })}
               </tbody>
             </table>
-            {filteredUsers.length === 0 && <div className="p-5 text-sm text-slate-400">No users match the current filters.</div>}
-            <div className="flex items-center justify-between border-t border-slate-200 px-5 py-3 text-sm text-slate-600">
+            {filteredUsers.length === 0 && <div className="p-5 text-sm" style={{ color: 'var(--dc-p3, #505050)' }}>No users match the current filters.</div>}
+            <div className="flex items-center justify-between px-5 py-3 text-sm" style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }}>
               <span>Showing {filteredUsers.length} of {users.length} users</span>
-              <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-[9px] bg-blue-50 px-3 text-xs font-black text-blue-700">1</span>
+              <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-[9px] px-3 text-xs font-black" style={{ color: 'var(--dc-acc2, #FF8A4C)', background: 'rgba(232,93,18,0.10)', fontFamily: 'var(--font-mono, monospace)' }}>1</span>
             </div>
           </div>
         )}
