@@ -5,6 +5,20 @@
 
 ---
 
+## v4.8.0 — Dashboard 3-Zone Layout: DashboardTopbar + DashboardSidebarNav (2026-06-13, P1 — UI)
+
+### Added
+- **`DashboardTopbar`** (`src/components/dashboard/DashboardTopbar.tsx`): Fixed 52px topbar for `/dashboard`. Logo zone (28px blue square + "Delivery Clarity" + "v4.1"), 6 nav button groups with chevrons, SVG ring health pill (circumference 40.84, r=6.5, color bands ≥75 green / ≥60 amber / ≥40 red / <40 dark-red), "New Upload" CTA, user avatar.
+- **`DashboardSidebarNav`** (`src/components/dashboard/DashboardSidebarNav.tsx`): Fixed 228px sidebar replacing the generic shell nav. Health block: score number (mono 28px, colored), progress bar (`linear-gradient(90deg, #DC2626 0%, #EA580C 50%, #D97706 100%)`), 2×2 vitals grid (Complete, Critical, Cycle, Est. done). 15 nav items across 3 groups (Overview 5, Delivery 6, Deep Dive 4) with SVG icons, meta text, and colored chips (cc/cw/cg/cm/cn). Active item: `#EFF6FF` bg + 3px `#2563EB` left accent.
+- **`activeSection` state** in `app/dashboard/page.tsx`: default `'summary'`. Sidebar click routes via `SIDEBAR_TO_MODE` map → `setSectionMode` + `setExpandedSections` for 12 keys; `'flow'` opens flow panel; `'data-quality'` sets mode; `'summary'` shows new Delivery Summary section.
+- **Delivery Summary section**: shown at `activeSection === 'summary'`: title + "Broadcast" chip, 4 KPI mini-cards (Completion, Critical, Avg Cycle, Est. Completion), alert strip (blocked / overdue / orphans), top 3 smart actions.
+
+### Changed
+- **`app/dashboard/page.tsx`**: Replaced `<AppShell showNav>` with a full-page 3-zone layout div (DashboardTopbar fixed at top, DashboardSidebarNav fixed left, scrollable `<main>` at `marginLeft: 228px`). All 14 existing sections remain untouched; `display: none` when Delivery Summary is active. Sticky section-switcher bar updated from `top-14` → `top-0` (now relative to scrollable main).
+- Loading state updated to standalone full-height centered div (no AppShell dependency).
+
+---
+
 ## v4.7.0 — Theme D Restyle P22: Security Checklist (2026-06-11, P1 — UI)
 
 ### Changed
