@@ -18,6 +18,8 @@ import { recKey, isMuted, muteRec, snoozeRec, restoreAll, getActiveMuted, type M
 import { getRecOwner, setRecOwner, clearRecOwner, getAllRecOwners } from '@/lib/recOwners';
 import { getVote, castVote, type FeedbackVote } from '@/lib/recFeedback';
 import { saveRecSnapshot, getRecHistory, getNewTitles, getResolvedRecs, type RecHistoryEntry } from '@/lib/recHistory';
+import DashboardTopbar from '@/components/dashboard/DashboardTopbar';
+import DashboardSidebarNav from '@/components/dashboard/DashboardSidebarNav';
 import SprintThroughputPanel from '@/components/dashboard/SprintThroughputPanel';
 import MidSprintDeliveryPanel from '@/components/dashboard/MidSprintDeliveryPanel';
 import KanbanThroughputPanel from '@/components/dashboard/KanbanThroughputPanel';
@@ -293,6 +295,7 @@ export default function DashboardPage() {
   const [activeViewId, setActiveViewId] = useState<ViewId>('full');
   const [currentRole, setCurrentRole] = useState<string | null>(null);
   const [sectionMode, setSectionMode]   = useState<SectionMode>('full');
+  const [activeSection, setActiveSection] = useState('summary');
 
   // filter presets
   const [presets, setPresets] = useState<FilterPreset[]>([]);
@@ -587,7 +590,7 @@ export default function DashboardPage() {
   }, [smartActions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── All hooks are now above this line. Early returns are safe here. ─────────
-  if (loading) return <AppShell showNav><LoadingState message="Loading dashboard…" /></AppShell>;
+  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#F7F8FA' }}><LoadingState message="Loading dashboard…" /></div>;
   if (!metrics) return null;
 
   // ── derived values (computed after hooks — metrics is guaranteed non-null here)
@@ -735,13 +738,159 @@ export default function DashboardPage() {
     URL.revokeObjectURL(url);
   };
 
+  // ── sidebar section derived values ───────────────────────────────────────────
+  const overdueItemsAll = flowItems.filter(i => Number(i.ageDays) > 10 && !DONE_STATUSES.includes(norm(i.status)));
+  const capacitySkewed = ((metrics.capacity || []) as any[]).some((c: any) => c.loadShare > 35);
+  const criticalEpics = epicReadiness.filter((e: any) => e.risk === 'critical').length;
+  const estimatedDone = prediction?.complete
+    ? 'Done'
+    : (prediction?.predictedDate ?? (prediction?.daysRemaining != null ? `~${prediction.daysRemaining}d` : 'N/A'));
+  const uniqueLabels = [...new Set(flowItems.flatMap(i => ((i as any).labels || '').split(',').map((l: string) => l.trim()).filter(Boolean)))];
+  const dataQualityScore: number = (metrics as any).dataQuality?.score ?? 80;
+
+  const SIDEBAR_TO_MODE: Record<string, string> = {
+    attention: 'attention', metrics: 'overview', actions: 'recommendations',
+    visuals: 'visuals', ratios: 'ratios', delivery: 'delivery',
+    quarters: 'quarters', kanban: 'kanban', sprint: 'sprint',
+    ownership: 'ownership', labels: 'labels', readiness: 'readiness',
+  };
+
+  function handleSidebarNav(id: string) {
+    setActiveSection(id);
+    const mode = SIDEBAR_TO_MODE[id];
+    if (mode) {
+      setSectionMode(mode as SectionMode);
+      setExpandedSections(new Set([mode]));
+    } else if (id === 'flow') {
+      setSectionMode('full');
+      setExpandedSections(new Set(['flow']));
+      setFlowPanelOpen(true);
+    } else if (id === 'data-quality') {
+      setSectionMode('dataQuality' as SectionMode);
+      setExpandedSections(new Set(['dataQuality']));
+    } else {
+      setSectionMode('full');
+    }
+  }
+
   // ── render ───────────────────────────────────────────────────────────────────
   return (
-    <AppShell showNav>
-      {/* Right-side dot navigation — hidden on small screens, print:hidden */}
-      <div className="print:hidden">
-        <SectionNav sections={navSections} />
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+      <DashboardTopbar
+        healthScore={metrics.healthScore}
+        userInitial="A"
+        onNewUpload={() => router.push('/')}
+      />
+      <div style={{ display: 'flex', marginTop: 52, minHeight: 'calc(100vh - 52px)' }}>
+        <DashboardSidebarNav
+          activeSection={activeSection}
+          onSection={handleSidebarNav}
+          healthScore={metrics.healthScore}
+          completionRate={metrics.completionRate || 0}
+          criticalCount={flow.critical || 0}
+          cycleTimeDays={flow.averageCycleTimeDays || 0}
+          estimatedDone={estimatedDone}
+          totalIssues={totalIssues}
+          overdueCount={overdueItemsAll.length}
+          orphanCount={orphanCount}
+          blockerCount={topBlockers.length}
+          smartActionsLen={smartActions.length}
+          dataQuality={dataQualityScore}
+          quartersLen={quarters.length}
+          epicsLen={epicReadiness.length}
+          criticalEpics={criticalEpics}
+          flowItemsLen={flowItems.length}
+          hasSprintData={!!sprint}
+          capacitySkewed={capacitySkewed}
+          labelsLen={uniqueLabels.length}
+          typesLen={typeOptions.length}
+        />
+        <main style={{ marginLeft: 228, flex: 1, overflowY: 'auto', minHeight: 0 }}>
+
+      {/* ── DELIVERY SUMMARY — shown when activeSection === 'summary' ── */}
+      {activeSection === 'summary' && (
+        <div style={{ padding: '28px 32px 48px' }}>
+          {/* Header */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <h1 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', letterSpacing: '-.02em', margin: 0 }}>
+                Delivery Summary
+              </h1>
+              <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 3, background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                Broadcast
+              </span>
+            </div>
+            <p style={{ fontSize: 12, color: '#64748B', margin: 0 }}>
+              Live delivery health · {flowItems.length.toLocaleString()} issues tracked
+            </p>
+          </div>
+
+          {/* 4 KPI mini-cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+            {[
+              { label: 'Completion', value: `${metrics.completionRate || 0}%`, color: (metrics.completionRate || 0) >= 70 ? '#059669' : '#D97706', bg: '#F0FDF4', border: '#BBF7D0' },
+              { label: 'Critical Issues', value: String(flow.critical || 0), color: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
+              { label: 'Avg Cycle Time', value: `${flow.averageCycleTimeDays || 0}d`, color: '#475569', bg: '#F8FAFC', border: '#E2E8F0' },
+              { label: 'Est. Completion', value: estimatedDone, color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
+            ].map(({ label, value, color, bg, border }) => (
+              <div key={label} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: '14px 16px' }}>
+                <p style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#94A3B8', marginBottom: 4 }}>{label}</p>
+                <p style={{ fontSize: 22, fontWeight: 800, fontFamily: 'monospace', color, margin: 0, lineHeight: 1 }}>{value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Alert strip */}
+          {(topBlockers.length > 0 || overdueItemsAll.length > 0 || orphanCount > 0) && (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+              {topBlockers.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, background: '#FEF2F2', border: '1px solid #FECACA', fontSize: 11, fontWeight: 600, color: '#DC2626' }}>
+                  <span>🚫</span> {topBlockers.length} blocked
+                </div>
+              )}
+              {overdueItemsAll.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, background: '#FFFBEB', border: '1px solid #FDE68A', fontSize: 11, fontWeight: 600, color: '#D97706' }}>
+                  <span>⏰</span> {overdueItemsAll.length} overdue
+                </div>
+              )}
+              {orphanCount > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, background: '#F0F9FF', border: '1px solid #BAE6FD', fontSize: 11, fontWeight: 600, color: '#0369A1' }}>
+                  <span>👻</span> {orphanCount} orphans
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Top smart actions */}
+          {smartActions.length > 0 && (
+            <div style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: 12, overflow: 'hidden' }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#0F172A' }}>Smart Actions</span>
+                <span style={{ fontSize: 9, color: '#94A3B8', marginLeft: 6 }}>Top {Math.min(smartActions.length, 3)} recommendations</span>
+              </div>
+              {smartActions.slice(0, 3).map((a, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 16px',
+                  borderBottom: i < Math.min(smartActions.length, 3) - 1 ? '1px solid #F1F5F9' : 'none',
+                  cursor: 'pointer',
+                }} onClick={() => handleSmartAction(a)}>
+                  <span style={{ fontSize: 16 }}>{a.icon}</span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: a.type === 'critical' ? '#DC2626' : a.type === 'warning' ? '#D97706' : '#2563EB', margin: '0 0 2px' }}>{a.title}</p>
+                    <p style={{ fontSize: 10, color: '#64748B', margin: 0 }}>{a.detail}</p>
+                  </div>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: a.type === 'critical' ? '#FEF2F2' : a.type === 'warning' ? '#FFFBEB' : '#EFF6FF', color: a.type === 'critical' ? '#DC2626' : a.type === 'warning' ? '#D97706' : '#2563EB', flexShrink: 0 }}>
+                    {a.suggestedOwner.split(' /')[0]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── ALL OTHER SECTIONS — hidden when showing summary ── */}
+      <div style={{ display: activeSection === 'summary' ? 'none' : 'block', padding: '24px 16px 48px' }}>
 
       <div aria-hidden={detailPanel ? true : undefined}>
 
@@ -882,7 +1031,7 @@ export default function DashboardPage() {
         )}
 
         {/* ── STICKY QUICK FILTERS + SECTION SWITCHER ──────────────────────────── */}
-        <div id="dashboard-sticky-bar" className="sticky top-14 z-30 mb-4 -mx-4 print:hidden"
+        <div id="dashboard-sticky-bar" className="sticky top-0 z-30 mb-4 -mx-4 print:hidden"
           style={{ background: 'var(--dc-s1, rgba(20,20,20,0.96))', backdropFilter: 'blur(14px)', borderBottom: '1px solid var(--dc-bdr, rgba(198,210,226,0.4))', boxShadow: '0 4px 16px rgba(0,0,0,0.18)' }}>
           {/* ── Section nav row ── */}
           <div className="px-5 flex items-center gap-2">
@@ -2456,8 +2605,13 @@ export default function DashboardPage() {
         )}
 
       </div>
+
+      </div>{/* end legacy-sections wrapper */}
+
       <ScrollToTopFab />
       <ProductTour />
-    </AppShell>
+        </main>
+      </div>
+    </div>
   );
 }
