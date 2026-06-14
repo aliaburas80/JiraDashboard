@@ -212,7 +212,7 @@ export default function FlowHealthPage() {
         {statusDist.length > 0 && (
           <SectionCard title="Status Distribution (filtered)">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {statusDist.map(r => {
+              {statusDist.map((r, i) => {
                 const isDone = DONE_STATUSES.includes(norm(r.name));
                 const isActive = ['in progress', 'code review', 'qa', 'testing'].includes(norm(r.name));
                 const color = isDone ? '#059669' : isActive ? '#2563EB' : '#94A3B8';
