@@ -25,7 +25,8 @@ export interface AdminConsoleNavItem {
 }
 
 export const ADMINISTRATION_NAV: AdminConsoleNavItem[] = [
-  { id: 'settings',    label: 'Settings',         icon: '⚙️', href: '/admin/settings' },
+  { id: 'users',       label: 'User Management',   icon: '👥', href: '/admin/users' },
+  { id: 'settings',    label: 'Settings',          icon: '⚙️', href: '/admin/settings' },
   { id: 'theme',       label: 'Theme & Branding',  icon: '🎨', href: '/admin/theme' },
   { id: 'diagnostics', label: 'Diagnostics',       icon: '🩺', href: '/admin/diagnostics' },
   { id: 'security',    label: 'Security',          icon: '🔐', href: '/admin/security' },
