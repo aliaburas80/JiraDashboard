@@ -50,6 +50,12 @@
   --dc-orange: #E85D12;
 }
 
+/* ── Global placeholder — always light/muted regardless of theme ─────────── */
+::placeholder {
+  color: var(--color-text-muted, #94a3b8);
+  opacity: 1;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    UIUXTemplate Palette — global Tailwind override
    When data-palette is active on <html>, every Tailwind colour utility is
@@ -168,7 +174,7 @@ html[data-palette] {
     color:            var(--dc-p1) !important;
     border-color:     var(--dc-bdr) !important;
   }
-  ::placeholder { color: var(--dc-p3) !important; opacity: 1 !important; }
+  ::placeholder { color: var(--dc-p3, #94a3b8) !important; opacity: 1 !important; }
 
   /* ── Specific component classes ────────────────────────────────────────── */
   .card {
