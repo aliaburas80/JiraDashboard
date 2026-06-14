@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { getHealthBand, HEALTH_COLORS } from '@/lib/utils';
 import type { DashboardMetrics } from '@/types/metrics';
+import styles from './page.module.scss';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -33,27 +34,38 @@ function norm(v: unknown): string { return String(v ?? '').trim().toLowerCase();
 // ── Section components ────────────────────────────────────────────────────────
 
 function MetricPill({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color: string }) {
+  const valueClass =
+    color === '#059669' ? styles.metricValueSuccess
+      : color === '#DC2626' ? styles.metricValueDanger
+      : color === '#E85D12' ? styles.metricValueWarning
+      : styles.metricValueDefault;
+
   return (
-    <div className="rounded-[8px] px-6 py-5 text-center" style={{ background: '#ffffff', border: '1px solid #E8E8E8' }}>
-      <p className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: '#888' }}>{label}</p>
-      <p className="text-[20px] font-black leading-none" style={{ color, fontFamily: 'var(--font-mono, monospace)' }}>{value}</p>
-      {sub && <p className="text-xs mt-1.5" style={{ color: '#888' }}>{sub}</p>}
+    <div className={styles.metricCard}>
+      <p className={styles.metricLabel}>{label}</p>
+      <p className={`${styles.metricValue} ${valueClass}`}>{value}</p>
+      {sub && <p className={styles.metricSub}>{sub}</p>}
     </div>
   );
 }
 
 function RiskRow({ text, level }: { text: string; level: 'high' | 'medium' | 'low' }) {
-  const styles = {
-    high:   { dot: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
-    medium: { dot: '#E85D12', bg: '#FFF7ED', border: '#FED7AA' },
-    low:    { dot: '#6B7280', bg: '#F8FAFC', border: '#E2E8F0' },
-  }[level];
+  const levelClass = level === 'high'
+    ? styles.riskHigh
+    : level === 'medium'
+      ? styles.riskMedium
+      : styles.riskLow;
+
+  const dotClass = level === 'high'
+    ? styles.riskDotHigh
+    : level === 'medium'
+      ? styles.riskDotMedium
+      : styles.riskDotLow;
+
   return (
-    <div className="flex items-start gap-3 rounded-xl px-4 py-3"
-      style={{ background: styles.bg, border: `1px solid ${styles.border}` }}>
-      <span className="mt-1.5 w-2.5 h-2.5 rounded-full shrink-0"
-        style={{ background: styles.dot, width: 10, height: 10, minWidth: 10 }} />
-      <p className="text-sm leading-snug" style={{ color: '#333' }}>{text}</p>
+    <div className={`${styles.riskCard} ${levelClass}`}>
+      <span className={`${styles.riskDot} ${dotClass}`} />
+      <p className={styles.riskText}>{text}</p>
     </div>
   );
 }
@@ -64,7 +76,6 @@ export default function CustomerPage() {
   const router = useRouter();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [printMode, setPrintMode] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -135,10 +146,10 @@ export default function CustomerPage() {
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <div className={`min-h-screen bg-slate-50 ${printMode ? 'print:bg-white' : ''}`}>
+    <div className={styles.reportWrapper}>
 
       {/* ── Toolbar (hidden in print) ── */}
-      <div className="no-print sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm">
+      <div className={`${styles.toolbar}`}>
         <Link href="/summary" className="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1">
           ← Back to Overview
         </Link>
@@ -164,28 +175,23 @@ export default function CustomerPage() {
             <p className="text-sm text-slate-400 mt-1">{today}</p>
           </div>
           {/* Health status badge */}
-          <div
-            className="flex flex-col items-center shrink-0 rounded-[10px] px-5 py-4 text-center"
-            style={{ background: '#ffffff', border: `2px solid ${color}` }}
-          >
-            <span className="font-black leading-none print:text-2xl"
-              style={{ color, fontSize: 28, fontFamily: 'var(--font-mono, monospace)' }}>
-              {metrics.healthScore ?? 0}
-            </span>
-            <span className="font-black uppercase tracking-wider mt-1" style={{ color, fontSize: 10, fontWeight: 700 }}>
-              {STATUS_LABELS[band] ?? band}
-            </span>
-            <span className="mt-0.5" style={{ fontSize: 8, color: '#888' }}>Delivery Health</span>
+          <div className={`${styles.healthBadge} ${
+            band === 'excellent' ? styles.healthBadgeExcellent
+            : band === 'good' ? styles.healthBadgeGood
+            : band === 'moderate' ? styles.healthBadgeModerate
+            : band === 'at-risk' ? styles.healthBadgeAtRisk
+            : styles.healthBadgeCritical
+          }`}>
+            <span className={styles.healthBadgeNumber}>{metrics.healthScore ?? 0}</span>
+            <span className={styles.healthBadgeLabel}>{STATUS_LABELS[band] ?? band}</span>
+            <span className={styles.healthBadgeSub}>Delivery Health</span>
           </div>
         </div>
 
         {/* ── Status summary ── */}
-        <div
-          className="rounded-r-xl border-l-[3px] px-6 py-5 mb-8 print:mb-4"
-          style={{ borderColor: '#E85D12', background: '#FFF7ED' }}
-        >
-          <p className="text-base font-black mb-1" style={{ color: '#E85D12' }}>{BAND_MESSAGE[band]}</p>
-          <p className="text-sm" style={{ color: '#222' }}>
+        <div className={styles.statusSummary}>
+          <p className={styles.statusSummaryHeading}>{BAND_MESSAGE[band]}</p>
+          <p className={styles.statusSummaryText}>
             {metrics.doneIssues ?? 0} of {metrics.totalIssues ?? 0} work items are complete (
             {metrics.completionRate ?? 0}% overall completion).
             {prediction && !prediction.complete && prediction.daysRemaining != null && (
@@ -238,18 +244,18 @@ export default function CustomerPage() {
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Delivery Areas</h2>
             <div className="space-y-2">
               {epicList.map((epic: any, i: number) => {
-                const pct = epic.progress ?? 0;
-                const barColor = pct >= 100 ? '#16A34A' : '#1D4ED8';
+                const pct = Math.max(0, Math.min(100, epic.progress ?? 0));
+                const progressWidthClass = styles[`progressPct${pct}` as keyof typeof styles];
                 return (
-                  <div key={i} className="rounded-xl px-5 py-4" style={{ background: '#ffffff', border: '1px solid #E8E8E8' }}>
+                  <div key={i} className={styles.epicCard}>
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-bold truncate max-w-xs" style={{ color: '#111' }}>{epic.epic}</p>
-                      <span className="text-sm font-black ml-4 shrink-0" style={{ color: barColor }}>{pct}%</span>
+                      <p className={styles.epicTitle}>{epic.epic}</p>
+                      <span className={`${styles.epicPct} ${pct >= 100 ? styles.epicPctGreen : styles.epicPctBlue}`}>{pct}%</span>
                     </div>
-                    <div className="h-2 rounded-full overflow-hidden" style={{ background: '#E8E8E8' }}>
-                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: barColor }} />
+                    <div className={styles.progressBar}>
+                      <div className={`${styles.progressFill} ${pct >= 100 ? styles.progressFillGreen : styles.progressFillBlue} ${progressWidthClass}`} />
                     </div>
-                    <p className="text-[11px] mt-1.5" style={{ color: '#888' }}>
+                    <p className={styles.progressMeta}>
                       {epic.completedIssues ?? 0} of {epic.issues ?? 0} items complete
                       {(epic.critical ?? 0) > 0 && ` · ${epic.critical} at risk`}
                     </p>
@@ -272,8 +278,7 @@ export default function CustomerPage() {
         {risks.length === 0 && (
           <section className="mb-8 print:mb-4">
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Current Risks</h2>
-            <div className="rounded-xl px-5 py-4 text-sm font-semibold"
-              style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#166534' }}>
+            <div className={styles.emptyRiskCard}>
               ✓ No significant risks identified at this time.
             </div>
           </section>
@@ -283,11 +288,11 @@ export default function CustomerPage() {
         {(metrics.insights ?? []).length > 0 && (
           <section className="mb-8 print:mb-4">
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Key Highlights</h2>
-            <div className="rounded-2xl px-5 py-5" style={{ background: '#ffffff', border: '1px solid #E8E8E8' }}>
+            <div className={styles.insightCard}>
               <ul className="space-y-2.5">
                 {(metrics.insights ?? []).slice(0, 4).map((insight: string, i: number) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm" style={{ color: '#333' }}>
-                    <span className="mt-1.5 shrink-0 rounded-full" style={{ width: 6, height: 6, minWidth: 6, marginTop: 7, background: '#1D4ED8' }} />
+                  <li key={i} className={styles.insightItem}>
+                    <span className={styles.insightDot} />
                     {insight}
                   </li>
                 ))}

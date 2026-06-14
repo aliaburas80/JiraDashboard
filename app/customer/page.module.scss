@@ -1,0 +1,304 @@
+.reportWrapper {
+  @apply min-h-screen bg-slate-50;
+}
+
+.reportInner {
+  @apply max-w-3xl mx-auto px-6 py-10 print:py-4;
+}
+
+.toolbar {
+  @apply sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm;
+}
+
+@media print {
+  .toolbar {
+    display: none;
+  }
+}
+
+.header {
+  @apply flex items-start justify-between mb-8 print:mb-4;
+}
+
+.headerCaption {
+  @apply text-xs font-bold uppercase tracking-widest text-slate-400 mb-1;
+}
+
+.headerTitle {
+  @apply text-3xl font-black text-slate-900 tracking-tight print:text-2xl;
+}
+
+.headerDate {
+  @apply text-sm text-slate-400 mt-1;
+}
+
+.healthBadge {
+  @apply flex flex-col items-center shrink-0 rounded-[10px] px-5 py-4 text-center bg-white border-2;
+  border-color: var(--badge-border, #e5e7eb);
+  color: var(--badge-text, #111827);
+}
+
+.healthBadgeNumber {
+  @apply font-black leading-none text-[28px] font-mono;
+  color: inherit;
+}
+
+.healthBadgeLabel {
+  @apply font-black uppercase tracking-wider mt-1 text-[10px];
+  color: inherit;
+}
+
+.healthBadgeSub {
+  @apply mt-0.5 text-[8px] text-slate-500;
+}
+
+.healthBadgeExcellent {
+  border-color: #16a34a;
+}
+
+.healthBadgeGood {
+  border-color: #0f766e;
+}
+
+.healthBadgeModerate {
+  border-color: #d97706;
+}
+
+.healthBadgeAtRisk {
+  border-color: #dc2626;
+}
+
+.healthBadgeCritical {
+  border-color: #991b1b;
+}
+
+.healthBadgeText {
+  color: inherit;
+}
+
+.metricCard {
+  @apply rounded-[8px] px-6 py-5 text-center bg-white border border-slate-200;
+}
+
+.metricLabel {
+  @apply text-[9px] font-bold uppercase tracking-widest mb-2 text-slate-500;
+}
+
+.metricValue {
+  @apply text-[20px] font-black leading-none font-mono;
+  color: var(--metric-color, #111111);
+}
+
+.metricSub {
+  @apply text-xs mt-1.5 text-slate-500;
+}
+
+.riskCard {
+  @apply rounded-xl px-4 py-3;
+}
+
+.riskDot {
+  @apply mt-1.5 rounded-full shrink-0;
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  background: var(--dot-color, #6B7280);
+}
+
+.riskText {
+  @apply text-sm leading-snug text-slate-900;
+}
+
+@media print {
+  .toolbar {
+    display: none;
+  }
+}
+
+.healthBadgeGood {
+  border-color: #0f766e;
+  color: #0f766e;
+}
+
+.healthBadgeModerate {
+  border-color: #d97706;
+  color: #d97706;
+}
+
+.healthBadgeAtRisk {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+.healthBadgeCritical {
+  border-color: #991b1b;
+  color: #991b1b;
+}
+
+.healthScore {
+  @apply font-black leading-none text-[28px] font-mono;
+}
+
+.healthStatus {
+  @apply font-black uppercase tracking-wider mt-1 text-[10px];
+}
+
+.healthMeta {
+  @apply mt-0.5 text-[8px] text-slate-500;
+}
+
+.statusSummary {
+  @apply rounded-r-xl px-6 py-5 mb-8 print:mb-4;
+  background: #FFF7ED;
+  border-left-width: 3px;
+  border-color: #E85D12;
+}
+
+.statusSummaryHeading {
+  @apply text-base font-black mb-1;
+  color: #E85D12;
+}
+
+.statusSummaryText {
+  @apply text-sm text-slate-900;
+}
+
+.kpiGrid {
+  @apply grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 print:mb-4 print:grid-cols-4;
+}
+
+.deliveryAreas {
+  @apply mb-8 print:mb-4;
+}
+
+.sectionHeading {
+  @apply text-xs font-black uppercase tracking-widest text-slate-400 mb-4;
+}
+
+.epicCard {
+  @apply rounded-xl px-5 py-4 bg-white border border-slate-200;
+}
+
+.epicRow {
+  @apply flex items-center justify-between mb-2;
+}
+
+.epicTitle {
+  @apply text-sm font-bold truncate max-w-xs;
+  color: #111111;
+}
+
+.epicPct {
+  @apply text-sm font-black ml-4 shrink-0;
+}
+
+.epicPctBlue {
+  color: #1d4ed8;
+}
+
+.epicPctGreen {
+  color: #16a34a;
+}
+
+.progressBar {
+  @apply h-2 rounded-full overflow-hidden bg-slate-200;
+}
+
+.progressFill {
+  @apply h-full rounded-full transition-all;
+  background: var(--progress-color);
+}
+
+@for $i from 0 through 100 {
+  .progressPct#{$i} {
+    width: #{$i}%;
+  }
+}
+
+.progressMeta {
+  @apply text-[11px] mt-1.5 text-slate-500;
+}
+
+.progressFillBlue {
+  --progress-color: #1d4ed8;
+}
+
+.progressFillGreen {
+  --progress-color: #16a34a;
+}
+
+.riskHigh {
+  @apply bg-red-50 border border-red-200 text-red-900;
+}
+
+.riskMedium {
+  @apply bg-orange-50 border border-orange-200 text-orange-900;
+}
+
+.riskLow {
+  @apply bg-slate-50 border border-slate-200 text-slate-900;
+}
+
+.emptyRiskCard {
+  @apply rounded-xl px-5 py-4 text-sm font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800;
+}
+
+.riskSection {
+  @apply mb-8 print:mb-4;
+}
+
+.riskRow {
+  @apply flex items-start gap-3 rounded-xl px-4 py-3;
+}
+
+.riskHigh {
+  @apply bg-red-50 border border-red-200 text-red-900;
+}
+
+.riskMedium {
+  @apply bg-orange-50 border border-orange-200 text-orange-900;
+}
+
+.riskLow {
+  @apply bg-slate-50 border border-slate-200 text-slate-900;
+}
+
+.riskDot {
+  @apply mt-1.5 rounded-full shrink-0;
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+}
+
+.riskText {
+  @apply text-sm leading-snug;
+  color: #111827;
+}
+
+.emptyRiskCard {
+  @apply rounded-xl px-5 py-4 text-sm font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800;
+}
+
+.insightsCard {
+  @apply rounded-2xl px-5 py-5 bg-white border border-slate-200;
+}
+
+.insightItem {
+  @apply flex items-start gap-2.5 text-sm text-slate-700;
+}
+
+.insightDot {
+  @apply mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0;
+}
+
+.footer {
+  @apply border-t border-slate-200 pt-6 text-center;
+}
+
+.footerText {
+  @apply text-xs text-slate-400;
+}
+
+.footerNote {
+  @apply text-xs text-slate-300 mt-1;
+}

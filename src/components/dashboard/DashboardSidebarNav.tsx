@@ -1,23 +1,18 @@
 'use client';
 
+import type { ReactNode } from 'react';
+import styles from './DashboardSidebarNav.module.scss';
+
 // ─── Chip classes (inline styles matching the spec) ───────────────────────────
 function Chip({ type, label }: { type: 'cc' | 'cw' | 'cg' | 'cm' | 'cn'; label: string }) {
-  const styles: Record<string, React.CSSProperties> = {
-    cc: { background: '#FEF2F2', color: '#DC2626' },
-    cw: { background: '#FFFBEB', color: '#D97706' },
-    cg: { background: '#ECFDF5', color: '#059669' },
-    cm: { background: '#ECFEFF', color: '#0891B2' },
-    cn: { background: '#F1F5F9', color: '#64748B' },
-  };
-  return (
-    <span style={{
-      display: 'inline-flex', padding: '2px 6px', borderRadius: 3,
-      fontSize: 8, fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap',
-      ...styles[type],
-    }}>
-      {label}
-    </span>
-  );
+  const className =
+    type === 'cc' ? styles.chipCc
+      : type === 'cw' ? styles.chipCw
+      : type === 'cg' ? styles.chipCg
+      : type === 'cm' ? styles.chipCm
+      : styles.chipCn;
+
+  return <span className={`${styles.chip} ${className}`}>{label}</span>;
 }
 
 // ─── Health colour ────────────────────────────────────────────────────────────
@@ -58,7 +53,7 @@ function Icon({ name, active }: { name: string; active: boolean }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      style={{ width: 13, height: 13, stroke: active ? '#2563EB' : '#94A3B8', strokeWidth: 1.8, fill: 'none', flexShrink: 0 }}
+      className={`${styles.navIcon} ${active ? styles.iconActive : styles.iconInactive}`}
       aria-hidden="true"
     >
       {icons[name]}
@@ -79,32 +74,15 @@ function NavItem({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-        padding: '7px 9px', borderRadius: 7, border: 'none',
-        background: active ? '#EFF6FF' : 'transparent',
-        cursor: 'pointer', marginBottom: 1, position: 'relative',
-        transition: 'background 100ms',
-      }}
-      onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = '#F8FAFC'; }}
-      onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+      className={`${styles.navItem} ${active ? styles.navItemActive : ''}`}
     >
-      {active && (
-        <span style={{
-          position: 'absolute', left: 0, top: '18%', bottom: '18%',
-          width: 3, borderRadius: '0 2px 2px 0', background: '#2563EB',
-        }} />
-      )}
+      {active && <span className={styles.activeIndicator} />}
       <Icon name={icon} active={active} />
-      <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-        <span style={{
-          fontSize: 11, fontWeight: active ? 600 : 500,
-          color: active ? '#2563EB' : '#64748B',
-          display: 'block', lineHeight: 1.3,
-        }}>{title}</span>
-        <span style={{ fontSize: 9, color: '#94A3B8', display: 'block', marginTop: 1 }}>
-          {meta}
+      <div className="min-w-0 flex-1 text-left">
+        <span className={`${styles.navTextTitle} ${active ? styles.navTextActive : styles.navTextInactive}`}>
+          {title}
         </span>
+        <span className={styles.navTextMeta}>{meta}</span>
       </div>
       <Chip type={chipType} label={chip} />
     </button>
@@ -113,15 +91,7 @@ function NavItem({
 
 // ─── Group label ──────────────────────────────────────────────────────────────
 function GroupLabel({ label }: { label: string }) {
-  return (
-    <span style={{
-      fontSize: 8, fontWeight: 700, letterSpacing: '.10em',
-      textTransform: 'uppercase', color: '#94A3B8',
-      padding: '10px 8px 4px', display: 'block',
-    }}>
-      {label}
-    </span>
-  );
+  return <span className={styles.groupLabel}>{label}</span>;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -156,9 +126,16 @@ export default function DashboardSidebarNav({
   smartActionsLen, dataQuality, quartersLen, epicsLen, criticalEpics,
   flowItemsLen, hasSprintData, capacitySkewed, labelsLen, typesLen,
 }: SidebarProps) {
-  const hc    = healthColor(healthScore);
   const hband = healthBandLabel(healthScore);
   const totalAttention = overdueCount + orphanCount;
+  const healthVariantClass =
+    healthScore >= 90 ? styles.healthBlockExcellent
+      : healthScore >= 75 ? styles.healthBlockGood
+      : healthScore >= 60 ? styles.healthBlockModerate
+      : healthScore >= 40 ? styles.healthBlockAtRisk
+      : styles.healthBlockCritical;
+  const progressWidthClass =
+    styles[`healthProgressWidth${Math.min(100, Math.max(0, healthScore))}` as keyof typeof styles];
 
   // Dynamic chips per section
   const attentionChipType: 'cc' | 'cw' | 'cn' = totalAttention > 200 ? 'cc' : totalAttention > 50 ? 'cw' : 'cn';
@@ -169,62 +146,41 @@ export default function DashboardSidebarNav({
   const scoreChipType: 'cc' | 'cw' | 'cg' = healthScore < 40 ? 'cc' : healthScore < 60 ? 'cw' : 'cg';
 
   return (
-    <aside style={{
-      width: 228, flexShrink: 0,
-      background: '#ffffff',
-      borderRight: '1px solid #E2E8F0',
-      display: 'flex', flexDirection: 'column',
-      position: 'fixed', top: 52, bottom: 0, left: 0,
-      overflowY: 'auto',
-      fontFamily: "'Segoe UI', system-ui, sans-serif",
-    }}>
+    <aside className={styles.sidebar}>
 
       {/* ── Health block ── */}
-      <div style={{ padding: '14px 14px 12px', borderBottom: '1px solid #E2E8F0' }}>
-        {/* Row 1 */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: '#94A3B8' }}>
-            Health Score
-          </span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: hc }}>{hband}</span>
+      <div className={`${styles.healthBlock} ${healthVariantClass}`}>
+        <div className={styles.healthHeader}>
+          <span className={styles.healthLabel}>Health Score</span>
+          <span className={styles.healthBand}>{hband}</span>
         </div>
 
         {/* Score number */}
-        <div style={{ fontFamily: 'monospace', fontSize: 28, fontWeight: 700, color: hc, lineHeight: 1, marginBottom: 5 }}>
-          {healthScore}
-        </div>
+        <div className={styles.healthValue}>{healthScore}</div>
 
         {/* Progress bar */}
-        <div style={{ height: 4, background: '#E2E8F0', borderRadius: 2, overflow: 'hidden', marginBottom: 8 }}>
-          <div style={{
-            height: '100%', width: `${Math.min(healthScore, 100)}%`,
-            background: 'linear-gradient(90deg, #DC2626 0%, #EA580C 50%, #D97706 100%)',
-            borderRadius: 2,
-          }} />
+        <div className={styles.healthProgress}>
+          <div className={`${styles.healthProgressFill} ${progressWidthClass}`} />
         </div>
 
         {/* 2×2 vitals grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+        <div className={styles.vitalsGrid}>
           {[
-            { label: 'Complete', value: `${completionRate}%`, color: completionRate >= 70 ? '#059669' : '#D97706' },
-            { label: 'Critical',  value: criticalCount.toLocaleString(), color: '#DC2626' },
-            { label: 'Cycle',     value: `${cycleTimeDays}d`, color: cycleTimeDays > 14 ? '#D97706' : '#059669' },
-            { label: 'Est. done', value: estimatedDone, color: '#475569', size: 10 },
-          ].map(({ label, value, color, size }) => (
-            <div key={label} style={{ background: '#F1F5F9', borderRadius: 5, padding: '5px 7px' }}>
-              <div style={{ fontSize: 7, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 1 }}>
-                {label}
-              </div>
-              <div style={{ fontFamily: 'monospace', fontSize: size ?? 11, fontWeight: 600, color }}>
-                {value}
-              </div>
+            { label: 'Complete', value: `${completionRate}%`, valueClass: completionRate >= 70 ? styles.healthPositive : styles.healthWarning, size: 11 },
+            { label: 'Critical',  value: criticalCount.toLocaleString(), valueClass: styles.healthDanger, size: 11 },
+            { label: 'Cycle',     value: `${cycleTimeDays}d`, valueClass: cycleTimeDays > 14 ? styles.healthWarning : styles.healthPositive, size: 11 },
+            { label: 'Est. done', value: estimatedDone, valueClass: styles.healthNeutral, size: 10 },
+          ].map(({ label, value, valueClass, size }) => (
+            <div key={label} className={styles.vitalCard}>
+              <div className={styles.vitalLabel}>{label}</div>
+              <div className={`${styles.vitalValue} ${valueClass}`}>{value}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* ── Section nav ── */}
-      <nav style={{ flex: 1, padding: '8px 8px 16px', overflowY: 'auto' }}>
+      <nav className={styles.navSection}>
 
         <GroupLabel label="Overview" />
         <NavItem id="summary"     icon="home"     title="Delivery Summary"    meta="Health · broadcast"                          chip={String(healthScore)}            chipType={scoreChipType}      active={activeSection === 'summary'}     onClick={() => onSection('summary')} />

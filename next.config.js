@@ -26,7 +26,9 @@ const nextConfig = {
       'xlsx', 'prisma', '@prisma/client', 'bcryptjs',
       ...CLOUD_EXTERNALS,
     ],
-    instrumentationHook: true,
+    // Disable the instrumentation hook to avoid generating edge-instrumentation
+    // bundles that execute eval() in a sandboxed context (causes EvalError).
+    instrumentationHook: false,
   },
   webpack: (config, { isServer }) => {
     // Client: mark Node built-ins as false (not available).

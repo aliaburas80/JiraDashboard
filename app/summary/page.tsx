@@ -13,6 +13,7 @@ import { getHealthBand, HEALTH_COLORS, type HealthBand } from '@/lib/utils';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import WhatChangedPanel from '@/components/dashboard/WhatChangedPanel';
 import dynamic from 'next/dynamic';
+import styles from './page.module.scss';
 const ProductTour = dynamic(() => import('@/components/tour/ProductTour'), { ssr: false });
 
 const DONE_STATUSES = new Set(['done', 'closed', 'resolved']);
@@ -37,22 +38,21 @@ const BAND_BG: Record<HealthBand, string> = {
 // ── Action toolbar helpers ────────────────────────────────────────────────────
 
 function CtaBtn({ label, color, icon, onClick }: { label: string; color: string; icon: string; onClick: () => void }) {
+  const colorClass =
+    color === '#64748b' ? styles.actionButtonNeutral
+      : color === '#059669' ? styles.actionButtonGreen
+      : color === '#7c3aed' ? styles.actionButtonPurple
+      : color === '#2563eb' ? styles.actionButtonBlue
+      : color === '#0d9488' ? styles.actionButtonTeal
+      : styles.actionButtonDark;
+
   return (
     <button
       type="button"
       onClick={onClick}
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        padding: '8px 14px', borderRadius: 9999, border: 'none',
-        cursor: 'pointer', background: 'transparent',
-        fontSize: 13, fontWeight: 700, color: '#334155',
-        fontFamily: 'inherit', whiteSpace: 'nowrap',
-        transition: 'background 150ms ease, color 150ms ease',
-      }}
-      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = `${color}14`; (e.currentTarget as HTMLButtonElement).style.color = color; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#334155'; }}
+      className={`${styles.actionButton} ${colorClass}`}
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 15, height: 15, fill: color, flexShrink: 0 }}>
+      <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.ctaIcon}>
         <path d={icon} />
       </svg>
       {label}
@@ -61,7 +61,7 @@ function CtaBtn({ label, color, icon, onClick }: { label: string; color: string;
 }
 
 function Divider() {
-  return <span aria-hidden="true" style={{ width: 1, height: 22, background: '#e2e8f0', flexShrink: 0, margin: '0 3px' }} />;
+  return <span aria-hidden="true" className={styles.divider} />;
 }
 
 export default function SummaryPage() {
@@ -129,12 +129,21 @@ export default function SummaryPage() {
         aria-label="Delivery health summary"
       >
         {/* Score circle */}
-        <div
-          className="relative flex shrink-0 items-center justify-center w-20 h-20 rounded-full border-4"
-          style={{ borderColor: color }}
-        >
+        <div className={`${styles.healthCircle} ${
+            band === 'excellent' ? styles.healthCircleExcellent
+            : band === 'good' ? styles.healthCircleGood
+            : band === 'moderate' ? styles.healthCircleModerate
+            : band === 'at-risk' ? styles.healthCircleAtRisk
+            : styles.healthCircleCritical
+          }`}>
           <div className="flex flex-col items-center leading-none">
-            <span className="text-2xl font-black" style={{ color }}>{metrics.healthScore ?? 0}</span>
+            <span className={`${styles.healthScoreText} ${
+              band === 'excellent' ? styles.healthScoreTextExcellent
+              : band === 'good' ? styles.healthScoreTextGood
+              : band === 'moderate' ? styles.healthScoreTextModerate
+              : band === 'at-risk' ? styles.healthScoreTextAtRisk
+              : styles.healthScoreTextCritical
+            }`}>{metrics.healthScore ?? 0}</span>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">/ 100</span>
           </div>
         </div>
@@ -308,19 +317,7 @@ export default function SummaryPage() {
 
       {/* ── CTA action toolbar ── */}
       <div className="flex justify-center pt-2 pb-6">
-        <div
-          className="overflow-x-auto"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            background: '#fff',
-            border: '1px solid #e2e8f0',
-            borderRadius: 9999,
-            padding: '5px',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
-            gap: 2,
-          }}
-        >
+        <div className={styles.actionToolbar}>
           {/* ── Group 1: Utility ── */}
           {[
             { label: 'Upload',    color: '#64748b', icon: 'M11 3h2v10.2l3.6-3.6L18 11l-6 6-6-6 1.4-1.4 3.6 3.6V3ZM5 19h14v2H5v-2Z', onClick: () => router.push('/') },

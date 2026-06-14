@@ -1,0 +1,203 @@
+.healthBanner {
+  @apply flex flex-wrap items-center gap-5 rounded-2xl border px-6 py-5 mb-7 shadow-sm;
+}
+
+.healthCircle {
+  @apply relative flex shrink-0 items-center justify-center w-20 h-20 rounded-full border-4;
+}
+
+.healthCircleExcellent {
+  border-color: #059669;
+}
+
+.healthCircleGood {
+  border-color: #0f766e;
+}
+
+.healthCircleModerate {
+  border-color: #d97706;
+}
+
+.healthCircleAtRisk {
+  border-color: #dc2626;
+}
+
+.healthCircleCritical {
+  border-color: #991b1b;
+}
+
+.healthScoreText {
+  @apply text-2xl font-black;
+}
+
+.healthScoreTextExcellent {
+  color: #059669;
+}
+
+.healthScoreTextGood {
+  color: #0f766e;
+}
+
+.healthScoreTextModerate {
+  color: #d97706;
+}
+
+.healthScoreTextAtRisk {
+  color: #dc2626;
+}
+
+.healthScoreTextCritical {
+  color: #991b1b;
+}
+
+.healthTextGreen {
+  color: #16a34a;
+}
+
+.healthTextSlate {
+  color: #0f172a;
+}
+
+.healthBorderExcellent {
+  border-color: #16a34a;
+}
+
+.healthBorderGood {
+  border-color: #0f766e;
+}
+
+.healthBorderModerate {
+  border-color: #d97706;
+}
+
+.healthBorderAt-risk {
+  border-color: #dc2626;
+}
+
+.healthBorderCritical {
+  border-color: #991b1b;
+}
+
+.healthTextGreen {
+  color: #16a34a;
+}
+
+.healthTextSlate {
+  color: #0f172a;
+}
+
+.predictionChip {
+  @apply flex flex-col items-center shrink-0 rounded-xl border border-slate-200 shadow-sm px-4 py-2.5 min-w-[90px] bg-white;
+}
+
+.predictionComplete {
+  @apply bg-emerald-50 border-emerald-200 text-emerald-700;
+}
+
+.kpiSection {
+  @apply mb-7;
+}
+
+.kpiHeading {
+  @apply text-xs font-black uppercase tracking-widest text-slate-500 mb-3;
+}
+
+.attentionSection {
+  @apply mb-7;
+}
+
+.attentionCard {
+  @apply flex flex-col gap-1.5 rounded-xl p-4 shadow-sm;
+}
+
+.attentionHigh {
+  @apply bg-red-50 border border-red-200 text-red-900;
+}
+
+.attentionMedium {
+  @apply bg-amber-50 border border-amber-200 text-amber-900;
+}
+
+.attentionNeutral {
+  @apply bg-slate-50 border border-slate-200 text-slate-700;
+}
+
+.attentionLabel {
+  @apply text-sm font-bold;
+}
+
+.attentionValue {
+  @apply text-2xl font-black;
+}
+
+.attentionDetail {
+  @apply text-xs leading-snug truncate;
+}
+
+.insightsCard {
+  @apply bg-white border border-slate-200 rounded-xl shadow-sm p-5;
+}
+
+.insightItem {
+  @apply flex items-start gap-2.5 text-sm text-slate-700;
+}
+
+.insightDot {
+  @apply mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0;
+}
+
+.actionToolbar {
+  @apply overflow-x-auto inline-flex items-center bg-white border border-slate-200 rounded-full p-1 shadow-sm gap-2;
+}
+
+.actionButton {
+  @apply inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-bold transition-colors duration-150 ease-in-out;
+}
+
+.actionButtonNeutral {
+  @apply text-slate-600 hover:text-slate-900 hover:bg-slate-100;
+}
+
+.actionButtonGreen {
+  @apply text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50;
+}
+
+.actionButtonPurple {
+  @apply text-violet-600 hover:text-violet-700 hover:bg-violet-50;
+}
+
+.actionButtonBlue {
+  @apply text-sky-600 hover:text-sky-700 hover:bg-sky-50;
+}
+
+.actionButtonDark {
+  @apply text-slate-900 hover:text-slate-950 hover:bg-slate-100;
+}
+
+.divider {
+  @apply w-px h-5 bg-slate-200 shrink-0 mx-1;
+}
+
+.actionButtonNeutral {
+  @apply text-slate-600 hover:text-slate-900 hover:bg-slate-100;
+}
+
+.actionButtonGreen {
+  @apply text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50;
+}
+
+.actionButtonPurple {
+  @apply text-violet-600 hover:text-violet-700 hover:bg-violet-50;
+}
+
+.actionButtonBlue {
+  @apply text-sky-600 hover:text-sky-700 hover:bg-sky-50;
+}
+
+.actionButtonDark {
+  @apply text-slate-900 hover:text-slate-950 hover:bg-slate-100;
+}
+
+.divider {
+  @apply w-px h-5 bg-slate-200 shrink-0 mx-1;
+}

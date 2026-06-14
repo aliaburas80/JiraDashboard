@@ -3,6 +3,23 @@
         "/^cd \"/Users/aliaburas/Documents/Documents - Ali's MacBook Pro/JiraDashboard/frontend\" && npm run build$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "/^cd \"/Users/aliaburas/Documents/Documents - Ali's MacBook Pro/JiraDashboard\" && pwd && python3 - <<'PY'\nimport os\nroot = os\\.getcwd\\(\\)\nfor dirpath, dirnames, filenames in os\\.walk\\(root\\):\n    for fn in filenames:\n        if fn\\.endswith\\(\\('\\.tsx', '\\.ts', '\\.js', '\\.jsx', '\\.scss'\\)\\):\n            path = os\\.path\\.join\\(dirpath, fn\\)\n            with open\\(path, 'r', encoding='utf-8', errors='ignore'\\) as f:\n                text = f\\.read\\(\\)\n            if 'printMode' in text:\n                print\\('FOUND', path\\)\nPY$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "import": true,
+        "root": true,
+        "\".\"": true,
+        "print(root)": true,
+        "/^cd \"/Users/aliaburas/Documents/Documents - Ali's MacBook Pro/JiraDashboard\" && python3 - <<'PY'\nfrom pathlib import Path\np = Path\\('app/customer/page\\.module\\.scss'\\)\nprint\\('exists', p\\.exists\\(\\)\\)\ntext = p\\.read_text\\(\\)\nfor i, line in enumerate\\(text\\.splitlines\\(\\), 1\\):\n    if 'noPrint' in line or 'no-print' in line or 'healthBadgeAt-risk' in line or '@apply print:hidden' in line:\n        print\\(i, line\\)\nprint\\('--- end ---'\\)\nPY$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "body": true,
+        "GLOBAL": true,
+        "content\\.js": true,
+        "ObjectMultiplex": true,
+        "mv": true
     }
 }
