@@ -45,6 +45,7 @@ export default function FlowHealthPage() {
   const [sprintFilter,   setSprintFilter]   = useState('all');
   const [assigneeFilter, setAssigneeFilter] = useState('all');
   const [healthFilter,   setHealthFilter]   = useState('all');
+  const [typeFilter,     setTypeFilter]     = useState('all');
   const [quickFilter,    setQuickFilter]    = useState<'all' | 'critical' | 'warning' | 'orphan'>('all');
   const [visibleCount,   setVisibleCount]   = useState(100);
 
@@ -70,9 +71,10 @@ export default function FlowHealthPage() {
     return raw.filter(i => { if (seen.has(i.key)) return false; seen.add(i.key); return true; });
   }, [metrics?.flow?.items]);
 
-  const statusOptions  = useMemo(() => [...new Set(flowItems.map(i => i.status).filter(Boolean))].sort() as string[], [flowItems]);
-  const sprintOptions  = useMemo(() => [...new Set(flowItems.map(i => i.sprint).filter(Boolean))].sort() as string[], [flowItems]);
+  const statusOptions   = useMemo(() => [...new Set(flowItems.map(i => i.status).filter(Boolean))].sort() as string[], [flowItems]);
+  const sprintOptions   = useMemo(() => [...new Set(flowItems.map(i => i.sprint).filter(Boolean))].sort() as string[], [flowItems]);
   const assigneeOptions = useMemo(() => [...new Set(flowItems.map(i => i.assignee).filter(Boolean))].sort() as string[], [flowItems]);
+  const typeOptions     = useMemo(() => [...new Set(flowItems.map(i => i.type).filter(Boolean))].sort() as string[], [flowItems]);
 
   const filtered = useMemo(() => flowItems.filter(i => {
     if (!matchText(i.key, keyFilter)) return false;
@@ -83,6 +85,7 @@ export default function FlowHealthPage() {
     if (sprintFilter !== 'all' && norm(i.sprint) !== norm(sprintFilter)) return false;
     if (assigneeFilter !== 'all' && norm(i.assignee) !== norm(assigneeFilter)) return false;
     if (healthFilter !== 'all' && norm(i.health) !== norm(healthFilter)) return false;
+    if (typeFilter !== 'all' && norm(i.type) !== norm(typeFilter)) return false;
     if (leadMax && Number(i.leadTimeDays) > Number(leadMax)) return false;
     if (cycleMax && Number(i.cycleTimeDays) > Number(cycleMax)) return false;
     if (ageMax && Number(i.ageDays) > Number(ageMax)) return false;
@@ -90,7 +93,7 @@ export default function FlowHealthPage() {
     if (quickFilter === 'warning' && norm(i.health) !== 'warning') return false;
     if (quickFilter === 'orphan' && !i.isOrphan) return false;
     return true;
-  }), [flowItems, keyFilter, summaryFilter, reasonFilter, labelFilter, statusFilter, sprintFilter, assigneeFilter, healthFilter, leadMax, cycleMax, ageMax, quickFilter]);
+  }), [flowItems, keyFilter, summaryFilter, reasonFilter, labelFilter, statusFilter, sprintFilter, assigneeFilter, healthFilter, typeFilter, leadMax, cycleMax, ageMax, quickFilter]);
 
   const statusDist = useMemo(() => {
     const map = new Map<string, number>();
@@ -103,14 +106,14 @@ export default function FlowHealthPage() {
   const resetAll = useCallback(() => {
     setKeyFilter(''); setSummaryFilter(''); setReasonFilter(''); setLabelFilter('');
     setLeadMax(''); setCycleMax(''); setAgeMax('');
-    setStatusFilter('all'); setSprintFilter('all'); setAssigneeFilter('all'); setHealthFilter('all');
+    setStatusFilter('all'); setSprintFilter('all'); setAssigneeFilter('all'); setHealthFilter('all'); setTypeFilter('all');
     setQuickFilter('all'); setVisibleCount(100);
   }, []);
 
   const exportCsv = useCallback(() => {
-    const cols = ['Key', 'Summary', 'Status', 'Sprint', 'Epic/Parent', 'Assignee', 'Labels', 'Lead (d)', 'Cycle (d)', 'Open Age (d)', 'Health', 'Reason'];
+    const cols = ['Key', 'Summary', 'Type', 'Status', 'Sprint', 'Epic/Parent', 'Assignee', 'Labels', 'Lead (d)', 'Cycle (d)', 'Open Age (d)', 'Health', 'Reason'];
     const rows = filtered.map(i => [
-      i.key, i.summary, i.status, i.sprint ?? '', i.epic ?? i.parent ?? '',
+      i.key, i.summary, i.type ?? '', i.status, i.sprint ?? '', i.epic ?? i.parent ?? '',
       i.assignee ?? '', (i as any).labels ?? '', i.leadTimeDays ?? '', i.cycleTimeDays ?? '',
       i.ageDays ?? '', i.health ?? '', i.reason ?? '',
     ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
@@ -186,8 +189,9 @@ export default function FlowHealthPage() {
               </label>
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
             {[
+              { label: 'Issue Type', value: typeFilter, set: setTypeFilter, opts: typeOptions, allLabel: 'All types' },
               { label: 'Status', value: statusFilter, set: setStatusFilter, opts: statusOptions, allLabel: 'All statuses' },
               { label: 'Sprint', value: sprintFilter, set: setSprintFilter, opts: sprintOptions, allLabel: 'All sprints' },
               { label: 'Assignee', value: assigneeFilter, set: setAssigneeFilter, opts: assigneeOptions, allLabel: 'All assignees' },
@@ -240,6 +244,7 @@ export default function FlowHealthPage() {
                 <tr style={{ background: '#F8FAFC' }}>
                   {th('Key', 80)}
                   {th('Summary')}
+                  {th('Type', 90)}
                   {th('Status', 110)}
                   {th('Sprint', 110)}
                   {th('Epic / Parent', 120)}
@@ -254,7 +259,7 @@ export default function FlowHealthPage() {
               <tbody>
                 {visible.length === 0 ? (
                   <tr>
-                    <td colSpan={11} style={{ padding: '40px', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>
+                    <td colSpan={12} style={{ padding: '40px', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>
                       No items match the selected filters.
                     </td>
                   </tr>
@@ -263,6 +268,9 @@ export default function FlowHealthPage() {
                     <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: '#2563EB', whiteSpace: 'nowrap' }}>{item.key}</td>
                     <td style={{ padding: '7px 10px', color: '#334155', maxWidth: 260 }}>
                       <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.summary}>{item.summary}</span>
+                    </td>
+                    <td style={{ padding: '7px 10px', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 4, background: '#F1F5F9', color: '#475569' }}>{item.type || '—'}</span>
                     </td>
                     <td style={{ padding: '7px 10px', color: '#475569', whiteSpace: 'nowrap' }}>{item.status}</td>
                     <td style={{ padding: '7px 10px', color: '#64748B', whiteSpace: 'nowrap', fontSize: 11 }}>{item.sprint ?? '—'}</td>
