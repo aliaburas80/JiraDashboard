@@ -115,7 +115,7 @@ export default function EpicReadinessPage() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div style={{ flex: 1, height: 6, borderRadius: 3, background: '#F1F5F9', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', borderRadius: 3, background: prog >= 70 ? '#059669' : prog >= 40 ? '#D97706' : '#DC2626', width: `${prog}%` }} />
+                          <div style={{ height: '100%', borderRadius: 3, background: prog >= 70 ? '#059669' : prog >= 40 ? '#D97706' : '#DC2626', width: `${prog}%`, animation: 'barFill 800ms ease-out both', transformOrigin: 'left center' }} />
                         </div>
                         <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: '#0F172A', width: 32, textAlign: 'right', flexShrink: 0 }}>{prog}%</span>
                       </div>
@@ -185,7 +185,7 @@ export default function EpicReadinessPage() {
                         <td style={{ padding: '7px 10px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <div style={{ width: 64, height: 6, borderRadius: 3, background: '#F1F5F9', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', borderRadius: 3, background: prog >= 70 ? '#059669' : prog >= 40 ? '#D97706' : '#DC2626', width: `${prog}%` }} />
+                              <div style={{ height: '100%', borderRadius: 3, background: prog >= 70 ? '#059669' : prog >= 40 ? '#D97706' : '#DC2626', width: `${prog}%`, animation: 'barFill 800ms ease-out both', transformOrigin: 'left center' }} />
                             </div>
                             <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#64748B' }}>{prog}%</span>
                           </div>

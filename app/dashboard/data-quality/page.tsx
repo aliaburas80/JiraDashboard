@@ -15,6 +15,7 @@ export default function DataQualityPage() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [severityFilter, setSeverityFilter] = useState<'all' | 'critical' | 'high' | 'medium'>('all');
+  const [circleReady, setCircleReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,6 +32,12 @@ export default function DataQualityPage() {
     load();
     return () => { cancelled = true; };
   }, [router]);
+
+  useEffect(() => {
+    if (!metrics) return;
+    const raf = requestAnimationFrame(() => setCircleReady(true));
+    return () => cancelAnimationFrame(raf);
+  }, [metrics]);
 
   if (loading) return <PageLoading />;
   if (!metrics) return null;
@@ -130,7 +137,8 @@ export default function DataQualityPage() {
             <svg width={72} height={72} viewBox="0 0 18 18">
               <circle cx="9" cy="9" r="6.5" fill="none" stroke={classification.border} strokeWidth="2.5" />
               <circle cx="9" cy="9" r="6.5" fill="none" stroke={classification.color} strokeWidth="2.5"
-                strokeDasharray={dash} strokeDashoffset="10" strokeLinecap="round" />
+                strokeDasharray={dash} strokeDashoffset={circleReady ? 10 : dash} strokeLinecap="round"
+                style={{ transition: 'stroke-dashoffset 900ms cubic-bezier(0.4,0,0.2,1)', transformOrigin: 'center', transform: 'rotate(-90deg)' }} />
             </svg>
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontFamily: 'monospace', fontSize: 18, fontWeight: 800, color: classification.color, lineHeight: 1 }}>{score}</span>

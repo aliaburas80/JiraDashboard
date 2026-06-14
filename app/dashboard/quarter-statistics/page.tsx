@@ -82,9 +82,9 @@ export default function QuarterStatisticsPage() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                         <span style={{ width: 50, fontSize: 11, fontWeight: 700, color: isLatest ? '#2563EB' : '#475569', flexShrink: 0 }}>{q.quarter}</span>
                         <div style={{ flex: 1, height: 20, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden', position: 'relative' }}>
-                          <div style={{ height: '100%', borderRadius: 4, background: isLatest ? '#2563EB' : '#94A3B8', width: `${pct}%`, transition: 'width 600ms', opacity: 0.8 }} />
+                          <div style={{ height: '100%', borderRadius: 4, background: isLatest ? '#2563EB' : '#94A3B8', width: `${pct}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 65}ms`, opacity: 0.8 }} />
                           {q.done > 0 && (
-                            <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', borderRadius: 4, background: '#059669', width: `${(q.done / qMax) * 100}%`, opacity: 0.6 }} />
+                            <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', borderRadius: 4, background: '#059669', width: `${(q.done / qMax) * 100}%`, animation: 'barFill 900ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 65 + 200}ms`, opacity: 0.6 }} />
                           )}
                         </div>
                         <div style={{ width: 110, flexShrink: 0, display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>

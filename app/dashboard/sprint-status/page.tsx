@@ -144,7 +144,7 @@ export default function SprintStatusPage() {
                     </div>
                   </div>
                   <div style={{ height: 8, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', borderRadius: 4, background: s.completion >= 70 ? '#059669' : '#D97706', width: `${s.completion}%`, transition: 'width 600ms' }} />
+                    <div style={{ height: '100%', borderRadius: 4, background: s.completion >= 70 ? '#059669' : '#D97706', width: `${s.completion}%`, animation: 'barFill 800ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 70}ms` }} />
                   </div>
                 </div>
               ))}

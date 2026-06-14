@@ -99,7 +99,7 @@ export default function DeliveryCompositionPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 40, padding: '24px', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, marginBottom: 20 }}>
           {/* Donut */}
           <div style={{ position: 'relative', flexShrink: 0 }}>
-            <div style={{ width: 180, height: 180, borderRadius: '50%', background: donutBg }} role="img" aria-label="Delivery composition ring" />
+            <div style={{ width: 180, height: 180, borderRadius: '50%', background: donutBg, animation: 'donutReveal 700ms ease-out both' }} role="img" aria-label="Delivery composition ring" />
             <div style={{
               position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               borderRadius: '50%',
@@ -139,7 +139,7 @@ export default function DeliveryCompositionPage() {
                 <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ width: 120, fontSize: 12, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name}>{r.name}</span>
                   <div style={{ flex: 1, height: 8, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', borderRadius: 4, background: TYPE_COLORS[i % TYPE_COLORS.length], width: `${(r.count / typeMax) * 100}%`, transition: 'width 600ms' }} />
+                    <div style={{ height: '100%', borderRadius: 4, background: TYPE_COLORS[i % TYPE_COLORS.length], width: `${(r.count / typeMax) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 60}ms` }} />
                   </div>
                   <strong style={{ fontFamily: 'monospace', fontSize: 11, color: TYPE_COLORS[i % TYPE_COLORS.length], width: 36, textAlign: 'right', flexShrink: 0 }}>{r.count}</strong>
                 </div>
@@ -164,7 +164,7 @@ export default function DeliveryCompositionPage() {
               ))}
             </div>
             <div style={{ height: 8, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: 4, background: '#059669', width: `${Math.min(100, storyPoints.pointCompletionRate || 0)}%`, transition: 'width 600ms' }} />
+              <div style={{ height: '100%', borderRadius: 4, background: '#059669', width: `${Math.min(100, storyPoints.pointCompletionRate || 0)}%`, animation: 'barFill 900ms ease-out both', transformOrigin: 'left center', animationDelay: '200ms' }} />
             </div>
           </SectionCard>
         )}

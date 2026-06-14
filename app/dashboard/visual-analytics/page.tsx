@@ -14,12 +14,12 @@ const DONE_STATUSES = ['done', 'closed', 'resolved'];
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
 const PALETTE = ['#2563EB', '#059669', '#D97706', '#DC2626', '#7C3AED', '#0891B2'];
 
-function CompactBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
+function CompactBar({ label, value, max, color, index = 0 }: { label: string; value: number; max: number; color: string; index?: number }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
       <span style={{ width: 130, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#334155' }} title={label}>{label}</span>
       <div style={{ flex: 1, height: 8, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-        <div style={{ height: '100%', borderRadius: 4, background: color, width: `${(value / Math.max(max, 1)) * 100}%`, transition: 'width 600ms' }} />
+        <div style={{ height: '100%', borderRadius: 4, background: color, width: `${(value / Math.max(max, 1)) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${index * 60}ms` }} />
       </div>
       <strong style={{ fontFamily: 'monospace', fontSize: 11, color, width: 36, textAlign: 'right', flexShrink: 0 }}>{value}</strong>
     </div>
@@ -120,7 +120,7 @@ export default function VisualAnalyticsPage() {
           <SectionCard title="Work by Status">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {statusDist.map((r, i) => (
-                <CompactBar key={r.name} label={r.name} value={r.count} max={statusMax} color={PALETTE[i % PALETTE.length]} />
+                <CompactBar key={r.name} label={r.name} value={r.count} max={statusMax} color={PALETTE[i % PALETTE.length]} index={i} />
               ))}
               {statusDist.length === 0 && <p style={{ fontSize: 12, color: '#94A3B8' }}>No data.</p>}
             </div>
@@ -130,7 +130,7 @@ export default function VisualAnalyticsPage() {
           <SectionCard title="Work by Type">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {typeDist.map((r, i) => (
-                <CompactBar key={r.name} label={r.name} value={r.count} max={typeMax} color={PALETTE[(i + 2) % PALETTE.length]} />
+                <CompactBar key={r.name} label={r.name} value={r.count} max={typeMax} color={PALETTE[(i + 2) % PALETTE.length]} index={i} />
               ))}
               {typeDist.length === 0 && <p style={{ fontSize: 12, color: '#94A3B8' }}>No data.</p>}
             </div>
@@ -140,7 +140,7 @@ export default function VisualAnalyticsPage() {
           <SectionCard title="Workload by Assignee">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {assigneeDist.map((r, i) => (
-                <CompactBar key={r.name} label={r.name} value={r.count} max={assigneeMax} color={PALETTE[(i + 1) % PALETTE.length]} />
+                <CompactBar key={r.name} label={r.name} value={r.count} max={assigneeMax} color={PALETTE[(i + 1) % PALETTE.length]} index={i} />
               ))}
               {assigneeDist.length === 0 && <p style={{ fontSize: 12, color: '#94A3B8' }}>No assignee data.</p>}
             </div>
@@ -159,7 +159,7 @@ export default function VisualAnalyticsPage() {
                       <span style={{ fontFamily: 'monospace', color, fontWeight: 700 }}>{count} ({pct}%)</span>
                     </div>
                     <div style={{ height: 8, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 4, background: color, width: `${pct}%`, transition: 'width 600ms' }} />
+                      <div style={{ height: '100%', borderRadius: 4, background: color, width: `${pct}%`, animation: 'barFill 800ms ease-out both', transformOrigin: 'left center' }} />
                     </div>
                   </div>
                 );

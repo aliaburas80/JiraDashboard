@@ -125,7 +125,7 @@ export default function KeyMetricsPage() {
           </div>
           <div style={{ marginTop: 16 }}>
             <div style={{ height: 8, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: 4, background: '#059669', width: `${Math.min(100, sp.pointCompletionRate || 0)}%`, transition: 'width 600ms' }} />
+              <div style={{ height: '100%', borderRadius: 4, background: '#059669', width: `${Math.min(100, sp.pointCompletionRate || 0)}%`, animation: 'barFill 900ms ease-out both', transformOrigin: 'left center', animationDelay: '150ms' }} />
             </div>
           </div>
         </SectionCard>

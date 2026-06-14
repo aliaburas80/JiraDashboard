@@ -1,6 +1,32 @@
 'use client';
 
-import { type ReactNode } from 'react';
+import { type ReactNode, type CSSProperties } from 'react';
+
+// ─── Bar-fill animation helper (use on the inner fill div of any bar) ──────────
+export function barAnim(color: string, pct: number, delayMs = 0): CSSProperties {
+  return {
+    height: '100%',
+    borderRadius: 4,
+    background: color,
+    width: `${Math.max(0, Math.min(100, pct))}%`,
+    animation: 'barFill 700ms ease-out both',
+    transformOrigin: 'left center',
+    ...(delayMs > 0 ? { animationDelay: `${delayMs}ms` } : {}),
+  };
+}
+
+// Thin-bar variant (for 6px/8px height progress bars)
+export function progressAnim(color: string, pct: number, delayMs = 0): CSSProperties {
+  return {
+    height: '100%',
+    borderRadius: 999,
+    background: color,
+    width: `${Math.max(0, Math.min(100, pct))}%`,
+    animation: 'barFill 800ms ease-out both',
+    transformOrigin: 'left center',
+    ...(delayMs > 0 ? { animationDelay: `${delayMs}ms` } : {}),
+  };
+}
 
 // ─── Sticky toolbar that sits immediately under the 52px topbar ──────────────
 export function StickyToolbar({ children }: { children: ReactNode }) {
@@ -72,8 +98,8 @@ export function ToolbarSpacer() {
 
 // ─── Icon button in toolbar ───────────────────────────────────────────────────
 export function ToolbarButton({
-  label, onClick, primary,
-}: { label: string; onClick: () => void; primary?: boolean }) {
+  label, children, onClick, primary,
+}: { label?: string; children?: ReactNode; onClick: () => void; primary?: boolean }) {
   return (
     <button
       type="button"
@@ -90,7 +116,7 @@ export function ToolbarButton({
         whiteSpace: 'nowrap',
       }}
     >
-      {label}
+      {children ?? label}
     </button>
   );
 }
@@ -152,10 +178,14 @@ export function PageHeader({
 
 // ─── KPI mini-card ────────────────────────────────────────────────────────────
 export function MiniKpiCard({
-  label, value, color, bg, border,
-}: { label: string; value: string; color: string; bg: string; border: string }) {
+  label, value, color, bg, border, index = 0,
+}: { label: string; value: string; color: string; bg: string; border: string; index?: number }) {
   return (
-    <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: '14px 16px' }}>
+    <div style={{
+      background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: '14px 16px',
+      animation: 'kpiPop 500ms ease-out both',
+      animationDelay: `${index * 70}ms`,
+    }}>
       <p style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '.08em', color: '#94A3B8', marginBottom: 4 }}>
         {label}
       </p>
@@ -173,6 +203,7 @@ export function SectionCard({ children, title }: { children: ReactNode; title?: 
       background: '#fff', border: '1px solid #E2E8F0',
       borderRadius: 12, overflow: 'hidden',
       marginBottom: 16,
+      animation: 'cardIn 450ms ease-out both',
     }}>
       {title && (
         <div style={{ padding: '12px 16px', borderBottom: '1px solid #E2E8F0' }}>

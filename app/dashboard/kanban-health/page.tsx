@@ -118,7 +118,7 @@ export default function KanbanHealthPage() {
                 <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ width: 140, fontSize: 12, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name}>{r.name}</span>
                   <div style={{ flex: 1, height: 8, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', borderRadius: 4, background: color, width: `${(r.count / statusMax) * 100}%`, transition: 'width 600ms' }} />
+                    <div style={{ height: '100%', borderRadius: 4, background: color, width: `${(r.count / statusMax) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 55}ms` }} />
                   </div>
                   <strong style={{ fontFamily: 'monospace', fontSize: 11, color, width: 40, textAlign: 'right', flexShrink: 0 }}>{r.count}</strong>
                 </div>

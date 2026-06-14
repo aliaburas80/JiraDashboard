@@ -220,7 +220,7 @@ export default function FlowHealthPage() {
                   <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ width: 130, fontSize: 11, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
                     <div style={{ flex: 1, height: 7, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 4, background: color, width: `${(r.count / statusMax) * 100}%`, transition: 'width 400ms' }} />
+                      <div style={{ height: '100%', borderRadius: 4, background: color, width: `${(r.count / statusMax) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 50}ms` }} />
                     </div>
                     <strong style={{ fontFamily: 'monospace', fontSize: 11, color, width: 36, textAlign: 'right', flexShrink: 0 }}>{r.count}</strong>
                   </div>

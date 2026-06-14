@@ -84,11 +84,11 @@ export default function LabelsTypesPage() {
                   </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {labelStats.slice(0, 8).map((l: any) => (
+                  {labelStats.slice(0, 8).map((l: any, i: number) => (
                     <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ width: 110, fontSize: 11, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.label}>{l.label}</span>
                       <div style={{ flex: 1, height: 7, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', borderRadius: 4, background: '#2563EB', width: `${(l.count / labelMax) * 100}%` }} />
+                        <div style={{ height: '100%', borderRadius: 4, background: '#2563EB', width: `${(l.count / labelMax) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 55}ms` }} />
                       </div>
                       <strong style={{ fontFamily: 'monospace', fontSize: 11, color: '#2563EB', width: 30, textAlign: 'right', flexShrink: 0 }}>{l.count}</strong>
                     </div>
@@ -108,7 +108,7 @@ export default function LabelsTypesPage() {
                   <div key={t.type} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ width: 110, fontSize: 11, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={t.type}>{t.type}</span>
                     <div style={{ flex: 1, height: 7, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 4, background: TYPE_COLORS[i % TYPE_COLORS.length], width: `${(t.count / typeMax) * 100}%` }} />
+                      <div style={{ height: '100%', borderRadius: 4, background: TYPE_COLORS[i % TYPE_COLORS.length], width: `${(t.count / typeMax) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 55}ms` }} />
                     </div>
                     <strong style={{ fontFamily: 'monospace', fontSize: 11, color: TYPE_COLORS[i % TYPE_COLORS.length], width: 30, textAlign: 'right', flexShrink: 0 }}>{t.count}</strong>
                   </div>
@@ -137,7 +137,7 @@ export default function LabelsTypesPage() {
                         <td style={{ padding: '7px 10px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <div style={{ width: 60, height: 6, borderRadius: 3, background: '#F1F5F9', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', borderRadius: 3, background: prog >= 70 ? '#059669' : '#D97706', width: `${prog}%` }} />
+                              <div style={{ height: '100%', borderRadius: 3, background: prog >= 70 ? '#059669' : '#D97706', width: `${prog}%`, animation: 'barFill 800ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 35}ms` }} />
                             </div>
                             <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#64748B' }}>{prog}%</span>
                           </div>
@@ -166,7 +166,7 @@ export default function LabelsTypesPage() {
                     <div key={p.parent ?? i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ width: 100, fontSize: 11, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.parent}>{p.parent}</span>
                       <div style={{ flex: 1, height: 7, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', borderRadius: 4, background: '#7C3AED', width: `${((p.count ?? 0) / parentMax) * 100}%` }} />
+                        <div style={{ height: '100%', borderRadius: 4, background: '#7C3AED', width: `${((p.count ?? 0) / parentMax) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 55}ms` }} />
                       </div>
                       <strong style={{ fontFamily: 'monospace', fontSize: 11, color: '#7C3AED', width: 30, textAlign: 'right', flexShrink: 0 }}>{p.count}</strong>
                     </div>
@@ -183,7 +183,7 @@ export default function LabelsTypesPage() {
                       <div key={p.project ?? i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ width: 100, fontSize: 11, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.project}>{p.project}</span>
                         <div style={{ flex: 1, height: 7, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', borderRadius: 4, background: '#0891B2', width: `${((p.count ?? 0) / projectMax) * 100}%` }} />
+                          <div style={{ height: '100%', borderRadius: 4, background: '#0891B2', width: `${((p.count ?? 0) / projectMax) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 55}ms` }} />
                         </div>
                         <strong style={{ fontFamily: 'monospace', fontSize: 11, color: '#0891B2', width: 30, textAlign: 'right', flexShrink: 0 }}>{p.count}</strong>
                       </div>

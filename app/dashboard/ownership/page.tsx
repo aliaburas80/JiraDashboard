@@ -70,14 +70,14 @@ export default function OwnershipCapacityPage() {
             <p style={{ fontSize: 12, color: '#94A3B8' }}>No assignee data found.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {capacity.slice(0, 10).map((c: any) => {
+              {capacity.slice(0, 10).map((c: any, idx: number) => {
                 const pct = Math.round(((c.issues ?? 0) / capMax) * 100);
                 const skewed = (c.loadShare ?? 0) > 35;
                 return (
                   <div key={c.assignee} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ width: 140, fontSize: 12, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.assignee}>{c.assignee}</span>
                     <div style={{ flex: 1, height: 8, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 4, background: skewed ? '#DC2626' : '#2563EB', width: `${pct}%`, transition: 'width 600ms' }} />
+                      <div style={{ height: '100%', borderRadius: 4, background: skewed ? '#DC2626' : '#2563EB', width: `${pct}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${idx * 60}ms` }} />
                     </div>
                     <span style={{ fontFamily: 'monospace', fontSize: 11, color: skewed ? '#DC2626' : '#475569', width: 80, textAlign: 'right', flexShrink: 0 }}>
                       {c.issues} issues · {c.loadShare ?? 0}%
@@ -136,7 +136,7 @@ export default function OwnershipCapacityPage() {
                         <td style={{ padding: '7px 10px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <div style={{ width: 72, height: 6, borderRadius: 3, background: '#F1F5F9', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', borderRadius: 3, background: prog >= 70 ? '#059669' : prog >= 40 ? '#D97706' : '#DC2626', width: `${prog}%` }} />
+                              <div style={{ height: '100%', borderRadius: 3, background: prog >= 70 ? '#059669' : prog >= 40 ? '#D97706' : '#DC2626', width: `${prog}%`, animation: 'barFill 800ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 40}ms` }} />
                             </div>
                             <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#64748B' }}>{prog}%</span>
                           </div>
