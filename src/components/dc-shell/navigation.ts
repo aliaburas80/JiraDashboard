@@ -15,72 +15,77 @@ export type DCShellNavGroup = {
 };
 
 export const DC_NAV_GROUPS: DCShellNavGroup[] = [
+  // ── Analytics ─────────────────────────────────────────────────────────────
   {
     id: 'analytics',
     label: 'Analytics',
     items: [
-      { id: 'charts',    title: 'Charts',       desc: 'Visual analysis',      href: '/charts',    status: 'info' },
-      { id: 'teams',     title: 'Team Health',   desc: 'Member health scores', href: '/teams',     status: 'success' },
-      { id: 'trends',    title: 'Trends',        desc: 'Upload deltas',        href: '/trends',    status: 'info' },
-      { id: 'forecast',  title: 'Forecast',      desc: 'Delivery projection',  href: '/forecast',  status: 'warning' },
+      { id: 'overview',   title: 'Overview',     desc: 'Health at a glance',           href: '/summary',    status: 'neutral' },
+      { id: 'dashboard',  title: 'Full Report',  desc: 'All metrics & filters',        href: '/dashboard',  status: 'neutral' },
+      { id: 'charts',     title: 'Charts',       desc: 'Visual breakdowns',            href: '/charts',     status: 'info'    },
+      { id: 'trends',     title: 'Trends',       desc: 'Upload-over-upload change',    href: '/trends',     status: 'info'    },
+      { id: 'teams',      title: 'Teams',        desc: 'Team health comparison',       href: '/teams',      status: 'success' },
+      { id: 'portfolio',  title: 'Portfolio',    desc: 'Cross-team portfolio summary', href: '/portfolio',  status: 'success' },
     ],
   },
-  {
-    id: 'explore',
-    label: 'Explore',
-    items: [
-      { id: 'portfolio', title: 'Portfolio',         desc: 'Epic & programme view',  href: '/portfolio', status: 'success' },
-      { id: 'customer',  title: 'Customer View',     desc: 'Stakeholder-safe view',  href: '/customer',  status: 'neutral' },
-      { id: 'retro',     title: 'Retrospective',     desc: 'Sprint insights',        href: '/retro',     status: 'neutral' },
-      { id: 'roadmap',   title: 'Roadmap',           desc: 'Timeline & scope',       href: '/roadmap',   status: 'neutral' },
-      { id: 'explore',   title: 'Relationship Map',  desc: 'Hierarchy graph',        href: '/explore',   status: 'neutral' },
-    ],
-  },
+  // ── Delivery ──────────────────────────────────────────────────────────────
   {
     id: 'delivery',
     label: 'Delivery',
     items: [
-      { id: 'overview',          title: 'Executive Summary',  desc: 'Health & top actions',   href: '/summary',           status: 'critical' },
-      { id: 'dashboard',         title: 'Full Dashboard',     desc: 'All metrics & filters',  href: '/dashboard',         status: 'neutral' },
-      { id: 'flow-health',       title: 'Flow Health',        desc: 'Lead time & blockers',   href: '/flow-health',       status: 'warning' },
-      { id: 'sprint-kanban',     title: 'Sprint & Kanban',    desc: 'Velocity & throughput',  href: '/sprint-kanban',     status: 'success' },
-      { id: 'delivery-mix',      title: 'Delivery Mix',       desc: 'Work & value mix',       href: '/delivery-mix',      status: 'success' },
-      { id: 'release-readiness', title: 'Release Readiness',  desc: 'Go / no-go gates',       href: '/release-readiness', status: 'warning' },
+      { id: 'release-readiness', title: 'Readiness',       desc: 'Go / No-Go per release',    href: '/release-readiness', status: 'warning' },
+      { id: 'flow-health',       title: 'Flow Health',     desc: 'Lead time & blockers',      href: '/flow-health',       status: 'warning' },
+      { id: 'sprint-kanban',     title: 'Sprint & Kanban', desc: 'Velocity & throughput',     href: '/sprint-kanban',     status: 'success' },
+      { id: 'delivery-mix',      title: 'Delivery Mix',    desc: 'Work type & value mix',     href: '/delivery-mix',      status: 'success' },
+      { id: 'explore',           title: 'Explore',         desc: 'Work item dependency graph', href: '/explore',           status: 'neutral' },
+      { id: 'customer',          title: 'Customer',        desc: 'Customer-visible progress', href: '/customer',          status: 'neutral' },
     ],
   },
+  // ── Planning ──────────────────────────────────────────────────────────────
+  {
+    id: 'planning',
+    label: 'Planning',
+    items: [
+      { id: 'roadmap',  title: 'Roadmap',  desc: 'Epic progress & delivery ETA', href: '/roadmap',  status: 'neutral' },
+      { id: 'forecast', title: 'Forecast', desc: 'Velocity & burn-up outlook',   href: '/forecast', status: 'warning' },
+      { id: 'retro',    title: 'Retro',    desc: 'Sprint retrospective tool',    href: '/retro',    status: 'neutral' },
+    ],
+  },
+  // ── Data ──────────────────────────────────────────────────────────────────
   {
     id: 'data',
     label: 'Data',
     items: [
-      { id: 'work-explorer',   title: 'Work Explorer',    desc: 'Issue table & detail',   href: '/work-explorer',   status: 'neutral' },
-      { id: 'data-quality',    title: 'Data Quality',     desc: 'Field confidence',       href: '/data-quality',    status: 'success' },
-      { id: 'snapshots',       title: 'Snapshots',        desc: 'Saved baselines',        href: '/snapshots',       status: 'info' },
-      { id: 'column-mapping',  title: 'Column Mapping',   desc: 'Field mapping config',   href: '/column-mapping',  status: 'neutral' },
-      { id: 'members',         title: 'Members',          desc: 'Team directory',         href: '/members',         status: 'success' },
-      { id: 'backend',         title: 'Backend Status',   desc: 'API & DB health',        href: '/backend',         status: 'neutral' },
+      { id: 'work-explorer',  title: 'Work Explorer',  desc: 'Issue table & detail',    href: '/work-explorer',  status: 'neutral' },
+      { id: 'data-quality',   title: 'Data Quality',   desc: 'Field confidence scores', href: '/data-quality',   status: 'success' },
+      { id: 'snapshots',      title: 'Snapshots',      desc: 'Saved metric snapshots',  href: '/snapshots',      status: 'info'    },
+      { id: 'column-mapping', title: 'Column Mapping', desc: 'Field mapping config',    href: '/column-mapping', status: 'neutral' },
+      { id: 'backend',        title: 'Backend',        desc: 'Import logs & raw data',  href: '/backend',        status: 'neutral' },
     ],
   },
+  // ── Administration ────────────────────────────────────────────────────────
   {
     id: 'administration',
     label: 'Administration',
     items: [
-      { id: 'admin-logs',        title: 'Import Logs',     desc: 'Audit trail',        href: '/admin/logs',        status: 'neutral' },
-      { id: 'admin-settings',    title: 'Settings',        desc: 'System config',      href: '/admin/settings',    status: 'neutral' },
-      { id: 'admin-users',       title: 'User Management', desc: 'Accounts & roles',   href: '/admin/users',       status: 'neutral' },
-      { id: 'admin-system',      title: 'System Config',   desc: 'Storage & theme',    href: '/admin/system',      status: 'neutral' },
-      { id: 'admin-security',    title: 'Security',        desc: 'Hardening checks',   href: '/admin/security',    status: 'warning' },
-      { id: 'admin-diagnostics', title: 'Diagnostics',     desc: 'System health',      href: '/admin/diagnostics', status: 'info' },
+      { id: 'admin-settings',    title: 'Settings',         desc: 'Users, storage, retention',   href: '/admin/settings',    status: 'neutral' },
+      { id: 'admin-theme',       title: 'Theme & Branding', desc: 'Palette, logo, app name',     href: '/admin/theme',        status: 'neutral' },
+      { id: 'admin-users',       title: 'User Management',  desc: 'Accounts & roles',            href: '/admin/users',        status: 'neutral' },
+      { id: 'admin-diagnostics', title: 'Diagnostics',      desc: 'System health & admin stats', href: '/admin/diagnostics',  status: 'info'    },
+      { id: 'admin-security',    title: 'Security',         desc: 'Production security checks',  href: '/admin/security',     status: 'warning' },
+      { id: 'admin-logs',        title: 'Import Logs',      desc: 'All user import activity',    href: '/admin/logs',         status: 'neutral' },
     ],
   },
+  // ── Reference ─────────────────────────────────────────────────────────────
   {
     id: 'reference',
     label: 'Reference',
     items: [
-      { id: 'help',      title: 'Help Guide',       desc: 'User guide',         href: '/help',      status: 'info' },
-      { id: 'glossary',  title: 'Glossary',         desc: 'Terminology',        href: '/glossary',  status: 'neutral' },
-      { id: 'developer', title: 'Developer Portal', desc: 'Technical guide',    href: '/developer', status: 'neutral' },
-      { id: 'landing',   title: 'About',            desc: 'Product overview',   href: '/landing',   status: 'neutral' },
-      { id: 'profile',   title: 'Profile',          desc: 'Account settings',   href: '/profile',   status: 'neutral' },
+      { id: 'members',   title: 'Members',   desc: 'Team directory & contacts',  href: '/members',   status: 'success' },
+      { id: 'landing',   title: 'About',     desc: 'Product overview & features', href: '/landing',   status: 'neutral' },
+      { id: 'glossary',  title: 'Glossary',  desc: 'Term & abbreviation guide',  href: '/glossary',  status: 'neutral' },
+      { id: 'developer', title: 'Developer', desc: 'API & technical docs',       href: '/developer', status: 'neutral' },
+      { id: 'help',      title: 'Help',      desc: 'How to use this app',        href: '/help',      status: 'info'    },
     ],
   },
 ];
