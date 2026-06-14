@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics } from '@/types/metrics';
 import {
-  StickyToolbar, ToolbarSpacer, LayoutControl,
+  StickyToolbar, ToolbarSpacer,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
 
@@ -54,7 +54,7 @@ export default function OwnershipCapacityPage() {
     <>
       <StickyToolbar>
         <ToolbarSpacer />
-        <LayoutControl />
+
       </StickyToolbar>
 
       <PageHeader

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
-  StickyToolbar, ToolbarSpacer, LayoutControl,
+  StickyToolbar, ToolbarSpacer,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
 
@@ -66,7 +66,7 @@ export default function SprintStatusPage() {
       <>
         <StickyToolbar>
           <ToolbarSpacer />
-          <LayoutControl />
+
         </StickyToolbar>
         <PageHeader title="Sprint Status" subtitle="Sprint health, progress, and delivery patterns." />
         <div style={{ padding: '60px 28px', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>
@@ -85,7 +85,7 @@ export default function SprintStatusPage() {
     <>
       <StickyToolbar>
         <ToolbarSpacer />
-        <LayoutControl />
+
       </StickyToolbar>
 
       <PageHeader

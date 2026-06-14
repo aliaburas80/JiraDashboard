@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
-  StickyToolbar, ToolbarSpacer, LayoutControl,
+  StickyToolbar, ToolbarSpacer,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
 
@@ -64,7 +64,7 @@ export default function KanbanHealthPage() {
     <>
       <StickyToolbar>
         <ToolbarSpacer />
-        <LayoutControl />
+
       </StickyToolbar>
 
       <PageHeader

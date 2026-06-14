@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
-  StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton, LayoutControl,
+  StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
 
@@ -108,7 +108,7 @@ export default function SmartActionsPage() {
         <FilterChip label="Info" active={priorityFilter === 'info'} onClick={() => setPriorityFilter('info')} />
         <FilterChip label="Clear" active={false} onClick={() => setPriorityFilter('all')} />
         <ToolbarSpacer />
-        <LayoutControl />
+
       </StickyToolbar>
 
       <PageHeader

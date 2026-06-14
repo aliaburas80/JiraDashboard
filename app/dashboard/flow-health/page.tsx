@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
-  StickyToolbar, FilterChip, ToolbarSpacer, LayoutControl,
+  StickyToolbar, FilterChip, ToolbarSpacer,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
 
@@ -152,7 +152,7 @@ export default function FlowHealthPage() {
         <FilterChip label="Warning"  active={quickFilter === 'warning'}  onClick={() => { setQuickFilter('warning');  setVisibleCount(100); }} />
         <FilterChip label="Orphans"  active={quickFilter === 'orphan'}   onClick={() => { setQuickFilter('orphan');   setVisibleCount(100); }} />
         <ToolbarSpacer />
-        <LayoutControl />
+
       </StickyToolbar>
 
       <PageHeader

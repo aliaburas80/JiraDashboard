@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
-  StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton, LayoutControl,
+  StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
 
@@ -74,7 +74,7 @@ export default function PriorityAttentionPage() {
         <FilterChip label="Clear" active={false} onClick={() => setQuickFilter('all')} />
         <ToolbarSpacer />
         <ToolbarButton label="Export" onClick={exportCSV} />
-        <LayoutControl />
+
       </StickyToolbar>
 
       {/* ── Page header ── */}

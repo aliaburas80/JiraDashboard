@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
-  StickyToolbar, FilterChip, ToolbarSpacer, LayoutControl,
+  StickyToolbar, FilterChip, ToolbarSpacer,
   PageHeader, MiniKpiCard, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
 
@@ -80,7 +80,7 @@ export default function DeliverySummaryPage() {
       {/* ── Sticky toolbar ── */}
       <StickyToolbar>
         <ToolbarSpacer />
-        <LayoutControl />
+
       </StickyToolbar>
 
       {/* ── Page header ── */}

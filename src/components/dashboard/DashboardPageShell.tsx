@@ -121,33 +121,6 @@ export function ToolbarButton({
   );
 }
 
-// ─── Layout control (far right of toolbar) ───────────────────────────────────
-export function LayoutControl() {
-  return (
-    <button
-      type="button"
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: 5,
-        padding: '5px 10px', borderRadius: 7,
-        border: '1px solid #E2E8F0',
-        cursor: 'pointer',
-        fontSize: 12, fontWeight: 500,
-        color: '#64748B',
-        background: '#fff',
-        fontFamily: 'inherit',
-        marginLeft: 4,
-      }}
-      title="Layout options"
-    >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-        <line x1="3" y1="12" x2="21" y2="12"/>
-        <line x1="3" y1="6" x2="21" y2="6"/>
-        <line x1="3" y1="18" x2="21" y2="18"/>
-      </svg>
-      Layout
-    </button>
-  );
-}
 
 // ─── Page header ─────────────────────────────────────────────────────────────
 export function PageHeader({

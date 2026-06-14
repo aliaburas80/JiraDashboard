@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
-  StickyToolbar, FilterChip, ToolbarSpacer, LayoutControl,
+  StickyToolbar, FilterChip, ToolbarSpacer,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
 
@@ -89,7 +89,7 @@ export default function VisualAnalyticsPage() {
     <>
       <StickyToolbar>
         <ToolbarSpacer />
-        <LayoutControl />
+
       </StickyToolbar>
 
       <PageHeader

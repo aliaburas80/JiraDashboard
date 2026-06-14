@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics } from '@/types/metrics';
 import {
-  StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton, LayoutControl,
+  StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
 
@@ -78,7 +78,7 @@ export default function KeyMetricsPage() {
         <FilterChip label="Clear" active={false} onClick={() => setPeriod('all')} />
         <ToolbarSpacer />
         <ToolbarButton label="Export" onClick={exportMetrics} />
-        <LayoutControl />
+
       </StickyToolbar>
 
       <PageHeader

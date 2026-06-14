@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics } from '@/types/metrics';
 import {
-  StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton, LayoutControl,
+  StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
 
@@ -119,7 +119,7 @@ export default function DataQualityPage() {
         <FilterChip label="Clear" active={false} onClick={() => setSeverityFilter('all')} />
         <ToolbarSpacer />
         <ToolbarButton label="Export" onClick={exportCSV} />
-        <LayoutControl />
+
       </StickyToolbar>
 
       <PageHeader
