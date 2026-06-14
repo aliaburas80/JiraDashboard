@@ -1,94 +1,221 @@
+// ── Health banner ─────────────────────────────────────────────────────────────
+// --banner-bg / --banner-border are set via CSS custom props from page.tsx
+// because they are data-driven (depend on health band at runtime).
 .healthBanner {
-  @apply flex flex-wrap items-center gap-5 rounded-2xl border px-6 py-5 mb-7 shadow-sm;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5, 20px);
+  border-radius: var(--radius-xl, 12px);
+  border: 1px solid var(--banner-border, var(--color-border));
+  background: var(--banner-bg, var(--color-subtle));
+  padding: var(--space-5, 20px) var(--space-6, 24px);
+  margin-bottom: var(--space-6, 24px);
+  box-shadow: var(--shadow-card);
+  animation: cardIn 300ms var(--ease-back, cubic-bezier(.34,1.56,.64,1)) both;
 }
 
+// --ring-color is data-driven (health band color).
 .healthCircle {
-  @apply relative flex shrink-0 items-center justify-center w-20 h-20 rounded-full border-4;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full, 9999px);
+  border: 4px solid var(--ring-color, var(--color-border));
+  flex-shrink: 0;
+  background: var(--color-surface);
 }
 
-.healthCircleExcellent { border-color: #059669; }
-.healthCircleGood      { border-color: #0f766e; }
-.healthCircleModerate  { border-color: #d97706; }
-.healthCircleAtRisk    { border-color: #dc2626; }
-.healthCircleCritical  { border-color: #991b1b; }
+// --score-color is data-driven (health band text color).
+.healthScore {
+  font-size: var(--text-2xl, 20px);
+  font-weight: 900;
+  line-height: 1;
+  color: var(--score-color, var(--color-text-primary));
+}
 
-.healthScoreText { @apply text-2xl font-black; }
+.healthScoreDenom {
+  font-size: var(--text-2xs, 9px);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
 
-.healthScoreTextExcellent { color: #059669; }
-.healthScoreTextGood      { color: #0f766e; }
-.healthScoreTextModerate  { color: #d97706; }
-.healthScoreTextAtRisk    { color: #dc2626; }
-.healthScoreTextCritical  { color: #991b1b; }
+.healthMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
 
-.healthTextGreen { color: #16a34a; }
-.healthTextSlate { color: #0f172a; }
+.healthBand {
+  font-size: var(--text-lg, 14px);
+  font-weight: 900;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
 
-.healthBorderExcellent { border-color: #16a34a; }
-.healthBorderGood      { border-color: #0f766e; }
-.healthBorderModerate  { border-color: #d97706; }
-.healthBorderAtRisk    { border-color: #dc2626; }
-.healthBorderCritical  { border-color: #991b1b; }
+.healthDetail {
+  font-size: var(--text-base, 12px);
+  color: var(--color-text-secondary);
+}
 
 .predictionChip {
-  @apply flex flex-col items-center shrink-0 rounded-xl border border-slate-200 shadow-sm px-4 py-2.5 min-w-[90px] bg-white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl, 12px);
+  box-shadow: var(--shadow-card);
+  padding: 10px 16px;
+  min-width: 90px;
 }
 
 .predictionComplete {
-  @apply bg-emerald-50 border-emerald-200 text-emerald-700;
+  background: var(--color-success-soft);
+  border-color: var(--color-success-border);
 }
 
-.kpiSection  { @apply mb-7; }
-.kpiHeading  { @apply text-xs font-black uppercase tracking-widest text-slate-500 mb-3; }
+.predictionDays {
+  font-size: var(--text-xl, 16px);
+  font-weight: 900;
+  color: var(--color-text-primary);
+}
 
-.attentionSection { @apply mb-7; }
+.predictionComplete .predictionDays {
+  color: var(--color-success);
+}
 
+.predictionLabel {
+  font-size: var(--text-2xs, 9px);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-align: center;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.predictionComplete .predictionLabel {
+  color: var(--color-success);
+}
+
+// ── Attention cards ───────────────────────────────────────────────────────────
 .attentionCard {
-  @apply flex flex-col gap-1.5 rounded-xl p-4 shadow-sm;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+  border-radius: var(--radius-xl, 12px);
+  padding: var(--space-4, 16px);
+  border-width: 1px;
+  border-style: solid;
+  box-shadow: var(--shadow-card);
+  animation: cardIn 300ms var(--ease-back) both;
 }
 
-.attentionHigh    { @apply bg-red-50 border border-red-200 text-red-900; }
-.attentionMedium  { @apply bg-amber-50 border border-amber-200 text-amber-900; }
-.attentionNeutral { @apply bg-slate-50 border border-slate-200 text-slate-700; }
+.attentionHigh    { background: var(--color-danger-soft);  border-color: var(--color-danger-border);  }
+.attentionMedium  { background: var(--color-warning-soft); border-color: var(--color-warning-border); }
+.attentionNeutral { background: var(--color-subtle);        border-color: var(--color-border);          }
 
-.attentionLabel  { @apply text-sm font-bold; }
-.attentionValue  { @apply text-2xl font-black; }
-.attentionDetail { @apply text-xs leading-snug truncate; }
-
-.insightsCard {
-  @apply bg-white border border-slate-200 rounded-xl shadow-sm p-5;
+.attentionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
 }
 
-.insightItem {
-  @apply flex items-start gap-2.5 text-sm text-slate-700;
+.attentionCount {
+  font-size: var(--text-2xl, 20px);
+  font-weight: 900;
+  line-height: 1;
 }
 
-.insightDot {
-  @apply mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0;
+.attentionHigh    .attentionCount { color: var(--color-danger-strong); }
+.attentionMedium  .attentionCount { color: var(--color-warning); }
+.attentionNeutral .attentionCount { color: var(--color-text-secondary); }
+
+.attentionLabel {
+  font-size: var(--text-base, 12px);
+  font-weight: 700;
 }
 
+.attentionHigh    .attentionLabel { color: var(--color-danger-strong); }
+.attentionMedium  .attentionLabel { color: var(--color-warning); }
+.attentionNeutral .attentionLabel { color: var(--color-text-secondary); }
+
+.attentionDetail {
+  font-size: var(--text-xs, 10px);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attentionKey {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+// ── Action toolbar ────────────────────────────────────────────────────────────
 .actionToolbar {
-  @apply overflow-x-auto inline-flex items-center bg-white border border-slate-200 rounded-full p-1 shadow-sm gap-2;
+  display: inline-flex;
+  align-items: center;
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full, 9999px);
+  padding: var(--space-1, 4px);
+  box-shadow: var(--shadow-toolbar);
+  gap: var(--space-2, 8px);
 }
 
 .actionButton {
-  @apply inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-bold transition-colors duration-150 ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-full, 9999px);
+  padding: 7px 14px;
+  font-size: var(--text-base, 12px);
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
 }
 
-.actionButtonTeal { @apply text-teal-600 hover:text-teal-700 hover:bg-teal-50; }
+.actionButtonNeutral { color: var(--color-text-secondary); &:hover { color: var(--color-text-primary); background: var(--color-subtle); } }
+.actionButtonGreen   { color: var(--color-success);        &:hover { color: var(--color-success); background: var(--color-success-soft); } }
+.actionButtonPurple  { color: #7c3aed;                     &:hover { color: #6d28d9; background: rgb(124 58 237 / 10%); } }
+.actionButtonBlue    { color: var(--color-primary);        &:hover { color: var(--color-primary-hover); background: var(--color-primary-soft); } }
+.actionButtonTeal    { color: #0d9488;                     &:hover { color: #0f766e; background: rgb(13 148 136 / 10%); } }
+.actionButtonDark    { color: var(--color-text-primary);   &:hover { color: var(--color-text-primary); background: var(--color-subtle); } }
 
 .ctaIcon {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   fill: currentColor;
   flex-shrink: 0;
 }
 
-.actionButtonNeutral { @apply text-slate-600 hover:text-slate-900 hover:bg-slate-100; }
-.actionButtonGreen   { @apply text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50; }
-.actionButtonPurple  { @apply text-violet-600 hover:text-violet-700 hover:bg-violet-50; }
-.actionButtonBlue    { @apply text-sky-600 hover:text-sky-700 hover:bg-sky-50; }
-.actionButtonDark    { @apply text-slate-900 hover:text-slate-950 hover:bg-slate-100; }
-
 .divider {
-  @apply w-px h-5 bg-slate-200 shrink-0 mx-1;
+  display: inline-block;
+  width: 1px;
+  height: 20px;
+  background: var(--color-border);
+  flex-shrink: 0;
+  margin: 0 var(--space-1, 4px);
 }
