@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
-  StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton, LayoutControl,
+  StickyToolbar, FilterChip, ToolbarSpacer, LayoutControl,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
 
@@ -147,13 +147,11 @@ export default function FlowHealthPage() {
   return (
     <>
       <StickyToolbar>
-        <FilterChip label="All" active={quickFilter === 'all'} onClick={() => setQuickFilter('all')} />
-        <FilterChip label="Critical" active={quickFilter === 'critical'} onClick={() => setQuickFilter('critical')} dot={flowItems.some(i => norm(i.health) === 'critical')} />
-        <FilterChip label="Warning" active={quickFilter === 'warning'} onClick={() => setQuickFilter('warning')} />
-        <FilterChip label="Orphans" active={quickFilter === 'orphan'} onClick={() => setQuickFilter('orphan')} />
+        <FilterChip label="All"      active={quickFilter === 'all'}      onClick={() => { setQuickFilter('all');      setVisibleCount(100); }} />
+        <FilterChip label="Critical" active={quickFilter === 'critical'} onClick={() => { setQuickFilter('critical'); setVisibleCount(100); }} dot={flowItems.some(i => norm(i.health) === 'critical')} />
+        <FilterChip label="Warning"  active={quickFilter === 'warning'}  onClick={() => { setQuickFilter('warning');  setVisibleCount(100); }} />
+        <FilterChip label="Orphans"  active={quickFilter === 'orphan'}   onClick={() => { setQuickFilter('orphan');   setVisibleCount(100); }} />
         <ToolbarSpacer />
-        <ToolbarButton onClick={resetAll}>Reset filters</ToolbarButton>
-        <ToolbarButton onClick={exportCsv}>Export CSV</ToolbarButton>
         <LayoutControl />
       </StickyToolbar>
 
@@ -205,6 +203,44 @@ export default function FlowHealthPage() {
                 </select>
               </label>
             ))}
+          </div>
+
+          {/* ── Action row ── */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 14, marginTop: 14, borderTop: '1px solid #F1F5F9' }}>
+            <button
+              type="button"
+              onClick={resetAll}
+              style={{
+                padding: '7px 16px', borderRadius: 8, border: '1px solid #E2E8F0',
+                background: '#F8FAFC', color: '#475569', fontSize: 12, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+              </svg>
+              Reset filters
+            </button>
+            <button
+              type="button"
+              onClick={exportCsv}
+              style={{
+                padding: '7px 16px', borderRadius: 8, border: 'none',
+                background: '#2563EB', color: '#fff', fontSize: 12, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Export CSV
+            </button>
+            <span style={{ fontSize: 11, color: '#94A3B8', marginLeft: 4 }}>
+              {filtered.length.toLocaleString()} of {flowItems.length.toLocaleString()} items
+            </span>
           </div>
         </div>
 
