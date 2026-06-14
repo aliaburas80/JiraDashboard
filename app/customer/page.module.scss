@@ -11,9 +11,7 @@
 }
 
 @media print {
-  .toolbar {
-    display: none;
-  }
+  .toolbar { display: none; }
 }
 
 .header {
@@ -52,29 +50,13 @@
   @apply mt-0.5 text-[8px] text-slate-500;
 }
 
-.healthBadgeExcellent {
-  border-color: #16a34a;
-}
+.healthBadgeExcellent { border-color: #16a34a; color: #16a34a; }
+.healthBadgeGood      { border-color: #0f766e; color: #0f766e; }
+.healthBadgeModerate  { border-color: #d97706; color: #d97706; }
+.healthBadgeAtRisk    { border-color: #dc2626; color: #dc2626; }
+.healthBadgeCritical  { border-color: #991b1b; color: #991b1b; }
 
-.healthBadgeGood {
-  border-color: #0f766e;
-}
-
-.healthBadgeModerate {
-  border-color: #d97706;
-}
-
-.healthBadgeAtRisk {
-  border-color: #dc2626;
-}
-
-.healthBadgeCritical {
-  border-color: #991b1b;
-}
-
-.healthBadgeText {
-  color: inherit;
-}
+.healthBadgeText { color: inherit; }
 
 .metricCard {
   @apply rounded-[8px] px-6 py-5 text-center bg-white border border-slate-200;
@@ -102,61 +84,27 @@
   width: 10px;
   height: 10px;
   min-width: 10px;
-  background: var(--dot-color, #6B7280);
+  background: var(--dot-color, #6b7280);
 }
 
 .riskText {
   @apply text-sm leading-snug text-slate-900;
 }
 
-@media print {
-  .toolbar {
-    display: none;
-  }
-}
-
-.healthBadgeGood {
-  border-color: #0f766e;
-  color: #0f766e;
-}
-
-.healthBadgeModerate {
-  border-color: #d97706;
-  color: #d97706;
-}
-
-.healthBadgeAtRisk {
-  border-color: #dc2626;
-  color: #dc2626;
-}
-
-.healthBadgeCritical {
-  border-color: #991b1b;
-  color: #991b1b;
-}
-
-.healthScore {
-  @apply font-black leading-none text-[28px] font-mono;
-}
-
-.healthStatus {
-  @apply font-black uppercase tracking-wider mt-1 text-[10px];
-}
-
-.healthMeta {
-  @apply mt-0.5 text-[8px] text-slate-500;
-}
+.healthScore  { @apply font-black leading-none text-[28px] font-mono; }
+.healthStatus { @apply font-black uppercase tracking-wider mt-1 text-[10px]; }
+.healthMeta   { @apply mt-0.5 text-[8px] text-slate-500; }
 
 .statusSummary {
   @apply rounded-r-xl px-6 py-5 mb-8 print:mb-4;
-  background: #FFF7ED;
+  background: #fff7ed;
   border-left-width: 3px;
-  border-color: #E85D12;
+  border-color: #e85d12;
 }
 
 .statusSummaryHeading {
   @apply text-base font-black mb-1;
-  color: #E85D12;
+  color: #e85d12;
 }
 
 .statusSummaryText {
@@ -188,17 +136,9 @@
   color: #111111;
 }
 
-.epicPct {
-  @apply text-sm font-black ml-4 shrink-0;
-}
-
-.epicPctBlue {
-  color: #1d4ed8;
-}
-
-.epicPctGreen {
-  color: #16a34a;
-}
+.epicPct      { @apply text-sm font-black ml-4 shrink-0; }
+.epicPctBlue  { color: #1d4ed8; }
+.epicPctGreen { color: #16a34a; }
 
 .progressBar {
   @apply h-2 rounded-full overflow-hidden bg-slate-200;
@@ -210,70 +150,23 @@
 }
 
 @for $i from 0 through 100 {
-  .progressPct#{$i} {
-    width: #{$i}%;
-  }
+  .progressPct#{$i} { width: #{$i}%; }
 }
 
-.progressMeta {
-  @apply text-[11px] mt-1.5 text-slate-500;
-}
+.progressMeta { @apply text-[11px] mt-1.5 text-slate-500; }
 
-.progressFillBlue {
-  --progress-color: #1d4ed8;
-}
+.progressFillBlue  { --progress-color: #1d4ed8; }
+.progressFillGreen { --progress-color: #16a34a; }
 
-.progressFillGreen {
-  --progress-color: #16a34a;
-}
-
-.riskHigh {
-  @apply bg-red-50 border border-red-200 text-red-900;
-}
-
-.riskMedium {
-  @apply bg-orange-50 border border-orange-200 text-orange-900;
-}
-
-.riskLow {
-  @apply bg-slate-50 border border-slate-200 text-slate-900;
-}
-
-.emptyRiskCard {
-  @apply rounded-xl px-5 py-4 text-sm font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800;
-}
-
-.riskSection {
-  @apply mb-8 print:mb-4;
-}
+.riskSection { @apply mb-8 print:mb-4; }
 
 .riskRow {
   @apply flex items-start gap-3 rounded-xl px-4 py-3;
 }
 
-.riskHigh {
-  @apply bg-red-50 border border-red-200 text-red-900;
-}
-
-.riskMedium {
-  @apply bg-orange-50 border border-orange-200 text-orange-900;
-}
-
-.riskLow {
-  @apply bg-slate-50 border border-slate-200 text-slate-900;
-}
-
-.riskDot {
-  @apply mt-1.5 rounded-full shrink-0;
-  width: 10px;
-  height: 10px;
-  min-width: 10px;
-}
-
-.riskText {
-  @apply text-sm leading-snug;
-  color: #111827;
-}
+.riskHigh   { @apply bg-red-50 border border-red-200 text-red-900; }
+.riskMedium { @apply bg-orange-50 border border-orange-200 text-orange-900; }
+.riskLow    { @apply bg-slate-50 border border-slate-200 text-slate-900; }
 
 .emptyRiskCard {
   @apply rounded-xl px-5 py-4 text-sm font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800;
@@ -291,14 +184,6 @@
   @apply mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0;
 }
 
-.footer {
-  @apply border-t border-slate-200 pt-6 text-center;
-}
-
-.footerText {
-  @apply text-xs text-slate-400;
-}
-
-.footerNote {
-  @apply text-xs text-slate-300 mt-1;
-}
+.footer     { @apply border-t border-slate-200 pt-6 text-center; }
+.footerText { @apply text-xs text-slate-400; }
+.footerNote { @apply text-xs text-slate-300 mt-1; }

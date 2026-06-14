@@ -85,7 +85,6 @@ function NavItem({ href, icon, title, meta, chip, chipType }: {
       href={href}
       aria-current={active ? 'page' : undefined}
       className={`${styles.navItem} ${active ? styles.navItemActive : ''}`}
-      style={{ textDecoration: 'none', border: 'none', background: 'none', cursor: 'pointer' }}
     >
       {active && <span className={styles.activeIndicator} />}
       <NavIcon name={icon} active={active} />

@@ -1,9 +1,19 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, type CSSProperties } from 'react';
+import clsx from 'clsx';
 import { DC_NAV_GROUPS } from '@/components/dc-shell/navigation';
 import UserMenu from '@/components/auth/UserMenu';
+import styles from './DashboardTopbar.module.scss';
+
+// Status → dot colour mapping (data-driven, not hardcoded per-item)
+const STATUS_DOT: Record<string, string> = {
+  critical: '#f87171',
+  warning:  '#f59e0b',
+  success:  '#22c55e',
+  info:     '#3b82f6',
+};
 
 // Label overrides for space-constrained topbar
 const GROUP_LABEL_OVERRIDE: Record<string, string> = {
@@ -19,11 +29,38 @@ function groupIsActive(pathname: string, group: typeof DC_NAV_GROUPS[0]): boolea
 }
 
 // ─── Health colour lookup ─────────────────────────────────────────────────────
-function healthMeta(score: number): { arc: string; bg: string; border: string; text: string; label: string } {
-  if (score >= 75) return { arc: '#059669', bg: '#ECFDF5', border: '#A7F3D0', text: '#059669', label: score >= 90 ? 'Excellent' : 'Good' };
-  if (score >= 60) return { arc: '#D97706', bg: '#FFFBEB', border: '#FDE68A', text: '#D97706', label: 'Moderate' };
-  if (score >= 40) return { arc: '#DC2626', bg: '#FEF2F2', border: '#FECACA', text: '#DC2626', label: 'At-Risk' };
-  return { arc: '#991B1B', bg: '#FEF2F2', border: '#FECACA', text: '#991B1B', label: 'Critical' };
+// Returns CSS-custom-property values, not inline hex codes.
+// EXCEPTION (CLAUDE.md Rule 1): color values are data-driven (from healthScore);
+// they are set as CSS custom properties consumed by .healthPill in SCSS.
+function healthCssVars(score: number): { cssVars: CSSProperties; label: string } {
+  let arc: string, bg: string, border: string, text: string, label: string;
+
+  if (score >= 90) {
+    arc = 'var(--color-health-excellent-arc, #059669)'; bg = 'var(--color-health-excellent-bg, #ecfdf5)';
+    border = 'var(--color-health-excellent-border, #a7f3d0)'; text = 'var(--color-health-excellent-text, #059669)';
+    label = 'Excellent';
+  } else if (score >= 75) {
+    arc = 'var(--color-health-good-arc, #059669)'; bg = 'var(--color-health-good-bg, #ecfdf5)';
+    border = 'var(--color-health-good-border, #a7f3d0)'; text = 'var(--color-health-good-text, #059669)';
+    label = 'Good';
+  } else if (score >= 60) {
+    arc = 'var(--color-health-moderate-arc, #d97706)'; bg = 'var(--color-health-moderate-bg, #fffbeb)';
+    border = 'var(--color-health-moderate-border, #fde68a)'; text = 'var(--color-health-moderate-text, #d97706)';
+    label = 'Moderate';
+  } else if (score >= 40) {
+    arc = 'var(--color-health-atrisk-arc, #dc2626)'; bg = 'var(--color-health-atrisk-bg, #fef2f2)';
+    border = 'var(--color-health-atrisk-border, #fecaca)'; text = 'var(--color-health-atrisk-text, #dc2626)';
+    label = 'At-Risk';
+  } else {
+    arc = 'var(--color-health-critical-arc, #991b1b)'; bg = 'var(--color-health-critical-bg, #fef2f2)';
+    border = 'var(--color-health-critical-border, #fecaca)'; text = 'var(--color-health-critical-text, #991b1b)';
+    label = 'Critical';
+  }
+
+  return {
+    cssVars: { '--health-arc': arc, '--health-bg': bg, '--health-border': border, '--health-text': text } as CSSProperties,
+    label,
+  };
 }
 
 const CIRC = 40.84;
@@ -35,10 +72,12 @@ interface Props {
 
 export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props) {
   const pathname = usePathname();
-  const hm = healthMeta(healthScore);
+  const { cssVars: healthVars, label: healthLabel } = healthCssVars(healthScore);
+
+  // SVG arc — strokeDasharray is an SVG attribute, not a CSS style prop
   const filled = (healthScore / 100) * CIRC;
   const gap    = CIRC - filled;
-  const dash   = `${filled.toFixed(1)} ${gap.toFixed(1)}`;
+  const svgDash = `${filled.toFixed(1)} ${gap.toFixed(1)}`;
 
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [dropPos, setDropPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -46,10 +85,7 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
   const dropMenuRef = useRef<HTMLDivElement>(null);
 
   const toggleGroup = useCallback((groupId: string) => {
-    if (openGroup === groupId) {
-      setOpenGroup(null);
-      return;
-    }
+    if (openGroup === groupId) { setOpenGroup(null); return; }
     const btn = groupButtonRefs.current[groupId];
     if (btn) {
       const rect = btn.getBoundingClientRect();
@@ -79,46 +115,25 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
 
   return (
     <>
-      <header style={{
-        height: 52,
-        background: '#ffffff',
-        borderBottom: '1px solid #E2E8F0',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 20px',
-        position: 'fixed',
-        top: 0, left: 0, right: 0,
-        zIndex: 500,
-        boxShadow: '0 1px 2px rgba(0,0,0,.04)',
-        fontFamily: "'Segoe UI', system-ui, sans-serif",
-      }}>
+      <header className={styles.header}>
 
-        {/* ── Logo ── */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, textDecoration: 'none' }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: 7, background: '#2563EB',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-              stroke="#fff" strokeWidth="2.5" aria-hidden="true">
+        {/* Logo */}
+        <Link href="/" className={styles.logo}>
+          <div className={styles.logoIcon} aria-hidden="true">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
             </svg>
           </div>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', letterSpacing: '-.01em' }}>
-            Delivery Clarity
-          </span>
-          <span style={{ fontSize: 8, color: '#94A3B8', fontFamily: 'monospace', marginLeft: 2 }}>
-            v4.1
-          </span>
+          <span className={styles.logoName}>Delivery Clarity</span>
+          <span className={styles.logoVersion}>v4.1</span>
         </Link>
 
-        {/* ── Spacer ── */}
-        <div style={{ flex: 1 }} />
+        <div className={styles.spacer} />
 
-        {/* ── Right nav ── */}
-        <div style={{ display: 'flex', alignItems: 'center', height: 52 }}>
+        {/* Right nav */}
+        <nav className={styles.rightNav} aria-label="Primary navigation">
 
-          {/* 6 nav group buttons */}
+          {/* Nav group buttons */}
           {DC_NAV_GROUPS.map(group => {
             const active = groupIsActive(pathname, group);
             const isOpen = openGroup === group.id;
@@ -131,156 +146,80 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
                 onClick={() => toggleGroup(group.id)}
                 aria-haspopup="menu"
                 aria-expanded={isOpen}
-                style={{
-                  fontSize: 12,
-                  color: active || isOpen ? '#2563EB' : '#64748B',
-                  fontWeight: active || isOpen ? 600 : 400,
-                  padding: '0 10px',
-                  height: '100%',
-                  border: 'none',
-                  background: 'transparent',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 3,
-                  whiteSpace: 'nowrap',
-                  position: 'relative',
-                }}
+                className={clsx(styles.navGroupBtn, { [styles.active]: active, [styles.open]: isOpen })}
               >
-                {active && (
-                  <span style={{
-                    position: 'absolute', bottom: 0, left: 7, right: 7,
-                    height: 2, background: '#2563EB', borderRadius: '2px 2px 0 0',
-                  }} />
-                )}
+                {active && <span className={styles.navGroupActiveBar} aria-hidden="true" />}
                 {label}
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="2"
-                  style={{ opacity: 0.6, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }}
-                  aria-hidden="true">
+                <svg
+                  width="9" height="9" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" strokeWidth="2"
+                  className={clsx(styles.navGroupChevron, { [styles.open]: isOpen })}
+                  aria-hidden="true"
+                >
                   <path d="M6 9l6 6 6-6" />
                 </svg>
               </button>
             );
           })}
 
-          {/* Separator */}
-          <div style={{ width: 1, height: 18, background: '#E2E8F0', margin: '0 8px' }} />
+          <div className={styles.separator} aria-hidden="true" />
 
-          {/* Health pill */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '4px 10px', borderRadius: 7,
-            background: hm.bg, border: `1px solid ${hm.border}`,
-          }}>
+          {/* Health pill — CSS custom properties carry the data-driven colours */}
+          <div className={styles.healthPill} style={healthVars} aria-label={`Health score: ${healthScore} — ${healthLabel}`}>
+            {/* SVG arc: stroke and strokeDasharray are SVG attributes, not CSS style props */}
             <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-              <circle cx="9" cy="9" r="6.5" fill="none" stroke={hm.border} strokeWidth="2.5" />
-              <circle cx="9" cy="9" r="6.5" fill="none" stroke={hm.arc} strokeWidth="2.5"
-                strokeDasharray={dash} strokeDashoffset="10" strokeLinecap="round" />
+              <circle cx="9" cy="9" r="6.5" fill="none" stroke="var(--health-border)" strokeWidth="2.5" />
+              <circle cx="9" cy="9" r="6.5" fill="none" stroke="var(--health-arc)"
+                strokeDasharray={svgDash} strokeDashoffset="10" strokeLinecap="round" />
             </svg>
             <div>
-              <div style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: hm.text, lineHeight: 1 }}>
-                {healthScore}
-              </div>
-              <div style={{
-                fontSize: 8, fontWeight: 700, color: hm.text,
-                textTransform: 'uppercase', letterSpacing: '.05em',
-                display: 'block', marginTop: 1,
-              }}>
-                {hm.label}
-              </div>
+              <div className={styles.healthScore}>{healthScore}</div>
+              <span className={styles.healthLabel}>{healthLabel}</span>
             </div>
           </div>
 
-          {/* New Upload button */}
-          <button
-            type="button"
-            onClick={onNewUpload}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              background: '#2563EB', color: '#fff',
-              fontSize: 11, fontWeight: 600,
-              padding: '6px 12px', borderRadius: 7, border: 'none',
-              marginLeft: 8, cursor: 'pointer',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#1D4ED8')}
-            onMouseLeave={e => (e.currentTarget.style.background = '#2563EB')}
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-              stroke="#fff" strokeWidth="2.5" aria-hidden="true">
+          {/* Upload button */}
+          <button type="button" onClick={onNewUpload} className={styles.uploadBtn}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" aria-hidden="true">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
             </svg>
             New Upload
           </button>
 
           {/* User menu */}
-          <div style={{ marginLeft: 6, flexShrink: 0 }}>
+          <div className={styles.userMenuWrapper}>
             <UserMenu />
           </div>
-        </div>
+        </nav>
       </header>
 
-      {/* ── Dropdown menu ── */}
+      {/* Nav dropdown panel */}
       {openGroup && activeGroup && (
         <div
           ref={dropMenuRef}
           role="menu"
-          style={{
-            position: 'fixed',
-            top: dropPos.top,
-            left: dropPos.left,
-            zIndex: 600,
-            background: '#ffffff',
-            border: '1px solid #E2E8F0',
-            borderRadius: 10,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
-            padding: '6px',
-            minWidth: 220,
-            maxWidth: 280,
-            fontFamily: "'Segoe UI', system-ui, sans-serif",
-          }}
+          className={styles.dropdownPanel}
+          style={{ '--drop-top': `${dropPos.top}px`, '--drop-left': `${dropPos.left}px` } as CSSProperties}
         >
           {activeGroup.items.map(item => {
             const active = isActivePath(pathname, item.href);
+            const dotColor = STATUS_DOT[item.status] ?? '#cbd5e1';
             return (
               <Link
                 key={item.id}
                 href={item.href}
                 role="menuitem"
                 onClick={() => setOpenGroup(null)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '8px 10px',
-                  borderRadius: 6,
-                  textDecoration: 'none',
-                  background: active ? '#EFF6FF' : 'transparent',
-                  transition: 'background 120ms',
-                }}
-                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = '#F8FAFC'; }}
-                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                className={clsx(styles.dropdownItem, { [styles.itemActive]: active })}
               >
                 <span>
-                  <span style={{
-                    display: 'block', fontSize: 13, fontWeight: 600,
-                    color: active ? '#2563EB' : '#0F172A',
-                  }}>
-                    {item.title}
-                  </span>
-                  <span style={{ fontSize: 11, color: '#94A3B8', marginTop: 1, display: 'block' }}>
-                    {item.desc}
-                  </span>
+                  <span className={styles.dropdownItemTitle}>{item.title}</span>
+                  <span className={styles.dropdownItemDesc}>{item.desc}</span>
                 </span>
+                {/* EXCEPTION: dot color is data-driven from item.status */}
                 <span
-                  style={{
-                    width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                    background: item.status === 'critical' ? '#F87171'
-                      : item.status === 'warning'  ? '#F59E0B'
-                      : item.status === 'success'  ? '#22C55E'
-                      : item.status === 'info'     ? '#3B82F6'
-                      : '#CBD5E1',
-                  }}
+                  className={styles.dropdownItemDot}
+                  style={{ background: dotColor } as CSSProperties}
                   aria-hidden="true"
                 />
               </Link>

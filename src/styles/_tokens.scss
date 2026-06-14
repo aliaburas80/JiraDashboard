@@ -1,0 +1,129 @@
+// ─── Delivery Clarity Design Tokens ──────────────────────────────────────────
+// Single source of truth for all visual values.
+// Imported by globals.scss. Referenced by all SCSS modules.
+// Never hardcode these values directly in component SCSS or JSX.
+// The --dc-* variables are defined by the runtime ThemeCustomizer.
+// These tokens map semantic names to the dc-palette and add missing dimensions.
+
+:root {
+  // ── Semantic colour aliases (map to dc-palette) ────────────────────────────
+  --color-primary:        var(--dc-accent,  #2563eb);
+  --color-primary-hover:  var(--dc-accent-hover, #1d4ed8);
+  --color-primary-soft:   #eff6ff;
+  --color-primary-border: #bfdbfe;
+
+  --color-surface:        var(--dc-s1, #fff);
+  --color-page:           var(--dc-bg, #f8fafc);
+  --color-subtle:         var(--dc-s2, #f1f5f9);
+  --color-muted:          var(--dc-s3, #e2e8f0);
+  --color-border:         var(--dc-bdr, rgb(203 213 225 / 70%));
+  --color-border-strong:  var(--dc-bdr2, rgb(148 163 184 / 50%));
+
+  --color-text-primary:   var(--dc-p1, #0f172a);
+  --color-text-secondary: var(--dc-p2, #64748b);
+  --color-text-muted:     var(--dc-p3, #94a3b8);
+
+  // ── Status colours (semantic — never use raw hex in components) ───────────
+  --color-success:        var(--dc-green, #22c55e);
+  --color-success-soft:   rgb(34 197 94 / 10%);
+  --color-success-border: rgb(34 197 94 / 25%);
+
+  --color-warning:        var(--dc-amber, #f59e0b);
+  --color-warning-soft:   rgb(245 158 11 / 10%);
+  --color-warning-border: rgb(245 158 11 / 25%);
+
+  --color-danger:         var(--dc-red, #f87171);
+  --color-danger-strong:  #dc2626;
+  --color-danger-soft:    rgb(248 113 113 / 10%);
+  --color-danger-border:  rgb(248 113 113 / 25%);
+
+  --color-info:           var(--dc-acc2, #3b82f6);
+  --color-info-soft:      rgb(59 130 246 / 10%);
+
+  // ── Health status bands ───────────────────────────────────────────────────
+  --color-health-excellent-arc:    #059669;
+  --color-health-excellent-bg:     #ecfdf5;
+  --color-health-excellent-border: #a7f3d0;
+  --color-health-excellent-text:   #059669;
+
+  --color-health-good-arc:         #059669;
+  --color-health-good-bg:          #ecfdf5;
+  --color-health-good-border:      #a7f3d0;
+  --color-health-good-text:        #059669;
+
+  --color-health-moderate-arc:     #d97706;
+  --color-health-moderate-bg:      #fffbeb;
+  --color-health-moderate-border:  #fde68a;
+  --color-health-moderate-text:    #d97706;
+
+  --color-health-atrisk-arc:       #dc2626;
+  --color-health-atrisk-bg:        #fef2f2;
+  --color-health-atrisk-border:    #fecaca;
+  --color-health-atrisk-text:      #dc2626;
+
+  --color-health-critical-arc:     #991b1b;
+  --color-health-critical-bg:      #fef2f2;
+  --color-health-critical-border:  #fecaca;
+  --color-health-critical-text:    #991b1b;
+
+  // ── Layout dimensions ─────────────────────────────────────────────────────
+  --header-height:  52px;
+  --toolbar-height: 52px;
+  --sidebar-width:  228px;
+
+  // ── Z-index scale ─────────────────────────────────────────────────────────
+  --z-below:    -1;
+  --z-base:      0;
+  --z-toolbar:  40;
+  --z-sidebar:  45;
+  --z-header:  500;
+  --z-dropdown: 600;
+  --z-modal:   9999;
+
+  // ── Border radii ──────────────────────────────────────────────────────────
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:  10px;
+  --radius-xl:  12px;
+  --radius-2xl: 14px;
+  --radius-chip: 20px;
+  --radius-full: 9999px;
+
+  // ── Spacing scale (matches Tailwind 4px base) ─────────────────────────────
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  // ── Typography scale ──────────────────────────────────────────────────────
+  --text-2xs:  9px;
+  --text-xs:  10px;
+  --text-sm:  11px;
+  --text-base: 12px;
+  --text-md:  13px;
+  --text-lg:  14px;
+  --text-xl:  16px;
+  --text-2xl: 20px;
+  --text-3xl: 22px;
+
+  // ── Shadows ───────────────────────────────────────────────────────────────
+  --shadow-toolbar:  0 1px 4px rgb(0 0 0 / 4%);
+  --shadow-card:     0 1px 3px rgb(0 0 0 / 6%);
+  --shadow-dropdown: 0 8px 24px rgb(0 0 0 / 10%);
+  --shadow-modal:    0 20px 60px rgb(0 0 0 / 20%);
+
+  // ── Transitions ───────────────────────────────────────────────────────────
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  // ── Bar / progress animations ─────────────────────────────────────────────
+  --bar-duration:  700ms;
+  --bar-easing:    ease-out;
+}

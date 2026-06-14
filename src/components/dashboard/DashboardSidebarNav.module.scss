@@ -1,31 +1,19 @@
+// ── Sidebar shell ─────────────────────────────────────────────────────────────
 .sidebar {
   @apply hidden md:flex flex-col w-[228px] shrink-0 bg-white border-r border-slate-200 fixed top-[52px] bottom-0 left-0 overflow-y-auto font-sans;
 }
 
+// ── Health widget ─────────────────────────────────────────────────────────────
 .healthBlock {
   @apply p-3.5 border-b border-slate-200;
   color: var(--health-color, #64748b);
 }
 
-.healthBlockExcellent {
-  --health-color: #059669;
-}
-
-.healthBlockGood {
-  --health-color: #0f766e;
-}
-
-.healthBlockModerate {
-  --health-color: #d97706;
-}
-
-.healthBlockAtRisk {
-  --health-color: #dc2626;
-}
-
-.healthBlockCritical {
-  --health-color: #991b1b;
-}
+.healthBlockExcellent { --health-color: #059669; }
+.healthBlockGood      { --health-color: #0f766e; }
+.healthBlockModerate  { --health-color: #d97706; }
+.healthBlockAtRisk    { --health-color: #dc2626; }
+.healthBlockCritical  { --health-color: #991b1b; }
 
 .healthHeader {
   @apply flex items-center justify-between mb-1;
@@ -45,146 +33,8 @@
   color: var(--health-color, #111827);
 }
 
-.healthValue {
-  @apply font-mono font-bold text-[28px] leading-none mb-1;
-}
-
 .healthSubtitle {
   @apply text-[9px] font-bold text-slate-500;
-}
-
-.healthProgress {
-  @apply h-1 rounded-full overflow-hidden mb-2 bg-slate-200;
-}
-
-.healthProgressFill {
-  @apply h-full rounded-full transition-all;
-  background: linear-gradient(90deg, #dc2626 0%, #ea580c 50%, #d97706 100%);
-}
-
-@for $i from 0 through 100 {
-  .healthProgressWidth#{$i} {
-    width: #{$i}%;
-  }
-}
-
-.vitalsGrid {
-  @apply grid grid-cols-2 gap-1;
-}
-
-.vitalCard {
-  @apply rounded-md p-[5px_7px] bg-slate-100;
-}
-
-.vitalLabel {
-  @apply text-[7px] uppercase tracking-[0.05em] text-slate-400 mb-1;
-}
-
-.vitalValue {
-  @apply font-mono font-semibold text-[11px];
-}
-
-.healthPositive {
-  color: #059669;
-}
-
-.healthNeutral {
-  color: #475569;
-}
-
-.healthWarning {
-  color: #d97706;
-}
-
-.healthDanger {
-  color: #dc2626;
-}
-
-.healthStat {
-  @apply grid grid-cols-2 gap-1;
-}
-
-.progressFillBlue {
-  --progress-color: #1d4ed8;
-}
-
-.progressFillGreen {
-  --progress-color: #16a34a;
-}
-
-.navItem {
-  @apply relative flex items-center gap-2 w-full px-2 py-1.5 rounded-[7px] mb-1 transition-colors cursor-pointer text-left;
-}
-
-.navItemActive {
-  @apply bg-sky-50;
-}
-
-.navItemHover:hover {
-  @apply bg-slate-100;
-}
-
-.activeIndicator {
-  @apply absolute left-0 top-[18%] bottom-[18%] w-1 rounded-r-sm bg-sky-600;
-}
-
-.navIcon {
-  @apply shrink-0 w-[13px] h-[13px];
-  stroke-width: 1.8;
-  fill: none;
-  color: #94a3b8;
-}
-
-.iconActive {
-  color: #2563eb;
-}
-
-.navTextTitle {
-  @apply block text-[11px] leading-snug;
-}
-
-.navTextMeta {
-  @apply block text-[9px] mt-[0.15rem];
-}
-
-.navTextActive {
-  color: #2563eb;
-}
-
-.navTextInactive {
-  color: #64748b;
-}
-
-.navTextMetaInactive {
-  color: #94a3b8;
-}
-
-.chip {
-  @apply inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-[0.02em];
-}
-
-.chipCc {
-  @apply bg-red-50 text-red-700;
-}
-
-.chipCw {
-  @apply bg-amber-50 text-amber-700;
-}
-
-.chipCg {
-  @apply bg-emerald-50 text-emerald-700;
-}
-
-.chipCm {
-  @apply bg-cyan-50 text-cyan-700;
-}
-
-.chipCn {
-  @apply bg-slate-100 text-slate-600;
-}
-
-.healthSubtitle {
-  @apply text-[9px] font-bold;
 }
 
 .healthProgress {
@@ -197,6 +47,11 @@
   background: linear-gradient(90deg, #dc2626 0%, #ea580c 50%, #d97706 100%);
 }
 
+// SCSS loop: generate .healthProgressWidth0 – .healthProgressWidth100 for SSR-safe widths
+@for $i from 0 through 100 {
+  .healthProgressWidth#{$i} { width: #{$i}%; }
+}
+
 .vitalsGrid {
   @apply grid grid-cols-2 gap-1;
 }
@@ -213,6 +68,19 @@
   @apply font-mono font-semibold text-[11px];
 }
 
+.healthPositive { color: #059669; }
+.healthNeutral  { color: #475569; }
+.healthWarning  { color: #d97706; }
+.healthDanger   { color: #dc2626; }
+
+.healthStat {
+  @apply grid grid-cols-2 gap-1;
+}
+
+.progressFillBlue  { --progress-color: #1d4ed8; }
+.progressFillGreen { --progress-color: #16a34a; }
+
+// ── Nav section ───────────────────────────────────────────────────────────────
 .navSection {
   @apply flex-1 overflow-y-auto px-2 pb-4;
 }
@@ -221,8 +89,13 @@
   @apply block text-[8px] font-bold tracking-[0.10em] uppercase text-slate-400 px-2 pt-2 pb-1;
 }
 
+// ── Nav item ─────────────────────────────────────────────────────────────────
 .navItem {
-  @apply relative flex items-center gap-2 w-full px-2 py-1.5 rounded-[7px] mb-1 transition-colors text-left cursor-pointer;
+  @apply relative flex items-center gap-2 w-full px-2 py-1.5 rounded-[7px] mb-1 transition-colors cursor-pointer text-left;
+  // Reset link/button defaults so Link renders identically to a button
+  text-decoration: none;
+  border: none;
+  background: none;
 }
 
 .navItemActive {
@@ -241,16 +114,12 @@
   @apply shrink-0 w-[13px] h-[13px];
   stroke-width: 1.8;
   fill: none;
+  color: #94a3b8;
   stroke: currentColor;
 }
 
-.iconActive {
-  color: #2563eb;
-}
-
-.iconInactive {
-  color: #94a3b8;
-}
+.iconActive   { color: #2563eb; }
+.iconInactive { color: #94a3b8; }
 
 .navTextTitle {
   @apply block text-[11px] leading-snug;
@@ -260,54 +129,27 @@
   @apply block text-[9px] text-slate-400 mt-[0.15rem];
 }
 
+.navTextActive   { color: #2563eb; }
+.navTextInactive { color: #64748b; }
+.navTextMetaInactive { color: #94a3b8; }
+
+// ── Status chips ──────────────────────────────────────────────────────────────
 .chip {
   @apply inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-[0.02em];
 }
 
-.chipCc {
-  @apply bg-red-50 text-red-700;
-}
+.chipCc { @apply bg-red-50 text-red-700; }
+.chipCw { @apply bg-amber-50 text-amber-700; }
+.chipCg { @apply bg-emerald-50 text-emerald-700; }
+.chipCm { @apply bg-cyan-50 text-cyan-700; }
+.chipCn { @apply bg-slate-100 text-slate-600; }
 
-.chipCw {
-  @apply bg-amber-50 text-amber-700;
-}
+.badgeText  { @apply text-[9px] font-bold; }
+.badgeValue { @apply font-mono font-semibold; }
 
-.chipCg {
-  @apply bg-emerald-50 text-emerald-700;
-}
-
-.chipCm {
-  @apply bg-cyan-50 text-cyan-700;
-}
-
-.chipCn {
-  @apply bg-slate-100 text-slate-600;
-}
-
-.badgeText {
-  @apply text-[9px] font-bold;
-}
-
-.badgeValue {
-  @apply font-mono font-semibold;
-}
-
-.textBlue {
-  color: #2563eb;
-}
-
-.textCyan {
-  color: #0891b2;
-}
-
-.textGreen {
-  color: #059669;
-}
-
-.textAmber {
-  color: #d97706;
-}
-
-.textSlate {
-  color: #475569;
-}
+// ── Semantic text colour helpers ──────────────────────────────────────────────
+.textBlue  { color: #2563eb; }
+.textCyan  { color: #0891b2; }
+.textGreen { color: #059669; }
+.textAmber { color: #d97706; }
+.textSlate { color: #475569; }

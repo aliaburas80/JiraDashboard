@@ -1,0 +1,243 @@
+// ─── DashboardTopbar styles ───────────────────────────────────────────────────
+// Covers: header bar, logo, nav group buttons, health pill, upload button,
+//         user menu wrapper, and the floating nav dropdown panel.
+
+// ── Header bar ─────────────────────────────────────────────────────────────────
+.header {
+  height: var(--header-height, 52px);
+  background: var(--color-surface, #fff);
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-header, 500);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+// ── Logo ───────────────────────────────────────────────────────────────────────
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.logoIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--color-primary, #2563eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logoName {
+  font-size: var(--text-md, 13px);
+  font-weight: 600;
+  color: var(--color-text-primary, #0f172a);
+  letter-spacing: -0.01em;
+}
+
+.logoVersion {
+  font-size: 8px;
+  color: var(--color-text-muted, #94a3b8);
+  font-family: var(--font-mono, monospace);
+  margin-left: 2px;
+}
+
+// ── Spacer ─────────────────────────────────────────────────────────────────────
+.spacer {
+  flex: 1;
+}
+
+// ── Right nav region ───────────────────────────────────────────────────────────
+.rightNav {
+  display: flex;
+  align-items: center;
+  height: var(--header-height, 52px);
+}
+
+// ── Nav group button ───────────────────────────────────────────────────────────
+.navGroupBtn {
+  font-size: var(--text-base, 12px);
+  font-weight: 400;
+  color: var(--color-text-secondary, #64748b);
+  padding: 0 10px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  position: relative;
+  font-family: inherit;
+  transition: color var(--transition-fast);
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: -2px;
+  }
+
+  &.active,
+  &.open {
+    color: var(--color-primary, #2563eb);
+    font-weight: 600;
+  }
+}
+
+.navGroupActiveBar {
+  position: absolute;
+  bottom: 0;
+  left: 7px;
+  right: 7px;
+  height: 2px;
+  background: var(--color-primary, #2563eb);
+  border-radius: 2px 2px 0 0;
+}
+
+.navGroupChevron {
+  opacity: 0.6;
+  transition: transform var(--transition-fast);
+
+  &.open { transform: rotate(180deg); }
+}
+
+// ── Separator ──────────────────────────────────────────────────────────────────
+.separator {
+  width: 1px;
+  height: 18px;
+  background: var(--color-border, #e2e8f0);
+  margin: 0 8px;
+  flex-shrink: 0;
+}
+
+// ── Health pill ────────────────────────────────────────────────────────────────
+// EXCEPTION (CLAUDE.md Rule 1): bg/border/arc/text colors and SVG dash values
+// are computed from healthScore (data). Passed as CSS custom properties.
+.healthPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  background: var(--health-bg, #ecfdf5);
+  border: 1px solid var(--health-border, #a7f3d0);
+  flex-shrink: 0;
+}
+
+.healthScore {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-lg, 14px);
+  font-weight: 700;
+  color: var(--health-text, #059669);
+  line-height: 1;
+}
+
+.healthLabel {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--health-text, #059669);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-top: 1px;
+}
+
+// ── Upload button ──────────────────────────────────────────────────────────────
+.uploadBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--color-primary, #2563eb);
+  color: #fff;
+  font-size: var(--text-sm, 11px);
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: none;
+  margin-left: var(--space-2, 8px);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background var(--transition-fast);
+
+  &:hover { background: var(--color-primary-hover, #1d4ed8); }
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+// ── User menu wrapper ──────────────────────────────────────────────────────────
+.userMenuWrapper {
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+// ── Nav dropdown panel ─────────────────────────────────────────────────────────
+// EXCEPTION: top/left are computed from button getBoundingClientRect() at runtime.
+// They are set via CSS custom properties --drop-top and --drop-left.
+.dropdownPanel {
+  position: fixed;
+  top: var(--drop-top, 56px);
+  left: var(--drop-left, 0);
+  z-index: var(--z-dropdown, 600); // note: --drop-top/--drop-left set by JS via CSS custom props
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-xl, 10px);
+  box-shadow: var(--shadow-dropdown, 0 8px 24px rgba(0, 0, 0, 0.10));
+  padding: 6px;
+  min-width: 220px;
+  max-width: 280px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm, 6px);
+  text-decoration: none;
+  transition: background var(--transition-fast);
+
+  &:hover { background: var(--color-subtle, #f8fafc); }
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: -2px;
+  }
+
+  &.itemActive { background: var(--color-primary-soft, #eff6ff); }
+}
+
+.dropdownItemTitle {
+  display: block;
+  font-size: var(--text-md, 13px);
+  font-weight: 600;
+  color: var(--color-text-primary, #0f172a);
+
+  .itemActive & { color: var(--color-primary, #2563eb); }
+}
+
+.dropdownItemDesc {
+  font-size: var(--text-sm, 11px);
+  color: var(--color-text-muted, #94a3b8);
+  margin-top: 1px;
+  display: block;
+}
+
+.dropdownItemDot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full, 9999px);
+  flex-shrink: 0;
+}
