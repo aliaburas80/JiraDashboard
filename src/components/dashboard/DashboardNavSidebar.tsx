@@ -1,0 +1,188 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import styles from './DashboardSidebarNav.module.scss';
+import type { DashboardMetrics, FlowItem } from '@/types/metrics';
+
+// ─── Chip ─────────────────────────────────────────────────────────────────────
+function Chip({ type, label }: { type: 'cc' | 'cw' | 'cg' | 'cm' | 'cn'; label: string }) {
+  const cls = type === 'cc' ? styles.chipCc : type === 'cw' ? styles.chipCw
+    : type === 'cg' ? styles.chipCg : type === 'cm' ? styles.chipCm : styles.chipCn;
+  return <span className={`${styles.chip} ${cls}`}>{label}</span>;
+}
+
+// ─── Health helpers ───────────────────────────────────────────────────────────
+function healthBandLabel(score: number): string {
+  if (score >= 90) return 'Excellent';
+  if (score >= 75) return 'Good';
+  if (score >= 60) return 'Moderate';
+  if (score >= 40) return 'At-Risk';
+  return 'Critical';
+}
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+const icons: Record<string, React.ReactNode> = {
+  home:      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>,
+  alertTri:  <><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></>,
+  monitor:   <><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></>,
+  clock:     <><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></>,
+  shield:    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>,
+  barChart:  <path d="M18 20V10M12 20V4M6 20v-6"/>,
+  circle:    <><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 010 20"/></>,
+  activity:  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>,
+  calendar:  <><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></>,
+  grid:      <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17h7m-3.5-3.5v7"/></>,
+  zap:       <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>,
+};
+
+function NavIcon({ name, active }: { name: string; active: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className={`${styles.navIcon} ${active ? styles.iconActive : styles.iconInactive}`} aria-hidden="true">
+      {icons[name]}
+    </svg>
+  );
+}
+
+// ─── Nav item (Link-based) ────────────────────────────────────────────────────
+function NavItem({ href, icon, title, meta, chip, chipType }: {
+  href: string; icon: string; title: string; meta: string;
+  chip: string; chipType: 'cc' | 'cw' | 'cg' | 'cm' | 'cn';
+}) {
+  const pathname = usePathname();
+  const active = pathname === href || pathname.startsWith(href + '/');
+
+  return (
+    <Link
+      href={href}
+      aria-current={active ? 'page' : undefined}
+      className={`${styles.navItem} ${active ? styles.navItemActive : ''}`}
+      style={{ textDecoration: 'none', border: 'none', background: 'none', cursor: 'pointer' }}
+    >
+      {active && <span className={styles.activeIndicator} />}
+      <NavIcon name={icon} active={active} />
+      <div style={{ minWidth: 0, flex: 1, textAlign: 'left' }}>
+        <span className={`${styles.navTextTitle} ${active ? styles.navTextActive : styles.navTextInactive}`}>
+          {title}
+        </span>
+        <span className={styles.navTextMeta}>{meta}</span>
+      </div>
+      <Chip type={chipType} label={chip} />
+    </Link>
+  );
+}
+
+function GroupLabel({ label }: { label: string }) {
+  return <span className={styles.groupLabel}>{label}</span>;
+}
+
+// ─── Props ────────────────────────────────────────────────────────────────────
+interface Props {
+  metrics: DashboardMetrics | null;
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+export default function DashboardNavSidebar({ metrics }: Props) {
+  const flow = metrics?.flow;
+  const storyPoints = metrics?.storyPoints;
+  const healthScore = metrics?.healthScore ?? 0;
+  const completionRate = metrics?.completionRate ?? 0;
+  const criticalCount = flow?.critical ?? 0;
+  const cycleTimeDays = flow?.averageCycleTimeDays ?? 0;
+  const prediction = metrics?.prediction;
+  const estimatedDone = prediction?.complete
+    ? 'Done ✅'
+    : (prediction?.predictedDate ?? (prediction?.daysRemaining != null ? `~${prediction.daysRemaining}d` : 'N/A'));
+
+  const flowItems: FlowItem[] = metrics?.flow?.items ?? [];
+  const DONE_STATUSES = ['done', 'closed', 'resolved'];
+  const overdueCount = flowItems.filter(i => Number(i.ageDays) > 10 && !DONE_STATUSES.includes(String(i.status ?? '').trim().toLowerCase())).length;
+  const orphanCount = flowItems.filter(i => i.isOrphan).length;
+  const dataQualityScore: number = (metrics as any)?.dataQuality?.score ?? 80;
+  const quarters = (metrics?.quarters as any[]) ?? [];
+  const epics = (metrics?.epics as any[]) ?? [];
+  const criticalEpics = epics.filter((e: any) => (e.critical ?? 0) > 0).length;
+  const smartActionsLen = (() => {
+    if (!metrics) return 0;
+    let count = 0;
+    const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
+    const critBlockers = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('block'));
+    if (critBlockers.length) count++;
+    const staleActive = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('in progress over 14'));
+    if (staleActive.length) count++;
+    const capacity = ((metrics?.capacity || []) as any[]);
+    const overloaded = capacity.filter((c: any) => c.loadShare > 35);
+    if (overloaded.length && capacity.length > 2) count++;
+    if (orphanCount > 0) count++;
+    if (criticalEpics > 0) count++;
+    return Math.min(count, 5);
+  })();
+
+  const totalAttention = overdueCount + orphanCount;
+  const hband = healthBandLabel(healthScore);
+  const healthVariantClass =
+    healthScore >= 90 ? styles.healthBlockExcellent
+      : healthScore >= 75 ? styles.healthBlockGood
+      : healthScore >= 60 ? styles.healthBlockModerate
+      : healthScore >= 40 ? styles.healthBlockAtRisk
+      : styles.healthBlockCritical;
+  const progressWidth = Math.min(100, Math.max(0, healthScore));
+
+  const attentionChipType: 'cc' | 'cw' | 'cn' = totalAttention > 200 ? 'cc' : totalAttention > 50 ? 'cw' : 'cn';
+  const qualityChipType: 'cg' | 'cm' | 'cw' = dataQualityScore >= 80 ? 'cg' : dataQualityScore >= 60 ? 'cm' : 'cw';
+  const completionChipType: 'cg' | 'cw' | 'cc' = completionRate >= 70 ? 'cg' : completionRate >= 40 ? 'cw' : 'cc';
+  const kanbanColor: 'cg' | 'cw' | 'cc' = criticalCount < 100 ? 'cg' : criticalCount < 500 ? 'cw' : 'cc';
+  const scoreChipType: 'cc' | 'cw' | 'cg' = healthScore < 40 ? 'cc' : healthScore < 60 ? 'cw' : 'cg';
+  const epicChipType: 'cc' | 'cw' | 'cg' = criticalEpics > 0 ? 'cc' : epics.length > 0 ? 'cw' : 'cg';
+
+  return (
+    <aside className={styles.sidebar}>
+
+      {/* ── Health block ── */}
+      <div className={`${styles.healthBlock} ${healthVariantClass}`}>
+        <div className={styles.healthHeader}>
+          <span className={styles.healthLabel}>Health Score</span>
+          <span className={styles.healthBand}>{hband}</span>
+        </div>
+        <div className={styles.healthValue}>{healthScore}</div>
+        <div className={styles.healthProgress}>
+          <div
+            className={styles.healthProgressFill}
+            style={{ width: `${progressWidth}%` }}
+          />
+        </div>
+        <div className={styles.vitalsGrid}>
+          {[
+            { label: 'Complete', value: `${completionRate}%`, valueClass: completionRate >= 70 ? styles.healthPositive : styles.healthWarning },
+            { label: 'Critical', value: criticalCount.toLocaleString(), valueClass: styles.healthDanger },
+            { label: 'Cycle', value: `${cycleTimeDays}d`, valueClass: cycleTimeDays > 14 ? styles.healthWarning : styles.healthPositive },
+            { label: 'Est. done', value: estimatedDone, valueClass: styles.healthNeutral },
+          ].map(({ label, value, valueClass }) => (
+            <div key={label} className={styles.vitalCard}>
+              <div className={styles.vitalLabel}>{label}</div>
+              <div className={`${styles.vitalValue} ${valueClass}`}>{value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Navigation ── */}
+      <nav className={styles.navSection}>
+        <GroupLabel label="Overview" />
+        <NavItem href="/dashboard/summary"             icon="home"     title="Delivery Summary"      meta="Health · broadcast"                          chip={String(healthScore)}           chipType={scoreChipType} />
+        <NavItem href="/dashboard/priority-attention"  icon="alertTri" title="Priority Attention"    meta="Blockers · overdue"                          chip={String(totalAttention)}        chipType={attentionChipType} />
+        <NavItem href="/dashboard/key-metrics"         icon="monitor"  title="Key Metrics"           meta="6 KPI cards"                                 chip={hband}                         chipType={healthScore < 60 ? 'cw' : 'cg'} />
+        <NavItem href="/dashboard/actions"             icon="clock"    title="Smart Actions"         meta={`${smartActionsLen} recommendations`}        chip={String(smartActionsLen)}       chipType="cn" />
+        <NavItem href="/dashboard/data-quality"        icon="shield"   title="Data Quality"          meta={`${dataQualityScore}% · field check`}        chip={`${dataQualityScore}%`}        chipType={qualityChipType} />
+
+        <GroupLabel label="Delivery" />
+        <NavItem href="/dashboard/visual-analytics"    icon="barChart" title="Visual Analytics"      meta="Charts · bars"                               chip="—"                             chipType="cn" />
+        <NavItem href="/dashboard/delivery-composition" icon="circle"  title="Delivery Composition"  meta="5-segment ring"                              chip={`${completionRate}%`}          chipType={completionChipType} />
+        <NavItem href="/dashboard/delivery-controls"   icon="activity" title="Delivery Controls"     meta="Flow · points · risk"                        chip={criticalCount > 500 ? 'Degraded' : 'OK'} chipType={criticalCount > 500 ? 'cc' : 'cg'} />
+        <NavItem href="/dashboard/quarter-statistics"  icon="calendar" title="Quarter Statistics"    meta={`${quarters.length} quarters`}               chip={`${quarters.length}Q`}         chipType="cn" />
+        <NavItem href="/dashboard/kanban-health"       icon="grid"     title="Kanban Health"         meta="Board statuses"                              chip={kanbanColor === 'cg' ? 'Good' : 'Mixed'} chipType={kanbanColor} />
+        <NavItem href="/dashboard/sprint-status"       icon="zap"      title="Sprint Status"         meta={metrics?.sprint ? 'Sprint data' : 'No sprint'} chip={metrics?.sprint ? 'Active' : 'N/A'} chipType={metrics?.sprint ? 'cg' : 'cn'} />
+      </nav>
+    </aside>
+  );
+}
