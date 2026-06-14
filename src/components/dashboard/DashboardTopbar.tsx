@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { DC_NAV_GROUPS } from '@/components/dc-shell/navigation';
+import UserMenu from '@/components/auth/UserMenu';
 
 // Label overrides for space-constrained topbar
 const GROUP_LABEL_OVERRIDE: Record<string, string> = {
@@ -29,11 +30,10 @@ const CIRC = 40.84;
 
 interface Props {
   healthScore?: number;
-  userInitial?: string;
   onNewUpload: () => void;
 }
 
-export default function DashboardTopbar({ healthScore = 0, userInitial = 'A', onNewUpload }: Props) {
+export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props) {
   const pathname = usePathname();
   const hm = healthMeta(healthScore);
   const filled = (healthScore / 100) * CIRC;
@@ -213,15 +213,9 @@ export default function DashboardTopbar({ healthScore = 0, userInitial = 'A', on
             New Upload
           </button>
 
-          {/* User avatar */}
-          <div style={{
-            width: 28, height: 28, borderRadius: '50%',
-            background: '#2563EB',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'monospace', fontSize: 10, fontWeight: 700, color: '#fff',
-            marginLeft: 7, border: '1px solid #BFDBFE', flexShrink: 0,
-          }}>
-            {userInitial.toUpperCase()}
+          {/* User menu */}
+          <div style={{ marginLeft: 6, flexShrink: 0 }}>
+            <UserMenu />
           </div>
         </div>
       </header>

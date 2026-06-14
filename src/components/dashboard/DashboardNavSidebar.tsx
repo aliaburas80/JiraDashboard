@@ -2,8 +2,32 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import styles from './DashboardSidebarNav.module.scss';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
+
+// Which roles can see each dashboard sub-route
+const ROUTE_ACCESS: Record<string, string[]> = {
+  '/dashboard/summary':             ['admin','scrum_master','product_owner','manager','c_level','user'],
+  '/dashboard/priority-attention':  ['admin','scrum_master','manager','user'],
+  '/dashboard/key-metrics':         ['admin','scrum_master','product_owner','manager','c_level','user'],
+  '/dashboard/actions':             ['admin','scrum_master','manager','user'],
+  '/dashboard/data-quality':        ['admin','scrum_master','product_owner','manager','user'],
+  '/dashboard/visual-analytics':    ['admin','scrum_master','manager','user'],
+  '/dashboard/delivery-composition':['admin','product_owner','manager','c_level','user'],
+  '/dashboard/delivery-controls':   ['admin','scrum_master','manager','user'],
+  '/dashboard/quarter-statistics':  ['admin','product_owner','manager','c_level','user'],
+  '/dashboard/kanban-health':       ['admin','scrum_master','manager','user'],
+  '/dashboard/sprint-status':       ['admin','scrum_master','manager','user'],
+  '/dashboard/ownership':           ['admin','scrum_master','manager','user'],
+  '/dashboard/labels':              ['admin','product_owner','user'],
+  '/dashboard/epic-readiness':      ['admin','product_owner','user'],
+  '/dashboard/flow-health':         ['admin','scrum_master','manager','user'],
+};
+
+function canSee(href: string, role: string): boolean {
+  return ROUTE_ACCESS[href]?.includes(role) ?? true;
+}
 
 // ─── Chip ─────────────────────────────────────────────────────────────────────
 function Chip({ type, label }: { type: 'cc' | 'cw' | 'cg' | 'cm' | 'cn'; label: string }) {
@@ -87,6 +111,17 @@ interface Props {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function DashboardNavSidebar({ metrics }: Props) {
+  const [userRole, setUserRole] = useState<string>('user');
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.role) setUserRole(data.role); })
+      .catch(() => {});
+  }, []);
+
+  const see = (href: string) => canSee(href, userRole);
+
   const flow = metrics?.flow;
   const storyPoints = metrics?.storyPoints;
   const healthScore = metrics?.healthScore ?? 0;
@@ -173,25 +208,25 @@ export default function DashboardNavSidebar({ metrics }: Props) {
       {/* ── Navigation ── */}
       <nav className={styles.navSection}>
         <GroupLabel label="Overview" />
-        <NavItem href="/dashboard/summary"             icon="home"     title="Delivery Summary"      meta="Health · broadcast"                          chip={String(healthScore)}           chipType={scoreChipType} />
-        <NavItem href="/dashboard/priority-attention"  icon="alertTri" title="Priority Attention"    meta="Blockers · overdue"                          chip={String(totalAttention)}        chipType={attentionChipType} />
-        <NavItem href="/dashboard/key-metrics"         icon="monitor"  title="Key Metrics"           meta="6 KPI cards"                                 chip={hband}                         chipType={healthScore < 60 ? 'cw' : 'cg'} />
-        <NavItem href="/dashboard/actions"             icon="clock"    title="Smart Actions"         meta={`${smartActionsLen} recommendations`}        chip={String(smartActionsLen)}       chipType="cn" />
-        <NavItem href="/dashboard/data-quality"        icon="shield"   title="Data Quality"          meta={`${dataQualityScore}% · field check`}        chip={`${dataQualityScore}%`}        chipType={qualityChipType} />
+        {see('/dashboard/summary')            && <NavItem href="/dashboard/summary"             icon="home"     title="Delivery Summary"      meta="Health · broadcast"                          chip={String(healthScore)}           chipType={scoreChipType} />}
+        {see('/dashboard/priority-attention') && <NavItem href="/dashboard/priority-attention"  icon="alertTri" title="Priority Attention"    meta="Blockers · overdue"                          chip={String(totalAttention)}        chipType={attentionChipType} />}
+        {see('/dashboard/key-metrics')        && <NavItem href="/dashboard/key-metrics"         icon="monitor"  title="Key Metrics"           meta="6 KPI cards"                                 chip={hband}                         chipType={healthScore < 60 ? 'cw' : 'cg'} />}
+        {see('/dashboard/actions')            && <NavItem href="/dashboard/actions"             icon="clock"    title="Smart Actions"         meta={`${smartActionsLen} recommendations`}        chip={String(smartActionsLen)}       chipType="cn" />}
+        {see('/dashboard/data-quality')       && <NavItem href="/dashboard/data-quality"        icon="shield"   title="Data Quality"          meta={`${dataQualityScore}% · field check`}        chip={`${dataQualityScore}%`}        chipType={qualityChipType} />}
 
         <GroupLabel label="Delivery" />
-        <NavItem href="/dashboard/visual-analytics"    icon="barChart" title="Visual Analytics"      meta="Charts · bars"                               chip="—"                             chipType="cn" />
-        <NavItem href="/dashboard/delivery-composition" icon="circle"  title="Delivery Composition"  meta="5-segment ring"                              chip={`${completionRate}%`}          chipType={completionChipType} />
-        <NavItem href="/dashboard/delivery-controls"   icon="activity" title="Delivery Controls"     meta="Flow · points · risk"                        chip={criticalCount > 500 ? 'Degraded' : 'OK'} chipType={criticalCount > 500 ? 'cc' : 'cg'} />
-        <NavItem href="/dashboard/quarter-statistics"  icon="calendar" title="Quarter Statistics"    meta={`${quarters.length} quarters`}               chip={`${quarters.length}Q`}         chipType="cn" />
-        <NavItem href="/dashboard/kanban-health"       icon="grid"     title="Kanban Health"         meta="Board statuses"                              chip={kanbanColor === 'cg' ? 'Good' : 'Mixed'} chipType={kanbanColor} />
-        <NavItem href="/dashboard/sprint-status"       icon="zap"      title="Sprint Status"         meta={metrics?.sprint ? 'Sprint data' : 'No sprint'} chip={metrics?.sprint ? 'Active' : 'N/A'} chipType={metrics?.sprint ? 'cg' : 'cn'} />
+        {see('/dashboard/visual-analytics')     && <NavItem href="/dashboard/visual-analytics"    icon="barChart" title="Visual Analytics"      meta="Charts · bars"                               chip="—"                             chipType="cn" />}
+        {see('/dashboard/delivery-composition') && <NavItem href="/dashboard/delivery-composition" icon="circle"  title="Delivery Composition"  meta="5-segment ring"                              chip={`${completionRate}%`}          chipType={completionChipType} />}
+        {see('/dashboard/delivery-controls')    && <NavItem href="/dashboard/delivery-controls"   icon="activity" title="Delivery Controls"     meta="Flow · points · risk"                        chip={criticalCount > 500 ? 'Degraded' : 'OK'} chipType={criticalCount > 500 ? 'cc' : 'cg'} />}
+        {see('/dashboard/quarter-statistics')   && <NavItem href="/dashboard/quarter-statistics"  icon="calendar" title="Quarter Statistics"    meta={`${quarters.length} quarters`}               chip={`${quarters.length}Q`}         chipType="cn" />}
+        {see('/dashboard/kanban-health')        && <NavItem href="/dashboard/kanban-health"       icon="grid"     title="Kanban Health"         meta="Board statuses"                              chip={kanbanColor === 'cg' ? 'Good' : 'Mixed'} chipType={kanbanColor} />}
+        {see('/dashboard/sprint-status')        && <NavItem href="/dashboard/sprint-status"       icon="zap"      title="Sprint Status"         meta={metrics?.sprint ? 'Sprint data' : 'No sprint'} chip={metrics?.sprint ? 'Active' : 'N/A'} chipType={metrics?.sprint ? 'cg' : 'cn'} />}
 
         <GroupLabel label="Deep Dive" />
-        <NavItem href="/dashboard/ownership"       icon="users"  title="Ownership & Capacity" meta="Team load · epics"                              chip={(() => { const cap = (metrics?.capacity as any[]) ?? []; const sk = cap.filter((c: any) => c.loadShare > 35); return sk.length > 0 ? 'Skewed' : 'Even'; })()}  chipType={(() => { const cap = (metrics?.capacity as any[]) ?? []; return cap.some((c: any) => c.loadShare > 35) ? 'cw' : 'cg'; })()} />
-        <NavItem href="/dashboard/labels"          icon="tag"    title="Labels & Types"        meta={`${(metrics?.labels as any)?.uniqueLabels ?? 0} labels`}  chip="—"  chipType="cn" />
-        <NavItem href="/dashboard/epic-readiness"  icon="layers" title="Epic Readiness"        meta={`${(metrics?.epics as any[])?.length ?? 0} epics · ${epicChipType === 'cc' ? criticalEpics + ' critical' : 'on track'}`}  chip={criticalEpics > 0 ? 'Critical' : 'Good'}  chipType={epicChipType} />
-        <NavItem href="/dashboard/flow-health"     icon="list"   title="Flow Health Table"     meta={`${flowItems.length.toLocaleString()} items · filters`}  chip="All"  chipType="cn" />
+        {see('/dashboard/ownership')      && <NavItem href="/dashboard/ownership"       icon="users"  title="Ownership & Capacity" meta="Team load · epics"                              chip={(() => { const cap = (metrics?.capacity as any[]) ?? []; const sk = cap.filter((c: any) => c.loadShare > 35); return sk.length > 0 ? 'Skewed' : 'Even'; })()}  chipType={(() => { const cap = (metrics?.capacity as any[]) ?? []; return cap.some((c: any) => c.loadShare > 35) ? 'cw' : 'cg'; })()} />}
+        {see('/dashboard/labels')         && <NavItem href="/dashboard/labels"          icon="tag"    title="Labels & Types"        meta={`${(metrics?.labels as any)?.uniqueLabels ?? 0} labels`}  chip="—"  chipType="cn" />}
+        {see('/dashboard/epic-readiness') && <NavItem href="/dashboard/epic-readiness"  icon="layers" title="Epic Readiness"        meta={`${(metrics?.epics as any[])?.length ?? 0} epics · ${epicChipType === 'cc' ? criticalEpics + ' critical' : 'on track'}`}  chip={criticalEpics > 0 ? 'Critical' : 'Good'}  chipType={epicChipType} />}
+        {see('/dashboard/flow-health')    && <NavItem href="/dashboard/flow-health"     icon="list"   title="Flow Health Table"     meta={`${flowItems.length.toLocaleString()} items · filters`}  chip="All"  chipType="cn" />}
       </nav>
     </aside>
   );
