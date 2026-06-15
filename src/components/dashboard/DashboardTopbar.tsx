@@ -148,7 +148,6 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
                 aria-expanded={isOpen}
                 className={clsx(styles.navGroupBtn, { [styles.active]: active, [styles.open]: isOpen })}
               >
-                {active && <span className={styles.navGroupActiveBar} aria-hidden="true" />}
                 {label}
                 <svg
                   width="9" height="9" viewBox="0 0 24 24"

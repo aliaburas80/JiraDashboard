@@ -15,8 +15,9 @@
   left: 0;
   right: 0;
   z-index: var(--z-header, 500);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 4%);
+  font-family: var(--font-jakarta, 'Inter', sans-serif);
+  gap: var(--space-2, 8px);
 }
 
 // ── Logo ───────────────────────────────────────────────────────────────────────
@@ -62,51 +63,49 @@
 .rightNav {
   display: flex;
   align-items: center;
+  gap: 2px;
   height: var(--header-height, 52px);
 }
 
-// ── Nav group button ───────────────────────────────────────────────────────────
+// ── Nav group button ─────────────────────────────────────────────────────────
+// Active state uses pill background (same as AppShell) — no underline bar.
 .navGroupBtn {
-  font-size: var(--text-base, 12px);
-  font-weight: 400;
-  color: var(--color-text-secondary, #64748b);
-  padding: 0 10px;
-  height: 100%;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--space-1, 4px);
+  padding: 6px var(--space-3, 12px);
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--text-md, 13px);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: var(--color-text-secondary, #64748b);
   white-space: nowrap;
-  position: relative;
   font-family: inherit;
-  transition: color var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  &:hover { background: var(--color-subtle, #f1f5f9); }
 
   &:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
-    outline-offset: -2px;
+    outline-offset: 2px;
   }
 
-  &.active,
-  &.open {
-    color: var(--color-primary, #2563eb);
-    font-weight: 600;
+  &.active {
+    background: var(--color-primary, #2563eb);
+    color: #fff;
   }
-}
 
-.navGroupActiveBar {
-  position: absolute;
-  bottom: 0;
-  left: 7px;
-  right: 7px;
-  height: 2px;
-  background: var(--color-primary, #2563eb);
-  border-radius: 2px 2px 0 0;
+  &.open:not(.active) {
+    background: var(--color-subtle, #f1f5f9);
+    color: var(--color-text-primary, #0f172a);
+  }
 }
 
 .navGroupChevron {
-  opacity: 0.6;
+  width: 0.875rem;
+  height: 0.875rem;
   transition: transform var(--transition-fast);
 
   &.open { transform: rotate(180deg); }
@@ -153,24 +152,24 @@
   margin-top: 1px;
 }
 
-// ── Upload button ──────────────────────────────────────────────────────────────
+// ── Upload button — outlined red, matches AppShell ────────────────────────────
 .uploadBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: var(--color-primary, #2563eb);
-  color: #fff;
-  font-size: var(--text-sm, 11px);
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 7px;
-  border: none;
-  margin-left: var(--space-2, 8px);
+  gap: var(--space-1-5, 6px);
+  padding: 6px var(--space-3, 12px);
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--text-xs, 10px);
+  font-weight: 700;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
   cursor: pointer;
   font-family: inherit;
-  transition: background var(--transition-fast);
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 
-  &:hover { background: var(--color-primary-hover, #1d4ed8); }
+  &:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
   &:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
     outline-offset: 2px;
@@ -198,7 +197,7 @@
   padding: 6px;
   min-width: 220px;
   max-width: 280px;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--font-jakarta, 'Inter', sans-serif);
 }
 
 .dropdownItem {
