@@ -2,7 +2,6 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 
 import { useState, useEffect, useCallback } from 'react';
-import AppShell from '@/components/layout/AppShell';
 
 // ─── Bash syntax highlighter ──────────────────────────────────────────────────
 
@@ -1250,8 +1249,7 @@ export default function DeveloperPage() {
   const groups = Array.from(new Set(SECTIONS.map(s => s.group)));
 
   return (
-    <AppShell showNav>
-      <div className="flex -mx-4 sm:-mx-6 min-h-[calc(100vh-8rem)]">
+    <div className="flex w-full min-h-[calc(100vh-var(--header-height,52px))]">
 
         {/* Mobile toggle */}
         <button
@@ -1266,8 +1264,8 @@ export default function DeveloperPage() {
         {/* Sidebar */}
         <aside
           className={[
-            'fixed lg:sticky lg:top-0',
-            'top-14 bottom-0 left-0',
+            'fixed lg:sticky lg:top-[52px]',
+            'top-[52px] bottom-0 left-0',
             'z-30',
             'w-60 shrink-0',
             'overflow-y-auto',
@@ -1646,7 +1644,6 @@ export default function DeveloperPage() {
           )}
           </>} {/* end !globalSearch.trim() */}
         </main>
-      </div>
-    </AppShell>
+    </div>
   );
 }
