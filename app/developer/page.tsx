@@ -2,6 +2,7 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 
 import { useState, useEffect, useCallback } from 'react';
+import styles from './page.module.scss';
 
 // ─── Bash syntax highlighter ──────────────────────────────────────────────────
 
@@ -1249,13 +1250,12 @@ export default function DeveloperPage() {
   const groups = Array.from(new Set(SECTIONS.map(s => s.group)));
 
   return (
-    <div className="flex w-full min-h-[calc(100vh-var(--header-height,52px))]">
+    <div className={`flex w-full min-h-[calc(100vh-var(--header-height,52px))] ${styles.wiki}`}>
 
         {/* Mobile toggle */}
         <button
           onClick={() => setNavOpen(v => !v)}
-          className="lg:hidden fixed bottom-5 right-5 z-50 w-12 h-12 rounded-full text-white shadow-xl flex items-center justify-center font-bold"
-          style={{ background: 'var(--dc-acc, #E85D12)' }}
+          className={`lg:hidden fixed bottom-5 right-5 z-50 w-12 h-12 rounded-full shadow-xl flex items-center justify-center font-bold ${styles.mobileToggle}`}
           aria-label="Toggle navigation"
         >
           {navOpen ? '✕' : '☰'}
@@ -1266,16 +1266,15 @@ export default function DeveloperPage() {
           className={[
             'fixed lg:sticky lg:top-[52px]',
             'top-[52px] bottom-0 left-0',
-            'z-30',
-            'w-60 shrink-0',
+            'z-30 w-60 shrink-0',
             'overflow-y-auto',
             'px-2 py-4 flex flex-col gap-0.5',
             'transition-transform duration-200',
+            styles.sidebar,
             navOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           ].join(' ')}
-          style={{ background: 'rgba(5,5,5,0.95)', borderRight: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
         >
-          <div className="px-3 pb-3 mb-2" style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+          <div className="px-3 pb-3 mb-2" style={{ borderBottom: '1px solid var(--color-border, #e2e8f0)' }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-p1, #F2F2F2)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Developer Portal</p>
             <p style={{ fontSize: 11, color: 'var(--dc-p2, #909090)', marginTop: 2 }}>Delivery Clarity v4.6</p>
             {/* Global search */}
@@ -1285,13 +1284,7 @@ export default function DeveloperPage() {
                 value={globalSearch}
                 onChange={e => setGlobalSearch(e.target.value)}
                 placeholder="Search portal…"
-                className="w-full px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-[rgba(232,93,18,0.4)]"
-                style={{
-                  background: 'var(--dc-s2, #1E1E1E)',
-                  border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
-                  borderRadius: 8,
-                  color: 'var(--dc-p1, #F2F2F2)',
-                }}
+                className={`w-full px-3 py-1.5 text-xs ${styles.searchInput}`}
               />
               {globalSearch && (
                 <button type="button" onClick={() => setGlobalSearch('')}
@@ -1310,12 +1303,10 @@ export default function DeveloperPage() {
                   <button
                     key={s.id}
                     onClick={() => go(s.id)}
-                    className="w-full text-left py-2 rounded-lg text-xs font-medium mb-0.5 transition-all"
+                    className={`w-full text-left py-2 rounded-lg text-xs font-medium mb-0.5 transition-all ${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
                     style={{
-                      background: isActive ? 'rgba(232,93,18,0.11)' : 'transparent',
-                      color: isActive ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p2, #909090)',
-                      borderLeft: isActive ? '2px solid var(--dc-acc, #E85D12)' : '2px solid transparent',
-                      paddingLeft: isActive ? 10 : 12,
+                      borderLeft: '2px solid transparent',
+                      paddingLeft: 12,
                       paddingRight: 12,
                     }}
                   >
@@ -1326,7 +1317,7 @@ export default function DeveloperPage() {
             </div>
           ))}
 
-          <div className="mt-auto pt-3 px-3" style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+          <div className="mt-auto pt-3 px-3" style={{ borderTop: '1px solid var(--color-border, #e2e8f0)' }}>
             <p style={{ fontSize: 10, color: 'var(--dc-p3, #505050)' }}>© 2026 Ali Abu Ras</p>
             <p className="truncate" style={{ fontSize: 10, color: 'var(--dc-p3, #505050)' }}>aliaburas80@gmail.com</p>
           </div>
@@ -1514,7 +1505,7 @@ export default function DeveloperPage() {
                     ).map(p => (
                       <tr key={p.name}
                         style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.025)')}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--dc-s3)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <td style={{ padding: '8px 12px', fontFamily: 'var(--font-mono,monospace)', fontWeight: 700, color: 'var(--dc-acc2, #FF8A4C)', whiteSpace: 'nowrap' }}>{p.name}</td>
@@ -1573,7 +1564,7 @@ export default function DeveloperPage() {
                       style={{ background: 'var(--dc-s2, #1E1E1E)', border: isExpanded ? '1px solid rgba(232,93,18,0.2)' : '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
                       <button type="button" onClick={() => setExpandedCalc(isExpanded ? null : calc.name)}
                         className="w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors"
-                        onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = 'rgba(255,255,255,0.025)'; }}
+                        onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = 'var(--dc-s3)'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
