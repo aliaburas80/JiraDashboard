@@ -1,0 +1,24 @@
+// ─── Admin layout shell — mirrors app/dashboard/layout.module.scss ────────────
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-page, var(--dc-bg, #f8fafc));
+  font-family: var(--font-jakarta, var(--font-inter, 'Inter', sans-serif));
+}
+
+// Body sits below the fixed topbar; sidebar and main live inside it.
+.body {
+  display: flex;
+  margin-top: var(--header-height, 52px);
+  min-height: calc(100vh - var(--header-height, 52px));
+}
+
+// Main scrollable content area, offset by the fixed admin sidebar.
+.main {
+  margin-left: var(--sidebar-width, 228px);
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-6, 24px);
+}

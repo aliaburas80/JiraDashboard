@@ -4,7 +4,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AppShell from '@/components/layout/AppShell';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -108,17 +107,13 @@ export default function DiagnosticsPage() {
   }, [router, refresh]);
 
   if (loading) return (
-    <AppShell showNav>
-      <div className="flex items-center justify-center h-64 text-slate-400 animate-pulse text-sm">Loading diagnostics…</div>
-    </AppShell>
+    <div className="flex items-center justify-center h-64 text-slate-400 animate-pulse text-sm">Loading diagnostics…</div>
   );
 
   if (error || !data) return (
-    <AppShell showNav>
-      <div className="max-w-4xl mx-auto py-8">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-700">{error || 'No data available.'}</div>
-      </div>
-    </AppShell>
+    <div className="max-w-4xl mx-auto py-8">
+      <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-700">{error || 'No data available.'}</div>
+    </div>
   );
 
   const opsColor = data.opsScore >= 80 ? '#16a34a' : data.opsScore >= 60 ? '#f59e0b' : '#dc2626';
@@ -133,9 +128,8 @@ export default function DiagnosticsPage() {
   ];
 
   return (
-    <AppShell showNav>
-      <AdminConsoleLayout
-        title="System Diagnostics"
+    <AdminConsoleLayout
+      title="System Diagnostics"
         description={`Live system health snapshot. Generated ${ago(data.generatedAt)}.`}
         stats={diagnosticsStats}
         statusLabel={opsBand}
@@ -305,7 +299,6 @@ export default function DiagnosticsPage() {
           ))}
         </div>
 
-      </AdminConsoleLayout>
-    </AppShell>
+    </AdminConsoleLayout>
   );
 }

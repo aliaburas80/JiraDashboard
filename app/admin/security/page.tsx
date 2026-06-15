@@ -2,7 +2,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AppShell from '@/components/layout/AppShell';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import type { SecurityReport, SecurityCheck, CheckStatus, CheckSeverity } from '@/services/settings/securityCheck.service';
 
@@ -91,7 +90,7 @@ export default function SecurityPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 animate-pulse" style={{ color: 'var(--dc-p3, #505050)' }}>Running security checks…</div></AppShell>;
+  if (loading) return <div className="flex items-center justify-center h-64 animate-pulse" style={{ color: 'var(--dc-p3, #505050)' }}>Running security checks…</div>;
 
   const filtered = report?.checks.filter(c =>
     (catFilter === 'all' || c.category === catFilter) &&
@@ -108,9 +107,8 @@ export default function SecurityPage() {
   ] : [];
 
   return (
-    <AppShell showNav>
-      <AdminConsoleLayout
-        title="Security Checklist"
+    <AdminConsoleLayout
+      title="Security Checklist"
         description="Production security assessment — automated checks and manual review items."
         stats={securityStats}
         statusLabel={report?.isProductionReady ? 'Production ready' : 'Review required'}
@@ -193,7 +191,6 @@ export default function SecurityPage() {
             </>
           );
         })()}
-      </AdminConsoleLayout>
-    </AppShell>
+    </AdminConsoleLayout>
   );
 }

@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import AppShell from '@/components/layout/AppShell';
 import {
   AdminConsoleLayout,
   ADMINISTRATION_NAV,
@@ -279,9 +278,8 @@ export default function AdminThemePage() {
   ];
 
   return (
-    <AppShell showNav>
-      <AdminConsoleLayout
-        title="Theme & Branding"
+    <AdminConsoleLayout
+      title="Theme & Branding"
         description="Choose a colour palette, upload your logo, and customise the app name. Changes apply instantly and persist for all sessions on this device."
         stats={stats}
         statusLabel="Live preview"
@@ -551,7 +549,6 @@ export default function AdminThemePage() {
             ))}
           </div>
         </section>
-      </AdminConsoleLayout>
-    </AppShell>
+    </AdminConsoleLayout>
   );
 }

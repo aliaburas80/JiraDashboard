@@ -2,7 +2,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import AppShell from '@/components/layout/AppShell';
 import DataRetentionSettings from '@/components/admin/DataRetentionSettings';
 import HealthThresholdSettings from '@/components/admin/HealthThresholdSettings';
 import OrphanRulesSettings from '@/components/admin/OrphanRulesSettings';
@@ -1344,7 +1343,7 @@ export default function AdminSettingsPage() {
     return data;
   }
 
-  if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading settings…</div></AppShell>;
+  if (loading) return <div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading settings…</div>;
 
   const selectedTab = activeTabMeta(tab);
   const statsCards = buildSettingsStats({ tab, userSummary, settings, stats, thresholds, orphanRules, backupFiles });
@@ -1357,8 +1356,7 @@ export default function AdminSettingsPage() {
   }));
 
   return (
-    <AppShell showNav>
-      <AdminConsoleLayout
+    <AdminConsoleLayout
         title={selectedTab.label}
         description={selectedTab.description}
         navItems={settingsNavItems}
@@ -1396,7 +1394,6 @@ export default function AdminSettingsPage() {
             <ClearLocalDataPanel />
           )}
         </section>
-      </AdminConsoleLayout>
-    </AppShell>
+    </AdminConsoleLayout>
   );
 }

@@ -2,7 +2,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AppShell from '@/components/layout/AppShell';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 
 function healthChipClass(score: number): string {
@@ -36,7 +35,7 @@ export default function AdminLogsPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 animate-pulse" style={{ color: 'var(--dc-p3, #505050)' }}>Loading logs…</div></AppShell>;
+  if (loading) return <div className="flex items-center justify-center h-64 animate-pulse" style={{ color: 'var(--dc-p3, #505050)' }}>Loading logs…</div>;
   const successfulLogs = logs.filter(log => log.status === 'success').length;
   const failedLogs = logs.length - successfulLogs;
   const uniqueUsers = new Set(logs.map(log => log.user?.email).filter(Boolean)).size;
@@ -51,9 +50,8 @@ export default function AdminLogsPage() {
   ];
 
   return (
-    <AppShell showNav>
-      <AdminConsoleLayout
-        title="Import Logs"
+    <AdminConsoleLayout
+      title="Import Logs"
         description={`${logs.length} total import log${logs.length !== 1 ? 's' : ''} across all users.`}
         stats={logStats}
         statusLabel="Operational"
@@ -112,7 +110,6 @@ export default function AdminLogsPage() {
           </table>
         </div>
       </div>
-      </AdminConsoleLayout>
-    </AppShell>
+    </AdminConsoleLayout>
   );
 }

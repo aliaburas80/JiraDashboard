@@ -2,7 +2,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import AppShell from '@/components/layout/AppShell';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import { ASSIGNABLE_ROLES, roleLabel, type AppRole } from '@/lib/roles';
 import type { ManagedUser } from '@/lib/adminConsole';
@@ -113,16 +112,13 @@ export default function AdminUsersPage() {
   ];
 
   if (loading) return (
-    <AppShell showNav>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 240, color: 'var(--dc-p3,#505050)' }}>
-        Loading users…
-      </div>
-    </AppShell>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 240, color: 'var(--dc-p3,#505050)' }}>
+      Loading users…
+    </div>
   );
 
   return (
-    <AppShell showNav>
-      <AdminConsoleLayout
+    <AdminConsoleLayout
         title="User Management"
         description="Manage accounts, roles, and access for all users in the system."
         stats={stats}
@@ -390,7 +386,6 @@ export default function AdminUsersPage() {
             </div>
           </div>
         )}
-      </AdminConsoleLayout>
-    </AppShell>
+    </AdminConsoleLayout>
   );
 }
