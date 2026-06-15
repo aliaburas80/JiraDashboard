@@ -208,7 +208,6 @@ export default function DashboardNavSidebar({ metrics }: Props) {
       {/* ── Navigation ── */}
       <nav className={styles.navSection}>
         <GroupLabel label="Overview" />
-        {see('/dashboard/summary')            && <NavItem href="/dashboard/summary"             icon="home"     title="Delivery Summary"      meta="Health · broadcast"                          chip={String(healthScore)}           chipType={scoreChipType} />}
         {see('/dashboard/priority-attention') && <NavItem href="/dashboard/priority-attention"  icon="alertTri" title="Priority Attention"    meta="Blockers · overdue"                          chip={String(totalAttention)}        chipType={attentionChipType} />}
         {see('/dashboard/key-metrics')        && <NavItem href="/dashboard/key-metrics"         icon="monitor"  title="Key Metrics"           meta="6 KPI cards"                                 chip={hband}                         chipType={healthScore < 60 ? 'cw' : 'cg'} />}
         {see('/dashboard/actions')            && <NavItem href="/dashboard/actions"             icon="clock"    title="Smart Actions"         meta={`${smartActionsLen} recommendations`}        chip={String(smartActionsLen)}       chipType="cn" />}

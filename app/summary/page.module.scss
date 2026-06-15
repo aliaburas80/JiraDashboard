@@ -1,221 +1,128 @@
-// ── Health banner ─────────────────────────────────────────────────────────────
-// --banner-bg / --banner-border are set via CSS custom props from page.tsx
-// because they are data-driven (depend on health band at runtime).
-.healthBanner {
+// ─── Delivery Summary standalone page styles ──────────────────────────────────
+// Used at /summary (AppShell context). AppShell.main handles horizontal padding.
+
+.pageContent {
+  padding-bottom: var(--space-12, 48px);
+}
+
+// 4-column KPI grid.
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: var(--space-5, 20px);
+
+  @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+// Alert chips row.
+.alertStrip {
   display: flex;
+  gap: var(--space-2, 8px);
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-5, 20px);
-  border-radius: var(--radius-xl, 12px);
-  border: 1px solid var(--banner-border, var(--color-border));
-  background: var(--banner-bg, var(--color-subtle));
-  padding: var(--space-5, 20px) var(--space-6, 24px);
-  margin-bottom: var(--space-6, 24px);
-  box-shadow: var(--shadow-card);
-  animation: cardIn 300ms var(--ease-back, cubic-bezier(.34,1.56,.64,1)) both;
+  margin-bottom: var(--space-5, 20px);
 }
 
-// --ring-color is data-driven (health band color).
-.healthCircle {
-  position: relative;
+.alertChip {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-full, 9999px);
-  border: 4px solid var(--ring-color, var(--color-border));
-  flex-shrink: 0;
-  background: var(--color-surface);
-}
-
-// --score-color is data-driven (health band text color).
-.healthScore {
-  font-size: var(--text-2xl, 20px);
-  font-weight: 900;
-  line-height: 1;
-  color: var(--score-color, var(--color-text-primary));
-}
-
-.healthScoreDenom {
-  font-size: var(--text-2xs, 9px);
-  font-weight: 700;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-top: 2px;
-}
-
-.healthMeta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-  flex: 1;
-}
-
-.healthBand {
-  font-size: var(--text-lg, 14px);
-  font-weight: 900;
-  color: var(--color-text-primary);
-  line-height: 1.3;
-}
-
-.healthDetail {
-  font-size: var(--text-base, 12px);
-  color: var(--color-text-secondary);
-}
-
-.predictionChip {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl, 12px);
-  box-shadow: var(--shadow-card);
-  padding: 10px 16px;
-  min-width: 90px;
-}
-
-.predictionComplete {
-  background: var(--color-success-soft);
-  border-color: var(--color-success-border);
-}
-
-.predictionDays {
-  font-size: var(--text-xl, 16px);
-  font-weight: 900;
-  color: var(--color-text-primary);
-}
-
-.predictionComplete .predictionDays {
-  color: var(--color-success);
-}
-
-.predictionLabel {
-  font-size: var(--text-2xs, 9px);
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-align: center;
-  line-height: 1.4;
-  margin-top: 2px;
-}
-
-.predictionComplete .predictionLabel {
-  color: var(--color-success);
-}
-
-// ── Attention cards ───────────────────────────────────────────────────────────
-.attentionCard {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1, 4px);
-  border-radius: var(--radius-xl, 12px);
-  padding: var(--space-4, 16px);
-  border-width: 1px;
-  border-style: solid;
-  box-shadow: var(--shadow-card);
-  animation: cardIn 300ms var(--ease-back) both;
-}
-
-.attentionHigh    { background: var(--color-danger-soft);  border-color: var(--color-danger-border);  }
-.attentionMedium  { background: var(--color-warning-soft); border-color: var(--color-warning-border); }
-.attentionNeutral { background: var(--color-subtle);        border-color: var(--color-border);          }
-
-.attentionHeader {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2, 8px);
-}
-
-.attentionCount {
-  font-size: var(--text-2xl, 20px);
-  font-weight: 900;
-  line-height: 1;
-}
-
-.attentionHigh    .attentionCount { color: var(--color-danger-strong); }
-.attentionMedium  .attentionCount { color: var(--color-warning); }
-.attentionNeutral .attentionCount { color: var(--color-text-secondary); }
-
-.attentionLabel {
-  font-size: var(--text-base, 12px);
-  font-weight: 700;
-}
-
-.attentionHigh    .attentionLabel { color: var(--color-danger-strong); }
-.attentionMedium  .attentionLabel { color: var(--color-warning); }
-.attentionNeutral .attentionLabel { color: var(--color-text-secondary); }
-
-.attentionDetail {
-  font-size: var(--text-xs, 10px);
-  color: var(--color-text-secondary);
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.attentionKey {
-  font-family: var(--font-mono);
-  font-weight: 700;
-}
-
-// ── Action toolbar ────────────────────────────────────────────────────────────
-.actionToolbar {
-  display: inline-flex;
-  align-items: center;
-  overflow-x: auto;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full, 9999px);
-  padding: var(--space-1, 4px);
-  box-shadow: var(--shadow-toolbar);
-  gap: var(--space-2, 8px);
-}
-
-.actionButton {
-  display: inline-flex;
   align-items: center;
   gap: 6px;
-  border-radius: var(--radius-full, 9999px);
-  padding: 7px 14px;
-  font-size: var(--text-base, 12px);
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  border: none;
-  background: none;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm, 7px);
+  font-size: var(--text-sm, 11px);
+  font-weight: 600;
+  border: 1px solid;
+}
 
-  &:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
-    outline-offset: 2px;
+.alertChipBlocked {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger-strong);
+}
+
+.alertChipOverdue {
+  background: var(--color-warning-soft);
+  border-color: var(--color-warning-border);
+  color: var(--color-warning);
+}
+
+.alertChipOrphan {
+  background: var(--color-info-soft);
+  border-color: rgb(186 230 253 / 100%);
+  color: #0369a1;
+}
+
+// Smart Actions list.
+.actionList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.actionRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-top: var(--space-3, 12px);
+  border-top: 1px solid var(--color-subtle);
+  margin-top: var(--space-3, 12px);
+
+  &:first-child {
+    padding-top: 0;
+    border-top: none;
+    margin-top: 0;
   }
 }
 
-.actionButtonNeutral { color: var(--color-text-secondary); &:hover { color: var(--color-text-primary); background: var(--color-subtle); } }
-.actionButtonGreen   { color: var(--color-success);        &:hover { color: var(--color-success); background: var(--color-success-soft); } }
-.actionButtonPurple  { color: #7c3aed;                     &:hover { color: #6d28d9; background: rgb(124 58 237 / 10%); } }
-.actionButtonBlue    { color: var(--color-primary);        &:hover { color: var(--color-primary-hover); background: var(--color-primary-soft); } }
-.actionButtonTeal    { color: #0d9488;                     &:hover { color: #0f766e; background: rgb(13 148 136 / 10%); } }
-.actionButtonDark    { color: var(--color-text-primary);   &:hover { color: var(--color-text-primary); background: var(--color-subtle); } }
+.actionIcon { font-size: var(--text-xl, 16px); flex-shrink: 0; }
+.actionBody { flex: 1; min-width: 0; }
 
-.ctaIcon {
-  width: 15px;
-  height: 15px;
-  fill: currentColor;
-  flex-shrink: 0;
+// --action-color is data-driven (action.type).
+.actionTitle {
+  font-size: var(--text-base, 12px);
+  font-weight: 600;
+  margin: 0 0 2px;
+  color: var(--action-color, var(--color-text-primary));
 }
 
-.divider {
-  display: inline-block;
-  width: 1px;
-  height: 20px;
-  background: var(--color-border);
+.actionDetail {
+  font-size: var(--text-xs, 10px);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+// --owner-bg / --owner-color are data-driven (action.type).
+.actionOwner {
+  font-size: var(--text-2xs, 9px);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs, 3px);
   flex-shrink: 0;
-  margin: 0 var(--space-1, 4px);
+  background: var(--owner-bg, var(--color-subtle));
+  color: var(--owner-color, var(--color-text-secondary));
+}
+
+// Completion snapshot grid.
+.snapshotGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4, 16px);
+}
+
+.snapshotLabel {
+  font-size: var(--text-2xs, 9px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.snapshotValue {
+  font-size: var(--text-2xl, 20px);
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+  margin: 0;
 }
