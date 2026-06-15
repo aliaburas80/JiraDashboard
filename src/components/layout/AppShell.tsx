@@ -193,6 +193,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                         <button
                           type="button"
                           onClick={() => setOpenGroup(open ? null : group.label)}
+                          aria-current={active ? 'page' : undefined}
                           className={clsx(styles.navGroupBtn, { [styles.active]: active })}
                         >
                           {group.label}
@@ -202,6 +203,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                           >
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                           </svg>
+                          {active && <span className={styles.navGroupActiveBar} aria-hidden="true" />}
                         </button>
 
                         {open && (
