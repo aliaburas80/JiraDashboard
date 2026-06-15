@@ -36,7 +36,7 @@ function ScoreRing({ score, band }: { score: number; band: string }) {
   return (
     <div style={{ position: 'relative', width: 108, height: 108, flexShrink: 0 }}>
       <svg width="108" height="108" viewBox="0 0 108 108" style={{ transform: 'rotate(-90deg)' }} aria-hidden="true">
-        <circle cx="54" cy="54" r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="10" />
+        <circle cx="54" cy="54" r={r} fill="none" stroke="var(--color-border, #e2e8f0)" strokeWidth="10" />
         <circle cx="54" cy="54" r={r} fill="none" stroke={color} strokeWidth="10"
           strokeDasharray={circ} strokeDashoffset={offset}
           strokeLinecap="round" style={{ transition: 'stroke-dashoffset 800ms ease-out' }} />

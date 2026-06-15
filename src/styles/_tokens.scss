@@ -126,4 +126,31 @@
   // ── Bar / progress animations ─────────────────────────────────────────────
   --bar-duration:  700ms;
   --bar-easing:    ease-out;
+
+  // ── Legacy token aliases (used by older pages/components) ─────────────────
+  // Maps --dc-text-*, --dc-brand, --dc-line etc. to the semantic --color-* layer
+  // so pages built before the token rename continue to resolve correctly.
+  --dc-text:          var(--color-text-primary,   #0f172a);
+  --dc-text-2:        var(--color-text-secondary, #64748b);
+  --dc-text-3:        var(--color-text-muted,     #94a3b8);
+  --dc-brand:         var(--color-primary,        #2563eb);
+  --dc-brand-soft:    var(--color-primary-soft,   #eff6ff);
+  --dc-line:          var(--color-border,         #e2e8f0);
+  --dc-surface:       var(--color-surface,        #fff);
+  --dc-surface-soft:  var(--color-subtle,         #f8fafc);
+  --dc-surface-blue:  var(--color-primary-soft,   #eff6ff);
+  --dc-success:       var(--color-success,        #22c55e);
+  --dc-success-soft:  var(--color-success-soft,   rgb(34 197 94 / 10%));
+  --dc-critical:      var(--color-danger,         #ef4444);
+  --dc-critical-soft: var(--color-danger-soft,    rgb(248 113 113 / 10%));
+  --dc-warning:       var(--color-warning,        #f59e0b);
+  --dc-warning-soft:  var(--color-warning-soft,   rgb(245 158 11 / 10%));
+  --dc-info:          var(--color-info,           #3b82f6);
+  --dc-info-soft:     var(--color-info-soft,      rgb(59 130 246 / 10%));
+  --n900:             var(--color-text-primary,   #0f172a);
+  --n500:             var(--color-text-secondary, #64748b);
+  --blue:             var(--color-primary,        #2563eb);
+  --dc-shadow-card:   var(--shadow-card, 0 1px 3px rgb(0 0 0 / 6%));
+  --dc-purple:        #7c3aed;
+  --dc-purple-soft:   rgb(124 58 237 / 10%);
 }
