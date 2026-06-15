@@ -82,9 +82,9 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const initial = getInitialTheme();
-    setTheme(initial);
-    applyTheme(initial);
+    // Always enforce light mode — dark system/localStorage preference is ignored.
+    setTheme('light');
+    applyTheme('light');
     initThemeCustom();
     const b = loadBranding();
     if (b.logoUrl) setBrandLogo(b.logoUrl);

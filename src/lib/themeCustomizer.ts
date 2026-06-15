@@ -152,7 +152,7 @@ export const DEFAULT_THEME: ThemeCustom = {
   accent:   'blue',
   radius:   'default',
   fontSize: 'md',
-  palette:  'gold',
+  palette:  'none',
 };
 
 export const DEFAULT_BRANDING: BrandingConfig = {
@@ -256,8 +256,16 @@ export function applyThemeCustom(settings: ThemeCustom): void {
   root.style.fontSize = f.px;
 }
 
+// Dark palette IDs — always coerced to 'none' to enforce the light theme.
+const DARK_PALETTES = new Set<PaletteId>(['gold', 'copper', 'sage', 'orange']);
+
 export function initThemeCustom(): ThemeCustom {
   const settings = loadThemeCustom();
-  applyThemeCustom(settings);
-  return settings;
+  // Enforce light mode: migrate any stored dark palette to 'none'.
+  const enforced: ThemeCustom = DARK_PALETTES.has(settings.palette)
+    ? { ...settings, palette: 'none' }
+    : settings;
+  if (enforced.palette !== settings.palette) saveThemeCustom(enforced);
+  applyThemeCustom(enforced);
+  return enforced;
 }
