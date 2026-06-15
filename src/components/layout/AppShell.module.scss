@@ -202,45 +202,50 @@
   box-shadow: var(--shadow-dropdown, 0 8px 28px rgb(0 0 0 / 18%));
 }
 
+// Dropdown items match DashboardTopbar: title + desc on left, status dot on right
 .dropdownLink {
   display: flex;
   align-items: center;
-  gap: var(--space-2, 8px);
-  padding: var(--space-2, 8px) 10px;
-  border-radius: var(--radius-md, 10px);
-  font-size: var(--text-md, 13px);
-  font-weight: 700;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm, 6px);
   text-decoration: none;
-  color: var(--color-text-primary, var(--dc-p1, #334155));
-  position: relative;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition: background var(--transition-fast);
 
-  &:hover {
-    background: var(--color-subtle, var(--dc-s3, #f1f5f9));
-  }
+  &:hover { background: var(--color-subtle, #f8fafc); }
 
-  &.active {
-    background: var(--color-primary-soft, #eff6ff);
-    color: var(--color-primary, #2563eb);
-  }
+  &.active { background: var(--color-primary-soft, #eff6ff); }
 
   &:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
-    outline-offset: 2px;
+    outline-offset: -2px;
   }
 }
 
-.dropdownIcon {
-  font-size: 0.9375rem;
-  line-height: 1;
-  flex-shrink: 0;
+.dropdownLinkText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
-.dropdownActiveDot {
-  width: 6px;
-  height: 6px;
+.dropdownTitle {
+  font-size: var(--text-md, 13px);
+  font-weight: 600;
+  color: var(--color-text-primary, #0f172a);
+
+  .active & { color: var(--color-primary, #2563eb); }
+}
+
+.dropdownDesc {
+  font-size: var(--text-sm, 11px);
+  color: var(--color-text-muted, #94a3b8);
+}
+
+// EXCEPTION (CLAUDE.md Rule 1): dot color is data-driven from item.status
+.dropdownDot {
+  width: 7px;
+  height: 7px;
   border-radius: var(--radius-full, 9999px);
-  background: var(--color-primary, #2563eb);
   flex-shrink: 0;
 }
 

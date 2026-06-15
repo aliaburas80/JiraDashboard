@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DeliveryClarityShell from '@/components/dc-shell/DeliveryClarityShell';
+import AppShell from '@/components/layout/AppShell';
 import DCKpiCard from '@/components/dc-shell/DCKpiCard';
 import DCStatusChip from '@/components/dc-shell/DCStatusChip';
 import LoadingState from '@/components/ui/LoadingState';
@@ -129,7 +129,7 @@ export default function DataQualityPage() {
     return () => { cancelled = true; };
   }, [router]);
 
-  if (loading) return <DeliveryClarityShell hideSidebar><LoadingState message="Analysing data quality…" /></DeliveryClarityShell>;
+  if (loading) return <AppShell showNav><LoadingState message="Analysing data quality…" /></AppShell>;
   if (!dq) return null;
 
   const missDate     = dq.checks.filter(c => c.field.toLowerCase().includes('date') && c.missingPct > 0).reduce((s, c) => s + c.missing, 0);
@@ -142,7 +142,7 @@ export default function DataQualityPage() {
   const highImpacts     = fi?.high ?? [];
 
   return (
-    <DeliveryClarityShell hideSidebar>
+    <AppShell showNav>
       {/* Page header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -285,6 +285,6 @@ export default function DataQualityPage() {
           )}
         </div>
       </div>
-    </DeliveryClarityShell>
+    </AppShell>
   );
 }

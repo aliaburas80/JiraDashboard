@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DeliveryClarityShell from '@/components/dc-shell/DeliveryClarityShell';
+import AppShell from '@/components/layout/AppShell';
 import DCStatusChip from '@/components/dc-shell/DCStatusChip';
 import LoadingState from '@/components/ui/LoadingState';
 import { loadMetricsWithSource } from '@/lib/storage';
@@ -90,7 +90,7 @@ export default function ReleaseReadinessPage() {
     return () => { cancelled = true; };
   }, [router]);
 
-  if (loading) return <DeliveryClarityShell hideSidebar><LoadingState message="Calculating release readiness…" /></DeliveryClarityShell>;
+  if (loading) return <AppShell showNav><LoadingState message="Calculating release readiness…" /></AppShell>;
   if (!summary || !metrics) return null;
 
   const flow         = (metrics.flow ?? {}) as any;
@@ -154,7 +154,7 @@ export default function ReleaseReadinessPage() {
   ];
 
   return (
-    <DeliveryClarityShell hideSidebar>
+    <AppShell showNav>
       {/* Page header */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -335,6 +335,6 @@ export default function ReleaseReadinessPage() {
           )}
         </div>
       )}
-    </DeliveryClarityShell>
+    </AppShell>
   );
 }

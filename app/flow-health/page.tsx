@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import DeliveryClarityShell from '@/components/dc-shell/DeliveryClarityShell';
+import AppShell from '@/components/layout/AppShell';
 import DCKpiCard from '@/components/dc-shell/DCKpiCard';
 import DCStatusChip from '@/components/dc-shell/DCStatusChip';
 import LoadingState from '@/components/ui/LoadingState';
@@ -39,7 +39,7 @@ export default function FlowHealthPage() {
     return () => { cancelled = true; };
   }, [router]);
 
-  if (loading) return <DeliveryClarityShell hideSidebar><LoadingState message="Loading flow health…" /></DeliveryClarityShell>;
+  if (loading) return <AppShell showNav><LoadingState message="Loading flow health…" /></AppShell>;
   if (!metrics) return null;
 
   const flow  = metrics.flow;
@@ -81,7 +81,7 @@ export default function FlowHealthPage() {
   }
 
   return (
-    <DeliveryClarityShell hideSidebar>
+    <AppShell showNav>
       {/* Page header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -278,6 +278,6 @@ export default function FlowHealthPage() {
           </div>
         </div>
       )}
-    </DeliveryClarityShell>
+    </AppShell>
   );
 }

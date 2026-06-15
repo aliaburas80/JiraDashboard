@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DeliveryClarityShell from '@/components/dc-shell/DeliveryClarityShell';
+import AppShell from '@/components/layout/AppShell';
 import DCKpiCard from '@/components/dc-shell/DCKpiCard';
 import DCStatusChip from '@/components/dc-shell/DCStatusChip';
 import LoadingState from '@/components/ui/LoadingState';
@@ -38,7 +38,7 @@ export default function DeliveryMixPage() {
     return () => { cancelled = true; };
   }, [router]);
 
-  if (loading) return <DeliveryClarityShell hideSidebar><LoadingState message="Loading delivery mix…" /></DeliveryClarityShell>;
+  if (loading) return <AppShell showNav><LoadingState message="Loading delivery mix…" /></AppShell>;
   if (!metrics) return null;
 
   const items = (metrics.flow.items ?? []);
@@ -83,7 +83,7 @@ export default function DeliveryMixPage() {
   const maxTypeCount = Math.max(...typeData.map((t: any) => t.count ?? 0), 1);
 
   return (
-    <DeliveryClarityShell hideSidebar>
+    <AppShell showNav>
       {/* Page header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -188,6 +188,6 @@ export default function DeliveryMixPage() {
           </div>
         </div>
       </div>
-    </DeliveryClarityShell>
+    </AppShell>
   );
 }

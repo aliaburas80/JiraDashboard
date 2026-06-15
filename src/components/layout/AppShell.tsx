@@ -7,64 +7,26 @@ import { applyTheme } from '@/lib/theme';
 import { initThemeCustom, loadBranding } from '@/lib/themeCustomizer';
 import UserMenu from '@/components/auth/UserMenu';
 import { canAccessRoute } from '@/lib/roles';
+import { DC_NAV_GROUPS } from '@/components/dc-shell/navigation';
 import styles from './AppShell.module.scss';
 
-const NAV_GROUPS = [
-  {
-    label: 'Analytics',
-    items: [
-      { href: '/summary',   label: 'Overview',    icon: '📊', desc: 'Health at a glance'           },
-      { href: '/dashboard', label: 'Full Report', icon: '📋', desc: 'All metrics & filters'        },
-      { href: '/charts',    label: 'Charts',      icon: '📈', desc: 'Visual breakdowns'            },
-      { href: '/trends',    label: 'Trends',      icon: '📉', desc: 'Upload-over-upload change'    },
-      { href: '/teams',     label: 'Teams',       icon: '👥', desc: 'Team health comparison'       },
-      { href: '/portfolio', label: 'Portfolio',   icon: '🗂️', desc: 'Cross-team portfolio summary' },
-    ],
-  },
-  {
-    label: 'Delivery',
-    items: [
-      { href: '/readiness', label: 'Readiness', icon: '🚀', desc: 'Go / No-Go per release'     },
-      { href: '/explore',   label: 'Explore',   icon: '🔗', desc: 'Work item dependency graph'  },
-      { href: '/customer',  label: 'Customer',  icon: '👤', desc: 'Customer-visible progress'   },
-    ],
-  },
-  {
-    label: 'Planning',
-    items: [
-      { href: '/roadmap',  label: 'Roadmap',  icon: '🗺️', desc: 'Epic progress & delivery ETA'  },
-      { href: '/forecast', label: 'Forecast', icon: '🔮', desc: 'Velocity & burn-up outlook'    },
-      { href: '/retro',    label: 'Retro',    icon: '🔄', desc: 'Sprint retrospective tool'     },
-    ],
-  },
-  {
-    label: 'Data',
-    items: [
-      { href: '/snapshots', label: 'Snapshots', icon: '📸', desc: 'Saved metric snapshots' },
-      { href: '/backend',   label: 'Backend',   icon: '⚙️', desc: 'Import logs & raw data' },
-    ],
-  },
-  {
-    label: 'Admin',
-    items: [
-      { href: '/admin/settings',    label: 'Settings',         icon: '⚙️', desc: 'Users, storage, retention'   },
-      { href: '/admin/theme',       label: 'Theme & Branding', icon: '🎨', desc: 'Palette, logo, app name'      },
-      { href: '/admin/diagnostics', label: 'Diagnostics',      icon: '🩺', desc: 'System health & admin stats'  },
-      { href: '/admin/security',    label: 'Security',         icon: '🔐', desc: 'Production security checks'   },
-      { href: '/admin/logs',        label: 'Import Logs',      icon: '🧾', desc: 'All user import activity'     },
-    ],
-  },
-  {
-    label: 'Reference',
-    items: [
-      { href: '/members',   label: 'Members',   icon: '🪪', desc: 'Team directory & contacts'  },
-      { href: '/landing',   label: 'About',     icon: '🏠', desc: 'Product overview & features' },
-      { href: '/glossary',  label: 'Glossary',  icon: '📖', desc: 'Term & abbreviation guide'  },
-      { href: '/developer', label: 'Developer', icon: '💻', desc: 'API & technical docs'       },
-      { href: '/help',      label: 'Help',      icon: '❓', desc: 'How to use this app'         },
-    ],
-  },
-];
+// Single source of truth: DC_NAV_GROUPS from navigation.ts
+// Status dot colours mirror DashboardTopbar
+const STATUS_DOT: Record<string, string> = {
+  critical: '#f87171',
+  warning:  '#f59e0b',
+  success:  '#22c55e',
+  info:     '#3b82f6',
+};
+
+// Label abbreviations matching DashboardTopbar GROUP_LABEL_OVERRIDE
+const GROUP_LABEL_OVERRIDE: Record<string, string> = {
+  administration: 'Admin',
+};
+
+function isActivePath(pathname: string, href: string): boolean {
+  return pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
+}
 
 export default function AppShell({ children, showNav }: { children: React.ReactNode; showNav?: boolean }) {
   const pathname    = usePathname();
@@ -75,7 +37,6 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    // Always enforce light mode
     applyTheme('light');
     initThemeCustom();
     const b = loadBranding();
@@ -106,13 +67,14 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
     setMobileOpen(false);
   }, [pathname]);
 
-  function isGroupActive(group: typeof NAV_GROUPS[0]) {
-    return group.items.some(i => pathname === i.href);
+  function isGroupActive(group: typeof DC_NAV_GROUPS[0]) {
+    return group.items.some(item => isActivePath(pathname, item.href));
   }
 
-  const visibleGroups = NAV_GROUPS
+  const visibleGroups = DC_NAV_GROUPS
     .map(group => ({
       ...group,
+      label: GROUP_LABEL_OVERRIDE[group.id] ?? group.label,
       items: group.items.filter(item => !showNav || (role !== null && canAccessRoute(role, item.href))),
     }))
     .filter(group => group.items.length > 0);
@@ -135,7 +97,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
             </Link>
           </div>
 
-          {/* ── Spacer — pushes nav to center-right ── */}
+          {/* ── Spacer ── */}
           <div className={styles.spacer} />
 
           {/* ── CENTER NAV ── */}
@@ -143,12 +105,12 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
             <nav className={styles.desktopNav} aria-label="Primary navigation">
               {visibleGroups.map(group => {
                 const active = isGroupActive(group);
-                const open   = openGroup === group.label;
+                const open   = openGroup === group.id;
                 return (
-                  <div key={group.label} className={styles.navGroupWrapper}>
+                  <div key={group.id} className={styles.navGroupWrapper}>
                     <button
                       type="button"
-                      onClick={() => setOpenGroup(open ? null : group.label)}
+                      onClick={() => setOpenGroup(open ? null : group.id)}
                       aria-current={active ? 'page' : undefined}
                       className={clsx(styles.navGroupBtn, { [styles.active]: active })}
                     >
@@ -165,19 +127,25 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                     {open && (
                       <div className={styles.dropdown}>
                         {group.items.map(item => {
-                          const itemActive = pathname === item.href;
+                          const itemActive = isActivePath(pathname, item.href);
+                          const dotColor   = STATUS_DOT[item.status] ?? '#cbd5e1';
                           return (
                             <Link
-                              key={item.href}
+                              key={item.id}
                               href={item.href}
                               aria-current={itemActive ? 'page' : undefined}
                               className={clsx(styles.dropdownLink, { [styles.active]: itemActive })}
+                              onClick={() => setOpenGroup(null)}
                             >
-                              <span className={styles.dropdownIcon}>{item.icon}</span>
-                              <span>{item.label}</span>
-                              {itemActive && (
-                                <span className={styles.dropdownActiveDot} aria-hidden="true" />
-                              )}
+                              <span className={styles.dropdownLinkText}>
+                                <span className={styles.dropdownTitle}>{item.title}</span>
+                                <span className={styles.dropdownDesc}>{item.desc}</span>
+                              </span>
+                              <span
+                                className={styles.dropdownDot}
+                                style={{ background: dotColor } as React.CSSProperties}
+                                aria-hidden="true"
+                              />
                             </Link>
                           );
                         })}
@@ -233,20 +201,20 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
         {showNav && mobileOpen && (
           <div className={styles.mobileNav}>
             {visibleGroups.map(group => (
-              <div key={group.label}>
+              <div key={group.id}>
                 <p className={styles.mobileGroupLabel}>{group.label}</p>
                 <div className={styles.mobileGroupGrid}>
                   {group.items.map(item => {
-                    const itemActive = pathname === item.href;
+                    const itemActive = isActivePath(pathname, item.href);
                     return (
                       <Link
-                        key={item.href}
+                        key={item.id}
                         href={item.href}
                         aria-current={itemActive ? 'page' : undefined}
                         className={clsx(styles.mobileLink, { [styles.active]: itemActive })}
+                        onClick={() => setMobileOpen(false)}
                       >
-                        <span>{item.icon}</span>
-                        {item.label}
+                        {item.title}
                       </Link>
                     );
                   })}

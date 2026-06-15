@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import DeliveryClarityShell from '@/components/dc-shell/DeliveryClarityShell';
+import AppShell from '@/components/layout/AppShell';
 import DCStatusChip from '@/components/dc-shell/DCStatusChip';
 import LoadingState from '@/components/ui/LoadingState';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
@@ -66,14 +66,14 @@ export default function WorkExplorerPage() {
 
   function onFilterChange() { setPage(0); setSelected(null); }
 
-  if (loading) return <DeliveryClarityShell hideSidebar><LoadingState message="Loading work explorer…" /></DeliveryClarityShell>;
+  if (loading) return <AppShell showNav><LoadingState message="Loading work explorer…" /></AppShell>;
   if (!metrics) return null;
 
   const relatedItems = selected ? items.filter(i => i.epic === selected.epic && i.key !== selected.key).slice(0, 8) : [];
   const children     = selected ? items.filter(i => i.parent === selected.key).slice(0, 10) : [];
 
   return (
-    <DeliveryClarityShell hideSidebar>
+    <AppShell showNav>
       {/* Page header */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -302,6 +302,6 @@ export default function WorkExplorerPage() {
           </div>
         )}
       </div>
-    </DeliveryClarityShell>
+    </AppShell>
   );
 }

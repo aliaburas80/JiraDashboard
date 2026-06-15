@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DeliveryClarityShell from '@/components/dc-shell/DeliveryClarityShell';
+import AppShell from '@/components/layout/AppShell';
 import DCKpiCard from '@/components/dc-shell/DCKpiCard';
 import DCStatusChip from '@/components/dc-shell/DCStatusChip';
 import LoadingState from '@/components/ui/LoadingState';
@@ -26,7 +26,7 @@ export default function SprintKanbanPage() {
     return () => { cancelled = true; };
   }, [router]);
 
-  if (loading) return <DeliveryClarityShell hideSidebar><LoadingState message="Loading sprint & kanban data…" /></DeliveryClarityShell>;
+  if (loading) return <AppShell showNav><LoadingState message="Loading sprint & kanban data…" /></AppShell>;
   if (!metrics) return null;
 
   const sprint = metrics.sprint;
@@ -61,7 +61,7 @@ export default function SprintKanbanPage() {
   };
 
   return (
-    <DeliveryClarityShell hideSidebar>
+    <AppShell showNav>
       {/* Page header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -222,6 +222,6 @@ export default function SprintKanbanPage() {
           )}
         </div>
       </div>
-    </DeliveryClarityShell>
+    </AppShell>
   );
 }
