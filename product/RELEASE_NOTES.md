@@ -5,6 +5,32 @@
 
 ---
 
+## v4.9.3 — Comprehensive Product Doc Audit + Route Security Fix (2026-06-16, P0 — documentation)
+
+### Security
+- **Middleware route protection gap closed**: 10 routes added v4.6–v4.9 (`/roadmap`, `/forecast`, `/retro`, `/data-quality`, `/delivery-mix`, `/flow-health`, `/release-readiness`, `/sprint-kanban`, `/work-explorer`, `/column-mapping`) were present in `canAccessRoute()` role allowlists but **missing from the `PROTECTED` array and `config.matcher`** in `middleware.ts`. Unauthenticated requests to these routes were not redirected to `/login`. All 10 routes now correctly included in both `PROTECTED` and `config.matcher`.
+
+### Documentation — SRS.md (v4.5.2 → v4.9.3)
+- **§1.2 Scope — dashboard sub-pages**: Corrected "11 dashboard pages" to **15 dashboard pages** with all names listed: summary, priority-attention, sprint, epics, labels, flow-health, throughput, work-explorer, data-quality, release-readiness, delivery-controls, actions, delivery-composition, epic-readiness, kanban-health (sprint-status, key-metrics, ownership, quarter-statistics, visual-analytics added in v4.9.0 refactor were not documented).
+- **§1.2 Scope — standalone analytics pages**: Added new section documenting 6 standalone analytics pages that were completely absent from SRS scope: `/data-quality`, `/delivery-mix`, `/flow-health`, `/release-readiness`, `/sprint-kanban`, `/work-explorer`.
+- **§8.1 API Route Inventory**: Updated "36 live route handlers" → **44 live route handlers** (verified via `find app/api -name "route.ts"`). Added missing `/api/admin/app-config` row (GET + PUT + POST for SMTP configuration, introduced v4.9.0 Admin Settings console).
+- Version bumped 4.5.2 → 4.9.3, date updated, revision history extended with 3 new entries.
+
+### Documentation — DEVELOPER_GUIDE.md
+- **File tree**: Updated dashboard section from 11 → 15 routed sub-pages with specific names; added 6 standalone analytics pages; added `src/components/dc-shell/` library with all 6 components; added `AdminNavSidebar`, `DashboardTopbar`, `DashboardSidebarNav`.
+- **§3a Frontend Architecture Standards**: New section added documenting the Tailwind-layout / SCSS-identity hybrid architecture, Rule 1 CSS custom property exception, data-attribute pattern for status-driven appearance, and Admin Layout Injection Pattern.
+- **§4 Navigation**: Updated to include standalone pages and Planning routes; added subsections for all 21 new routed pages.
+
+### Documentation — APPENDIX.md
+- Added 9 new glossary entries: Dashboard Sub-Pages, Standalone Analytics Pages, Smart Actions Page, Delivery Composition Page, DC Shell, DC_NAV_GROUPS, App Config, Admin Layout Injection, Wiki Theme.
+
+### Documentation — USE_CASES.md
+- **UC-107 — Navigate Dashboard Sub-Pages**: New use case for DashboardSidebarNav browsing across 15 sections.
+- **UC-108 — Access Standalone Analytics Page**: New use case for the 6 standalone analytics routes with per-page postconditions.
+- **UC-109 — Admin Manages App Configuration**: New use case for SMTP config via `/admin/settings` App Config tab and `/api/admin/app-config`.
+
+---
+
 ## v4.9.2 — P0: Test Fixes + CSS Token System Completion (2026-06-16, P0 — quality)
 
 ### Fixed

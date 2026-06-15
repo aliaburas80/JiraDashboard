@@ -3135,3 +3135,91 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 **Postcondition:** User finds the relevant help section with at most 2 clicks  
 **Related FR:** FR-336  
 **Related:** NAV-01
+
+---
+
+## v4.9.0 — Navigation Architecture Overhaul Use Cases (2026-06-16)
+
+### UC-107 — Navigate Dashboard Sub-Pages
+
+- **ID:** UC-107
+- **Title:** Navigate to a Specific Dashboard Analysis Section via the Sidebar
+- **Actor:** Any authenticated user (role-appropriate sections visible)
+- **Precondition:** User is logged in; metrics have been loaded; user is on any `/dashboard/*` route
+- **Trigger:** User clicks a section link in the DashboardSidebarNav
+
+**Main Flow:**
+1. User sees DashboardSidebarNav (fixed 228px left sidebar) with 15 section links grouped into Overview, Delivery, and Deep Dive groups
+2. User clicks a section (e.g. "Flow Health" or "Sprint Status")
+3. Next.js App Router navigates to the corresponding `/dashboard/[section]` page
+4. Page loads, calls `loadMetricsWithSource()`, and renders the section's analysis
+5. Active sidebar item highlights with blue left border and primary-soft background
+6. DashboardTopbar health pill and "New Upload" CTA remain visible throughout
+
+**Alternate Flow — No metrics loaded:**
+4a. Page redirects to `/` (upload page) with no flash of content
+
+**Alternate Flow — Mobile:**
+1a. On mobile, DashboardSidebarNav is hidden; user navigates via the AppShell mobile hamburger
+
+**Postcondition:** User is viewing the selected delivery analysis section in full detail  
+**Related FR:** FR-337 (dashboard routing; see §4.9.0 scope entry)  
+**Related:** UC-108, DC_NAV_GROUPS
+
+---
+
+### UC-108 — Access Standalone Analytics Page
+
+- **ID:** UC-108
+- **Title:** Navigate to a Standalone Analytics Route (Data Quality, Flow Health, etc.)
+- **Actor:** Any authenticated user (role must permit the route per `canAccessRoute`)
+- **Precondition:** User is logged in; Jira export has been uploaded
+- **Trigger:** User navigates to one of the 6 standalone analytics routes via the nav or direct URL
+
+**Main Flow:**
+1. User navigates to one of: `/data-quality`, `/delivery-mix`, `/flow-health`, `/release-readiness`, `/sprint-kanban`, `/work-explorer`
+2. Middleware checks authentication (PROTECTED list) and role access (`canAccessRoute`)
+3. Page renders with AppShell header and full-page analytics view
+4. Page calls `loadMetricsWithSource()` to load metrics
+5. Page renders KPI cards, charts, tables specific to its domain:
+   - `/data-quality` — Score ring (0–100%), 10-field check table, field impact report
+   - `/delivery-mix` — Issue-type donut, status distribution bar, sprint composition
+   - `/flow-health` — Lead time, cycle time, age bracket histogram, flow items table
+   - `/release-readiness` — Go/Conditional-Go/No-Go per Fix Version
+   - `/sprint-kanban` — Velocity KPIs, WIP, cycle time, sprint completion rates
+   - `/work-explorer` — Filterable table of all work items with risk/orphan status
+
+**Alternate Flow — Role without access:**
+2a. Middleware redirects to `fallbackRouteForRole(role)` (typically `/dashboard`)
+
+**Alternate Flow — No metrics:**
+4a. Page redirects to `/` (upload)
+
+**Postcondition:** User views full-page analytics for the chosen domain  
+**Related FR:** FR-225A–D (explorer), FR-242 (data quality), FR-309 (metrics loading)  
+**Related:** UC-107, UC-046
+
+---
+
+### UC-109 — Admin Manages App Configuration (SMTP + Email Settings)
+
+- **ID:** UC-109
+- **Title:** Admin Views and Updates App-Level SMTP Configuration
+- **Actor:** Admin
+- **Precondition:** Admin is logged in; `/admin/settings` Config tab is accessible
+- **Trigger:** Admin navigates to `/admin/settings` and selects the "App Config" (⚙️) tab
+
+**Main Flow:**
+1. Admin selects the Config tab in AdminNavSidebar or admin settings
+2. Page loads current config via `GET /api/admin/app-config` — passwords are masked in the response
+3. Admin views/edits: SMTP host, port, user, password, from address, app URL
+4. Admin clicks "Save" → `PUT /api/admin/app-config` encrypts the config and saves to cloud storage
+5. Admin optionally clicks "Send Test Email" → `POST /api/admin/app-config?action=test` sends a test email to the logged-in admin's address
+6. Admin sees ✅ success or ⚠️ error based on the email delivery result
+
+**Alternate Flow — SMTP not configured:**
+5a. Test email returns `{ emailSent: false }` with a "SMTP not configured" message
+
+**Postcondition:** SMTP config is encrypted and stored in cloud; welcome emails for new users will be sent using this config  
+**Related FR:** FR-325 (email on accept), FR-325-adjacent (app-config API)  
+**Related:** UC-100, STORAGE-DEC-06

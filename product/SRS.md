@@ -83,7 +83,8 @@ Delivery Clarity accepts Jira CSV or Excel exports and produces a real-time, mul
 - **F1 Throughput analytics**, **F2 Work Item Explorer**, **F3 Authentication & Database**, **F4 Smart Excel Export (17 sheets)**
 - Dark mode, print mode, mobile responsiveness (including `/explore` mobile polish)
 - Performance optimised for 5,000+ issues (parseDate memo cache, flowItemByKey Map)
-- **Dashboard routed pages** — dashboard refactored into 11 independent Next.js App Router pages under `app/dashboard/[section]/`: summary, priority-attention, sprint, epics, labels, flow-health, throughput, work-explorer, data-quality, release-readiness, delivery-controls
+- **Dashboard routed pages** — dashboard refactored into 15 independent Next.js App Router pages under `app/dashboard/[section]/`: summary, priority-attention, sprint-status, epics (epic-readiness), labels, flow-health, key-metrics, kanban-health, visual-analytics, ownership (ownership & capacity), quarter-statistics, smart-actions, delivery-composition, delivery-controls, data-quality
+- **Standalone analytics pages** — 6 full-page analytics routes accessible from the nav (not nested under /dashboard): `/data-quality` (Data Quality report), `/delivery-mix` (issue-type/status breakdown), `/flow-health` (flow health table), `/release-readiness` (release readiness checklist), `/sprint-kanban` (sprint + kanban overview), `/work-explorer` (work item explorer standalone)
 - **Admin layout injection** — `app/admin/layout.tsx` provides `DashboardTopbar` + `AdminNavSidebar` to all `/admin/*` routes via Next.js layout file; individual pages render content only
 - **Developer wiki** — `/developer` renders as a light wiki theme; all dark palette tokens remapped to semantic light values via `.wiki` SCSS class
 - **DC shell component library** — `src/components/dc-shell/`: `DCTopbar`, `DCPageSidebar`, `DCKpiCard`, `DCStatusChip`, `DCActionBoard`, `DeliveryClarityShell` — reusable chrome for non-dashboard pages
@@ -1307,7 +1308,7 @@ Rendered by `renderBackendHome()`. Provides: import history table, file statisti
 
 ### 8.1 — Next.js Application API Route Inventory (v3.0+, produced 2026-06-08 to close TRACE-02 / Gaps-Summary COVER-03)
 
-This table is the consolidated inventory of all 36 live `app/api/**/route.ts` route handlers — the API surface the deployed product, its pages, and its automated test suite actually exercise (distinct from the legacy backend documented in §8 above). **Auth** reflects the actual `getIronSession`/`session.role` checks read from each handler. **FR ref** cites the existing functional requirement that already documents the route's behaviour in narrative form, where one exists; routes with no FR ref are documented only here and via their consuming page's FR/UC (cited in the Notes column) — `app/api/backend-view/route.ts` itself maintains a partial live `ENDPOINTS` registry that this table supersedes as the authoritative cross-reference.
+This table is the consolidated inventory of all 44 live `app/api/**/route.ts` route handlers — the API surface the deployed product, its pages, and its automated test suite actually exercise (distinct from the legacy backend documented in §8 above). **Auth** reflects the actual `getIronSession`/`session.role` checks read from each handler. **FR ref** cites the existing functional requirement that already documents the route's behaviour in narrative form, where one exists; routes with no FR ref are documented only here and via their consuming page's FR/UC (cited in the Notes column) — `app/api/backend-view/route.ts` itself maintains a partial live `ENDPOINTS` registry that this table supersedes as the authoritative cross-reference.
 
 | Method(s) | Path | Auth | Purpose | FR ref | Notes |
 |---|---|---|---|---|---|
@@ -1347,6 +1348,7 @@ This table is the consolidated inventory of all 36 live `app/api/**/route.ts` ro
 | GET, POST | `/api/admin/storage/sync` | Admin only | Return sync status + cache metadata; trigger a sync from or push to the cloud provider | FR-307-adjacent | — |
 | GET | `/api/admin/storage/download` | Admin only | Download a backup object by `?key=`; `?restore=true` immediately restores it | FR-298/FR-307-adjacent | — |
 | GET, POST | `/api/admin/storage/auto-restore` | Admin only | Check local-DB health status; manually trigger auto-restore from cloud | FR-307-adjacent | — |
+| GET, PUT, POST | `/api/admin/app-config` | Admin only | `GET`: return current SMTP/app config with passwords masked; `PUT`: encrypt and save new config to cloud; `POST ?action=test`: send a test email to the logged-in admin to verify SMTP settings | FR-325-adjacent (email delivery) | Config envelope is encrypted before upload to cloud storage; uses `getAppConfig()` / `getSafeConfig()` / `saveToCloud()` from `src/lib/app-config.ts` |
 
 | POST | `/api/user-add-requests` | Authenticated | Submit a request to add a new team member (name, email, role, reason); guards duplicate email and duplicate pending request | FR-316 | UC-095 |
 | GET | `/api/user-add-requests/mine` | Authenticated | Return the calling user's own submitted add-member requests (max 50, desc) | FR-317 | UC-095 |

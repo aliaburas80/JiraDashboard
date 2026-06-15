@@ -109,22 +109,33 @@ JiraDashboard/
 │   ├── summary/page.tsx          # /summary — Health overview (AppShell, standalone)
 │   ├── charts/page.tsx           # /charts — Visual analytics
 │   ├── column-mapping/page.tsx   # /column-mapping — Column mapping preview
-│   ├── dashboard/                # /dashboard/* — 11 independent routed pages
+│   ├── dashboard/                # /dashboard/* — 15 independent routed pages
+│   │   ├── layout.tsx            # /dashboard/* layout — DashboardTopbar + DashboardSidebarNav
 │   │   ├── page.tsx              # /dashboard — redirect to summary section
-│   │   ├── summary/page.tsx      # Delivery Summary
-│   │   ├── priority-attention/   # Priority Attention
-│   │   ├── sprint/               # Sprint Health
-│   │   ├── epics/                # Epic Health
-│   │   ├── labels/               # Labels
-│   │   ├── flow-health/          # Flow Health Table (11 filters)
-│   │   ├── throughput/           # Throughput Analytics
-│   │   ├── work-explorer/        # Work Item Explorer
-│   │   ├── data-quality/         # Data Quality Score
-│   │   ├── release-readiness/    # Release Readiness
-│   │   └── delivery-controls/    # Delivery Controls
+│   │   ├── summary/page.tsx      # Delivery Summary (KPI overview + alert strip)
+│   │   ├── priority-attention/   # Priority Attention (critical/blocked items)
+│   │   ├── sprint-status/        # Sprint Status (velocity, goals, commitment vs completion)
+│   │   ├── epic-readiness/       # Epic Readiness (completion, forecast, blockers)
+│   │   ├── labels/               # Labels (label distribution + health)
+│   │   ├── flow-health/          # Flow Health Table (11 filters, column reorder)
+│   │   ├── key-metrics/          # Key Metrics (KPI summary cards)
+│   │   ├── kanban-health/        # Kanban Health (WIP, cycle time, blocked lanes)
+│   │   ├── visual-analytics/     # Visual Analytics (charts, donuts, distributions)
+│   │   ├── ownership/            # Ownership & Capacity (assignee distribution)
+│   │   ├── quarter-statistics/   # Quarter Statistics (quarterly throughput tables)
+│   │   ├── actions/              # Smart Actions (AI-style suggested actions by severity)
+│   │   ├── delivery-composition/ # Delivery Composition (work breakdown by type/status/epic)
+│   │   ├── delivery-controls/    # Delivery Controls (risk + orphan panels)
+│   │   └── data-quality/         # Data Quality Score (10-field check, impact report)
+│   ├── data-quality/page.tsx     # /data-quality — standalone Data Quality page (AppShell)
+│   ├── delivery-mix/page.tsx     # /delivery-mix — standalone Delivery Mix (type/status breakdown)
+│   ├── flow-health/page.tsx      # /flow-health — standalone Flow Health table
+│   ├── release-readiness/page.tsx # /release-readiness — standalone Release Readiness
+│   ├── sprint-kanban/page.tsx    # /sprint-kanban — standalone Sprint + Kanban overview
+│   ├── work-explorer/page.tsx    # /work-explorer — standalone Work Explorer (table view)
 │   ├── trends/page.tsx           # /trends — Upload-to-upload trend analysis
-│   ├── explore/page.tsx          # /explore — Work Item Explorer (React Flow)
-│   ├── readiness/page.tsx        # /readiness — Release readiness checklist
+│   ├── explore/page.tsx          # /explore — Work Item Explorer (React Flow graph)
+│   ├── readiness/page.tsx        # /readiness — Release readiness checklist (legacy route)
 │   ├── customer/page.tsx         # /customer — Customer-facing summary
 │   ├── snapshots/page.tsx        # /snapshots — Saved metric snapshots
 │   ├── backend/page.tsx          # /backend — Import logs & backend status
@@ -289,10 +300,40 @@ All analytics pages are React Client Components (`'use client'`). They call `loa
 Navigation items are defined in `DC_NAV_GROUPS` (`src/components/dc-shell/navigation.ts`) — the single source of truth consumed by both `AppShell` and `DashboardTopbar`. Groups:
 - **Analytics**: `/summary`, `/dashboard`, `/charts`, `/trends`, `/teams`, `/portfolio`
 - **Reference**: `/glossary`, `/developer`, `/help`
-- **Delivery**: `/readiness`, `/explore`, `/customer`, `/column-mapping`
+- **Delivery**: `/readiness`, `/explore`, `/customer`, `/column-mapping`, `/data-quality`, `/delivery-mix`, `/flow-health`, `/release-readiness`, `/sprint-kanban`, `/work-explorer`
+- **Planning**: `/roadmap`, `/forecast`, `/retro`
 - **Data**: `/snapshots`, `/backend`
 
 Mobile: hamburger button opens a 2-column grid panel below the header.
+
+### Dashboard sub-pages (`/dashboard/*`)
+
+All dashboard sub-pages share the 3-zone layout injected by `app/dashboard/layout.tsx` (DashboardTopbar + DashboardSidebarNav). Each page calls `loadMetricsWithSource()` and renders its section:
+- `/dashboard/summary` — Delivery Summary (KPI cards + alert strip + top smart actions)
+- `/dashboard/priority-attention` — Priority Attention (critical + blocked items)
+- `/dashboard/sprint-status` — Sprint Status (velocity, goals, commitment vs completion, blockers)
+- `/dashboard/epic-readiness` — Epic Readiness (completion %, forecast, blockers)
+- `/dashboard/labels` — Labels (distribution + health bands)
+- `/dashboard/flow-health` — Flow Health Table (11 filters, column reorder, saved presets)
+- `/dashboard/key-metrics` — Key Metrics (KPI summary cards with trend indicators)
+- `/dashboard/kanban-health` — Kanban Health (WIP limits, cycle time, blocked lanes)
+- `/dashboard/visual-analytics` — Visual Analytics (donuts, bars, heatmaps)
+- `/dashboard/ownership` — Ownership & Capacity (assignee distribution, capacity balance)
+- `/dashboard/quarter-statistics` — Quarter Statistics (quarterly throughput tables)
+- `/dashboard/actions` — Smart Actions (AI-style suggested actions by severity: critical/warning/info)
+- `/dashboard/delivery-composition` — Delivery Composition (work breakdown by type/status/epic)
+- `/dashboard/delivery-controls` — Delivery Controls (risk panels + orphan panels)
+- `/dashboard/data-quality` — Data Quality Score (10-field check, impact report)
+
+### Standalone analytics pages
+
+6 standalone routes use AppShell and present full-page analytics views (not nested under /dashboard):
+- `/data-quality` — Data Quality report (score ring, 10-field check, field impact table)
+- `/delivery-mix` — Delivery Mix (issue-type breakdown, status distribution, sprint composition)
+- `/flow-health` — Flow Health table (lead time, cycle time, age bracket histogram)
+- `/release-readiness` — Release Readiness (Go/Conditional-Go/No-Go per Fix Version)
+- `/sprint-kanban` — Sprint + Kanban overview (velocity, WIP, cycle time KPIs)
+- `/work-explorer` — Work Explorer table view (list of all items with risk/orphan status)
 
 ### `app/page.tsx` — Upload (`/`)
 

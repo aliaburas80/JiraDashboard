@@ -1,6 +1,8 @@
 # Delivery Clarity — Master TODO List
 
-**Last updated:** 2026-06-16 (**v4.9.2 P0 PASS ✅ COMPLETE** — REC-01–11/17/19–24 closed. TC-AC-01 + TC-REQ-10 fixed. Tests: 571/63 all passing. Lint: pass. Build: pass. RELEASE_NOTES v4.9.0/v4.9.1/v4.9.2 added. SRS v4.9.2, BRD v4.9.2, DEVELOPER_GUIDE, TEST_CASES all updated. Branch: style/visual-design-updates.)
+**Last updated:** 2026-06-16 (**v4.9.3 DOC AUDIT ✅ COMPLETE** — Comprehensive doc audit: SRS scope fixed (15 dashboard pages + 6 standalone, was 11), §8.1 updated 36→44 routes + app-config row added, DEVELOPER_GUIDE file tree + §3a added, APPENDIX 9 new entries, USE_CASES UC-107/108/109 added, RELEASE_NOTES v4.9.3 written. Security fix: 10 routes added to middleware PROTECTED array + config.matcher. Branch: style/visual-design-updates.)
+
+**Previous:** 2026-06-16 (**v4.9.2 P0 PASS ✅ COMPLETE** — REC-01–11/17/19–24 closed. TC-AC-01 + TC-REQ-10 fixed. Tests: 571/63 all passing. Lint: pass. Build: pass. RELEASE_NOTES v4.9.0/v4.9.1/v4.9.2 added. SRS v4.9.2, BRD v4.9.2, DEVELOPER_GUIDE, TEST_CASES all updated. Branch: style/visual-design-updates.)
 
 **Previous:** 2026-06-10 (**v4.6 ROADMAP/FORECAST/RETRO/NAV-UX ✅ SHIPPED** — /roadmap, /forecast, /retro pages live; help + glossary nav UX redesigned; encrypted S3 config shipped; nav items added to Delivery group in AppShell. RETRO-01/02/03/23/24/25/26/27/28/31/32 ✅ Done. FCAST-01–18 ✅ Done. NAV-01/NAV-02 ✅ Done. ROADMAP-01 ✅ Done. COVER-19/20/22 re-opened → re-closed as implemented. Branch: feat/s3-encrypted-config.)  
 
