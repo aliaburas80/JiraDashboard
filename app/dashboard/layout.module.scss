@@ -23,3 +23,9 @@
   flex: 1;
   min-height: 0;
 }
+
+// Full-width variant — used on pages that opt out of the sidebar (e.g. /dashboard/summary).
+.mainFull {
+  flex: 1;
+  min-height: 0;
+}

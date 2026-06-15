@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import DashboardTopbar from '@/components/dashboard/DashboardTopbar';
 import DashboardNavSidebar from '@/components/dashboard/DashboardNavSidebar';
 import { loadMetricsWithSource } from '@/lib/storage';
@@ -10,6 +10,8 @@ import styles from './layout.module.scss';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const showSidebar = pathname !== '/dashboard/summary';
   const [healthScore, setHealthScore] = useState(0);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
 
@@ -39,8 +41,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       />
 
       <div className={styles.body}>
-        <DashboardNavSidebar metrics={metrics} />
-        <main className={styles.main} id="main-content">
+        {showSidebar && <DashboardNavSidebar metrics={metrics} />}
+        <main className={showSidebar ? styles.main : styles.mainFull} id="main-content">
           {children}
         </main>
       </div>
