@@ -104,11 +104,24 @@ JiraDashboard/
 ├── app/                          # Next.js App Router root
 │   ├── layout.tsx                # Root layout — sets <html>, <body>, favicon metadata
 │   ├── icon.png                  # App favicon (auto-detected by Next.js)
-│   ├── globals.scss              # Global styles (Tailwind base + custom)
+│   ├── globals.scss              # Global styles (Tailwind base + custom + .dc-card/.dc-kpi-* utilities)
 │   ├── page.tsx                  # / — Upload page (home)
-│   ├── summary/page.tsx          # /summary — Health overview
+│   ├── summary/page.tsx          # /summary — Health overview (AppShell, standalone)
 │   ├── charts/page.tsx           # /charts — Visual analytics
-│   ├── dashboard/page.tsx        # /dashboard — Full delivery report
+│   ├── column-mapping/page.tsx   # /column-mapping — Column mapping preview
+│   ├── dashboard/                # /dashboard/* — 11 independent routed pages
+│   │   ├── page.tsx              # /dashboard — redirect to summary section
+│   │   ├── summary/page.tsx      # Delivery Summary
+│   │   ├── priority-attention/   # Priority Attention
+│   │   ├── sprint/               # Sprint Health
+│   │   ├── epics/                # Epic Health
+│   │   ├── labels/               # Labels
+│   │   ├── flow-health/          # Flow Health Table (11 filters)
+│   │   ├── throughput/           # Throughput Analytics
+│   │   ├── work-explorer/        # Work Item Explorer
+│   │   ├── data-quality/         # Data Quality Score
+│   │   ├── release-readiness/    # Release Readiness
+│   │   └── delivery-controls/    # Delivery Controls
 │   ├── trends/page.tsx           # /trends — Upload-to-upload trend analysis
 │   ├── explore/page.tsx          # /explore — Work Item Explorer (React Flow)
 │   ├── readiness/page.tsx        # /readiness — Release readiness checklist
@@ -116,7 +129,11 @@ JiraDashboard/
 │   ├── snapshots/page.tsx        # /snapshots — Saved metric snapshots
 │   ├── backend/page.tsx          # /backend — Import logs & backend status
 │   ├── glossary/page.tsx         # /glossary — Abbreviations & metric guide
-│   ├── developer/page.tsx        # /developer — Developer wiki UI
+│   ├── developer/
+│   │   ├── layout.tsx            # /developer/* layout — DashboardTopbar only
+│   │   ├── layout.module.scss
+│   │   ├── page.tsx              # /developer — Developer wiki (light wiki theme)
+│   │   └── page.module.scss      # .wiki class remaps all --dc-* tokens to light values
 │   ├── help/page.tsx             # /help — FAQ / help guide
 │   ├── login/page.tsx            # /login — Authentication
 │   ├── register/page.tsx         # /register — Reserved; redirects to login
@@ -124,9 +141,14 @@ JiraDashboard/
 │   ├── profile/page.tsx          # /profile — Editable member profile
 │   ├── members/page.tsx          # /members — Team member directory
 │   ├── admin/
+│   │   ├── layout.tsx            # /admin/* layout — DashboardTopbar + AdminNavSidebar
+│   │   ├── layout.module.scss
 │   │   ├── logs/page.tsx         # /admin/logs — Import log management
-│   │   ├── settings/page.tsx     # /admin/settings — Users, backup, restore, thresholds
-│   │   └── security/page.tsx     # /admin/security — Production security checklist
+│   │   ├── settings/page.tsx     # /admin/settings — Backup, restore, thresholds
+│   │   ├── security/page.tsx     # /admin/security — Production security checklist
+│   │   ├── users/page.tsx        # /admin/users — User management
+│   │   ├── diagnostics/page.tsx  # /admin/diagnostics — System diagnostics
+│   │   └── theme/page.tsx        # /admin/theme — Brand & theme settings
 │   └── api/
 │       ├── upload/route.ts       # POST /api/upload — parse + metrics + save log
 │       ├── imports/route.ts      # GET  /api/imports — logs (role-scoped; all for admin/manager/c_level)
@@ -148,11 +170,27 @@ JiraDashboard/
 ├── src/
 │   ├── components/
 │   │   ├── layout/
-│   │   │   └── AppShell.tsx      # Sticky header with 4-group dropdown nav + mobile hamburger
+│   │   │   └── AppShell.tsx      # Sticky header — nav driven by DC_NAV_GROUPS single source of truth
+│   │   ├── dashboard/
+│   │   │   ├── DashboardTopbar.tsx      # Fixed 52px topbar for /dashboard/* + /admin/* + /developer
+│   │   │   ├── DashboardTopbar.module.scss
+│   │   │   ├── DashboardSidebarNav.tsx  # Fixed 228px sidebar for /dashboard/*
+│   │   │   └── DashboardSidebarNav.module.scss
+│   │   ├── admin/
+│   │   │   ├── AdminNavSidebar.tsx      # Fixed 228px sidebar for /admin/* (injected by layout.tsx)
+│   │   │   ├── AdminNavSidebar.module.scss
+│   │   │   └── BackupRestoreSettings.tsx
+│   │   ├── dc-shell/
+│   │   │   ├── navigation.ts            # DC_NAV_GROUPS — single source of truth for all nav items
+│   │   │   ├── DCTopbar.tsx             # Generic topbar shell component
+│   │   │   ├── DCPageSidebar.tsx        # Generic page sidebar shell component
+│   │   │   ├── DCKpiCard.tsx            # KPI metric card
+│   │   │   ├── DCStatusChip.tsx         # Status chip (uses .chip + variant classes)
+│   │   │   ├── DCActionBoard.tsx        # Action board panel
+│   │   │   └── DeliveryClarityShell.tsx # Composite shell (topbar + sidebar + main)
 │   │   ├── auth/
 │   │   │   └── UserMenu.tsx      # Avatar dropdown (name, role badge, sign out)
 │   │   ├── admin/
-│   │   │   └── BackupRestoreSettings.tsx
 │   │   ├── onboarding/
 │   │   │   └── OnboardingChecklist.tsx
 │   │   ├── readiness/
@@ -213,18 +251,46 @@ JiraDashboard/
 
 ---
 
+## 3a. Frontend Architecture Standards (v4.9.0+)
+
+These rules apply to every component, page, and style file. They are enforced by ESLint, Stylelint, and TypeScript.
+
+### Styling hierarchy
+```
+Tailwind  →  utility layout only (flex, grid, gap, p-*, m-*, responsive breakpoints)
+SCSS      →  all component appearance (color, border, shadow, animation, typography, interaction)
+```
+
+### Rules
+- **Zero inline `style` props** — ESLint `react/forbid-dom-props` enforces this. Exception: CSS custom properties only (`--prefixed-keys`) for data-driven values (e.g. `style={{ '--bar-width': `${pct}%` } as CSSProperties}`).
+- **SCSS modules** — one `ComponentName.module.scss` per component with custom styling.
+- **Design tokens** — all values from `src/styles/_tokens.scss`. Never hardcode hex, px dimensions, or z-indices.
+- **`clsx`** — for conditional class composition.
+- **`DC_NAV_GROUPS`** (`src/components/dc-shell/navigation.ts`) — single source of truth for all nav items. Both `AppShell` and `DashboardTopbar` consume this config.
+
+### Layout injection patterns
+
+**Dashboard pages** (`/dashboard/*`): `DashboardTopbar` (fixed top) + `DashboardSidebarNav` (fixed left) via `app/dashboard/layout.tsx`.
+
+**Admin pages** (`/admin/*`): `DashboardTopbar` + `AdminNavSidebar` injected by `app/admin/layout.tsx`. Individual admin page files render content only — no shell logic.
+
+**Developer page** (`/developer`): `DashboardTopbar` only, via `app/developer/layout.tsx`. The page has its own internal section sidebar. The `.wiki` class in `page.module.scss` remaps all `--dc-*` dark tokens to light semantic equivalents so inline-style token references resolve to light values without editing individual lines.
+
+**AppShell pages** (all other routes): `AppShell` from `src/components/layout/AppShell.tsx` with `showNav` prop.
+
+---
+
 ## 4. Routing Architecture — Pages
 
 All analytics pages are React Client Components (`'use client'`). They call `loadMetricsWithSource()`, which first fetches `/api/metrics/latest` to restore metrics from the bucket-backed server copy, then falls back to browser `localStorage` (`dc_metrics_v2`) if no server/bucket payload is available. If both are missing the router redirects to `/` (upload).
 
 ### Navigation structure
 
-The `AppShell` header renders 4 dropdown groups:
+Navigation items are defined in `DC_NAV_GROUPS` (`src/components/dc-shell/navigation.ts`) — the single source of truth consumed by both `AppShell` and `DashboardTopbar`. Groups:
 - **Analytics**: `/summary`, `/dashboard`, `/charts`, `/trends`, `/teams`, `/portfolio`
-- **Reference**: `/landing` (About), `/glossary`, `/developer`, `/help`
-- **Delivery**: `/readiness`, `/explore`, `/customer`
-- **Data**: `/snapshots`, `/backend`
 - **Reference**: `/glossary`, `/developer`, `/help`
+- **Delivery**: `/readiness`, `/explore`, `/customer`, `/column-mapping`
+- **Data**: `/snapshots`, `/backend`
 
 Mobile: hamburger button opens a 2-column grid panel below the header.
 

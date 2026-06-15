@@ -5,6 +5,74 @@
 
 ---
 
+## v4.9.2 — P0: Test Fixes + CSS Token System Completion (2026-06-16, P0 — quality)
+
+### Fixed
+- **`adminSettingsConsole.test.ts` TC-AC-01**: Updated expected `ADMIN_TABS` ID list from 8 → 9 tabs to include `'config'` (App Config tab added in v4.9.0 but test not updated). All 9 tabs now asserted: `['users', 'requests', 'config', 'retention', 'thresholds', 'orphan', 'backup', 'cloud', 'browser']`.
+- **`userAddRequests.test.ts` TC-REQ-10**: Removed stale assertion `expect(body.tempPassword).toBe('ValidPass1')`. The `PATCH /api/admin/user-add-requests/[id]/accept` route deliberately omits `tempPassword` from the response (it is delivered via welcome email per v4.5.1 / FR-325). The assertion was never updated after commit `c00c93b` removed it from the response.
+
+### Verified
+- **Test suite**: 571 tests / 63 suites — all passing.
+- **Lint**: passes (warnings for legacy inline styles in tech-debt files; zero errors).
+- **Build**: `npx next build` passes — all routes compiled successfully.
+
+---
+
+## v4.9.1 — Admin Layout Overhaul + Developer Wiki Theme (2026-06-14, P1 — UI)
+
+### Added
+- **`app/admin/layout.tsx`**: New Next.js App Router layout wrapping all `/admin/*` routes. Injects `DashboardTopbar` (fixed 52px header) and `AdminNavSidebar` (fixed 228px left sidebar). Individual admin page files no longer manage their own shell.
+- **`src/components/admin/AdminNavSidebar.tsx`** + **`AdminNavSidebar.module.scss`**: Fixed left sidebar with 6 admin nav items (Users, Requests, Settings, Diagnostics, Security, Logs). Active state via `usePathname()`: `--color-primary-soft` background + `--color-primary` text + 700 weight. SCSS tokens only — no hardcoded values.
+- **`app/admin/layout.module.scss`**: Shell (flex column, full viewport), body (flex row, `margin-top: var(--header-height)`), main (`margin-left: var(--sidebar-width)`, `padding: var(--space-6)`).
+- **`app/developer/layout.tsx`** + **`app/developer/layout.module.scss`**: New layout for `/developer` providing `DashboardTopbar` only (the page owns its own internal docs sidebar).
+- **`app/developer/page.module.scss`**: 208-line light wiki theme. `.wiki` root class remaps all `--dc-*` dark palette tokens to light equivalents so every `var(--dc-xxx)` in the 1 650-line page resolves to a light value automatically — no line-by-line edits needed. Key remappings: `--dc-p1 → --color-text-primary`, `--dc-s1 → --color-subtle`, `--dc-s2 → --color-surface`, `--dc-bdr → --color-border`, `--dc-acc → --color-primary`. SCSS sub-rules style sidebar, nav items (active state: blue left border + `color-mix` background), search input, wiki article typography (headings, code blocks, tables, blockquotes, links, `<hr>`), and mobile toggle.
+
+### Changed
+- **6 admin page files** (`settings/`, `users/`, `theme/`, `diagnostics/`, `security/`, `logs/`): Removed `<AppShell showNav>` wrappers — shell is now provided by `app/admin/layout.tsx`.
+- **`src/components/admin/AdminConsoleLayout.tsx`**: Removed internal two-column grid + `<aside>` (sidebar now injected by layout). Return is now a bare fragment: breadcrumb header → title/description → stats grid → `{children}`. Inline styles migrated from dark `dc-*` fallbacks to light `color-*` semantic tokens.
+- **`app/developer/page.tsx`**: Removed `<AppShell showNav>` wrapper. Root div adds `styles.wiki` class. Mobile toggle, nav items, search input, table row hovers — all migrated from inline orange/dark styles to SCSS module classes.
+
+---
+
+## v4.9.0 — Navigation Architecture Overhaul + Frontend Standards (2026-06-14, P1 — architecture)
+
+### Added
+- **`src/components/dc-shell/`** — New Delivery Clarity shell component library: `DCActionBoard.tsx`, `DCKpiCard.tsx`, `DCPageSidebar.tsx`, `DCStatusChip.tsx`, `DCTopbar.tsx`, `DeliveryClarityShell.tsx`. Foundation for consistent chrome across non-dashboard pages.
+- **`src/styles/_tokens.scss` — 23 legacy token aliases**: Added `--dc-text`, `--dc-text-2`, `--dc-text-3`, `--dc-brand`, `--dc-brand-soft`, `--dc-line`, `--dc-surface`, `--dc-surface-soft`, `--dc-surface-blue`, `--dc-success`, `--dc-success-soft`, `--dc-critical`, `--dc-critical-soft`, `--dc-warning`, `--dc-warning-soft`, `--dc-info`, `--dc-info-soft`, `--n900`, `--n500`, `--blue`, `--dc-shadow-card`, `--dc-purple`, `--dc-purple-soft` as aliases pointing to the semantic `--color-*` layer. This bridges older pages and components that used the legacy names with the current token system.
+- **`app/globals.scss` — `.dc-card`, `.dc-kpi-card`, `.dc-kpi-icon`, `.dc-kpi-label`, `.dc-kpi-value`, `.dc-kpi-sub` utility classes**: Used throughout `work-explorer`, `data-quality`, and the `DCKpiCard` component but previously undefined — caused invisible cards and missing borders on those pages.
+- **`app/column-mapping/page.tsx`**: Created new `/column-mapping` route with proper AppShell — was a 404 previously. Column mapping preview before dashboard generation.
+- **`src/components/dc-shell/navigation.ts` (`DC_NAV_GROUPS`)**: Single source of truth for all navigation items. AppShell now consumes this config — menus are no longer duplicated between AppShell and DashboardTopbar.
+- **`/admin/users` User Management page** (`app/admin/users/page.tsx`): Admin page for managing platform users.
+- **Load animations**: `@keyframes barGrow`, `@keyframes circleExpand`, `@keyframes fadeSlideUp` added to dashboard bars, charts, and circles — `animation-delay` staggers by index. `@media (prefers-reduced-motion)` disables all animations.
+
+### Changed
+- **Dashboard refactored into 11 independent routed pages** under `app/dashboard/[section]/page.tsx`: each section (summary, priority-attention, sprint, epics, labels, flow-health, throughput, work-explorer, data-quality, release-readiness, delivery-controls) is its own Next.js page. Previously a single monolithic `app/dashboard/page.tsx`.
+- **4 Deep Dive pages restored** after refactor: `app/dashboard/data-quality/`, `app/dashboard/work-explorer/`, `app/dashboard/release-readiness/`, `app/dashboard/delivery-controls/` (these were inadvertently lost in the initial split and restored in a follow-up commit).
+- **`DashboardTopbar`**: Redesigned to correct 3-zone layout — `[Brand zone] [flex-1 spacer] [Nav groups] [Right rail]`. Nav groups now match AppShell groups exactly (same `DC_NAV_GROUPS` source). Active state: blue 2px underline on button. Right rail: "New Upload" CTA + user avatar/menu.
+- **AppShell header** brought structurally identical to DashboardTopbar: same 3-zone layout, same nav groups from `DC_NAV_GROUPS`, consistent spacing and token usage.
+- **`/summary` page**: Restored as standalone AppShell page (no DashboardTopbar/sidebar injection). Visual style matches the dashboard without adding the sidebar chrome.
+- **`app/dashboard/flow-health/`**: Reset Filters + Export CSV controls moved into the filter card (were floating outside).
+- **UserMenu**: Wired into DashboardTopbar with role-based sidebar section filtering.
+
+### Fixed
+- **`/dashboard` routing**: Corrected Next.js App Router page resolution — dashboard no longer falls through to wrong route.
+- **Missing routes in `canAccessRoute`**: `da75e40` added `/column-mapping`, `/data-quality`, `/work-explorer`, `/delivery-mix`, `/flow-health`, `/release-readiness`, `/sprint-kanban` to the role allowlists.
+- **`statusDist.map` index**: Missing `index` parameter in flow-health page caused React key warning.
+- **Placeholder text**: Ensured `::placeholder` is always `--color-text-muted` / `--dc-p3` across all themes — was white/invisible in some dark contexts.
+- **ScoreRing SVG track**: `data-quality/page.tsx` — track circle stroke changed from `rgba(255,255,255,0.12)` (invisible on light background) to `var(--color-border, #e2e8f0)`.
+- **Next.js `distDir`**: Redirected build output outside iCloud Drive to prevent chunk eviction during development.
+
+### Architecture — Frontend Standards (permanent, applies to all future changes)
+- **Zero inline `style` props** (except CSS custom property exception for data-driven values).
+- **SCSS modules** (`ComponentName.module.scss`) for all custom component styling.
+- **Tailwind** for layout utilities only (flex, grid, spacing, responsive breakpoints).
+- **Design tokens** (`src/styles/_tokens.scss`) as single source of truth — no hardcoded hex values.
+- **`clsx`** for conditional class composition.
+- **`DC_NAV_GROUPS`** as single nav source — no duplicated item lists.
+- **ESLint rule** (`react/forbid-dom-props`) enforces `style` prop prohibition.
+
+---
+
 ## v4.8.0 — Dashboard 3-Zone Layout: DashboardTopbar + DashboardSidebarNav (2026-06-13, P1 — UI)
 
 ### Added

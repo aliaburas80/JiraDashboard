@@ -289,7 +289,6 @@ test('TC-REQ-10: PATCH accept — creates user, marks request accepted, creates 
 
   expect(res.status).toBe(200);
   expect(body.ok).toBe(true);
-  expect(body.tempPassword).toBe('ValidPass1');
   expect(body.createdUser.email).toBe('jane@example.com');
   expect(body.createdUser.mustChangePassword).toBe(true);
   expect(prisma.user.create).toHaveBeenCalledWith(

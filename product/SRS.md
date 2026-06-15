@@ -7,12 +7,12 @@
 | Field | Value |
 |---|---|
 | **Document Title** | Software Requirements Specification — Delivery Clarity |
-| **Version** | 4.5.2 |
-| **Date** | 2026-06-09 |
+| **Version** | 4.9.2 |
+| **Date** | 2026-06-16 |
 | **Author** | Ali Abu Ras (aburasali80@gmail.com) |
-| **Status** | Active — Release Candidate (lint, tests, and build verified 2026-06-07) |
+| **Status** | Active — Release Candidate (lint: pass, tests: 571/63 passing, build: pass — verified 2026-06-16) |
 | **Repository** | https://github.com/aliaburas80/JiraDashboard |
-| **Branch** | codex/flat-admin-settings |
+| **Branch** | style/visual-design-updates |
 
 ### Revision History
 
@@ -32,6 +32,9 @@
 | 4.5.0 | 2026-06-09 | Ali Abu Ras | P1 — USERREQ UI layer: FR-320–FR-324, Addendum C, Notification Bell, Bulk User Management |
 | 4.5.1 | 2026-06-09 | Ali Abu Ras | P1 — Auto-generate password UX + welcome email on accept: FR-319/FR-321 updated, FR-325 added, Addendum D, nodemailer wired |
 | 4.5.2 | 2026-06-10 | Ali Abu Ras | P1 — Clickable notifications + admin settings tab deep-link: FR-323 updated, Addendum E, BR-113/BR-114, TC-NOTIF-06/07, UC-100, UJ-035, SCN-050 |
+| 4.9.0 | 2026-06-14 | Ali Abu Ras | P1 — Navigation architecture overhaul: dashboard refactored into 11 routed pages, DashboardTopbar redesigned (3-zone), AppShell unified via DC_NAV_GROUPS, dc-shell component library, 23 legacy token aliases, /column-mapping page, load animations, frontend standards (SCSS modules / design tokens / zero inline styles) enforced via ESLint |
+| 4.9.1 | 2026-06-14 | Ali Abu Ras | P1 — Admin layout overhaul (app/admin/layout.tsx + AdminNavSidebar) + developer wiki light theme (page.module.scss token remapping) |
+| 4.9.2 | 2026-06-16 | Ali Abu Ras | P0 — Test fixes: adminSettingsConsole TC-AC-01 (config tab), userAddRequests TC-REQ-10 (tempPassword removed from response); P0 doc pass: RELEASE_NOTES, SRS, DEVELOPER_GUIDE, TEST_CASES, BRD updated; test suite verified 571/63 all passing |
 
 ---
 
@@ -80,6 +83,13 @@ Delivery Clarity accepts Jira CSV or Excel exports and produces a real-time, mul
 - **F1 Throughput analytics**, **F2 Work Item Explorer**, **F3 Authentication & Database**, **F4 Smart Excel Export (17 sheets)**
 - Dark mode, print mode, mobile responsiveness (including `/explore` mobile polish)
 - Performance optimised for 5,000+ issues (parseDate memo cache, flowItemByKey Map)
+- **Dashboard routed pages** — dashboard refactored into 11 independent Next.js App Router pages under `app/dashboard/[section]/`: summary, priority-attention, sprint, epics, labels, flow-health, throughput, work-explorer, data-quality, release-readiness, delivery-controls
+- **Admin layout injection** — `app/admin/layout.tsx` provides `DashboardTopbar` + `AdminNavSidebar` to all `/admin/*` routes via Next.js layout file; individual pages render content only
+- **Developer wiki** — `/developer` renders as a light wiki theme; all dark palette tokens remapped to semantic light values via `.wiki` SCSS class
+- **DC shell component library** — `src/components/dc-shell/`: `DCTopbar`, `DCPageSidebar`, `DCKpiCard`, `DCStatusChip`, `DCActionBoard`, `DeliveryClarityShell` — reusable chrome for non-dashboard pages
+- **Unified navigation** — `DC_NAV_GROUPS` (`src/components/dc-shell/navigation.ts`) is single source of truth for all nav items; both AppShell and DashboardTopbar consume it
+- **`/column-mapping` route** — column mapping preview page before dashboard generation
+- **Frontend architecture standards** — zero inline `style` props (ESLint `react/forbid-dom-props`), SCSS modules for all custom styling, Tailwind for layout utilities only, `src/styles/_tokens.scss` as single source of truth for all visual values
 
 **Out of scope (v4.0 — not yet implemented):**
 - Jira OAuth or API token direct connection (roadmap P3)

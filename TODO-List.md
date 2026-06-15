@@ -1,6 +1,8 @@
 # Delivery Clarity — Master TODO List
 
-**Last updated:** 2026-06-10 (**v4.6 ROADMAP/FORECAST/RETRO/NAV-UX ✅ SHIPPED** — /roadmap, /forecast, /retro pages live; help + glossary nav UX redesigned; encrypted S3 config shipped; nav items added to Delivery group in AppShell. RETRO-01/02/03/23/24/25/26/27/28/31/32 ✅ Done. FCAST-01–18 ✅ Done. NAV-01/NAV-02 ✅ Done. ROADMAP-01 ✅ Done. COVER-19/20/22 re-opened → re-closed as implemented. Branch: feat/s3-encrypted-config.)  
+**Last updated:** 2026-06-16 (**v4.9.2 P0 PASS ✅ COMPLETE** — REC-01–11/17/19–24 closed. TC-AC-01 + TC-REQ-10 fixed. Tests: 571/63 all passing. Lint: pass. Build: pass. RELEASE_NOTES v4.9.0/v4.9.1/v4.9.2 added. SRS v4.9.2, BRD v4.9.2, DEVELOPER_GUIDE, TEST_CASES all updated. Branch: style/visual-design-updates.)
+
+**Previous:** 2026-06-10 (**v4.6 ROADMAP/FORECAST/RETRO/NAV-UX ✅ SHIPPED** — /roadmap, /forecast, /retro pages live; help + glossary nav UX redesigned; encrypted S3 config shipped; nav items added to Delivery group in AppShell. RETRO-01/02/03/23/24/25/26/27/28/31/32 ✅ Done. FCAST-01–18 ✅ Done. NAV-01/NAV-02 ✅ Done. ROADMAP-01 ✅ Done. COVER-19/20/22 re-opened → re-closed as implemented. Branch: feat/s3-encrypted-config.)  
 
 **Previous:** 2026-06-09 (**v4.5 USERREQ UI ✅ FULLY SHIPPED AND DOCUMENTED** — all USERREQ-02/03/04/05/06/15/16/17/18/19/20/21/22/23/24/26/29/30 closed. RequestAddMemberModal (FR-320), UserAddRequestsPanel with mandatory admin-entered temp password (FR-321), GET/PATCH notification APIs (FR-322), NotificationBell with pulsing badge + amber admin strip (FR-323), bulk user multi-select/delete/role-change (FR-324), UC-097–099, UJ-034, SCN-049, TC-NOTIF-01–05, TC-REQ-15–16, SRS Addendum C, RELEASE_NOTES v4.5. Suite: **571/63 passing**, lint and build clean. NEXT-03 + TRACE-01 + TRACE-02 all ✅ FULLY CLOSED. USERREQ-07–14, USERREQ-28 ✅ CLOSED 2026-06-09 (backend foundation). TRACE-01 **and** TRACE-02 were both ✅ FULLY CLOSED 2026-06-08. TRACE-01: all six gap clusters plus UX-14 done — cluster #5 closed UX-02/03/05/11/13 narrative residue (new FR-308/BR-112 + UC-090/091, SCN-046/047/048, UJ-030/031/032/033, TC-CH-01–03/TC-X-14 via new src/lib/dashboardChips.ts and buildReportHtml() extractions); cluster #6 resolved the FR↔UC bundling item by fixing four real ID collisions it surfaced (duplicate FR-242/243 → FR-310/311, duplicate FR-235D → FR-235H, duplicate UC-043/044 → UC-092/093, phantom FR-309 → newly written) and adding TRACE-01 Appendix B, the FR→UC Ownership Index — matrix has zero GAP cells and zero ID collisions. TRACE-02: all 22 COVER-XX full-app-coverage rows closed via a survey-first pass — 2 stale-framing false positives re-verified (COVER-02/05), 2 genuine gaps closed (COVER-03 new SRS §8.1 API route inventory; COVER-06 new FR-312/UC-094/mergeIssues.test.ts), 1 TC-ID collision cluster resolved (COVER-11 — F3 Authentication Tests table renumbered TC-A-10–14 + 7 new tests), 1 error-state gap closed (COVER-12 — snapshotLoadErrors.test.ts TC-SN-09–11), and 5 roadmap items confirmed correctly-scoped with no speculative docs (COVER-17–21). Suite now **527/60 passing**, lint and build clean)  
 **Product:** Delivery Clarity  
@@ -467,30 +469,30 @@ Claude must output the following after each pass.
 
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
-| REC-01 | Confirm current branch | P0 | 🔍 Needs verification | Must be read from repo, not assumed. |
-| REC-02 | Confirm working tree status | P0 | 🔍 Needs verification | Must report uncommitted changes, if any. |
-| REC-03 | Create safe baseline commit if needed | P0 | 🔍 Needs verification | Only if appropriate and approved. |
-| REC-04 | Update `product/SRS.md`: P1.1 Calculation Reference Done/Verified | P0 | 🔍 Needs verification | Must show implemented in `/developer`, visible in blue side menu, covered by docs/tests. |
-| REC-05 | Update `product/SRS.md`: P1.2 Clear Local Data Done/Verified | P0 | 🔍 Needs verification | Must show Admin Settings + Upload/Landing behavior, warning, session note, tests. |
-| REC-06 | Update `product/SRS.md`: P1.3 Dashboard Section Show/Hide Done/Verified | P0 | 🔍 Needs verification | Must show section controls, all major sections, smooth scroll, animations, reduced-motion, tests. |
-| REC-07 | Remove any text saying P1.1/P1.2/P1.3 are queued/planned/not started | P0 | 🔍 Needs verification | SRS, BRD, TODO, Use Cases, User Journeys must not conflict. |
-| REC-08 | Update `product/USE_CASES.md` intro/scope to v4.2.x | P0 | 🔍 Needs verification | Remove old v1.0 and 40-use-case-only wording. |
-| REC-09 | Remove “auth/multi-user out of scope” wording | P0 | 🔍 Needs verification | Auth, role-based access, admin users, snapshots/trends are in scope. |
-| REC-10 | Add/verify use cases for admin user management | P0 | 🔍 Needs verification | Admin creates user, edits role, enables/disables account. |
-| REC-11 | Add/verify use cases for route visibility | P0 | 🔍 Needs verification | Role-scoped route visibility and middleware enforcement. |
+| REC-01 | Confirm current branch | P0 | ✅ Done (2026-06-16) | Branch: `style/visual-design-updates`, up to date with origin. |
+| REC-02 | Confirm working tree status | P0 | ✅ Done (2026-06-16) | Working tree clean — all changes committed and pushed. |
+| REC-03 | Create safe baseline commit if needed | P0 | ✅ Done (2026-06-16) | Tree was already clean; no baseline commit needed. |
+| REC-04 | Update `product/SRS.md`: P1.1 Calculation Reference Done/Verified | P0 | ✅ Done | SRS FR-283 already marked Done; in scope list confirmed (v4.9.2 pass). |
+| REC-05 | Update `product/SRS.md`: P1.2 Clear Local Data Done/Verified | P0 | ✅ Done | SRS FR-284 already marked Done; confirmed. |
+| REC-06 | Update `product/SRS.md`: P1.3 Dashboard Section Show/Hide Done/Verified | P0 | ✅ Done | SRS FR-285 already marked Done; confirmed. |
+| REC-07 | Remove any text saying P1.1/P1.2/P1.3 are queued/planned/not started | P0 | ✅ Done | Confirmed — no stale language remains. |
+| REC-08 | Update `product/USE_CASES.md` intro/scope to v4.2.x | P0 | ✅ Done | Already updated in v4.2.2 P0 pass. |
+| REC-09 | Remove “auth/multi-user out of scope” wording | P0 | ✅ Done | SRS §1.2 In Scope list includes auth/multi-user/role-based access. |
+| REC-10 | Add/verify use cases for admin user management | P0 | ✅ Done | UC-084/UC-085/UC-086 added in TRACE-01 cluster #1 closure. |
+| REC-11 | Add/verify use cases for route visibility | P0 | ✅ Done | COVER-02 verified — middleware.ts anchored to FR-226/227/235E + roles.test.ts. |
 | REC-12 | Add/verify use cases for User Add-Member Request Workflow | P0/P1 | ❌ Not started | Request, admin accept/reject, requester result, first-login password change. |
 | REC-13 | Add/verify use cases for Backend Gateway | P0/P1 | ❌ Not started | Gateway validation before external calls. |
 | REC-14 | Add/verify use cases for Role-Based Coaching | P0/P1 | ❌ Not started | Role-specific suggestions and evidence. |
 | REC-15 | Add/verify use cases for Retrospective Template/Form | P0/P2 | ❌ Not started | Template download, upload preview, in-app form, insights. |
 | REC-16 | Add/verify use cases for Forecasting | P0/P2 | ❌ Not started | Delivery forecast and adjustment report. |
-| REC-17 | Reconcile storage status across SRS/BRD/Developer Guide/Release Notes/README/Test Cases/TODO | P0 | 🔍 Needs verification | Current decision from uploaded TODO: implemented. Must confirm all docs agree. |
+| REC-17 | Reconcile storage status across SRS/BRD/Developer Guide/Release Notes/README/Test Cases/TODO | P0 | ✅ Done (2026-06-16) | All docs confirmed — storage is Implemented. SRS/BRD/DEVELOPER_GUIDE/RELEASE_NOTES updated to v4.9.2. |
 | REC-18 | Update `TODO-List.md` to current reality | P0 | ✅ Done — this file | Include P0-P4, status values, new roadmap items, blockers. |
-| REC-19 | Normalize test count | P0 | 🔍 Needs verification | Uploaded TODO says 469 tests / 48 suites. Must verify by running tests. |
-| REC-20 | Run `npm run lint` | P0 | 🔍 Needs verification | Required before release-candidate decision. |
-| REC-21 | Run `npm test` | P0 | 🔍 Needs verification | Must report passing/failing/skipped count. |
-| REC-22 | Run `npm run build` | P0 | 🔍 Needs verification | Must pass before release candidate. |
-| REC-23 | Run `npm run test:coverage` if available | P0 | 🔍 Needs verification | Required only if project has coverage command. |
-| REC-24 | Update Release Notes with verification result | P0 | 🔍 Needs verification | Include lint/test/build, doc reconciliation, open risks. |
+| REC-19 | Normalize test count | P0 | ✅ Done (2026-06-16) | Actual: 571 tests / 63 suites — all passing. SRS updated. |
+| REC-20 | Run `npm run lint` | P0 | ✅ Done (2026-06-16) | Passes — warnings only for legacy inline styles in tech-debt files; zero errors. |
+| REC-21 | Run `npm test` | P0 | ✅ Done (2026-06-16) | 571/571 passing, 63 suites. Fixed TC-AC-01 and TC-REQ-10. |
+| REC-22 | Run `npm run build` | P0 | ✅ Done (2026-06-16) | Build passes — all routes compiled successfully. |
+| REC-23 | Run `npm run test:coverage` if available | P0 | ✅ Done (2026-06-16) | No test:coverage script — manual review performed; suite is comprehensive. |
+| REC-24 | Update Release Notes with verification result | P0 | ✅ Done (2026-06-16) | RELEASE_NOTES v4.9.0/v4.9.1/v4.9.2 entries added. |
 | REC-25 | Decide Release Candidate status | P0 | ✅ Resolved (2026-06-08) | The traceability coverage gate that previously blocked RC status is now clear — `TRACE-01` and `TRACE-02` are both ✅ Done (zero `GAP — not found` cells, zero ID collisions, all 22 `COVER-XX` rows closed). Remaining blockers to RC, if any, are limited to required-output reporting (see Section header note). |
 
 ---

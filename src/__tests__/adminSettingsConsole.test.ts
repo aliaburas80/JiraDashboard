@@ -55,7 +55,7 @@ describe('TC-AC-01: flat admin console exposes current tab name and status', () 
 
   test('ADMIN_TABS lists every console tab with a label and an icon for the sidebar', () => {
     const ids = ADMIN_TABS.map(item => item.id);
-    expect(ids).toEqual(['users', 'requests', 'retention', 'thresholds', 'orphan', 'backup', 'cloud', 'browser']);
+    expect(ids).toEqual(['users', 'requests', 'config', 'retention', 'thresholds', 'orphan', 'backup', 'cloud', 'browser']);
     ADMIN_TABS.forEach(item => {
       expect(item.label.length).toBeGreaterThan(0);
       expect(item.icon.length).toBeGreaterThan(0);

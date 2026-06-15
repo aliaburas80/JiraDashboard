@@ -7,10 +7,10 @@
 | Field | Detail |
 |---|---|
 | **Document Title** | Delivery Clarity — Business Requirements Document |
-| **Version** | 4.2.2 |
-| **Date** | 2026-06-07 |
+| **Version** | 4.9.2 |
+| **Date** | 2026-06-16 |
 | **Author** | Ali Abu Ras |
-| **Status** | Approved — reconciled with v4.2.2 Release Candidate (P0 pass 2026-06-07: superseded v1.0 scope/assumption language on authentication, multi-user, and audit trail; storage status confirmed Done) |
+| **Status** | Approved — reconciled with v4.9.2 (P0 pass 2026-06-16: navigation architecture overhaul, admin layout injection, developer wiki theme, frontend standards enforced; test suite 571/63 all passing; lint and build clean) |
 | **Classification** | Internal |
 
 ### Revision History
@@ -23,6 +23,7 @@
 | 0.4 | 2026-05-22 | Ali Abu Ras | Incorporated roadmap items into Future Scope; added glossary |
 | 1.0 | 2026-05-30 | Ali Abu Ras | Final review, all sections complete — approved for development baseline |
 | 4.0 | 2026-06-03 | Ali Abu Ras | v4 Quality & Trust Layer; scope updated; auth and database now in scope; BR-070–BR-090 added |
+| 4.9.2 | 2026-06-16 | Ali Abu Ras | P0 doc pass: navigation architecture overhaul (11 routed dashboard pages, DashboardTopbar, AdminNavSidebar, developer wiki, DC shell library, unified DC_NAV_GROUPS, frontend standards enforced) reflected in scope and capabilities |
 
 ---
 
