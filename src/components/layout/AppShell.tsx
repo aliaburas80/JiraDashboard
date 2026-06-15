@@ -45,7 +45,7 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: 'Administration',
+    label: 'Admin',
     items: [
       { href: '/admin/settings',    label: 'Settings',         icon: '⚙️', desc: 'Users, storage, retention'   },
       { href: '/admin/theme',       label: 'Theme & Branding', icon: '🎨', desc: 'Palette, logo, app name'      },
@@ -135,81 +135,83 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
             </Link>
           </div>
 
-          {/* ── Right: nav + upload + user ── */}
-          <div className={styles.rightRail}>
-            {showNav && (
-              <>
-                {/* Desktop grouped nav */}
-                <nav className={styles.desktopNav}>
-                  {visibleGroups.map(group => {
-                    const active = isGroupActive(group);
-                    const open   = openGroup === group.label;
-                    return (
-                      <div key={group.label} className={styles.navGroupWrapper}>
-                        <button
-                          type="button"
-                          onClick={() => setOpenGroup(open ? null : group.label)}
-                          aria-current={active ? 'page' : undefined}
-                          className={clsx(styles.navGroupBtn, { [styles.active]: active })}
-                        >
-                          {group.label}
-                          <svg
-                            className={clsx(styles.navGroupChevron, { [styles.open]: open })}
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                          </svg>
-                          {active && <span className={styles.navGroupActiveBar} aria-hidden="true" />}
-                        </button>
+          {/* ── Spacer — pushes nav to center-right ── */}
+          <div className={styles.spacer} />
 
-                        {open && (
-                          <div className={styles.dropdown}>
-                            {group.items.map(item => {
-                              const itemActive = pathname === item.href;
-                              return (
-                                <Link
-                                  key={item.href}
-                                  href={item.href}
-                                  aria-current={itemActive ? 'page' : undefined}
-                                  className={clsx(styles.dropdownLink, { [styles.active]: itemActive })}
-                                >
-                                  <span className={styles.dropdownIcon}>{item.icon}</span>
-                                  <span>{item.label}</span>
-                                  {itemActive && (
-                                    <span className={styles.dropdownActiveDot} aria-hidden="true" />
-                                  )}
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        )}
+          {/* ── CENTER NAV ── */}
+          {showNav && (
+            <nav className={styles.desktopNav} aria-label="Primary navigation">
+              {visibleGroups.map(group => {
+                const active = isGroupActive(group);
+                const open   = openGroup === group.label;
+                return (
+                  <div key={group.label} className={styles.navGroupWrapper}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenGroup(open ? null : group.label)}
+                      aria-current={active ? 'page' : undefined}
+                      className={clsx(styles.navGroupBtn, { [styles.active]: active })}
+                    >
+                      {group.label}
+                      <svg
+                        className={clsx(styles.navGroupChevron, { [styles.open]: open })}
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                      {active && <span className={styles.navGroupActiveBar} aria-hidden="true" />}
+                    </button>
+
+                    {open && (
+                      <div className={styles.dropdown}>
+                        {group.items.map(item => {
+                          const itemActive = pathname === item.href;
+                          return (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              aria-current={itemActive ? 'page' : undefined}
+                              className={clsx(styles.dropdownLink, { [styles.active]: itemActive })}
+                            >
+                              <span className={styles.dropdownIcon}>{item.icon}</span>
+                              <span>{item.label}</span>
+                              {itemActive && (
+                                <span className={styles.dropdownActiveDot} aria-hidden="true" />
+                              )}
+                            </Link>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </nav>
+                    )}
+                  </div>
+                );
+              })}
+            </nav>
+          )}
 
-                {/* Mobile hamburger */}
-                <button
-                  type="button"
-                  onClick={() => setMobileOpen(v => !v)}
-                  className={styles.mobileMenuBtn}
-                  aria-label="Open navigation menu"
-                  aria-expanded={mobileOpen}
-                >
-                  {mobileOpen ? (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                  )}
-                </button>
-              </>
+          {/* ── RIGHT RAIL: upload + user ── */}
+          <div className={styles.rightRail}>
+            {/* Mobile hamburger */}
+            {showNav && (
+              <button
+                type="button"
+                onClick={() => setMobileOpen(v => !v)}
+                className={styles.mobileMenuBtn}
+                aria-label="Open navigation menu"
+                aria-expanded={mobileOpen}
+              >
+                {mobileOpen ? (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
             )}
 
-            {/* Upload button — solid blue, right of nav, before user menu */}
             {showNav && (
               <Link
                 href="/"
