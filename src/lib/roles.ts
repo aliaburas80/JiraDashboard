@@ -56,25 +56,50 @@ export function allowedDashboardViewsForRole(role: string | null | undefined): V
 
 const COMMON_ROUTES = ['/profile', '/members', '/help', '/glossary', '/landing', '/change-password'];
 const PLANNING_ROUTES = ['/roadmap', '/forecast', '/retro'];
+const DELIVERY_ROUTES = ['/release-readiness', '/readiness', '/flow-health', '/sprint-kanban', '/delivery-mix', '/explore', '/customer'];
+const DATA_ROUTES     = ['/work-explorer', '/data-quality', '/column-mapping', '/snapshots', '/backend'];
 
 export function allowedRoutePrefixesForRole(role: string | null | undefined): string[] {
   switch (role) {
     case 'admin':
       return [
-        '/dashboard', '/summary', '/charts', '/explore', '/backend', '/customer',
-        '/snapshots', '/trends', '/readiness', '/teams', '/portfolio', '/developer', '/admin',
-        ...PLANNING_ROUTES, ...COMMON_ROUTES,
+        '/dashboard', '/summary', '/charts', '/trends', '/teams', '/portfolio',
+        '/developer', '/admin',
+        ...DELIVERY_ROUTES, ...DATA_ROUTES, ...PLANNING_ROUTES, ...COMMON_ROUTES,
       ];
     case 'scrum_master':
-      return ['/dashboard', '/summary', '/charts', '/trends', '/teams', '/readiness', '/explore', '/snapshots', ...PLANNING_ROUTES, ...COMMON_ROUTES];
+      return [
+        '/dashboard', '/summary', '/charts', '/trends', '/teams',
+        '/flow-health', '/sprint-kanban', '/release-readiness', '/readiness', '/explore',
+        '/work-explorer', '/snapshots',
+        ...PLANNING_ROUTES, ...COMMON_ROUTES,
+      ];
     case 'product_owner':
-      return ['/dashboard', '/summary', '/readiness', '/portfolio', '/customer', '/explore', '/snapshots', ...PLANNING_ROUTES, ...COMMON_ROUTES];
+      return [
+        '/dashboard', '/summary', '/portfolio', '/customer',
+        '/release-readiness', '/readiness', '/delivery-mix', '/explore',
+        '/work-explorer', '/snapshots',
+        ...PLANNING_ROUTES, ...COMMON_ROUTES,
+      ];
     case 'manager':
-      return ['/dashboard', '/summary', '/charts', '/trends', '/teams', '/portfolio', '/readiness', '/customer', '/snapshots', '/backend', ...PLANNING_ROUTES, ...COMMON_ROUTES];
+      return [
+        '/dashboard', '/summary', '/charts', '/trends', '/teams', '/portfolio', '/customer',
+        '/release-readiness', '/readiness', '/flow-health', '/sprint-kanban', '/delivery-mix', '/explore',
+        '/work-explorer', '/data-quality', '/snapshots', '/backend',
+        ...PLANNING_ROUTES, ...COMMON_ROUTES,
+      ];
     case 'c_level':
-      return ['/dashboard', '/summary', '/portfolio', '/customer', '/trends', ...PLANNING_ROUTES, ...COMMON_ROUTES];
+      return [
+        '/dashboard', '/summary', '/portfolio', '/customer', '/trends',
+        '/release-readiness', '/delivery-mix',
+        ...PLANNING_ROUTES, ...COMMON_ROUTES,
+      ];
     default:
-      return ['/dashboard', '/summary', '/charts', '/explore', '/customer', '/snapshots', '/trends', '/readiness', '/teams', '/portfolio', ...PLANNING_ROUTES, ...COMMON_ROUTES];
+      return [
+        '/dashboard', '/summary', '/charts', '/trends', '/teams', '/portfolio', '/customer',
+        '/release-readiness', '/readiness', '/explore',
+        ...DATA_ROUTES, ...PLANNING_ROUTES, ...COMMON_ROUTES,
+      ];
   }
 }
 
