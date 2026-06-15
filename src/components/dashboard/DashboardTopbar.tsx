@@ -117,7 +117,7 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
     <>
       <header className={styles.header}>
 
-        {/* LEFT: Logo */}
+        {/* ── BRAND ── */}
         <Link href="/" className={styles.logo}>
           <div className={styles.logoIcon} aria-hidden="true">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
@@ -128,20 +128,15 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
           <span className={styles.logoVersion}>v4.1</span>
         </Link>
 
-        {/* LEFT: Upload button — outlined red, matches AppShell */}
-        <button type="button" onClick={onNewUpload} className={styles.uploadBtn}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-          </svg>
-          New Upload
-        </button>
+        {/* ── SPACER — pushes nav to center-right ── */}
+        <div className={styles.spacer} />
 
-        {/* CENTER: Nav group buttons */}
+        {/* ── CENTER NAV ── */}
         <nav className={styles.nav} aria-label="Primary navigation">
           {DC_NAV_GROUPS.map(group => {
             const active = groupIsActive(pathname, group);
             const isOpen = openGroup === group.id;
-            const label = GROUP_LABEL_OVERRIDE[group.id] ?? group.label;
+            const label  = GROUP_LABEL_OVERRIDE[group.id] ?? group.label;
             return (
               <button
                 key={group.id}
@@ -150,6 +145,7 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
                 onClick={() => toggleGroup(group.id)}
                 aria-haspopup="menu"
                 aria-expanded={isOpen}
+                aria-current={active ? 'page' : undefined}
                 className={clsx(styles.navGroupBtn, { [styles.active]: active, [styles.open]: isOpen })}
               >
                 {label}
@@ -161,12 +157,14 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
                 >
                   <path d="M6 9l6 6 6-6" />
                 </svg>
+                {/* Blue underline at the bottom of the header when group is active */}
+                {active && <span className={styles.activeBar} aria-hidden="true" />}
               </button>
             );
           })}
         </nav>
 
-        {/* RIGHT RAIL: pushed to far right by margin-left:auto */}
+        {/* ── RIGHT RAIL ── */}
         <div className={styles.rightRail}>
           <div className={styles.separator} aria-hidden="true" />
 
@@ -184,6 +182,14 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
             </div>
           </div>
 
+          {/* Upload button — solid primary blue, white text */}
+          <button type="button" onClick={onNewUpload} className={styles.uploadBtn}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+            </svg>
+            New Upload
+          </button>
+
           {/* User menu */}
           <UserMenu />
         </div>
@@ -198,7 +204,7 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
           style={{ '--drop-top': `${dropPos.top}px`, '--drop-left': `${dropPos.left}px` } as CSSProperties}
         >
           {activeGroup.items.map(item => {
-            const active = isActivePath(pathname, item.href);
+            const active   = isActivePath(pathname, item.href);
             const dotColor = STATUS_DOT[item.status] ?? '#cbd5e1';
             return (
               <Link

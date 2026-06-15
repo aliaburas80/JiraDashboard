@@ -1,10 +1,10 @@
 // ─── DashboardTopbar styles ───────────────────────────────────────────────────
-// Three-zone layout matching AppShell:
-//   LEFT  — logo + upload button (fixed width, flex-shrink: 0)
-//   CENTER — nav group buttons (inline after upload)
-//   RIGHT  — separator + health pill + user menu (margin-left: auto)
+// Three-zone layout:
+//   LEFT   — logo + version (flex-shrink: 0)
+//   CENTER — nav group buttons (preceded by flex: 1 spacer)
+//   RIGHT  — separator + health pill + upload button + user menu
 
-// ── Header bar ─────────────────────────────────────────────────────────────────
+// ── Header bar ──────────────────────────────────────────────────────────────
 .header {
   height: var(--header-height, 52px);
   background: var(--color-surface, #fff);
@@ -12,7 +12,6 @@
   display: flex;
   align-items: center;
   padding: 0 var(--space-5, 20px);
-  gap: var(--space-3, 12px);
   position: fixed;
   top: 0;
   left: 0;
@@ -22,7 +21,7 @@
   font-family: var(--font-jakarta, 'Inter', sans-serif);
 }
 
-// ── Logo ───────────────────────────────────────────────────────────────────────
+// ── Brand ────────────────────────────────────────────────────────────────────
 .logo {
   display: flex;
   align-items: center;
@@ -44,81 +43,65 @@
 
 .logoName {
   font-size: var(--text-md, 13px);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text-primary, #0f172a);
   letter-spacing: -0.01em;
 }
 
 .logoVersion {
-  font-size: 8px;
+  font-size: 9px;
   color: var(--color-text-muted, #94a3b8);
   font-family: var(--font-mono, monospace);
   margin-left: 2px;
+  align-self: flex-start;
+  margin-top: 4px;
 }
 
-// ── Upload button — LEFT zone, outlined red, matching AppShell ─────────────────
-.uploadBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px var(--space-3, 12px);
-  border-radius: var(--radius-md, 8px);
-  font-size: var(--text-xs, 10px);
-  font-weight: 700;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
-  color: #dc2626;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+// ── Spacer between brand and nav ─────────────────────────────────────────────
+.spacer { flex: 1; }
 
-  &:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
-  &:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
-    outline-offset: 2px;
-  }
-}
-
-// ── CENTER: Nav group buttons ──────────────────────────────────────────────────
+// ── CENTER: Nav group buttons ─────────────────────────────────────────────────
+// align-self: stretch lets children use height: 100% to anchor the active bar
+// to the physical bottom of the header.
 .nav {
   display: flex;
+  align-self: stretch;
   align-items: center;
-  gap: 2px;
+  gap: 0;
 }
 
-// Active state uses pill background (same as AppShell) — no underline bar.
 .navGroupBtn {
+  // Fill full header height so the absolute activeBar sits at the header bottom.
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: var(--space-1, 4px);
-  padding: 6px var(--space-3, 12px);
-  border-radius: var(--radius-md, 8px);
-  font-size: var(--text-md, 13px);
-  font-weight: 600;
+  padding: 0 var(--space-3, 12px);
+  height: 100%;
   border: none;
   cursor: pointer;
   background: none;
+  font-size: var(--text-md, 13px);
+  font-weight: 500;
   color: var(--color-text-secondary, #64748b);
   white-space: nowrap;
   font-family: inherit;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition: color var(--transition-fast, 120ms ease);
 
-  &:hover { background: var(--color-subtle, #f1f5f9); }
+  &:hover { color: var(--color-text-primary, #0f172a); }
 
   &:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
-    outline-offset: 2px;
+    outline-offset: -2px;
   }
 
+  // Active: blue text only — the blue underline comes from .activeBar below.
   &.active {
-    background: var(--color-primary, #2563eb);
-    color: #fff;
+    color: var(--color-primary, #2563eb);
+    font-weight: 600;
   }
 
   &.open:not(.active) {
-    background: var(--color-subtle, #f1f5f9);
     color: var(--color-text-primary, #0f172a);
   }
 }
@@ -126,29 +109,42 @@
 .navGroupChevron {
   width: 0.875rem;
   height: 0.875rem;
-  transition: transform var(--transition-fast);
+  transition: transform var(--transition-fast, 120ms ease);
 
   &.open { transform: rotate(180deg); }
 }
 
-// ── RIGHT RAIL: separator + health pill + user menu ────────────────────────────
+// Blue underline anchored to the very bottom of the header (not the button padding).
+// EXCEPTION (CLAUDE.md Rule 1 — none needed): this is a pure design element with no JS value.
+.activeBar {
+  position: absolute;
+  bottom: 0;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--color-primary, #2563eb);
+  pointer-events: none;
+}
+
+// ── RIGHT RAIL ───────────────────────────────────────────────────────────────
 .rightRail {
   display: flex;
   align-items: center;
   gap: var(--space-2, 8px);
-  margin-left: auto;
+  margin-left: var(--space-3, 12px);
 }
 
 .separator {
   width: 1px;
-  height: 18px;
+  height: 20px;
   background: var(--color-border, #e2e8f0);
   flex-shrink: 0;
 }
 
-// ── Health pill ────────────────────────────────────────────────────────────────
+// ── Health pill ───────────────────────────────────────────────────────────────
 // EXCEPTION (CLAUDE.md Rule 1): bg/border/arc/text colors are data-driven
-// (computed from healthScore). Passed as CSS custom properties.
+// (computed from healthScore). Passed as CSS custom properties via style={}.
 .healthPill {
   display: flex;
   align-items: center;
@@ -178,9 +174,35 @@
   margin-top: 1px;
 }
 
-// ── Nav dropdown panel ─────────────────────────────────────────────────────────
-// EXCEPTION: top/left are computed from button getBoundingClientRect() at runtime.
-// They are set via CSS custom properties --drop-top and --drop-left.
+// ── Upload button — solid primary blue ────────────────────────────────────────
+.uploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px var(--space-3, 12px);
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--text-xs, 10px);
+  font-weight: 700;
+  border: none;
+  background: var(--color-primary, #2563eb);
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background var(--transition-fast, 120ms ease);
+
+  &:hover { background: var(--color-primary-hover, #1d4ed8); }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+// ── Nav dropdown panel ────────────────────────────────────────────────────────
+// EXCEPTION (CLAUDE.md Rule 1): top/left are computed from getBoundingClientRect()
+// at runtime and passed as CSS custom properties --drop-top and --drop-left.
 .dropdownPanel {
   position: fixed;
   top: var(--drop-top, 56px);
@@ -203,9 +225,10 @@
   padding: 8px 10px;
   border-radius: var(--radius-sm, 6px);
   text-decoration: none;
-  transition: background var(--transition-fast);
+  transition: background var(--transition-fast, 120ms ease);
 
   &:hover { background: var(--color-subtle, #f8fafc); }
+
   &:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
     outline-offset: -2px;
