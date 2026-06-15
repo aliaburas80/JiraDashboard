@@ -52,11 +52,31 @@
   text-decoration: none;
 }
 
-// Next.js <Image> requires explicit width/height — the style override keeps it
-// visually fluid (height token, auto width) without layout-thrash.
-.logoImg {
-  width: auto;
-  height: 2rem;
+.logoIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm, 7px);
+  background: var(--color-primary, #2563eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logoName {
+  font-size: var(--text-md, 13px);
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  letter-spacing: -0.01em;
+}
+
+.logoVersion {
+  font-size: 9px;
+  color: var(--color-text-muted, #94a3b8);
+  font-family: var(--font-mono, monospace);
+  margin-left: 2px;
+  align-self: flex-start;
+  margin-top: 4px;
 }
 
 .uploadBtn {
