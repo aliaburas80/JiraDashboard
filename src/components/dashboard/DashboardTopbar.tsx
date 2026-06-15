@@ -117,7 +117,7 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
     <>
       <header className={styles.header}>
 
-        {/* Logo */}
+        {/* LEFT: Logo */}
         <Link href="/" className={styles.logo}>
           <div className={styles.logoIcon} aria-hidden="true">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
@@ -128,12 +128,16 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
           <span className={styles.logoVersion}>v4.1</span>
         </Link>
 
-        <div className={styles.spacer} />
+        {/* LEFT: Upload button — outlined red, matches AppShell */}
+        <button type="button" onClick={onNewUpload} className={styles.uploadBtn}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+          </svg>
+          New Upload
+        </button>
 
-        {/* Right nav */}
-        <nav className={styles.rightNav} aria-label="Primary navigation">
-
-          {/* Nav group buttons */}
+        {/* CENTER: Nav group buttons */}
+        <nav className={styles.nav} aria-label="Primary navigation">
           {DC_NAV_GROUPS.map(group => {
             const active = groupIsActive(pathname, group);
             const isOpen = openGroup === group.id;
@@ -160,7 +164,10 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
               </button>
             );
           })}
+        </nav>
 
+        {/* RIGHT RAIL: pushed to far right by margin-left:auto */}
+        <div className={styles.rightRail}>
           <div className={styles.separator} aria-hidden="true" />
 
           {/* Health pill — CSS custom properties carry the data-driven colours */}
@@ -177,19 +184,9 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
             </div>
           </div>
 
-          {/* Upload button */}
-          <button type="button" onClick={onNewUpload} className={styles.uploadBtn}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" aria-hidden="true">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-            </svg>
-            New Upload
-          </button>
-
           {/* User menu */}
-          <div className={styles.userMenuWrapper}>
-            <UserMenu />
-          </div>
-        </nav>
+          <UserMenu />
+        </div>
       </header>
 
       {/* Nav dropdown panel */}

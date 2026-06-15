@@ -1,6 +1,8 @@
 // ─── DashboardTopbar styles ───────────────────────────────────────────────────
-// Covers: header bar, logo, nav group buttons, health pill, upload button,
-//         user menu wrapper, and the floating nav dropdown panel.
+// Three-zone layout matching AppShell:
+//   LEFT  — logo + upload button (fixed width, flex-shrink: 0)
+//   CENTER — nav group buttons (inline after upload)
+//   RIGHT  — separator + health pill + user menu (margin-left: auto)
 
 // ── Header bar ─────────────────────────────────────────────────────────────────
 .header {
@@ -9,7 +11,8 @@
   border-bottom: 1px solid var(--color-border, #e2e8f0);
   display: flex;
   align-items: center;
-  padding: 0 20px;
+  padding: 0 var(--space-5, 20px);
+  gap: var(--space-3, 12px);
   position: fixed;
   top: 0;
   left: 0;
@@ -17,14 +20,13 @@
   z-index: var(--z-header, 500);
   box-shadow: 0 1px 4px rgb(0 0 0 / 4%);
   font-family: var(--font-jakarta, 'Inter', sans-serif);
-  gap: var(--space-2, 8px);
 }
 
 // ── Logo ───────────────────────────────────────────────────────────────────────
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2, 8px);
   flex-shrink: 0;
   text-decoration: none;
 }
@@ -32,7 +34,7 @@
 .logoIcon {
   width: 28px;
   height: 28px;
-  border-radius: 7px;
+  border-radius: var(--radius-sm, 7px);
   background: var(--color-primary, #2563eb);
   display: flex;
   align-items: center;
@@ -54,20 +56,38 @@
   margin-left: 2px;
 }
 
-// ── Spacer ─────────────────────────────────────────────────────────────────────
-.spacer {
-  flex: 1;
+// ── Upload button — LEFT zone, outlined red, matching AppShell ─────────────────
+.uploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px var(--space-3, 12px);
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--text-xs, 10px);
+  font-weight: 700;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+
+  &:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: 2px;
+  }
 }
 
-// ── Right nav region ───────────────────────────────────────────────────────────
-.rightNav {
+// ── CENTER: Nav group buttons ──────────────────────────────────────────────────
+.nav {
   display: flex;
   align-items: center;
   gap: 2px;
-  height: var(--header-height, 52px);
 }
 
-// ── Nav group button ─────────────────────────────────────────────────────────
 // Active state uses pill background (same as AppShell) — no underline bar.
 .navGroupBtn {
   display: inline-flex;
@@ -111,24 +131,30 @@
   &.open { transform: rotate(180deg); }
 }
 
-// ── Separator ──────────────────────────────────────────────────────────────────
+// ── RIGHT RAIL: separator + health pill + user menu ────────────────────────────
+.rightRail {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-left: auto;
+}
+
 .separator {
   width: 1px;
   height: 18px;
   background: var(--color-border, #e2e8f0);
-  margin: 0 8px;
   flex-shrink: 0;
 }
 
 // ── Health pill ────────────────────────────────────────────────────────────────
-// EXCEPTION (CLAUDE.md Rule 1): bg/border/arc/text colors and SVG dash values
-// are computed from healthScore (data). Passed as CSS custom properties.
+// EXCEPTION (CLAUDE.md Rule 1): bg/border/arc/text colors are data-driven
+// (computed from healthScore). Passed as CSS custom properties.
 .healthPill {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border-radius: 7px;
+  border-radius: var(--radius-sm, 7px);
   background: var(--health-bg, #ecfdf5);
   border: 1px solid var(--health-border, #a7f3d0);
   flex-shrink: 0;
@@ -152,36 +178,6 @@
   margin-top: 1px;
 }
 
-// ── Upload button — outlined red, matches AppShell ────────────────────────────
-.uploadBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5, 6px);
-  padding: 6px var(--space-3, 12px);
-  border-radius: var(--radius-md, 8px);
-  font-size: var(--text-xs, 10px);
-  font-weight: 700;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
-  color: #dc2626;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
-
-  &:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
-  &:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
-    outline-offset: 2px;
-  }
-}
-
-// ── User menu wrapper ──────────────────────────────────────────────────────────
-.userMenuWrapper {
-  margin-left: 6px;
-  flex-shrink: 0;
-}
-
 // ── Nav dropdown panel ─────────────────────────────────────────────────────────
 // EXCEPTION: top/left are computed from button getBoundingClientRect() at runtime.
 // They are set via CSS custom properties --drop-top and --drop-left.
@@ -189,11 +185,11 @@
   position: fixed;
   top: var(--drop-top, 56px);
   left: var(--drop-left, 0);
-  z-index: var(--z-dropdown, 600); // note: --drop-top/--drop-left set by JS via CSS custom props
+  z-index: var(--z-dropdown, 600);
   background: var(--color-surface, #fff);
   border: 1px solid var(--color-border, #e2e8f0);
   border-radius: var(--radius-xl, 10px);
-  box-shadow: var(--shadow-dropdown, 0 8px 24px rgba(0, 0, 0, 0.10));
+  box-shadow: var(--shadow-dropdown, 0 8px 24px rgb(0 0 0 / 10%));
   padding: 6px;
   min-width: 220px;
   max-width: 280px;
