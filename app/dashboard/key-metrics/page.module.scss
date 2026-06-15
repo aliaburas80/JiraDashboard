@@ -1,0 +1,75 @@
+// ─── Key Metrics page styles ──────────────────────────────────────────────────
+// 2-column stat card grid used in Flow Metrics section.
+.statGrid2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4, 16px);
+
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+// Individual stat card (light tinted surface).
+.statCard {
+  padding: var(--space-3, 12px);
+  background: var(--color-subtle);
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--color-border);
+}
+
+.statLabel {
+  font-size: var(--text-2xs, 9px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.statValue {
+  font-size: var(--text-2xl, 20px);
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+  margin: 0 0 2px;
+}
+
+.statSub {
+  font-size: var(--text-xs, 10px);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+// Progress track for story points bar.
+.progressTrack {
+  height: 8px;
+  border-radius: var(--radius-xs, 4px);
+  background: var(--color-muted);
+  overflow: hidden;
+  margin-top: var(--space-4, 16px);
+}
+
+// 3-column snapshot grid for label/value pairs.
+.snapshotGrid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4, 16px);
+
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+.snapshotLabel {
+  font-size: var(--text-2xs, 9px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.snapshotValue {
+  font-size: var(--text-2xl, 20px);
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+  margin: 0;
+}

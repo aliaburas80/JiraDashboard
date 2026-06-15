@@ -1,0 +1,114 @@
+// ─── Smart Actions page styles ────────────────────────────────────────────────
+// ── Summary count chips ────────────────────────────────────────────────────────
+.countStrip {
+  display: flex;
+  gap: 10px;
+  margin-bottom: var(--space-5, 20px);
+  flex-wrap: wrap;
+}
+
+// --count-bg / --count-border / --count-color are data-driven (action type).
+.countChip {
+  background: var(--count-bg, var(--color-subtle));
+  border: 1px solid var(--count-border, var(--color-border));
+  border-radius: var(--radius-md, 8px);
+  padding: 10px var(--space-4, 16px);
+  min-width: 90px;
+}
+
+.countLabel {
+  font-size: var(--text-2xs, 9px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+// --count-color is data-driven.
+.countValue {
+  font-size: var(--text-2xl, 20px);
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--count-color, var(--color-text-primary));
+  margin: 0;
+}
+
+// ── Action list ────────────────────────────────────────────────────────────────
+.actionList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+
+// --action-accent is data-driven (action type); used for the left border strip.
+.actionCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--action-accent, var(--color-border));
+  border-radius: var(--radius-lg, 10px);
+  padding: var(--space-4, 16px) var(--space-5, 20px);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.actionIcon {
+  font-size: var(--text-2xl, 22px);
+  flex-shrink: 0;
+}
+
+.actionBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.actionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-1-5, 6px);
+}
+
+// --badge-bg / --badge-color are data-driven.
+.actionTypeBadge {
+  font-size: var(--text-2xs, 9px);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs, 4px);
+  text-transform: uppercase;
+  background: var(--badge-bg, var(--color-subtle));
+  color: var(--badge-color, var(--color-text-secondary));
+}
+
+.actionTitle {
+  font-size: var(--text-md, 13px);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.actionDetail {
+  font-size: var(--text-base, 12px);
+  color: var(--color-text-secondary);
+  margin: 0 0 10px;
+}
+
+.actionOwnerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+.actionOwnerKey {
+  font-size: var(--text-2xs, 9px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.actionOwnerValue {
+  font-size: var(--text-sm, 11px);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}

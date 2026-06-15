@@ -88,7 +88,7 @@ function NavItem({ href, icon, title, meta, chip, chipType }: {
     >
       {active && <span className={styles.activeIndicator} />}
       <NavIcon name={icon} active={active} />
-      <div style={{ minWidth: 0, flex: 1, textAlign: 'left' }}>
+      <div className={styles.navItemText}>
         <span className={`${styles.navTextTitle} ${active ? styles.navTextActive : styles.navTextInactive}`}>
           {title}
         </span>
@@ -184,9 +184,10 @@ export default function DashboardNavSidebar({ metrics }: Props) {
         </div>
         <div className={styles.healthValue}>{healthScore}</div>
         <div className={styles.healthProgress}>
+          {/* --progress-width is data-driven (healthScore); consumed by .healthProgressFill */}
           <div
             className={styles.healthProgressFill}
-            style={{ width: `${progressWidth}%` }}
+            style={{ '--progress-width': `${progressWidth}%` } as React.CSSProperties}
           />
         </div>
         <div className={styles.vitalsGrid}>

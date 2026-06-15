@@ -50,6 +50,14 @@
   --dc-orange: #E85D12;
 }
 
+/* ── Base body — background, text colour, and font from design tokens ────── */
+/* Removes the need for inline styles on <body> in the root layout.            */
+body {
+  background: var(--dc-bg, #f8fafc);
+  color: var(--dc-p1, #0f172a);
+  font-family: var(--font-jakarta, var(--font-inter, 'Inter', sans-serif));
+}
+
 /* ── Global placeholder — always light/muted regardless of theme ─────────── */
 ::placeholder {
   color: var(--color-text-muted, #94a3b8);

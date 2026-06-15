@@ -1,18 +1,27 @@
 // @ts-nocheck
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
-  StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
-  PageHeader, SectionCard, PageLoading,
+  StickyToolbar, FilterChip, ToolbarSpacer,
+  PageHeader, PageLoading, shellStyles,
 } from '@/components/dashboard/DashboardPageShell';
+import styles from './page.module.scss';
 
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
 
 type ActionType = { type: string; icon: string; title: string; detail: string; suggestedOwner: string; status: 'open' | 'resolved' };
+
+// Data-driven color tokens for each action type.
+// EXCEPTION (CLAUDE.md Rule 1): these are set as CSS custom properties in JSX.
+const TYPE_TOKENS: Record<string, { bg: string; border: string; color: string }> = {
+  critical: { bg: 'var(--color-danger-soft)',  border: 'var(--color-danger-border)',  color: 'var(--color-danger-strong)' },
+  warning:  { bg: 'var(--color-warning-soft)', border: 'var(--color-warning-border)', color: 'var(--color-warning)'       },
+  info:     { bg: 'var(--color-primary-soft)', border: 'var(--color-primary-border)', color: 'var(--color-primary)'       },
+};
 
 export default function SmartActionsPage() {
   const router = useRouter();
@@ -93,22 +102,15 @@ export default function SmartActionsPage() {
   if (loading) return <PageLoading />;
   if (!metrics) return null;
 
-  const PRIORITY_COLORS: Record<string, { bg: string; border: string; text: string; badge: string }> = {
-    critical: { bg: '#FEF2F2', border: '#FECACA', text: '#DC2626', badge: '#FEF2F2' },
-    warning:  { bg: '#FFFBEB', border: '#FDE68A', text: '#D97706', badge: '#FFFBEB' },
-    info:     { bg: '#EFF6FF', border: '#BFDBFE', text: '#2563EB', badge: '#EFF6FF' },
-  };
-
   return (
     <>
       <StickyToolbar>
-        <FilterChip label="All" active={priorityFilter === 'all'} onClick={() => setPriorityFilter('all')} />
+        <FilterChip label="All"      active={priorityFilter === 'all'}      onClick={() => setPriorityFilter('all')} />
         <FilterChip label="Critical" active={priorityFilter === 'critical'} onClick={() => setPriorityFilter('critical')} dot={actions.some(a => a.type === 'critical')} />
-        <FilterChip label="Warning" active={priorityFilter === 'warning'} onClick={() => setPriorityFilter('warning')} />
-        <FilterChip label="Info" active={priorityFilter === 'info'} onClick={() => setPriorityFilter('info')} />
-        <FilterChip label="Clear" active={false} onClick={() => setPriorityFilter('all')} />
+        <FilterChip label="Warning"  active={priorityFilter === 'warning'}  onClick={() => setPriorityFilter('warning')} />
+        <FilterChip label="Info"     active={priorityFilter === 'info'}     onClick={() => setPriorityFilter('info')} />
+        <FilterChip label="Clear"    active={false}                         onClick={() => setPriorityFilter('all')} />
         <ToolbarSpacer />
-
       </StickyToolbar>
 
       <PageHeader
@@ -117,18 +119,20 @@ export default function SmartActionsPage() {
         subtitle="Actionable recommendations to improve delivery health."
       />
 
-      <div style={{ padding: '0 28px 48px' }}>
+      <div className={shellStyles.pageBody}>
 
-        {/* ── Summary counts ── */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+        {/* ── Summary count chips ── */}
+        <div className={styles.countStrip}>
           {(['critical', 'warning', 'info'] as const).map(type => {
             const count = actions.filter(a => a.type === type).length;
             if (!count) return null;
-            const { bg, border, text } = PRIORITY_COLORS[type];
+            const tok = TYPE_TOKENS[type];
             return (
-              <div key={type} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 8, padding: '10px 16px', minWidth: 90 }}>
-                <p style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#94A3B8', marginBottom: 4 }}>{type}</p>
-                <p style={{ fontSize: 20, fontWeight: 800, fontFamily: 'monospace', color: text, margin: 0 }}>{count}</p>
+              // --count-bg / --count-border / --count-color are data-driven (action type).
+              <div key={type} className={styles.countChip}
+                style={{ '--count-bg': tok.bg, '--count-border': tok.border, '--count-color': tok.color } as CSSProperties}>
+                <p className={styles.countLabel}>{type}</p>
+                <p className={styles.countValue}>{count}</p>
               </div>
             );
           })}
@@ -136,31 +140,26 @@ export default function SmartActionsPage() {
 
         {/* ── Action list ── */}
         {filtered.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className={styles.actionList}>
             {filtered.map((action, i) => {
-              const colors = PRIORITY_COLORS[action.type] ?? PRIORITY_COLORS.info;
+              const tok = TYPE_TOKENS[action.type] ?? TYPE_TOKENS.info;
               return (
-                <div key={i} style={{
-                  background: '#fff', border: `1px solid #E2E8F0`,
-                  borderLeft: `4px solid ${colors.text}`,
-                  borderRadius: 10, padding: '16px 20px',
-                  display: 'flex', alignItems: 'flex-start', gap: 14,
-                }}>
-                  <span style={{ fontSize: 22, flexShrink: 0 }}>{action.icon}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                      <span style={{
-                        fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase',
-                        background: colors.badge, color: colors.text,
-                      }}>
+                // --action-accent / --badge-bg / --badge-color are data-driven (action.type).
+                <div key={i} className={styles.actionCard}
+                  style={{ '--action-accent': tok.color } as CSSProperties}>
+                  <span className={styles.actionIcon}>{action.icon}</span>
+                  <div className={styles.actionBody}>
+                    <div className={styles.actionHeader}>
+                      <span className={styles.actionTypeBadge}
+                        style={{ '--badge-bg': tok.bg, '--badge-color': tok.color } as CSSProperties}>
                         {action.type}
                       </span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{action.title}</span>
+                      <span className={styles.actionTitle}>{action.title}</span>
                     </div>
-                    <p style={{ fontSize: 12, color: '#64748B', margin: '0 0 10px' }}>{action.detail}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94A3B8' }}>Suggested owner:</span>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#475569' }}>{action.suggestedOwner}</span>
+                    <p className={styles.actionDetail}>{action.detail}</p>
+                    <div className={styles.actionOwnerRow}>
+                      <span className={styles.actionOwnerKey}>Suggested owner:</span>
+                      <span className={styles.actionOwnerValue}>{action.suggestedOwner}</span>
                     </div>
                   </div>
                 </div>
@@ -168,11 +167,12 @@ export default function SmartActionsPage() {
             })}
           </div>
         ) : (
-          <div style={{ padding: '60px 0', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
+          <div className={shellStyles.emptySection}>
+            <div className={shellStyles.emptySectionIcon}>✅</div>
             No {priorityFilter !== 'all' ? priorityFilter + ' ' : ''}actions at this time.
           </div>
         )}
+
       </div>
     </>
   );

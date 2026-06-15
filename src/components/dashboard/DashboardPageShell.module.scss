@@ -2,6 +2,9 @@
 // Covers: StickyToolbar, FilterChip, ToolbarButton, ToolbarSpacer,
 //         PageHeader, MiniKpiCard, SectionCard, EmptyPage, PageLoading,
 //         barFill, progressFill (CSS-custom-property-driven bar animations).
+// Also exposes shared page-layout helpers used by individual dashboard pages:
+//         pageBody, kpiGrid, kpiGrid3, metaBar, table, tableHeader, tableRow,
+//         tdMono, tdMuted, statusBadge (+ --badge-bg/--badge-color variants).
 
 // ── Sticky toolbar ─────────────────────────────────────────────────────────────
 .stickyToolbar {
@@ -213,6 +216,146 @@
   height: 80px;
   border-radius: var(--radius-lg, 10px);
   background: var(--color-subtle, #f1f5f9);
+  margin-bottom: var(--space-3, 12px);
+}
+
+// ── Shared page layout helpers ─────────────────────────────────────────────────
+// These are exported via shellStyles and used by individual dashboard page files.
+
+// Standard page content wrapper — matches 28px side padding used across pages.
+.pageBody {
+  padding: 0 28px var(--space-12, 48px);
+}
+
+// 4-column KPI grid (used by Delivery Summary, Priority Attention, etc.)
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: var(--space-5, 20px);
+
+  @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+// 3-column KPI grid (used by Key Metrics, Delivery Composition, etc.)
+.kpiGrid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: var(--space-5, 20px);
+
+  @media (max-width: 700px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+// Meta bar — horizontal "Target vs Actual" style row.
+.metaBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  margin-bottom: var(--space-5, 20px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  background: var(--color-subtle, #f8fafc);
+  border-radius: var(--radius-lg, 10px);
+  border: 1px solid var(--color-border);
+}
+
+.metaBarLabel {
+  font-size: var(--text-sm, 11px);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.metaBarValue {
+  font-size: var(--text-lg, 14px);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.metaBarRight {
+  margin-left: auto;
+  font-size: var(--text-base, 12px);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+// Data table wrapper + base styles.
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  font-size: var(--text-base, 12px);
+  border-collapse: collapse;
+}
+
+.tableHead {
+  th {
+    padding: 6px 10px;
+    text-align: left;
+    font-size: var(--text-xs, 10px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
+.tableRow {
+  border-bottom: 1px solid var(--color-subtle);
+}
+
+.tdBase {
+  padding: 7px 10px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.tdMono {
+  padding: 7px 10px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm, 11px);
+  color: var(--color-primary);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tdTruncate {
+  padding: 7px 10px;
+  color: var(--color-text-primary);
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Status badge — --badge-bg / --badge-color are data-driven (set via CSS custom prop in JSX).
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs, 10px);
+  font-weight: 700;
+  background: var(--badge-bg, var(--color-subtle));
+  color: var(--badge-color, var(--color-text-secondary));
+}
+
+// Empty state inside a section.
+.emptySection {
+  padding: 60px 0;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-md, 13px);
+}
+
+.emptySectionIcon {
+  font-size: 2.25rem;
   margin-bottom: var(--space-3, 12px);
 }
 

@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
@@ -9,9 +9,18 @@ import {
   StickyToolbar, FilterChip, ToolbarSpacer,
   PageHeader, MiniKpiCard, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
+import styles from './page.module.scss';
 
 const DONE_STATUSES = ['done', 'closed', 'resolved'];
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
+
+// Map action type → data-driven CSS custom property values (consumed by SCSS).
+// EXCEPTION (CLAUDE.md Rule 1): color values depend on action.type at runtime.
+const ACTION_TOKENS: Record<string, { color: string; bg: string }> = {
+  critical: { color: 'var(--color-danger-strong)', bg: 'var(--color-danger-soft)' },
+  warning:  { color: 'var(--color-warning)',        bg: 'var(--color-warning-soft)' },
+  info:     { color: 'var(--color-primary)',         bg: 'var(--color-primary-soft)' },
+};
 
 export default function DeliverySummaryPage() {
   const router = useRouter();
@@ -74,13 +83,13 @@ export default function DeliverySummaryPage() {
   const topBlockers = flowItems.filter(i => norm(i.reason).includes('block')).slice(0, 5);
   const overdueItems = flowItems.filter(i => Number(i.ageDays) > 10 && !DONE_STATUSES.includes(norm(i.status))).slice(0, 5);
   const orphanCount = flowItems.filter(i => i.isOrphan).length;
+  const completionRate = metrics.completionRate || 0;
 
   return (
     <>
       {/* ── Sticky toolbar ── */}
       <StickyToolbar>
         <ToolbarSpacer />
-
       </StickyToolbar>
 
       {/* ── Page header ── */}
@@ -90,48 +99,55 @@ export default function DeliverySummaryPage() {
         subtitle={`Live delivery health · ${flowItems.length.toLocaleString()} issues tracked`}
       />
 
-      <div style={{ padding: '0 28px 48px' }}>
+      <div className={styles.pageBody}>
 
         {/* ── 4 KPI cards ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+        <div className={styles.kpiGrid}>
           <MiniKpiCard
             label="Completion"
-            value={`${metrics.completionRate || 0}%`}
-            color={(metrics.completionRate || 0) >= 70 ? '#059669' : '#D97706'}
-            bg="#F0FDF4" border="#BBF7D0"
+            value={`${completionRate}%`}
+            color={completionRate >= 70 ? 'var(--color-health-excellent-text)' : 'var(--color-warning)'}
+            bg="var(--color-success-soft)"
+            border="var(--color-success-border)"
           />
           <MiniKpiCard
             label="Critical Issues"
             value={String(flow.critical || 0)}
-            color="#DC2626" bg="#FEF2F2" border="#FECACA"
+            color="var(--color-danger-strong)"
+            bg="var(--color-danger-soft)"
+            border="var(--color-danger-border)"
           />
           <MiniKpiCard
             label="Avg Cycle Time"
             value={`${flow.averageCycleTimeDays || 0}d`}
-            color="#475569" bg="#F8FAFC" border="#E2E8F0"
+            color="var(--color-text-secondary)"
+            bg="var(--color-subtle)"
+            border="var(--color-border)"
           />
           <MiniKpiCard
             label="Est. Completion"
             value={estimatedDone}
-            color="#2563EB" bg="#EFF6FF" border="#BFDBFE"
+            color="var(--color-primary)"
+            bg="var(--color-primary-soft)"
+            border="var(--color-primary-border)"
           />
         </div>
 
         {/* ── Alert strip ── */}
         {(topBlockers.length > 0 || overdueItems.length > 0 || orphanCount > 0) && (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+          <div className={styles.alertStrip}>
             {topBlockers.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, background: '#FEF2F2', border: '1px solid #FECACA', fontSize: 11, fontWeight: 600, color: '#DC2626' }}>
+              <div className={`${styles.alertChip} ${styles.alertChipBlocked}`}>
                 <span>🚫</span> {topBlockers.length} blocked
               </div>
             )}
             {overdueItems.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, background: '#FFFBEB', border: '1px solid #FDE68A', fontSize: 11, fontWeight: 600, color: '#D97706' }}>
+              <div className={`${styles.alertChip} ${styles.alertChipOverdue}`}>
                 <span>⏰</span> {overdueItems.length} overdue
               </div>
             )}
             {orphanCount > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, background: '#F0F9FF', border: '1px solid #BAE6FD', fontSize: 11, fontWeight: 600, color: '#0369A1' }}>
+              <div className={`${styles.alertChip} ${styles.alertChipOrphan}`}>
                 <span>👻</span> {orphanCount} orphans
               </div>
             )}
@@ -141,48 +157,47 @@ export default function DeliverySummaryPage() {
         {/* ── Smart Actions preview ── */}
         {smartActions.length > 0 && (
           <SectionCard title={`Smart Actions  ·  Top ${Math.min(smartActions.length, 3)} recommendations`}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-              {smartActions.slice(0, 3).map((a, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 10,
-                  padding: i > 0 ? '12px 0 0' : '0',
-                  borderTop: i > 0 ? '1px solid #F1F5F9' : 'none',
-                  marginTop: i > 0 ? 12 : 0,
-                }}>
-                  <span style={{ fontSize: 16 }}>{a.icon}</span>
-                  <div style={{ flex: 1 }}>
-                    <p style={{
-                      fontSize: 12, fontWeight: 600, margin: '0 0 2px',
-                      color: a.type === 'critical' ? '#DC2626' : a.type === 'warning' ? '#D97706' : '#2563EB',
-                    }}>
-                      {a.title}
-                    </p>
-                    <p style={{ fontSize: 10, color: '#64748B', margin: 0 }}>{a.detail}</p>
+            <div className={styles.actionList}>
+              {smartActions.slice(0, 3).map((a, i) => {
+                const tok = ACTION_TOKENS[a.type] ?? ACTION_TOKENS.info;
+                return (
+                  <div key={i} className={styles.actionRow}>
+                    <span className={styles.actionIcon}>{a.icon}</span>
+                    <div className={styles.actionBody}>
+                      {/* --action-color is data-driven (action.type) */}
+                      <p
+                        className={styles.actionTitle}
+                        style={{ '--action-color': tok.color } as CSSProperties}
+                      >
+                        {a.title}
+                      </p>
+                      <p className={styles.actionDetail}>{a.detail}</p>
+                    </div>
+                    {/* --owner-bg / --owner-color are data-driven (action.type) */}
+                    <span
+                      className={styles.actionOwner}
+                      style={{ '--owner-bg': tok.bg, '--owner-color': tok.color } as CSSProperties}
+                    >
+                      {a.suggestedOwner.split(' /')[0]}
+                    </span>
                   </div>
-                  <span style={{
-                    fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, flexShrink: 0,
-                    background: a.type === 'critical' ? '#FEF2F2' : a.type === 'warning' ? '#FFFBEB' : '#EFF6FF',
-                    color: a.type === 'critical' ? '#DC2626' : a.type === 'warning' ? '#D97706' : '#2563EB',
-                  }}>
-                    {a.suggestedOwner.split(' /')[0]}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </SectionCard>
         )}
 
         {/* ── Completion snapshot ── */}
         <SectionCard title="Completion Snapshot">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          <div className={styles.snapshotGrid}>
             {[
               { label: 'Total Issues', value: metrics.totalIssues?.toLocaleString() ?? '—' },
-              { label: 'Completed', value: metrics.doneIssues?.toLocaleString() ?? '—' },
-              { label: 'Active', value: metrics.activeIssues?.toLocaleString() ?? '—' },
+              { label: 'Completed',    value: metrics.doneIssues?.toLocaleString()  ?? '—' },
+              { label: 'Active',       value: metrics.activeIssues?.toLocaleString() ?? '—' },
             ].map(({ label, value }) => (
               <div key={label}>
-                <p style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#94A3B8', marginBottom: 4 }}>{label}</p>
-                <p style={{ fontSize: 20, fontWeight: 800, fontFamily: 'monospace', color: '#0F172A', margin: 0 }}>{value}</p>
+                <p className={styles.snapshotLabel}>{label}</p>
+                <p className={styles.snapshotValue}>{value}</p>
               </div>
             ))}
           </div>

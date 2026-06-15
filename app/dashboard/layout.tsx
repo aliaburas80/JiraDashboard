@@ -6,6 +6,7 @@ import DashboardTopbar from '@/components/dashboard/DashboardTopbar';
 import DashboardNavSidebar from '@/components/dashboard/DashboardNavSidebar';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics } from '@/types/metrics';
+import styles from './layout.module.scss';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -31,24 +32,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [router]);
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100vh',
-      background: '#F7F8FA',
-      fontFamily: "'Segoe UI', system-ui, sans-serif",
-    }}>
+    <div className={styles.shell}>
       <DashboardTopbar
         healthScore={healthScore}
         onNewUpload={() => router.push('/')}
       />
 
-      <div style={{ display: 'flex', marginTop: 52, minHeight: 'calc(100vh - 52px)' }}>
+      <div className={styles.body}>
         <DashboardNavSidebar metrics={metrics} />
-        <main
-          style={{ marginLeft: 228, flex: 1, minHeight: 0 }}
-          id="main-content"
-        >
+        <main className={styles.main} id="main-content">
           {children}
         </main>
       </div>

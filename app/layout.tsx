@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="antialiased overflow-x-hidden" style={{ background: "var(--dc-bg, #f8fafc)", color: "var(--dc-p1, #0f172a)", fontFamily: "var(--font-jakarta, var(--font-inter, 'Inter', sans-serif))" }}>
+      <body className="antialiased overflow-x-hidden">
         <DataSourceProvider>
           <CloudLoadingBanner />
           {children}

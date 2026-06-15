@@ -1,0 +1,336 @@
+// ─── AppShell styles ───────────────────────────────────────────────────────────
+// Covers: root shell, sticky header, logo, nav groups, dropdown panel,
+//         mobile nav, footer. All values reference design tokens.
+
+// ── Root shell ─────────────────────────────────────────────────────────────────
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-page, var(--dc-bg, #f8fafc));
+  color: var(--color-text-primary, var(--dc-p1, #0f172a));
+}
+
+// ── Sticky header ──────────────────────────────────────────────────────────────
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header, 500);
+  background: rgb(255 255 255 / 95%);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--color-border, var(--dc-bdr));
+  box-shadow: 0 1px 6px rgb(0 0 0 / 8%);
+}
+
+.headerInner {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4, 16px);
+  display: flex;
+  align-items: center;
+  height: var(--header-height, 52px);
+  gap: var(--space-3, 12px);
+
+  @media (min-width: 640px) {
+    padding: 0 var(--space-6, 24px);
+  }
+}
+
+// ── Logo area ──────────────────────────────────────────────────────────────────
+.logoArea {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  flex-shrink: 0;
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  text-decoration: none;
+}
+
+// Next.js <Image> requires explicit width/height — the style override keeps it
+// visually fluid (height token, auto width) without layout-thrash.
+.logoImg {
+  width: auto;
+  height: 2rem;
+}
+
+.uploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5, 6px);
+  padding: 6px var(--space-3, 12px);
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--text-xs, 10px);
+  font-weight: 700;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+
+  &:hover {
+    background: #dc2626;
+    color: #fff;
+    border-color: #dc2626;
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+// ── Right rail ─────────────────────────────────────────────────────────────────
+.rightRail {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  margin-left: auto;
+}
+
+// ── Desktop grouped nav ────────────────────────────────────────────────────────
+.desktopNav {
+  display: none;
+  align-items: center;
+  gap: 2px;
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+}
+
+.navGroupWrapper {
+  position: relative;
+}
+
+.navGroupBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  padding: 6px var(--space-3, 12px);
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--text-md, 13px);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: var(--color-text-secondary, var(--dc-p2, #64748b));
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  font-family: inherit;
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+
+  &.active {
+    background: var(--color-primary, var(--dc-accent, #2563eb));
+    color: #fff;
+  }
+}
+
+.navGroupChevron {
+  width: 0.875rem;
+  height: 0.875rem;
+  transition: transform var(--transition-fast);
+
+  &.open {
+    transform: rotate(180deg);
+  }
+}
+
+// ── Desktop dropdown ───────────────────────────────────────────────────────────
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  border-radius: var(--radius-xl, 12px);
+  padding: var(--space-1-5, 6px);
+  z-index: var(--z-dropdown, 600);
+  min-width: 200px;
+  background: var(--color-surface, var(--dc-s2, #fff));
+  border: 1px solid var(--color-border, var(--dc-bdr));
+  box-shadow: var(--shadow-dropdown, 0 8px 28px rgb(0 0 0 / 18%));
+}
+
+.dropdownLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px) 10px;
+  border-radius: var(--radius-md, 10px);
+  font-size: var(--text-md, 13px);
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--color-text-primary, var(--dc-p1, #334155));
+  position: relative;
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background: var(--color-subtle, var(--dc-s3, #f1f5f9));
+  }
+
+  &.active {
+    background: var(--color-primary-soft, #eff6ff);
+    color: var(--color-primary, #2563eb);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.dropdownIcon {
+  font-size: 0.9375rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.dropdownActiveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--color-primary, #2563eb);
+  flex-shrink: 0;
+}
+
+// ── Mobile hamburger ───────────────────────────────────────────────────────────
+.mobileMenuBtn {
+  display: flex;
+  padding: var(--space-2, 8px);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-text-secondary, #64748b);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-subtle, #f1f5f9);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+// ── Mobile nav panel ───────────────────────────────────────────────────────────
+.mobileNav {
+  border-top: 1px solid var(--color-border, var(--dc-bdr));
+  background: var(--color-surface, var(--dc-s1, #fff));
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+.mobileGroupLabel {
+  font-size: 0.625rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted, #94a3b8);
+  margin-bottom: var(--space-1, 4px);
+  padding: 0 var(--space-1, 4px);
+}
+
+.mobileGroupGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-1, 4px);
+  margin-bottom: var(--space-3, 12px);
+}
+
+.mobileLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-xl, 12px);
+  font-size: var(--text-md, 13px);
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--color-text-primary, #334155);
+  transition: background var(--transition-fast);
+
+  &.active {
+    background: var(--color-primary-soft, #eff6ff);
+    color: var(--color-primary, #2563eb);
+  }
+
+  &:hover:not(.active) {
+    background: var(--color-subtle, #f1f5f9);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+// ── Theme toggle ───────────────────────────────────────────────────────────────
+.themeToggle {
+  margin-left: var(--space-1, 4px);
+  padding: var(--space-2, 8px);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-text-muted, #94a3b8);
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-subtle, #f1f5f9);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+// ── Main content ───────────────────────────────────────────────────────────────
+.main {
+  flex: 1;
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-6, 24px) var(--space-4, 16px);
+
+  @media (min-width: 640px) {
+    padding: var(--space-6, 24px) var(--space-6, 24px);
+  }
+}
+
+// ── Footer ─────────────────────────────────────────────────────────────────────
+.footer {
+  border-top: 1px solid var(--color-border, var(--dc-bdr));
+  background: var(--color-surface, var(--dc-s1, #fff));
+}
+
+.footerInner {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  font-size: var(--text-xs, 10px);
+  text-align: center;
+  color: var(--color-text-muted, var(--dc-p3, #94a3b8));
+
+  @media (min-width: 640px) {
+    padding: var(--space-3, 12px) var(--space-6, 24px);
+  }
+}

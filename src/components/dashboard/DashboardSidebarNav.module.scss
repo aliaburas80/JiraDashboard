@@ -43,7 +43,8 @@
 
 .healthProgressFill {
   @apply h-full rounded-full transition-all;
-  width: var(--progress);
+  // --progress-width is data-driven (healthScore); set via CSS custom property in JSX.
+  width: var(--progress-width, 0%);
   background: linear-gradient(90deg, #dc2626 0%, #ea580c 50%, #d97706 100%);
 }
 
@@ -146,6 +147,13 @@
 
 .badgeText  { @apply text-[9px] font-bold; }
 .badgeValue { @apply font-mono font-semibold; }
+
+// ── Nav item text wrapper ─────────────────────────────────────────────────────
+.navItemText {
+  min-width: 0;
+  flex: 1;
+  text-align: left;
+}
 
 // ── Semantic text colour helpers ──────────────────────────────────────────────
 .textBlue  { color: #2563eb; }
