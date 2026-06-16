@@ -9,9 +9,10 @@ import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, validatePasswordStrength } from '@/lib/auth';
 import { sendEmail, buildWelcomeEmail } from '@/lib/email';
-import { getAppConfig } from '@/lib/app-config';
+import { getAppConfig, invalidateConfig } from '@/lib/app-config';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { isAppRole, roleLabel } from '@/lib/roles';
+import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -101,21 +102,18 @@ export async function PATCH(
     },
   });
 
-  try {
-    await prisma.notification.create({
-      data: {
-        recipientUserId: userAddRequest.requestedByUserId,
-        type: 'user_add_request_accepted',
-        title: '✅ User request approved',
-        message: `Your request to add ${userAddRequest.requestedEmail} as ${roleLabel(userAddRequest.requestedRole)} has been approved.\n\nTemporary password: ${tempPassword}\n\nThe user should log in and change their password immediately on first login.`,
-        relatedEntityType: 'UserAddRequest',
-        relatedEntityId: requestId,
-      },
-    });
-  } catch { /* swallow notification write errors */ }
+  await safeNotifications([{
+    recipientUserId: userAddRequest.requestedByUserId,
+    type: 'user_add_request_accepted',
+    title: '✅ User request approved',
+    message: `Your request to add ${userAddRequest.requestedEmail} as ${roleLabel(userAddRequest.requestedRole)} has been approved.\n\nTemporary password: ${tempPassword}\n\nThe user should log in and change their password immediately on first login.`,
+    relatedEntityType: 'UserAddRequest',
+    relatedEntityId: requestId,
+  }], 'user_add_request accept notification');
 
   let emailSent = false;
   try {
+    invalidateConfig();
     const { appUrl } = await getAppConfig();
     const welcome = buildWelcomeEmail(newUser.name, newUser.email, tempPassword, appUrl);
     emailSent = await sendEmail({ to: newUser.email, toName: newUser.name, ...welcome });
@@ -123,17 +121,13 @@ export async function PATCH(
     console.warn('[email] Failed to send welcome email:', err);
   }
 
-  try {
-    await prisma.auditEvent.create({
-      data: {
-        userId: session.userId,
-        eventType: 'user_add_request_accept',
-        eventDescription: `${session.email} accepted request ${requestId} — created user ${newUser.email} with role ${roleLabel(newUser.role)}.`,
-        ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
-        userAgent: req.headers.get('user-agent') ?? undefined,
-      },
-    });
-  } catch { /* swallow audit write errors */ }
+  await safeAuditEvent({
+    userId: session.userId,
+    eventType: 'user_add_request_accept',
+    eventDescription: `${session.email} accepted request ${requestId} — created user ${newUser.email} with role ${roleLabel(newUser.role)}.`,
+    ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
+    userAgent: req.headers.get('user-agent') ?? undefined,
+  });
 
   return NextResponse.json({
     ok: true,

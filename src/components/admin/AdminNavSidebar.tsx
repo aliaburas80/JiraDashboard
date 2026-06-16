@@ -23,6 +23,7 @@ const NAV_ITEMS = [
   { id: 'diagnostics', label: 'Diagnostics',       href: '/admin/diagnostics',  icon: '🩺' },
   { id: 'security',    label: 'Security',          href: '/admin/security',     icon: '🔐' },
   { id: 'logs',        label: 'Import Logs',       href: '/admin/logs',         icon: '🧾' },
+  { id: 'syserrors',   label: 'System Errors',     href: '/admin/system-errors', icon: '🚨' },
 ];
 
 export default function AdminNavSidebar() {

@@ -7,6 +7,7 @@ import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { isAppRole } from '@/lib/roles';
+import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
 
 export async function POST(req: NextRequest) {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -87,37 +88,32 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  try {
-    await prisma.auditEvent.create({
-      data: {
-        userId: session.userId,
-        eventType: 'user_add_request_submit',
-        eventDescription: `${session.email} submitted a request to add ${requestedEmail} as ${requestedRole}.`,
-        ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
-        userAgent: req.headers.get('user-agent') ?? undefined,
-      },
-    });
-  } catch { /* swallow audit write errors */ }
+  await safeAuditEvent({
+    userId: session.userId,
+    eventType: 'user_add_request_submit',
+    eventDescription: `${session.email} submitted a request to add ${requestedEmail} as ${requestedRole}.`,
+    ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
+    userAgent: req.headers.get('user-agent') ?? undefined,
+  });
 
   // Notify all active admins so they can review the pending request.
-  try {
-    const admins = await prisma.user.findMany({
-      where: { role: 'admin', isActive: true },
-      select: { id: true },
-    });
-    if (admins.length > 0) {
-      await prisma.notification.createMany({
-        data: admins.map(admin => ({
-          recipientUserId: admin.id,
-          type: 'user_add_request_submitted',
-          title: '👤 New user add request',
-          message: `${session.name} (${session.email}) requested to add ${requestedEmail} as ${requestedRole}${reason ? `: "${reason}"` : ''}. Review in Admin → Users.`,
-          relatedEntityType: 'UserAddRequest',
-          relatedEntityId: userAddRequest.id,
-        })),
-      });
-    }
-  } catch { /* swallow notification errors */ }
+  const admins = await prisma.user.findMany({
+    where: { role: 'admin', isActive: true },
+    select: { id: true },
+  });
+  if (admins.length > 0) {
+    await safeNotifications(
+      admins.map(admin => ({
+        recipientUserId: admin.id,
+        type: 'user_add_request_submitted',
+        title: '👤 New user add request',
+        message: `${session.name} (${session.email}) requested to add ${requestedEmail} as ${requestedRole}${reason ? `: "${reason}"` : ''}. Review in Admin → Users.`,
+        relatedEntityType: 'UserAddRequest',
+        relatedEntityId: userAddRequest.id,
+      })),
+      'user_add_request_submit notifications',
+    );
+  }
 
   return NextResponse.json(
     {

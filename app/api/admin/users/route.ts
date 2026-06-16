@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma';
 import { hashPassword, validatePasswordStrength } from '@/lib/auth';
 import { sendEmail, buildWelcomeEmail } from '@/lib/email';
 import { getAppConfig, invalidateConfig } from '@/lib/app-config';
+import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { ASSIGNABLE_ROLES, isAppRole, roleLabel, type AppRole } from '@/lib/roles';
 
@@ -105,11 +106,11 @@ export async function POST(req: NextRequest) {
     include: { _count: { select: { importLogs: true, snapshots: true } } },
   });
 
-  await prisma.auditEvent.create({ data: {
+  await safeAuditEvent({
     userId: session.userId,
     eventType: 'admin_user_create',
     eventDescription: `${session.email} created user ${email} with role ${roleLabel(role)}.`,
-  }});
+  });
   await pushUsersToCloudIfConfigured();
 
   // Send welcome email to the new user.
@@ -123,21 +124,16 @@ export async function POST(req: NextRequest) {
     console.warn('[email] Failed to send welcome email:', err);
   }
 
-  // Notify the admin who created the user with the outcome.
-  try {
-    await prisma.notification.create({
-      data: {
-        recipientUserId: session.userId,
-        type: 'user_created',
-        title: '✅ User account created',
-        message: emailSent
-          ? `${name} (${email}) was created as ${roleLabel(role)}. A welcome email with their temporary password has been sent.`
-          : `${name} (${email}) was created as ${roleLabel(role)}. Welcome email could not be sent — configure SMTP in Admin → Settings.`,
-        relatedEntityType: 'User',
-        relatedEntityId: user.id,
-      },
-    });
-  } catch { /* swallow notification errors */ }
+  await safeNotifications([{
+    recipientUserId: session.userId,
+    type: 'user_created',
+    title: '✅ User account created',
+    message: emailSent
+      ? `${name} (${email}) was created as ${roleLabel(role)}. A welcome email with their temporary password has been sent.`
+      : `${name} (${email}) was created as ${roleLabel(role)}. Welcome email could not be sent — configure SMTP in Admin → Settings.`,
+    relatedEntityType: 'User',
+    relatedEntityId: user.id,
+  }], 'admin_user_create notification');
 
   return NextResponse.json({ ok: true, emailSent, user: safeUser(user) }, { status: 201 });
 }
@@ -171,11 +167,11 @@ export async function PATCH(req: NextRequest) {
     include: { _count: { select: { importLogs: true, snapshots: true } } },
   });
 
-  await prisma.auditEvent.create({ data: {
+  await safeAuditEvent({
     userId: session.userId,
     eventType: 'admin_user_update',
     eventDescription: `${session.email} updated user ${user.email}.`,
-  }});
+  });
   await pushUsersToCloudIfConfigured();
 
   return NextResponse.json({ ok: true, user: safeUser(user) });
@@ -210,11 +206,11 @@ export async function DELETE(req: NextRequest) {
   });
 
   await prisma.user.delete({ where: { id: user.id } });
-  await prisma.auditEvent.create({ data: {
+  await safeAuditEvent({
     userId: session.userId,
     eventType: 'admin_user_delete',
     eventDescription: `${session.email} deleted user ${user.email}.`,
-  }});
+  });
   await pushUsersToCloudIfConfigured();
 
   return NextResponse.json({ ok: true, deletedUserId: user.id });

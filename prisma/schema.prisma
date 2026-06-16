@@ -145,3 +145,24 @@ model Notification {
   @@index([recipientUserId])
   @@index([readAt])
 }
+
+// ── System Error Log (P-SYSERR) ───────────────────────────────────────────────
+
+model SystemErrorLog {
+  id            String    @id @default(cuid())
+  errorCode     String    // Prisma code (P2003, P2025, …) or "UNKNOWN"
+  errorMessage  String
+  prismaModel   String?   // model that failed, e.g. "AuditEvent"
+  operation     String    // e.g. "auditEvent.create", "notification.createMany"
+  context       String?   // route / action that triggered the error
+  payload       String?   // JSON-serialised data for retry
+  resolution    String    @default("logged") // "logged" | "auto-fixed" | "retried" | "resolved" | "skipped"
+  retryCount    Int       @default(0)
+  lastRetriedAt DateTime?
+  resolvedAt    DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([errorCode])
+  @@index([createdAt])
+  @@index([resolution])
+}
