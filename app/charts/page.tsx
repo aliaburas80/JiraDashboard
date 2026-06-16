@@ -1,948 +1,792 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// /charts — Visual Analytics: two tabs (bar/line Charts + donut Circles).
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
+import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import type { DashboardMetrics } from '@/types/metrics';
 import { loadMetricsWithSource } from '@/lib/storage';
 import SprintVelocityChart from '@/components/charts/SprintVelocityChart';
 import ChartCustomizerPanel from '@/components/charts/ChartCustomizerPanel';
-import { getChartPrefs, type ChartPref, type ChartSpan } from '@/lib/chartCustomizer';
+import { getChartPrefs, type ChartPref } from '@/lib/chartCustomizer';
+import styles from './page.module.scss';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 const DONE_ST   = ['done', 'closed', 'resolved'];
 const ACTIVE_ST = ['in progress', 'code review', 'qa', 'testing', 'uat'];
-const PALETTE   = ['#2563eb', '#14b8a6', '#f59e0b', '#dc2626', '#7c3aed', '#0891b2', '#f97316', '#16a34a'];
+const PALETTE   = ['#2563eb', '#14b8a6', '#f59e0b', '#7c3aed', '#0891b2', '#f97316', '#16a34a', '#dc2626'];
 
-const norm = (v: unknown): string => String(v ?? '').trim().toLowerCase();
+const HEALTH_CSS: Record<string, string> = {
+  good:     'var(--color-success, #22c55e)',
+  warning:  'var(--color-warning, #f59e0b)',
+  critical: 'var(--color-danger, #dc2626)',
+};
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface Segment {
-  label: string;
-  value: number;
-  color: string;
-}
+const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
 
-interface GanttRow {
-  label: string;
-  pct: number;
-  done: number;
-  total: number;
-  health: 'good' | 'warning' | 'critical';
-}
+// ── Types ─────────────────────────────────────────────────────────────────────
+interface Seg { label: string; value: number; color: string; }
 
-// ─── Donut Chart ──────────────────────────────────────────────────────────────
-function DonutChart({
-  segments,
-  size = 160,
-  centerLabel,
+// ── SVG Donut (animated arcs) ─────────────────────────────────────────────────
+const DONUT_R = 52;
+const DONUT_CIRC = 2 * Math.PI * DONUT_R;
+const DONUT_GAP  = 3; // gap between arcs in px
+
+function AnimatedDonut({
+  segs,
+  size = 140,
+  centerVal,
   centerSub,
+  delayBase = 0,
 }: {
-  segments: Segment[];
+  segs: Seg[];
   size?: number;
-  centerLabel?: string | number;
+  centerVal?: string | number;
   centerSub?: string;
+  delayBase?: number;
 }) {
-  let cursor = 0;
-  const total = Math.max(
-    segments.reduce((s, seg) => s + (seg.value || 0), 0),
-    1
-  );
+  const total = Math.max(segs.reduce((s, g) => s + (g.value || 0), 0), 1);
+  const cx = size / 2;
+  const cy = size / 2;
+  const r  = (size / 2) * 0.68;
+  const circ = 2 * Math.PI * r;
+  const gap  = segs.length > 1 ? (DONUT_GAP / DONUT_CIRC) * circ : 0;
 
-  const gradient =
-    segments.length > 0
-      ? `conic-gradient(${segments
-          .map((seg) => {
-            const start = cursor;
-            cursor += (seg.value / total) * 100;
-            return `${seg.color} ${start}% ${cursor}%`;
-          })
-          .join(', ')})`
-      : '#e2e8f0';
-
-  const holeSize = Math.round(size * 0.58);
-  const holeOffset = Math.round((size - holeSize) / 2);
+  let offset = 0; // cumulative arc offset (starts at top = -circ/4)
 
   return (
-    <div
-      className="rounded-full shrink-0 relative"
-      style={{ width: size, height: size, background: gradient }}
-      role="img"
+    <svg
+      className={styles.donutSvg}
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
       aria-label="Donut chart"
+      style={{ '--spin-delay': `${delayBase}ms` } as CSSProperties}
     >
-      <div
-        className="absolute rounded-full bg-white flex flex-col items-center justify-center"
-        style={{
-          width: holeSize,
-          height: holeSize,
-          top: holeOffset,
-          left: holeOffset,
-        }}
-      >
-        {centerLabel !== undefined && (
-          <span className="text-sm font-black text-slate-900 leading-none">{centerLabel}</span>
-        )}
-        {centerSub && (
-          <span className="text-xs text-slate-500 leading-none mt-0.5">{centerSub}</span>
-        )}
-      </div>
-    </div>
-  );
-}
+      {/* Background ring */}
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--color-subtle,#f1f5f9)" strokeWidth={size * 0.09} />
 
-// ─── Legend Row ───────────────────────────────────────────────────────────────
-function LegendRow({
-  color,
-  label,
-  value,
-  pct,
-}: {
-  color: string;
-  label: string;
-  value: number;
-  pct?: number;
-}) {
-  return (
-    <div className="flex items-center gap-1.5 text-xs">
-      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
-      <span className="text-slate-600 flex-1 min-w-0 truncate">{label}</span>
-      <span className="font-bold text-slate-800 shrink-0">{value}</span>
-      {pct !== undefined && (
-        <span className="text-slate-400 shrink-0 w-8 text-right">{pct}%</span>
+      {segs.map((seg, i) => {
+        const segLen   = (seg.value / total) * circ - gap;
+        const startOff = circ / 4 - offset; // SVG starts at 3 o'clock; adjust to 12 o'clock
+        const endOff   = startOff - segLen;
+        offset += segLen + gap;
+
+        return (
+          <circle
+            key={i}
+            className={styles.donutArc}
+            cx={cx}
+            cy={cy}
+            r={r}
+            stroke={seg.color}
+            strokeWidth={size * 0.09}
+            style={{
+              '--arc-len':   `${circ}`,
+              '--arc-end':   `${endOff}`,
+              '--arc-delay': `${delayBase + i * 120}ms`,
+              '--arc-dur':   '850ms',
+              strokeDasharray: `${circ}`,
+              strokeDashoffset: endOff,
+              transform: 'rotate(-90deg)',
+              transformOrigin: `${cx}px ${cy}px`,
+            } as CSSProperties}
+          />
+        );
+      })}
+
+      {/* Center text */}
+      <text x={cx} y={cy - (centerSub ? size * 0.06 : 0)} className={styles.donutCenter}>
+        <tspan className={styles.donutCenterVal} style={{ fontSize: size * 0.13 }}>{centerVal}</tspan>
+      </text>
+      {centerSub && (
+        <text x={cx} y={cy + size * 0.1} className={styles.donutCenter}>
+          <tspan className={styles.donutCenterSub} style={{ fontSize: size * 0.065 }}>{centerSub}</tspan>
+        </text>
       )}
-    </div>
+    </svg>
   );
 }
 
-// ─── Horizontal Bar ───────────────────────────────────────────────────────────
-function HorizBar({
-  label,
-  value,
-  maxValue,
-  color,
-  pct,
-  subLabel,
+// ── Widget card ────────────────────────────────────────────────────────────────
+function Widget({
+  title, icon, desc, source, children, colSpan = 1, delay = 0,
 }: {
-  label: string;
-  value: number;
-  maxValue?: number;
-  color: string;
-  pct?: number;
-  subLabel?: string;
+  title: string; icon: string; desc: string; source: string;
+  children: React.ReactNode; colSpan?: 1 | 2 | 3; delay?: number;
 }) {
-  const width =
-    pct !== undefined
-      ? pct
-      : maxValue
-      ? Math.max(0, Math.min(100, (value / maxValue) * 100))
-      : 0;
-
-  return (
-    <div className="flex items-center gap-2 text-xs">
-      <span className="text-slate-600 truncate w-28 shrink-0" title={label}>
-        {label}
-      </span>
-      <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all"
-          style={{ width: `${width}%`, background: color }}
-        />
-      </div>
-      <span className="font-bold text-slate-800 w-10 text-right shrink-0">
-        {subLabel ?? value}
-      </span>
-    </div>
-  );
-}
-
-// ─── Vertical Bar ─────────────────────────────────────────────────────────────
-function VertBar({
-  label,
-  value,
-  maxValue,
-  color,
-  pct,
-}: {
-  label: string;
-  value: number;
-  maxValue?: number;
-  color: string;
-  pct?: number;
-}) {
-  const h =
-    pct !== undefined
-      ? pct
-      : maxValue
-      ? Math.max(3, Math.min(100, (value / maxValue) * 100))
-      : 3;
-
-  return (
-    <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-      <span className="text-xs font-bold text-slate-700">{value}</span>
-      <div className="w-full relative h-24 flex items-end">
-        <div
-          className="w-full rounded-t transition-all"
-          style={{ height: `${h}%`, background: color }}
-        />
-      </div>
-      <span
-        className="text-xs text-slate-500 text-center leading-none max-w-full truncate"
-        title={label}
-      >
-        {label}
-      </span>
-    </div>
-  );
-}
-
-// ─── Chart Widget ─────────────────────────────────────────────────────────────
-function ChartWidget({
-  title,
-  icon,
-  children,
-  span = 1,
-  className = '',
-}: {
-  title: string;
-  icon: string;
-  children: React.ReactNode;
-  span?: 1 | 2 | 3;
-  className?: string;
-}) {
-  const spanClass =
-    span === 3
-      ? 'col-span-1 md:col-span-3'
-      : span === 2
-      ? 'col-span-1 md:col-span-2'
-      : 'col-span-1';
-
   return (
     <article
-      className={`bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden ${spanClass} ${className}`}
+      className={clsx(styles.widget, colSpan === 3 && styles.colSpan3, colSpan === 2 && styles.colSpan2)}
+      style={{ '--widget-delay': `${delay}ms`, '--widget-dur': '320ms' } as CSSProperties}
     >
-      <header className="flex items-center gap-2 px-5 pt-4 pb-3 border-b border-slate-100">
-        <span aria-hidden="true" className="text-base">
-          {icon}
-        </span>
-        <h3 className="text-sm font-black uppercase tracking-wider text-slate-700">{title}</h3>
+      <header className={styles.widgetHead}>
+        <div className={styles.widgetIconBox} aria-hidden="true">{icon}</div>
+        <div className={styles.widgetMeta}>
+          <p className={styles.widgetTitle}>{title}</p>
+          <p className={styles.widgetDesc}>{desc}</p>
+          <span className={styles.widgetSource}>📥 {source}</span>
+        </div>
       </header>
-      <div className="p-5">{children}</div>
+      <div className={styles.widgetBody}>{children}</div>
     </article>
   );
 }
 
-// ─── Gantt / Timeline Chart ───────────────────────────────────────────────────
-function GanttChart({
-  epics,
-  sprints,
-}: {
-  epics: unknown[];
-  sprints: unknown[];
+// ── Animated horizontal bar ────────────────────────────────────────────────────
+function HBar({ label, pct, color, valLabel, delay = 0 }: {
+  label: string; pct: number; color: string; valLabel: string; delay?: number;
 }) {
-  const COLOR = { good: '#16a34a', warning: '#f59e0b', critical: '#dc2626' } as const;
-  const BG    = {
-    good:     'rgba(22,163,74,0.06)',
-    warning:  'rgba(245,158,11,0.08)',
-    critical: 'rgba(220,38,38,0.08)',
-  } as const;
-
-  const rows: GanttRow[] = (epics as any[]).length
-    ? (epics as any[]).slice(0, 12).map((e) => ({
-        label: e.epic || 'No epic',
-        pct:   e.progress    || 0,
-        done:  e.completedIssues || 0,
-        total: e.issues      || 0,
-        health:
-          e.critical > 0
-            ? 'critical'
-            : e.warning > 0
-            ? 'warning'
-            : 'good',
-      }))
-    : (sprints as any[]).slice(0, 10).map((s) => ({
-        label: s.name || 'Sprint',
-        pct:   s.completionRate || 0,
-        done:  s.completedIssues || 0,
-        total: s.issues          || 0,
-        health:
-          s.completionRate >= 80
-            ? 'good'
-            : s.completionRate >= 50
-            ? 'warning'
-            : 'critical',
-      }));
-
-  if (!rows.length) {
-    return (
-      <p className="text-sm text-slate-400 italic">
-        No epic or sprint data — include Epic Link or Sprint columns in the export.
-      </p>
-    );
-  }
-
-  const colLabel = (epics as any[]).length ? 'Epic' : 'Sprint';
-
   return (
-    <div className="space-y-0">
-      {/* Scale header */}
-      <div className="flex items-center gap-3 mb-1 px-1">
-        <span className="text-xs font-bold text-slate-400 uppercase w-36 shrink-0">{colLabel}</span>
-        <div className="flex-1 flex justify-between text-xs text-slate-300 font-mono select-none">
-          <span>0%</span>
-          <span>25%</span>
-          <span>50%</span>
-          <span>75%</span>
-          <span>100%</span>
-        </div>
-        <span className="text-xs font-bold text-slate-400 uppercase w-20 text-right shrink-0">Done</span>
-      </div>
-
-      {rows.map((r, i) => (
+    <div className={styles.hBarRow}>
+      <span className={styles.hBarLabel} title={label}>{label}</span>
+      <div className={styles.hBarTrack}>
         <div
-          key={i}
-          className="flex items-center gap-3 rounded-lg px-1 py-1.5"
-          style={{ background: BG[r.health] }}
-        >
-          <span
-            className="text-xs text-slate-700 font-medium truncate w-36 shrink-0"
-            title={r.label}
-          >
-            {r.label}
-          </span>
-
-          <div className="flex-1 relative h-4 rounded-full bg-slate-100 overflow-hidden">
-            <div
-              className="absolute inset-y-0 left-0 rounded-full transition-all"
-              style={{ width: `${r.pct}%`, background: COLOR[r.health] }}
-            />
-            {/* tick marks at 25/50/75 */}
-            {[25, 50, 75].map((t) => (
-              <div
-                key={t}
-                className="absolute inset-y-0 w-px bg-white/60"
-                style={{ left: `${t}%` }}
-                aria-hidden="true"
-              />
-            ))}
-          </div>
-
-          <div className="flex flex-col items-end w-20 shrink-0">
-            <span className="text-xs font-black" style={{ color: COLOR[r.health] }}>
-              {r.pct}%
-            </span>
-            <span className="text-xs text-slate-400 leading-none">
-              {r.done}/{r.total}
-            </span>
-          </div>
-        </div>
-      ))}
+          className={styles.hBarFill}
+          style={{ '--bar-w': `${pct}%`, '--bar-color': color, '--bar-delay': `${delay}ms` } as CSSProperties}
+        />
+      </div>
+      <span className={styles.hBarVal}>{valLabel}</span>
     </div>
   );
 }
 
-// ─── KPI Pill ─────────────────────────────────────────────────────────────────
-function KpiPill({
-  value,
-  label,
-  gradient,
-}: {
-  value: string | number;
-  label: string;
-  gradient: string;
+// ── Animated vertical bar ─────────────────────────────────────────────────────
+function VBar({ label, valLabel, pct, color, delay = 0 }: {
+  label: string; valLabel: string; pct: number; color: string; delay?: number;
 }) {
+  return (
+    <div className={styles.vBarCol}>
+      <span className={styles.vBarValLabel}>{valLabel}</span>
+      <div className={styles.vBarTrack}>
+        <div
+          className={styles.vBarFill}
+          style={{ '--bar-h': `${Math.max(3, pct)}%`, '--bar-color': color, '--bar-delay': `${delay}ms` } as CSSProperties}
+        />
+      </div>
+      <span className={styles.vBarName} title={label}>{label}</span>
+    </div>
+  );
+}
+
+// ── Gantt row ─────────────────────────────────────────────────────────────────
+const HEALTH_META = {
+  good:     { color: '#16a34a', bg: 'rgba(22,163,74,0.06)',    accent: '#16a34a', chipBg: '#dcfce7', chipFg: '#15803d', label: 'On track'  },
+  warning:  { color: '#f59e0b', bg: 'rgba(245,158,11,0.07)',   accent: '#f59e0b', chipBg: '#fef9c3', chipFg: '#a16207', label: 'At risk'   },
+  critical: { color: '#dc2626', bg: 'rgba(220,38,38,0.06)',    accent: '#dc2626', chipBg: '#fee2e2', chipFg: '#b91c1c', label: 'Critical'  },
+};
+
+function GanttRow({ label, pct, done, total, health, delay = 0 }: {
+  label: string; pct: number; done: number; total: number;
+  health: 'good' | 'warning' | 'critical'; delay?: number;
+}) {
+  const m = HEALTH_META[health] ?? HEALTH_META.warning;
+
   return (
     <div
-      className="flex flex-col items-center justify-center rounded-2xl px-5 py-3 text-white shadow-sm min-w-[80px]"
-      style={{ background: gradient }}
+      className={styles.ganttRow}
+      style={{
+        '--row-bg':     m.bg,
+        '--row-accent': m.accent,
+      } as CSSProperties}
     >
-      <span className="text-xl font-black leading-none">{value}</span>
-      <span className="text-xs opacity-85 mt-0.5 font-semibold">{label}</span>
+      {/* Label column */}
+      <div className={styles.ganttRowLabel}>
+        <span className={styles.ganttRowName} title={label}>{label}</span>
+        <span className={styles.ganttRowSub}>{done} of {total} issues</span>
+      </div>
+
+      {/* Bar track */}
+      <div className={styles.ganttTrack}>
+        <div className={styles.ganttTick} />
+        <div className={styles.ganttTick} />
+        <div className={styles.ganttTick} />
+        <div
+          className={styles.ganttFill}
+          style={{ '--bar-w': `${pct}%`, '--bar-color': m.color, '--bar-delay': `${delay}ms` } as CSSProperties}
+        />
+      </div>
+
+      {/* Health chip */}
+      <span
+        className={styles.ganttHealthChip}
+        style={{ '--chip-bg': m.chipBg, '--chip-fg': m.chipFg } as CSSProperties}
+      >
+        {m.label}
+      </span>
+
+      {/* % + fraction */}
+      <div className={styles.ganttDoneCell}>
+        <span className={styles.ganttPct} style={{ '--bar-color': m.color } as CSSProperties}>{pct}%</span>
+      </div>
     </div>
   );
 }
 
-// ─── Charts Page ──────────────────────────────────────────────────────────────
+// ── DonutBlock (legend + svg) ─────────────────────────────────────────────────
+function DonutBlock({ segs, total, centerVal, centerSub, size = 130, delayBase = 0 }: {
+  segs: Seg[]; total: number; centerVal: string | number; centerSub: string;
+  size?: number; delayBase?: number;
+}) {
+  return (
+    <div className={styles.donutWrap}>
+      <AnimatedDonut segs={segs} size={size} centerVal={centerVal} centerSub={centerSub} delayBase={delayBase} />
+      <div className={styles.donutLegend}>
+        {segs.map((s, i) => (
+          <div key={i} className={styles.donutLegendRow}>
+            <div className={styles.donutLegendDot} style={{ '--dot-color': s.color } as CSSProperties} />
+            <span className={styles.donutLegendLabel}>{s.label}</span>
+            <span className={styles.donutLegendVal}>{s.value}</span>
+            <span className={styles.donutLegendPct}>{Math.round((s.value / total) * 100)}%</span>
+          </div>
+        ))}
+        <hr className={styles.donutDivider} />
+        <div className={styles.donutTotal}>
+          <span>Total</span>
+          <span className={styles.donutTotalVal}>{total}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 export default function ChartsPage() {
   const router = useRouter();
-  const [metrics,     setMetrics]     = useState<DashboardMetrics | null>(null);
-  const [loading,     setLoading]     = useState(true);
-  const [chartPrefs,  setChartPrefs]  = useState<ChartPref[]>([]);
+  const [metrics,    setMetrics]    = useState<DashboardMetrics | null>(null);
+  const [loading,    setLoading]    = useState(true);
+  const [chartPrefs, setChartPrefs] = useState<ChartPref[]>([]);
+  const [tab,        setTab]        = useState<'charts' | 'circles'>('charts');
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
-      const result = await loadMetricsWithSource();
-      if (cancelled) return;
-      const data = result.metrics as DashboardMetrics | null;
-      if (!data) {
-        router.replace('/');
-        return;
-      }
-      setMetrics(data);
-      setChartPrefs(getChartPrefs());
-    } catch {
-      router.replace('/');
-    } finally {
-      if (!cancelled) setLoading(false);
-    }
+        const result = await loadMetricsWithSource();
+        if (cancelled) return;
+        const data = result.metrics as DashboardMetrics | null;
+        if (!data) { router.replace('/'); return; }
+        setMetrics(data);
+        setChartPrefs(getChartPrefs());
+      } catch { router.replace('/'); }
+      finally   { if (!cancelled) setLoading(false); }
     }
     load();
     return () => { cancelled = true; };
   }, [router]);
 
-  if (loading) {
-    return (
-      <AppShell showNav>
-        <div className="flex items-center justify-center h-64 text-slate-400 text-sm animate-pulse">
-          Loading charts…
-        </div>
-      </AppShell>
-    );
-  }
+  if (loading) return (
+    <AppShell showNav>
+      <div className="flex items-center justify-center h-64 text-slate-400 text-sm animate-pulse">
+        Loading charts…
+      </div>
+    </AppShell>
+  );
   if (!metrics) return null;
 
-  // ── Chart pref helpers ────────────────────────────────────────────────────────
-  const isChartVisible = (id: string) => {
+  // ── Chart pref helpers ──────────────────────────────────────────────────────
+  const isVisible = (id: string) => {
     if (!chartPrefs.length) return true;
     const p = chartPrefs.find(c => c.id === id);
     return p ? p.visible : true;
   };
-  const chartSpan = (id: string): ChartSpan => {
+  const span = (id: string): 1 | 2 | 3 => {
     if (!chartPrefs.length) return 1;
     const p = chartPrefs.find(c => c.id === id);
-    return p ? p.span : 1;
+    return (p?.span as 1 | 2 | 3) ?? 1;
   };
 
-  // ── Derived data ─────────────────────────────────────────────────────────────
-  const flow   = metrics.flow          || ({} as any);
-  const sp     = metrics.storyPoints   || ({} as any);
-  const items  = (flow.items           || []) as any[];
+  // ── Derived data ────────────────────────────────────────────────────────────
+  const flow   = metrics.flow        || ({} as any);
+  const sp     = metrics.storyPoints || ({} as any);
+  const items  = (flow.items || [])  as any[];
   const total  = Math.max(items.length, 1);
 
-  // 1. Delivery Composition
-  const doneBucket     = items.filter((i) => DONE_ST.includes(norm(i.status))).length;
-  const criticalBucket = items.filter(
-    (i) => !DONE_ST.includes(norm(i.status)) && norm(i.health) === 'critical'
-  ).length;
-  const warningBucket  = items.filter(
-    (i) => !DONE_ST.includes(norm(i.status)) && norm(i.health) === 'warning'
-  ).length;
-  const activeBucket   = items.filter(
-    (i) =>
-      ACTIVE_ST.includes(norm(i.status)) &&
-      !DONE_ST.includes(norm(i.status)) &&
-      norm(i.health) !== 'critical' &&
-      norm(i.health) !== 'warning'
-  ).length;
-  const otherBucket = Math.max(
-    total - doneBucket - criticalBucket - warningBucket - activeBucket,
-    0
-  );
+  // Delivery composition
+  const doneBucket     = items.filter(i => DONE_ST.includes(norm(i.status))).length;
+  const criticalBucket = items.filter(i => !DONE_ST.includes(norm(i.status)) && norm(i.health) === 'critical').length;
+  const warningBucket  = items.filter(i => !DONE_ST.includes(norm(i.status)) && norm(i.health) === 'warning').length;
+  const activeBucket   = items.filter(i => ACTIVE_ST.includes(norm(i.status)) && !DONE_ST.includes(norm(i.status)) && norm(i.health) !== 'critical' && norm(i.health) !== 'warning').length;
+  const otherBucket    = Math.max(total - doneBucket - criticalBucket - warningBucket - activeBucket, 0);
 
-  const deliverySegs: Segment[] = [
+  const deliverySegs: Seg[] = [
     { label: 'Done',        value: doneBucket,     color: '#16a34a' },
     { label: 'In Progress', value: activeBucket,   color: '#2563eb' },
     { label: 'At Risk',     value: warningBucket,  color: '#f59e0b' },
     { label: 'Critical',    value: criticalBucket, color: '#dc2626' },
     { label: 'Backlog',     value: otherBucket,    color: '#cbd5e1' },
-  ].filter((s) => s.value > 0);
+  ].filter(s => s.value > 0);
 
-  // 2. Health Mix
-  const healthSegs: Segment[] = [
+  const healthSegs: Seg[] = [
     { label: 'Good',     value: flow.good     || 0, color: '#16a34a' },
     { label: 'Warning',  value: flow.warning  || 0, color: '#f59e0b' },
     { label: 'Critical', value: flow.critical || 0, color: '#dc2626' },
-  ].filter((s) => s.value > 0);
+  ].filter(s => s.value > 0);
 
-  // 3. Issue Types
-  const typeList  = ((metrics.types || []) as any[]).slice(0, 6);
-  const typeTotal = Math.max(typeList.reduce((s: number, t: any) => s + (t.count || 0), 0), 1);
-  const typeSegs: Segment[]  = typeList.map((t: any, i: number) => ({
-    label: t.type,
-    value: t.count,
-    color: PALETTE[i % PALETTE.length],
-  }));
+  const typeList   = ((metrics.types || []) as any[]).slice(0, 6);
+  const typeTotal  = Math.max(typeList.reduce((s: number, t: any) => s + (t.count || 0), 0), 1);
+  const typeSegs: Seg[] = typeList.map((t: any, i: number) => ({ label: t.type, value: t.count, color: PALETTE[i % PALETTE.length] }));
 
-  // 4. Story Points
-  const spPct  = sp.pointCompletionRate || 0;
-  const spSegs: Segment[] =
-    sp.totalStoryPoints > 0
-      ? [
-          { label: 'Completed', value: sp.completedStoryPoints || 0, color: '#16a34a' },
-          { label: 'Remaining', value: sp.remainingStoryPoints || 0, color: '#e2e8f0' },
-        ]
-      : [];
+  const spPct    = sp.pointCompletionRate || 0;
+  const spSegs: Seg[] = sp.totalStoryPoints > 0
+    ? [{ label: 'Completed', value: sp.completedStoryPoints || 0, color: '#16a34a' }, { label: 'Remaining', value: sp.remainingStoryPoints || 0, color: '#e2e8f0' }]
+    : [];
 
-  // 5. Sprint Velocity
   const sprints    = ((metrics.sprint?.sprints || []) as any[]).slice(0, 7).reverse();
   const maxSprint  = Math.max(...sprints.map((s: any) => s.issues || 0), 1);
 
-  // 6. Team Load
-  const capacity = ((metrics.capacity || []) as any[]).slice(0, 8);
-  const maxLoad  = Math.max(...capacity.map((c: any) => c.loadShare || 0), 1);
+  const capacity  = ((metrics.capacity || []) as any[]).slice(0, 8);
+  const maxLoad   = Math.max(...capacity.map((c: any) => c.loadShare || 0), 1);
 
-  // 7. Quarter Throughput
-  const quarters = ((metrics.quarters || []) as any[])
-    .filter((q: any) => q.quarter !== 'No date')
-    .slice(0, 5)
-    .reverse();
-  const maxQ = Math.max(...quarters.map((q: any) => q.issues || 0), 1);
+  const quarters  = ((metrics.quarters || []) as any[]).filter((q: any) => q.quarter !== 'No date').slice(0, 6).reverse();
+  const maxQ      = Math.max(...quarters.map((q: any) => q.issues || 0), 1);
 
-  // 8. Kanban Status
   const kanban    = ((metrics.kanban as any)?.byStatus || []) as any[];
   const kanbanTop = kanban.slice(0, 8);
   const maxKanban = Math.max(...kanbanTop.map((k: any) => k.count || 0), 1);
 
-  // 9. Label Distribution
-  const labelStats = (((metrics.labels as any)?.labelStats || []) as any[])
-    .filter((l: any) => l.label !== '(unlabeled)')
-    .slice(0, 7);
-  const maxLabel = Math.max(...labelStats.map((l: any) => l.count || 0), 1);
+  const labelStats  = (((metrics.labels as any)?.labelStats || []) as any[]).filter((l: any) => l.label !== '(unlabeled)').slice(0, 7);
+  const maxLabel    = Math.max(...labelStats.map((l: any) => l.count || 0), 1);
 
-  // 10. Epic Progress
-  const epics = ((metrics.epics || []) as any[]).slice(0, 8);
+  const epics = ((metrics.epics || []) as any[]).slice(0, 10);
 
-  // 11. Relations
   const relations  = (metrics.relations as any) || {};
-  const linkSegs: Segment[]   = relations.hasLinks
-    ? ((relations.linkStats || []) as any[]).slice(0, 5).map((l: any, i: number) => ({
-        label: l.type,
-        value: l.count,
-        color: PALETTE[i % PALETTE.length],
-      }))
+  const linkSegs: Seg[] = relations.hasLinks
+    ? ((relations.linkStats || []) as any[]).slice(0, 5).map((l: any, i: number) => ({ label: l.type, value: l.count, color: PALETTE[i % PALETTE.length] }))
     : [];
   const linkTotal = Math.max(linkSegs.reduce((s, l) => s + l.value, 0), 1);
 
+  const healthTotal = Math.max((flow.good || 0) + (flow.warning || 0) + (flow.critical || 0), 1);
+  const spTotal     = sp.totalStoryPoints || 0;
+
+  const KPI_PILLS = [
+    { val: `${metrics.completionRate || 0}%`, lbl: 'Complete',    grad: 'linear-gradient(135deg,#16a34a,#14b8a6)' },
+    { val: flow.critical || 0,                lbl: 'Critical',    grad: 'linear-gradient(135deg,#dc2626,#f97316)' },
+    { val: metrics.healthScore || 0,          lbl: 'Health Score', grad: 'linear-gradient(135deg,#2563eb,#7c3aed)' },
+    ...(metrics.prediction && !metrics.prediction.complete && metrics.prediction.daysRemaining !== null
+      ? [{ val: `~${metrics.prediction.daysRemaining}d`, lbl: 'Est. Done', grad: 'linear-gradient(135deg,#0891b2,#2563eb)' }]
+      : []),
+  ];
+
   return (
     <AppShell showNav>
-      {/* Page Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-        <div>
+      <div className={styles.page}>
+
+        {/* ── Header ── */}
+        <div className={styles.pageHead}>
+          <div className={styles.headLeft}>
+            <button type="button" className={styles.breadcrumb} onClick={() => router.push('/summary')}>
+              ← Overview
+            </button>
+            <h1 className={styles.pageTitle}>Visual Analytics</h1>
+            <p className={styles.pageSubtitle}>
+              Charts and diagrams summarising delivery health, flow, team, and progress — all derived from your Jira export.
+            </p>
+          </div>
+          <ChartCustomizerPanel onPrefsChange={setChartPrefs} />
+          <div className={styles.kpiStrip}>
+            {KPI_PILLS.map((p, i) => (
+              <div
+                key={p.lbl}
+                className={styles.kpiPill}
+                style={{ '--pill-gradient': p.grad, '--pill-delay': `${i * 60}ms` } as CSSProperties}
+              >
+                <span className={styles.kpiVal}>{p.val}</span>
+                <span className={styles.kpiLbl}>{p.lbl}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Tab bar ── */}
+        <div className={styles.tabBar} role="tablist">
           <button
             type="button"
-            onClick={() => router.push('/summary')}
-            className="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 mb-2"
+            role="tab"
+            aria-selected={tab === 'charts'}
+            className={clsx(styles.tabBtn, tab === 'charts' && styles.tabBtnActive)}
+            onClick={() => setTab('charts')}
           >
-            ← Overview
+            📊 Bar Charts
           </button>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Visual Analytics</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Charts and diagrams summarising delivery health, flow, team, and progress across all dimensions.
-          </p>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'circles'}
+            className={clsx(styles.tabBtn, tab === 'circles' && styles.tabBtnActive)}
+            onClick={() => setTab('circles')}
+          >
+            🍩 Circles
+          </button>
         </div>
-        <ChartCustomizerPanel onPrefsChange={setChartPrefs} />
 
-        {/* KPI Pills */}
-        <div className="flex flex-wrap gap-2">
-          <KpiPill
-            value={`${metrics.completionRate || 0}%`}
-            label="Complete"
-            gradient="linear-gradient(135deg,#16a34a,#14b8a6)"
-          />
-          <KpiPill
-            value={flow.critical || 0}
-            label="Critical"
-            gradient="linear-gradient(135deg,#dc2626,#f97316)"
-          />
-          <KpiPill
-            value={metrics.healthScore || 0}
-            label="Health Score"
-            gradient="linear-gradient(135deg,#2563eb,#7c3aed)"
-          />
-          {metrics.prediction &&
-            !metrics.prediction.complete &&
-            metrics.prediction.daysRemaining !== null && (
-              <KpiPill
-                value={`~${metrics.prediction.daysRemaining}d`}
-                label="Est. Done"
-                gradient="linear-gradient(135deg,#0891b2,#2563eb)"
-              />
-            )}
-        </div>
-      </div>
+        {/* ═══════════════════ TAB: CHARTS ═══════════════════ */}
+        {tab === 'charts' && (
+          <div key="charts" className={styles.grid}>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-
-        {/* 1. Delivery Composition */}
-        {isChartVisible('delivery') && <ChartWidget title="Delivery Composition" icon="💠" span={chartSpan('delivery') as 1|2|3}>
-          <div className="flex flex-wrap items-center gap-6">
-            <DonutChart
-              segments={deliverySegs}
-              size={180}
-              centerLabel={`${metrics.completionRate || 0}%`}
-              centerSub="complete"
-            />
-            <div className="flex-1 min-w-[140px] space-y-2">
-              {deliverySegs.map((s) => (
-                <LegendRow
-                  key={s.label}
-                  color={s.color}
-                  label={s.label}
-                  value={s.value}
-                  pct={Math.round((s.value / total) * 100)}
-                />
-              ))}
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100 mt-1">
-                <span className="text-slate-500">Total</span>
-                <span className="font-bold text-slate-800">{total} issues</span>
-              </div>
-            </div>
-          </div>
-        </ChartWidget>}
-
-        {/* 2. Health Mix */}
-        {isChartVisible('health') && <ChartWidget title="Health Mix" icon="🏥" span={chartSpan('health') as 1|2|3}>
-          <div className="flex flex-wrap items-center gap-4">
-            <DonutChart
-              segments={healthSegs}
-              size={140}
-              centerLabel={total}
-              centerSub="items"
-            />
-            <div className="flex-1 min-w-[100px] space-y-2">
-              {healthSegs.map((s) => (
-                <LegendRow
-                  key={s.label}
-                  color={s.color}
-                  label={s.label}
-                  value={s.value}
-                  pct={Math.round((s.value / total) * 100)}
-                />
-              ))}
-            </div>
-          </div>
-        </ChartWidget>}
-
-        {/* 3. Issue Types */}
-        {isChartVisible('types') && <ChartWidget title="Issue Types" icon="📁" span={chartSpan('types') as 1|2|3}>
-          {typeList.length > 0 ? (
-            <div className="flex flex-wrap items-center gap-4">
-              <DonutChart
-                segments={typeSegs}
-                size={130}
-                centerLabel={typeTotal}
-                centerSub="total"
-              />
-              <div className="flex-1 min-w-[100px] space-y-2">
-                {typeSegs.map((s) => (
-                  <LegendRow
-                    key={s.label}
-                    color={s.color}
-                    label={s.label}
-                    value={s.value}
-                    pct={Math.round((s.value / typeTotal) * 100)}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-slate-400 italic">No issue type data</p>
-          )}
-        </ChartWidget>}
-
-        {/* 4. Story Points */}
-        {isChartVisible('points') && <ChartWidget title="Story Points" icon="💎" span={chartSpan('points') as 1|2|3}>
-          {sp.totalStoryPoints > 0 ? (
-            <div className="flex flex-wrap items-center gap-4">
-              <DonutChart
-                segments={spSegs}
-                size={130}
-                centerLabel={`${spPct}%`}
-                centerSub="done"
-              />
-              <div className="flex-1 min-w-[100px] space-y-2">
-                <LegendRow color="#16a34a" label="Completed" value={sp.completedStoryPoints || 0} />
-                <LegendRow color="#e2e8f0" label="Remaining" value={sp.remainingStoryPoints || 0} />
-                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
-                  <span className="text-slate-500">Total</span>
-                  <span className="font-bold text-slate-800">{sp.totalStoryPoints} pts</span>
+            {/* Sprint Velocity — id: 'velocity' */}
+            {isVisible('velocity') && sprints.length > 0 && (
+              <Widget
+                title="Sprint Velocity"
+                icon="🏃"
+                desc="Issues completed per sprint. Green = ≥80% completion rate, amber = ≥60%, red = below."
+                source="Sprint field + Status"
+                colSpan={span('velocity')}
+                delay={0}
+              >
+                <div className={styles.vBarsWrap}>
+                  {sprints.map((s: any, i: number) => {
+                    const cr    = s.completionRate ?? 0;
+                    const color = cr >= 80 ? '#16a34a' : cr >= 60 ? '#f59e0b' : '#dc2626';
+                    return (
+                      <VBar
+                        key={s.name}
+                        label={s.name || `S${i + 1}`}
+                        valLabel={String(s.issues)}
+                        pct={Math.max(3, Math.min(100, (s.issues / maxSprint) * 100))}
+                        color={color}
+                        delay={i * 60}
+                      />
+                    );
+                  })}
                 </div>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-slate-400 italic">No story point data</p>
-          )}
-        </ChartWidget>}
+                <div className={styles.legendRow}>
+                  {[['#16a34a','≥80% done'],['#f59e0b','≥60% done'],['#dc2626','<60% done']].map(([c,l]) => (
+                    <span key={l} className={styles.legendItem}>
+                      <span className={styles.legendDot} style={{ '--dot-color': c } as CSSProperties} />
+                      {l}
+                    </span>
+                  ))}
+                </div>
+              </Widget>
+            )}
 
-        {/* 5. Sprint Velocity */}
-        {isChartVisible('velocity') && <ChartWidget title="Sprint Velocity" icon="🏃" span={chartSpan('velocity') as 1|2|3}>
-          {sprints.length > 0 ? (
-            <>
-              <div className="flex items-end gap-2 h-28 w-full">
-                {sprints.map((s: any) => (
-                  <VertBar
-                    key={s.name}
-                    label={s.name || 'Sprint'}
-                    value={s.issues}
-                    maxValue={maxSprint}
-                    color={
-                      s.completionRate >= 80
-                        ? '#16a34a'
-                        : s.completionRate >= 60
-                        ? '#f59e0b'
-                        : '#dc2626'
-                    }
-                  />
-                ))}
-              </div>
-              <div className="flex items-center gap-4 mt-2 text-xs">
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-green-600 inline-block" />
-                  <span className="text-slate-500">≥80%</span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
-                  <span className="text-slate-500">≥60%</span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-red-600 inline-block" />
-                  <span className="text-slate-500">&lt;60%</span>
-                </span>
-                <span className="text-slate-400 ml-1">completion rate</span>
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-slate-400 italic">
-              No sprint data — include Sprint column in export.
-            </p>
-          )}
-        </ChartWidget>}
-
-        {/* 5b. Sprint Velocity — Story Points (full width) */}
-        {metrics.throughput?.sprint && (
-          <div className="col-span-1 md:col-span-3">
-            <SprintVelocityChart summary={metrics.throughput.sprint} />
-          </div>
-        )}
-
-        {/* 6. Team Load */}
-        {isChartVisible('team') && <ChartWidget title="Team Load" icon="👥" span={chartSpan('team') as 1|2|3}>
-          {capacity.length > 0 ? (
-            <div className="space-y-2.5">
-              {capacity.map((c: any) => (
-                <HorizBar
-                  key={c.assignee}
-                  label={c.assignee || '(unassigned)'}
-                  value={c.loadShare}
-                  maxValue={maxLoad}
-                  color={
-                    c.loadShare > 35
-                      ? '#dc2626'
-                      : c.loadShare > 20
-                      ? '#f59e0b'
-                      : '#16a34a'
-                  }
-                  subLabel={`${c.loadShare}%`}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-slate-400 italic">No assignee data</p>
-          )}
-        </ChartWidget>}
-
-        {/* 7. Quarter Throughput */}
-        {isChartVisible('quarters') && <ChartWidget title="Quarter Throughput" icon="📅" span={chartSpan('quarters') as 1|2|3}>
-          {quarters.length > 0 ? (
-            <>
-              <div className="flex items-end gap-3 h-28 w-full">
-                {quarters.map((q: any) => {
-                  const totalH = Math.max(3, Math.min(100, (q.issues / maxQ) * 100));
-                  const doneH  = Math.max(0, Math.min(totalH, (q.doneIssues / maxQ) * 100));
+            {/* Team Load — id: 'team' */}
+            {isVisible('team') && capacity.length > 0 && (
+              <Widget
+                title="Team Load"
+                icon="👥"
+                desc="Each team member's share of open issues. High load (>35%) risks burnout and delayed delivery."
+                source="Assignee field"
+                colSpan={span('team')}
+                delay={60}
+              >
+                {capacity.map((c: any, i: number) => {
+                  const share = c.loadShare || 0;
+                  const color = share > 35 ? '#dc2626' : share > 20 ? '#f59e0b' : '#16a34a';
                   return (
-                    <div key={q.quarter} className="flex flex-col items-center flex-1 min-w-0 gap-1">
-                      <span className="text-xs font-bold text-slate-600">{q.issues}</span>
-                      <div
-                        className="w-full relative rounded-t overflow-hidden"
-                        style={{ height: `${totalH}%`, minHeight: 6, background: '#bfdbfe' }}
-                      >
-                        <div
-                          className="absolute bottom-0 left-0 right-0 rounded-t"
-                          style={{ height: `${(doneH / totalH) * 100}%`, background: '#2563eb' }}
-                        />
-                      </div>
-                      <span
-                        className="text-xs text-slate-500 text-center leading-tight max-w-full"
-                        title={q.quarter}
-                      >
-                        {q.quarter.replace(' ', ' ')}
-                      </span>
-                    </div>
+                    <HBar
+                      key={c.assignee}
+                      label={c.assignee || '(unassigned)'}
+                      pct={Math.max(0, Math.min(100, (share / maxLoad) * 100))}
+                      color={color}
+                      valLabel={`${share}%`}
+                      delay={i * 50}
+                    />
                   );
                 })}
-              </div>
-              <div className="flex items-center gap-4 mt-2 text-xs">
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#bfdbfe' }} />
-                  <span className="text-slate-500">Total issues</span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-blue-600 inline-block" />
-                  <span className="text-slate-500">Done</span>
-                </span>
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-slate-400 italic">
-              No date data — include Created Date and Resolution Date in export.
-            </p>
-          )}
-        </ChartWidget>}
+              </Widget>
+            )}
 
-        {/* 8. Kanban Status Flow */}
-        {isChartVisible('kanban') && <ChartWidget title="Kanban Status Flow" icon="🗃️" span={chartSpan('kanban') as 1|2|3}>
-          {kanbanTop.length > 0 ? (
-            <div className="space-y-2.5">
-              {kanbanTop.map((k: any) => (
-                <HorizBar
-                  key={k.name}
-                  label={k.name || '?'}
-                  value={k.count}
-                  maxValue={maxKanban}
-                  color={
-                    k.critical > 0
-                      ? '#dc2626'
-                      : k.warning > 0
-                      ? '#f59e0b'
-                      : '#2563eb'
-                  }
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-slate-400 italic">No status data</p>
-          )}
-        </ChartWidget>}
-
-        {/* 9. Gantt / Timeline */}
-        {isChartVisible('timeline') && <ChartWidget
-          title={epics.length > 0 ? 'Epic Delivery Timeline' : 'Sprint Completion Timeline'}
-          icon="📊"
-          span={chartSpan('timeline') as 1|2|3}
-        >
-          <GanttChart epics={epics} sprints={sprints} />
-        </ChartWidget>}
-
-        {/* 10. Label Distribution (conditional) */}
-        {isChartVisible('labels') && labelStats.length > 0 && (
-          <ChartWidget title="Label Distribution" icon="🏷️" span={chartSpan('labels') as 1|2|3}>
-            <div className="space-y-2.5">
-              {labelStats.map((l: any, i: number) => (
-                <HorizBar
-                  key={l.label}
-                  label={l.label}
-                  value={l.count}
-                  maxValue={maxLabel}
-                  color={PALETTE[i % PALETTE.length]}
-                />
-              ))}
-            </div>
-          </ChartWidget>
-        )}
-
-        {/* 11. Epic Progress — span 1 (or 3 if no labels) */}
-        {epics.length > 0 && (
-          <ChartWidget
-            title="Epic Progress"
-            icon="🎯"
-            span={labelStats.length > 0 ? 1 : 3}
-          >
-            <div className="space-y-3">
-              {epics.map((e: any) => (
-                <div key={e.epic || e.id}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span
-                      className="text-xs text-slate-700 font-medium truncate max-w-[70%]"
-                      title={e.epic}
-                    >
-                      {(e.epic || 'No epic').slice(0, 28)}
-                    </span>
-                    <span
-                      className="text-xs font-black ml-2 shrink-0"
-                      style={{
-                        color:
-                          e.critical > 0
-                            ? '#dc2626'
-                            : e.warning > 0
-                            ? '#f59e0b'
-                            : '#16a34a',
-                      }}
-                    >
-                      {e.progress || 0}%
-                    </span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{
-                        width: `${e.progress || 0}%`,
-                        background:
-                          e.critical > 0
-                            ? '#dc2626'
-                            : e.warning > 0
-                            ? '#f59e0b'
-                            : '#16a34a',
-                      }}
+            {/* Quarter Throughput — id: 'quarters' */}
+            {isVisible('quarters') && quarters.length > 0 && (
+              <Widget
+                title="Quarter Throughput"
+                icon="📅"
+                desc="Total issues created per quarter. Spot whether your team's intake is growing or shrinking over time."
+                source="Created Date + Resolution Date"
+                colSpan={span('quarters')}
+                delay={120}
+              >
+                <div className={styles.vBarsWrap}>
+                  {quarters.map((q: any, i: number) => (
+                    <VBar
+                      key={q.quarter}
+                      label={q.quarter}
+                      valLabel={String(q.issues)}
+                      pct={Math.max(3, Math.min(100, (q.issues / maxQ) * 100))}
+                      color="#2563eb"
+                      delay={i * 60}
                     />
-                  </div>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {e.completedIssues || 0} / {e.issues || 0} issues
-                  </p>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </ChartWidget>
-        )}
+                <div className={styles.legendRow}>
+                  <span className={styles.legendItem}>
+                    <span className={styles.legendDot} style={{ '--dot-color': '#2563eb' } as CSSProperties} />
+                    Issues per quarter
+                  </span>
+                </div>
+              </Widget>
+            )}
 
-        {/* 12. Issue Relations (conditional) */}
-        {isChartVisible('links') && linkSegs.length > 0 && (
-          <ChartWidget title="Issue Relations" icon="🔗" span={chartSpan('links') as 1|2|3}>
-            <div className="flex flex-wrap items-center gap-4">
-              <DonutChart
-                segments={linkSegs}
-                size={130}
-                centerLabel={relations.totalLinks}
-                centerSub="links"
-              />
-              <div className="flex-1 min-w-[100px] space-y-2">
-                {linkSegs.map((s) => (
-                  <LegendRow
-                    key={s.label}
-                    color={s.color}
-                    label={s.label.length > 14 ? s.label.slice(0, 14) + '…' : s.label}
-                    value={s.value}
-                    pct={Math.round((s.value / linkTotal) * 100)}
+            {/* Kanban Status Flow — id: 'kanban' */}
+            {isVisible('kanban') && kanbanTop.length > 0 && (
+              <Widget
+                title="Kanban Status Flow"
+                icon="🗃️"
+                desc="Volume of issues in each workflow status. Red = status contains critical issues, amber = warning, blue = healthy."
+                source="Status field"
+                colSpan={span('kanban')}
+                delay={180}
+              >
+                {kanbanTop.map((k: any, i: number) => {
+                  const color = k.critical > 0 ? '#dc2626' : k.warning > 0 ? '#f59e0b' : '#2563eb';
+                  return (
+                    <HBar
+                      key={k.name}
+                      label={k.name || '?'}
+                      pct={Math.max(0, Math.min(100, (k.count / maxKanban) * 100))}
+                      color={color}
+                      valLabel={String(k.count)}
+                      delay={i * 50}
+                    />
+                  );
+                })}
+              </Widget>
+            )}
+
+            {/* Label Distribution — id: 'labels' */}
+            {isVisible('labels') && labelStats.length > 0 && (
+              <Widget
+                title="Label Distribution"
+                icon="🏷️"
+                desc="How issues are tagged by label. Useful for spotting which themes or categories hold the most work."
+                source="Labels field"
+                colSpan={span('labels')}
+                delay={240}
+              >
+                {labelStats.map((l: any, i: number) => (
+                  <HBar
+                    key={l.label}
+                    label={l.label}
+                    pct={Math.max(0, Math.min(100, (l.count / maxLabel) * 100))}
+                    color={PALETTE[i % PALETTE.length]}
+                    valLabel={String(l.count)}
+                    delay={i * 50}
                   />
                 ))}
+              </Widget>
+            )}
+
+            {/* Epic / Sprint Gantt — id: 'timeline' */}
+            {isVisible('timeline') && (epics.length > 0 || sprints.length > 0) && (
+              <Widget
+                title={epics.length > 0 ? 'Epic Delivery Progress' : 'Sprint Completion'}
+                icon="📊"
+                desc={epics.length > 0
+                  ? 'Completion % per epic. Bar color reflects health: green = on track, amber = at risk, red = critical.'
+                  : 'Sprint-level completion rate. Red sprints need immediate attention.'}
+                source={epics.length > 0 ? 'Epic Link + Status' : 'Sprint field + Status'}
+                colSpan={span('timeline') as 1 | 2 | 3}
+                delay={300}
+              >
+                <div className={styles.ganttScaleRow}>
+                  <span className={styles.ganttColHead}>{epics.length > 0 ? 'Epic' : 'Sprint'}</span>
+                  <div className={styles.ganttScale}>
+                    {['0%','25%','50%','75%','100%'].map(t => <span key={t}>{t}</span>)}
+                  </div>
+                  <span className={styles.ganttColHead}>Status</span>
+                  <span className={styles.ganttDoneHead}>Progress</span>
+                </div>
+                {(epics.length > 0 ? epics : sprints).slice(0, 12).map((row: any, i: number) => {
+                  const isEpic = epics.length > 0;
+                  const pct    = isEpic ? (row.progress || 0) : (row.completionRate || 0);
+                  const health: 'good' | 'warning' | 'critical' = isEpic
+                    ? (row.critical > 0 ? 'critical' : row.warning > 0 ? 'warning' : 'good')
+                    : (pct >= 80 ? 'good' : pct >= 50 ? 'warning' : 'critical');
+                  return (
+                    <GanttRow
+                      key={i}
+                      label={isEpic ? (row.epic || 'No epic') : (row.name || `Sprint ${i + 1}`)}
+                      pct={pct}
+                      done={row.completedIssues || 0}
+                      total={row.issues || 0}
+                      health={health}
+                      delay={i * 40}
+                    />
+                  );
+                })}
+              </Widget>
+            )}
+
+            {/* Story Points sprint chart (if available) — uses 'velocity' pref */}
+            {isVisible('velocity') && metrics.throughput?.sprint && (
+              <div className={styles.colSpan3} style={{ '--widget-delay': '360ms', '--widget-dur': '320ms' } as CSSProperties}>
+                <SprintVelocityChart summary={metrics.throughput.sprint} />
               </div>
-            </div>
-          </ChartWidget>
+            )}
+
+          </div>
         )}
-      </div>
 
-      {/* CTA */}
-      <div className="flex flex-wrap items-center justify-center gap-3 pb-4">
+        {/* ═══════════════════ TAB: CIRCLES ═══════════════════ */}
+        {tab === 'circles' && (
+          <div key="circles" className={styles.grid}>
 
-        <button type="button" onClick={() => router.push('/')} className="btn-secondary px-5 py-2.5">
-          Upload new file
-        </button>
+            {/* Delivery Composition — id: 'delivery' */}
+            {isVisible('delivery') && deliverySegs.length > 0 && (
+              <Widget
+                title="Delivery Composition"
+                icon="💠"
+                desc="Breakdown of all issues by delivery state. The center % shows overall completion. Each ring segment is one delivery state."
+                source="Status field → grouped into Done / Active / At Risk / Critical / Backlog"
+                colSpan={span('delivery')}
+                delay={0}
+              >
+                <DonutBlock
+                  segs={deliverySegs}
+                  total={total}
+                  centerVal={`${metrics.completionRate || 0}%`}
+                  centerSub="complete"
+                  size={150}
+                  delayBase={0}
+                />
+              </Widget>
+            )}
 
-        <button type="button" onClick={() => router.push('/summary')} className="btn-secondary px-5 py-2.5">
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2Z"/>
-          </svg>
-          Overview
-        </button>
+            {/* Health Mix — id: 'health' */}
+            {isVisible('health') && healthSegs.length > 0 && (
+              <Widget
+                title="Health Mix"
+                icon="🏥"
+                desc="Distribution of issue health across the board. Critical and warning items need immediate attention from the team."
+                source="Health field (computed from flag, blocker, and age thresholds)"
+                colSpan={span('health')}
+                delay={60}
+              >
+                <DonutBlock
+                  segs={healthSegs}
+                  total={healthTotal}
+                  centerVal={healthTotal}
+                  centerSub="items"
+                  size={150}
+                  delayBase={60}
+                />
+              </Widget>
+            )}
 
-        <button type="button" onClick={() => router.push('/dashboard')} className="btn-primary px-5 py-2.5">
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-            <path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/>
-          </svg>
-          View Full Report
-        </button>
+            {/* Issue Types — id: 'types' */}
+            {isVisible('types') && typeSegs.length > 0 && (
+              <Widget
+                title="Issue Types"
+                icon="📁"
+                desc="Split of work by issue type (Story, Bug, Task, Sub-task, etc.). Helps understand the nature of the backlog."
+                source="Issue Type field"
+                colSpan={span('types')}
+                delay={120}
+              >
+                <DonutBlock
+                  segs={typeSegs}
+                  total={typeTotal}
+                  centerVal={typeTotal}
+                  centerSub="total"
+                  size={150}
+                  delayBase={120}
+                />
+              </Widget>
+            )}
+
+            {/* Story Points — id: 'points' */}
+            {isVisible('points') && spSegs.length > 0 && (
+              <Widget
+                title="Story Points"
+                icon="💎"
+                desc="Points completed vs remaining. The center % is the point completion rate, which often lags issue count if large stories remain."
+                source="Story Points field (original estimate)"
+                colSpan={span('points')}
+                delay={180}
+              >
+                <DonutBlock
+                  segs={spSegs}
+                  total={spTotal}
+                  centerVal={`${spPct}%`}
+                  centerSub="pts done"
+                  size={150}
+                  delayBase={180}
+                />
+              </Widget>
+            )}
+
+            {/* Issue Relations — id: 'links' */}
+            {isVisible('links') && linkSegs.length > 0 && (
+              <Widget
+                title="Issue Relations"
+                icon="🔗"
+                desc="Types of links between issues (blocks, is blocked by, relates to, clones, etc.). High 'blocks' links indicate dependency risk."
+                source="Issue Links field"
+                colSpan={span('links')}
+                delay={240}
+              >
+                <DonutBlock
+                  segs={linkSegs}
+                  total={linkTotal}
+                  centerVal={relations.totalLinks || linkTotal}
+                  centerSub="links"
+                  size={150}
+                  delayBase={240}
+                />
+              </Widget>
+            )}
+
+            {/* Epic Progress circles — id: 'timeline' */}
+            {isVisible('timeline') && epics.length > 0 && (
+              <Widget
+                title="Epic Completion Rings"
+                icon="🎯"
+                desc="Each ring shows how far a single epic is through its issues. Full green ring = 100% done. Red/amber = blocked or behind."
+                source="Epic Link + Status → completion %"
+                colSpan={span('timeline') as 1 | 2 | 3}
+                delay={300}
+              >
+                <div className="flex flex-wrap gap-6">
+                  {epics.map((e: any, i: number) => {
+                    const pct    = Math.min(100, e.progress || 0);
+                    const health = e.critical > 0 ? 'critical' : e.warning > 0 ? 'warning' : 'good';
+                    const color  = HEALTH_CSS[health];
+                    const seg: Seg = { label: 'Done', value: pct, color };
+                    const bg: Seg  = { label: 'Remaining', value: 100 - pct, color: 'var(--color-subtle,#f1f5f9)' };
+                    return (
+                      <div key={i} className="flex flex-col items-center gap-1">
+                        <AnimatedDonut
+                          segs={pct > 0 ? [seg, bg] : [bg]}
+                          size={88}
+                          centerVal={`${pct}%`}
+                          delayBase={i * 80}
+                        />
+                        <span
+                          className="text-center leading-tight font-semibold max-w-[80px] truncate"
+                          style={{ fontSize: 9, color: 'var(--color-text-secondary,#64748b)' }}
+                          title={e.epic}
+                        >
+                          {(e.epic || 'No epic').slice(0, 14)}
+                        </span>
+                        <span style={{ fontSize: 9, color: 'var(--color-text-muted,#94a3b8)' }}>
+                          {e.completedIssues}/{e.issues}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Widget>
+            )}
+
+          </div>
+        )}
+
+        {/* ── CTA row ── */}
+        <div className={styles.ctaRow}>
+          <button type="button" onClick={() => router.push('/')} className="btn-secondary px-5 py-2.5">
+            Upload new file
+          </button>
+          <button type="button" onClick={() => router.push('/summary')} className="btn-secondary px-5 py-2.5">
+            ← Overview
+          </button>
+          <button type="button" onClick={() => router.push('/dashboard')} className="btn-primary px-5 py-2.5">
+            View Full Report →
+          </button>
+        </div>
 
       </div>
     </AppShell>

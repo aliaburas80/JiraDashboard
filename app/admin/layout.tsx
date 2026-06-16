@@ -9,10 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className={styles.shell}>
-      <DashboardTopbar
-        healthScore={0}
-        onNewUpload={() => router.push('/')}
-      />
+      <DashboardTopbar onNewUpload={() => router.push('/')} />
       <div className={styles.body}>
         <AdminNavSidebar />
         <main className={styles.main} id="main-content">

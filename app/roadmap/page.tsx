@@ -1,12 +1,14 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
-// /roadmap — Epic delivery roadmap: Gantt chart + card view.
+// /roadmap — Epic delivery roadmap: animated Gantt + card view.
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
+import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { computePortfolioSummary, type EpicSummary } from '@/lib/portfolioHealth';
 import type { DashboardMetrics } from '@/types/metrics';
+import styles from './page.module.scss';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -24,6 +26,15 @@ interface EpicTimeline extends EpicForecast {
   isEstimated: boolean;
 }
 
+// ── Health color tokens (CSS custom property values — data-driven) ─────────────
+// EXCEPTION (CLAUDE.md Rule 1): color values are data-driven from health status
+// and passed as CSS custom properties consumed by SCSS.
+const HEALTH_COLOR: Record<string, string> = {
+  good:     'var(--color-success, #22c55e)',
+  warning:  'var(--color-warning, #f59e0b)',
+  critical: 'var(--color-danger, #f87171)',
+};
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function msFromDate(d: string | null | undefined): number | null {
@@ -38,10 +49,10 @@ function forecastEpic(epic: EpicSummary, avgThroughput: number): EpicForecast {
     return { ...epic, remainingIssues: 0, sprintsRemaining: 0, weeksRemaining: 0, forecastLabel: 'Complete', confidence: 'high' };
   if (avgThroughput <= 0 || remaining <= 0)
     return { ...epic, remainingIssues: remaining, sprintsRemaining: null, weeksRemaining: null, forecastLabel: 'Insufficient data', confidence: 'low' };
-  const sprints = remaining / avgThroughput;
-  const weeks   = Math.ceil(sprints * 2);
-  const confidence: EpicForecast['confidence'] = sprints < 2 ? 'high' : sprints < 5 ? 'medium' : 'low';
-  const label = weeks <= 2 ? 'Within 2 weeks' : weeks <= 6 ? `~${weeks} weeks` : `~${Math.round(weeks / 4)} months`;
+  const sprints    = remaining / avgThroughput;
+  const weeks      = Math.ceil(sprints * 2);
+  const confidence = sprints < 2 ? 'high' : sprints < 5 ? 'medium' : 'low';
+  const label      = weeks <= 2 ? 'Within 2 weeks' : weeks <= 6 ? `~${weeks} weeks` : `~${Math.round(weeks / 4)} months`;
   return { ...epic, remainingIssues: remaining, sprintsRemaining: parseFloat(sprints.toFixed(1)), weeksRemaining: weeks, forecastLabel: label, confidence };
 }
 
@@ -59,232 +70,311 @@ function buildTimelines(forecasts: EpicForecast[], flowItems: any[]): EpicTimeli
   const now = Date.now();
   return forecasts.map(epic => {
     const dates = epicDates[epic.name] ??
-      Object.entries(epicDates).find(([k]) => k.toLowerCase().includes(epic.name.toLowerCase().slice(0, 8)) || epic.name.toLowerCase().includes(k.toLowerCase().slice(0, 8)))?.[1] ??
-      null;
-    let startMs: number | null = null;
-    let endMs:   number | null = null;
-    let isEstimated = false;
-    if (dates && dates.starts.length > 0) {
-      startMs = Math.min(...dates.starts);
-      if (epic.progress >= 100 && dates.ends.length > 0) {
-        endMs = Math.max(...dates.ends);
-        isEstimated = false;
-      } else {
-        endMs = epic.weeksRemaining != null
-          ? now + epic.weeksRemaining * 7 * 86_400_000
-          : now + 90 * 86_400_000;
-        isEstimated = true;
-      }
-    }
+      Object.entries(epicDates).find(([k]) =>
+        k.toLowerCase().includes(epic.name.toLowerCase().slice(0, 8)) ||
+        epic.name.toLowerCase().includes(k.toLowerCase().slice(0, 8))
+      )?.[1] ?? null;
+
+    if (!dates || dates.starts.length === 0) return { ...epic, startMs: null, endMs: null, isEstimated: false };
+
+    const startMs = Math.min(...dates.starts);
+    const isEstimated = !(epic.progress >= 100 && dates.ends.length > 0);
+    const endMs = isEstimated
+      ? (epic.weeksRemaining != null ? now + epic.weeksRemaining * 7 * 86_400_000 : now + 90 * 86_400_000)
+      : Math.max(...dates.ends);
+
     return { ...epic, startMs, endMs, isEstimated };
   });
 }
 
-// ── Health colour map (Theme D tokens) ────────────────────────────────────────
+// ── Forecast helpers ───────────────────────────────────────────────────────────
 
-const HC = { good: '#22C55E', warning: '#F59E0B', critical: '#E85D12' };
+function getForecastMs(epic: EpicTimeline): number | null {
+  if (epic.progress >= 100) return epic.endMs;
+  if (epic.endMs) return epic.endMs;
+  if (epic.weeksRemaining != null) return Date.now() + epic.weeksRemaining * 7 * 86_400_000;
+  return null;
+}
 
-// ── Gantt Chart SVG ────────────────────────────────────────────────────────────
+function fmtMonthYear(ms: number | null): string {
+  if (ms === null) return '—';
+  return new Date(ms).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+}
 
-function GanttChart({ timelines }: { timelines: EpicTimeline[] }) {
-  const dated = timelines.filter(e => e.startMs && e.endMs).slice(0, 22);
+// ── Gantt Component ────────────────────────────────────────────────────────────
+
+function GanttTimeline({ timelines }: { timelines: EpicTimeline[] }) {
+  const dated = timelines.filter(e => e.startMs && e.endMs).slice(0, 24);
+
   if (dated.length === 0) {
     return (
-      <div className="text-center py-10">
-        <p className="text-3xl mb-2">📅</p>
-        <p className="text-sm font-semibold" style={{ color: 'var(--dc-p2, #909090)' }}>No date data available for Gantt view.</p>
-        <p className="text-xs mt-1" style={{ color: 'var(--dc-p3, #505050)' }}>Ensure your Jira export includes <strong>Created</strong> and <strong>Resolved</strong> date columns.</p>
+      <div className={styles.emptyState} style={{ borderRadius: 0, border: 'none', padding: '48px 24px' }}>
+        <div className={styles.emptyIcon}>📅</div>
+        <p className={styles.emptyTitle}>No date data for Gantt view</p>
+        <p className={styles.emptyText}>
+          Ensure your Jira export includes <strong>Created</strong> and <strong>Resolved</strong> date columns.
+        </p>
       </div>
     );
   }
 
-  const now = Date.now();
-  const LABEL_W = 164;
-  const CHART_W = 556;
-  const ROW_H   = 36;
-  const BAR_H   = 20;
-  const HEAD_H  = 26;
-  const TOTAL_W = LABEL_W + CHART_W;
-  const TOTAL_H = HEAD_H + dated.length * ROW_H + 6;
-
-  const minMs = Math.min(...dated.map(e => e.startMs!));
-  const maxMs = Math.max(...dated.map(e => e.endMs!), now + 14 * 86_400_000);
-  const pad   = (maxMs - minMs) * 0.04;
+  const now    = Date.now();
+  const minMs  = Math.min(...dated.map(e => e.startMs!));
+  const maxMs  = Math.max(...dated.map(e => e.endMs!), now + 14 * 86_400_000);
+  const pad    = (maxMs - minMs) * 0.03;
   const rStart = minMs - pad;
   const rEnd   = maxMs + pad;
   const rMs    = rEnd - rStart;
 
-  function xOf(ms: number) { return LABEL_W + ((ms - rStart) / rMs) * CHART_W; }
+  function frac(ms: number) { return (ms - rStart) / rMs; }
 
-  const ticks: { x: number; label: string }[] = [];
-  const d = new Date(rStart); d.setDate(1); d.setHours(0,0,0,0);
+  // Monthly ticks
+  const ticks: { frac: number; label: string }[] = [];
+  const d = new Date(rStart); d.setDate(1); d.setHours(0, 0, 0, 0);
   while (d.getTime() < rEnd) {
-    const x = xOf(d.getTime());
-    if (x >= LABEL_W)
-      ticks.push({ x, label: d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) });
+    const f = frac(d.getTime());
+    if (f >= 0 && f <= 1) ticks.push({ frac: f, label: d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) });
     d.setMonth(d.getMonth() + 1);
   }
 
-  const todayX = xOf(now);
+  const todayFrac = frac(now);
+  const showToday = todayFrac >= 0 && todayFrac <= 1;
 
   return (
-    <div className="overflow-x-auto">
-      <svg viewBox={`0 0 ${TOTAL_W} ${TOTAL_H}`} style={{ width: '100%', minWidth: 520 }}>
-        <defs>
-          <pattern id="est-hatch" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(232,93,18,0.5)" strokeWidth="2.5" />
-          </pattern>
-        </defs>
+    <>
+      <div className={styles.ganttGrid}>
+        {/* ── Axis header row ── */}
+        <div className={clsx(styles.ganttRow, styles.axisRow)}>
+          <div className={styles.ganttAxisLabel}>Epic</div>
+          <div className={styles.ganttTrackArea}>
+            {ticks.map((t, i) => (
+              <div key={i} className={styles.ganttTick} style={{ '--tick-pct': `${t.frac * 100}%` } as CSSProperties}>
+                <div className={styles.ganttTickLine} />
+                <span className={styles.ganttTickLabel}>{t.label}</span>
+              </div>
+            ))}
+            {showToday && (
+              <div className={styles.ganttTodayAxis} style={{ '--today-pct': `${todayFrac * 100}%` } as CSSProperties}>
+                <span className={styles.ganttTodayLabel}>TODAY</span>
+              </div>
+            )}
+          </div>
+        </div>
 
-        {/* Chart area bg */}
-        <rect x={LABEL_W} y={0} width={CHART_W} height={TOTAL_H} fill="#141414" rx="0" />
-
-        {/* Monthly grid lines + labels */}
-        {ticks.map((t, i) => (
-          <g key={i}>
-            <line x1={t.x} x2={t.x} y1={HEAD_H - 4} y2={TOTAL_H} stroke="rgba(255,255,255,0.07)" strokeWidth="0.75" />
-            <text x={t.x + 3} y={HEAD_H - 10} fontSize="8" fill="#505050">{t.label}</text>
-          </g>
-        ))}
-
-        {/* Today line */}
-        {todayX >= LABEL_W && todayX <= LABEL_W + CHART_W && (
-          <g>
-            <line x1={todayX} x2={todayX} y1={0} y2={TOTAL_H} stroke="#FF8A4C" strokeWidth="1.5" strokeDasharray="5 3" />
-            <rect x={todayX - 14} y={0} width={28} height={12} rx="3" fill="#FF8A4C" />
-            <text x={todayX} y={9} fontSize="7" fill="#fff" textAnchor="middle" fontWeight="bold">TODAY</text>
-          </g>
-        )}
-
-        {/* Rows */}
+        {/* ── Epic rows ── */}
         {dated.map((epic, i) => {
-          const rowY = HEAD_H + i * ROW_H;
-          const barY = rowY + (ROW_H - BAR_H) / 2;
-          const x1 = Math.max(LABEL_W + 1, xOf(epic.startMs!));
-          const x2 = Math.min(LABEL_W + CHART_W - 1, xOf(epic.endMs!));
-          const bw  = Math.max(6, x2 - x1);
-          const fw  = Math.max(3, bw * (epic.progress / 100));
-          const col = HC[epic.health];
+          const startF  = frac(epic.startMs!);
+          const endF    = frac(epic.endMs!);
+          const barLeft = `${Math.max(0, startF) * 100}%`;
+          const barW    = `${Math.max(0.5, (endF - startF)) * 100}%`;
+          const fillW   = `${Math.min(100, epic.progress)}%`;
+          const pctLeft = `${Math.min(99, endF) * 100}%`;
+          const color   = HEALTH_COLOR[epic.health] ?? HEALTH_COLOR.warning;
 
           return (
-            <g key={i}>
-              {i % 2 === 0 && <rect x={0} y={rowY} width={TOTAL_W} height={ROW_H} fill="#1E1E1E" opacity="0.4" />}
+            <div key={i} className={styles.ganttRow}>
+              <div className={styles.ganttLabel}>
+                {/* EXCEPTION: health dot color is data-driven — use data attribute for SCSS targeting */}
+                <div className={styles.healthDot} data-health={epic.health} aria-hidden="true" />
+                <span className={styles.epicName} title={epic.name}>{epic.name}</span>
+              </div>
+              <div className={styles.ganttTrackArea}>
+                {/* Today vertical line */}
+                {showToday && (
+                  <div className={styles.ganttTodayRow} style={{ '--today-pct': `${todayFrac * 100}%` } as CSSProperties} />
+                )}
 
-              {/* Health dot */}
-              <circle cx={7} cy={rowY + ROW_H / 2} r={4} fill={col} />
+                {/* Bar track + fill */}
+                {/* EXCEPTION: bar-left, bar-width, fill-w, bar-color are all data-driven from timeline math and health status */}
+                <div
+                  className={styles.ganttBarWrap}
+                  style={{ '--bar-left': barLeft, '--bar-width': barW, '--bar-color': color } as CSSProperties}
+                >
+                  {epic.isEstimated && <div className={styles.ganttBarEst} aria-hidden="true" />}
+                  <div
+                    className={styles.ganttBarFill}
+                    style={{ '--fill-w': fillW, '--bar-delay': `${i * 45}ms` } as CSSProperties}
+                  />
+                </div>
 
-              {/* Epic label */}
-              <text x={15} y={rowY + ROW_H / 2 + 4} fontSize="9.5" fill="#F2F2F2" fontWeight="600">
-                {epic.name.length > 21 ? epic.name.slice(0, 21) + '…' : epic.name}
-              </text>
-
-              {/* Bar background (track) */}
-              <rect x={x1} y={barY} width={bw} height={BAR_H} rx={5} fill="#282828" />
-
-              {/* Estimated hatch overlay */}
-              {epic.isEstimated && (
-                <rect x={x1} y={barY} width={bw} height={BAR_H} rx={5} fill="url(#est-hatch)" />
-              )}
-
-              {/* Filled progress */}
-              <rect x={x1} y={barY} width={fw} height={BAR_H} rx={5} fill={col} opacity="0.9" />
-
-              {/* Progress % label inside bar */}
-              {bw > 36 && (
-                <text x={x1 + bw / 2} y={barY + BAR_H / 2 + 3.5} fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">
+                {/* % label */}
+                <span
+                  className={styles.ganttPct}
+                  style={{ '--pct-left': pctLeft } as CSSProperties}
+                >
                   {Math.round(epic.progress)}%
-                </text>
-              )}
-
-              {/* Forecast label to the right */}
-              {x2 + 4 < TOTAL_W - 2 && (
-                <text x={x2 + 5} y={barY + BAR_H / 2 + 3.5} fontSize="8" fill="#505050">
-                  {epic.forecastLabel === 'Insufficient data' ? '' : epic.forecastLabel}
-                </text>
-              )}
-            </g>
+                </span>
+              </div>
+            </div>
           );
         })}
-
-        {/* Left label column separator */}
-        <line x1={LABEL_W} x2={LABEL_W} y1={0} y2={TOTAL_H} stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
-      </svg>
+      </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-5 mt-3 px-2 text-[11px]" style={{ color: 'var(--dc-p3, #505050)' }}>
-        {[['#22C55E','On track'],['#F59E0B','At risk'],['#E85D12','Critical']].map(([c,l]) => (
-          <span key={l} className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full inline-block" style={{ background: c }} />
-            {l}
+      <div className={styles.ganttLegend}>
+        {([['good', 'On track'], ['warning', 'At risk'], ['critical', 'Critical']] as const).map(([h, lbl]) => (
+          <span key={h} className={styles.legendItem}>
+            <span className={styles.legendDot} style={{ background: HEALTH_COLOR[h] } as CSSProperties} aria-hidden="true" />
+            {lbl}
           </span>
         ))}
-        <span className="flex items-center gap-1.5">
-          <span className="w-8 h-3 rounded inline-block"
-            style={{ background: 'repeating-linear-gradient(45deg,rgba(232,93,18,0.4),rgba(232,93,18,0.4) 2px,transparent 2px,transparent 6px)', border: '1px solid rgba(232,93,18,0.25)' }} />
-          Estimated
+        <span className={styles.legendItem}>
+          <span className={styles.legendHatch} aria-hidden="true" />
+          Estimated end
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-px h-3 inline-block" style={{ background: '#FF8A4C' }} />
+        <span className={styles.legendItem}>
+          <span className={styles.legendTodayLine} aria-hidden="true" />
           Today
         </span>
       </div>
-    </div>
+
+      {/* ── Forecast date comparison ─────────────────────────────────────────── */}
+      <div className={styles.forecastSection}>
+        <div className={styles.forecastSectionHead}>
+          <span className={styles.forecastSectionTitle}>Estimated Completion</span>
+          <span className={styles.forecastSectionHint}>All epics · sorted by earliest forecast</span>
+        </div>
+
+        {/* Column headers */}
+        <div className={styles.forecastColRow}>
+          <span className={styles.forecastColLabel}>Epic</span>
+          <span className={styles.forecastColLabel}>Progress</span>
+          <span className={styles.forecastColLabel}>Done</span>
+          <span className={styles.forecastColLabel}>Est. date</span>
+          <span className={styles.forecastColLabel}>Confidence</span>
+        </div>
+
+        {/* Data rows — ALL epics sorted by forecast date */}
+        {[...timelines]
+          .sort((a, b) => (getForecastMs(a) ?? Infinity) - (getForecastMs(b) ?? Infinity))
+          .map((epic, i) => {
+            const ms      = getForecastMs(epic);
+            const isDone  = epic.progress >= 100;
+            // EXCEPTION: fill-color and fill-w are data-driven from progress/health
+            const color   = HEALTH_COLOR[epic.health] ?? HEALTH_COLOR.warning;
+            return (
+              <div key={i} className={styles.forecastRow}>
+                {/* Epic name + health dot */}
+                <div className={styles.forecastEpicCell}>
+                  <div className={styles.healthDot} data-health={epic.health} aria-hidden="true" />
+                  <span className={styles.forecastEpicName} title={epic.name}>{epic.name}</span>
+                </div>
+
+                {/* Mini progress bar */}
+                <div className={styles.forecastMiniTrack}>
+                  <div
+                    className={styles.forecastMiniFill}
+                    style={{ '--fill-w': `${Math.min(100, epic.progress)}%`, '--fill-color': color, '--bar-delay': `${i * 30}ms` } as CSSProperties}
+                  />
+                </div>
+
+                {/* % complete */}
+                <span className={styles.forecastPctCell}>{Math.round(epic.progress)}%</span>
+
+                {/* Estimated completion date chip */}
+                <span
+                  className={styles.forecastDateChip}
+                  data-health={isDone ? undefined : epic.health}
+                  data-status={isDone ? 'done' : undefined}
+                >
+                  {isDone ? '✓ Done' : fmtMonthYear(ms)}
+                </span>
+
+                {/* Confidence badge */}
+                <span className={styles.forecastConfChip} data-conf={isDone ? 'done' : epic.confidence}>
+                  {isDone ? 'done' : epic.confidence}
+                </span>
+              </div>
+            );
+          })}
+      </div>
+    </>
   );
 }
 
-// ── Epic Card (card view) ──────────────────────────────────────────────────────
+// ── Epic card (cards view) ─────────────────────────────────────────────────────
 
-const CONF_CHIP: Record<string, string> = {
-  high:   'chip c-gr',
-  medium: 'chip c-am',
-  low:    'chip c-nt',
-};
-
-function EpicCard({ epic }: { epic: EpicForecast }) {
+function EpicCard({ epic, index }: { epic: EpicForecast; index: number }) {
   const [open, setOpen] = useState(false);
+  const color  = HEALTH_COLOR[epic.health] ?? HEALTH_COLOR.warning;
+  const isDone = epic.progress >= 100;
+
   return (
-    <div className="rounded-2xl shadow-sm overflow-hidden"
-      style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-      <button type="button" onClick={() => setOpen(o => !o)}
-        className="w-full text-left px-5 py-4 transition-colors"
-        style={{ background: 'transparent' }}
-        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.025)')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: HC[epic.health] }} />
-              <p className="text-sm font-black truncate" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{epic.name}</p>
-              {epic.progress >= 100 && <span className="chip c-gr" style={{ fontSize: 10 }}>Done</span>}
-            </div>
-            <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: 'var(--dc-s3, #282828)' }}>
-              <div className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, epic.progress)}%`, background: HC[epic.health] }} />
-            </div>
-            <div className="flex items-center gap-4 mt-1.5 text-[11px]" style={{ color: 'var(--dc-p2, #909090)' }}>
-              <span>{epic.completedIssues}/{epic.issues} issues ({Math.round(epic.progress)}%)</span>
-              {epic.storyPoints > 0 && <span>{epic.doneStoryPoints}/{epic.storyPoints} SP</span>}
-            </div>
+    // EXCEPTION: --card-accent color is data-driven from health status
+    <div className={styles.epicCard} data-health={epic.health}>
+      <button type="button" onClick={() => setOpen(v => !v)} className={styles.epicCardBtn}>
+
+        {/* Top row: name + forecast */}
+        <div className={styles.epicTop}>
+          <div className={styles.epicNameCol}>
+            <p className={styles.epicTitle}>{epic.name}</p>
+            <span
+              className={styles.epicBadge}
+              data-health={isDone ? undefined : epic.health}
+              data-status={isDone ? 'done' : undefined}
+            >
+              {isDone ? 'Done' : epic.health}
+            </span>
           </div>
-          <div className="text-right shrink-0">
-            <p className="text-xs font-bold" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{epic.forecastLabel}</p>
-            <span className={`${CONF_CHIP[epic.confidence] ?? 'chip c-nt'} mt-1`} style={{ fontSize: 10 }}>
-              {epic.confidence} confidence
+          <div className={styles.epicForecastTag}>
+            <p className={styles.epicForecastValue}>{epic.forecastLabel}</p>
+            <span className={styles.epicForecastConf} data-conf={epic.confidence}>
+              {epic.confidence} conf.
             </span>
           </div>
         </div>
-      </button>
-      {open && (
-        <div className="px-5 py-3 grid grid-cols-3 gap-3"
-          style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', background: 'var(--dc-s1, #141414)' }}>
+
+        {/* Progress bar */}
+        <div className={styles.epicProgressLabel}>
+          <span>{epic.completedIssues} / {epic.issues} issues</span>
+          <span>{Math.round(epic.progress)}%</span>
+        </div>
+        <div className={styles.epicProgressTrack}>
+          {/* EXCEPTION: fill-w and fill-color are data-driven */}
+          <div
+            className={styles.epicProgressFill}
+            style={{
+              '--fill-w': `${Math.min(100, epic.progress)}%`,
+              '--fill-color': color,
+              '--bar-delay': `${index * 55}ms`,
+            } as CSSProperties}
+          />
+        </div>
+
+        {/* Stat mini-grid */}
+        <div className={styles.epicStatGrid}>
           {[
-            { label: 'Remaining', value: epic.remainingIssues },
-            { label: 'Sprints est.', value: epic.sprintsRemaining ?? '—' },
-            { label: 'Critical', value: epic.critical },
+            { v: epic.remainingIssues,         l: 'Remaining' },
+            { v: epic.sprintsRemaining ?? '—', l: 'Sprints est.' },
+            { v: epic.critical,                l: 'Critical' },
           ].map(s => (
-            <div key={s.label} className="text-center">
-              <p className="text-lg font-black" style={{ color: 'var(--dc-p1, #F2F2F2)', fontFamily: 'var(--font-mono, monospace)' }}>{s.value}</p>
-              <p className="text-[10px] uppercase tracking-wide font-bold" style={{ color: 'var(--dc-p3, #505050)' }}>{s.label}</p>
+            <div key={s.l} className={styles.epicStat}>
+              <div className={styles.epicStatVal}>{s.v}</div>
+              <div className={styles.epicStatLbl}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Story points row (if available) */}
+        {epic.storyPoints > 0 && (
+          <div style={{ fontSize: 10, color: 'var(--color-text-muted, #94a3b8)', display: 'flex', justifyContent: 'space-between' } as CSSProperties}>
+            <span>Story points</span>
+            <span style={{ fontWeight: 700 } as CSSProperties}>{epic.doneStoryPoints} / {epic.storyPoints} SP</span>
+          </div>
+        )}
+      </button>
+
+      {/* Expanded drawer */}
+      {open && (
+        <div className={styles.epicExpanded}>
+          {[
+            { v: epic.issues,              l: 'Total issues'    },
+            { v: epic.completedIssues,     l: 'Done'            },
+            { v: epic.weeksRemaining ?? '—', l: 'Weeks left'   },
+          ].map(s => (
+            <div key={s.l} className={styles.expandStat}>
+              <div className={styles.expandVal}>{s.v}</div>
+              <div className={styles.expandLbl}>{s.l}</div>
             </div>
           ))}
         </div>
@@ -308,224 +398,218 @@ export default function RoadmapPage() {
 
   useEffect(() => {
     async function load() {
-      const result    = await loadMetricsWithSource();
-      const metrics   = result.metrics as DashboardMetrics | null;
+      const result  = await loadMetricsWithSource();
+      const metrics = result.metrics as DashboardMetrics | null;
       if (!metrics) { setNoData(true); setLoading(false); return; }
 
-      const sprints      = (metrics.sprint?.sprints ?? []) as any[];
-      const valid        = sprints.filter((s: any) => (s.completedCount ?? 0) > 0);
+      const sprints       = (metrics.sprint?.sprints ?? []) as any[];
+      const valid         = sprints.filter((s: any) => (s.completedCount ?? 0) > 0);
       const avgThroughput = valid.length > 0 ? valid.reduce((s: number, x: any) => s + x.completedCount, 0) / valid.length : 0;
 
       const portfolio = computePortfolioSummary(metrics);
       const forecast  = portfolio.epics.map(e => forecastEpic(e, avgThroughput));
       const flowItems = (metrics.flow?.items ?? []) as any[];
-      const tl        = buildTimelines(forecast, flowItems);
 
       setEpics(forecast);
-      setTimelines(tl);
+      setTimelines(buildTimelines(forecast, flowItems));
       setThroughput(parseFloat(avgThroughput.toFixed(1)));
       setLoading(false);
     }
     load().catch(() => { setNoData(true); setLoading(false); });
   }, [router]);
 
+  // ── Loading state ──────────────────────────────────────────────────────────
   if (loading) return (
     <AppShell showNav>
-      <div className="flex items-center justify-center h-64 animate-pulse" style={{ color: 'var(--dc-p3, #505050)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 320, color: 'var(--color-text-muted)', fontSize: 13, fontWeight: 600 } as CSSProperties}>
         Building roadmap…
       </div>
     </AppShell>
   );
 
+  // ── No-data state ──────────────────────────────────────────────────────────
   if (noData) return (
     <AppShell showNav>
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-5">
-          <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold mb-3"
-            style={{ background: 'rgba(232,93,18,0.10)', color: 'var(--dc-acc2, #FF8A4C)' }}>
-            🗺️ Planning
-          </div>
-          <h1 className="text-2xl font-black tracking-tight mb-1" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Roadmap</h1>
-        </div>
-        <div className="text-center py-20 rounded-2xl"
-          style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-          <p className="text-5xl mb-4">🗺️</p>
-          <p className="text-base font-black mb-2" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>No data uploaded yet</p>
-          <p className="text-sm max-w-sm mx-auto mb-6" style={{ color: 'var(--dc-p3, #505050)' }}>
-            Upload a Jira export to see your epic roadmap and delivery forecast.
-          </p>
-          <button onClick={() => router.push('/')}
-            className="px-5 py-2 rounded-xl text-sm font-bold"
-            style={{ background: 'var(--dc-acc, #E85D12)', color: '#fff' }}>
-            Upload data
-          </button>
+      <div className={styles.page}>
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>🗺️</div>
+          <p className={styles.emptyTitle}>No data uploaded yet</p>
+          <p className={styles.emptyText}>Upload a Jira export to see your epic roadmap and delivery forecast.</p>
+          <button onClick={() => router.push('/')} className={styles.uploadBtn}>Upload data</button>
         </div>
       </div>
     </AppShell>
   );
 
+  // ── Derived KPIs ───────────────────────────────────────────────────────────
   const totalEpics  = epics.length;
   const doneEpics   = epics.filter(e => e.progress >= 100).length;
+  const activeEpics = epics.filter(e => e.progress > 0 && e.progress < 100).length;
+  const onTrack     = epics.filter(e => e.health === 'good' && e.progress < 100).length;
+  const atRisk      = epics.filter(e => e.health === 'warning').length;
   const critEpics   = epics.filter(e => e.health === 'critical').length;
   const avgProgress = totalEpics > 0 ? Math.round(epics.reduce((s, e) => s + e.progress, 0) / totalEpics) : 0;
+  const totalIssues = epics.reduce((s, e) => s + e.issues, 0);
+  const doneIssues  = epics.reduce((s, e) => s + e.completedIssues, 0);
 
+  const kpis = [
+    { icon: '📋', label: 'Total Epics',  value: totalEpics,        sub: `${doneEpics} complete`,      color: 'var(--color-text-primary)',        bg: 'var(--color-muted, #e2e8f0)' },
+    { icon: '✅', label: 'Done',         value: doneEpics,         sub: `${Math.round(doneEpics / Math.max(1, totalEpics) * 100)}% of total`, color: 'var(--color-success, #22c55e)',    bg: '#dcfce7' },
+    { icon: '🚀', label: 'In Progress',  value: activeEpics,       sub: `${onTrack} on track`,        color: 'var(--color-primary, #2563eb)',    bg: '#dbeafe' },
+    { icon: '⚠️', label: 'At Risk',      value: atRisk,            sub: atRisk > 0 ? 'Needs attention' : 'All clear', color: atRisk > 0 ? 'var(--color-warning, #f59e0b)' : 'var(--color-text-muted)', bg: atRisk > 0 ? '#fef9c3' : 'var(--color-muted)' },
+    { icon: '🔴', label: 'Critical',     value: critEpics,         sub: critEpics > 0 ? 'Immediate action' : 'None critical', color: critEpics > 0 ? 'var(--color-danger, #f87171)' : 'var(--color-text-muted)', bg: critEpics > 0 ? '#fee2e2' : 'var(--color-muted)' },
+    { icon: '📊', label: 'Issues Done',  value: `${doneIssues}/${totalIssues}`, sub: `${Math.round(doneIssues / Math.max(1, totalIssues) * 100)}% complete`, color: 'var(--color-text-primary)', bg: 'var(--color-muted, #e2e8f0)' },
+  ];
+
+  // ── Filtered + sorted cards ────────────────────────────────────────────────
   const filtered = epics.filter(e =>
     filter === 'all'      ? true :
     filter === 'active'   ? e.progress < 100 :
     filter === 'critical' ? e.health === 'critical' :
     e.progress >= 100
   );
-
   const sorted = [...filtered].sort((a, b) =>
     sort === 'progress' ? b.progress - a.progress :
     sort === 'name'     ? a.name.localeCompare(b.name) :
     (a.weeksRemaining ?? 999) - (b.weeksRemaining ?? 999)
   );
-
   const ganttTimelines = [...timelines].sort((a, b) => (a.startMs ?? 0) - (b.startMs ?? 0));
-
-  // KPI card value colours
-  const avgProgColor = avgProgress >= 80 ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-amber, #F59E0B)';
 
   return (
     <AppShell showNav>
-      <div className="max-w-5xl mx-auto">
+      <div className={styles.page}>
 
-        {/* Header */}
-        <div className="mb-5">
-          <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold mb-3"
-            style={{ background: 'rgba(232,93,18,0.10)', border: '1px solid rgba(232,93,18,0.22)', color: 'var(--dc-acc2, #FF8A4C)' }}>
-            🗺️ Planning
+        {/* ── Page header ── */}
+        <div className={styles.pageHeader}>
+          <div>
+            <div className={styles.breadcrumb}>🗺️ Planning</div>
+            <h1 className={styles.title}>Epic Roadmap</h1>
+            <p className={styles.subtitle}>Delivery timeline, forecasts & health — based on your Jira data</p>
           </div>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-black tracking-tight mb-1" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Roadmap</h1>
-              <p className="text-sm" style={{ color: 'var(--dc-p3, #505050)' }}>Epic-level delivery timeline — based on your uploaded Jira data.</p>
-            </div>
-            {/* View toggle */}
-            <div className="flex rounded-[9px] p-[3px] gap-1" style={{ background: 'var(--dc-s3, #282828)' }}>
-              {(['gantt','cards'] as const).map(v => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setView(v)}
-                  className="px-4 py-1.5 text-xs font-bold transition-colors"
-                  style={{
-                    borderRadius: 7,
-                    background: view === v ? 'var(--dc-s2, #1E1E1E)' : 'transparent',
-                    color: view === v ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p2, #909090)',
-                    boxShadow: view === v ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
-                  }}
-                >
-                  {v === 'gantt' ? '📊 Gantt' : '📋 Cards'}
-                </button>
-              ))}
-            </div>
+          <div className={styles.viewToggle} role="group" aria-label="View mode">
+            {(['gantt', 'cards'] as const).map(v => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                className={clsx(styles.viewBtn, { [styles.active]: view === v })}
+                aria-pressed={view === v}
+              >
+                {v === 'gantt' ? '📊 Timeline' : '📋 Cards'}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Summary KPI row */}
-        <div className="grid grid-cols-4 gap-3 mb-5">
-          {[
-            { label: 'Total Epics',  value: totalEpics,        icon: '📋', color: 'var(--dc-p1, #F2F2F2)' },
-            { label: 'Complete',     value: doneEpics,         icon: '✅', color: 'var(--dc-green, #22C55E)' },
-            { label: 'Avg Progress', value: `${avgProgress}%`, icon: '📈', color: avgProgColor },
-            { label: 'Critical',     value: critEpics,         icon: '⚠️', color: critEpics > 0 ? 'var(--dc-red, #F87171)' : 'var(--dc-p3, #505050)' },
-          ].map(c => (
-            <div key={c.label} className="rounded-2xl p-4 text-center shadow-sm"
-              style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-              <p className="text-xl mb-1">{c.icon}</p>
-              <p className="text-2xl font-black" style={{ color: c.color, fontFamily: 'var(--font-mono, monospace)' }}>{c.value}</p>
-              <p className="text-[10px] font-bold uppercase tracking-wide mt-0.5" style={{ color: 'var(--dc-p3, #505050)' }}>{c.label}</p>
+        {/* ── KPI strip ── */}
+        <div className={styles.kpiStrip} role="list" aria-label="Key metrics">
+          {kpis.map(k => (
+            <div key={k.label} className={styles.kpiCard} role="listitem">
+              {/* EXCEPTION: bg is data-driven from health/status — CSS custom property */}
+              <div className={styles.kpiIconBox} style={{ background: k.bg } as CSSProperties}>{k.icon}</div>
+              <div className={styles.kpiBody}>
+                {/* EXCEPTION: color is data-driven from health/status */}
+                <div className={styles.kpiValue} style={{ color: k.color } as CSSProperties}>{k.value}</div>
+                <div className={styles.kpiLabel}>{k.label}</div>
+                <div className={styles.kpiSub}>{k.sub}</div>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Throughput context */}
-        <div className="flex items-center gap-2 rounded-[9px] px-4 py-2.5 mb-5 text-sm"
-          style={{
-            background: 'rgba(245,158,11,0.06)',
-            border: '1px solid rgba(245,158,11,0.18)',
-          }}>
-          <span style={{ color: 'var(--dc-amber, #F59E0B)', fontSize: 14 }}>⚡</span>
-          <span className="font-semibold" style={{ color: 'var(--dc-amber, #F59E0B)', fontSize: 11 }}>
-            Avg throughput: <strong>{throughput > 0 ? `${throughput} items/sprint` : 'No sprint data'}</strong>
-          </span>
-          <span className="text-xs ml-auto" style={{ color: 'var(--dc-p2, #909090)' }}>
-            {throughput > 0 ? 'Linear extrapolation · 2-week sprints · Hatched bars = estimated end' : 'Upload sprint data to enable forecasts'}
-          </span>
+        {/* ── Portfolio progress + throughput banner ── */}
+        <div className={styles.infoBanner}>
+          <div className={styles.infoLeft}>
+            <div className={styles.infoTopLabel}>Portfolio Progress</div>
+            <div className={styles.infoBigValue}>{avgProgress}%</div>
+          </div>
+          <div className={styles.infoTrackWrap}>
+            <div className={styles.infoTrackLabel}>
+              <span>{doneIssues} issues done</span>
+              <span>{totalIssues - doneIssues} remaining</span>
+            </div>
+            <div className={styles.infoTrack}>
+              {/* EXCEPTION: fill-w is data-driven from avgProgress */}
+              <div className={styles.infoFill} style={{ '--fill-w': `${avgProgress}%` } as CSSProperties} />
+            </div>
+          </div>
+          <div className={styles.infoRight}>
+            <div className={styles.throughputLabel}>Avg throughput</div>
+            <div className={styles.throughputValue}>
+              {throughput > 0 ? `${throughput} items / sprint` : 'No sprint data'}
+            </div>
+            <div className={styles.throughputHint}>
+              {throughput > 0 ? 'Linear forecast · 2-week sprints' : 'Upload sprint data to enable forecasts'}
+            </div>
+          </div>
         </div>
 
         {/* ── GANTT VIEW ── */}
         {view === 'gantt' && (
-          <div className="rounded-2xl shadow-sm p-5"
-            style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-black" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Epic Timeline</h2>
-              <span className="text-xs" style={{ color: 'var(--dc-p3, #505050)' }}>{ganttTimelines.filter(t => t.startMs).length} of {totalEpics} epics with date data</span>
+          <div className={styles.ganttCard}>
+            <div className={styles.ganttCardHead}>
+              <h2 className={styles.ganttCardTitle}>Epic Timeline</h2>
+              <span className={styles.ganttCardMeta}>
+                {ganttTimelines.filter(t => t.startMs).length} of {totalEpics} epics with date data
+                {ganttTimelines.filter(t => t.isEstimated).length > 0 &&
+                  ` · ${ganttTimelines.filter(t => t.isEstimated).length} estimated`}
+              </span>
             </div>
-            <GanttChart timelines={ganttTimelines} />
+            <GanttTimeline timelines={ganttTimelines} />
           </div>
         )}
 
         {/* ── CARDS VIEW ── */}
         {view === 'cards' && (
           <>
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div className="flex gap-1">
-                {(['active','all','critical','done'] as const).map(f => (
+            <div className={styles.cardsHeader}>
+              <div className={styles.filterGroup} role="group" aria-label="Filter epics">
+                {([['active', 'In Progress'], ['all', 'All Epics'], ['critical', '🔴 Critical'], ['done', '✅ Done']] as const).map(([f, lbl]) => (
                   <button
                     key={f}
                     type="button"
                     onClick={() => setFilter(f)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                    style={{
-                      background: filter === f ? 'var(--dc-acc, #E85D12)' : 'var(--dc-s2, #1E1E1E)',
-                      color: filter === f ? '#fff' : 'var(--dc-p2, #909090)',
-                      border: filter === f ? '1px solid var(--dc-acc)' : '1px solid var(--dc-bdr)',
-                    }}
+                    className={clsx(styles.filterBtn, { [styles.active]: filter === f })}
+                    aria-pressed={filter === f}
                   >
-                    {f === 'active' ? 'In Progress' : f === 'critical' ? '⚠️ Critical' : f.charAt(0).toUpperCase() + f.slice(1)}
+                    {lbl}
                   </button>
                 ))}
               </div>
               <select
                 value={sort}
                 onChange={e => setSort(e.target.value as typeof sort)}
-                className="text-xs font-bold rounded-lg px-2 py-1.5"
-                style={{
-                  background: 'var(--dc-s2, #1E1E1E)',
-                  border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
-                  color: 'var(--dc-p2, #909090)',
-                }}
+                className={styles.sortSelect}
+                aria-label="Sort epics"
               >
                 <option value="forecast">Sort: Forecast</option>
                 <option value="progress">Sort: Progress</option>
-                <option value="name">Sort: Name</option>
+                <option value="name">Sort: Name A–Z</option>
               </select>
             </div>
 
             {sorted.length === 0 ? (
-              <div className="text-center py-12" style={{ color: 'var(--dc-p3, #505050)' }}>
-                <p className="text-4xl mb-3">🗺️</p>
-                <p className="font-bold" style={{ color: 'var(--dc-p2, #909090)' }}>No epics match this filter.</p>
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>🗺️</div>
+                <p className={styles.emptyTitle}>No epics match this filter</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {sorted.map((epic, i) => <EpicCard key={`${epic.name}-${i}`} epic={epic} />)}
+              <div className={styles.cardsGrid}>
+                {sorted.map((epic, i) => <EpicCard key={`${epic.name}-${i}`} epic={epic} index={i} />)}
               </div>
             )}
           </>
         )}
 
-        {epics.length === 0 && !loading && (
-          <div className="text-center py-16 rounded-2xl shadow-sm mt-4"
-            style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-            <p className="text-5xl mb-4">🗺️</p>
-            <p className="text-base font-black mb-2" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>No epic data found</p>
-            <p className="text-sm max-w-sm mx-auto" style={{ color: 'var(--dc-p3, #505050)' }}>Upload a Jira export that includes the <strong>Epic Link</strong> or <strong>Epic Name</strong> column.</p>
+        {/* ── No epics at all ── */}
+        {epics.length === 0 && (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>🗺️</div>
+            <p className={styles.emptyTitle}>No epic data found</p>
+            <p className={styles.emptyText}>Upload a Jira export that includes the <strong>Epic Link</strong> or <strong>Epic Name</strong> column.</p>
           </div>
         )}
+
       </div>
     </AppShell>
   );

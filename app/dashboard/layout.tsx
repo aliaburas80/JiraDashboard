@@ -10,7 +10,6 @@ import styles from './layout.module.scss';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [healthScore, setHealthScore] = useState(0);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
 
   useEffect(() => {
@@ -22,7 +21,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const data = result.metrics as DashboardMetrics | null;
         if (!data) { router.replace('/'); return; }
         setMetrics(data);
-        setHealthScore(data.healthScore ?? 0);
       } catch {
         if (!cancelled) router.replace('/');
       }
@@ -34,7 +32,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className={styles.shell}>
       <DashboardTopbar
-        healthScore={healthScore}
         onNewUpload={() => router.push('/')}
       />
 

@@ -7,7 +7,7 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   return (
     <div className={styles.shell}>
-      <DashboardTopbar healthScore={0} onNewUpload={() => router.push('/')} />
+      <DashboardTopbar onNewUpload={() => router.push('/')} />
       <div className={styles.body}>{children}</div>
     </div>
   );

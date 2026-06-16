@@ -54,49 +54,55 @@ export function allowedDashboardViewsForRole(role: string | null | undefined): V
     : ['full', 'executive', 'scrum_master', 'product_owner', 'engineering_manager'];
 }
 
-const COMMON_ROUTES = ['/profile', '/members', '/help', '/glossary', '/landing', '/change-password'];
-const PLANNING_ROUTES = ['/roadmap', '/forecast', '/retro'];
-const DELIVERY_ROUTES = ['/release-readiness', '/readiness', '/flow-health', '/sprint-kanban', '/delivery-mix', '/explore', '/customer'];
-const DATA_ROUTES     = ['/work-explorer', '/data-quality', '/column-mapping', '/snapshots', '/backend'];
+const COMMON_ROUTES    = ['/profile', '/members', '/help', '/glossary', '/landing', '/change-password'];
+const PLANNING_ROUTES  = ['/roadmap', '/forecast', '/retro'];
+const DELIVERY_ROUTES  = ['/release-readiness', '/readiness', '/flow-health', '/sprint-kanban', '/delivery-mix', '/explore', '/customer'];
+const DATA_ROUTES      = ['/work-explorer', '/data-quality', '/column-mapping', '/snapshots', '/backend'];
+// All Analytics sub-menu items are visible to every role so the nav is consistent everywhere.
+const ANALYTICS_ROUTES = ['/dashboard', '/summary', '/charts', '/trends', '/teams', '/portfolio'];
 
 export function allowedRoutePrefixesForRole(role: string | null | undefined): string[] {
   switch (role) {
     case 'admin':
       return [
-        '/dashboard', '/summary', '/charts', '/trends', '/teams', '/portfolio',
+        ...ANALYTICS_ROUTES,
         '/developer', '/admin',
         ...DELIVERY_ROUTES, ...DATA_ROUTES, ...PLANNING_ROUTES, ...COMMON_ROUTES,
       ];
     case 'scrum_master':
       return [
-        '/dashboard', '/summary', '/charts', '/trends', '/teams',
+        ...ANALYTICS_ROUTES,
         '/flow-health', '/sprint-kanban', '/release-readiness', '/readiness', '/explore',
         '/work-explorer', '/snapshots',
         ...PLANNING_ROUTES, ...COMMON_ROUTES,
       ];
     case 'product_owner':
       return [
-        '/dashboard', '/summary', '/portfolio', '/customer',
+        ...ANALYTICS_ROUTES,
+        '/customer',
         '/release-readiness', '/readiness', '/delivery-mix', '/explore',
         '/work-explorer', '/snapshots',
         ...PLANNING_ROUTES, ...COMMON_ROUTES,
       ];
     case 'manager':
       return [
-        '/dashboard', '/summary', '/charts', '/trends', '/teams', '/portfolio', '/customer',
+        ...ANALYTICS_ROUTES,
+        '/customer',
         '/release-readiness', '/readiness', '/flow-health', '/sprint-kanban', '/delivery-mix', '/explore',
         '/work-explorer', '/data-quality', '/snapshots', '/backend',
         ...PLANNING_ROUTES, ...COMMON_ROUTES,
       ];
     case 'c_level':
       return [
-        '/dashboard', '/summary', '/portfolio', '/customer', '/trends',
+        ...ANALYTICS_ROUTES,
+        '/customer',
         '/release-readiness', '/delivery-mix',
         ...PLANNING_ROUTES, ...COMMON_ROUTES,
       ];
     default:
       return [
-        '/dashboard', '/summary', '/charts', '/trends', '/teams', '/portfolio', '/customer',
+        ...ANALYTICS_ROUTES,
+        '/customer',
         '/release-readiness', '/readiness', '/explore',
         ...DATA_ROUTES, ...PLANNING_ROUTES, ...COMMON_ROUTES,
       ];

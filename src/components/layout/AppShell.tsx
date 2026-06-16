@@ -6,7 +6,6 @@ import clsx from 'clsx';
 import { applyTheme } from '@/lib/theme';
 import { initThemeCustom, loadBranding } from '@/lib/themeCustomizer';
 import UserMenu from '@/components/auth/UserMenu';
-import { canAccessRoute } from '@/lib/roles';
 import { DC_NAV_GROUPS } from '@/components/dc-shell/navigation';
 import styles from './AppShell.module.scss';
 
@@ -32,7 +31,6 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
   const pathname    = usePathname();
   const [openGroup, setOpenGroup]   = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [role, setRole]             = useState<string | null>(null);
   const [brandName, setBrandName]   = useState('Delivery Clarity');
   const navRef = useRef<HTMLElement>(null);
 
@@ -42,14 +40,6 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
     const b = loadBranding();
     if (b.appName) setBrandName(b.appName);
   }, []);
-
-  useEffect(() => {
-    if (!showNav) return;
-    fetch('/api/auth/me')
-      .then(r => r.ok ? r.json() : null)
-      .then(me => setRole(me?.role ?? null))
-      .catch(() => setRole(null));
-  }, [showNav]);
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -71,13 +61,11 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
     return group.items.some(item => isActivePath(pathname, item.href));
   }
 
-  const visibleGroups = DC_NAV_GROUPS
-    .map(group => ({
-      ...group,
-      label: GROUP_LABEL_OVERRIDE[group.id] ?? group.label,
-      items: group.items.filter(item => !showNav || (role !== null && canAccessRoute(role, item.href))),
-    }))
-    .filter(group => group.items.length > 0);
+  // Show all nav groups — matches DashboardTopbar (no role-based filtering in the nav)
+  const visibleGroups = DC_NAV_GROUPS.map(group => ({
+    ...group,
+    label: GROUP_LABEL_OVERRIDE[group.id] ?? group.label,
+  }));
 
   return (
     <div className={styles.shell}>

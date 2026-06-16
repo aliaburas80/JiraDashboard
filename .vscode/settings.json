@@ -20,6 +20,7 @@
         "GLOBAL": true,
         "content\\.js": true,
         "ObjectMultiplex": true,
-        "mv": true
+        "mv": true,
+        "git -C \"/Users/aliaburas/Documents/Documents": true
     }
 }

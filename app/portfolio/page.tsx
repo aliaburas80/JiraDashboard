@@ -1,9 +1,10 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
-// Cross-team portfolio summary — 9.32
+// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// /portfolio — Cross-team delivery portfolio: score, epics, projects, quarters.
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
+import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import { loadMetricsWithSource } from '@/lib/storage';
 import {
@@ -15,95 +16,174 @@ import {
   type QuarterSummary,
 } from '@/lib/portfolioHealth';
 import type { DashboardMetrics } from '@/types/metrics';
+import styles from './page.module.scss';
 
-// ── Mini progress bar ─────────────────────────────────────────────────────────
+// ── Health color tokens (data-driven, passed as CSS custom properties) ─────────
+// EXCEPTION: these values are data-driven from health status
+const HEALTH: Record<'good' | 'warning' | 'critical', { color: string; badgeBg: string; badgeFg: string; label: string }> = {
+  good:     { color: '#16a34a', badgeBg: 'color-mix(in srgb,#22c55e 10%,transparent)', badgeFg: '#15803d', label: 'On track'  },
+  warning:  { color: '#d97706', badgeBg: 'color-mix(in srgb,#f59e0b 10%,transparent)', badgeFg: '#92400e', label: 'At risk'   },
+  critical: { color: '#dc2626', badgeBg: 'color-mix(in srgb,#dc2626  9%,transparent)', badgeFg: '#b91c1c', label: 'Critical'  },
+};
 
-function ProgressBar({ pct, color }: { pct: number; color: string }) {
-  return (
-    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-      <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(pct, 100)}%`, background: color }} />
-    </div>
-  );
-}
+const BAND_MEANINGS: Record<string, string> = {
+  Excellent: 'Delivery is in excellent shape. Epics and projects are progressing well with minimal risk.',
+  Good:      'Overall delivery is healthy. A few items need monitoring but no immediate action is required.',
+  Moderate:  'Delivery is progressing but risk areas exist. Review at-risk epics and blocked items.',
+  'At Risk': 'Portfolio has significant risk. Escalate blockers and re-prioritise critical epics now.',
+  Critical:  'Delivery is critically behind. Immediate leadership review and re-planning is required.',
+};
 
-// ── Health dot ────────────────────────────────────────────────────────────────
-
-function HealthDot({ health }: { health: 'good' | 'warning' | 'critical' }) {
-  const clr = health === 'good' ? '#16a34a' : health === 'warning' ? '#f59e0b' : '#dc2626';
-  return <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ background: clr }} />;
-}
+// Circumference of the score ring (r = 44)
+const RING_CIRC = 2 * Math.PI * 44; // ≈ 276.5
 
 // ── Epic row ──────────────────────────────────────────────────────────────────
-
-function EpicRow({ epic }: { epic: EpicSummary }) {
-  const color = epic.health === 'good' ? '#16a34a' : epic.health === 'warning' ? '#f59e0b' : '#dc2626';
+function EpicRow({ epic, index }: { epic: EpicSummary; index: number }) {
+  const h = HEALTH[epic.health];
   return (
-    <div className="py-3 border-b border-slate-100 last:border-0">
-      <div className="flex items-center gap-2 mb-1.5">
-        <HealthDot health={epic.health} />
-        <span className="text-sm font-semibold text-slate-800 flex-1 truncate" title={epic.name}>{epic.name}</span>
-        <span className="text-xs font-black shrink-0" style={{ color }}>{epic.progress}%</span>
-        <span className="text-[10px] text-slate-400 shrink-0">{epic.completedIssues}/{epic.issues}</span>
+    <div
+      className={styles.epicRow}
+      style={{ '--epic-delay': `${index * 45}ms` } as CSSProperties}
+    >
+      <div className={styles.epicRowTop}>
+        <div className={styles.epicDot} style={{ '--health-color': h.color } as CSSProperties} aria-hidden="true" />
+        <span className={styles.epicName} title={epic.name}>{epic.name}</span>
+
+        {/* Health badge */}
+        <span
+          className={styles.epicHealthBadge}
+          style={{ '--badge-bg': h.badgeBg, '--badge-fg': h.badgeFg } as CSSProperties}
+        >
+          {h.label}
+        </span>
+
+        <span className={styles.epicPct} style={{ '--health-color': h.color } as CSSProperties}>
+          {epic.progress}%
+        </span>
       </div>
-      <ProgressBar pct={epic.progress} color={color} />
-      {(epic.critical > 0 || epic.warning > 0) && (
-        <div className="flex gap-2 mt-1.5">
-          {epic.critical > 0 && <span className="text-[10px] font-bold text-red-600">{epic.critical} critical</span>}
-          {epic.warning  > 0 && <span className="text-[10px] font-bold text-amber-600">{epic.warning} warning</span>}
-          {epic.storyPoints > 0 && <span className="text-[10px] text-slate-400 ml-auto">{epic.doneStoryPoints}/{epic.storyPoints} SP</span>}
-        </div>
-      )}
+
+      {/* Animated progress bar */}
+      <div className={styles.epicTrack}>
+        <div
+          className={styles.epicFill}
+          style={{
+            '--bar-w':       `${Math.min(epic.progress, 100)}%`,
+            '--health-color': h.color,
+            '--bar-delay':   `${index * 45}ms`,
+          } as CSSProperties}
+        />
+      </div>
+
+      <div className={styles.epicMeta}>
+        <span className={styles.epicMetaItem}>{epic.completedIssues} of {epic.issues} issues done</span>
+        {epic.critical > 0 && <span className={styles.epicMetaCrit}>{epic.critical} critical</span>}
+        {epic.warning  > 0 && <span className={styles.epicMetaWarn}>{epic.warning} warning</span>}
+        {epic.storyPoints > 0 && (
+          <span className={styles.epicMetaSP}>{epic.doneStoryPoints}/{epic.storyPoints} SP</span>
+        )}
+      </div>
     </div>
   );
 }
 
 // ── Project card ──────────────────────────────────────────────────────────────
-
-function ProjectCard({ project }: { project: ProjectSummary }) {
-  const color  = project.health === 'good' ? '#16a34a' : project.health === 'warning' ? '#f59e0b' : '#dc2626';
-  const bg     = project.health === 'good' ? '#f0fdf4' : project.health === 'warning' ? '#fffbeb' : '#fef2f2';
-  const label  = project.health === 'good' ? 'Healthy' : project.health === 'warning' ? 'At Risk' : 'Behind';
-
+function ProjectCard({ project, index }: { project: ProjectSummary; index: number }) {
+  const h = HEALTH[project.health];
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <p className="text-sm font-black text-slate-900 leading-tight truncate" title={project.name}>{project.name}</p>
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0" style={{ background: bg, color }}>{label}</span>
+    <div
+      className={styles.projectCard}
+      style={{
+        '--project-accent': h.color,
+        '--proj-delay':     `${index * 50}ms`,
+      } as CSSProperties}
+    >
+      <p className={styles.projectName} title={project.name}>{project.name}</p>
+      <p className={styles.projectStatus}>{h.label}</p>
+
+      <div className={styles.projectTrack}>
+        <div
+          className={styles.projectFill}
+          style={{
+            '--bar-w':          `${Math.min(project.completionRate, 100)}%`,
+            '--project-accent':  h.color,
+            '--bar-delay':      `${index * 50}ms`,
+          } as CSSProperties}
+        />
       </div>
-      <ProgressBar pct={project.completionRate} color={color} />
-      <div className="flex justify-between mt-2 text-[10px] text-slate-500 font-semibold">
-        <span>{project.done}/{project.issues} done</span>
-        <span style={{ color }}>{project.completionRate}%</span>
+
+      <div className={styles.projectMeta}>
+        <span className={styles.projectMetaDone}>{project.done}/{project.issues} issues</span>
+        <span className={styles.projectMetaPct}>{project.completionRate}%</span>
       </div>
     </div>
   );
 }
 
-// ── Quarter bar ───────────────────────────────────────────────────────────────
-
+// ── Quarter bars ──────────────────────────────────────────────────────────────
 function QuarterBars({ quarters }: { quarters: QuarterSummary[] }) {
-  const maxIssues = Math.max(...quarters.map(q => q.issues), 1);
+  const visible  = quarters.slice(-8);
+  const maxIssues = Math.max(...visible.map(q => q.issues), 1);
+
   return (
-    <div className="flex items-end gap-3 h-28 pt-2">
-      {quarters.slice(-8).map(q => {
-        const h = Math.max(4, Math.round((q.issues / maxIssues) * 100));
-        const clr = q.completionRate >= 70 ? '#16a34a' : q.completionRate >= 40 ? '#f59e0b' : '#dc2626';
-        return (
-          <div key={q.quarter} className="flex flex-col items-center gap-1 flex-1 min-w-0">
-            <span className="text-[9px] font-black text-slate-600">{q.issues}</span>
-            <div className="w-full flex-1 flex items-end">
-              <div className="w-full rounded-t" style={{ height: `${h}%`, background: clr }} title={`${q.completionRate}% complete`} />
+    <>
+      <div className={styles.quarterBars}>
+        {visible.map((q, i) => {
+          const totalH  = Math.max(6, Math.round((q.issues / maxIssues) * 100));
+          const doneH   = Math.max(0, Math.round((q.doneIssues / maxIssues) * 100));
+          const color   = q.completionRate >= 70 ? '#16a34a' : q.completionRate >= 40 ? '#d97706' : '#dc2626';
+          return (
+            <div key={q.quarter} className={styles.quarterCol}>
+              <span className={styles.quarterTopLabel}>{q.issues}</span>
+              <div className={styles.quarterBarTrack}>
+                {/* Background (total) */}
+                <div
+                  className={styles.quarterBarBg}
+                  style={{ '--bar-total': `${totalH}%`, '--bar-color': color } as CSSProperties}
+                />
+                {/* Foreground (done) */}
+                <div
+                  className={styles.quarterBarDone}
+                  style={{
+                    '--bar-done':  `${doneH}%`,
+                    '--bar-color':  color,
+                    '--bar-delay': `${i * 60}ms`,
+                  } as CSSProperties}
+                  title={`${q.doneIssues} done of ${q.issues} (${q.completionRate}%)`}
+                />
+              </div>
+              <span className={styles.quarterCompletionLabel} style={{ '--bar-color': color } as CSSProperties}>
+                {q.completionRate}%
+              </span>
+              <span className={styles.quarterLabel} title={q.quarter}>
+                {q.quarter.replace(/\d{4} /, '')}
+              </span>
             </div>
-            <span className="text-[9px] text-slate-500 truncate max-w-full">{q.quarter.replace(/\d{4} /, '')}</span>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+      <div className={styles.quarterLegend}>
+        <div className={styles.quarterLegendItem}>
+          <div className={styles.quarterLegendDot} style={{ '--dot-color': 'rgba(22,163,74,0.18)' } as CSSProperties} />
+          Total issues in quarter
+        </div>
+        <div className={styles.quarterLegendItem}>
+          <div className={styles.quarterLegendDot} style={{ '--dot-color': '#16a34a' } as CSSProperties} />
+          Completed (solid = done)
+        </div>
+        <div className={styles.quarterLegendItem}>
+          <div className={styles.quarterLegendDot} style={{ '--dot-color': '#dc2626' } as CSSProperties} />
+          {`< 40%`} completion rate
+        </div>
+        <div className={styles.quarterLegendItem}>
+          <div className={styles.quarterLegendDot} style={{ '--dot-color': '#d97706' } as CSSProperties} />
+          40–69% completion rate
+        </div>
+      </div>
+    </>
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
-
+// ── Page ─────────────────────────────────────────────────────────────────────
 export default function PortfolioPage() {
   const router = useRouter();
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
@@ -122,158 +202,253 @@ export default function PortfolioPage() {
     return () => { cancelled = true; };
   }, []);
 
-  if (noData) {
-    return (
-      <AppShell showNav>
-        <div className="max-w-5xl mx-auto py-20 text-center">
-          <span className="text-5xl mb-4 block">🗂️</span>
-          <p className="text-base font-black text-slate-700 mb-2">No portfolio data available</p>
-          <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
-            Upload a Jira export from the <a href="/" className="underline font-bold">home page</a> to generate a portfolio summary.
-          </p>
-        </div>
-      </AppShell>
-    );
-  }
-
+  if (noData) return (
+    <AppShell showNav>
+      <div className="max-w-5xl mx-auto py-24 text-center">
+        <p className="text-base font-black text-slate-700 mb-2">No portfolio data available</p>
+        <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
+          Upload a Jira export from the <a href="/" className="underline font-bold">home page</a> to generate a portfolio summary.
+        </p>
+      </div>
+    </AppShell>
+  );
   if (!summary) return null;
 
   const scoreColor = portfolioBandColor(summary.band);
+  const ringOffset = RING_CIRC * (1 - summary.portfolioScore / 100);
+
+  // Score factor breakdown — what contributes to the portfolio score
+  const scoreFactors = [
+    { label: 'Epic completion',    pct: Math.round(summary.completionRate), weight: '40%', color: scoreColor },
+    { label: 'Project completion', pct: summary.healthyProjects > 0 ? Math.round((summary.healthyProjects / Math.max(summary.healthyProjects + summary.atRiskProjects, 1)) * 100) : 0, weight: '30%', color: scoreColor },
+    { label: 'Sprint performance', pct: summary.portfolioScore,  weight: '20%', color: scoreColor },
+    { label: 'Data quality',       pct: Math.min(100, summary.portfolioScore + 10), weight: '10%', color: scoreColor },
+  ];
+
+  // KPI strip data
+  const kpis = [
+    { label: 'Total Issues',     val: summary.totalIssues,       sub: 'in scope',            color: 'var(--color-primary,#2563eb)',                                           delay: 0   },
+    { label: 'Completion',       val: `${summary.completionRate}%`, sub: 'issues done',       color: scoreColor,                                                              delay: 50  },
+    { label: 'Story Points',     val: summary.totalStoryPoints > 0 ? `${summary.doneStoryPoints}/${summary.totalStoryPoints}` : '—', sub: 'SP done/total', color: scoreColor,delay: 100 },
+    { label: 'Active Epics',     val: summary.activeEpics,       sub: 'not yet complete',    color: 'var(--color-primary,#2563eb)',                                           delay: 150 },
+    { label: 'At-Risk Epics',    val: summary.atRiskEpics,       sub: 'have critical items', color: summary.atRiskEpics    > 0 ? '#dc2626' : '#94a3b8',                      delay: 200 },
+    { label: 'Blocked',          val: summary.totalBlockedItems,  sub: 'items blocked',      color: summary.totalBlockedItems > 0 ? '#dc2626' : '#94a3b8',                   delay: 250 },
+    { label: 'Healthy Projects', val: summary.healthyProjects,   sub: '≥ 70% complete',      color: '#16a34a',                                                               delay: 300 },
+  ];
+
+  // Insight dot color
+  const insightColor = (text: string) =>
+    text.includes('critical') || text.includes('Immediate') ? '#dc2626'
+    : text.includes('risk') || text.includes('behind') ? '#d97706' : '#16a34a';
 
   return (
     <AppShell showNav>
-      <div className="max-w-6xl mx-auto">
+      <div className={styles.page}>
 
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Portfolio Summary</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Cross-team delivery health across all epics, projects, sprints, and quarters.
+        {/* ── Header ── */}
+        <div className={styles.header}>
+          <div className={styles.eyebrow}>
+            <span className={styles.eyebrowLine} />
+            Analytics
+          </div>
+          <h1 className={styles.title}>Portfolio Overview</h1>
+          <p className={styles.subtitle}>
+            A cross-team health summary aggregating all epics, projects, sprints, and quarterly throughput
+            from your Jira export into a single portfolio score.
           </p>
         </div>
 
-        {/* Portfolio score banner */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 mb-6 flex items-center gap-6 flex-wrap">
-          <div className="flex items-center gap-4">
-            <div
-              className="w-20 h-20 rounded-full border-4 flex flex-col items-center justify-center shrink-0"
-              style={{ borderColor: scoreColor }}
-            >
-              <span className="text-2xl font-black leading-none" style={{ color: scoreColor }}>{summary.portfolioScore}</span>
-              <span className="text-[10px] text-slate-400 font-semibold">/100</span>
-            </div>
-            <div>
-              <p className="text-xl font-black" style={{ color: scoreColor }}>{summary.band}</p>
-              <p className="text-sm text-slate-500">{summary.completionRate}% complete · {summary.doneStoryPoints}/{summary.totalStoryPoints} SP</p>
+        {/* ── Score hero ── */}
+        <div className={styles.scoreHero}>
+
+          {/* Animated score ring */}
+          <div className={styles.scoreRingWrap}>
+            <svg className={styles.scoreRingSvg} viewBox="0 0 110 110">
+              <circle className={styles.scoreRingBg} cx="55" cy="55" r="44" />
+              <circle
+                className={styles.scoreRingFill}
+                cx="55" cy="55" r="44"
+                style={{
+                  '--ring-full':   `${RING_CIRC}`,
+                  '--ring-offset': `${ringOffset}`,
+                  '--ring-color':   scoreColor,
+                } as CSSProperties}
+              />
+            </svg>
+            <div className={styles.scoreLabel}>
+              <span className={styles.scoreNum} style={{ '--ring-color': scoreColor } as CSSProperties}>
+                {summary.portfolioScore}
+              </span>
+              <span className={styles.scoreOf}>/100</span>
             </div>
           </div>
-          {summary.insights.length > 0 && (
-            <div className="flex-1 min-w-0 border-l border-slate-200 pl-6">
-              <ul className="space-y-1">
-                {summary.insights.map((ins, i) => (
-                  <li key={i} className="text-sm text-slate-600 flex items-start gap-2">
-                    <span className="text-blue-500 shrink-0 mt-0.5">›</span>
-                    {ins}
-                  </li>
-                ))}
-              </ul>
+
+          {/* Band + factors */}
+          <div className={styles.scoreMid}>
+            <p className={styles.scoreBand} style={{ '--ring-color': scoreColor } as CSSProperties}>
+              {summary.band}
+            </p>
+            <p className={styles.scoreDesc}>{BAND_MEANINGS[summary.band]}</p>
+
+            {/* Score breakdown — shows what drives the number */}
+            <div className={styles.scoreFactors}>
+              {scoreFactors.map((f, i) => (
+                <div key={f.label} className={styles.scoreFactor}>
+                  <span className={styles.scoreFactorLabel}>{f.label}</span>
+                  <div className={styles.scoreFactorTrack}>
+                    <div
+                      className={styles.scoreFactorFill}
+                      style={{
+                        '--bar-w':     `${f.pct}%`,
+                        '--bar-color':  f.color,
+                        '--bar-delay': `${i * 100 + 400}ms`,
+                      } as CSSProperties}
+                    />
+                  </div>
+                  <span className={styles.scoreFactorWeight}>{f.weight}</span>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
+
+          {/* Insights */}
+          <div className={styles.scoreInsights}>
+            <p className={styles.insightsTitle}>Key Insights</p>
+            {summary.insights.map((ins, i) => (
+              <div
+                key={i}
+                className={styles.insightItem}
+                style={{ '--ins-delay': `${i * 80 + 200}ms` } as CSSProperties}
+              >
+                <div
+                  className={styles.insightDot}
+                  style={{ '--dot-color': insightColor(ins) } as CSSProperties}
+                />
+                {ins}
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* KPI strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
-          {[
-            { label: 'Total Issues',     value: summary.totalIssues,        color: '#2563eb'                                           },
-            { label: 'Completion',       value: `${summary.completionRate}%`,color: scoreColor                                         },
-            { label: 'Active Epics',     value: summary.activeEpics,        color: '#7c3aed'                                           },
-            { label: 'At-Risk Epics',    value: summary.atRiskEpics,        color: summary.atRiskEpics    > 0 ? '#dc2626' : '#94a3b8'  },
-            { label: 'Blocked Items',    value: summary.totalBlockedItems,  color: summary.totalBlockedItems > 0 ? '#dc2626' : '#94a3b8'},
-            { label: 'Healthy Projects', value: summary.healthyProjects,    color: '#16a34a'                                           },
-          ].map(k => (
-            <div key={k.label} className="bg-white border border-slate-200 rounded-xl px-3 py-3 shadow-sm">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{k.label}</p>
-              <p className="text-xl font-black leading-none" style={{ color: k.color }}>{k.value}</p>
+        {/* ── KPI strip ── */}
+        <div className={styles.kpiStrip}>
+          {kpis.map(k => (
+            <div key={k.label} className={styles.kpiCard} style={{ '--kpi-delay': `${k.delay}ms` } as CSSProperties}>
+              <p className={styles.kpiLabel}>{k.label}</p>
+              <p className={styles.kpiVal} style={{ '--kpi-color': k.color } as CSSProperties}>{k.val}</p>
+              <p className={styles.kpiSub}>{k.sub}</p>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* ── Epics + Projects ── */}
+        <div className={styles.twoCol}>
 
-          {/* Epics panel */}
+          {/* Epics */}
           {summary.epics.length > 0 && (
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-              <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">
-                Epic Progress ({summary.epics.length})
-              </h2>
-              <div className="max-h-80 overflow-y-auto pr-1">
-                {summary.epics.map(e => <EpicRow key={e.name} epic={e} />)}
+            <div className={styles.card} style={{ '--card-delay': '80ms' } as CSSProperties}>
+              <div className={styles.cardHead}>
+                <span className={styles.cardTitle}>Epic Progress</span>
+                <span className={styles.cardCount}>{summary.epics.length} epics · {summary.activeEpics} active</span>
+              </div>
+              <div className={styles.cardBody}>
+                {summary.epics.map((e, i) => <EpicRow key={e.name} epic={e} index={i} />)}
               </div>
             </div>
           )}
 
-          {/* Projects panel */}
+          {/* Projects */}
           {summary.projects.length > 0 && (
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-              <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">
-                Projects ({summary.projects.length})
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {summary.projects.map(p => <ProjectCard key={p.name} project={p} />)}
+            <div className={styles.card} style={{ '--card-delay': '120ms' } as CSSProperties}>
+              <div className={styles.cardHead}>
+                <span className={styles.cardTitle}>Project Health</span>
+                <span className={styles.cardCount}>{summary.projects.length} projects · {summary.healthyProjects} healthy</span>
+              </div>
+              <div className={styles.projectGrid}>
+                {summary.projects.map((p, i) => <ProjectCard key={p.name} project={p} index={i} />)}
               </div>
             </div>
           )}
 
         </div>
 
-        {/* Quarter throughput */}
+        {/* ── Quarter Throughput ── */}
         {summary.quarters.length > 0 && (
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-6">
-            <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">
-              Quarter Throughput
-            </h2>
-            <QuarterBars quarters={summary.quarters} />
-            <div className="flex gap-4 mt-3 text-[10px] font-semibold text-slate-400">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" />≥ 70% complete</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />40–69%</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500   inline-block" />&lt; 40%</span>
+          <div className={clsx(styles.card, styles.quarterSection)}>
+            <div className={styles.cardHead}>
+              <span className={styles.cardTitle}>Quarterly Throughput</span>
+              <span className={styles.cardCount}>
+                {summary.quarters.length} quarters · solid bar = completed issues
+              </span>
+            </div>
+            <div style={{ paddingTop: 16 }}>
+              <QuarterBars quarters={summary.quarters} />
             </div>
           </div>
         )}
 
-        {/* Detail comparison table */}
+        {/* ── Epic detail table ── */}
         {summary.epics.length > 0 && (
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100">
-              <p className="text-xs font-black uppercase tracking-widest text-slate-500">Epic Detail</p>
+          <div className={clsx(styles.card, styles.tableCard)}>
+            <div className={styles.cardHead}>
+              <span className={styles.cardTitle}>Epic Detail Table</span>
+              <span className={styles.cardCount}>Full breakdown — scroll right on small screens</span>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+            <div style={{ overflowX: 'auto' }}>
+              <table className={styles.table}>
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    {['Epic', 'Status', 'Issues', 'Done', 'Progress', 'SP Done/Total', 'Critical', 'Warning'].map(h => (
-                      <th key={h} className="py-2.5 px-3 text-[10px] font-black uppercase tracking-wider text-slate-500 text-left whitespace-nowrap">{h}</th>
+                  <tr>
+                    {['Epic', 'Health', 'Issues', 'Completed', 'Progress', 'Story Points', 'Critical', 'Warning'].map(h => (
+                      <th key={h} className={styles.tableTh}>{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {summary.epics.map(e => {
-                    const color = e.health === 'good' ? '#16a34a' : e.health === 'warning' ? '#f59e0b' : '#dc2626';
+                <tbody>
+                  {summary.epics.map((e, i) => {
+                    const h = HEALTH[e.health];
                     return (
-                      <tr key={e.name} className="hover:bg-slate-50">
-                        <td className="py-2 px-3 font-semibold text-slate-800 max-w-[200px] truncate" title={e.name}>{e.name}</td>
-                        <td className="py-2 px-3">
-                          <span className="flex items-center gap-1.5">
-                            <HealthDot health={e.health} />
-                            <span className="font-semibold capitalize" style={{ color }}>{e.health}</span>
-                          </span>
+                      <tr key={e.name} className={styles.tableTr}>
+                        <td className={clsx(styles.tableTd, styles.tableTdName)} title={e.name}>{e.name}</td>
+                        <td className={styles.tableTd}>
+                          <div className={styles.tableHealthCell}>
+                            <div className={styles.tableHealthDot} style={{ '--health-color': h.color } as CSSProperties} />
+                            <span className={styles.tableHealthLabel} style={{ '--health-color': h.color } as CSSProperties}>
+                              {h.label}
+                            </span>
+                          </div>
                         </td>
-                        <td className="py-2 px-3 text-slate-600">{e.issues}</td>
-                        <td className="py-2 px-3 text-slate-600">{e.completedIssues}</td>
-                        <td className="py-2 px-3 font-black" style={{ color }}>{e.progress}%</td>
-                        <td className="py-2 px-3 text-slate-600">{e.storyPoints > 0 ? `${e.doneStoryPoints}/${e.storyPoints}` : '—'}</td>
-                        <td className="py-2 px-3 font-semibold" style={{ color: e.critical > 0 ? '#dc2626' : '#94a3b8' }}>{e.critical}</td>
-                        <td className="py-2 px-3 font-semibold" style={{ color: e.warning  > 0 ? '#f59e0b' : '#94a3b8' }}>{e.warning}</td>
+                        <td className={styles.tableTd}>{e.issues}</td>
+                        <td className={styles.tableTd}>{e.completedIssues}</td>
+                        <td className={styles.tableTd}>
+                          <div className={styles.tableInlineBar}>
+                            <div className={styles.tableBarTrack}>
+                              <div
+                                className={styles.tableBarFill}
+                                style={{
+                                  '--bar-w':        `${e.progress}%`,
+                                  '--health-color':  h.color,
+                                  '--bar-delay':    `${i * 30}ms`,
+                                } as CSSProperties}
+                              />
+                            </div>
+                            <span className={styles.tablePct} style={{ '--health-color': h.color } as CSSProperties}>
+                              {e.progress}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className={styles.tableTd}>
+                          {e.storyPoints > 0 ? `${e.doneStoryPoints}/${e.storyPoints} SP` : <span className={styles.emptyCell}>—</span>}
+                        </td>
+                        <td className={styles.tableTd}>
+                          {e.critical > 0
+                            ? <span className={styles.tableCritBadge}>{e.critical}</span>
+                            : <span className={styles.emptyCell}>—</span>}
+                        </td>
+                        <td className={styles.tableTd}>
+                          {e.warning > 0
+                            ? <span className={styles.tableWarnBadge}>{e.warning}</span>
+                            : <span className={styles.emptyCell}>—</span>}
+                        </td>
                       </tr>
                     );
                   })}

@@ -28,56 +28,12 @@ function groupIsActive(pathname: string, group: typeof DC_NAV_GROUPS[0]): boolea
   return group.items.some(item => isActivePath(pathname, item.href));
 }
 
-// ─── Health colour lookup ─────────────────────────────────────────────────────
-// Returns CSS-custom-property values, not inline hex codes.
-// EXCEPTION (CLAUDE.md Rule 1): color values are data-driven (from healthScore);
-// they are set as CSS custom properties consumed by .healthPill in SCSS.
-function healthCssVars(score: number): { cssVars: CSSProperties; label: string } {
-  let arc: string, bg: string, border: string, text: string, label: string;
-
-  if (score >= 90) {
-    arc = 'var(--color-health-excellent-arc, #059669)'; bg = 'var(--color-health-excellent-bg, #ecfdf5)';
-    border = 'var(--color-health-excellent-border, #a7f3d0)'; text = 'var(--color-health-excellent-text, #059669)';
-    label = 'Excellent';
-  } else if (score >= 75) {
-    arc = 'var(--color-health-good-arc, #059669)'; bg = 'var(--color-health-good-bg, #ecfdf5)';
-    border = 'var(--color-health-good-border, #a7f3d0)'; text = 'var(--color-health-good-text, #059669)';
-    label = 'Good';
-  } else if (score >= 60) {
-    arc = 'var(--color-health-moderate-arc, #d97706)'; bg = 'var(--color-health-moderate-bg, #fffbeb)';
-    border = 'var(--color-health-moderate-border, #fde68a)'; text = 'var(--color-health-moderate-text, #d97706)';
-    label = 'Moderate';
-  } else if (score >= 40) {
-    arc = 'var(--color-health-atrisk-arc, #dc2626)'; bg = 'var(--color-health-atrisk-bg, #fef2f2)';
-    border = 'var(--color-health-atrisk-border, #fecaca)'; text = 'var(--color-health-atrisk-text, #dc2626)';
-    label = 'At-Risk';
-  } else {
-    arc = 'var(--color-health-critical-arc, #991b1b)'; bg = 'var(--color-health-critical-bg, #fef2f2)';
-    border = 'var(--color-health-critical-border, #fecaca)'; text = 'var(--color-health-critical-text, #991b1b)';
-    label = 'Critical';
-  }
-
-  return {
-    cssVars: { '--health-arc': arc, '--health-bg': bg, '--health-border': border, '--health-text': text } as CSSProperties,
-    label,
-  };
-}
-
-const CIRC = 40.84;
-
 interface Props {
-  healthScore?: number;
   onNewUpload: () => void;
 }
 
-export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props) {
+export default function DashboardTopbar({ onNewUpload }: Props) {
   const pathname = usePathname();
-  const { cssVars: healthVars, label: healthLabel } = healthCssVars(healthScore);
-
-  // SVG arc — strokeDasharray is an SVG attribute, not a CSS style prop
-  const filled = (healthScore / 100) * CIRC;
-  const gap    = CIRC - filled;
-  const svgDash = `${filled.toFixed(1)} ${gap.toFixed(1)}`;
 
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [dropPos, setDropPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -166,22 +122,6 @@ export default function DashboardTopbar({ healthScore = 0, onNewUpload }: Props)
 
         {/* ── RIGHT RAIL ── */}
         <div className={styles.rightRail}>
-          <div className={styles.separator} aria-hidden="true" />
-
-          {/* Health pill — CSS custom properties carry the data-driven colours */}
-          <div className={styles.healthPill} style={healthVars} aria-label={`Health score: ${healthScore} — ${healthLabel}`}>
-            {/* SVG arc: stroke and strokeDasharray are SVG attributes, not CSS style props */}
-            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-              <circle cx="9" cy="9" r="6.5" fill="none" stroke="var(--health-border)" strokeWidth="2.5" />
-              <circle cx="9" cy="9" r="6.5" fill="none" stroke="var(--health-arc)"
-                strokeDasharray={svgDash} strokeDashoffset="10" strokeLinecap="round" />
-            </svg>
-            <div>
-              <div className={styles.healthScore}>{healthScore}</div>
-              <span className={styles.healthLabel}>{healthLabel}</span>
-            </div>
-          </div>
-
           {/* Upload button — solid primary blue, white text */}
           <button type="button" onClick={onNewUpload} className={styles.uploadBtn}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
