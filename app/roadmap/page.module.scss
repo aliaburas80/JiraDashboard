@@ -297,7 +297,7 @@
 .ganttGrid {
   padding: 0 var(--space-5, 20px);
   overflow-x: auto;
-  // Reserve space for % labels on the right
+  overflow-y: clip; // clip prevents y-scroll without creating a scroll container; bottom:-2000px tick lines stay visible within the grid rows
   padding-right: 56px;
 }
 

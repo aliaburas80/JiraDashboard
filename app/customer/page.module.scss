@@ -1,189 +1,925 @@
-.reportWrapper {
-  @apply min-h-screen bg-slate-50;
+// ── Keyframes ─────────────────────────────────────────────────────────────────
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.90); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes barFill {
+  from { width: 0; }
+  to   { width: var(--bar-w, 0%); }
+}
+@keyframes ringDraw {
+  from { stroke-dashoffset: var(--ring-full, 276); }
+  to   { stroke-dashoffset: var(--ring-offset, 0); }
 }
 
-.reportInner {
-  @apply max-w-3xl mx-auto px-6 py-10 print:py-4;
+// ── Page — dark premium canvas ────────────────────────────────────────────────
+.page {
+  min-height: 100vh;
+  background: linear-gradient(145deg, #08081a 0%, #100d2b 50%, #0b162e 100%);
+  font-family: inherit;
+
+  @media print { background: #fff; min-height: unset; }
 }
 
+.loadingPage {
+  min-height: 100vh;
+  background: linear-gradient(145deg, #08081a 0%, #100d2b 50%, #0b162e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ── Toolbar — dark glass ──────────────────────────────────────────────────────
 .toolbar {
-  @apply sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(8, 8, 26, 0.88);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(124, 58, 237, 0.18);
+  padding: 12px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  @media print { display: none; }
 }
 
-@media print {
-  .toolbar { display: none; }
+.toolbarBack {
+  font-size: 13px;
+  font-weight: 600;
+  color: #a78bfa;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.01em;
+  transition: color 150ms ease;
+
+  &:hover { color: #c4b5fd; }
+  &:focus-visible { outline: 2px solid #7c3aed; outline-offset: 2px; border-radius: 4px; }
 }
 
-.header {
-  @apply flex items-start justify-between mb-8 print:mb-4;
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.headerCaption {
-  @apply text-xs font-bold uppercase tracking-widest text-slate-400 mb-1;
+.toolbarTag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(167, 139, 250, 0.38);
 }
 
-.headerTitle {
-  @apply text-3xl font-black text-slate-900 tracking-tight print:text-2xl;
+.printBtn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: background 150ms ease, box-shadow 150ms ease;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+
+  &:hover { background: #6d28d9; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.55); }
+  &:active { transform: scale(0.97); }
+  &:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
 }
 
-.headerDate {
-  @apply text-sm text-slate-400 mt-1;
+// ── Outer wrapper — centers the paper on the dark canvas ──────────────────────
+.outer {
+  padding: 28px 20px 56px;
+
+  @media (max-width: 480px) { padding: 16px 12px 40px; }
+  @media print { padding: 0; }
 }
 
-.healthBadge {
-  @apply flex flex-col items-center shrink-0 rounded-[10px] px-5 py-4 text-center bg-white border-2;
-  border-color: var(--badge-border, #e5e7eb);
-  color: var(--badge-text, #111827);
+// ── Paper card — white floating card ─────────────────────────────────────────
+.paper {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    0 16px 48px rgba(0, 0, 0, 0.28),
+    0 40px 80px rgba(0, 0, 0, 0.14),
+    0 0 0 1px rgba(124, 58, 237, 0.08);
+
+  @media print {
+    box-shadow: none;
+    border-radius: 0;
+    max-width: 100%;
+    margin: 0;
+  }
 }
 
-.healthBadgeNumber {
-  @apply font-black leading-none text-[28px] font-mono;
-  color: inherit;
+// ── Hero — full-bleed gradient header inside the paper ────────────────────────
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 36px 40px 32px;
+  // EXCEPTION: gradient driven by health band enum
+  background: var(--hero-gradient, linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%));
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 80% 30%, rgba(255,255,255,0.07) 0%, transparent 55%),
+      radial-gradient(ellipse at 10% 85%, rgba(0,0,0,0.18) 0%, transparent 45%);
+    pointer-events: none;
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column-reverse;
+    gap: 24px;
+    padding: 28px 24px;
+  }
+
+  @media print {
+    // EXCEPTION: print bg driven by health band
+    background: var(--hero-print-bg, #f0f4ff) !important;
+    border-bottom: 3px solid var(--hero-print-border, #bfdbfe);
+    padding: 24px;
+
+    &::before { display: none; }
+  }
 }
 
-.healthBadgeLabel {
-  @apply font-black uppercase tracking-wider mt-1 text-[10px];
-  color: inherit;
+.heroLeft {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
-.healthBadgeSub {
-  @apply mt-0.5 text-[8px] text-slate-500;
+.heroRight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+
+  @media (max-width: 600px) { align-self: center; }
+
+  // Ring and confidence always on dark gradient — override to white
+  .ringBg       { stroke: rgba(255, 255, 255, 0.12); }
+  .ringPct      { color: rgba(255, 255, 255, 0.96); }
+  .ringLabel    { color: rgba(255, 255, 255, 0.42); }
+  .confidenceVal   { color: rgba(255, 255, 255, 0.96); }
+  .confidenceLabel { color: rgba(255, 255, 255, 0.42); }
 }
 
-.healthBadgeExcellent { border-color: #16a34a; color: #16a34a; }
-.healthBadgeGood      { border-color: #0f766e; color: #0f766e; }
-.healthBadgeModerate  { border-color: #d97706; color: #d97706; }
-.healthBadgeAtRisk    { border-color: #dc2626; color: #dc2626; }
-.healthBadgeCritical  { border-color: #991b1b; color: #991b1b; }
+.heroEyebrow {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.42);
+  margin-bottom: 6px;
 
-.healthBadgeText { color: inherit; }
+  @media print { color: #64748b; }
+}
+
+.heroTitle {
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.03em;
+  margin: 0 0 4px;
+  line-height: 1.08;
+
+  @media (max-width: 600px) { font-size: 22px; }
+  @media print { color: #0f172a; font-size: 20px; }
+}
+
+.heroDate {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.36);
+  font-weight: 500;
+  margin-bottom: 22px;
+  letter-spacing: 0.01em;
+
+  @media print { color: #94a3b8; margin-bottom: 12px; }
+}
+
+.heroStatusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 13px 5px 10px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  // EXCEPTION: border and text color driven by health band accent
+  border: 1.5px solid var(--pill-color, rgba(255,255,255,0.35));
+  color: var(--pill-color, #fff);
+  margin-bottom: 10px;
+  animation: scaleIn 400ms 200ms ease both;
+
+  &::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background: currentColor;
+    flex-shrink: 0;
+    opacity: 0.85;
+  }
+
+  @media print { border-color: #334155; color: #0f172a; }
+}
+
+.heroHeadline {
+  font-size: 15px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+
+  @media print { color: #0f172a; }
+}
+
+.heroBody {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.6;
+  margin: 0;
+
+  @media print { color: #475569; }
+}
+
+// ── Progress ring ─────────────────────────────────────────────────────────────
+.ringWrap {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  flex-shrink: 0;
+  animation: scaleIn 500ms 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ringSvg {
+  width: 110px;
+  height: 110px;
+  transform: rotate(-90deg);
+}
+
+.ringBg {
+  fill: none;
+  stroke: #f1f5f9;
+  stroke-width: 12;
+}
+
+.ringFill {
+  fill: none;
+  stroke-width: 12;
+  stroke-linecap: round;
+  // EXCEPTION: stroke and dashoffset driven by completion %
+  stroke: var(--ring-color, #7c3aed);
+  stroke-dasharray: var(--ring-full, 276);
+  stroke-dashoffset: var(--ring-offset, 276);
+  animation: ringDraw 1100ms 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ringCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.ringPct {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  // EXCEPTION: color driven by ring/band color (overridden to white inside .heroRight)
+  color: var(--ring-color, #7c3aed);
+  animation: scaleIn 500ms 750ms ease both;
+}
+
+.ringLabel {
+  font-size: 9px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+
+// ── Confidence indicator ──────────────────────────────────────────────────────
+.confidenceWrap { text-align: center; }
+
+.confidenceVal {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 2px;
+  color: #1e1b4b;
+}
+
+.confidenceLabel {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #94a3b8;
+}
+
+// ── Body — white paper content ────────────────────────────────────────────────
+.body {
+  padding: 32px 40px 40px;
+
+  @media (max-width: 600px) { padding: 24px 20px 32px; }
+  @media print { padding: 24px 0; }
+}
+
+// ── Purpose note ──────────────────────────────────────────────────────────────
+.purposeNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #f5f3ff;
+  border-left: 3px solid #7c3aed;
+  border-radius: 0 10px 10px 0;
+  margin-bottom: 28px;
+  font-size: 11px;
+  color: #4c1d95;
+  line-height: 1.55;
+  animation: fadeUp 320ms 80ms ease both;
+
+  @media print { display: none; }
+}
+
+.purposeIcon {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+// ── Metrics strip ─────────────────────────────────────────────────────────────
+.metricsStrip {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 28px;
+  animation: fadeUp 320ms 100ms ease both;
+
+  @media (min-width: 520px) { grid-template-columns: repeat(4, 1fr); }
+  @media print { grid-template-columns: repeat(4, 1fr); }
+}
 
 .metricCard {
-  @apply rounded-[8px] px-6 py-5 text-center bg-white border border-slate-200;
+  background: #faf5ff;
+  border: 1px solid #ede9fe;
+  border-radius: 14px;
+  padding: 16px 12px 14px;
+  text-align: center;
+  animation: scaleIn 380ms var(--card-delay, 0ms) ease both;
 }
 
 .metricLabel {
-  @apply text-[9px] font-bold uppercase tracking-widest mb-2 text-slate-500;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #7c3aed;
+  margin-bottom: 6px;
+  opacity: 0.65;
 }
 
-.metricValue {
-  @apply text-[20px] font-black leading-none font-mono;
-  color: var(--metric-color, #111111);
+.metricVal {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 4px;
+  // EXCEPTION: color driven by metric health level
+  color: var(--metric-color, #1e1b4b);
 }
 
 .metricSub {
-  @apply text-xs mt-1.5 text-slate-500;
+  font-size: 10px;
+  color: #7c3aed;
+  font-weight: 500;
+  opacity: 0.55;
 }
 
-.riskCard {
-  @apply rounded-xl px-4 py-3;
+// ── Customer-visible progress ─────────────────────────────────────────────────
+.customerVisibleCard {
+  background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+  border: 1px solid #ddd6fe;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  animation: fadeUp 320ms 110ms ease both;
 }
 
-.riskDot {
-  @apply mt-1.5 rounded-full shrink-0;
-  width: 10px;
+.cvHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.cvLabel {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6d28d9;
+}
+
+.cvPct {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  // EXCEPTION: color driven by completion level
+  color: var(--cv-color, #7c3aed);
+}
+
+.cvBarTrack {
   height: 10px;
-  min-width: 10px;
-  background: var(--dot-color, #6b7280);
+  background: rgba(109, 40, 217, 0.1);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.cvBarFill {
+  height: 100%;
+  border-radius: 9999px;
+  // EXCEPTION: width and color driven by customer-visible progress
+  width: var(--bar-w, 0%);
+  background: var(--cv-color, #7c3aed);
+  animation: barFill 900ms 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.cvMeta {
+  font-size: 11px;
+  color: #6d28d9;
+  font-weight: 500;
+  opacity: 0.65;
+}
+
+// ── Section ────────────────────────────────────────────────────────────────────
+.section {
+  margin-bottom: 28px;
+  animation: fadeUp 320ms var(--section-delay, 80ms) ease both;
+}
+
+.sectionHead {
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #7c3aed;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #ede9fe;
+  }
+}
+
+// ── Delivery area (epic) cards ────────────────────────────────────────────────
+.epicCard {
+  background: #fff;
+  border: 1px solid #e8e4f8;
+  border-left: 4px solid;
+  // EXCEPTION: left accent driven by epic health
+  border-left-color: var(--epic-color, #7c3aed);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 10px;
+  transition: box-shadow 180ms ease;
+  animation: fadeUp 300ms var(--epic-delay, 0ms) ease both;
+
+  &:last-child { margin-bottom: 0; }
+
+  &:hover { box-shadow: 0 2px 14px rgba(124, 58, 237, 0.1); }
+}
+
+.epicTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.epicName {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1e1b4b;
+  flex: 1;
+  letter-spacing: -0.01em;
+}
+
+.epicHealthChip {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  // EXCEPTION: bg/fg driven by epic health
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+}
+
+.epicPct {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  flex-shrink: 0;
+  // EXCEPTION: color driven by epic health
+  color: var(--epic-color, #7c3aed);
+}
+
+.epicBarTrack {
+  height: 8px;
+  background: #f5f3ff;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.epicBarFill {
+  height: 100%;
+  border-radius: 9999px;
+  // EXCEPTION: width and color driven by epic progress + health
+  width: var(--bar-w, 0%);
+  background: var(--epic-color, #7c3aed);
+  animation: barFill 750ms var(--epic-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.epicMeta {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.epicMetaAlert {
+  font-size: 11px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+// ── Prediction / timeline ─────────────────────────────────────────────────────
+.predictionCard {
+  background: linear-gradient(135deg, #faf5ff 0%, #f0f9ff 100%);
+  border: 1px solid #ddd6fe;
+  border-radius: 16px;
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.predictionMain { flex: 1; }
+
+.predictionDate {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: #1e1b4b;
+  margin-bottom: 3px;
+}
+
+.predictionLabel {
+  font-size: 11px;
+  color: #6d28d9;
+  font-weight: 500;
+  opacity: 0.65;
+}
+
+.predictionStat {
+  text-align: center;
+  padding: 14px 20px;
+  background: #fff;
+  border: 1px solid #ddd6fe;
+  border-radius: 12px;
+}
+
+.predictionStatVal {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: #1e1b4b;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.predictionStatLabel {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #7c3aed;
+  opacity: 0.65;
+}
+
+// ── Risk cards ────────────────────────────────────────────────────────────────
+.riskCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 8px;
+  border: 1px solid;
+
+  &[data-level='high'] {
+    background: #fff7f7;
+    border-color: #fecaca;
+    .riskLevel { color: #dc2626; }
+  }
+  &[data-level='medium'] {
+    background: #fffaf5;
+    border-color: #fed7aa;
+    .riskLevel { color: #c2410c; }
+  }
+  &[data-level='low'] {
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+    .riskLevel { color: #6d28d9; }
+  }
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.riskIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.riskBody {}
+
+.riskLevel {
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin-bottom: 3px;
 }
 
 .riskText {
-  @apply text-sm leading-snug text-slate-900;
+  font-size: 13px;
+  color: #1e293b;
+  line-height: 1.55;
+  font-weight: 600;
 }
 
-.healthScore  { @apply font-black leading-none text-[28px] font-mono; }
-.healthStatus { @apply font-black uppercase tracking-wider mt-1 text-[10px]; }
-.healthMeta   { @apply mt-0.5 text-[8px] text-slate-500; }
-
-.statusSummary {
-  @apply rounded-r-xl px-6 py-5 mb-8 print:mb-4;
-  background: #fff7ed;
-  border-left-width: 3px;
-  border-color: #e85d12;
+.noRiskCard {
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #15803d;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.statusSummaryHeading {
-  @apply text-base font-black mb-1;
-  color: #e85d12;
-}
-
-.statusSummaryText {
-  @apply text-sm text-slate-900;
-}
-
-.kpiGrid {
-  @apply grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 print:mb-4 print:grid-cols-4;
-}
-
-.deliveryAreas {
-  @apply mb-8 print:mb-4;
-}
-
-.sectionHeading {
-  @apply text-xs font-black uppercase tracking-widest text-slate-400 mb-4;
-}
-
-.epicCard {
-  @apply rounded-xl px-5 py-4 bg-white border border-slate-200;
-}
-
-.epicRow {
-  @apply flex items-center justify-between mb-2;
-}
-
-.epicTitle {
-  @apply text-sm font-bold truncate max-w-xs;
-  color: #111111;
-}
-
-.epicPct      { @apply text-sm font-black ml-4 shrink-0; }
-.epicPctBlue  { color: #1d4ed8; }
-.epicPctGreen { color: #16a34a; }
-
-.progressBar {
-  @apply h-2 rounded-full overflow-hidden bg-slate-200;
-}
-
-.progressFill {
-  @apply h-full rounded-full transition-all;
-  background: var(--progress-color);
-}
-
-@for $i from 0 through 100 {
-  .progressPct#{$i} { width: #{$i}%; }
-}
-
-.progressMeta { @apply text-[11px] mt-1.5 text-slate-500; }
-
-.progressFillBlue  { --progress-color: #1d4ed8; }
-.progressFillGreen { --progress-color: #16a34a; }
-
-.riskSection { @apply mb-8 print:mb-4; }
-
-.riskRow {
-  @apply flex items-start gap-3 rounded-xl px-4 py-3;
-}
-
-.riskHigh   { @apply bg-red-50 border border-red-200 text-red-900; }
-.riskMedium { @apply bg-orange-50 border border-orange-200 text-orange-900; }
-.riskLow    { @apply bg-slate-50 border border-slate-200 text-slate-900; }
-
-.emptyRiskCard {
-  @apply rounded-xl px-5 py-4 text-sm font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800;
-}
-
-.insightsCard {
-  @apply rounded-2xl px-5 py-5 bg-white border border-slate-200;
+// ── Key highlights ────────────────────────────────────────────────────────────
+.insightCard {
+  background: #fff;
+  border: 1px solid #e8e4f8;
+  border-radius: 14px;
+  padding: 20px 24px;
 }
 
 .insightItem {
-  @apply flex items-start gap-2.5 text-sm text-slate-700;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f5f3ff;
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.55;
+  font-weight: 500;
+
+  &:last-child { border-bottom: none; padding-bottom: 0; }
+  &:first-child { padding-top: 0; }
 }
 
 .insightDot {
-  @apply mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: #7c3aed;
+  flex-shrink: 0;
+  margin-top: 5px;
+  transform: rotate(45deg);
 }
 
-.footer     { @apply border-t border-slate-200 pt-6 text-center; }
-.footerText { @apply text-xs text-slate-400; }
-.footerNote { @apply text-xs text-slate-300 mt-1; }
+// ── Footer — dark band at the bottom of the paper ────────────────────────────
+.footer {
+  background: #0a0a1e;
+  padding: 20px 40px;
+  text-align: center;
+  margin-top: 8px;
+
+  @media (max-width: 600px) { padding: 18px 24px; }
+  @media print { background: #f8fafc; border-top: 1px solid #e2e8f0; }
+}
+
+.footerText {
+  font-size: 11px;
+  color: rgba(167, 139, 250, 0.65);
+  font-weight: 600;
+
+  @media print { color: #64748b; }
+}
+
+.footerNote {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 4px;
+
+  @media print { color: #94a3b8; }
+}
+
+// ── Print overrides ───────────────────────────────────────────────────────────
+// ── Status distribution bar ───────────────────────────────────────────────────
+.distCard {
+  background: #fff;
+  border: 1px solid #e8e4f8;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  animation: fadeUp 320ms 105ms ease both;
+}
+
+.distBar {
+  display: flex;
+  height: 14px;
+  border-radius: 9999px;
+  overflow: hidden;
+  gap: 3px;
+  margin-bottom: 14px;
+}
+
+.distSeg {
+  // EXCEPTION: flex share and color driven by status distribution data
+  flex: var(--seg-flex, 1);
+  background: var(--seg-color, #94a3b8);
+  height: 100%;
+  border-radius: 9999px;
+  min-width: 5px;
+}
+
+.distLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+}
+
+.distLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #334155;
+  font-weight: 500;
+}
+
+.distSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  // EXCEPTION: color driven by status category
+  background: var(--swatch-color, #94a3b8);
+}
+
+.distLabel {
+  font-weight: 600;
+  color: #1e1b4b;
+}
+
+.distCount {
+  color: #64748b;
+  font-size: 10px;
+}
+
+// ── Delivery speed cards ──────────────────────────────────────────────────────
+.speedGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  animation: fadeUp 320ms 108ms ease both;
+}
+
+.speedCard {
+  background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+  border: 1px solid #ddd6fe;
+  border-radius: 14px;
+  padding: 18px 16px 14px;
+  text-align: center;
+  animation: scaleIn 380ms var(--card-delay, 0ms) ease both;
+}
+
+.speedVal {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 4px;
+  // EXCEPTION: color driven by speed health level
+  color: var(--speed-color, #1e1b4b);
+}
+
+.speedLabel {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #7c3aed;
+  opacity: 0.65;
+  margin-bottom: 3px;
+}
+
+.speedSub {
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.speedNote {
+  font-size: 9px;
+  color: #a78bfa;
+  font-weight: 500;
+  margin-top: 3px;
+}
+
+// ── Print overrides ───────────────────────────────────────────────────────────
+@media print {
+  .paper        { box-shadow: none; border-radius: 0; }
+  .section      { margin-bottom: 14px; animation: none; page-break-inside: avoid; }
+  .epicCard     { animation: none; box-shadow: none; page-break-inside: avoid; }
+  .hero         { animation: none; }
+  .metricsStrip { animation: none; }
+  .ringWrap     { animation: none; }
+  .ringFill     { animation: none; }
+  .ringPct      { animation: none; }
+  .distCard     { animation: none; page-break-inside: avoid; }
+  .speedGrid    { animation: none; }
+  .insightCard  { page-break-inside: avoid; }
+  .predictionCard { page-break-inside: avoid; }
+
+  // 2-column print layout for epics and risks
+  .epicList {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .riskList {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+}
