@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { applyTheme } from '@/lib/theme';
 import { initThemeCustom, loadBranding } from '@/lib/themeCustomizer';
 import UserMenu from '@/components/auth/UserMenu';
+import NotificationBell from '@/components/auth/NotificationBell';
 import { DC_NAV_GROUPS } from '@/components/dc-shell/navigation';
 import styles from './AppShell.module.scss';
 
@@ -181,6 +182,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
               </Link>
             )}
 
+            <NotificationBell />
             <UserMenu />
           </div>
         </div>

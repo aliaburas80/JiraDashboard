@@ -23,27 +23,48 @@ interface Props {
 
 function resolveNotificationUrl(n: AppNotification, isAdmin: boolean): string | null {
   switch (n.type) {
+    case 'user_add_request_submitted':
+      return isAdmin ? '/admin/settings?tab=requests' : null;
     case 'user_add_request_accepted':
-      // Requester: their request was approved → see the new member on the Members page
-      // Admin: go back to the requests queue
       return isAdmin ? '/admin/settings?tab=requests' : '/members';
     case 'user_add_request_rejected':
-      // Both roles: go to Members page (requester can re-submit there)
       return '/members';
+    case 'user_created':
+      return isAdmin ? '/admin/users' : null;
     default:
       return null;
   }
 }
 
-export default function NotificationBell({ role }: Props) {
+function notificationIcon(type: string): string {
+  switch (type) {
+    case 'user_add_request_submitted': return '📬';
+    case 'user_add_request_accepted':  return '✅';
+    case 'user_add_request_rejected':  return '❌';
+    case 'user_created':               return '👤';
+    default:                           return '🔔';
+  }
+}
+
+export default function NotificationBell({ role: roleProp }: Props) {
   const router = useRouter();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [pendingRequests, setPendingRequests] = useState(0);
   const [open, setOpen]   = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resolvedRole, setResolvedRole] = useState<string | null>(roleProp ?? null);
   const ref = useRef<HTMLDivElement>(null);
 
-  const isAdmin = role === 'admin';
+  const isAdmin = resolvedRole === 'admin';
+
+  // Fetch role from session if not provided via prop.
+  useEffect(() => {
+    if (roleProp !== undefined) return;
+    fetch('/api/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.role) setResolvedRole(data.role); })
+      .catch(() => {});
+  }, [roleProp]);
 
   const loadNotifications = useCallback(async () => {
     setLoading(true);
@@ -210,11 +231,7 @@ export default function NotificationBell({ role }: Props) {
                       dest ? 'hover:bg-blue-50 cursor-pointer' : 'hover:bg-slate-50'
                     } ${!n.readAt ? 'bg-blue-50/40' : ''}`}
                   >
-                    <span className="text-base shrink-0 mt-0.5">
-                      {n.type === 'user_add_request_accepted' ? '✅'
-                        : n.type === 'user_add_request_rejected' ? '❌'
-                        : '🔔'}
-                    </span>
+                    <span className="text-base shrink-0 mt-0.5">{notificationIcon(n.type)}</span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-1">
                         <p className={`text-xs font-bold leading-snug ${!n.readAt ? 'text-blue-900' : 'text-slate-900'}`}>

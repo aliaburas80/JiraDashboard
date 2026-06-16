@@ -5,6 +5,7 @@ import { useState, useRef, useEffect, useCallback, type CSSProperties } from 're
 import clsx from 'clsx';
 import { DC_NAV_GROUPS } from '@/components/dc-shell/navigation';
 import UserMenu from '@/components/auth/UserMenu';
+import NotificationBell from '@/components/auth/NotificationBell';
 import styles from './DashboardTopbar.module.scss';
 
 // Status → dot colour mapping (data-driven, not hardcoded per-item)
@@ -130,6 +131,8 @@ export default function DashboardTopbar({ onNewUpload }: Props) {
             New Upload
           </button>
 
+          {/* Notification bell */}
+          <NotificationBell />
           {/* User menu */}
           <UserMenu />
         </div>
