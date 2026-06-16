@@ -235,6 +235,8 @@
     color: var(--dc-p3, #505050);
     white-space: nowrap;
     user-select: none;
+
+    &:last-child { padding-right: 20px; }
   }
 }
 
@@ -421,7 +423,7 @@
 }
 
 .ageCell {
-  padding: 10px 14px;
+  padding: 10px 20px 10px 14px;
   text-align: right;
   font-size: 12px;
   font-weight: 600;
