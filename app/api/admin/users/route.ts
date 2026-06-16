@@ -6,6 +6,8 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, validatePasswordStrength } from '@/lib/auth';
+import { sendEmail, buildWelcomeEmail } from '@/lib/email';
+import { getAppConfig } from '@/lib/app-config';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { ASSIGNABLE_ROLES, isAppRole, roleLabel, type AppRole } from '@/lib/roles';
 
@@ -110,7 +112,33 @@ export async function POST(req: NextRequest) {
   }});
   await pushUsersToCloudIfConfigured();
 
-  return NextResponse.json({ ok: true, user: safeUser(user) }, { status: 201 });
+  // Send welcome email to the new user.
+  let emailSent = false;
+  try {
+    const { appUrl } = await getAppConfig();
+    const welcome = buildWelcomeEmail(user.name, user.email, body.password!, appUrl);
+    emailSent = await sendEmail({ to: user.email, toName: user.name, ...welcome });
+  } catch (err) {
+    console.warn('[email] Failed to send welcome email:', err);
+  }
+
+  // Notify the admin who created the user with the outcome.
+  try {
+    await prisma.notification.create({
+      data: {
+        recipientUserId: session.userId,
+        type: 'user_created',
+        title: '✅ User account created',
+        message: emailSent
+          ? `${name} (${email}) was created as ${roleLabel(role)}. A welcome email with their temporary password has been sent.`
+          : `${name} (${email}) was created as ${roleLabel(role)}. Welcome email could not be sent — configure SMTP in Admin → Settings.`,
+        relatedEntityType: 'User',
+        relatedEntityId: user.id,
+      },
+    });
+  } catch { /* swallow notification errors */ }
+
+  return NextResponse.json({ ok: true, emailSent, user: safeUser(user) }, { status: 201 });
 }
 
 export async function PATCH(req: NextRequest) {

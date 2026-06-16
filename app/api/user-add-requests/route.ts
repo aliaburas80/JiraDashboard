@@ -92,6 +92,26 @@ export async function POST(req: NextRequest) {
     });
   } catch { /* swallow audit write errors */ }
 
+  // Notify all active admins so they can review the pending request.
+  try {
+    const admins = await prisma.user.findMany({
+      where: { role: 'admin', isActive: true },
+      select: { id: true },
+    });
+    if (admins.length > 0) {
+      await prisma.notification.createMany({
+        data: admins.map(admin => ({
+          recipientUserId: admin.id,
+          type: 'user_add_request_submitted',
+          title: '👤 New user add request',
+          message: `${session.name} (${session.email}) requested to add ${requestedEmail} as ${requestedRole}${reason ? `: "${reason}"` : ''}. Review in Admin → Users.`,
+          relatedEntityType: 'UserAddRequest',
+          relatedEntityId: userAddRequest.id,
+        })),
+      });
+    }
+  } catch { /* swallow notification errors */ }
+
   return NextResponse.json(
     {
       ok: true,

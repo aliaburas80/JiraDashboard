@@ -31,6 +31,7 @@ export default function AdminUsersPage() {
   const [form, setForm]             = useState<CreateForm>(EMPTY_FORM);
   const [formErr, setFormErr]       = useState('');
   const [saving, setSaving]         = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<ManagedUser | null>(null);
   const [meId, setMeId]             = useState('');
 
@@ -96,6 +97,11 @@ export default function AdminUsersPage() {
       setUsers(prev => [data.user, ...prev]);
       setForm(EMPTY_FORM);
       setShowCreate(false);
+      setSuccessMsg(
+        data.emailSent
+          ? `✅ ${data.user.name} created — welcome email sent to ${data.user.email}.`
+          : `✅ ${data.user.name} created. No email sent — configure SMTP in Admin → Settings.`,
+      );
     } catch (e: any) { setFormErr(e.message); }
     finally { setSaving(false); }
   }
@@ -138,6 +144,12 @@ export default function AdminUsersPage() {
           </button>
         }
       >
+        {successMsg && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.28)', borderRadius: 8, color: '#4ade80', fontSize: 12, marginBottom: 16 }}>
+            <span>{successMsg}</span>
+            <button type="button" onClick={() => setSuccessMsg('')} style={{ background: 'none', border: 'none', color: '#4ade80', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '0 0 0 10px', opacity: 0.7 }} aria-label="Dismiss">×</button>
+          </div>
+        )}
         {error && (
           <div style={{ padding: '10px 14px', background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, color: '#F87171', fontSize: 12, marginBottom: 16 }}>
             {error}
