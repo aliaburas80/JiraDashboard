@@ -1,0 +1,819 @@
+// ── Keyframes ──────────────────────────────────────────────────────────────────
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes barFill {
+  from { width: 0; }
+  to   { width: var(--bar-w, 0%); }
+}
+@keyframes barGrowV {
+  from { height: 0; }
+  to   { height: var(--bar-h, 10%); }
+}
+@keyframes countUp {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes chipPop {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+.page {
+  max-width: 1120px;
+  animation: fadeUp 340ms ease both;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+.header {
+  margin-bottom: 24px;
+  animation: fadeUp 340ms ease both;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-primary, #2563eb);
+  margin-bottom: 8px;
+}
+
+.eyebrowLine {
+  width: 16px;
+  height: 2px;
+  background: var(--color-primary, #2563eb);
+  border-radius: 2px;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--color-text-primary, #0f172a);
+  letter-spacing: -0.025em;
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--color-text-secondary, #64748b);
+  margin: 0;
+  max-width: 640px;
+  line-height: 1.55;
+}
+
+// ── Mode banner ───────────────────────────────────────────────────────────────
+.modeBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-xl, 12px);
+  margin-bottom: 20px;
+  border: 1px solid;
+  animation: slideIn 300ms 40ms ease both;
+
+  &[data-mode='sprint'] {
+    background: color-mix(in srgb, #2563eb 5%, transparent);
+    border-color: color-mix(in srgb, #2563eb 25%, transparent);
+  }
+
+  &[data-mode='kanban'] {
+    background: color-mix(in srgb, #0d9488 5%, transparent);
+    border-color: color-mix(in srgb, #0d9488 25%, transparent);
+  }
+}
+
+.modeBannerIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.modeBannerTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text-primary, #0f172a);
+  margin-bottom: 2px;
+}
+
+.modeBannerDesc {
+  font-size: 12px;
+  color: var(--color-text-secondary, #64748b);
+  line-height: 1.5;
+  margin: 0;
+}
+
+// ── KPI strip ─────────────────────────────────────────────────────────────────
+.kpiStrip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+  animation: fadeUp 340ms 50ms ease both;
+
+  @media (min-width: 768px)  { grid-template-columns: repeat(4, 1fr); }
+  @media (min-width: 1024px) { grid-template-columns: repeat(8, 1fr); }
+}
+
+.kpiCard {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-xl, 12px);
+  padding: 14px 14px 12px;
+  animation: countUp 400ms var(--kpi-delay, 0ms) ease both;
+}
+
+.kpiLabel {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted, #94a3b8);
+  margin-bottom: 4px;
+}
+
+.kpiVal {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 4px;
+  // EXCEPTION: color driven by metric health status
+  color: var(--kpi-color, var(--color-text-primary, #0f172a));
+}
+
+.kpiSub {
+  font-size: 10px;
+  color: var(--color-text-secondary, #64748b);
+  font-weight: 500;
+}
+
+// ── Body layout ───────────────────────────────────────────────────────────────
+.body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+
+  @media (min-width: 900px) { grid-template-columns: minmax(0, 1fr) 300px; }
+}
+
+.mainCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sideCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ── Card shell ────────────────────────────────────────────────────────────────
+.card {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-2xl, 16px);
+  overflow: hidden;
+  animation: fadeUp 340ms var(--card-delay, 80ms) ease both;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.cardTitle {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.cardBadge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--color-subtle, #f1f5f9);
+  color: var(--color-text-muted, #94a3b8);
+}
+
+.cardDesc {
+  font-size: 11px;
+  color: var(--color-text-secondary, #64748b);
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  line-height: 1.5;
+  background: var(--color-subtle, #f8fafc);
+}
+
+.cardBody {
+  padding: 14px 20px;
+}
+
+// ── Sprint rows ───────────────────────────────────────────────────────────────
+.sprintRow {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  animation: slideIn 320ms var(--row-delay, 0ms) ease both;
+
+  &:last-child { border-bottom: none; }
+
+  &[data-latest='true'] {
+    background: color-mix(in srgb, var(--color-primary, #2563eb) 4%, transparent);
+    border-left: 3px solid var(--color-primary, #2563eb);
+    padding-left: 17px;
+  }
+}
+
+.sprintRowTop {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sprintName {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text-primary, #0f172a);
+  flex: 1;
+  min-width: 100px;
+  letter-spacing: -0.01em;
+}
+
+.sprintPct {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+  // EXCEPTION: color driven by completion level
+  color: var(--pct-color, var(--color-text-primary));
+}
+
+.sprintTrack {
+  height: 8px;
+  background: var(--color-subtle, #f1f5f9);
+  border-radius: var(--radius-full, 9999px);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.sprintFill {
+  height: 100%;
+  border-radius: var(--radius-full, 9999px);
+  // EXCEPTION: width and color driven by sprint completion
+  width: var(--bar-w, 0%);
+  background: var(--pct-color, var(--color-primary, #2563eb));
+  animation: barFill 750ms var(--bar-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.sprintMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sprintMetaItem {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-muted, #94a3b8);
+}
+
+.sprintMetaAlert {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-full, 9999px);
+
+  &[data-type='carryover'] {
+    background: color-mix(in srgb, #f59e0b 12%, transparent);
+    color: #92400e;
+  }
+  &[data-type='blocked'] {
+    background: color-mix(in srgb, #dc2626 10%, transparent);
+    color: #b91c1c;
+  }
+  &[data-type='scope'] {
+    background: color-mix(in srgb, #8b5cf6 10%, transparent);
+    color: #6d28d9;
+  }
+}
+
+.sprintInterpretation {
+  font-size: 11px;
+  color: var(--color-text-secondary, #64748b);
+  line-height: 1.5;
+  font-style: italic;
+  padding: 8px 10px;
+  background: var(--color-subtle, #f8fafc);
+  border-radius: var(--radius-lg, 10px);
+  border-left: 3px solid;
+  // EXCEPTION: border color driven by pattern severity
+  border-left-color: var(--pattern-color, var(--color-border, #e2e8f0));
+}
+
+// ── Goal outcome + pattern chips ──────────────────────────────────────────────
+.goalChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: var(--radius-full, 9999px);
+  flex-shrink: 0;
+  animation: chipPop 300ms var(--chip-delay, 0ms) ease both;
+  // EXCEPTION: bg/color driven by goal outcome
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+}
+
+.patternChip {
+  display: inline-flex;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: var(--radius-full, 9999px);
+  flex-shrink: 0;
+  // EXCEPTION: bg/color driven by delivery pattern
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+}
+
+.confidenceBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--color-text-muted, #94a3b8);
+}
+
+.confidenceTrack {
+  width: 64px;
+  height: 4px;
+  background: var(--color-subtle, #f1f5f9);
+  border-radius: var(--radius-full, 9999px);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.confidenceFill {
+  height: 100%;
+  border-radius: var(--radius-full, 9999px);
+  // EXCEPTION: width and color driven by confidence score
+  width: var(--bar-w, 0%);
+  background: var(--pct-color, var(--color-primary, #2563eb));
+  animation: barFill 600ms var(--bar-delay, 0ms) ease both;
+}
+
+// ── Delivery trend mini chart ─────────────────────────────────────────────────
+.trendWrap {
+  padding: 0 20px 20px;
+}
+
+.trendTitle {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted, #94a3b8);
+  margin-bottom: 10px;
+}
+
+.trendChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 60px;
+}
+
+.trendCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+}
+
+.trendBarTrack {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  background: var(--color-subtle, #f1f5f9);
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+}
+
+.trendBarFill {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  // EXCEPTION: height and color driven by sprint completion pct
+  height: var(--bar-h, 0%);
+  background: var(--bar-color, var(--color-primary, #2563eb));
+  animation: barGrowV 700ms var(--bar-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.trendBarLabel {
+  font-size: 8px;
+  color: var(--color-text-muted, #94a3b8);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.trendLegend {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.trendLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.trendLegendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  // EXCEPTION: bg driven by legend level
+  background: var(--dot-color);
+}
+
+// ── Mid-sprint insights ────────────────────────────────────────────────────────
+.midList {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.midCard {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  animation: slideIn 300ms var(--row-delay, 0ms) ease both;
+
+  &:last-child { border-bottom: none; }
+}
+
+.midCardHead {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.midSprintName {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-text-primary, #0f172a);
+  flex: 1;
+}
+
+.midPctRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 10px;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.midPctTrack {
+  flex: 1;
+  height: 5px;
+  background: var(--color-subtle, #f1f5f9);
+  border-radius: var(--radius-full, 9999px);
+  overflow: hidden;
+}
+
+.midPctFill {
+  height: 100%;
+  border-radius: var(--radius-full, 9999px);
+  // EXCEPTION: width and color driven by mid-sprint pct
+  width: var(--bar-w, 0%);
+  background: var(--bar-color, var(--color-primary, #2563eb));
+  animation: barFill 600ms var(--bar-delay, 0ms) ease both;
+}
+
+.midPctLabel {
+  font-size: 11px;
+  font-weight: 900;
+  // EXCEPTION: color driven by pct health
+  color: var(--bar-color, var(--color-text-primary));
+  flex-shrink: 0;
+  width: 30px;
+  text-align: right;
+}
+
+.midInterpretation {
+  font-size: 11px;
+  color: var(--color-text-secondary, #64748b);
+  line-height: 1.5;
+}
+
+// ── Board status bars ─────────────────────────────────────────────────────────
+.boardList {
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.boardRow {
+  animation: slideIn 300ms var(--row-delay, 0ms) ease both;
+}
+
+.boardRowTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.boardStatusName {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  text-transform: capitalize;
+}
+
+.boardStatusCount {
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  // EXCEPTION: color driven by status category
+  color: var(--bar-color, var(--color-text-secondary));
+}
+
+.boardTrack {
+  height: 7px;
+  background: var(--color-subtle, #f1f5f9);
+  border-radius: var(--radius-full, 9999px);
+  overflow: hidden;
+}
+
+.boardFill {
+  height: 100%;
+  border-radius: var(--radius-full, 9999px);
+  // EXCEPTION: width and color driven by status count ratio
+  width: var(--bar-w, 0%);
+  background: var(--bar-color, var(--color-primary, #2563eb));
+  animation: barFill 700ms var(--bar-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+// ── Kanban period cards ───────────────────────────────────────────────────────
+.periodGrid {
+  display: grid;
+  gap: 12px;
+  padding: 14px 20px;
+}
+
+.periodGridMulti {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.periodCard {
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-left: 4px solid;
+  // EXCEPTION: border-left-color driven by flow health
+  border-left-color: var(--period-accent, var(--color-primary, #2563eb));
+  border-radius: var(--radius-xl, 12px);
+  padding: 14px 16px;
+  animation: fadeUp 300ms var(--row-delay, 0ms) ease both;
+  transition: box-shadow var(--transition-fast, 120ms ease);
+
+  &:hover { box-shadow: 0 2px 10px rgb(0 0 0 / 6%); }
+}
+
+.periodCardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.periodLabel {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--color-text-primary, #0f172a);
+  letter-spacing: -0.01em;
+}
+
+.periodChips {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.periodFlowChip {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: var(--radius-full, 9999px);
+  // EXCEPTION: bg/fg driven by flow health
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+}
+
+.periodBotChip {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: var(--radius-full, 9999px);
+  // EXCEPTION: bg/fg driven by bottleneck severity
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+}
+
+.periodSummary {
+  font-size: 11px;
+  color: var(--color-text-secondary, #64748b);
+  line-height: 1.55;
+  padding: 8px 10px;
+  border-radius: var(--radius-lg, 10px);
+  border-left: 3px solid;
+  // EXCEPTION: border-left-color and bg driven by period health
+  border-left-color: var(--summary-color, var(--color-border, #e2e8f0));
+  background: color-mix(in srgb, var(--summary-color, transparent) 6%, transparent);
+  margin-bottom: 12px;
+}
+
+// 2×2 metric grid inside each period card
+.periodMetricGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.periodMetricBlock {
+  padding: 8px 10px;
+  background: var(--color-subtle, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-lg, 10px);
+}
+
+.periodMetricVal {
+  display: block;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  margin-bottom: 3px;
+  // EXCEPTION: color driven by metric health
+  color: var(--metric-color, var(--color-text-primary, #0f172a));
+}
+
+.periodMetricLabel {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted, #94a3b8);
+  margin-bottom: 2px;
+}
+
+.periodMetricHint {
+  display: block;
+  font-size: 9px;
+  color: var(--color-text-muted, #94a3b8);
+  line-height: 1.3;
+}
+
+.periodFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border, #e2e8f0);
+  font-size: 10px;
+  color: var(--color-text-muted, #94a3b8);
+  font-weight: 500;
+}
+
+.periodFooterAlert {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  // EXCEPTION: color driven by bottleneck severity
+  color: var(--alert-color, #94a3b8);
+}
+
+// ── Flow health sidebar stats ─────────────────────────────────────────────────
+.flowStatGrid {
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.flowStatRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--color-subtle, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-lg, 10px);
+  animation: fadeUp 300ms var(--row-delay, 0ms) ease both;
+}
+
+.flowStatLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.flowStatVal {
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  // EXCEPTION: color driven by health status
+  color: var(--stat-color, var(--color-text-primary, #0f172a));
+}
+
+.flowStatSub {
+  font-size: 9px;
+  color: var(--color-text-muted, #94a3b8);
+  font-weight: 500;
+}
+
+// ── Health stats (blocked, defects, active) ───────────────────────────────────
+.healthRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 12px;
+  border-radius: var(--radius-lg, 10px);
+  border: 1px solid var(--color-border, #e2e8f0);
+  background: var(--color-surface, #fff);
+  animation: fadeUp 280ms var(--row-delay, 0ms) ease both;
+
+  &[data-alert='true'] {
+    background: color-mix(in srgb, #dc2626 4%, transparent);
+    border-color: color-mix(in srgb, #dc2626 20%, transparent);
+  }
+}
+
+.healthRowLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.healthRowVal {
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  // EXCEPTION: color driven by value + threshold
+  color: var(--stat-color, var(--color-text-primary, #0f172a));
+}
+
+.healthRowSub {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--color-text-muted, #94a3b8);
+  text-align: right;
+}
