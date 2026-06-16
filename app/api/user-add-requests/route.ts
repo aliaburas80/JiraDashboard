@@ -46,13 +46,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unsupported role.' }, { status: 400 });
   }
 
-  // Prevent duplicate email: check existing users AND pending requests.
-  const [existingUser, pendingRequest] = await Promise.all([
+  // Guard: the session userId must still exist in the DB. Iron-session stores
+  // the session in the cookie, so a deleted user's cookie remains valid until
+  // expiry — this prevents a FK violation on requestedByUserId.
+  const [requester, existingUser, pendingRequest] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.userId }, select: { id: true } }),
     prisma.user.findUnique({ where: { email: requestedEmail } }),
     prisma.userAddRequest.findFirst({
       where: { requestedEmail, status: 'pending' },
     }),
   ]);
+
+  if (!requester) {
+    return NextResponse.json({ error: 'Your account no longer exists. Please log out and contact your administrator.' }, { status: 401 });
+  }
 
   if (existingUser) {
     return NextResponse.json(

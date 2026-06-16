@@ -202,6 +202,13 @@ export async function DELETE(req: NextRequest) {
   });
   if (!user) return NextResponse.json({ error: 'User not found.' }, { status: 404 });
 
+  // Cancel any pending add-requests for the deleted user's email so the email
+  // can be re-used and the requests list stays clean.
+  await prisma.userAddRequest.updateMany({
+    where: { requestedEmail: user.email, status: 'pending' },
+    data:  { status: 'cancelled', adminDecisionNote: 'User account deleted.' },
+  });
+
   await prisma.user.delete({ where: { id: user.id } });
   await prisma.auditEvent.create({ data: {
     userId: session.userId,
