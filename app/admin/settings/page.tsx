@@ -1261,12 +1261,18 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
 export default function AdminSettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const VALID_TABS: Tab[] = ['users','requests','config','retention','thresholds','orphan','backup','cloud','browser'];
   const initialTab = (searchParams.get('tab') as Tab | null);
   const [tab, setTab] = useState<Tab>(
-    initialTab && ['users','requests','config','retention','thresholds','orphan','backup','cloud','browser'].includes(initialTab)
-      ? initialTab
-      : 'users'
+    initialTab && VALID_TABS.includes(initialTab) ? initialTab : 'users'
   );
+
+  // Sync tab state when the URL ?tab= param changes (e.g. sidebar link clicks).
+  useEffect(() => {
+    const urlTab = searchParams.get('tab') as Tab | null;
+    const resolved = urlTab && VALID_TABS.includes(urlTab) ? urlTab : 'users';
+    setTab(resolved);
+  }, [searchParams]);
   const [settings, setSettings]       = useState<RetentionSettings | null>(null);
   const [stats, setStats]             = useState<RetentionStats | null>(null);
   const [thresholds, setThresholds]   = useState<HealthThresholds | null>(null);
