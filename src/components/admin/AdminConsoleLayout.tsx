@@ -37,7 +37,7 @@ export function AdminConsoleLayout({
   description,
   children,
   stats = [],
-  navItems: _navItems,
+  navItems,
   actions,
   statusLabel = 'Operational',
 }: {
@@ -90,6 +90,49 @@ export function AdminConsoleLayout({
             </article>
           ))}
         </section>
+      )}
+
+      {navItems && navItems.length > 0 && (
+        <nav
+          aria-label="Settings navigation"
+          className="mb-6 flex flex-wrap gap-1 rounded-[14px] p-1.5"
+          style={{ background: 'var(--color-subtle, #f1f5f9)', border: '1px solid var(--color-border, #e2e8f0)' }}
+        >
+          {navItems.map(item => {
+            const isSelected = item.selected;
+            const tabStyle = isSelected
+              ? { background: 'var(--color-surface, #fff)', color: 'var(--color-text-primary, #0f172a)', boxShadow: '0 1px 3px rgb(0 0 0 / 10%)' }
+              : { color: 'var(--color-text-secondary, #64748b)' };
+            const tabClass = `inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-2 text-sm font-bold transition-colors hover:text-[var(--color-text-primary,#0f172a)] ${isSelected ? '' : 'hover:bg-white/60'}`;
+            if (item.href) {
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  aria-current={isSelected ? 'page' : undefined}
+                  style={tabStyle}
+                  className={tabClass}
+                >
+                  <span aria-hidden="true">{item.icon}</span>
+                  {item.label}
+                </Link>
+              );
+            }
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={item.onClick}
+                aria-current={isSelected ? 'page' : undefined}
+                style={tabStyle}
+                className={tabClass}
+              >
+                <span aria-hidden="true">{item.icon}</span>
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
       )}
 
       {children}

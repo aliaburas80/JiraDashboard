@@ -1,20 +1,23 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 import styles from './AdminNavSidebar.module.scss';
 
 const NAV_ITEMS = [
-  { id: 'users',       label: 'User Management',   href: '/admin/users',        icon: '👥' },
-  { id: 'settings',    label: 'Settings',          href: '/admin/settings',     icon: '⚙️' },
-  { id: 'theme',       label: 'Theme & Branding',  href: '/admin/theme',        icon: '🎨' },
-  { id: 'diagnostics', label: 'Diagnostics',       href: '/admin/diagnostics',  icon: '🩺' },
-  { id: 'security',    label: 'Security',          href: '/admin/security',     icon: '🔐' },
-  { id: 'logs',        label: 'Import Logs',       href: '/admin/logs',         icon: '🧾' },
+  { id: 'users',       label: 'User Management',   href: '/admin/users',                   icon: '👥' },
+  { id: 'requests',    label: 'Member Requests',   href: '/admin/settings?tab=requests',   icon: '📬' },
+  { id: 'config',      label: 'App Config / SMTP', href: '/admin/settings?tab=config',     icon: '⚙️' },
+  { id: 'settings',    label: 'Settings',          href: '/admin/settings',                icon: '🔧' },
+  { id: 'theme',       label: 'Theme & Branding',  href: '/admin/theme',                   icon: '🎨' },
+  { id: 'diagnostics', label: 'Diagnostics',       href: '/admin/diagnostics',             icon: '🩺' },
+  { id: 'security',    label: 'Security',          href: '/admin/security',                icon: '🔐' },
+  { id: 'logs',        label: 'Import Logs',       href: '/admin/logs',                    icon: '🧾' },
 ];
 
 export default function AdminNavSidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   return (
     <aside className={styles.sidebar} aria-label="Administration navigation">
@@ -23,7 +26,20 @@ export default function AdminNavSidebar() {
 
       <nav className={styles.nav}>
         {NAV_ITEMS.map(item => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const [hrefPath, hrefQuery] = item.href.split('?');
+          let active: boolean;
+          if (hrefQuery) {
+            const [paramKey, paramVal] = hrefQuery.split('=');
+            active = pathname === hrefPath && searchParams.get(paramKey) === paramVal;
+          } else {
+            // "Settings" base link is active only when no tab param is set
+            const isBaseSettings = item.href === '/admin/settings';
+            if (isBaseSettings) {
+              active = pathname === '/admin/settings' && !searchParams.get('tab');
+            } else {
+              active = pathname === hrefPath || pathname.startsWith(`${hrefPath}/`);
+            }
+          }
           return (
             <Link
               key={item.id}
