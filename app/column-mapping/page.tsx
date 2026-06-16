@@ -1,28 +1,72 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { CSSProperties, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics } from '@/types/metrics';
+import styles from './page.module.scss';
 
-const EXPECTED_COLUMNS = [
-  { key: 'issueKey',     label: 'Issue Key',       example: 'PROJ-123',       required: true  },
-  { key: 'summary',      label: 'Summary',          example: 'Fix login bug',  required: true  },
-  { key: 'status',       label: 'Status',           example: 'In Progress',    required: true  },
-  { key: 'issueType',    label: 'Issue Type',       example: 'Story',          required: true  },
-  { key: 'priority',     label: 'Priority',         example: 'High',           required: false },
-  { key: 'assignee',     label: 'Assignee',         example: 'Jane Smith',     required: false },
-  { key: 'team',         label: 'Team',             example: 'Platform',       required: false },
-  { key: 'epic',         label: 'Epic Link',        example: 'PROJ-10',        required: false },
-  { key: 'sprint',       label: 'Sprint',           example: 'Sprint 42',      required: false },
-  { key: 'storyPoints',  label: 'Story Points',     example: '5',              required: false },
-  { key: 'created',      label: 'Created Date',     example: '2024-01-15',     required: false },
-  { key: 'updated',      label: 'Updated Date',     example: '2024-03-01',     required: false },
-  { key: 'resolved',     label: 'Resolved Date',    example: '2024-03-05',     required: false },
-  { key: 'dueDate',      label: 'Due Date',         example: '2024-04-01',     required: false },
-  { key: 'labels',       label: 'Labels',           example: 'backend,api',    required: false },
-  { key: 'fixVersion',   label: 'Fix Version',      example: 'v2.1.0',         required: false },
+// ── Field definitions ─────────────────────────────────────────────────────────
+
+type FieldType = 'text' | 'status' | 'user' | 'link' | 'number' | 'date' | 'tag';
+
+interface FieldDef {
+  key:       string;
+  label:     string;
+  example:   string;
+  required:  boolean;
+  fieldType: FieldType;
+  unlocks:   string;
+}
+
+const FIELDS: FieldDef[] = [
+  { key: 'issueKey',    label: 'Issue Key',     example: 'PROJ-123',    required: true,  fieldType: 'text',   unlocks: 'Parent-child linking, deduplication, direct URL navigation' },
+  { key: 'summary',     label: 'Summary',       example: 'Fix login bug', required: true,  fieldType: 'text',   unlocks: 'Issue display, search, and title rendering across all views' },
+  { key: 'status',      label: 'Status',        example: 'In Progress', required: true,  fieldType: 'status', unlocks: 'Completion tracking, health scoring, burn-up and burn-down' },
+  { key: 'issueType',   label: 'Issue Type',    example: 'Story',       required: true,  fieldType: 'status', unlocks: 'Type icons, type-level filtering, epic vs story split views' },
+  { key: 'priority',    label: 'Priority',      example: 'High',        required: false, fieldType: 'status', unlocks: 'Risk scoring, critical item flags, forecast confidence penalty' },
+  { key: 'assignee',    label: 'Assignee',      example: 'Jane Smith',  required: false, fieldType: 'user',   unlocks: 'Ownership heat maps, avatar display, workload distribution' },
+  { key: 'team',        label: 'Team',          example: 'Platform',    required: false, fieldType: 'user',   unlocks: 'Team-level velocity, cross-team dependency charts' },
+  { key: 'epic',        label: 'Epic Link',     example: 'PROJ-10',     required: false, fieldType: 'link',   unlocks: 'Epic grouping, rollup completion %, same-epic related items' },
+  { key: 'sprint',      label: 'Sprint',        example: 'Sprint 42',   required: false, fieldType: 'link',   unlocks: 'Velocity analysis, sprint health, burn-up chart data points' },
+  { key: 'storyPoints', label: 'Story Points',  example: '5',           required: false, fieldType: 'number', unlocks: 'Point-based velocity as alternative to issue count velocity' },
+  { key: 'created',     label: 'Created Date',  example: '2024-01-15',  required: false, fieldType: 'date',   unlocks: 'Issue age calculation, lead time start, backlog age heatmap' },
+  { key: 'updated',     label: 'Updated Date',  example: '2024-03-01',  required: false, fieldType: 'date',   unlocks: 'Staleness detection, idle issue alerts after N days' },
+  { key: 'resolved',    label: 'Resolved Date', example: '2024-03-05',  required: false, fieldType: 'date',   unlocks: 'Cycle time tracking, done-date accuracy, SLA measurement' },
+  { key: 'dueDate',     label: 'Due Date',      example: '2024-04-01',  required: false, fieldType: 'date',   unlocks: 'Deadline risk alerts, overdue detection, delivery confidence' },
+  { key: 'labels',      label: 'Labels',        example: 'backend,api', required: false, fieldType: 'tag',    unlocks: 'Label-based filtering, grouping, cross-cutting concern analysis' },
+  { key: 'fixVersion',  label: 'Fix Version',   example: 'v2.1.0',      required: false, fieldType: 'tag',    unlocks: 'Version-based rollup, release readiness tracking' },
 ];
+
+const REQUIRED = FIELDS.filter(f => f.required);
+const OPTIONAL  = FIELDS.filter(f => !f.required);
+
+// ── Field type icon ───────────────────────────────────────────────────────────
+
+const TYPE_CFG: Record<FieldType, { fill: string; letter: string; label: string }> = {
+  text:   { fill: '#60A5FA', letter: 'T',  label: 'Text'     },
+  status: { fill: '#A78BFA', letter: '≡',  label: 'Category' },
+  user:   { fill: '#4ade80', letter: 'U',  label: 'User'     },
+  link:   { fill: '#FB923C', letter: '⛓',  label: 'Link'     },
+  number: { fill: '#FACC15', letter: '#',  label: 'Number'   },
+  date:   { fill: '#22D3EE', letter: 'D',  label: 'Date'     },
+  tag:    { fill: '#F472B6', letter: '⊞',  label: 'Multi'    },
+};
+
+function FieldTypeIcon({ type }: { type: FieldType }) {
+  const c = TYPE_CFG[type];
+  return (
+    // fill / textAnchor / fontSize / fontWeight are SVG presentation attributes
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-label={c.label}>
+      <rect width="18" height="18" rx="4" fill={c.fill} opacity="0.18" />
+      <text x="9" y="13" textAnchor="middle" fontSize="9" fontWeight="900" fill={c.fill}>
+        {c.letter}
+      </text>
+    </svg>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ColumnMappingPage() {
   const router = useRouter();
@@ -36,88 +80,236 @@ export default function ColumnMappingPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  const detectedColumns: string[] = (metrics as any)?._rawColumns ?? [];
+  const detectedCols: string[] = (metrics as any)?._rawColumns ?? [];
   const hasUpload = metrics !== null;
+
+  // Map detected column names to known field keys (loose match)
+  const knownKeys = new Set(FIELDS.map(f => f.key.toLowerCase()));
+  const matchedRaw = new Set(
+    detectedCols.map(c => c.toLowerCase()).filter(c => knownKeys.has(c))
+  );
+
+  function isMapped(fieldKey: string): boolean {
+    if (!hasUpload) return false;
+    return detectedCols.some(c => c.toLowerCase() === fieldKey.toLowerCase());
+  }
+
+  const requiredMapped  = REQUIRED.filter(f => isMapped(f.key)).length;
+  const optionalMapped  = OPTIONAL.filter(f => isMapped(f.key)).length;
+  const totalMapped     = requiredMapped + optionalMapped;
+
+  function statusState(field: FieldDef): 'mapped' | 'missing-required' | 'missing-optional' | 'no-upload' {
+    if (!hasUpload) return 'no-upload';
+    if (isMapped(field.key)) return 'mapped';
+    return field.required ? 'missing-required' : 'missing-optional';
+  }
+
+  function statusLabel(state: ReturnType<typeof statusState>): string {
+    switch (state) {
+      case 'mapped':           return '✓ Mapped';
+      case 'missing-required': return '✕ Missing';
+      case 'missing-optional': return '— Not found';
+      case 'no-upload':        return '—';
+    }
+  }
 
   return (
     <AppShell showNav>
-      <div className="max-w-4xl mx-auto">
+      <div className={styles.page}>
 
-        {/* Page header */}
-        <div className="mb-8">
-          <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-1">Data</p>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-1">Column Mapping</h1>
-          <p className="text-sm text-slate-500">
+        {/* ── Header ── */}
+        <header className={styles.pageHeader}>
+          <div className={styles.breadcrumb}>
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+              <rect width="18" height="18" rx="4" fill="#FF8A4C" opacity="0.18" />
+              <text x="9" y="13" textAnchor="middle" fontSize="10" fontWeight="900" fill="#FF8A4C">J</text>
+            </svg>
+            <span className={styles.breadcrumbProject}>Project Setup</span>
+            <span className={styles.breadcrumbSep}>/</span>
+            <span className={styles.breadcrumbCurrent}>Column Mapping</span>
+          </div>
+          <h1 className={styles.pageTitle}>Column Mapping</h1>
+          <p className={styles.pageDesc}>
             Maps your CSV or Jira export columns to Delivery Clarity&apos;s expected fields.
+            Matched automatically via fuzzy matching — the more fields present, the richer the analysis.
           </p>
-        </div>
+        </header>
 
+        {/* ── Health summary ── */}
+        {!loading && (
+          <div className={styles.summaryRow}>
+            {[
+              {
+                val: `${requiredMapped} / ${REQUIRED.length}`,
+                label: 'Required fields mapped',
+                icon: requiredMapped === REQUIRED.length ? '✅' : '⚠️',
+                color: requiredMapped === REQUIRED.length ? '#4ade80' : '#fca5a5',
+                barColor: requiredMapped === REQUIRED.length ? '#22C55E' : '#F87171',
+                barWidth: `${Math.round(requiredMapped / REQUIRED.length * 100)}%`,
+              },
+              {
+                val: `${optionalMapped} / ${OPTIONAL.length}`,
+                label: 'Optional fields detected',
+                icon: '🔧',
+                color: optionalMapped > 0 ? '#93c5fd' : 'var(--dc-p3, #505050)',
+                barColor: '#60A5FA',
+                barWidth: `${OPTIONAL.length > 0 ? Math.round(optionalMapped / OPTIONAL.length * 100) : 0}%`,
+              },
+              {
+                val: hasUpload ? `${totalMapped} / ${FIELDS.length}` : '—',
+                label: 'Total fields matched',
+                icon: '📊',
+                color: 'var(--dc-p1, #F2F2F2)',
+                barColor: 'var(--dc-acc2, #FF8A4C)',
+                barWidth: FIELDS.length > 0 ? `${Math.round(totalMapped / FIELDS.length * 100)}%` : '0%',
+              },
+            ].map(s => (
+              <div key={s.label} className={styles.summaryCard}>
+                <div className={styles.summaryCardTop}>
+                  <div className={styles.summaryVal} style={{ '--summary-color': s.color } as CSSProperties}>{s.val}</div>
+                  <div className={styles.summaryIcon}>{s.icon}</div>
+                </div>
+                <div className={styles.summaryLabel}>{s.label}</div>
+                {hasUpload && (
+                  <div className={styles.summaryBar}>
+                    <div
+                      className={styles.summaryBarFill}
+                      style={{ '--bar-color': s.barColor, '--bar-width': s.barWidth } as CSSProperties}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── No upload state ── */}
         {!hasUpload && !loading && (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center mb-6">
-            <p className="text-4xl mb-3">📂</p>
-            <p className="text-sm font-bold text-slate-700 mb-1">No data uploaded yet</p>
-            <p className="text-xs text-slate-500 mb-4">Upload a Jira CSV or JSON export to see how your columns are mapped.</p>
-            <a href="/" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors">
-              Upload now
+          <div className={styles.emptyCard}>
+            <div className={styles.emptyIcon}>📂</div>
+            <p className={styles.emptyTitle}>No data uploaded yet</p>
+            <p className={styles.emptyBody}>
+              Upload a Jira CSV or JSON export to see live mapping status.<br />
+              The table below shows all expected fields and what each one unlocks.
+            </p>
+            <a href="/" className={styles.emptyUploadBtn}>
+              ↑ Upload data
             </a>
           </div>
         )}
 
-        {/* Column mapping table */}
-        <div className="rounded-2xl border border-slate-200 overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-800">Expected Fields</h2>
-            <span className="text-xs text-slate-400">{EXPECTED_COLUMNS.length} fields</span>
+        {/* ── Detected CSV columns ── */}
+        {hasUpload && detectedCols.length > 0 && (
+          <div className={styles.detectedCard}>
+            <div className={styles.detectedHead}>
+              <span className={styles.detectedTitle}>Your CSV columns</span>
+              <span className={styles.detectedCount}>{detectedCols.length} columns detected</span>
+            </div>
+            <div className={styles.tagCloud}>
+              {detectedCols.map(col => (
+                <span
+                  key={col}
+                  className={styles.columnTag}
+                  data-matched={matchedRaw.has(col.toLowerCase()) ? 'true' : undefined}
+                >
+                  {col}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Mapping table ── */}
+        <div className={styles.tableCard}>
+
+          {/* Column headers */}
+          <div className={styles.colHead}>
+            <span>Field</span>
+            <span>Required</span>
+            <span>Example</span>
+            <span>Status</span>
           </div>
 
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100">
-                <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Field</th>
-                <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Required</th>
-                <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Example value</th>
-                <th className="text-left px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {EXPECTED_COLUMNS.map((col, i) => {
-                const detected = detectedColumns.includes(col.key);
-                return (
-                  <tr key={col.key} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
-                    <td className="px-5 py-3 font-semibold text-slate-800">{col.label}</td>
-                    <td className="px-5 py-3">
-                      {col.required ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">Required</span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500">Optional</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-slate-400 font-mono text-xs">{col.example}</td>
-                    <td className="px-5 py-3">
-                      {!hasUpload ? (
-                        <span className="text-slate-300 text-xs">—</span>
-                      ) : detected ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                          Mapped
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-600">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                          Not detected
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          {/* Required fields section */}
+          <div className={styles.sectionHead}>
+            <span className={styles.sectionTitle}>
+              <span className={styles.sectionDot} data-kind="required" />
+              Required fields
+            </span>
+            <span className={styles.sectionCount}>{REQUIRED.length} fields</span>
+          </div>
+
+          {REQUIRED.map(field => {
+            const state = statusState(field);
+            return (
+              <div key={field.key} className={styles.fieldRow}>
+                <div className={styles.fieldInfo}>
+                  <div className={styles.fieldIconWrap}>
+                    <FieldTypeIcon type={field.fieldType} />
+                  </div>
+                  <div className={styles.fieldText}>
+                    <div className={styles.fieldName}>{field.label}</div>
+                    <div className={styles.fieldUnlocks}>{field.unlocks}</div>
+                  </div>
+                </div>
+                <div>
+                  <span className={styles.requiredBadge}>★ Required</span>
+                </div>
+                <div className={styles.exampleVal}>{field.example}</div>
+                <div>
+                  <span className={styles.statusBadge} data-state={state}>
+                    {state !== 'no-upload' && <span className={styles.statusDot} aria-hidden="true" />}
+                    {statusLabel(state)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Optional fields section */}
+          <div className={styles.sectionHead}>
+            <span className={styles.sectionTitle}>
+              <span className={styles.sectionDot} data-kind="optional" />
+              Optional fields
+            </span>
+            <span className={styles.sectionCount}>{OPTIONAL.length} fields</span>
+          </div>
+
+          {OPTIONAL.map(field => {
+            const state = statusState(field);
+            return (
+              <div key={field.key} className={styles.fieldRow}>
+                <div className={styles.fieldInfo}>
+                  <div className={styles.fieldIconWrap}>
+                    <FieldTypeIcon type={field.fieldType} />
+                  </div>
+                  <div className={styles.fieldText}>
+                    <div className={styles.fieldName}>{field.label}</div>
+                    <div className={styles.fieldUnlocks}>{field.unlocks}</div>
+                  </div>
+                </div>
+                <div>
+                  <span className={styles.optionalBadge}>Optional</span>
+                </div>
+                <div className={styles.exampleVal}>{field.example}</div>
+                <div>
+                  <span className={styles.statusBadge} data-state={state}>
+                    {state === 'mapped' && <span className={styles.statusDot} aria-hidden="true" />}
+                    {statusLabel(state)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <p className="text-xs text-slate-400 mt-4 text-center">
-          Column names are matched automatically using fuzzy matching. Manual overrides coming in v5.
+        {/* ── Footer ── */}
+        <p className={styles.footerNote}>
+          Column names are matched automatically using fuzzy matching.
+          Green tags above = columns from your CSV that matched a known field.{' '}
+          <strong>Manual overrides coming in v5.</strong>
         </p>
+
       </div>
     </AppShell>
   );
