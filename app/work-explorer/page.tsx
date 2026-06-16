@@ -1,47 +1,125 @@
 'use client';
-import { useEffect, useState, useMemo } from 'react';
+import { CSSProperties, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import DCStatusChip from '@/components/dc-shell/DCStatusChip';
 import LoadingState from '@/components/ui/LoadingState';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { loadMetricsWithSource } from '@/lib/storage';
+import styles from './page.module.scss';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
-const DONE = new Set(['done', 'closed', 'resolved']);
 
-const TYPE_ICONS: Record<string, string> = {
-  bug: '🐛', story: '📖', task: '✅', epic: '⚡', 'sub-task': '🔹',
-  'test case': '🧪', feature: '🌟', improvement: '🔧', spike: '🔍',
+const DONE_SET = new Set(['done', 'closed', 'resolved', 'complete', 'completed']);
+
+function statusCat(status: string): 'done' | 'in-progress' | 'blocked' | 'review' | 'todo' {
+  const s = norm(status);
+  if (DONE_SET.has(s) || /done|resolved|complete|closed/.test(s)) return 'done';
+  if (/progress|doing|active|started|working/.test(s)) return 'in-progress';
+  if (/block|impede/.test(s)) return 'blocked';
+  if (/review|qa|test|stag/.test(s)) return 'review';
+  return 'todo';
+}
+
+// ── Type icon ─────────────────────────────────────────────────────────────────
+
+const TYPE_CFG: Record<string, { fill: string; letter: string }> = {
+  bug:         { fill: '#F87171', letter: 'B' },
+  story:       { fill: '#4ade80', letter: 'S' },
+  task:        { fill: '#60A5FA', letter: 'T' },
+  epic:        { fill: '#A78BFA', letter: 'E' },
+  'sub-task':  { fill: '#93c5fd', letter: '↘' },
+  feature:     { fill: '#FB923C', letter: 'F' },
+  improvement: { fill: '#22D3EE', letter: 'I' },
+  spike:       { fill: '#F472B6', letter: 'R' },
+  'test case': { fill: '#FACC15', letter: 'Q' },
 };
 
-const HEALTH_CHIP_TONE = {
-  critical: 'critical' as const,
-  warning:  'warning'  as const,
-  good:     'success'  as const,
-};
+function resolveTypeKey(type: string): string {
+  const t = norm(type);
+  if (/bug|defect/.test(t))          return 'bug';
+  if (/story|user.story/.test(t))    return 'story';
+  if (/\bepic\b/.test(t))            return 'epic';
+  if (/sub.task|subtask/.test(t))    return 'sub-task';
+  if (/feature/.test(t))             return 'feature';
+  if (/improve|enhance/.test(t))     return 'improvement';
+  if (/spike|research/.test(t))      return 'spike';
+  if (/test.case/.test(t))           return 'test case';
+  if (/task/.test(t))                return 'task';
+  return 'task';
+}
+
+function TypeIcon({ type }: { type: string }) {
+  const key = resolveTypeKey(type);
+  const c = TYPE_CFG[key] ?? TYPE_CFG.task;
+  return (
+    // fill/textAnchor/fontSize/fontWeight are SVG presentation attributes — not style props
+    <svg width="16" height="16" viewBox="0 0 16 16" className={styles.typeIcon} aria-hidden="true">
+      <rect width="16" height="16" rx="3" fill={c.fill} />
+      <text x="8" y="11.5" textAnchor="middle" fontSize="8" fontWeight="800" fill="#060606">
+        {c.letter}
+      </text>
+    </svg>
+  );
+}
+
+// ── Priority ──────────────────────────────────────────────────────────────────
+
+const PRIO_CFG: Array<[RegExp, { key: string; icon: string }]> = [
+  [/critical|highest/, { key: 'critical', icon: '⬆' }],
+  [/high/,             { key: 'high',     icon: '↑'  }],
+  [/medium|normal/,    { key: 'medium',   icon: '→'  }],
+  [/\blow\b/,          { key: 'low',      icon: '↓'  }],
+  [/lowest|minor/,     { key: 'lowest',   icon: '⬇'  }],
+];
+
+function prioMeta(priority: string): { key: string; icon: string } {
+  const p = norm(priority);
+  for (const [re, meta] of PRIO_CFG) {
+    if (re.test(p)) return meta;
+  }
+  return { key: 'low', icon: '—' };
+}
+
+// ── Avatar ────────────────────────────────────────────────────────────────────
+
+function initials(name: string): string {
+  if (!name || name === '—') return '?';
+  const parts = name.trim().split(/\s+/);
+  return parts.length >= 2
+    ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+const PAGE_SIZE = 50;
 
 export default function WorkExplorerPage() {
   const router = useRouter();
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [healthFilter, setHealthFilter] = useState('all');
-  const [selected, setSelected] = useState<FlowItem | null>(null);
-  const [page, setPage] = useState(0);
-
-  const PAGE_SIZE = 50;
+  const [metrics, setMetrics]         = useState<DashboardMetrics | null>(null);
+  const [loading, setLoading]         = useState(true);
+  const [search, setSearch]           = useState('');
+  const [typeFilter, setTypeFilter]   = useState('all');
+  const [statusFilter, setStatus]     = useState('all');
+  const [prioFilter, setPrio]         = useState('all');
+  const [healthFilter, setHealth]     = useState('all');
+  const [selected, setSelected]       = useState<FlowItem | null>(null);
+  const [page, setPage]               = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    loadMetricsWithSource().then(r => {
-      if (cancelled) return;
-      const data = r.metrics as DashboardMetrics | null;
-      if (!data) { router.replace('/'); return; }
-      setMetrics(data);
-    }).catch(() => router.replace('/')).finally(() => { if (!cancelled) setLoading(false); });
+    loadMetricsWithSource()
+      .then(r => {
+        if (cancelled) return;
+        const data = r.metrics as DashboardMetrics | null;
+        if (!data) { router.replace('/'); return; }
+        setMetrics(data);
+      })
+      .catch(() => router.replace('/'))
+      .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [router]);
 
@@ -49,258 +127,445 @@ export default function WorkExplorerPage() {
 
   const types    = useMemo(() => ['all', ...new Set(items.map(i => norm(i.type)).filter(Boolean))].sort(), [items]);
   const statuses = useMemo(() => ['all', ...new Set(items.map(i => norm(i.status)).filter(Boolean))].sort(), [items]);
+  const prios    = useMemo(() => ['all', ...new Set(items.map(i => norm(i.priority ?? '')).filter(Boolean))].sort(), [items]);
+
+  const stats = useMemo(() => {
+    const total   = items.length;
+    const done    = items.filter(i => DONE_SET.has(norm(i.status))).length;
+    const inProg  = items.filter(i => statusCat(i.status) === 'in-progress').length;
+    const atRisk  = items.filter(i => i.health === 'critical').length;
+    const ages    = items.map(i => Number(i.ageDays) || 0).filter(a => a > 0);
+    const avgAge  = ages.length > 0 ? Math.round(ages.reduce((s, a) => s + a, 0) / ages.length) : 0;
+    return { total, done, donePct: total > 0 ? Math.round(done / total * 100) : 0, inProg, atRisk, avgAge };
+  }, [items]);
 
   const filtered = useMemo(() => {
     const q = norm(search);
     return items.filter(i => {
-      if (typeFilter   !== 'all' && norm(i.type)   !== typeFilter)   return false;
-      if (statusFilter !== 'all' && norm(i.status) !== statusFilter) return false;
-      if (healthFilter !== 'all' && i.health       !== healthFilter) return false;
+      if (typeFilter   !== 'all' && norm(i.type)        !== typeFilter)   return false;
+      if (statusFilter !== 'all' && norm(i.status)      !== statusFilter) return false;
+      if (prioFilter   !== 'all' && norm(i.priority??'') !== prioFilter)  return false;
+      if (healthFilter !== 'all' && i.health            !== healthFilter) return false;
       if (!q) return true;
-      return norm(i.key).includes(q) || norm(i.summary).includes(q) || norm(i.epic).includes(q) || norm(i.assignee).includes(q);
+      return (
+        norm(i.key).includes(q) || norm(i.summary).includes(q) ||
+        norm(i.epic).includes(q) || norm(i.assignee).includes(q) ||
+        norm(i.sprint ?? '').includes(q) || norm(i.project ?? '').includes(q)
+      );
     });
-  }, [items, search, typeFilter, statusFilter, healthFilter]);
+  }, [items, search, typeFilter, statusFilter, prioFilter, healthFilter]);
 
-  const pageItems = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const pageItems  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
-  function onFilterChange() { setPage(0); setSelected(null); }
+  function resetPage() { setPage(0); setSelected(null); }
+
+  function clearFilters() {
+    setSearch(''); setTypeFilter('all'); setStatus('all');
+    setPrio('all'); setHealth('all'); setPage(0); setSelected(null);
+  }
+
+  const hasFilter = !!(search || typeFilter !== 'all' || statusFilter !== 'all' || prioFilter !== 'all' || healthFilter !== 'all');
+
+  const pageWindow = useMemo(() => {
+    const half  = 2;
+    const start = Math.max(0, Math.min(page - half, totalPages - 2 * half - 1));
+    const end   = Math.min(totalPages - 1, start + 2 * half);
+    const nums: number[] = [];
+    for (let n = start; n <= end; n++) nums.push(n);
+    return nums;
+  }, [page, totalPages]);
 
   if (loading) return <AppShell showNav><LoadingState message="Loading work explorer…" /></AppShell>;
   if (!metrics) return null;
 
-  const relatedItems = selected ? items.filter(i => i.epic === selected.epic && i.key !== selected.key).slice(0, 8) : [];
-  const children     = selected ? items.filter(i => i.parent === selected.key).slice(0, 10) : [];
+  const relatedItems = selected
+    ? items.filter(i => i.epic === selected.epic && i.key !== selected.key).slice(0, 8)
+    : [];
+  const children = selected
+    ? items.filter(i => i.parent === selected.key).slice(0, 10)
+    : [];
+
+  const FILTERS = [
+    { label: 'Type',     value: typeFilter,   options: types,    setter: (v: string) => { setTypeFilter(v); resetPage(); } },
+    { label: 'Status',   value: statusFilter, options: statuses, setter: (v: string) => { setStatus(v);     resetPage(); } },
+    { label: 'Priority', value: prioFilter,   options: prios.length > 1 ? prios : [], setter: (v: string) => { setPrio(v); resetPage(); } },
+    { label: 'Health',   value: healthFilter, options: ['all', 'critical', 'warning', 'good'], setter: (v: string) => { setHealth(v); resetPage(); } },
+  ].filter(f => f.options.length > 1);
 
   return (
     <AppShell showNav>
-      {/* Page header */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <span style={{ width: 20, height: 2, background: 'var(--blue)', display: 'inline-block' }} />
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--blue)', textTransform: 'uppercase' }}>Data</span>
-        </div>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--n900)', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Work Explorer</h1>
-        <p style={{ fontSize: 13, color: 'var(--n500)', margin: 0 }}>
-          {filtered.length.toLocaleString()} of {items.length.toLocaleString()} items · Click any row to see details
-        </p>
-      </div>
+      <div className={styles.page}>
 
-      {/* Search + filters */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: '1 1 280px', minWidth: 200 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--dc-text-3)" strokeWidth="2" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} aria-hidden="true">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
-          <input
-            type="search"
-            value={search}
-            onChange={e => { setSearch(e.target.value); onFilterChange(); }}
-            placeholder="Search by key, summary, epic, assignee…"
-            style={{
-              width: '100%', paddingLeft: 36, paddingRight: 14, paddingTop: 10, paddingBottom: 10,
-              borderRadius: 12, border: '1px solid var(--dc-line)', background: 'var(--dc-surface)',
-              fontSize: 13, fontWeight: 600, color: 'var(--dc-text)', outline: 'none',
-            }}
-            aria-label="Search work items"
-          />
-        </div>
+        {/* ── Header ── */}
+        <header className={styles.pageHeader}>
+          <div className={styles.breadcrumb}>
+            {/* Jira-style project badge — fill is SVG presentation attribute */}
+            <svg width="18" height="18" viewBox="0 0 18 18" className={styles.jiraIcon} aria-hidden="true">
+              <rect width="18" height="18" rx="4" fill="#FF8A4C" opacity="0.18" />
+              <text x="9" y="13" textAnchor="middle" fontSize="10" fontWeight="900" fill="#FF8A4C">J</text>
+            </svg>
+            <span className={styles.breadcrumbProject}>Project Backlog</span>
+            <span className={styles.breadcrumbSep}>/</span>
+            <span className={styles.breadcrumbCurrent}>Work Explorer</span>
+          </div>
+          <h1 className={styles.pageTitle}>Work Explorer</h1>
+          <p className={styles.pageMeta}>
+            Showing <strong>{filtered.length.toLocaleString()}</strong> of{' '}
+            <strong>{items.length.toLocaleString()}</strong> issues — click any row to inspect
+          </p>
+        </header>
 
-        {/* Filter chips */}
-        {[
-          { label: 'Type',   value: typeFilter,   options: types,    setter: (v: string) => { setTypeFilter(v); onFilterChange(); } },
-          { label: 'Status', value: statusFilter, options: statuses, setter: (v: string) => { setStatusFilter(v); onFilterChange(); } },
-          { label: 'Health', value: healthFilter, options: ['all', 'critical', 'warning', 'good'], setter: (v: string) => { setHealthFilter(v); onFilterChange(); } },
-        ].map(f => (
-          <select
-            key={f.label}
-            value={f.value}
-            onChange={e => f.setter(e.target.value)}
-            style={{
-              padding: '9px 12px', borderRadius: 12, border: '1px solid var(--dc-line)',
-              background: 'var(--dc-surface)', fontSize: 12, fontWeight: 700,
-              color: f.value !== 'all' ? 'var(--dc-brand)' : 'var(--dc-text-2)',
-              cursor: 'pointer', maxWidth: 180,
-            }}
-            aria-label={`Filter by ${f.label}`}
-          >
-            <option value="all">All {f.label}s</option>
-            {f.options.filter(o => o !== 'all').map(o => (
-              <option key={o} value={o} style={{ textTransform: 'capitalize' }}>{o}</option>
-            ))}
-          </select>
-        ))}
-
-        {(search || typeFilter !== 'all' || statusFilter !== 'all' || healthFilter !== 'all') && (
-          <button
-            type="button"
-            onClick={() => { setSearch(''); setTypeFilter('all'); setStatusFilter('all'); setHealthFilter('all'); setPage(0); setSelected(null); }}
-            style={{ fontSize: 12, fontWeight: 800, color: 'var(--dc-text-2)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
-          >
-            Clear filters
-          </button>
-        )}
-      </div>
-
-      {/* Main content */}
-      <div style={{ display: 'grid', gridTemplateColumns: selected ? 'minmax(0,1fr) 360px' : '1fr', gap: 20 }}>
-
-        {/* Issue table */}
-        <div className="dc-card" style={{ overflow: 'hidden' }}>
-          {pageItems.length === 0 ? (
-            <div style={{ padding: '40px 22px', textAlign: 'center' }}>
-              <p style={{ fontSize: 14, color: 'var(--dc-text-3)', fontWeight: 700 }}>No items match your filters</p>
-              <p style={{ fontSize: 12, color: 'var(--dc-text-3)', margin: '6px 0 0' }}>Try adjusting the search or filters above</p>
-            </div>
-          ) : (
-            <>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid var(--dc-line)', background: 'var(--dc-surface-soft)' }}>
-                      {['Key', 'Summary', 'Type', 'Status', 'Health', 'Assignee', 'Age (d)'].map(h => (
-                        <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: 11, fontWeight: 900, color: 'var(--dc-text-3)', whiteSpace: 'nowrap', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pageItems.map((item, i) => {
-                      const isSelected = selected?.key === item.key;
-                      return (
-                        <tr
-                          key={item.key}
-                          onClick={() => setSelected(isSelected ? null : item)}
-                          style={{
-                            borderBottom: '1px solid var(--dc-line)',
-                            background: isSelected ? 'var(--dc-brand-soft)' : i % 2 === 1 ? 'var(--dc-surface-soft)' : 'white',
-                            cursor: 'pointer', transition: 'background 100ms',
-                          }}
-                          onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'var(--dc-brand-soft)'; }}
-                          onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = i % 2 === 1 ? 'var(--dc-surface-soft)' : 'white'; }}
-                          role="button"
-                          tabIndex={0}
-                          aria-pressed={isSelected}
-                          aria-label={`${item.key}: ${item.summary}`}
-                          onKeyDown={e => e.key === 'Enter' && setSelected(isSelected ? null : item)}
-                        >
-                          <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontWeight: 900, color: 'var(--dc-brand)', whiteSpace: 'nowrap' }}>{item.key}</td>
-                          <td style={{ padding: '8px 12px', color: 'var(--dc-text)', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>{item.summary}</td>
-                          <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--dc-text-2)', textTransform: 'capitalize' }}>
-                              {TYPE_ICONS[norm(item.type)] ?? ''} {item.type}
-                            </span>
-                          </td>
-                          <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
-                            <span style={{
-                              fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 6,
-                              background: DONE.has(norm(item.status)) ? 'var(--dc-success-soft)' : 'var(--dc-surface-blue)',
-                              color: DONE.has(norm(item.status)) ? '#15803D' : 'var(--dc-text-2)',
-                              textTransform: 'capitalize',
-                            }}>
-                              {item.status}
-                            </span>
-                          </td>
-                          <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
-                            {item.health && <DCStatusChip label={item.health} tone={HEALTH_CHIP_TONE[item.health as keyof typeof HEALTH_CHIP_TONE] ?? 'neutral'} />}
-                          </td>
-                          <td style={{ padding: '8px 12px', color: 'var(--dc-text-2)', whiteSpace: 'nowrap', fontWeight: 600 }}>{item.assignee || '—'}</td>
-                          <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 800, whiteSpace: 'nowrap', color: Number(item.ageDays ?? 0) > 14 ? 'var(--dc-critical)' : 'var(--dc-text-2)' }}>{item.ageDays ?? '—'}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderTop: '1px solid var(--dc-line)' }}>
-                  <span style={{ fontSize: 12, color: 'var(--dc-text-2)', fontWeight: 600 }}>
-                    {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} of {filtered.length}
-                  </span>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button type="button" disabled={page === 0} onClick={() => setPage(p => p - 1)} style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid var(--dc-line)', background: 'none', cursor: page === 0 ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 700, color: page === 0 ? 'var(--dc-text-3)' : 'var(--dc-text)' }}>← Prev</button>
-                    <button type="button" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)} style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid var(--dc-line)', background: 'none', cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 700, color: page >= totalPages - 1 ? 'var(--dc-text-3)' : 'var(--dc-text)' }}>Next →</button>
-                  </div>
+        {/* ── Stats strip ── */}
+        {items.length > 0 && (
+          <div className={styles.statsStrip} role="list" aria-label="Project summary">
+            {[
+              { label: 'Total Issues',   val: stats.total.toLocaleString(),   color: 'var(--dc-p1, #F2F2F2)' },
+              { label: `Done (${stats.donePct}%)`, val: stats.done.toLocaleString(), color: '#4ade80' },
+              { label: 'In Progress',    val: stats.inProg.toLocaleString(),  color: '#93c5fd' },
+              { label: 'At Risk',        val: stats.atRisk.toLocaleString(),  color: stats.atRisk > 0 ? '#fca5a5' : 'var(--dc-p1)' },
+              { label: 'Avg Age (days)', val: stats.avgAge > 0 ? String(stats.avgAge) : '—', color: stats.avgAge > 14 ? '#F59E0B' : 'var(--dc-p1)' },
+            ].map(s => (
+              <div key={s.label} className={styles.statChip} role="listitem">
+                <div className={styles.statVal} style={{ '--stat-color': s.color } as CSSProperties}>
+                  {s.val}
                 </div>
-              )}
-            </>
+                <div className={styles.statLabel}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Toolbar ── */}
+        <div className={styles.toolbar} role="search">
+          <div className={styles.searchWrap}>
+            <svg className={styles.searchIcon} width="14" height="14" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              type="search"
+              value={search}
+              onChange={e => { setSearch(e.target.value); resetPage(); }}
+              placeholder="Search by key, summary, epic, assignee…"
+              className={styles.searchInput}
+              aria-label="Search work items"
+            />
+          </div>
+
+          {FILTERS.map(f => (
+            <select
+              key={f.label}
+              value={f.value}
+              onChange={e => f.setter(e.target.value)}
+              className={styles.filterSelect}
+              data-active={f.value !== 'all' ? 'true' : undefined}
+              aria-label={`Filter by ${f.label}`}
+            >
+              <option value="all">All {f.label}s</option>
+              {f.options.filter(o => o !== 'all').map(o => (
+                <option key={o} value={o}>
+                  {o.charAt(0).toUpperCase() + o.slice(1)}
+                </option>
+              ))}
+            </select>
+          ))}
+
+          {hasFilter && (
+            <button type="button" onClick={clearFilters} className={styles.clearBtn}>
+              ✕ Clear
+            </button>
           )}
         </div>
 
-        {/* Issue detail panel */}
-        {selected && (
-          <div className="dc-card" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-              <div>
-                <span style={{ fontSize: 12, fontFamily: 'monospace', fontWeight: 900, color: 'var(--dc-brand)' }}>{selected.key}</span>
-                <h2 style={{ fontSize: 14, fontWeight: 900, color: 'var(--dc-text)', margin: '4px 0 0', lineHeight: 1.4 }}>{selected.summary}</h2>
+        {/* ── Content ── */}
+        <div className={styles.layout} data-panel={selected ? 'open' : 'closed'}>
+
+          {/* ── Issue table ── */}
+          <div className={styles.tableCard}>
+            {pageItems.length === 0 ? (
+              <div className={styles.emptyTable}>
+                <div className={styles.emptyIcon}>🔍</div>
+                <p className={styles.emptyTitle}>No issues match your filters</p>
+                <p className={styles.emptyBody}>Try adjusting the search query or filter selections above.</p>
               </div>
-              <button type="button" onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--dc-text-3)', padding: 0, flexShrink: 0 }} aria-label="Close detail">×</button>
-            </div>
+            ) : (
+              <>
+                <div className={styles.tableWrap}>
+                  <table className={styles.table}>
+                    <thead className={styles.tableHead}>
+                      <tr>
+                        <th scope="col">Key</th>
+                        <th scope="col" aria-label="Priority">P</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Summary</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Assignee</th>
+                        <th scope="col" className={styles.right}>Age (d)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pageItems.map(item => {
+                        const isSelected = selected?.key === item.key;
+                        const cat  = statusCat(item.status);
+                        const prio = prioMeta(item.priority ?? '');
+                        const age  = Number(item.ageDays ?? 0);
+                        return (
+                          <tr
+                            key={item.key}
+                            className={styles.tableRow}
+                            data-selected={isSelected ? 'true' : undefined}
+                            onClick={() => setSelected(isSelected ? null : item)}
+                            role="button"
+                            tabIndex={0}
+                            aria-pressed={isSelected}
+                            aria-label={`${item.key}: ${item.summary}`}
+                            onKeyDown={e => e.key === 'Enter' && setSelected(isSelected ? null : item)}
+                          >
+                            <td className={styles.keyCell}>{item.key}</td>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              <DCStatusChip label={selected.type || 'Unknown'} tone="neutral" />
-              <DCStatusChip label={selected.status} tone={DONE.has(norm(selected.status)) ? 'success' : 'neutral'} />
-              {selected.health && <DCStatusChip label={selected.health} tone={HEALTH_CHIP_TONE[selected.health as keyof typeof HEALTH_CHIP_TONE] ?? 'neutral'} />}
-              {selected.priority && <DCStatusChip label={selected.priority} tone="neutral" />}
-            </div>
+                            <td className={styles.prioCell}>
+                              <span
+                                className={styles.prioFlag}
+                                data-prio={prio.key}
+                                aria-label={`Priority: ${item.priority || 'unset'}`}
+                              >
+                                {prio.icon}
+                              </span>
+                            </td>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[
-                { label: 'Assignee',    value: selected.assignee || '—' },
-                { label: 'Epic',        value: selected.epic || '—' },
-                { label: 'Sprint',      value: selected.sprint || '—' },
-                { label: 'Project',     value: selected.project || '—' },
-                { label: 'Story pts',   value: selected.storyPoints || '—' },
-                { label: 'Age (days)',  value: selected.ageDays ?? '—' },
-                { label: 'Lead time',   value: selected.leadTimeDays != null ? `${selected.leadTimeDays}d` : '—' },
-                { label: 'Cycle time',  value: selected.cycleTimeDays != null ? `${selected.cycleTimeDays}d` : '—' },
-              ].map(row => (
-                <div key={row.label} style={{ display: 'flex', gap: 8, fontSize: 12 }}>
-                  <span style={{ color: 'var(--dc-text-3)', fontWeight: 700, width: 90, flexShrink: 0 }}>{row.label}</span>
-                  <span style={{ color: 'var(--dc-text)', fontWeight: 600, flex: 1 }}>{String(row.value)}</span>
+                            <td className={styles.typeCell}>
+                              <span className={styles.typeBadge}>
+                                <TypeIcon type={item.type ?? 'task'} />
+                                {item.type ?? 'Task'}
+                              </span>
+                            </td>
+
+                            <td className={styles.summaryCell}>
+                              <div className={styles.summaryCellInner}>{item.summary}</div>
+                            </td>
+
+                            <td className={styles.statusCell}>
+                              <span className={styles.statusLozenge} data-cat={cat}>
+                                <span className={styles.statusDot} aria-hidden="true" />
+                                {item.status}
+                              </span>
+                            </td>
+
+                            <td className={styles.assigneeCell}>
+                              <div className={styles.assigneeInner}>
+                                <span className={styles.avatar} aria-hidden="true">
+                                  {initials(item.assignee ?? '')}
+                                </span>
+                                <span className={styles.assigneeName}>{item.assignee || '—'}</span>
+                              </div>
+                            </td>
+
+                            <td
+                              className={styles.ageCell}
+                              data-overdue={age > 30 ? 'true' : undefined}
+                              data-warning={age > 14 && age <= 30 ? 'true' : undefined}
+                            >
+                              {age > 0 ? age : '—'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              ))}
-            </div>
 
-            {selected.reason && (
-              <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--dc-warning-soft)', border: '1px solid rgba(245,158,11,0.2)' }}>
-                <p style={{ fontSize: 11, fontWeight: 800, color: '#92400E', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Health note</p>
-                <p style={{ fontSize: 12, color: '#B45309', margin: 0 }}>{selected.reason}</p>
-              </div>
-            )}
-
-            {children.length > 0 && (
-              <div>
-                <h3 style={{ fontSize: 12, fontWeight: 900, color: 'var(--dc-text)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Children ({children.length})</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  {children.map(c => (
-                    <button key={c.key} type="button" onClick={() => setSelected(c)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--dc-line)', background: 'var(--dc-surface-soft)', textAlign: 'left', cursor: 'pointer' }}>
-                      <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 900, color: 'var(--dc-brand)' }}>{c.key}</span>
-                      <span style={{ fontSize: 11, color: 'var(--dc-text-2)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.summary}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {relatedItems.length > 0 && (
-              <div>
-                <h3 style={{ fontSize: 12, fontWeight: 900, color: 'var(--dc-text)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Same Epic ({relatedItems.length})</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  {relatedItems.map(r => (
-                    <button key={r.key} type="button" onClick={() => setSelected(r)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--dc-line)', background: 'var(--dc-surface-soft)', textAlign: 'left', cursor: 'pointer' }}>
-                      <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 900, color: 'var(--dc-brand)' }}>{r.key}</span>
-                      <span style={{ fontSize: 11, color: 'var(--dc-text-2)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.summary}</span>
-                      {r.health && <DCStatusChip label={r.health} tone={HEALTH_CHIP_TONE[r.health as keyof typeof HEALTH_CHIP_TONE] ?? 'neutral'} />}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className={styles.pagination}>
+                    <span className={styles.paginationInfo}>
+                      {(page * PAGE_SIZE + 1).toLocaleString()}–
+                      {Math.min((page + 1) * PAGE_SIZE, filtered.length).toLocaleString()} of{' '}
+                      {filtered.length.toLocaleString()}
+                    </span>
+                    <div className={styles.paginationBtns}>
+                      <button
+                        type="button"
+                        className={styles.paginationBtn}
+                        disabled={page === 0}
+                        onClick={() => setPage(p => p - 1)}
+                      >
+                        ← Prev
+                      </button>
+                      <div className={styles.pageNums}>
+                        {pageWindow.map(n => (
+                          <button
+                            key={n}
+                            type="button"
+                            className={styles.pageNum}
+                            data-current={n === page ? 'true' : undefined}
+                            onClick={() => setPage(n)}
+                            aria-label={`Page ${n + 1}`}
+                            aria-current={n === page ? 'page' : undefined}
+                          >
+                            {n + 1}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.paginationBtn}
+                        disabled={page >= totalPages - 1}
+                        onClick={() => setPage(p => p + 1)}
+                      >
+                        Next →
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
-        )}
+
+          {/* ── Detail panel ── */}
+          {selected && (
+            <aside className={styles.detailPanel} aria-label="Issue detail">
+
+              <div className={styles.detailHeader}>
+                <div className={styles.detailHeaderRow}>
+                  <div className={styles.detailKeyRow}>
+                    <TypeIcon type={selected.type ?? 'task'} />
+                    <span className={styles.detailKey}>{selected.key}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.detailClose}
+                    onClick={() => setSelected(null)}
+                    aria-label="Close detail panel"
+                  >
+                    ×
+                  </button>
+                </div>
+                <p className={styles.detailSummary}>{selected.summary}</p>
+              </div>
+
+              <div className={styles.detailChips}>
+                <span className={styles.statusLozenge} data-cat={statusCat(selected.status)}>
+                  <span className={styles.statusDot} aria-hidden="true" />
+                  {selected.status}
+                </span>
+                {selected.health && (
+                  <DCStatusChip
+                    label={selected.health}
+                    tone={
+                      selected.health === 'critical' ? 'critical' :
+                      selected.health === 'warning'  ? 'warning'  : 'success'
+                    }
+                    size="sm"
+                  />
+                )}
+                {selected.priority && (
+                  <span className={styles.prioFlag} data-prio={prioMeta(selected.priority).key}>
+                    {prioMeta(selected.priority).icon} {selected.priority}
+                  </span>
+                )}
+              </div>
+
+              <div className={styles.detailBody}>
+
+                {/* Details section */}
+                <section className={styles.detailSection}>
+                  <p className={styles.detailSectionTitle}>Details</p>
+                  {([
+                    { label: 'Assignee',  value: selected.assignee  || '—' },
+                    { label: 'Epic',      value: selected.epic       || '—' },
+                    { label: 'Sprint',    value: selected.sprint     || '—' },
+                    { label: 'Project',   value: selected.project    || '—' },
+                    { label: 'Type',      value: selected.type       || '—' },
+                    { label: 'Story pts', value: selected.storyPoints != null ? String(selected.storyPoints) : '—' },
+                  ] as const).map(row => (
+                    <div key={row.label} className={styles.detailField}>
+                      <span className={styles.detailFieldLabel}>{row.label}</span>
+                      <span className={styles.detailFieldValue}>{row.value}</span>
+                    </div>
+                  ))}
+                </section>
+
+                {/* Time section */}
+                <section className={styles.detailSection}>
+                  <p className={styles.detailSectionTitle}>Time</p>
+                  {([
+                    { label: 'Age',        value: selected.ageDays != null        ? `${selected.ageDays}d`        : '—' },
+                    { label: 'Lead time',  value: selected.leadTimeDays != null   ? `${selected.leadTimeDays}d`   : '—' },
+                    { label: 'Cycle time', value: selected.cycleTimeDays != null  ? `${selected.cycleTimeDays}d`  : '—' },
+                  ] as const).map(row => (
+                    <div key={row.label} className={styles.detailField}>
+                      <span className={styles.detailFieldLabel}>{row.label}</span>
+                      <span className={styles.detailFieldValue}>{row.value}</span>
+                    </div>
+                  ))}
+                </section>
+
+                {/* Health note */}
+                {selected.reason && (
+                  <div className={styles.healthNote}>
+                    <p className={styles.healthNoteTitle}>⚠ Health note</p>
+                    <p className={styles.healthNoteBody}>{selected.reason}</p>
+                  </div>
+                )}
+
+                {/* Children */}
+                {children.length > 0 && (
+                  <section className={styles.detailSection}>
+                    <p className={styles.detailSectionTitle}>Children ({children.length})</p>
+                    <div className={styles.relatedList}>
+                      {children.map(c => (
+                        <button
+                          key={c.key}
+                          type="button"
+                          className={styles.relatedBtn}
+                          onClick={() => setSelected(c)}
+                        >
+                          <TypeIcon type={c.type ?? 'task'} />
+                          <span className={styles.relatedKey}>{c.key}</span>
+                          <span className={styles.relatedSummary}>{c.summary}</span>
+                          <span className={styles.statusLozenge} data-cat={statusCat(c.status)}>
+                            <span className={styles.statusDot} aria-hidden="true" />
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Same epic */}
+                {relatedItems.length > 0 && (
+                  <section className={styles.detailSection}>
+                    <p className={styles.detailSectionTitle}>Same Epic ({relatedItems.length})</p>
+                    <div className={styles.relatedList}>
+                      {relatedItems.map(r => (
+                        <button
+                          key={r.key}
+                          type="button"
+                          className={styles.relatedBtn}
+                          onClick={() => setSelected(r)}
+                        >
+                          <TypeIcon type={r.type ?? 'task'} />
+                          <span className={styles.relatedKey}>{r.key}</span>
+                          <span className={styles.relatedSummary}>{r.summary}</span>
+                          {r.health && (
+                            <DCStatusChip
+                              label={r.health}
+                              tone={r.health === 'critical' ? 'critical' : r.health === 'warning' ? 'warning' : 'success'}
+                              size="sm"
+                            />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+              </div>
+            </aside>
+          )}
+        </div>
+
       </div>
     </AppShell>
   );
