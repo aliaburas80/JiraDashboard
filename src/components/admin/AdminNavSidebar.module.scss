@@ -71,6 +71,57 @@
 
 .navLabel { flex: 1; min-width: 0; }
 
+// ── Settings sub-nav ─────────────────────────────────────────────────────────
+
+.subNav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 2px var(--space-2, 8px) 4px calc(var(--space-2, 8px) + 28px);
+}
+
+.subNavItem {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px var(--space-3, 12px);
+  border-radius: var(--radius-md, 8px);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted, #94a3b8);
+  transition: background var(--transition-fast, 120ms ease), color var(--transition-fast, 120ms ease);
+
+  &:hover {
+    background: var(--color-subtle, #f1f5f9);
+    color: var(--color-text-primary, #0f172a);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: -2px;
+  }
+}
+
+.subNavItemActive {
+  background: var(--color-primary-soft, #eff6ff);
+  color: var(--color-primary, #2563eb);
+  font-weight: 700;
+
+  &:hover {
+    background: var(--color-primary-soft, #eff6ff);
+    color: var(--color-primary, #2563eb);
+  }
+}
+
+.subNavIcon {
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+
 // ── Help box at the bottom ────────────────────────────────────────────────────
 .helpBox {
   margin: auto var(--space-2, 8px) 0;
