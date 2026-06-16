@@ -122,7 +122,17 @@ function buildFromEnv(): AppConfig {
 export async function getAppConfig(): Promise<AppConfig> {
   if (_cached) return _cached;
   const cloud = await loadFromCloud();
-  if (cloud) { _cached = cloud; _source = 'cloud'; return _cached; }
+  if (cloud) {
+    // If SMTP env vars are explicitly set, they override the cloud SMTP config.
+    // This lets operators fix credentials via .env without needing a cloud update.
+    const envSmtp = buildFromEnv().smtp;
+    if (envSmtp.user && envSmtp.pass) {
+      cloud.smtp = envSmtp;
+    }
+    _cached = cloud;
+    _source = 'cloud';
+    return _cached;
+  }
   _cached = buildFromEnv();
   _source = 'env';
   return _cached;

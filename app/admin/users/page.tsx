@@ -34,6 +34,10 @@ export default function AdminUsersPage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<ManagedUser | null>(null);
   const [meId, setMeId]             = useState('');
+  const [selectedIds, setSelectedIds]       = useState<Set<string>>(new Set());
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [bulkRole, setBulkRole]             = useState<AppRole>('user');
+  const [bulkProcessing, setBulkProcessing] = useState(false);
 
   const loadUsers = useCallback(async () => {
     const res = await fetch('/api/admin/users');
@@ -60,6 +64,55 @@ export default function AdminUsersPage() {
     const matchR = roleFilter === 'all' || u.role === roleFilter;
     return matchQ && matchR;
   });
+
+  const selectableFiltered = filtered.filter(u => u.id !== meId);
+  const allSelected = selectableFiltered.length > 0 && selectableFiltered.every(u => selectedIds.has(u.id));
+  const someSelected = selectedIds.size > 0;
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(selectableFiltered.map(u => u.id)));
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function bulkDelete() {
+    setBulkProcessing(true);
+    const ids = [...selectedIds];
+    try {
+      for (const id of ids) {
+        await fetch('/api/admin/users', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      }
+      setUsers(prev => prev.filter(u => !ids.includes(u.id)));
+      setSelectedIds(new Set());
+      setConfirmBulkDelete(false);
+      setSuccessMsg(`✅ ${ids.length} user${ids.length > 1 ? 's' : ''} deleted.`);
+    } catch (e: any) { setError(e.message); }
+    finally { setBulkProcessing(false); }
+  }
+
+  async function bulkChangeRole() {
+    setBulkProcessing(true);
+    const ids = [...selectedIds];
+    try {
+      for (const id of ids) {
+        await fetch('/api/admin/users', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, role: bulkRole }) });
+      }
+      setUsers(prev => prev.map(u => ids.includes(u.id) ? { ...u, role: bulkRole, roleLabel: roleLabel(bulkRole) } : u));
+      setSelectedIds(new Set());
+      setSuccessMsg(`✅ Role updated to "${roleLabel(bulkRole)}" for ${ids.length} user${ids.length > 1 ? 's' : ''}.`);
+    } catch (e: any) { setError(e.message); }
+    finally { setBulkProcessing(false); }
+  }
 
   async function changeRole(user: ManagedUser, role: AppRole) {
     setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role, roleLabel: roleLabel(role) } : u));
@@ -238,11 +291,46 @@ export default function AdminUsersPage() {
           </span>
         </div>
 
+        {/* ── Bulk action bar ── */}
+        {someSelected && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '8px 14px', background: 'rgba(232,93,18,0.08)', border: '1px solid rgba(232,93,18,0.25)', borderRadius: 10, marginBottom: 12 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-acc,#E85D12)' }}>{selectedIds.size} selected</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto' }}>
+              <select
+                value={bulkRole}
+                onChange={e => setBulkRole(e.target.value as AppRole)}
+                style={{ padding: '5px 8px', borderRadius: 6, background: 'var(--dc-s3,#282828)', border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', color: 'var(--dc-p1,#F2F2F2)', fontSize: 11, outline: 'none', fontFamily: 'inherit' }}
+              >
+                {ALL_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
+              </select>
+              <button type="button" onClick={bulkChangeRole} disabled={bulkProcessing} style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: 'rgba(96,165,250,0.15)', color: '#60A5FA', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                {bulkProcessing ? 'Applying…' : 'Apply Role'}
+              </button>
+              <button type="button" onClick={() => setConfirmBulkDelete(true)} disabled={bulkProcessing} style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: 'rgba(248,113,113,0.15)', color: '#F87171', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                Delete Selected
+              </button>
+              <button type="button" onClick={() => setSelectedIds(new Set())} style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', background: 'transparent', color: 'var(--dc-p3,#505050)', fontSize: 11, cursor: 'pointer' }}>
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ── User table ── */}
         <div style={{ background: 'var(--dc-s2,#1e1e1e)', border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', borderRadius: 12, overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))' }}>
+                <th style={{ padding: '10px 14px', width: 36 }}>
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    ref={el => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                    onChange={toggleSelectAll}
+                    aria-label="Select all users"
+                    style={{ cursor: 'pointer', accentColor: 'var(--dc-acc,#E85D12)', width: 14, height: 14 }}
+                  />
+                </th>
                 {['User', 'Role', 'Status', 'Imports', 'Last Login', 'Actions'].map(h => (
                   <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--dc-p3,#505050)', whiteSpace: 'nowrap' }}>
                     {h}
@@ -253,7 +341,7 @@ export default function AdminUsersPage() {
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ padding: '32px 14px', textAlign: 'center', color: 'var(--dc-p3,#505050)', fontStyle: 'italic' }}>
+                  <td colSpan={7} style={{ padding: '32px 14px', textAlign: 'center', color: 'var(--dc-p3,#505050)', fontStyle: 'italic' }}>
                     No users found.
                   </td>
                 </tr>
@@ -272,6 +360,19 @@ export default function AdminUsersPage() {
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--dc-s3,rgba(255,255,255,0.03))')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
+                    {/* Checkbox */}
+                    <td style={{ padding: '10px 14px', width: 36 }}>
+                      {!isSelf && (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(user.id)}
+                          onChange={() => toggleSelect(user.id)}
+                          aria-label={`Select ${user.name}`}
+                          style={{ cursor: 'pointer', accentColor: 'var(--dc-acc,#E85D12)', width: 14, height: 14 }}
+                        />
+                      )}
+                    </td>
+
                     {/* User cell */}
                     <td style={{ padding: '10px 14px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -366,6 +467,26 @@ export default function AdminUsersPage() {
             </tbody>
           </table>
         </div>
+
+        {/* ── Bulk delete confirmation ── */}
+        {confirmBulkDelete && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div style={{ background: 'var(--dc-s2,#1e1e1e)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 14, padding: 28, maxWidth: 400, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--dc-p1,#F2F2F2)', marginBottom: 8 }}>Delete {selectedIds.size} user{selectedIds.size > 1 ? 's' : ''}?</p>
+              <p style={{ fontSize: 13, color: 'var(--dc-p3,#505050)', marginBottom: 20 }}>
+                This will permanently delete <strong style={{ color: '#F87171' }}>{selectedIds.size} account{selectedIds.size > 1 ? 's' : ''}</strong> and all their data. This cannot be undone.
+              </p>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button type="button" onClick={bulkDelete} disabled={bulkProcessing} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: '#DC2626', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  {bulkProcessing ? 'Deleting…' : `Yes, delete ${selectedIds.size}`}
+                </button>
+                <button type="button" onClick={() => setConfirmBulkDelete(false)} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', background: 'transparent', color: 'var(--dc-p2,#909090)', fontSize: 12, cursor: 'pointer' }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Delete confirmation ── */}
         {confirmDelete && (

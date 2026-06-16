@@ -7,7 +7,7 @@ import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, validatePasswordStrength } from '@/lib/auth';
 import { sendEmail, buildWelcomeEmail } from '@/lib/email';
-import { getAppConfig } from '@/lib/app-config';
+import { getAppConfig, invalidateConfig } from '@/lib/app-config';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { ASSIGNABLE_ROLES, isAppRole, roleLabel, type AppRole } from '@/lib/roles';
 
@@ -115,6 +115,7 @@ export async function POST(req: NextRequest) {
   // Send welcome email to the new user.
   let emailSent = false;
   try {
+    invalidateConfig();          // always read fresh env/cloud merge, not stale cache
     const { appUrl } = await getAppConfig();
     const welcome = buildWelcomeEmail(user.name, user.email, body.password!, appUrl);
     emailSent = await sendEmail({ to: user.email, toName: user.name, ...welcome });
