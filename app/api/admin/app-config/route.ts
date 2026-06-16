@@ -21,6 +21,8 @@ export async function GET(): Promise<NextResponse> {
   const auth = await requireAdmin();
   if (auth instanceof NextResponse) return auth;
   try {
+    // Bust the module-level cache so the panel always reflects current env state.
+    invalidateConfig();
     const safe = await getSafeConfig();
     const hasEncKey = !!process.env.CONFIG_ENCRYPTION_KEY;
     return NextResponse.json({ config: safe, hasEncKey });
@@ -67,6 +69,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (auth instanceof NextResponse) return auth;
   const action = new URL(req.url).searchParams.get('action');
   if (action !== 'test') return NextResponse.json({ error: 'Unknown action.' }, { status: 400 });
+
+  // Always re-read env values when testing — clears any stale module-level cache.
+  invalidateConfig();
 
   try {
     const sent = await sendEmail({
