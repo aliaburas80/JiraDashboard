@@ -3,7 +3,7 @@
 // falling back to environment variables when no cloud config exists.
 
 import nodemailer from 'nodemailer';
-import { getAppConfig } from './app-config';
+import { getAppConfig, type AppSmtpConfig } from './app-config';
 
 interface EmailOptions {
   to:      string;
@@ -11,6 +11,35 @@ interface EmailOptions {
   subject: string;
   text:    string;
   html?:   string;
+}
+
+function createTransporter(smtp: AppSmtpConfig) {
+  const isGmail = smtp.host.toLowerCase() === 'smtp.gmail.com';
+  return isGmail
+    ? nodemailer.createTransport({ service: 'gmail', auth: { user: smtp.user, pass: smtp.pass } })
+    : nodemailer.createTransport({
+        host:              smtp.host,
+        port:              smtp.port,
+        secure:            smtp.port === 465,
+        auth:              { user: smtp.user, pass: smtp.pass },
+        connectionTimeout: 10_000,
+        greetingTimeout:   10_000,
+      });
+}
+
+// Send using explicit SMTP config — used by the admin test endpoint so it can
+// test form-supplied credentials before they are saved to cloud.
+export async function sendEmailWith(smtp: AppSmtpConfig, opts: EmailOptions): Promise<boolean> {
+  if (!smtp.host || !smtp.user || !smtp.pass) return false;
+  const transporter = createTransporter(smtp);
+  await transporter.sendMail({
+    from: smtp.from,
+    to:   opts.toName ? `${opts.toName} <${opts.to}>` : opts.to,
+    subject: opts.subject,
+    text:    opts.text,
+    html:    opts.html,
+  });
+  return true;
 }
 
 export async function sendEmail(opts: EmailOptions): Promise<boolean> {
@@ -22,19 +51,7 @@ export async function sendEmail(opts: EmailOptions): Promise<boolean> {
     return false;
   }
 
-  const isGmail = smtp.host.toLowerCase() === 'smtp.gmail.com';
-  const transporter = isGmail
-    ? nodemailer.createTransport({ service: 'gmail', auth: { user: smtp.user, pass: smtp.pass } })
-    : nodemailer.createTransport({
-        host:              smtp.host,
-        port:              smtp.port,
-        secure:            smtp.port === 465,
-        auth:              { user: smtp.user, pass: smtp.pass },
-        connectionTimeout: 10_000,
-        greetingTimeout:   10_000,
-      });
-
-  await transporter.sendMail({
+  await createTransporter(smtp).sendMail({
     from: smtp.from,
     to:   opts.toName ? `${opts.toName} <${opts.to}>` : opts.to,
     subject: opts.subject,

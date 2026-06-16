@@ -8,7 +8,7 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { getAppConfig, getSafeConfig, saveToCloud, invalidateConfig, type AppConfig } from '@/lib/app-config';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, sendEmailWith } from '@/lib/email';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -70,12 +70,37 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const action = new URL(req.url).searchParams.get('action');
   if (action !== 'test') return NextResponse.json({ error: 'Unknown action.' }, { status: 400 });
 
-  // Always re-read env values when testing — clears any stale module-level cache.
+  // Always bust the module-level cache so env changes take effect.
   invalidateConfig();
 
+  // If the client passed inline SMTP creds (form values), test with those directly
+  // rather than whatever is stored in cloud config. This lets users test before saving.
+  let body: { smtp?: Partial<AppConfig['smtp']> } = {};
+  try { body = await req.json(); } catch { /* body is optional */ }
+
+  let smtpToTest: AppConfig['smtp'];
+  if (body.smtp?.host && body.smtp?.user) {
+    // Inline creds provided — merge pass from stored config if the form left it blank.
+    const stored = await getAppConfig();
+    smtpToTest = {
+      host: body.smtp.host,
+      port: body.smtp.port ?? 587,
+      user: body.smtp.user,
+      pass: body.smtp.pass?.trim() || stored.smtp.pass,
+      from: body.smtp.from ?? stored.smtp.from,
+    };
+  } else {
+    smtpToTest = (await getAppConfig()).smtp;
+  }
+
+  if (!smtpToTest.host || !smtpToTest.user || !smtpToTest.pass) {
+    return NextResponse.json({ ok: false, skipped: true });
+  }
+
   try {
-    const sent = await sendEmail({
-      to:      (auth as SessionData).email ?? '',
+    const adminEmail = (auth as SessionData).email ?? '';
+    const sent = await sendEmailWith(smtpToTest, {
+      to:      adminEmail,
       subject: 'Delivery Clarity — SMTP test',
       text:    'This is a test email from your Delivery Clarity app-config SMTP settings.',
       html:    '<p>This is a <strong>test email</strong> from your <strong>Delivery Clarity</strong> app-config SMTP settings.</p>',

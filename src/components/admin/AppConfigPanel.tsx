@@ -100,11 +100,20 @@ export default function AppConfigPanel() {
     setTesting(true);
     setStatus(null);
     try {
-      const res = await fetch('/api/admin/app-config?action=test', { method: 'POST' });
+      // Pass the current form values so the test uses what's on screen,
+      // not stale cloud config — critical when the user has edited fields
+      // but hasn't saved yet.
+      const res = await fetch('/api/admin/app-config?action=test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          smtp: { host, port: parseInt(port, 10), user, pass: pass || undefined, from },
+        }),
+      });
       const data = await res.json();
       if (!res.ok) { setStatus({ type: 'error', msg: data.error ?? 'Test failed.' }); return; }
-      if (data.skipped) { setStatus({ type: 'info', msg: 'SMTP not configured — no email sent.' }); return; }
-      setStatus({ type: 'success', msg: 'Test email sent — check your inbox.' });
+      if (data.skipped) { setStatus({ type: 'info', msg: 'SMTP not configured — fill in Host, Username, and Password first.' }); return; }
+      setStatus({ type: 'success', msg: `Test email sent to ${user} — check your inbox.` });
     } catch {
       setStatus({ type: 'error', msg: 'Network error — test failed.' });
     } finally {
