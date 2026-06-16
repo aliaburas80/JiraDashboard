@@ -460,7 +460,7 @@ export default function WorkExplorerPage() {
                   />
                 )}
                 {selected.priority && (
-                  <span className={styles.prioFlag} data-prio={prioMeta(selected.priority).key}>
+                  <span className={styles.prioChip} data-prio={prioMeta(selected.priority).key}>
                     {prioMeta(selected.priority).icon} {selected.priority}
                   </span>
                 )}
