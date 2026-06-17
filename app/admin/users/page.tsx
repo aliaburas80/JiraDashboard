@@ -164,10 +164,10 @@ export default function AdminUsersPage() {
   const admins = users.filter(u => u.role === 'admin').length;
 
   const stats = [
-    { icon: '👥', label: 'Total Users',  value: String(total),  note: 'All accounts',        toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
-    { icon: '🛡',  label: 'Active',       value: String(active), note: total ? `${Math.round((active/total)*100)}% of total` : '—', toneStyle: { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } },
-    { icon: '⚡',  label: 'Admins',       value: String(admins), note: total ? `${Math.round((admins/total)*100)}% of total` : '—', toneStyle: { background: 'rgba(248,113,113,0.12)', color: '#F87171' } },
-    { icon: '▣',  label: 'Role Types',   value: String(ASSIGNABLE_ROLES.length), note: 'Assignable roles', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#94A3B8' } },
+    { icon: 'people', label: 'Total Users',  value: String(total),  note: 'All accounts',        toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
+    { icon: 'shield', label: 'Active',       value: String(active), note: total ? `${Math.round((active/total)*100)}% of total` : '—', toneStyle: { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } },
+    { icon: 'priorityHigh', label: 'Admins',       value: String(admins), note: total ? `${Math.round((admins/total)*100)}% of total` : '—', toneStyle: { background: 'rgba(248,113,113,0.12)', color: '#F87171' } },
+    { icon: 'teams', label: 'Role Types',   value: String(ASSIGNABLE_ROLES.length), note: 'Assignable roles', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#94A3B8' } },
   ];
 
   if (loading) return (

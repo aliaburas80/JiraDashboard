@@ -12,12 +12,10 @@ const CLOUD_EXTERNALS = [
 
 const NODE_EXTERNALS = ['fs', 'path', 'http', 'https', 'stream', 'net', 'tls'];
 
-const path = require('path');
-
 // Keep build output outside iCloud Drive — iCloud evicts files from the
 // Documents folder, destroying .next chunks while the server is running.
 const DIST_DIR = process.env.NEXT_DIST_DIR
-  || path.join(require('os').homedir(), '.next-jira-dashboard');
+  || '.next-jira-dashboard';
 
 const nextConfig = {
   distDir: DIST_DIR,

@@ -22,17 +22,17 @@ export interface ChartMeta {
 }
 
 export const CHART_REGISTRY: ChartMeta[] = [
-  { id: 'delivery',   label: 'Delivery Composition',  icon: '💠', defaultSpan: 2 },
-  { id: 'health',     label: 'Health Mix',             icon: '🏥', defaultSpan: 1 },
-  { id: 'types',      label: 'Issue Types',            icon: '📁', defaultSpan: 1 },
-  { id: 'points',     label: 'Story Points',           icon: '💎', defaultSpan: 1 },
-  { id: 'velocity',   label: 'Sprint Velocity',        icon: '🏃', defaultSpan: 2 },
-  { id: 'team',       label: 'Team Load',              icon: '👥', defaultSpan: 1 },
-  { id: 'quarters',   label: 'Quarter Throughput',     icon: '📅', defaultSpan: 2 },
-  { id: 'kanban',     label: 'Kanban Status Flow',     icon: '🗃️', defaultSpan: 1 },
-  { id: 'timeline',   label: 'Timeline / Gantt',       icon: '📊', defaultSpan: 3 },
-  { id: 'labels',     label: 'Label Distribution',     icon: '🏷️', defaultSpan: 2 },
-  { id: 'links',      label: 'Link Type Distribution', icon: '🔗', defaultSpan: 1 },
+  { id: 'delivery',   label: 'Delivery Composition',  icon: 'chartPie', defaultSpan: 2 },
+  { id: 'health',     label: 'Health Mix',             icon: 'statusSuccess', defaultSpan: 1 },
+  { id: 'types',      label: 'Issue Types',            icon: 'folder', defaultSpan: 1 },
+  { id: 'points',     label: 'Story Points',           icon: 'story', defaultSpan: 1 },
+  { id: 'velocity',   label: 'Sprint Velocity',        icon: 'sprint', defaultSpan: 2 },
+  { id: 'team',       label: 'Team Load',              icon: 'people', defaultSpan: 1 },
+  { id: 'quarters',   label: 'Quarter Throughput',     icon: 'calendar', defaultSpan: 2 },
+  { id: 'kanban',     label: 'Kanban Status Flow',     icon: 'board', defaultSpan: 1 },
+  { id: 'timeline',   label: 'Timeline / Gantt',       icon: 'chartBar', defaultSpan: 3 },
+  { id: 'labels',     label: 'Label Distribution',     icon: 'tag', defaultSpan: 2 },
+  { id: 'links',      label: 'Link Type Distribution', icon: 'link', defaultSpan: 1 },
 ];
 
 // ── Defaults ──────────────────────────────────────────────────────────────────

@@ -757,7 +757,6 @@ const PACKAGES = [
   { name:'iron-session',    version:'^8.0.4',   usedFor:'HTTP-only cookie sessions, auth state',         feature:'F3 Auth & Database',  scope:'Server',    status:'Installed', risk:'Login/logout/session completely broken' },
   { name:'bcryptjs',        version:'^3.0.3',   usedFor:'Password hashing (rounds=12)',                  feature:'F3 Auth & Database',  scope:'Server',    status:'Installed', risk:'Passwords stored in plaintext' },
   { name:'@types/bcryptjs', version:'^2.4.6',   usedFor:'TypeScript types for bcryptjs',                feature:'F3 Auth & Database',  scope:'Dev-only',  status:'Installed', risk:'TypeScript errors in auth code' },
-  { name:'lucide-react',    version:'^0.427.0', usedFor:'SVG icon components used sparingly',            feature:'UI/Icons',            scope:'Client',    status:'Installed', risk:'Icons disappear, minor visual issue' },
   { name:'clsx',            version:'^2.1.1',   usedFor:'Conditional className utility',                 feature:'UI/Styling',          scope:'Client',    status:'Installed', risk:'className logic errors in components' },
   { name:'tailwind-merge',  version:'^2.3.0',   usedFor:'Merge Tailwind classes without conflicts',      feature:'UI/Styling',          scope:'Client',    status:'Installed', risk:'Duplicate Tailwind class conflicts' },
   { name:'jest',            version:'^29.7.0',  usedFor:'Test runner for 253 automated tests',           feature:'Testing',             scope:'Dev-only',  status:'Installed', risk:'No automated testing' },

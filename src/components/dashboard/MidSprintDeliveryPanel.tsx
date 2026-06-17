@@ -1,15 +1,16 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
 import type { MidSprintInsight, SprintDeliveryPattern } from '@/types/throughput';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 function patternChip(pattern: SprintDeliveryPattern): { cls: string; icon: string; borderLeft?: string } {
   switch (pattern) {
-    case 'Healthy Early Progress': return { cls: 'chip c-gr',  icon: '✅' };
-    case 'End-Loaded Sprint':      return { cls: 'chip c-am',  icon: '⏱', borderLeft: '3px solid var(--dc-amber, #F59E0B)' };
-    case 'Late Delivery Risk':     return { cls: 'chip c-am',  icon: '⚠️', borderLeft: '3px solid var(--dc-amber, #F59E0B)' };
-    case 'Scope Instability':      return { cls: 'chip c-or',  icon: '🔀' };
-    case 'Blocked Sprint':         return { cls: 'chip c-rd',  icon: '🚫', borderLeft: '3px solid var(--dc-red, #F87171)' };
-    default:                       return { cls: 'chip c-nt',  icon: '❓' };
+    case 'Healthy Early Progress': return { cls: 'chip c-gr',  icon: 'checkCircle' };
+    case 'End-Loaded Sprint':      return { cls: 'chip c-am',  icon: 'clock', borderLeft: '3px solid var(--dc-amber, #F59E0B)' };
+    case 'Late Delivery Risk':     return { cls: 'chip c-am',  icon: 'warning', borderLeft: '3px solid var(--dc-amber, #F59E0B)' };
+    case 'Scope Instability':      return { cls: 'chip c-or',  icon: 'workflow' };
+    case 'Blocked Sprint':         return { cls: 'chip c-rd',  icon: 'priorityBlocker', borderLeft: '3px solid var(--dc-red, #F87171)' };
+    default:                       return { cls: 'chip c-nt',  icon: 'question' };
   }
 }
 
@@ -40,7 +41,7 @@ function MidSprintCard({ insight }: { insight: MidSprintInsight }) {
           )}
         </p>
         <span className={`${cls} shrink-0`} style={{ fontSize: 10 }}>
-          <span>{icon}</span> {insight.pattern}
+          <SvgIcon name={icon} size={10} /> {insight.pattern}
         </span>
       </div>
 

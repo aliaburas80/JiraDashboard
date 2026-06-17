@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { SecurityReport, SecurityCheck, CheckStatus, CheckSeverity } from '@/services/settings/securityCheck.service';
 
 const STATUS_DOT: Record<CheckStatus, { bg: string; border: string; color: string; icon: string }> = {
-  pass:   { bg: 'rgba(34,197,94,0.12)',   border: '1.5px solid var(--dc-green, #22C55E)', color: '#4ade80',  icon: '✓' },
-  fail:   { bg: 'rgba(248,113,113,0.12)', border: '1.5px solid var(--dc-red, #F87171)',   color: '#fca5a5',  icon: '✗' },
-  warn:   { bg: 'rgba(245,158,11,0.12)',  border: '1.5px solid var(--dc-amber, #F59E0B)', color: '#fcd34d',  icon: '△' },
-  manual: { bg: 'rgba(255,255,255,0.07)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)', icon: '?' },
+  pass:   { bg: 'rgba(34,197,94,0.12)',   border: '1.5px solid var(--dc-green, #22C55E)', color: '#4ade80',  icon: 'check' },
+  fail:   { bg: 'rgba(248,113,113,0.12)', border: '1.5px solid var(--dc-red, #F87171)',   color: '#fca5a5',  icon: 'cross' },
+  warn:   { bg: 'rgba(245,158,11,0.12)',  border: '1.5px solid var(--dc-amber, #F59E0B)', color: '#fcd34d',  icon: 'warning' },
+  manual: { bg: 'rgba(255,255,255,0.07)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)', icon: 'question' },
 };
 
 function sevChipClass(sev: CheckSeverity): string {
@@ -20,10 +21,10 @@ function sevChipClass(sev: CheckSeverity): string {
 }
 
 const SECTION_HEADER: Record<'fail' | 'warn' | 'pass' | 'manual', { label: string; color: string }> = {
-  fail:   { label: '✗ FAILING',       color: 'var(--dc-red, #F87171)' },
-  warn:   { label: '△ WARNINGS',      color: 'var(--dc-amber, #F59E0B)' },
-  pass:   { label: '✓ PASSING',       color: 'var(--dc-green, #22C55E)' },
-  manual: { label: '? MANUAL REVIEW', color: 'var(--dc-p2, #909090)' },
+  fail:   { label: 'Failing',       color: 'var(--dc-red, #F87171)' },
+  warn:   { label: 'Warnings',      color: 'var(--dc-amber, #F59E0B)' },
+  pass:   { label: 'Passing',       color: 'var(--dc-green, #22C55E)' },
+  manual: { label: 'Manual Review', color: 'var(--dc-p2, #909090)' },
 };
 
 const CATEGORIES = ['Authentication', 'Access Control', 'Secrets', 'Environment', 'Database', 'Transport', 'Network', 'Privacy', 'Backup', 'Operations'];
@@ -42,7 +43,7 @@ function CheckRow({ c }: { c: SecurityCheck }) {
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
       >
         <span style={{ width: 18, height: 18, borderRadius: '50%', background: dot.bg, border: dot.border, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, fontSize: 9, color: dot.color, fontWeight: 700 }}>
-          {dot.icon}
+          <SvgIcon name={dot.icon} size={10} />
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
@@ -100,10 +101,10 @@ export default function SecurityPage() {
     ? report.overallScore >= 80 ? 'var(--dc-green, #22C55E)' : report.overallScore >= 60 ? 'var(--dc-amber, #F59E0B)' : 'var(--dc-red, #F87171)'
     : 'var(--dc-p2, #909090)';
   const securityStats = report ? [
-    { icon: '🔐', label: 'Security Score', value: String(report.overallScore), note: report.isProductionReady ? 'Production ready' : 'Review required', color: scoreColor, toneStyle: { background: report.overallScore >= 80 ? 'rgba(34,197,94,0.1)' : report.overallScore >= 60 ? 'rgba(245,158,11,0.1)' : 'rgba(248,113,113,0.1)', color: scoreColor } },
-    { icon: '✓', label: 'Passing',        value: String(report.passCount),   note: 'Automated checks', color: 'var(--dc-green, #22C55E)',   toneStyle: { background: 'rgba(34,197,94,0.1)',   color: 'var(--dc-green, #22C55E)' } },
-    { icon: '△', label: 'Warnings',       value: String(report.warnCount),   note: 'Needs attention',  color: 'var(--dc-amber, #F59E0B)',   toneStyle: { background: 'rgba(245,158,11,0.1)',  color: 'var(--dc-amber, #F59E0B)' } },
-    { icon: '?', label: 'Manual Review',  value: String(report.manualCount), note: 'Runbook checks',   color: 'var(--dc-p2, #909090)',      toneStyle: { background: 'var(--dc-s3, #282828)', color: 'var(--dc-p2, #909090)' } },
+    { icon: 'shield', label: 'Security Score', value: String(report.overallScore), note: report.isProductionReady ? 'Production ready' : 'Review required', color: scoreColor, toneStyle: { background: report.overallScore >= 80 ? 'rgba(34,197,94,0.1)' : report.overallScore >= 60 ? 'rgba(245,158,11,0.1)' : 'rgba(248,113,113,0.1)', color: scoreColor } },
+    { icon: 'checkCircle', label: 'Passing',        value: String(report.passCount),   note: 'Automated checks', color: 'var(--dc-green, #22C55E)',   toneStyle: { background: 'rgba(34,197,94,0.1)',   color: 'var(--dc-green, #22C55E)' } },
+    { icon: 'warning', label: 'Warnings',       value: String(report.warnCount),   note: 'Needs attention',  color: 'var(--dc-amber, #F59E0B)',   toneStyle: { background: 'rgba(245,158,11,0.1)',  color: 'var(--dc-amber, #F59E0B)' } },
+    { icon: 'question', label: 'Manual Review',  value: String(report.manualCount), note: 'Runbook checks',   color: 'var(--dc-p2, #909090)',      toneStyle: { background: 'var(--dc-s3, #282828)', color: 'var(--dc-p2, #909090)' } },
   ] : [];
 
   return (

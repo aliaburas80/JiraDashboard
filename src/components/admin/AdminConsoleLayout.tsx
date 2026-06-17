@@ -2,6 +2,7 @@
 'use client';
 
 import type { CSSProperties, ReactNode } from 'react';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 export interface AdminConsoleStat {
   icon: string;
@@ -23,12 +24,12 @@ export interface AdminConsoleNavItem {
 }
 
 export const ADMINISTRATION_NAV: AdminConsoleNavItem[] = [
-  { id: 'users',       label: 'User Management',   icon: '👥', href: '/admin/users' },
-  { id: 'settings',    label: 'Settings',          icon: '⚙️', href: '/admin/settings' },
-  { id: 'theme',       label: 'Theme & Branding',  icon: '🎨', href: '/admin/theme' },
-  { id: 'diagnostics', label: 'Diagnostics',       icon: '🩺', href: '/admin/diagnostics' },
-  { id: 'security',    label: 'Security',          icon: '🔐', href: '/admin/security' },
-  { id: 'logs',        label: 'Import Logs',       icon: '🧾', href: '/admin/logs' },
+  { id: 'users',       label: 'User Management',   icon: 'people', href: '/admin/users' },
+  { id: 'settings',    label: 'Settings',          icon: 'settings', href: '/admin/settings' },
+  { id: 'theme',       label: 'Theme & Branding',  icon: 'palette', href: '/admin/theme' },
+  { id: 'diagnostics', label: 'Diagnostics',       icon: 'statusInfo', href: '/admin/diagnostics' },
+  { id: 'security',    label: 'Security',          icon: 'shield', href: '/admin/security' },
+  { id: 'logs',        label: 'Import Logs',       icon: 'clipboard', href: '/admin/logs' },
 ];
 
 export function AdminConsoleLayout({
@@ -79,7 +80,9 @@ export function AdminConsoleLayout({
           {stats.map(card => (
             <article key={card.label} className="min-h-[88px] rounded-[14px] p-4" style={{ background: 'var(--color-surface, #fff)', border: '1px solid var(--color-border, #e2e8f0)', boxShadow: '0 1px 4px rgb(0 0 0 / 6%)' }}>
               <div className="flex items-center gap-4">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-lg" style={card.toneStyle ?? { background: 'var(--color-subtle, #f1f5f9)', color: 'var(--color-text-secondary, #64748b)' }}>{card.icon}</span>
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-lg" style={card.toneStyle ?? { background: 'var(--color-subtle, #f1f5f9)', color: 'var(--color-text-secondary, #64748b)' }}>
+                  <SvgIcon name={card.icon} size={18} />
+                </span>
                 <span className="min-w-0">
                   <strong className="block truncate text-2xl font-black tracking-tight" style={{ color: card.color ?? 'var(--color-text-primary, #0f172a)' }}>{card.value}</strong>
                   <span className="mt-1 block truncate text-sm font-bold" style={{ color: 'var(--color-text-secondary, #64748b)' }}>{card.label}</span>

@@ -43,10 +43,10 @@ export default function AdminLogsPage() {
     ? Math.round(logs.reduce((sum, log) => sum + (log.healthScore || 0), 0) / logs.length)
     : 0;
   const logStats = [
-    { icon: '🧾', label: 'Import Logs',  value: String(logs.length),   note: 'Across all users',   color: 'var(--dc-p1, #F2F2F2)',    toneStyle: { background: 'rgba(232,93,18,0.1)',   color: 'var(--dc-acc, #E85D12)' } },
-    { icon: '✓',  label: 'Successful',   value: String(successfulLogs), note: logs.length ? `${Math.round((successfulLogs / logs.length) * 100)}% success` : 'No imports yet', color: 'var(--dc-green, #22C55E)',  toneStyle: { background: 'rgba(34,197,94,0.1)',   color: 'var(--dc-green, #22C55E)' } },
-    { icon: '△',  label: 'Failed',       value: String(failedLogs),     note: 'Needs review',       color: failedLogs > 0 ? 'var(--dc-red, #F87171)' : 'var(--dc-p3, #505050)', toneStyle: { background: failedLogs > 0 ? 'rgba(248,113,113,0.1)' : 'var(--dc-s3, #282828)', color: failedLogs > 0 ? '#fca5a5' : 'var(--dc-p3, #505050)' } },
-    { icon: '▣',  label: 'Avg Health',   value: logs.length ? `${averageHealth}/100` : '—', note: `${uniqueUsers} user${uniqueUsers !== 1 ? 's' : ''}`, color: 'var(--dc-acc2, #FF8A4C)', toneStyle: { background: 'rgba(232,93,18,0.1)', color: 'var(--dc-acc2, #FF8A4C)' } },
+    { icon: 'clipboard', label: 'Import Logs',  value: String(logs.length),   note: 'Across all users',   color: 'var(--dc-p1, #F2F2F2)',    toneStyle: { background: 'rgba(232,93,18,0.1)',   color: 'var(--dc-acc, #E85D12)' } },
+    { icon: 'checkCircle',  label: 'Successful',   value: String(successfulLogs), note: logs.length ? `${Math.round((successfulLogs / logs.length) * 100)}% success` : 'No imports yet', color: 'var(--dc-green, #22C55E)',  toneStyle: { background: 'rgba(34,197,94,0.1)',   color: 'var(--dc-green, #22C55E)' } },
+    { icon: 'warning',  label: 'Failed',       value: String(failedLogs),     note: 'Needs review',       color: failedLogs > 0 ? 'var(--dc-red, #F87171)' : 'var(--dc-p3, #505050)', toneStyle: { background: failedLogs > 0 ? 'rgba(248,113,113,0.1)' : 'var(--dc-s3, #282828)', color: failedLogs > 0 ? '#fca5a5' : 'var(--dc-p3, #505050)' } },
+    { icon: 'statusInfo',  label: 'Avg Health',   value: logs.length ? `${averageHealth}/100` : '—', note: `${uniqueUsers} user${uniqueUsers !== 1 ? 's' : ''}`, color: 'var(--dc-acc2, #FF8A4C)', toneStyle: { background: 'rgba(232,93,18,0.1)', color: 'var(--dc-acc2, #FF8A4C)' } },
   ];
 
   return (

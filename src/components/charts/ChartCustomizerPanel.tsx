@@ -17,6 +17,7 @@ import {
   type ChartPref,
   type ChartSpan,
 } from '@/lib/chartCustomizer';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 interface Props {
   onPrefsChange: (prefs: ChartPref[]) => void;
@@ -67,9 +68,7 @@ export default function ChartCustomizerPanel({ onPrefsChange }: Props) {
         aria-expanded={open}
         className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-colors shadow-sm"
       >
-        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
-          <path d="M3 5h18v2H3V5Zm4 7h10v2H7v-2Zm3 7h4v2h-4v-2Z"/>
-        </svg>
+        <SvgIcon name="customize" size={14} />
         Customise
         {!isDefault && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />}
       </button>
@@ -116,16 +115,16 @@ export default function ChartCustomizerPanel({ onPrefsChange }: Props) {
                         disabled={idx === 0}
                         className="w-5 h-4 flex items-center justify-center text-slate-300 hover:text-slate-600 disabled:opacity-20 disabled:cursor-not-allowed rounded"
                         aria-label={`Move ${meta.label} up`}>
-                        <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current"><path d="M12 4 4 12h5v8h6v-8h5L12 4Z"/></svg>
+                        <SvgIcon name="arrowUp" size={12} />
                       </button>
                       <button type="button" onClick={() => apply(chartMoveDown(prefs, pref.id))}
                         disabled={idx === prefs.length - 1}
                         className="w-5 h-4 flex items-center justify-center text-slate-300 hover:text-slate-600 disabled:opacity-20 disabled:cursor-not-allowed rounded"
                         aria-label={`Move ${meta.label} down`}>
-                        <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current"><path d="M12 20 4 12h5V4h6v8h5L12 20Z"/></svg>
+                        <SvgIcon name="arrowDown" size={12} />
                       </button>
                     </div>
-                    <span className="text-base shrink-0" aria-hidden="true">{meta.icon}</span>
+                    <SvgIcon name={meta.icon} size={16} className="text-slate-500" />
                     <span className={`flex-1 text-xs font-semibold truncate ${pref.visible ? 'text-slate-700' : 'text-slate-400 line-through'}`}>
                       {meta.label}
                     </span>

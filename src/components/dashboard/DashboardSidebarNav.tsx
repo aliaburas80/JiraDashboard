@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import styles from './DashboardSidebarNav.module.scss';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 // ─── Chip classes (inline styles matching the spec) ───────────────────────────
 function Chip({ type, label }: { type: 'cc' | 'cw' | 'cg' | 'cm' | 'cn'; label: string }) {
@@ -30,34 +31,27 @@ function healthBandLabel(score: number): string {
   return 'Critical';
 }
 
-// ─── Icon SVGs (13×13 stroke, fill:none) ─────────────────────────────────────
-const icons: Record<string, React.ReactNode> = {
-  home:      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>,
-  alertTri:  <><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></>,
-  monitor:   <><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></>,
-  clock:     <><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></>,
-  shield:    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>,
-  barChart:  <path d="M18 20V10M12 20V4M6 20v-6"/>,
-  circle:    <><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 010 20"/></>,
-  activity:  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>,
-  calendar:  <><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></>,
-  grid:      <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17h7m-3.5-3.5v7"/></>,
-  zap:       <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>,
-  users:     <><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></>,
-  tag:       <><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></>,
-  layers:    <><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></>,
-  list:      <><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></>,
+const NAV_ICONS: Record<string, string> = {
+  home: 'dashboard',
+  alertTri: 'warning',
+  monitor: 'chartBar',
+  clock: 'clock',
+  shield: 'shield',
+  barChart: 'chartBar',
+  circle: 'chartPie',
+  activity: 'activity',
+  calendar: 'calendar',
+  grid: 'board',
+  zap: 'priorityHigh',
+  users: 'people',
+  tag: 'tag',
+  layers: 'epic',
+  list: 'list',
 };
 
 function Icon({ name, active }: { name: string; active: boolean }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      className={`${styles.navIcon} ${active ? styles.iconActive : styles.iconInactive}`}
-      aria-hidden="true"
-    >
-      {icons[name]}
-    </svg>
+    <SvgIcon name={NAV_ICONS[name] ?? name} className={`${styles.navIcon} ${active ? styles.iconActive : styles.iconInactive}`} />
   );
 }
 

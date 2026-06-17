@@ -121,10 +121,10 @@ export default function DiagnosticsPage() {
   const envOkCount = Object.values(data.env).filter(Boolean).length;
   const envTotal   = Object.keys(data.env).length;
   const diagnosticsStats = [
-    { icon: '🩺', label: 'Ops Score', value: String(data.opsScore), note: opsBand, tone: data.opsScore >= 80 ? 'bg-green-50 text-green-700' : data.opsScore >= 60 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700' },
-    { icon: '✓', label: 'Env Checks', value: `${envOkCount}/${envTotal}`, note: 'Configuration checks' },
-    { icon: '↥', label: 'Imports', value: String(data.imports.total), note: `${data.imports.successRate}% success` },
-    { icon: '▣', label: 'Audit Events', value: String(data.auditEvents.total), note: 'Recorded actions' },
+    { icon: 'statusInfo', label: 'Ops Score', value: String(data.opsScore), note: opsBand, tone: data.opsScore >= 80 ? 'bg-green-50 text-green-700' : data.opsScore >= 60 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700' },
+    { icon: 'checkCircle', label: 'Env Checks', value: `${envOkCount}/${envTotal}`, note: 'Configuration checks' },
+    { icon: 'upload', label: 'Imports', value: String(data.imports.total), note: `${data.imports.successRate}% success` },
+    { icon: 'clipboard', label: 'Audit Events', value: String(data.auditEvents.total), note: 'Recorded actions' },
   ];
 
   return (

@@ -271,10 +271,10 @@ export default function AdminThemePage() {
   const activePal = PALETTE_PRESETS[settings.palette];
 
   const stats = [
-    { icon: '🎨', label: 'Active palette',  value: activePal?.badge ?? '—',      note: activePal?.label ?? 'None',  tone: 'bg-indigo-50 text-indigo-700' },
-    { icon: '🔤', label: 'Font size',        value: FONT_SIZE_PRESETS[settings.fontSize]?.label ?? '—', note: FONT_SIZE_PRESETS[settings.fontSize]?.px ?? '—', tone: 'bg-blue-50 text-blue-700' },
-    { icon: '⬛', label: 'Corner radius',    value: RADIUS_PRESETS[settings.radius]?.label ?? '—', note: `md: ${RADIUS_PRESETS[settings.radius]?.md ?? '—'}`, tone: 'bg-slate-50 text-slate-700' },
-    { icon: '🏷️', label: 'App name',         value: branding.appName || '—',       note: branding.logoUrl ? 'Custom logo set' : 'Default logo', tone: 'bg-amber-50 text-amber-700' },
+    { icon: 'palette', label: 'Active palette',  value: activePal?.badge ?? '—',      note: activePal?.label ?? 'None',  tone: 'bg-indigo-50 text-indigo-700' },
+    { icon: 'text', label: 'Font size',        value: FONT_SIZE_PRESETS[settings.fontSize]?.label ?? '—', note: FONT_SIZE_PRESETS[settings.fontSize]?.px ?? '—', tone: 'bg-blue-50 text-blue-700' },
+    { icon: 'customize', label: 'Corner radius',    value: RADIUS_PRESETS[settings.radius]?.label ?? '—', note: `md: ${RADIUS_PRESETS[settings.radius]?.md ?? '—'}`, tone: 'bg-slate-50 text-slate-700' },
+    { icon: 'tag', label: 'App name',         value: branding.appName || '—',       note: branding.logoUrl ? 'Custom logo set' : 'Default logo', tone: 'bg-amber-50 text-amber-700' },
   ];
 
   return (

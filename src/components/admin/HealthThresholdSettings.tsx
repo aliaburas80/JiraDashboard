@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import type { HealthThresholds } from '@/types/thresholds';
 import { DEFAULT_THRESHOLDS, THRESHOLD_LABELS } from '@/types/thresholds';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 interface Props {
   thresholds: HealthThresholds;
@@ -64,27 +65,27 @@ export default function HealthThresholdSettings({ thresholds, onSave }: Props) {
   const groups = [
     {
       title: 'Cycle Time',
-      icon: '🔄',
+      icon: 'refresh',
       fields: ['cycleTimeWarningDays', 'cycleTimeCriticalDays'] as (keyof typeof THRESHOLD_LABELS)[],
     },
     {
       title: 'Lead Time',
-      icon: '📅',
+      icon: 'calendar',
       fields: ['leadTimeWarningDays', 'leadTimeCriticalDays'] as (keyof typeof THRESHOLD_LABELS)[],
     },
     {
       title: 'Active Item Age',
-      icon: '⏳',
+      icon: 'clock',
       fields: ['activeAgeWarningDays', 'activeAgeCriticalDays'] as (keyof typeof THRESHOLD_LABELS)[],
     },
     {
       title: 'Open Item Age',
-      icon: '📦',
+      icon: 'archive',
       fields: ['openAgeWarningDays'] as (keyof typeof THRESHOLD_LABELS)[],
     },
     {
       title: 'Blocked Ratio',
-      icon: '🚫',
+      icon: 'priorityBlocker',
       fields: ['blockedRatioWarningPct', 'blockedRatioCriticalPct'] as (keyof typeof THRESHOLD_LABELS)[],
     },
   ];
@@ -109,7 +110,7 @@ export default function HealthThresholdSettings({ thresholds, onSave }: Props) {
       {groups.map(group => (
         <div key={group.title} className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
           <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-3">
-            <span className="text-base">{group.icon}</span>
+            <SvgIcon name={group.icon} size={16} className="text-slate-500" />
             <h3 className="text-sm font-black text-slate-700">{group.title}</h3>
           </div>
           {group.fields.map(key => (

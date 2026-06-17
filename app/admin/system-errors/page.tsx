@@ -114,10 +114,10 @@ export default function SystemErrorsPage() {
   const unresolved = logs.filter(l => !l.resolvedAt).length;
 
   const stats = [
-    { icon: '🚨', label: 'Total Logged',   value: String(total),     note: 'All time',          toneStyle: { background: 'rgba(248,113,113,0.12)', color: '#F87171' } },
-    { icon: '⚡', label: 'Unresolved',     value: String(unresolved), note: 'Need attention',    toneStyle: { background: 'rgba(251,191,36,0.12)',   color: '#FBBF24' } },
-    { icon: '✅', label: 'Auto-Fixed',     value: String(logs.filter(l => l.resolution === 'auto-fixed').length), note: 'System self-healed', toneStyle: { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } },
-    { icon: '🔁', label: 'Retried',        value: String(logs.filter(l => l.resolution.startsWith('retried')).length), note: 'Manually retried', toneStyle: { background: 'rgba(96,165,250,0.12)', color: '#60A5FA' } },
+    { icon: 'warning', label: 'Total Logged',   value: String(total),     note: 'All time',          toneStyle: { background: 'rgba(248,113,113,0.12)', color: '#F87171' } },
+    { icon: 'priorityHigh', label: 'Unresolved',     value: String(unresolved), note: 'Need attention',    toneStyle: { background: 'rgba(251,191,36,0.12)',   color: '#FBBF24' } },
+    { icon: 'checkCircle', label: 'Auto-Fixed',     value: String(logs.filter(l => l.resolution === 'auto-fixed').length), note: 'System self-healed', toneStyle: { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } },
+    { icon: 'retry', label: 'Retried',        value: String(logs.filter(l => l.resolution.startsWith('retried')).length), note: 'Manually retried', toneStyle: { background: 'rgba(96,165,250,0.12)', color: '#60A5FA' } },
   ];
 
   if (loading) return (

@@ -10,15 +10,15 @@ import type { AdminConsoleStat } from '@/components/admin/AdminConsoleLayout';
 export type Tab = 'users' | 'requests' | 'retention' | 'thresholds' | 'orphan' | 'backup' | 'cloud' | 'browser' | 'config';
 
 export const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; description: string }> = [
-  { id: 'users',      label: 'User Management',     icon: '👥', description: 'Accounts, roles, access state' },
-  { id: 'requests',   label: 'Member Requests',     icon: '📬', description: 'Pending add-member requests' },
-  { id: 'config',     label: 'App Config',          icon: '⚙️', description: 'SMTP, email, and app-level settings' },
-  { id: 'retention',  label: 'Privacy & Retention', icon: '🔒', description: 'Data windows and cleanup' },
-  { id: 'thresholds', label: 'Health Thresholds',   icon: '⚡', description: 'Delivery health rules' },
-  { id: 'orphan',     label: 'Orphan Rules',        icon: '👻', description: 'Hierarchy detection rules' },
-  { id: 'backup',     label: 'Backup & Restore',    icon: '🗄️', description: 'Local backup bundles' },
-  { id: 'cloud',      label: 'Cloud Storage',       icon: '☁️', description: 'S3, Azure, GCP, restore' },
-  { id: 'browser',    label: 'Browser Data',        icon: '🗑️', description: 'Client-side cached data' },
+  { id: 'users',      label: 'User Management',     icon: 'people', description: 'Accounts, roles, access state' },
+  { id: 'requests',   label: 'Member Requests',     icon: 'email', description: 'Pending add-member requests' },
+  { id: 'config',     label: 'App Config',          icon: 'settings', description: 'SMTP, email, and app-level settings' },
+  { id: 'retention',  label: 'Privacy & Retention', icon: 'lock', description: 'Data windows and cleanup' },
+  { id: 'thresholds', label: 'Health Thresholds',   icon: 'priorityHigh', description: 'Delivery health rules' },
+  { id: 'orphan',     label: 'Orphan Rules',        icon: 'link', description: 'Hierarchy detection rules' },
+  { id: 'backup',     label: 'Backup & Restore',    icon: 'archive', description: 'Local backup bundles' },
+  { id: 'cloud',      label: 'Cloud Storage',       icon: 'cloud', description: 'S3, Azure, GCP, restore' },
+  { id: 'browser',    label: 'Browser Data',        icon: 'delete', description: 'Client-side cached data' },
 ];
 
 export function activeTabMeta(tab: Tab) {
@@ -53,59 +53,59 @@ export function buildSettingsStats({
   switch (tab) {
     case 'users':
       return [
-        { icon: '👥', label: 'Total Users', value: String(userSummary.total), note: 'All accounts', color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
-        { icon: '🛡', label: 'Active Users', value: String(userSummary.active), note: userSummary.total ? `${Math.round((userSummary.active / userSummary.total) * 100)}% of total` : 'No users yet', color: '#22C55E', toneStyle: { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } },
-        { icon: '↥', label: 'Admin Users', value: String(userSummary.admins), note: userSummary.total ? `${Math.round((userSummary.admins / userSummary.total) * 100)}% of total` : 'No users yet', color: 'var(--dc-acc2, #FF8A4C)', toneStyle: { background: 'rgba(232,93,18,0.12)', color: '#FF8A4C' } },
-        { icon: '▣', label: 'Role Types', value: String(ASSIGNABLE_ROLES.length), note: 'Assignable roles', color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
+        { icon: 'people', label: 'Total Users', value: String(userSummary.total), note: 'All accounts', color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
+        { icon: 'shield', label: 'Active Users', value: String(userSummary.active), note: userSummary.total ? `${Math.round((userSummary.active / userSummary.total) * 100)}% of total` : 'No users yet', color: '#22C55E', toneStyle: { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } },
+        { icon: 'priorityHigh', label: 'Admin Users', value: String(userSummary.admins), note: userSummary.total ? `${Math.round((userSummary.admins / userSummary.total) * 100)}% of total` : 'No users yet', color: 'var(--dc-acc2, #FF8A4C)', toneStyle: { background: 'rgba(232,93,18,0.12)', color: '#FF8A4C' } },
+        { icon: 'teams', label: 'Role Types', value: String(ASSIGNABLE_ROLES.length), note: 'Assignable roles', color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
       ];
     case 'retention':
       return [
-        { icon: '🔒', label: 'Retention Window', value: retentionLabel(settings), note: settings?.autoDeleteOldLogs ? 'Auto-delete enabled' : 'Manual cleanup', color: 'var(--dc-acc2, #FF8A4C)', toneStyle: { background: 'rgba(232,93,18,0.12)', color: '#FF8A4C' } },
-        { icon: '↥', label: 'Import Logs', value: String(stats?.totalLogs ?? 0), note: `${stats?.logsEligible ?? 0} eligible`, color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
-        { icon: '▣', label: 'Snapshots', value: String(stats?.totalSnapshots ?? 0), note: `${stats?.snapshotsEligible ?? 0} eligible`, color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
-        { icon: '✓', label: 'Storage Mode', value: settings?.storeUploadLogs ? 'On' : 'Off', note: settings?.storeDashboardSnapshots ? 'Snapshots stored' : 'Snapshots off', color: settings?.storeUploadLogs ? '#22C55E' : 'var(--dc-p2, #909090)', toneStyle: settings?.storeUploadLogs ? { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } : { background: 'rgba(255,255,255,0.06)', color: '#909090' } },
+        { icon: 'lock', label: 'Retention Window', value: retentionLabel(settings), note: settings?.autoDeleteOldLogs ? 'Auto-delete enabled' : 'Manual cleanup', color: 'var(--dc-acc2, #FF8A4C)', toneStyle: { background: 'rgba(232,93,18,0.12)', color: '#FF8A4C' } },
+        { icon: 'upload', label: 'Import Logs', value: String(stats?.totalLogs ?? 0), note: `${stats?.logsEligible ?? 0} eligible`, color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
+        { icon: 'dashboard', label: 'Snapshots', value: String(stats?.totalSnapshots ?? 0), note: `${stats?.snapshotsEligible ?? 0} eligible`, color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
+        { icon: 'checkCircle', label: 'Storage Mode', value: settings?.storeUploadLogs ? 'On' : 'Off', note: settings?.storeDashboardSnapshots ? 'Snapshots stored' : 'Snapshots off', color: settings?.storeUploadLogs ? '#22C55E' : 'var(--dc-p2, #909090)', toneStyle: settings?.storeUploadLogs ? { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } : { background: 'rgba(255,255,255,0.06)', color: '#909090' } },
       ];
     case 'thresholds':
       return [
-        { icon: '⚡', label: 'Cycle Critical', value: `${thresholds?.cycleTimeCriticalDays ?? '—'}d`, note: 'Cycle-time hard limit', tone: 'bg-amber-50 text-amber-700' },
-        { icon: '↥', label: 'Lead Critical', value: `${thresholds?.leadTimeCriticalDays ?? '—'}d`, note: 'Lead-time hard limit' },
-        { icon: '▣', label: 'Active Age', value: `${thresholds?.activeAgeCriticalDays ?? '—'}d`, note: 'Work-item age limit' },
-        { icon: '⚖', label: 'Blocked Ratio', value: `${thresholds?.blockedRatioWarningPct ?? '—'}%`, note: 'Warning threshold' },
+        { icon: 'priorityHigh', label: 'Cycle Critical', value: `${thresholds?.cycleTimeCriticalDays ?? '—'}d`, note: 'Cycle-time hard limit', tone: 'bg-amber-50 text-amber-700' },
+        { icon: 'timeline', label: 'Lead Critical', value: `${thresholds?.leadTimeCriticalDays ?? '—'}d`, note: 'Lead-time hard limit' },
+        { icon: 'workItem', label: 'Active Age', value: `${thresholds?.activeAgeCriticalDays ?? '—'}d`, note: 'Work-item age limit' },
+        { icon: 'warning', label: 'Blocked Ratio', value: `${thresholds?.blockedRatioWarningPct ?? '—'}%`, note: 'Warning threshold' },
       ];
     case 'orphan':
       return [
-        { icon: '⚖', label: 'Parent Fields', value: String(orphanRules?.parentLinkFields?.length ?? 0), note: 'Hierarchy sources', tone: 'bg-blue-50 text-blue-700' },
-        { icon: '▣', label: 'Exempt Types', value: String(orphanRules?.exemptIssueTypes?.length ?? 0), note: 'Ignored issue types' },
-        { icon: '↥', label: 'Sub-task Rule', value: orphanRules?.flagSubTasksWithoutParent ? 'On' : 'Off', note: 'Parent validation' },
-        { icon: '⚡', label: 'Risk Threshold', value: `${orphanRules?.riskThresholdPct ?? '—'}%`, note: 'Warning threshold' },
+        { icon: 'link', label: 'Parent Fields', value: String(orphanRules?.parentLinkFields?.length ?? 0), note: 'Hierarchy sources', tone: 'bg-blue-50 text-blue-700' },
+        { icon: 'workItems', label: 'Exempt Types', value: String(orphanRules?.exemptIssueTypes?.length ?? 0), note: 'Ignored issue types' },
+        { icon: 'subtasks', label: 'Sub-task Rule', value: orphanRules?.flagSubTasksWithoutParent ? 'On' : 'Off', note: 'Parent validation' },
+        { icon: 'priorityHigh', label: 'Risk Threshold', value: `${orphanRules?.riskThresholdPct ?? '—'}%`, note: 'Warning threshold' },
       ];
     case 'backup':
       return [
-        { icon: '🗄️', label: 'Backup Files', value: String(backupFiles?.length ?? 0), note: 'Local bundles', tone: 'bg-blue-50 text-blue-700' },
-        { icon: '▣', label: 'Included', value: String(includedBackups), note: 'Ready to restore' },
-        { icon: '✓', label: 'Latest Backup', value: latestBackup, note: backupFiles?.length ? 'Backup detected' : 'No backup found' },
-        { icon: '↥', label: 'Restore Path', value: 'Local', note: 'Server filesystem' },
+        { icon: 'archive', label: 'Backup Files', value: String(backupFiles?.length ?? 0), note: 'Local bundles', tone: 'bg-blue-50 text-blue-700' },
+        { icon: 'checkCircle', label: 'Included', value: String(includedBackups), note: 'Ready to restore' },
+        { icon: 'statusSuccess', label: 'Latest Backup', value: latestBackup, note: backupFiles?.length ? 'Backup detected' : 'No backup found' },
+        { icon: 'folder', label: 'Restore Path', value: 'Local', note: 'Server filesystem' },
       ];
     case 'cloud':
       return [
-        { icon: '☁️', label: 'Provider Setup', value: 'Cloud', note: 'S3, Azure, GCP', tone: 'bg-blue-50 text-blue-700' },
-        { icon: '✓', label: 'Backup State', value: latestBackup, note: backupFiles?.length ? 'Backup available' : 'No backup found' },
-        { icon: '↥', label: 'Local Bundles', value: String(backupFiles?.length ?? 0), note: 'Known backup files' },
-        { icon: '▣', label: 'Recovery', value: 'Ready', note: 'Test provider first' },
+        { icon: 'cloud', label: 'Provider Setup', value: 'Cloud', note: 'S3, Azure, GCP', tone: 'bg-blue-50 text-blue-700' },
+        { icon: 'checkCircle', label: 'Backup State', value: latestBackup, note: backupFiles?.length ? 'Backup available' : 'No backup found' },
+        { icon: 'archive', label: 'Local Bundles', value: String(backupFiles?.length ?? 0), note: 'Known backup files' },
+        { icon: 'retry', label: 'Recovery', value: 'Ready', note: 'Test provider first' },
       ];
     case 'requests':
       return [
-        { icon: '📬', label: 'Requests', value: 'Inbox', note: 'Pending add-member requests', tone: 'bg-amber-50 text-amber-700' },
-        { icon: '✓', label: 'Accept', value: 'Creates account', note: 'With first-login password' },
-        { icon: '✕', label: 'Reject', value: 'Notifies requester', note: 'Optional decision note' },
-        { icon: '🔒', label: 'Self-approval', value: 'Blocked', note: 'Admin cannot approve own' },
+        { icon: 'email', label: 'Requests', value: 'Inbox', note: 'Pending add-member requests', tone: 'bg-amber-50 text-amber-700' },
+        { icon: 'checkCircle', label: 'Accept', value: 'Creates account', note: 'With first-login password' },
+        { icon: 'cross', label: 'Reject', value: 'Notifies requester', note: 'Optional decision note' },
+        { icon: 'lock', label: 'Self-approval', value: 'Blocked', note: 'Admin cannot approve own' },
       ];
     case 'browser':
       return [
-        { icon: '🗑️', label: 'Browser Data', value: 'Local', note: 'Client-side cache', tone: 'bg-red-50 text-red-700' },
-        { icon: '▣', label: 'Scope', value: 'This device', note: 'Browser storage only' },
-        { icon: '🔒', label: 'Server Data', value: 'Safe', note: 'Not cleared here' },
-        { icon: '✓', label: 'Admin Action', value: 'Manual', note: 'Confirmation required' },
+        { icon: 'delete', label: 'Browser Data', value: 'Local', note: 'Client-side cache', tone: 'bg-red-50 text-red-700' },
+        { icon: 'target', label: 'Scope', value: 'This device', note: 'Browser storage only' },
+        { icon: 'lock', label: 'Server Data', value: 'Safe', note: 'Not cleared here' },
+        { icon: 'checkCircle', label: 'Admin Action', value: 'Manual', note: 'Confirmation required' },
       ];
     default:
       return [];

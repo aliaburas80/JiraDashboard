@@ -62,11 +62,9 @@
 }
 
 .navIcon {
-  font-size: 15px;
-  line-height: 1;
   flex-shrink: 0;
-  width: 20px;
-  text-align: center;
+  width: 16px;
+  height: 16px;
 }
 
 .navLabel { flex: 1; min-width: 0; }
@@ -115,11 +113,9 @@
 }
 
 .subNavIcon {
-  font-size: 12px;
-  line-height: 1;
   flex-shrink: 0;
-  width: 16px;
-  text-align: center;
+  width: 13px;
+  height: 13px;
 }
 
 // ── Help box at the bottom ────────────────────────────────────────────────────

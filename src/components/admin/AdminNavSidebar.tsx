@@ -3,27 +3,28 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 import styles from './AdminNavSidebar.module.scss';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 const SETTINGS_SUB_ITEMS = [
-  { id: 'users',      label: 'User Management',     icon: '👥', tab: '' },
-  { id: 'requests',   label: 'Member Requests',     icon: '📬', tab: 'requests' },
-  { id: 'config',     label: 'App Config / SMTP',   icon: '⚙️', tab: 'config' },
-  { id: 'retention',  label: 'Privacy & Retention', icon: '🔒', tab: 'retention' },
-  { id: 'thresholds', label: 'Health Thresholds',   icon: '⚡', tab: 'thresholds' },
-  { id: 'orphan',     label: 'Orphan Rules',        icon: '👻', tab: 'orphan' },
-  { id: 'backup',     label: 'Backup & Restore',    icon: '🗄️', tab: 'backup' },
-  { id: 'cloud',      label: 'Cloud Storage',       icon: '☁️', tab: 'cloud' },
-  { id: 'browser',    label: 'Browser Data',        icon: '🗑️', tab: 'browser' },
+  { id: 'users',      label: 'User Management',     icon: 'people', tab: '' },
+  { id: 'requests',   label: 'Member Requests',     icon: 'email', tab: 'requests' },
+  { id: 'config',     label: 'App Config / SMTP',   icon: 'settings', tab: 'config' },
+  { id: 'retention',  label: 'Privacy & Retention', icon: 'lock', tab: 'retention' },
+  { id: 'thresholds', label: 'Health Thresholds',   icon: 'priorityHigh', tab: 'thresholds' },
+  { id: 'orphan',     label: 'Orphan Rules',        icon: 'link', tab: 'orphan' },
+  { id: 'backup',     label: 'Backup & Restore',    icon: 'archive', tab: 'backup' },
+  { id: 'cloud',      label: 'Cloud Storage',       icon: 'cloud', tab: 'cloud' },
+  { id: 'browser',    label: 'Browser Data',        icon: 'delete', tab: 'browser' },
 ];
 
 const NAV_ITEMS = [
-  { id: 'users',       label: 'User Management',   href: '/admin/users',        icon: '👥' },
-  { id: 'settings',    label: 'Settings',          href: '/admin/settings',     icon: '🔧' },
-  { id: 'theme',       label: 'Theme & Branding',  href: '/admin/theme',        icon: '🎨' },
-  { id: 'diagnostics', label: 'Diagnostics',       href: '/admin/diagnostics',  icon: '🩺' },
-  { id: 'security',    label: 'Security',          href: '/admin/security',     icon: '🔐' },
-  { id: 'logs',        label: 'Import Logs',       href: '/admin/logs',         icon: '🧾' },
-  { id: 'syserrors',   label: 'System Errors',     href: '/admin/system-errors', icon: '🚨' },
+  { id: 'users',       label: 'User Management',   href: '/admin/users',        icon: 'people' },
+  { id: 'settings',    label: 'Settings',          href: '/admin/settings',     icon: 'tools' },
+  { id: 'theme',       label: 'Theme & Branding',  href: '/admin/theme',        icon: 'palette' },
+  { id: 'diagnostics', label: 'Diagnostics',       href: '/admin/diagnostics',  icon: 'statusInfo' },
+  { id: 'security',    label: 'Security',          href: '/admin/security',     icon: 'shield' },
+  { id: 'logs',        label: 'Import Logs',       href: '/admin/logs',         icon: 'clipboard' },
+  { id: 'syserrors',   label: 'System Errors',     href: '/admin/system-errors', icon: 'warning' },
 ];
 
 export default function AdminNavSidebar() {
@@ -48,7 +49,7 @@ export default function AdminNavSidebar() {
                 aria-current={active ? 'page' : undefined}
                 className={clsx(styles.navItem, { [styles.navItemActive]: active })}
               >
-                <span className={styles.navIcon} aria-hidden="true">{item.icon}</span>
+                <SvgIcon name={item.icon} className={styles.navIcon} />
                 <span className={styles.navLabel}>{item.label}</span>
               </Link>
 
@@ -65,7 +66,7 @@ export default function AdminNavSidebar() {
                         aria-current={subActive ? 'page' : undefined}
                         className={clsx(styles.subNavItem, { [styles.subNavItemActive]: subActive })}
                       >
-                        <span className={styles.subNavIcon} aria-hidden="true">{sub.icon}</span>
+                        <SvgIcon name={sub.icon} className={styles.subNavIcon} />
                         {sub.label}
                       </Link>
                     );

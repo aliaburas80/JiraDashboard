@@ -11,6 +11,7 @@ import UserAddRequestsPanel from '@/components/admin/UserAddRequestsPanel';
 import AppConfigPanel from '@/components/admin/AppConfigPanel';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import { ASSIGNABLE_ROLES, roleLabel, type AppRole } from '@/lib/roles';
 import {
   type Tab, type ManagedUser,
@@ -602,7 +603,7 @@ function CloudStorageSettings() {
       {/* Active provider badge when locked */}
       {isLocked && (
         <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-          <span className="text-lg">{providers[savedProvider]?.icon ?? '☁️'}</span>
+          <SvgIcon name={providers[savedProvider]?.icon ?? 'cloud'} size={18} />
           <div>
             <p className="text-xs font-black text-green-800">Active: {providers[savedProvider]?.label ?? savedProvider}</p>
             <p className="text-[10px] text-green-600 font-semibold">Click &quot;Change provider&quot; above to switch to a different provider.</p>
@@ -614,11 +615,11 @@ function CloudStorageSettings() {
       {(!isLocked) && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {TABS.map(p => {
-            const info = providers[p] ?? { label: p, icon: '💾', description: '' };
+            const info = providers[p] ?? { label: p, icon: 'database', description: '' };
             return (
               <button key={p} type="button" onClick={() => { setActive(p); setMsg(null); }}
                 className={`p-3 rounded-xl border text-left transition-colors ${active === p ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-blue-300'}`}>
-                <div className="text-xl mb-1">{info.icon}</div>
+                <SvgIcon name={info.icon} size={20} className="mb-1 text-slate-600" />
                 <div className="text-xs font-black text-slate-800">{info.label}</div>
                 <div className="text-[10px] text-slate-500 mt-0.5 leading-snug">{info.description?.slice(0, 60)}</div>
               </button>

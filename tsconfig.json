@@ -33,7 +33,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "/Users/aliaburas/.next-jira-dashboard/types/**/*.ts"
+    ".next-jira-dashboard/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
