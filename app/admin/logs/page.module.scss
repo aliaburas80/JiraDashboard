@@ -1,0 +1,109 @@
+.errorBanner {
+  background: rgba(248, 113, 113, 0.07);
+  border: 1px solid rgba(248, 113, 113, 0.18);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #fca5a5;
+  margin-bottom: 16px;
+}
+
+.tableCard {
+  background: var(--dc-s2, #1E1E1E);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.headerRow {
+  background: var(--dc-s1, #141414);
+  border-bottom: 1px solid var(--dc-bdr2, rgba(255, 255, 255, 0.13));
+  text-align: left;
+}
+
+.headerCell {
+  padding: 10px 14px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--dc-p3, #505050);
+}
+
+.row {
+  border-bottom: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+  transition: background-color 120ms ease;
+}
+
+.row:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.userCell,
+.fileCell,
+.typeCell,
+.numericCell,
+.uploadedCell {
+  padding: 10px 14px;
+}
+
+.userName {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dc-p1, #F2F2F2);
+}
+
+.userEmail {
+  font-size: 9px;
+  color: var(--dc-p3, #505050);
+  margin-top: 2px;
+}
+
+.fileCell {
+  font-size: 10px;
+  color: var(--dc-p2, #909090);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.typeBadge {
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+}
+
+.numericCell {
+  color: var(--dc-p1, #F2F2F2);
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+}
+
+.smallBadge {
+  font-size: 9px;
+}
+
+.uploadedCell {
+  font-size: 9px;
+  color: var(--dc-p3, #505050);
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+}
+
+.noLogsCell {
+  padding: 48px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--dc-p3, #505050);
+  font-style: italic;
+}

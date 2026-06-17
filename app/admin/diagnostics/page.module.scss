@@ -1,0 +1,20 @@
+.opsBanner {
+  @apply bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-6 flex items-center gap-5 flex-wrap;
+}
+
+.opsCircle {
+  @apply w-16 h-16 rounded-full border-4 flex flex-col items-center justify-center shrink-0;
+  border-color: var(--ops-color, #2563eb);
+}
+
+.opsCircleValue {
+  color: var(--ops-color, #2563eb);
+}
+
+.opsStatus {
+  color: var(--ops-color, #2563eb);
+}
+
+.kpiValue {
+  color: var(--kpi-color, #2563eb);
+}

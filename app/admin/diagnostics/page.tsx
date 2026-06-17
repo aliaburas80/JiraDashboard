@@ -2,9 +2,10 @@
 // System Health & Admin Diagnostics — 9.36
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import styles from './page.module.scss';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -44,9 +45,9 @@ function uptime(s: number): string {
 
 function KpiCard({ label, value, sub, color = '#2563eb' }: { label: string; value: string | number; sub?: string; color?: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
+    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm" style={{ '--kpi-color': color } as CSSProperties}>
       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
-      <p className="text-2xl font-black leading-none" style={{ color }}>{value}</p>
+      <p className={`${styles.kpiValue} text-2xl font-black leading-none`}>{value}</p>
       {sub && <p className="text-[10px] text-slate-400 mt-1 font-semibold">{sub}</p>}
     </div>
   );
@@ -148,15 +149,14 @@ export default function DiagnosticsPage() {
       >
 
         {/* Ops score banner */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-6 flex items-center gap-5 flex-wrap">
+        <div className={styles.opsBanner} style={{ '--ops-color': opsColor } as CSSProperties}>
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full border-4 flex flex-col items-center justify-center shrink-0"
-              style={{ borderColor: opsColor }}>
-              <span className="text-xl font-black leading-none" style={{ color: opsColor }}>{data.opsScore}</span>
+            <div className={styles.opsCircle}>
+              <span className={`${styles.opsCircleValue} text-xl font-black leading-none`}>{data.opsScore}</span>
               <span className="text-[9px] text-slate-400 font-semibold">/100</span>
             </div>
             <div>
-              <p className="text-lg font-black" style={{ color: opsColor }}>{opsBand}</p>
+              <p className={styles.opsStatus + ' text-lg font-black'}>{opsBand}</p>
               <p className="text-xs text-slate-500">Operational health · {envOkCount}/{envTotal} env checks passed</p>
             </div>
           </div>
