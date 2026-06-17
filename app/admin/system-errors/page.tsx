@@ -2,7 +2,9 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import clsx from 'clsx';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import styles from './page.module.scss';
 
 interface ErrorLog {
   id:           string;
@@ -18,14 +20,6 @@ interface ErrorLog {
   createdAt:    string;
 }
 
-const RESOLUTION_COLORS: Record<string, { bg: string; text: string }> = {
-  logged:        { bg: 'rgba(248,113,113,0.12)', text: '#F87171' },
-  'auto-fixed':  { bg: 'rgba(34,197,94,0.12)',   text: '#22C55E' },
-  retried:       { bg: 'rgba(96,165,250,0.12)',   text: '#60A5FA' },
-  resolved:      { bg: 'rgba(148,163,184,0.10)',  text: '#94A3B8' },
-  skipped:       { bg: 'rgba(251,191,36,0.12)',   text: '#FBBF24' },
-};
-
 const CODE_LABELS: Record<string, string> = {
   P2003: 'Foreign key constraint — referenced record does not exist',
   P2025: 'Record not found',
@@ -33,11 +27,6 @@ const CODE_LABELS: Record<string, string> = {
   P2014: 'Relation violation',
   UNKNOWN: 'Unknown error',
 };
-
-function resolutionStyle(r: string) {
-  const base = RESOLUTION_COLORS[r] ?? RESOLUTION_COLORS.logged;
-  return { background: base.bg, color: base.text };
-}
 
 export default function SystemErrorsPage() {
   const router = useRouter();
@@ -114,14 +103,14 @@ export default function SystemErrorsPage() {
   const unresolved = logs.filter(l => !l.resolvedAt).length;
 
   const stats = [
-    { icon: 'warning', label: 'Total Logged',   value: String(total),     note: 'All time',          toneStyle: { background: 'rgba(248,113,113,0.12)', color: '#F87171' } },
-    { icon: 'priorityHigh', label: 'Unresolved',     value: String(unresolved), note: 'Need attention',    toneStyle: { background: 'rgba(251,191,36,0.12)',   color: '#FBBF24' } },
-    { icon: 'checkCircle', label: 'Auto-Fixed',     value: String(logs.filter(l => l.resolution === 'auto-fixed').length), note: 'System self-healed', toneStyle: { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } },
-    { icon: 'retry', label: 'Retried',        value: String(logs.filter(l => l.resolution.startsWith('retried')).length), note: 'Manually retried', toneStyle: { background: 'rgba(96,165,250,0.12)', color: '#60A5FA' } },
+    { icon: 'warning',      label: 'Total Logged',  value: String(total),     note: 'All time',          toneStyle: { background: 'rgba(248,113,113,0.12)', color: '#F87171' } },
+    { icon: 'priorityHigh', label: 'Unresolved',    value: String(unresolved), note: 'Need attention',    toneStyle: { background: 'rgba(251,191,36,0.12)',   color: '#FBBF24' } },
+    { icon: 'checkCircle',  label: 'Auto-Fixed',    value: String(logs.filter(l => l.resolution === 'auto-fixed').length), note: 'System self-healed', toneStyle: { background: 'rgba(34,197,94,0.12)',  color: '#22C55E' } },
+    { icon: 'retry',        label: 'Retried',       value: String(logs.filter(l => l.resolution.startsWith('retried')).length), note: 'Manually retried', toneStyle: { background: 'rgba(96,165,250,0.12)', color: '#60A5FA' } },
   ];
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 240, color: 'var(--dc-p3,#505050)' }}>
+    <div className={clsx('flex items-center justify-center h-64', styles.loadingState)}>
       Loading system errors…
     </div>
   );
@@ -133,11 +122,11 @@ export default function SystemErrorsPage() {
       stats={stats}
       statusLabel={unresolved > 0 ? `${unresolved} unresolved` : 'All resolved'}
       actions={
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="flex gap-2 items-center">
           <select
             value={filter}
             onChange={e => { setFilter(e.target.value); load(e.target.value); }}
-            style={{ padding: '6px 10px', borderRadius: 7, background: 'var(--dc-s3,#282828)', border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', color: 'var(--dc-p1,#F2F2F2)', fontSize: 11, outline: 'none', fontFamily: 'inherit' }}
+            className={styles.filterSelect}
           >
             <option value="all">All statuses</option>
             <option value="logged">Logged</option>
@@ -148,7 +137,7 @@ export default function SystemErrorsPage() {
           <button
             type="button"
             onClick={() => load(filter)}
-            style={{ padding: '6px 12px', borderRadius: 7, border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', background: 'transparent', color: 'var(--dc-p2,#909090)', fontSize: 11, cursor: 'pointer' }}
+            className={styles.btnRefresh}
           >
             ↻ Refresh
           </button>
@@ -157,7 +146,7 @@ export default function SystemErrorsPage() {
               type="button"
               onClick={markAllResolved}
               disabled={actionId === 'all'}
-              style={{ padding: '6px 12px', borderRadius: 7, border: 'none', background: 'rgba(148,163,184,0.12)', color: '#94A3B8', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+              className={styles.btnMarkAll}
             >
               {actionId === 'all' ? 'Resolving…' : 'Mark all resolved'}
             </button>
@@ -165,67 +154,54 @@ export default function SystemErrorsPage() {
         </div>
       }
     >
-      {statusMsg && (
-        <div style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.1)', color: '#4ade80', fontSize: 12, marginBottom: 16 }}>
-          {statusMsg}
-        </div>
-      )}
+      {statusMsg && <div className={styles.statusMsg}>{statusMsg}</div>}
 
       {logs.length === 0 ? (
-        <div style={{ padding: '48px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-          <p style={{ color: 'var(--dc-p2,#909090)', fontSize: 14, fontWeight: 600 }}>No system errors logged</p>
-          <p style={{ color: 'var(--dc-p3,#505050)', fontSize: 12, marginTop: 4 }}>
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>✅</div>
+          <p className={styles.emptyTitle}>No system errors logged</p>
+          <p className={styles.emptySubtitle}>
             Errors are captured automatically whenever a database operation fails.
           </p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className={styles.cardList}>
           {logs.map(log => (
             <div
               key={log.id}
-              style={{
-                background: 'var(--dc-s2,#1e1e1e)',
-                border: `1px solid ${log.resolvedAt ? 'var(--dc-bdr,rgba(255,255,255,0.06))' : 'rgba(248,113,113,0.18)'}`,
-                borderRadius: 12,
-                padding: '14px 16px',
-                opacity: log.resolvedAt ? 0.6 : 1,
-              }}
+              // data-resolved drives border color and opacity in SCSS
+              data-resolved={log.resolvedAt ? 'true' : 'false'}
+              className={styles.card}
             >
               {/* Header row */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
-                <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 800, padding: '2px 7px', borderRadius: 4, background: 'rgba(248,113,113,0.15)', color: '#F87171', whiteSpace: 'nowrap' }}>
-                  {log.errorCode}
-                </span>
-                <span style={{ fontFamily: 'monospace', fontSize: 11, padding: '2px 7px', borderRadius: 4, background: 'rgba(255,255,255,0.05)', color: 'var(--dc-p2,#909090)', whiteSpace: 'nowrap' }}>
-                  {log.operation}
-                </span>
+              <div className="flex items-start gap-2 flex-wrap mb-2">
+                <span className={styles.errorCodeBadge}>{log.errorCode}</span>
+                <span className={styles.operationBadge}>{log.operation}</span>
                 {log.prismaModel && (
-                  <span style={{ fontSize: 11, color: 'var(--dc-p3,#505050)', padding: '2px 7px', borderRadius: 4, background: 'rgba(255,255,255,0.04)', whiteSpace: 'nowrap' }}>
-                    model: {log.prismaModel}
-                  </span>
+                  <span className={styles.modelBadge}>model: {log.prismaModel}</span>
                 )}
-                <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--dc-p3,#505050)', whiteSpace: 'nowrap' }}>
+                <span className={styles.timestamp}>
                   {new Date(log.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
 
               {/* What failed */}
-              <div style={{ marginBottom: 8 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--dc-p3,#505050)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 3 }}>What failed</p>
-                <p style={{ fontSize: 12, color: 'var(--dc-p2,#909090)' }}>
+              <div className="mb-2">
+                <p className={styles.sectionLabel}>What failed</p>
+                <p className={styles.sectionText}>
                   {CODE_LABELS[log.errorCode] ?? log.errorCode} — {log.errorMessage.split('\n')[0]}
                 </p>
               </div>
 
-              {/* What the system did */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--dc-p3,#505050)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Resolution</p>
-                <span style={{ ...resolutionStyle(log.resolution), fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+              {/* Resolution */}
+              <div className="flex items-center gap-2 mb-2">
+                <p className={styles.resolutionLabel}>Resolution</p>
+                {/* data-resolution drives bg/color; no inline styles needed */}
+                <span data-resolution={log.resolution} className={styles.resolutionChip}>
                   {log.resolution}
                 </span>
                 {log.retryCount > 0 && (
-                  <span style={{ fontSize: 10, color: 'var(--dc-p3,#505050)' }}>
+                  <span className={styles.retryMeta}>
                     {log.retryCount} retry attempt{log.retryCount !== 1 ? 's' : ''}
                     {log.lastRetriedAt ? ` · last ${new Date(log.lastRetriedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : ''}
                   </span>
@@ -234,19 +210,19 @@ export default function SystemErrorsPage() {
 
               {/* Context */}
               {log.context && (
-                <p style={{ fontSize: 11, color: 'var(--dc-p3,#505050)', marginBottom: 10 }}>
-                  Context: <span style={{ color: 'var(--dc-p2,#909090)' }}>{log.context}</span>
+                <p className={clsx(styles.contextText, 'mb-2')}>
+                  Context: <span className={styles.contextValue}>{log.context}</span>
                 </p>
               )}
 
               {/* Actions */}
               {!log.resolvedAt && (
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => retry(log.id)}
                     disabled={actionId === log.id}
-                    style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: 'rgba(96,165,250,0.15)', color: '#60A5FA', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                    className={styles.btnRetry}
                   >
                     {actionId === log.id ? 'Retrying…' : '🔁 Retry operation'}
                   </button>
@@ -254,7 +230,7 @@ export default function SystemErrorsPage() {
                     type="button"
                     onClick={() => markResolved(log.id)}
                     disabled={actionId === log.id}
-                    style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', background: 'transparent', color: 'var(--dc-p3,#505050)', fontSize: 11, cursor: 'pointer' }}
+                    className={styles.btnDismiss}
                   >
                     ✓ Dismiss
                   </button>

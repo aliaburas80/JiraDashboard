@@ -1,9 +1,12 @@
 'use client';
 
+import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import LoadingState from '@/components/ui/LoadingState';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
+import styles from './page.module.scss';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,18 +51,26 @@ interface BackendViewData {
 
 function MethodBadge({ method }: { method: string }) {
   const upper = method.toUpperCase();
-  const style =
+
+  // Dynamic: badge bg/color are determined at runtime from the HTTP method string.
+  // No static SCSS class can express this mapping without duplicating the logic.
+  const [bg, color] =
     upper === 'POST'
-      ? { background: 'rgba(34,197,94,0.15)',   color: '#4ade80' }
+      ? ['rgba(34,197,94,0.15)',   '#4ade80']
       : upper === 'GET'
-      ? { background: 'rgba(59,130,246,0.15)',   color: '#93c5fd' }
+      ? ['rgba(59,130,246,0.15)',   '#93c5fd']
       : upper === 'DELETE'
-      ? { background: 'rgba(248,113,113,0.13)',  color: '#fca5a5' }
+      ? ['rgba(248,113,113,0.13)',  '#fca5a5']
       : upper === 'PUT' || upper === 'PATCH'
-      ? { background: 'rgba(255,255,255,0.08)',  color: 'var(--dc-p2, #909090)' }
-      : { background: 'rgba(255,255,255,0.06)',  color: 'var(--dc-p3, #505050)' };
+      ? ['rgba(255,255,255,0.08)',  'var(--color-text-secondary)']
+      : ['rgba(255,255,255,0.06)',  'var(--color-text-muted)'];
+
   return (
-    <span style={{ ...style, fontFamily: 'var(--font-mono, monospace)', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, display: 'inline-block', letterSpacing: '0.05em' }}>
+    <span
+      className={styles.methodBadge}
+      // eslint-disable-next-line react/forbid-dom-props
+      style={{ '--method-bg': bg, '--method-color': color } as CSSProperties}
+    >
       {upper}
     </span>
   );
@@ -71,7 +82,7 @@ function StatusBadge({ status }: { status: string }) {
     lower === 'success' ? 'chip c-gr' :
     lower === 'failed'  ? 'chip c-rd' :
                           'chip c-am';
-  return <span className={cls} style={{ fontSize: 10 }}>{status}</span>;
+  return <span className={clsx(cls, styles.chipSm)}>{status}</span>;
 }
 
 function healthChipCls(score: number): string {
@@ -177,25 +188,21 @@ export default function BackendPage() {
 
       {/* ── Toast ── */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg z-50"
-          style={{ background: 'var(--dc-s3, #282828)', color: 'var(--dc-p1, #F2F2F2)', border: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))' }}>
-          {toast}
-        </div>
+        <div className={styles.toast}>{toast}</div>
       )}
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)', margin: 0 }}>Backend Status</h1>
-          <p style={{ fontSize: 13, color: 'var(--dc-p2, #909090)', marginTop: 2 }}>
+          <h1 className={styles.pageTitle}>Backend Status</h1>
+          <p className={styles.pageDesc}>
             Live view of imports, API endpoints, and recent activity.
           </p>
         </div>
         <button
           onClick={fetchData}
           disabled={loading}
-          className="flex items-center gap-2 disabled:opacity-50"
-          style={{ background: 'var(--dc-acc, #E85D12)', color: '#fff', fontWeight: 700, fontSize: 13, padding: '7px 18px', borderRadius: 100, border: 'none', cursor: loading ? 'not-allowed' : 'pointer' }}
+          className={styles.refreshBtn}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -216,14 +223,13 @@ export default function BackendPage() {
 
       {/* ── Error ── */}
       {!loading && error && (
-        <div className="rounded-xl p-5 flex items-start gap-3"
-          style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.18)' }}>
+        <div className={styles.errorBanner}>
           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="#F87171" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
           <div>
-            <p className="font-semibold text-sm" style={{ color: '#fca5a5' }}>Failed to load backend data</p>
-            <p className="text-sm mt-0.5" style={{ color: 'var(--dc-p2, #909090)' }}>{error}</p>
+            <p className={styles.errorTitle}>Failed to load backend data</p>
+            <p className={styles.errorBody}>{error}</p>
           </div>
         </div>
       )}
@@ -234,60 +240,52 @@ export default function BackendPage() {
 
           {/* ── 1. Stats Cards ── */}
           <section>
-            <h2 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--dc-p3, #505050)' }}>
-              Import Statistics
-            </h2>
+            <h2 className={styles.sectionHeading}>Import Statistics</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
 
               {/* Total Imports */}
-              <div className="rounded-xl p-5 flex flex-col gap-1"
-                style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--dc-p3, #505050)' }}>Total Imports</p>
-                <p className="text-2xl font-black truncate" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{data.stats.totalImports}</p>
+              <div className={styles.statCard}>
+                <p className={styles.statLabel}>Total Imports</p>
+                <p className={styles.statValueDefault}>{data.stats.totalImports}</p>
               </div>
 
               {/* Successful */}
-              <div className="rounded-xl p-5 flex flex-col gap-1"
-                style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--dc-p3, #505050)' }}>Successful</p>
-                <p className="text-2xl font-black truncate" style={{ color: 'var(--dc-green, #22C55E)' }}>{data.stats.successfulImports}</p>
+              <div className={styles.statCard}>
+                <p className={styles.statLabel}>Successful</p>
+                <p className={styles.statValueSuccess}>{data.stats.successfulImports}</p>
                 {data.stats.totalImports > 0 && (
-                  <p className="text-xs truncate" style={{ color: 'var(--dc-p3, #505050)' }}>
+                  <p className={styles.statNote}>
                     {Math.round((data.stats.successfulImports / data.stats.totalImports) * 100)}% success rate
                   </p>
                 )}
               </div>
 
               {/* Failed */}
-              <div className="rounded-xl p-5 flex flex-col gap-1"
-                style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--dc-p3, #505050)' }}>Failed</p>
-                <p className="text-2xl font-black truncate" style={{ color: 'var(--dc-p3, #505050)' }}>{data.stats.failedImports}</p>
+              <div className={styles.statCard}>
+                <p className={styles.statLabel}>Failed</p>
+                <p className={styles.statValueMuted}>{data.stats.failedImports}</p>
               </div>
 
               {/* Last Import */}
-              <div className="rounded-xl p-5 flex flex-col gap-1"
-                style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--dc-p3, #505050)' }}>Last Import</p>
-                <p className="text-sm font-black truncate" style={{ color: 'var(--dc-acc2, #FF8A4C)', fontFamily: 'var(--font-mono, monospace)', fontSize: 13 }}>
+              <div className={styles.statCard}>
+                <p className={styles.statLabel}>Last Import</p>
+                <p className={styles.statValueAccent}>
                   {data.stats.lastImport ? formatTimestamp(data.stats.lastImport) : '—'}
                 </p>
               </div>
 
               {/* Last Filename */}
-              <div className="rounded-xl p-5 flex flex-col gap-1"
-                style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--dc-p3, #505050)' }}>Last Filename</p>
-                <p className="text-xs font-bold truncate" style={{ color: 'var(--dc-p1, #F2F2F2)', fontFamily: 'var(--font-mono, monospace)' }}>
+              <div className={styles.statCard}>
+                <p className={styles.statLabel}>Last Filename</p>
+                <p className={styles.statValueMono}>
                   {data.stats.lastFilename ?? '—'}
                 </p>
               </div>
 
               {/* Last Row Count */}
-              <div className="rounded-xl p-5 flex flex-col gap-1"
-                style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--dc-p3, #505050)' }}>Last Row Count</p>
-                <p className="text-2xl font-black truncate" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>
+              <div className={styles.statCard}>
+                <p className={styles.statLabel}>Last Row Count</p>
+                <p className={styles.statValueDefault}>
                   {data.stats.lastRowCount !== null ? safeInt(data.stats.lastRowCount) : '—'}
                 </p>
               </div>
@@ -297,40 +295,34 @@ export default function BackendPage() {
 
           {/* ── 2. API Endpoints ── */}
           <section>
-            <h2 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--dc-p3, #505050)' }}>
-              API Endpoints
-            </h2>
-            <div className="rounded-xl overflow-hidden"
-              style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+            <h2 className={styles.sectionHeading}>API Endpoints</h2>
+            <div className={styles.tableCard}>
               {data.endpoints.length === 0 ? (
-                <p className="text-sm text-center py-10" style={{ color: 'var(--dc-p3, #505050)' }}>No endpoints registered.</p>
+                <p className={styles.tableEmpty}>No endpoints registered.</p>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))', background: 'var(--dc-s1, #141414)' }}>
-                      <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider w-20" style={{ color: 'var(--dc-p3, #505050)' }}>Method</th>
-                      <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--dc-p3, #505050)' }}>Path</th>
-                      <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: 'var(--dc-p3, #505050)' }}>Description</th>
-                      <th className="text-center px-4 py-3 text-[10px] font-bold uppercase tracking-wider w-20" style={{ color: 'var(--dc-p3, #505050)' }}>Status</th>
+                    <tr className={styles.tableHead}>
+                      <th className={`${styles.th} text-left px-4 py-3 w-20`}>Method</th>
+                      <th className={`${styles.th} text-left px-4 py-3`}>Path</th>
+                      <th className={`${styles.th} text-left px-4 py-3 hidden md:table-cell`}>Description</th>
+                      <th className={`${styles.th} text-center px-4 py-3 w-20`}>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.endpoints.map((ep, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
-                        className="transition-colors hover:[&>td]:bg-[rgba(255,255,255,0.025)]">
+                      <tr key={i} className={styles.tableRow}>
                         <td className="px-4 py-3">
                           <MethodBadge method={ep.method} />
                         </td>
                         <td className="px-4 py-3">
-                          <span style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 10, color: 'var(--dc-acc2, #FF8A4C)' }}>
-                            {ep.path}
-                          </span>
+                          <span className={styles.endpointPath}>{ep.path}</span>
                         </td>
-                        <td className="px-4 py-3 hidden md:table-cell" style={{ color: 'var(--dc-p2, #909090)' }}>
+                        <td className={`px-4 py-3 hidden md:table-cell ${styles.endpointDesc}`}>
                           {ep.description}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span title="Online" style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: 'var(--dc-green, #22C55E)', boxShadow: '0 0 4px rgba(34,197,94,0.5)' }} />
+                          <span title="Online" className={styles.onlineDot} />
                         </td>
                       </tr>
                     ))}
@@ -343,7 +335,7 @@ export default function BackendPage() {
           {/* ── 3. Import Logs ── */}
           <section>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-              <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--dc-p3, #505050)' }}>
+              <h2 className={styles.sectionHeading}>
                 {data.isAdmin ? 'All Import Logs' : 'My Import Logs'}
               </h2>
               <div className="flex items-center gap-3 flex-wrap">
@@ -351,76 +343,72 @@ export default function BackendPage() {
                   <button
                     type="button"
                     onClick={() => setDeleteAllConfirm(true)}
-                    className="text-xs font-bold rounded-xl px-3 py-1.5"
-                    style={{ background: 'rgba(248,113,113,0.10)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.18)' }}
+                    className={styles.deleteAllBtn}
                   >
                     Delete all my logs
                   </button>
                 )}
                 {data.currentUser && (
-                  <span className="text-xs" style={{ color: 'var(--dc-p3, #505050)' }}>
-                    Signed in as <strong style={{ color: 'var(--dc-p2, #909090)' }}>{data.currentUser.name}</strong>
+                  <span className={styles.logSignedIn}>
+                    Signed in as <strong className={styles.logSignedInName}>{data.currentUser.name}</strong>
                   </span>
                 )}
                 {data.isAdmin && (
-                  <span className="chip c-nt" style={{ fontSize: 10 }}>Admin — seeing all users</span>
+                  <span className={clsx('chip c-nt', styles.chipSm)}>Admin — seeing all users</span>
                 )}
               </div>
             </div>
-            <div className="rounded-xl overflow-hidden"
-              style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+            <div className={styles.tableCard}>
               {data.logs.length === 0 ? (
-                <p className="text-sm text-center py-10" style={{ color: 'var(--dc-p3, #505050)' }}>No import logs found.</p>
+                <p className={styles.tableEmpty}>No import logs found.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr style={{ borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))', background: 'var(--dc-s1, #141414)' }}>
-                        <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: 'var(--dc-p3, #505050)' }}>Timestamp</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--dc-p3, #505050)' }}>Filename</th>
+                      <tr className={styles.tableHead}>
+                        <th className={`${styles.th} text-left px-4 py-3 whitespace-nowrap`}>Timestamp</th>
+                        <th className={`${styles.th} text-left px-4 py-3`}>Filename</th>
                         {data.isAdmin && (
-                          <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: 'var(--dc-p3, #505050)' }}>Uploaded By</th>
+                          <th className={`${styles.th} text-left px-4 py-3 whitespace-nowrap`}>Uploaded By</th>
                         )}
-                        <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-wider w-20 whitespace-nowrap" style={{ color: 'var(--dc-p3, #505050)' }}>Issues</th>
-                        <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-wider w-20 whitespace-nowrap" style={{ color: 'var(--dc-p3, #505050)' }}>Rows</th>
-                        <th className="text-center px-4 py-3 text-[10px] font-bold uppercase tracking-wider w-16" style={{ color: 'var(--dc-p3, #505050)' }}>Health</th>
-                        <th className="text-center px-4 py-3 text-[10px] font-bold uppercase tracking-wider w-28" style={{ color: 'var(--dc-p3, #505050)' }}>Status</th>
+                        <th className={`${styles.th} text-right px-4 py-3 w-20 whitespace-nowrap`}>Issues</th>
+                        <th className={`${styles.th} text-right px-4 py-3 w-20 whitespace-nowrap`}>Rows</th>
+                        <th className={`${styles.th} text-center px-4 py-3 w-16`}>Health</th>
+                        <th className={`${styles.th} text-center px-4 py-3 w-28`}>Status</th>
                         <th className="w-10 px-2 py-3" />
                       </tr>
                     </thead>
                     <tbody>
                       {data.logs.map((log, i) => (
-                        <tr key={i} style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
-                          className="transition-colors hover:[&>td]:bg-[rgba(255,255,255,0.025)]">
-                          <td className="px-4 py-3 whitespace-nowrap"
-                            style={{ color: 'var(--dc-p2, #909090)', fontFamily: 'var(--font-mono, monospace)', fontSize: 9 }}>
+                        <tr key={i} className={styles.tableRow}>
+                          <td className={`px-4 py-3 whitespace-nowrap ${styles.cellTimestamp}`}>
                             {formatTimestamp(log.timestamp)}
                           </td>
                           <td className="px-4 py-3 max-w-xs">
-                            <span style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 11, color: 'var(--dc-p1, #F2F2F2)' }}>
+                            <span className={styles.cellFilename}>
                               {log.filename ?? '—'}
                             </span>
                           </td>
                           {data.isAdmin && (
                             <td className="px-4 py-3 whitespace-nowrap">
                               <div className="flex flex-col">
-                                <span className="text-xs font-semibold" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{log.userName ?? '—'}</span>
-                                <span style={{ fontSize: 10, color: 'var(--dc-p3, #505050)' }}>{log.userEmail ?? ''}</span>
+                                <span className={styles.cellUserName}>{log.userName ?? '—'}</span>
+                                <span className={styles.cellUserEmail}>{log.userEmail ?? ''}</span>
                               </div>
                             </td>
                           )}
-                          <td className="px-4 py-3 text-right font-semibold tabular-nums" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>
+                          <td className={`px-4 py-3 text-right tabular-nums ${styles.cellNum}`}>
                             {log.totalIssues != null ? log.totalIssues : '—'}
                           </td>
-                          <td className="px-4 py-3 text-right font-semibold tabular-nums" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>
+                          <td className={`px-4 py-3 text-right tabular-nums ${styles.cellNum}`}>
                             {safeInt(log.rowCount)}
                           </td>
                           <td className="px-4 py-3 text-center">
                             {log.healthScore != null ? (
-                              <span className={healthChipCls(log.healthScore)} style={{ fontSize: 9 }}>
+                              <span className={clsx(healthChipCls(log.healthScore), styles.chipXs)}>
                                 {log.healthScore}
                               </span>
-                            ) : <span style={{ color: 'var(--dc-p3, #505050)', fontSize: 11 }}>—</span>}
+                            ) : <span className={styles.healthMissing}>—</span>}
                           </td>
                           <td className="px-4 py-3 text-center">
                             <StatusBadge status={log.status} />
@@ -431,10 +419,8 @@ export default function BackendPage() {
                                 type="button"
                                 title="Delete this log"
                                 onClick={() => setDeleteTarget({ id: log.id!, filename: log.filename ?? 'Unknown' })}
-                                className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-black transition-colors"
-                                style={{ color: 'var(--dc-p3, #505050)', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#F87171'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(248,113,113,0.10)'; }}
-                                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--dc-p3, #505050)'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                                className={styles.logDeleteBtn}
+                                aria-label={`Delete log for ${log.filename ?? 'Unknown'}`}
                               >
                                 ×
                               </button>

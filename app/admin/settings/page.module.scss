@@ -1,0 +1,575 @@
+// app/admin/settings/page.module.scss
+// Migrated from inline styles in UserManagementSettings.
+// The tab navigation, cloud storage, and sub-panels all used inline styles
+// for themed (--dc-*) values. They are extracted here so SCSS handles identity.
+
+// ── Add User / form section ────────────────────────────────────────────────────
+
+.formSection {
+  border-radius: var(--radius-2xl);
+  padding: var(--space-5);
+  background: var(--color-subtle);
+  border: 1px solid var(--color-border);
+}
+
+.formSectionHeader {
+  margin-bottom: var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.formIconWrap {
+  display: grid;
+  height: 32px;
+  width: 32px;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: var(--color-muted);
+  color: var(--color-text-secondary);
+}
+
+.formTitle {
+  font-size: var(--text-xl);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+}
+
+.formSubtitle {
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+}
+
+.fieldLabel {
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.formInput {
+  height: 42px;
+  min-width: 0;
+  border-radius: var(--radius-lg);
+  padding: 0 var(--space-3);
+  font-size: var(--text-md);
+  outline: none;
+  transition: box-shadow var(--transition-fast);
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+
+  &:focus {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.formFooter {
+  margin-top: var(--space-5);
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.createBtn {
+  display: inline-flex;
+  height: 42px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  padding: 0 var(--space-5);
+  font-size: var(--text-md);
+  font-weight: 800;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-fast), opacity var(--transition-fast);
+  background: var(--color-primary);
+
+  @media (min-width: 640px) {
+    width: auto;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background: var(--color-muted);
+    color: var(--color-text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+// ── Status message ────────────────────────────────────────────────────────────
+
+.statusMsg {
+  border-radius: var(--radius-2xl);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-md);
+  font-weight: 600;
+
+  &--ok {
+    background: var(--color-success-soft);
+    border: 1px solid var(--color-success-border);
+    color: var(--color-success);
+  }
+
+  &--err {
+    background: var(--color-danger-soft);
+    border: 1px solid var(--color-danger-border);
+    color: var(--color-danger);
+  }
+}
+
+// ── User table section ────────────────────────────────────────────────────────
+
+.tableSection {
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  background: var(--color-subtle);
+  border: 1px solid var(--color-border);
+}
+
+.tableSectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+
+  @media (min-width: 1024px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.tableTitle {
+  font-size: var(--text-xl);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+}
+
+.tableSubtitle {
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+}
+
+.searchIconWrap {
+  pointer-events: none;
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+.searchInput {
+  height: 38px;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  padding-left: 36px;
+  padding-right: var(--space-3);
+  font-size: var(--text-md);
+  outline: none;
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+
+  @media (min-width: 640px) {
+    width: 224px;
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.roleSelect {
+  height: 38px;
+  border-radius: var(--radius-lg);
+  padding: 0 var(--space-3);
+  font-size: var(--text-md);
+  font-weight: 700;
+  outline: none;
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.refreshBtn {
+  display: inline-flex;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  padding: 0 var(--space-4);
+  font-size: var(--text-md);
+  font-weight: 800;
+  transition: background var(--transition-fast);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  cursor: pointer;
+
+  &:disabled {
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--color-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+// ── Bulk action bar ───────────────────────────────────────────────────────────
+
+.bulkBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.bulkCount {
+  font-size: var(--text-md);
+  font-weight: 900;
+  color: var(--color-text-primary);
+}
+
+.bulkActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.bulkRoleSelect {
+  height: 34px;
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-2);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  outline: none;
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.bulkRoleBtn {
+  display: inline-flex;
+  height: 34px;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-3);
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  transition: opacity var(--transition-fast);
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.bulkDeleteBtn {
+  display: inline-flex;
+  height: 34px;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-3);
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  transition: opacity var(--transition-fast);
+  background: var(--color-danger-soft);
+  border: 1px solid var(--color-danger-border);
+  color: var(--color-danger);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-danger);
+    outline-offset: 2px;
+  }
+}
+
+.bulkClearBtn {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  padding: 0 var(--space-1);
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+// ── Loading state ─────────────────────────────────────────────────────────────
+
+.loadingRow {
+  padding: var(--space-5);
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+
+.tableHead {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-strong);
+}
+
+.th {
+  font-size: var(--text-2xs);
+  font-weight: 900;
+  color: var(--color-text-muted);
+}
+
+// Row: selected state is data-attribute driven
+.tableRow {
+  border-bottom: 1px solid var(--color-border);
+  transition: background var(--transition-fast);
+
+  &[data-selected='true'] {
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  }
+
+  &:hover td {
+    background: rgb(255 255 255 / 2.5%);
+  }
+}
+
+.avatar {
+  display: grid;
+  height: 40px;
+  width: 40px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 50%;
+  font-size: var(--text-2xs);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 50%, #000));
+  color: #fff;
+}
+
+.nameInput {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-md);
+  font-weight: 900;
+  color: var(--color-text-primary);
+  background: transparent;
+  outline: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:focus {
+    background: var(--color-surface);
+    border-color: var(--color-border-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.userEmail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 var(--space-2);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.inlineSelect {
+  height: 38px;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  padding: 0 var(--space-3);
+  font-size: var(--text-md);
+  outline: none;
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.cellText {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.statusDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+
+  &[data-active='true'] {
+    background: var(--color-success);
+  }
+
+  &[data-active='false'] {
+    background: var(--color-text-muted);
+  }
+}
+
+.toggleBtn {
+  display: grid;
+  height: 32px;
+  width: 32px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xl);
+  transition: color var(--transition-fast), background var(--transition-fast);
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-warning);
+    background: var(--color-warning-soft);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.deleteBtn {
+  display: grid;
+  height: 32px;
+  width: 32px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xl);
+  transition: color var(--transition-fast), background var(--transition-fast);
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-danger);
+    background: var(--color-danger-soft);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-danger);
+    outline-offset: 2px;
+  }
+}
+
+// ── Chip pill modifier — overrides global .chip radius to make it pill-shaped ─
+
+.chipPill {
+  border-radius: var(--radius-full);
+}
+
+// ── Table footer ──────────────────────────────────────────────────────────────
+
+.tableFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--text-md);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.pageBadge {
+  display: inline-flex;
+  height: 32px;
+  min-width: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  padding: 0 var(--space-3);
+  font-size: var(--text-2xs);
+  font-weight: 900;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  font-family: var(--font-mono, monospace);
+}
+
+.emptyMsg {
+  padding: var(--space-5);
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}

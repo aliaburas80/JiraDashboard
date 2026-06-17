@@ -2,6 +2,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import clsx from 'clsx';
 import DataRetentionSettings from '@/components/admin/DataRetentionSettings';
 import HealthThresholdSettings from '@/components/admin/HealthThresholdSettings';
 import OrphanRulesSettings from '@/components/admin/OrphanRulesSettings';
@@ -22,6 +23,7 @@ import type { RetentionSettings, RetentionStats } from '@/types/settings';
 import type { HealthThresholds } from '@/types/thresholds';
 import type { OrphanRules } from '@/types/orphanRules';
 import type { StorageProviderType } from '@/types/storage';
+import styles from './page.module.scss';
 
 // ── Connection guide — step-by-step per provider ─────────────────────────────
 
@@ -1020,99 +1022,90 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
         />
       )}
 
-      <section className="rounded-[14px] p-5" style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-        <div className="mb-5 flex items-center gap-3">
-          <span className="grid h-8 w-8 place-items-center rounded-[10px]" style={{ background: 'var(--dc-s3, #282828)', color: 'var(--dc-p2, #909090)' }}><SvgIcon name="person" size={16} /></span>
+      {/* ── Add User form ── */}
+      <section className={styles.formSection}>
+        <div className={styles.formSectionHeader}>
+          <span className={styles.formIconWrap}><SvgIcon name="person" size={16} /></span>
           <div>
-            <h3 className="text-lg font-black tracking-tight" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Add User</h3>
-            <p className="text-sm" style={{ color: 'var(--dc-p2, #909090)' }}>Create a new user account and assign a role.</p>
+            <h3 className={styles.formTitle}>Add User</h3>
+            <p className={styles.formSubtitle}>Create a new user account and assign a role.</p>
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <label className="grid gap-2 text-xs font-extrabold" style={{ color: 'var(--dc-p2, #909090)' }}>
+          <label className={styles.fieldLabel}>
             Full Name
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Enter full name"
-              className="h-[42px] min-w-0 rounded-[9px] px-3 text-sm outline-none transition focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
-              style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }} />
+              className={styles.formInput} />
           </label>
-          <label className="grid gap-2 text-xs font-extrabold" style={{ color: 'var(--dc-p2, #909090)' }}>
+          <label className={styles.fieldLabel}>
             Email Address
             <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Enter email address"
-              className="h-[42px] min-w-0 rounded-[9px] px-3 text-sm outline-none transition focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
-              style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }} />
+              className={styles.formInput} />
           </label>
-          <label className="grid gap-2 text-xs font-extrabold" style={{ color: 'var(--dc-p2, #909090)' }}>
+          <label className={styles.fieldLabel}>
             Temporary Password
             <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Enter temporary password"
-              className="h-[42px] min-w-0 rounded-[9px] px-3 text-sm outline-none transition focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
-              style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }} />
+              className={styles.formInput} />
           </label>
-          <label className="grid gap-2 text-xs font-extrabold" style={{ color: 'var(--dc-p2, #909090)' }}>
+          <label className={styles.fieldLabel}>
             Role
             <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
-              className="h-[42px] min-w-0 rounded-[9px] px-3 text-sm outline-none transition focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
-              style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }}>
+              className={styles.formInput}>
               {ASSIGNABLE_ROLES.map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
             </select>
           </label>
         </div>
 
-        <div className="mt-5 flex justify-end pt-4" style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-          <button type="button" onClick={createUser} disabled={saving}
-            className="inline-flex h-[42px] w-full items-center justify-center rounded-[9px] px-5 text-sm font-extrabold text-white transition sm:w-auto disabled:cursor-not-allowed"
-            style={{ background: saving ? 'var(--dc-s3, #282828)' : 'var(--dc-acc, #E85D12)', color: saving ? 'var(--dc-p3, #505050)' : '#fff' }}>
+        <div className={styles.formFooter}>
+          <button type="button" onClick={createUser} disabled={saving} className={styles.createBtn}>
             {saving ? 'Creating...' : 'Create User'}
           </button>
         </div>
       </section>
 
+      {/* ── Status message ── */}
       {msg && (
-        <div className="rounded-[14px] px-4 py-3 text-sm font-semibold" style={msg.ok
-          ? { background: 'rgba(34,197,94,0.11)', border: '1px solid rgba(34,197,94,0.25)', color: '#4ade80' }
-          : { background: 'rgba(248,113,113,0.11)', border: '1px solid rgba(248,113,113,0.25)', color: '#fca5a5' }}>
+        <div className={clsx(styles.statusMsg, msg.ok ? styles['statusMsg--ok'] : styles['statusMsg--err'])}>
           {msg.text}
         </div>
       )}
 
-      <section className="overflow-hidden rounded-[14px]" style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-        <div className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between" style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+      {/* ── User table ── */}
+      <section className={styles.tableSection}>
+        <div className={styles.tableSectionHeader}>
           <div>
-            <h3 className="text-lg font-black tracking-tight" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>User Management</h3>
-            <p className="text-sm" style={{ color: 'var(--dc-p2, #909090)' }}>View and manage all users in your account.</p>
+            <h3 className={styles.tableTitle}>User Management</h3>
+            <p className={styles.tableSubtitle}>View and manage all users in your account.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <label className="relative block">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: 'var(--dc-p3, #505050)' }}>⌕</span>
+              <span className={styles.searchIconWrap}>⌕</span>
               <input value={query} onChange={e => setQuery(e.target.value)} type="search" placeholder="Search users"
-                className="h-[38px] w-full rounded-[9px] pl-9 pr-3 text-sm outline-none sm:w-56 focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
-                style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }} />
+                className={styles.searchInput} />
             </label>
             <select value={roleFilter} onChange={e => setRoleFilter(e.target.value as AppRole | 'all')}
-              className="h-[38px] rounded-[9px] px-3 text-sm font-bold outline-none"
-              style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }}>
+              className={styles.roleSelect}>
               <option value="all">All roles</option>
               {roleOptionsFor().map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
             </select>
-            <button type="button" onClick={loadUsers} disabled={loading}
-              className="inline-flex h-[38px] items-center justify-center rounded-[9px] px-4 text-sm font-extrabold transition"
-              style={{ background: 'var(--dc-s1, #141414)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: loading ? 'var(--dc-p3, #505050)' : 'var(--dc-p1, #F2F2F2)' }}>
+            <button type="button" onClick={loadUsers} disabled={loading} className={styles.refreshBtn}>
               {loading ? 'Loading...' : '↻ Refresh'}
             </button>
           </div>
         </div>
+
         {/* Bulk action bar — visible only when rows are selected */}
         {selected.size > 0 && (
-          <div className="flex flex-wrap items-center gap-3 px-5 py-3" style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', background: 'var(--dc-s1, #141414)' }}>
-            <span className="text-sm font-black" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>
+          <div className={styles.bulkBar}>
+            <span className={styles.bulkCount}>
               {selected.size} user{selected.size !== 1 ? 's' : ''} selected
             </span>
-            <div className="flex flex-wrap items-center gap-2 ml-auto">
+            <div className={styles.bulkActions}>
               <select
                 value={bulkRole}
                 onChange={e => setBulkRole(e.target.value as AppRole)}
-                className="h-[34px] rounded-[8px] px-2 text-xs font-bold outline-none"
-                style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }}
+                className={styles.bulkRoleSelect}
               >
                 {ASSIGNABLE_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
               </select>
@@ -1120,8 +1113,7 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
                 type="button"
                 onClick={bulkUpdateRole}
                 disabled={bulkApplying}
-                className="inline-flex h-[34px] items-center gap-1.5 rounded-[8px] px-3 text-xs font-extrabold transition disabled:opacity-50"
-                style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }}
+                className={styles.bulkRoleBtn}
               >
                 {bulkApplying ? '...' : '✎'} Change role
               </button>
@@ -1129,18 +1121,14 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
                 type="button"
                 onClick={() => setShowBulkDeleteConfirm(true)}
                 disabled={bulkDeleting}
-                className="inline-flex h-[34px] items-center gap-1.5 rounded-[8px] px-3 text-xs font-extrabold transition disabled:opacity-50"
-                style={{ background: 'rgba(248,113,113,0.13)', border: '1px solid rgba(248,113,113,0.25)', color: '#fca5a5' }}
+                className={styles.bulkDeleteBtn}
               >
                 <SvgIcon name="delete" size={14} /> Delete {selected.size}
               </button>
               <button
                 type="button"
                 onClick={() => setSelected(new Set())}
-                className="text-xs font-bold transition-colors px-1"
-                style={{ color: 'var(--dc-p3, #505050)' }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'var(--dc-p1, #F2F2F2)')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'var(--dc-p3, #505050)')}
+                className={styles.bulkClearBtn}
               >
                 ✕ Clear
               </button>
@@ -1149,12 +1137,12 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
         )}
 
         {loading ? (
-          <div className="p-5 text-sm animate-pulse" style={{ color: 'var(--dc-p3, #505050)' }}>Loading users...</div>
+          <div className={clsx(styles.loadingRow, 'animate-pulse')}>Loading users...</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr style={{ background: 'var(--dc-s1, #141414)', borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))' }}>
+                <tr className={styles.tableHead}>
                   <th className="w-10 px-4 py-3">
                     <input
                       ref={selectAllRef}
@@ -1165,11 +1153,11 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
                       aria-label="Select all users"
                     />
                   </th>
-                  <th className="px-5 py-3 text-left text-xs font-black" style={{ color: 'var(--dc-p3, #505050)' }}>User</th>
-                  <th className="w-44 px-5 py-3 text-left text-xs font-black" style={{ color: 'var(--dc-p3, #505050)' }}>Role</th>
-                  <th className="w-20 px-5 py-3 text-left text-xs font-black" style={{ color: 'var(--dc-p3, #505050)' }}>Imports</th>
-                  <th className="w-24 px-5 py-3 text-left text-xs font-black" style={{ color: 'var(--dc-p3, #505050)' }}>Snapshots</th>
-                  <th className="w-48 px-5 py-3 text-left text-xs font-black" style={{ color: 'var(--dc-p3, #505050)' }}>Status &amp; Actions</th>
+                  <th className={clsx(styles.th, 'px-5 py-3 text-left')}>User</th>
+                  <th className={clsx(styles.th, 'w-44 px-5 py-3 text-left')}>Role</th>
+                  <th className={clsx(styles.th, 'w-20 px-5 py-3 text-left')}>Imports</th>
+                  <th className={clsx(styles.th, 'w-24 px-5 py-3 text-left')}>Snapshots</th>
+                  <th className={clsx(styles.th, 'w-48 px-5 py-3 text-left')}>Status &amp; Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -1180,12 +1168,13 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
                     .slice(0, 2)
                     .map(part => part[0]?.toUpperCase())
                     .join('') || user.email.slice(0, 2).toUpperCase();
-                  const avatarStyle = { background: 'linear-gradient(135deg, var(--dc-acc, #E85D12), #8B2D00)', color: '#F2F2F2' };
 
                   return (
-                    <tr key={user.id}
-                      className="transition-colors hover:[&>td]:bg-[rgba(255,255,255,0.025)]"
-                      style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', background: selected.has(user.id) ? 'rgba(232,93,18,0.08)' : 'transparent' }}>
+                    <tr
+                      key={user.id}
+                      className={styles.tableRow}
+                      data-selected={selected.has(user.id) ? 'true' : 'false'}
+                    >
                       <td className="px-4 py-4">
                         <input
                           type="checkbox"
@@ -1197,48 +1186,48 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex min-w-0 items-center gap-3">
-                          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-black" style={avatarStyle}>{initials}</span>
+                          <span className={styles.avatar}>{initials}</span>
                           <div className="min-w-0">
                             <input value={user.name} onChange={e => setUsers(prev => prev.map(u => u.id === user.id ? { ...u, name: e.target.value } : u))}
-                              onFocus={e => { e.currentTarget.style.background = 'var(--dc-s1, #141414)'; e.currentTarget.style.borderColor = 'var(--dc-bdr2, rgba(255,255,255,0.13))'; }}
-                              onBlur={e => { updateUser(user.id, { name: e.target.value }); e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
-                              className="w-full truncate rounded-[8px] border border-transparent px-2 py-1 text-sm font-black outline-none transition"
-                              style={{ color: 'var(--dc-p1, #F2F2F2)', background: 'transparent' }} />
-                            <p className="truncate px-2 text-xs" style={{ color: 'var(--dc-p3, #505050)' }}>{user.email}</p>
+                              onBlur={e => updateUser(user.id, { name: e.target.value })}
+                              className={styles.nameInput}
+                              aria-label={`Edit name for ${user.name}`}
+                            />
+                            <p className={styles.userEmail}>{user.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-5 py-4">
                         <select value={user.role} onChange={e => updateUser(user.id, { role: e.target.value as AppRole })}
-                          className="h-[38px] w-full rounded-[9px] px-3 text-sm outline-none"
-                          style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p1, #F2F2F2)' }}>
+                          className={styles.inlineSelect}
+                          aria-label={`Change role for ${user.name}`}>
                           {roleOptionsFor(user).map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
                         </select>
                       </td>
-                      <td className="px-5 py-4 font-bold" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{user.importCount}</td>
-                      <td className="px-5 py-4 font-bold" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{user.snapshotCount}</td>
+                      <td className={clsx(styles.cellText, 'px-5 py-4')}>{user.importCount}</td>
+                      <td className={clsx(styles.cellText, 'px-5 py-4')}>{user.snapshotCount}</td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
-                          <span className={user.isActive ? 'chip c-gr' : 'chip c-nt'} style={{ borderRadius: 100 }}>
-                            <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: user.isActive ? '#22C55E' : '#505050' }} />
+                          <span className={clsx(user.isActive ? 'chip c-gr' : 'chip c-nt', styles.chipPill)}>
+                            <span className={styles.statusDot} data-active={String(user.isActive)} />
                             {user.isActive ? 'Active' : 'Disabled'}
                           </span>
-                          <button type="button" onClick={() => updateUser(user.id, { isActive: !user.isActive })}
+                          <button
+                            type="button"
+                            onClick={() => updateUser(user.id, { isActive: !user.isActive })}
                             title={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}
-                            className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] text-base transition"
-                            style={{ color: 'var(--dc-p2, #909090)' }}
-                            onMouseEnter={e => (e.currentTarget.style.color = 'var(--dc-amber, #F59E0B)')}
-                            onMouseLeave={e => (e.currentTarget.style.color = 'var(--dc-p2, #909090)')}
-                            aria-label={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}>
+                            className={styles.toggleBtn}
+                            aria-label={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}
+                          >
                             <SvgIcon name={user.isActive ? 'videoPause' : 'videoPlay'} size={15} />
                           </button>
-                          <button type="button" onClick={() => setDeleteTarget(user)}
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget(user)}
                             title={`Delete ${user.name}`}
-                            className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] text-base transition"
-                            style={{ color: 'var(--dc-p2, #909090)' }}
-                            onMouseEnter={e => (e.currentTarget.style.color = 'var(--dc-red, #F87171)')}
-                            onMouseLeave={e => (e.currentTarget.style.color = 'var(--dc-p2, #909090)')}
-                            aria-label={`Delete ${user.name}`}>
+                            className={styles.deleteBtn}
+                            aria-label={`Delete ${user.name}`}
+                          >
                             <SvgIcon name="delete" size={15} />
                           </button>
                         </div>
@@ -1248,10 +1237,10 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
                 })}
               </tbody>
             </table>
-            {filteredUsers.length === 0 && <div className="p-5 text-sm" style={{ color: 'var(--dc-p3, #505050)' }}>No users match the current filters.</div>}
-            <div className="flex items-center justify-between px-5 py-3 text-sm" style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }}>
+            {filteredUsers.length === 0 && <div className={styles.emptyMsg}>No users match the current filters.</div>}
+            <div className={styles.tableFooter}>
               <span>Showing {filteredUsers.length} of {users.length} users</span>
-              <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-[9px] px-3 text-xs font-black" style={{ color: 'var(--dc-acc2, #FF8A4C)', background: 'rgba(232,93,18,0.10)', fontFamily: 'var(--font-mono, monospace)' }}>1</span>
+              <span className={styles.pageBadge}>1</span>
             </div>
           </div>
         )}
@@ -1260,10 +1249,11 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
   );
 }
 
+const VALID_TABS: Tab[] = ['users','requests','config','retention','thresholds','orphan','backup','cloud','browser'];
+
 export default function AdminSettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const VALID_TABS: Tab[] = ['users','requests','config','retention','thresholds','orphan','backup','cloud','browser'];
   const initialTab = (searchParams.get('tab') as Tab | null);
   const [tab, setTab] = useState<Tab>(
     initialTab && VALID_TABS.includes(initialTab) ? initialTab : 'users'

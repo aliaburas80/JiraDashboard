@@ -2,6 +2,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import type { CSSProperties } from 'react';
+import clsx from 'clsx';
 import {
   AdminConsoleLayout,
   ADMINISTRATION_NAV,
@@ -21,6 +23,7 @@ import {
   type ThemeCustom,
   type BrandingConfig,
 } from '@/lib/themeCustomizer';
+import styles from './page.module.scss';
 
 // ── Palette card ──────────────────────────────────────────────────────────────
 
@@ -37,96 +40,163 @@ function PaletteCard({
 }) {
   const isDark = id !== 'none';
 
+  // Dynamic per-card values from palette data — cannot be expressed as static SCSS
+  const cardDynamic: CSSProperties = {
+    '--card-bg': isDark ? p.bg : '#ffffff',
+    '--card-border': active
+      ? `2px solid ${p.acc}`
+      : `1px solid ${isDark ? p.bdr2 : '#e2e8f0'}`,
+    '--card-shadow': active
+      ? `0 0 0 3px ${p.acc}33, 0 8px 24px rgba(0,0,0,0.3)`
+      : '0 2px 8px rgba(0,0,0,0.1)',
+  } as CSSProperties;
+
   return (
     <button
       type="button"
       onClick={onSelect}
-      style={{
-        width: '100%',
-        background: isDark ? p.bg : '#ffffff',
-        border: active ? `2px solid ${p.acc}` : `1px solid ${isDark ? p.bdr2 : '#e2e8f0'}`,
-        borderRadius: 14,
-        padding: 0,
-        cursor: 'pointer',
-        transition: 'all 200ms',
-        boxShadow: active ? `0 0 0 3px ${p.acc}33, 0 8px 24px rgba(0,0,0,0.3)` : '0 2px 8px rgba(0,0,0,0.1)',
-        textAlign: 'left',
-        overflow: 'hidden',
-        position: 'relative',
-      }}
+      className={styles.paletteCard}
+      // eslint-disable-next-line react/forbid-dom-props
+      style={cardDynamic}
       aria-pressed={active}
     >
-      {/* Color stripe */}
-      <div style={{ display: 'flex', height: 6 }}>
+      {/* Color stripe — each swatch color comes from palette runtime data */}
+      <div className={styles.colorStripe}>
         {p.swatches.map((sw, i) => (
-          <div key={i} style={{ flex: 1, background: sw }} />
+          <div
+            key={i}
+            className={styles.stripeSwatch}
+            // Dynamic: each swatch has its own color from palette data
+            // eslint-disable-next-line react/forbid-dom-props
+            style={{ '--swatch-color': sw } as CSSProperties}
+          />
         ))}
       </div>
 
-      <div style={{ padding: '14px 16px' }}>
+      <div className={styles.cardBody}>
         {/* Header row */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div className={styles.cardHeaderRow}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? p.p1 : '#0f172a', marginBottom: 2 }}>
+            <div
+              className={styles.cardName}
+              // Dynamic: text color from palette data (dark vs light theme)
+              // eslint-disable-next-line react/forbid-dom-props
+              style={{ '--card-name-color': isDark ? p.p1 : '#0f172a' } as CSSProperties}
+            >
               {p.label}
             </div>
-            <div style={{ fontSize: 10, color: isDark ? p.p2 : '#64748b', lineHeight: 1.5 }}>
+            <div
+              className={styles.cardTagline}
+              // Dynamic: muted text color from palette data
+              // eslint-disable-next-line react/forbid-dom-props
+              style={{ '--card-tagline-color': isDark ? p.p2 : '#64748b' } as CSSProperties}
+            >
               {p.tagline}
             </div>
           </div>
-          <span style={{
-            fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
-            textTransform: 'uppercase' as const,
-            background: `${p.acc}1a`, color: p.acc,
-            padding: '2px 8px', borderRadius: 3, flexShrink: 0, marginLeft: 8,
-          }}>
+          <span
+            className={styles.cardBadge}
+            // Dynamic: badge bg/color are palette-specific accent values
+            // eslint-disable-next-line react/forbid-dom-props
+            style={{
+              '--card-badge-bg': `${p.acc}1a`,
+              '--card-badge-color': p.acc,
+            } as CSSProperties}
+          >
             {p.badge}
           </span>
         </div>
 
         {/* Mini KPI preview */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6, marginBottom: 10 }}>
+        <div className={styles.kpiGrid}>
           {[
             { label: 'Health', val: '73', color: p.acc },
             { label: 'Blocked', val: '4',  color: '#E85D12' },
             { label: 'Flow',    val: '68%', color: isDark ? p.p1 : '#0f172a' },
           ].map(kpi => (
-            <div key={kpi.label} style={{
-              background: isDark ? p.s2 : '#f8fafc',
-              border: `1px solid ${isDark ? p.bdr : '#e2e8f0'}`,
-              borderRadius: 8, padding: '7px 8px',
-            }}>
-              <div style={{ fontSize: 8, color: isDark ? p.p2 : '#64748b', marginBottom: 2 }}>{kpi.label}</div>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 500, color: kpi.color, lineHeight: 1 }}>{kpi.val}</div>
+            <div
+              key={kpi.label}
+              className={styles.kpiCell}
+              // Dynamic: KPI cell bg/border come from palette data
+              // eslint-disable-next-line react/forbid-dom-props
+              style={{
+                '--kpi-bg': isDark ? p.s2 : '#f8fafc',
+                '--kpi-border': isDark ? p.bdr : '#e2e8f0',
+              } as CSSProperties}
+            >
+              <div
+                className={styles.kpiLabel}
+                // Dynamic: label color from palette data
+                // eslint-disable-next-line react/forbid-dom-props
+                style={{ '--kpi-label-color': isDark ? p.p2 : '#64748b' } as CSSProperties}
+              >
+                {kpi.label}
+              </div>
+              <div
+                className={styles.kpiValue}
+                // Dynamic: value color is per-KPI and palette-derived
+                // eslint-disable-next-line react/forbid-dom-props
+                style={{ '--kpi-value-color': kpi.color } as CSSProperties}
+              >
+                {kpi.val}
+              </div>
             </div>
           ))}
         </div>
 
         {/* Nav preview strip */}
-        <div style={{
-          background: isDark ? p.s1 : '#ffffff',
-          border: `1px solid ${isDark ? p.bdr : '#e2e8f0'}`,
-          borderRadius: 100, padding: '5px 10px',
-          display: 'flex', alignItems: 'center', gap: 4, fontSize: 10,
-        }}>
-          <svg width="14" height="14" viewBox="0 0 32 32" fill="none" style={{ flexShrink: 0 }}>
+        <div
+          className={styles.navStrip}
+          // Dynamic: nav strip bg/border from palette data
+          // eslint-disable-next-line react/forbid-dom-props
+          style={{
+            '--nav-bg': isDark ? p.s1 : '#ffffff',
+            '--nav-border': isDark ? p.bdr : '#e2e8f0',
+          } as CSSProperties}
+        >
+          <svg width="14" height="14" viewBox="0 0 32 32" fill="none" className="shrink-0">
             <circle cx="16" cy="16" r="13" stroke={p.acc} strokeWidth="1.5" opacity=".5" />
             <path d="M11 16.5l3.5 3.5 6.5-7" stroke={p.acc} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           </svg>
-          <span style={{ fontWeight: 700, color: isDark ? p.p1 : '#0f172a', fontSize: 10 }}>DC</span>
-          <span style={{ marginLeft: 4, background: `${p.acc}1a`, color: p.acc, padding: '2px 8px', borderRadius: 100, fontWeight: 600 }}>Dashboard</span>
-          <span style={{ color: isDark ? p.p3 : '#94a3b8', marginLeft: 2 }}>Reports</span>
-          <div style={{ marginLeft: 'auto', background: '#E85D12', color: '#fff', padding: '3px 10px', borderRadius: 100, fontWeight: 700, fontSize: 9 }}>Upload</div>
+          <span
+            className={styles.navLogo}
+            // Dynamic: logo text color from palette data
+            // eslint-disable-next-line react/forbid-dom-props
+            style={{ '--nav-logo-color': isDark ? p.p1 : '#0f172a' } as CSSProperties}
+          >
+            DC
+          </span>
+          <span
+            className={styles.navActive}
+            // Dynamic: active nav item uses palette accent
+            // eslint-disable-next-line react/forbid-dom-props
+            style={{
+              '--nav-active-bg': `${p.acc}1a`,
+              '--nav-active-color': p.acc,
+            } as CSSProperties}
+          >
+            Dashboard
+          </span>
+          <span
+            className={styles.navMuted}
+            // Dynamic: muted nav item color from palette data
+            // eslint-disable-next-line react/forbid-dom-props
+            style={{ '--nav-muted-color': isDark ? p.p3 : '#94a3b8' } as CSSProperties}
+          >
+            Reports
+          </span>
+          <div className={styles.navCta}>Upload</div>
         </div>
       </div>
 
       {/* Active checkmark */}
       {active && (
-        <div style={{
-          position: 'absolute', top: 10, right: 10,
-          width: 20, height: 20, borderRadius: '50%',
-          background: p.acc, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
+        <div
+          className={styles.activeCheck}
+          // Dynamic: checkmark bg uses palette accent color
+          // eslint-disable-next-line react/forbid-dom-props
+          style={{ '--check-bg': p.acc } as CSSProperties}
+        >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <path d="M5 13l4 4L19 7" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -161,25 +231,18 @@ function LogoUpload({
 
   return (
     <div>
-      <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 8, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
-        {label}
-      </p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <p className={styles.logoLabel}>{label}</p>
+      <div className={styles.logoRow}>
         <div
+          role="button"
+          tabIndex={0}
           onClick={() => inputRef.current?.click()}
-          style={{
-            width: 120, height: 48, borderRadius: 10,
-            border: '1.5px dashed #cbd5e1',
-            background: value ? 'transparent' : '#f8fafc',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', overflow: 'hidden', transition: 'border-color 200ms',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--dc-accent, #2563eb)')}
-          onMouseLeave={e => (e.currentTarget.style.borderColor = '#cbd5e1')}
+          onKeyDown={e => e.key === 'Enter' && inputRef.current?.click()}
+          className={clsx(styles.logoDropzone, { [styles['logoDropzone--hasImage']]: !!value })}
         >
           {value ? (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={value} alt={label} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+            <img src={value} alt={label} className={styles.logoPreview} />
           ) : (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0L8 8m4-4l4 4" />
@@ -190,11 +253,7 @@ function LogoUpload({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            style={{
-              fontSize: 12, fontWeight: 700, color: 'var(--dc-accent, #2563eb)',
-              background: 'transparent', border: 'none', cursor: 'pointer',
-              padding: 0, display: 'block', marginBottom: 4,
-            }}
+            className={styles.logoUploadBtn}
           >
             {value ? 'Replace image' : 'Upload image'}
           </button>
@@ -202,15 +261,15 @@ function LogoUpload({
             <button
               type="button"
               onClick={() => onChange('')}
-              style={{ fontSize: 11, color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+              className={styles.logoRemoveBtn}
             >
               Remove
             </button>
           )}
-          <p style={{ fontSize: 10, color: '#94a3b8', marginTop: value ? 0 : 4 }}>{hint}</p>
+          <p className={styles.logoHint}>{hint}</p>
         </div>
       </div>
-      <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
+      <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className={styles.hiddenInput} />
     </div>
   );
 }
@@ -284,26 +343,18 @@ export default function AdminThemePage() {
         stats={stats}
         statusLabel="Live preview"
         actions={
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className={styles.actionRow}>
             <button
               type="button"
               onClick={handleReset}
-              style={{
-                height: 42, padding: '0 16px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-                border: '1px solid #e2e8f0', background: 'white', color: '#64748b', cursor: 'pointer',
-              }}
+              className={styles.btnReset}
             >
               Reset defaults
             </button>
             <button
               type="button"
               onClick={handleSave}
-              style={{
-                height: 42, padding: '0 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-                background: saved ? '#22c55e' : 'var(--dc-accent, #2563eb)',
-                color: '#fff', border: 'none', cursor: 'pointer', transition: 'background 300ms',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}
+              className={clsx(styles.btnSave, { [styles['btnSave--saved']]: saved })}
             >
               {saved ? (
                 <>
@@ -318,32 +369,28 @@ export default function AdminThemePage() {
         }
       >
         {/* ── Section 1: Colour palettes ──────────────────────────────────── */}
-        <section style={{
-          background: '#fff', border: '1px solid #e2e8f0',
-          borderRadius: 14, padding: '24px 24px 28px',
-          boxShadow: '0 3px 12px rgba(15,23,42,0.035)', marginBottom: 16,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
             <div>
-              <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
-                Colour Palette
-              </h2>
-              <p style={{ fontSize: 13, color: '#64748b' }}>
+              <h2 className={styles.sectionTitle}>Colour Palette</h2>
+              <p className={styles.sectionDesc}>
                 Four themes from the UIUXTemplate design system. All dark except Default (Light).
               </p>
             </div>
-            <span style={{
-              fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
-              textTransform: 'uppercase' as const,
-              background: `${activePal?.acc ?? '#2563eb'}1a`,
-              color: activePal?.acc ?? '#2563eb',
-              padding: '4px 12px', borderRadius: 100,
-            }}>
+            <span
+              className={styles.activeBadge}
+              // Dynamic: badge uses active palette accent color from runtime palette data
+              // eslint-disable-next-line react/forbid-dom-props
+              style={{
+                '--badge-bg': `${activePal?.acc ?? '#2563eb'}1a`,
+                '--badge-color': activePal?.acc ?? '#2563eb',
+              } as CSSProperties}
+            >
               Active: {activePal?.badge ?? '—'}
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+          <div className={styles.paletteGrid}>
             {(Object.entries(PALETTE_PRESETS) as [PaletteId, (typeof PALETTE_PRESETS)[PaletteId]][]).map(([id, p]) => (
               <PaletteCard
                 key={id}
@@ -357,22 +404,14 @@ export default function AdminThemePage() {
         </section>
 
         {/* ── Section 2: Typography & Radius ─────────────────────────────── */}
-        <section style={{
-          background: '#fff', border: '1px solid #e2e8f0',
-          borderRadius: 14, padding: '24px 24px 28px',
-          boxShadow: '0 3px 12px rgba(15,23,42,0.035)', marginBottom: 16,
-        }}>
-          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 20 }}>
-            Typography &amp; Shape
-          </h2>
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Typography &amp; Shape</h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          <div className="grid grid-cols-2 gap-6">
             {/* Font size */}
             <div>
-              <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 10, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
-                Base font size
-              </p>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <p className={styles.controlLabel}>Base font size</p>
+              <div className={styles.presetRow}>
                 {(Object.entries(FONT_SIZE_PRESETS) as [ThemeCustom['fontSize'], typeof FONT_SIZE_PRESETS[ThemeCustom['fontSize']]][]).map(([id, p]) => {
                   const active = settings.fontSize === id;
                   return (
@@ -380,18 +419,14 @@ export default function AdminThemePage() {
                       key={id}
                       type="button"
                       onClick={() => updateFontSize(id)}
-                      style={{
-                        flex: 1, padding: '10px 8px', fontWeight: 700,
-                        fontSize: id === 'sm' ? 11 : id === 'lg' ? 14 : 12,
-                        borderRadius: 10,
-                        border: active ? `2px solid var(--dc-accent, #2563eb)` : '1px solid #e2e8f0',
-                        background: active ? `color-mix(in srgb, var(--dc-accent, #2563eb) 10%, transparent)` : '#f8fafc',
-                        color: active ? 'var(--dc-accent, #2563eb)' : '#64748b',
-                        cursor: 'pointer', transition: 'all 150ms',
-                      }}
+                      className={clsx(
+                        styles.presetBtn,
+                        id === 'sm' ? styles.presetBtnSm : id === 'lg' ? styles.presetBtnLg : styles.presetBtnMd,
+                        { [styles['presetBtn--active']]: active }
+                      )}
                     >
                       {p.label}
-                      <span style={{ display: 'block', fontSize: 9, fontWeight: 500, marginTop: 2, opacity: 0.7 }}>{p.px}</span>
+                      <span className={styles.presetHint}>{p.px}</span>
                     </button>
                   );
                 })}
@@ -400,10 +435,8 @@ export default function AdminThemePage() {
 
             {/* Border radius */}
             <div>
-              <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 10, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
-                Corner radius
-              </p>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <p className={styles.controlLabel}>Corner radius</p>
+              <div className={styles.presetRow}>
                 {(Object.entries(RADIUS_PRESETS) as [ThemeCustom['radius'], typeof RADIUS_PRESETS[ThemeCustom['radius']]][]).map(([id, p]) => {
                   const active = settings.radius === id;
                   return (
@@ -411,17 +444,15 @@ export default function AdminThemePage() {
                       key={id}
                       type="button"
                       onClick={() => updateRadius(id)}
-                      style={{
-                        flex: 1, padding: '10px 8px', fontSize: 12, fontWeight: 700,
-                        borderRadius: id === 'sharp' ? 4 : id === 'rounded' ? 14 : 8,
-                        border: active ? `2px solid var(--dc-accent, #2563eb)` : '1px solid #e2e8f0',
-                        background: active ? `color-mix(in srgb, var(--dc-accent, #2563eb) 10%, transparent)` : '#f8fafc',
-                        color: active ? 'var(--dc-accent, #2563eb)' : '#64748b',
-                        cursor: 'pointer', transition: 'all 150ms',
-                      }}
+                      className={clsx(
+                        styles.presetBtn,
+                        styles.presetBtnMd,
+                        id === 'sharp' ? styles.radiusBtnSharp : id === 'rounded' ? styles.radiusBtnRounded : styles.radiusBtnDefault,
+                        { [styles['presetBtn--active']]: active }
+                      )}
                     >
                       {p.label}
-                      <span style={{ display: 'block', fontSize: 9, fontWeight: 500, marginTop: 2, opacity: 0.7 }}>{p.md}</span>
+                      <span className={styles.presetHint}>{p.md}</span>
                     </button>
                   );
                 })}
@@ -430,60 +461,40 @@ export default function AdminThemePage() {
           </div>
 
           {/* Typography spec reference */}
-          <div style={{
-            marginTop: 20, padding: '14px 16px', borderRadius: 10,
-            background: '#f8fafc', border: '1px solid #e2e8f0',
-          }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: 10 }}>
-              Font stack (UIUXTemplate spec)
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div className={styles.fontRef}>
+            <p className={styles.fontRefLabel}>Font stack (UIUXTemplate spec)</p>
+            <div className={styles.fontRefGrid}>
               <div>
-                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>Plus Jakarta Sans</p>
-                <p style={{ fontSize: 10, color: '#64748b' }}>UI text · headings · labels</p>
+                <p className={clsx(styles.fontSample, styles['fontSample--jakarta'])}>Plus Jakarta Sans</p>
+                <p className={styles.fontSampleDesc}>UI text · headings · labels</p>
               </div>
               <div>
-                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 500, color: '#0f172a', marginBottom: 2 }}>JetBrains Mono</p>
-                <p style={{ fontSize: 10, color: '#64748b' }}>Metric numbers · evidence tags</p>
+                <p className={clsx(styles.fontSample, styles['fontSample--mono'])}>JetBrains Mono</p>
+                <p className={styles.fontSampleDesc}>Metric numbers · evidence tags</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* ── Section 3: Branding ─────────────────────────────────────────── */}
-        <section style={{
-          background: '#fff', border: '1px solid #e2e8f0',
-          borderRadius: 14, padding: '24px 24px 28px',
-          boxShadow: '0 3px 12px rgba(15,23,42,0.035)', marginBottom: 16,
-        }}>
-          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
-            Branding
-          </h2>
-          <p style={{ fontSize: 13, color: '#64748b', marginBottom: 20 }}>
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Branding</h2>
+          <p className={clsx(styles.sectionDesc, 'mb-5')}>
             Customise the app name and logo shown in the navigation bar. Logos are stored locally in your browser.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 20 }}>
+          <div className={styles.brandingGrid}>
             {/* App name */}
             <div>
-              <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 8, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
-                App name
-              </p>
+              <p className={styles.fieldLabel}>App name</p>
               <input
                 type="text"
                 value={branding.appName}
                 onChange={e => updateBranding({ appName: e.target.value })}
                 placeholder="Delivery Clarity"
-                style={{
-                  width: '100%', height: 42, padding: '0 14px', borderRadius: 10,
-                  border: '1px solid #e2e8f0', background: '#f8fafc',
-                  fontSize: 13, fontWeight: 600, color: '#0f172a',
-                  outline: 'none', transition: 'border-color 200ms',
-                }}
-                onFocus={e => (e.target.style.borderColor = 'var(--dc-accent, #2563eb)')}
-                onBlur={e => (e.target.style.borderColor = '#e2e8f0')}
+                className={styles.textInput}
               />
-              <p style={{ fontSize: 10, color: '#94a3b8', marginTop: 6 }}>Shown in the nav bar and page title</p>
+              <p className={styles.inputHint}>Shown in the nav bar and page title</p>
             </div>
 
             {/* Favicon upload */}
@@ -504,19 +515,13 @@ export default function AdminThemePage() {
         </section>
 
         {/* ── Section 4: Token reference ──────────────────────────────────── */}
-        <section style={{
-          background: '#fff', border: '1px solid #e2e8f0',
-          borderRadius: 14, padding: '24px 24px 28px',
-          boxShadow: '0 3px 12px rgba(15,23,42,0.035)',
-        }}>
-          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
-            Active Token Reference
-          </h2>
-          <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>
-            CSS custom properties currently applied to <code style={{ fontSize: 11, background: '#f1f5f9', padding: '1px 5px', borderRadius: 4 }}>{'<html>'}</code>. These drive all themed components.
+        <section className={clsx(styles.section, 'mb-0')}>
+          <h2 className={styles.sectionTitle}>Active Token Reference</h2>
+          <p className={clsx(styles.sectionDesc, 'mb-4')}>
+            CSS custom properties currently applied to <code className={styles.code}>{'<html>'}</code>. These drive all themed components.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
+          <div className={styles.tokenGrid}>
             {[
               { name: '--dc-bg',      val: activePal?.bg      ?? '#f8fafc', role: 'Page background'  },
               { name: '--dc-s1',      val: activePal?.s1      ?? '#ffffff', role: 'Surface / nav'    },
@@ -532,18 +537,17 @@ export default function AdminThemePage() {
               { name: '--dc-amber',   val: '#F59E0B',                       role: 'Moderate status'  },
               { name: '--dc-red',     val: '#F87171',                       role: 'Critical status'  },
             ].map(tok => (
-              <div key={tok.name} style={{
-                background: '#f8fafc', border: '1px solid #e2e8f0',
-                borderRadius: 8, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8,
-              }}>
-                <div style={{
-                  width: 24, height: 24, borderRadius: 5, flexShrink: 0,
-                  background: tok.val, border: '1px solid rgba(0,0,0,0.08)',
-                }} />
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#64748b', marginBottom: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tok.name}</p>
-                  <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#0f172a', marginBottom: 1 }}>{tok.val}</p>
-                  <p style={{ fontSize: 9, color: '#94a3b8' }}>{tok.role}</p>
+              <div key={tok.name} className={styles.tokenCard}>
+                <div
+                  className={styles.tokenSwatch}
+                  // Dynamic: swatch color is the resolved token value (from runtime palette data)
+                  // eslint-disable-next-line react/forbid-dom-props
+                  style={{ '--swatch-color': tok.val } as CSSProperties}
+                />
+                <div className={styles.tokenInfo}>
+                  <p className={styles.tokenName}>{tok.name}</p>
+                  <p className={styles.tokenVal}>{tok.val}</p>
+                  <p className={styles.tokenRole}>{tok.role}</p>
                 </div>
               </div>
             ))}

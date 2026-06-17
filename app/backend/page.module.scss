@@ -1,0 +1,356 @@
+// app/backend/page.module.scss
+// Styles for the /backend page (Backend Status).
+// Migrated from inline styles. All visual identity is here; Tailwind handles layout.
+
+// ── Toast notification ────────────────────────────────────────────────────────
+
+.toast {
+  position: fixed;
+  bottom: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  padding: var(--space-2) + 2px var(--space-4);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-dropdown);
+  z-index: var(--z-modal);
+  background: var(--color-muted);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-strong);
+  white-space: nowrap;
+}
+
+// ── Page header ───────────────────────────────────────────────────────────────
+
+.pageTitle {
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.pageDesc {
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: var(--text-md);
+  padding: 7px 18px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--transition-base);
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+// ── Error banner ──────────────────────────────────────────────────────────────
+
+.errorBanner {
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  background: var(--color-danger-soft);
+  border: 1px solid var(--color-danger-border);
+}
+
+.errorTitle {
+  font-weight: 600;
+  font-size: var(--text-md);
+  color: var(--color-danger);
+}
+
+.errorBody {
+  font-size: var(--text-md);
+  margin-top: 2px;
+  color: var(--color-text-secondary);
+}
+
+// ── Section headings ──────────────────────────────────────────────────────────
+
+.sectionHeading {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-3);
+  color: var(--color-text-muted);
+}
+
+// ── Stat cards ────────────────────────────────────────────────────────────────
+
+.statCard {
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  background: var(--color-subtle);
+  border: 1px solid var(--color-border);
+}
+
+.statLabel {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+}
+
+.statValueDefault {
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+}
+
+.statValueSuccess {
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-success);
+}
+
+.statValueMuted {
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.statValueAccent {
+  font-size: var(--text-md);
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-primary);
+  font-family: var(--font-mono, monospace);
+}
+
+.statValueMono {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono, monospace);
+}
+
+.statNote {
+  font-size: var(--text-2xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+// ── Table card wrapper ────────────────────────────────────────────────────────
+
+.tableCard {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--color-subtle);
+  border: 1px solid var(--color-border);
+}
+
+.tableEmpty {
+  font-size: var(--text-md);
+  text-align: center;
+  padding: 40px 0;
+  color: var(--color-text-muted);
+}
+
+.tableHead {
+  border-bottom: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+}
+
+.th {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.tableRow {
+  border-bottom: 1px solid var(--color-border);
+  transition: background var(--transition-fast);
+
+  &:hover td {
+    background: rgb(255 255 255 / 2.5%);
+  }
+}
+
+// ── Method badge ──────────────────────────────────────────────────────────────
+// Dynamic bg/color supplied via --method-bg / --method-color CSS custom props set in TSX,
+// because the colors come from runtime method-string evaluation.
+
+.methodBadge {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  display: inline-block;
+  letter-spacing: 0.05em;
+  // Dynamic: background and color set via --method-bg / --method-color in TSX
+  background: var(--method-bg);
+  color: var(--method-color);
+}
+
+// ── Endpoint path ─────────────────────────────────────────────────────────────
+
+.endpointPath {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-2xs);
+  color: var(--color-primary);
+}
+
+.endpointDesc {
+  color: var(--color-text-secondary);
+}
+
+// ── Online indicator dot ──────────────────────────────────────────────────────
+
+.onlineDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-success);
+  box-shadow: 0 0 4px rgb(34 197 94 / 50%);
+}
+
+// ── Import logs section header ────────────────────────────────────────────────
+
+.deleteAllBtn {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  border-radius: var(--radius-xl);
+  padding: 6px var(--space-3);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger-border);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+
+  &:hover {
+    opacity: 0.85;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-danger);
+    outline-offset: 2px;
+  }
+}
+
+.logSignedIn {
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.logSignedInName {
+  color: var(--color-text-secondary);
+}
+
+// ── Log table cells ───────────────────────────────────────────────────────────
+
+.cellTimestamp {
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-2xs);
+}
+
+.cellFilename {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-xs);
+  color: var(--color-text-primary);
+}
+
+.cellUserName {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.cellUserEmail {
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.cellNum {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.healthMissing {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+// ── Chip size overrides — applied alongside global .chip to shrink font-size ──
+// The global .chip sets font-size: 10px; these reduce it further for dense tables.
+
+.chipXs {
+  font-size: var(--text-2xs); // 9px
+}
+
+.chipSm {
+  font-size: var(--text-xs); // 10px
+}
+
+// ── Delete log button ─────────────────────────────────────────────────────────
+
+.logDeleteBtn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-md);
+  font-weight: 900;
+  transition: color var(--transition-fast), background var(--transition-fast);
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-danger);
+    background: var(--color-danger-soft);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-danger);
+    outline-offset: 2px;
+  }
+}

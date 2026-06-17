@@ -5,17 +5,9 @@ import { useRouter } from 'next/navigation';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import { ASSIGNABLE_ROLES, roleLabel, type AppRole } from '@/lib/roles';
 import type { ManagedUser } from '@/lib/adminConsole';
+import styles from './page.module.scss';
 
 const ALL_ROLES: AppRole[] = ['admin', 'scrum_master', 'product_owner', 'manager', 'c_level', 'user'];
-
-const ROLE_COLORS: Record<string, string> = {
-  admin:         '#F87171',
-  scrum_master:  '#60A5FA',
-  product_owner: '#34D399',
-  manager:       '#FBBF24',
-  c_level:       '#A78BFA',
-  user:          '#94A3B8',
-};
 
 interface CreateForm { name: string; email: string; password: string; role: AppRole }
 const EMPTY_FORM: CreateForm = { name: '', email: '', password: '', role: 'user' };
@@ -96,7 +88,7 @@ export default function AdminUsersPage() {
       setSelectedIds(new Set());
       setConfirmBulkDelete(false);
       setSuccessMsg(`✅ ${ids.length} user${ids.length > 1 ? 's' : ''} deleted.`);
-    } catch (e: any) { setError(e.message); }
+    } catch (e: unknown) { setError((e as Error).message); }
     finally { setBulkProcessing(false); }
   }
 
@@ -110,7 +102,7 @@ export default function AdminUsersPage() {
       setUsers(prev => prev.map(u => ids.includes(u.id) ? { ...u, role: bulkRole, roleLabel: roleLabel(bulkRole) } : u));
       setSelectedIds(new Set());
       setSuccessMsg(`✅ Role updated to "${roleLabel(bulkRole)}" for ${ids.length} user${ids.length > 1 ? 's' : ''}.`);
-    } catch (e: any) { setError(e.message); }
+    } catch (e: unknown) { setError((e as Error).message); }
     finally { setBulkProcessing(false); }
   }
 
@@ -134,7 +126,7 @@ export default function AdminUsersPage() {
       if (!res.ok) { const d = await res.json(); throw new Error(d.error ?? 'Delete failed'); }
       setUsers(prev => prev.filter(u => u.id !== confirmDelete.id));
       setConfirmDelete(null);
-    } catch (e: any) { setError(e.message); }
+    } catch (e: unknown) { setError((e as Error).message); }
     finally { setSaving(false); }
   }
 
@@ -155,7 +147,7 @@ export default function AdminUsersPage() {
           ? `✅ ${data.user.name} created — welcome email sent to ${data.user.email}.`
           : `✅ ${data.user.name} created. No email sent — configure SMTP in Admin → Settings.`,
       );
-    } catch (e: any) { setFormErr(e.message); }
+    } catch (e: unknown) { setFormErr((e as Error).message); }
     finally { setSaving(false); }
   }
 
@@ -164,361 +156,333 @@ export default function AdminUsersPage() {
   const admins = users.filter(u => u.role === 'admin').length;
 
   const stats = [
-    { icon: 'people', label: 'Total Users',  value: String(total),  note: 'All accounts',        toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
-    { icon: 'shield', label: 'Active',       value: String(active), note: total ? `${Math.round((active/total)*100)}% of total` : '—', toneStyle: { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } },
-    { icon: 'priorityHigh', label: 'Admins',       value: String(admins), note: total ? `${Math.round((admins/total)*100)}% of total` : '—', toneStyle: { background: 'rgba(248,113,113,0.12)', color: '#F87171' } },
-    { icon: 'teams', label: 'Role Types',   value: String(ASSIGNABLE_ROLES.length), note: 'Assignable roles', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#94A3B8' } },
+    { icon: 'people',        label: 'Total Users', value: String(total),                note: 'All accounts',        toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
+    { icon: 'shield',        label: 'Active',      value: String(active),               note: total ? `${Math.round((active/total)*100)}% of total` : '—', toneStyle: { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } },
+    { icon: 'priorityHigh',  label: 'Admins',      value: String(admins),               note: total ? `${Math.round((admins/total)*100)}% of total` : '—', toneStyle: { background: 'rgba(248,113,113,0.12)', color: '#F87171' } },
+    { icon: 'teams',         label: 'Role Types',  value: String(ASSIGNABLE_ROLES.length), note: 'Assignable roles', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#94A3B8' } },
   ];
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 240, color: 'var(--dc-p3,#505050)' }}>
-      Loading users…
-    </div>
+    <div className={styles.loading}>Loading users…</div>
   );
 
   return (
     <AdminConsoleLayout
-        title="User Management"
-        description="Manage accounts, roles, and access for all users in the system."
-        stats={stats}
-        statusLabel={`${active} active`}
-        actions={
+      title="User Management"
+      description="Manage accounts, roles, and access for all users in the system."
+      stats={stats}
+      statusLabel={`${active} active`}
+      actions={
+        <button
+          type="button"
+          className={styles.addUserBtn}
+          onClick={() => { setShowCreate(true); setFormErr(''); setForm(EMPTY_FORM); }}
+        >
+          + Add User
+        </button>
+      }
+    >
+      {/* ── Success / error banners ── */}
+      {successMsg && (
+        <div className={styles.successBanner}>
+          <span>{successMsg}</span>
           <button
             type="button"
-            onClick={() => { setShowCreate(true); setFormErr(''); setForm(EMPTY_FORM); }}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '7px 14px', borderRadius: 8, border: 'none',
-              background: 'var(--dc-acc,#E85D12)', color: '#fff',
-              fontSize: 12, fontWeight: 700, cursor: 'pointer',
-            }}
+            className={styles.dismissBtn}
+            onClick={() => setSuccessMsg('')}
+            aria-label="Dismiss"
           >
-            + Add User
+            ×
           </button>
-        }
-      >
-        {successMsg && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.28)', borderRadius: 8, color: '#4ade80', fontSize: 12, marginBottom: 16 }}>
-            <span>{successMsg}</span>
-            <button type="button" onClick={() => setSuccessMsg('')} style={{ background: 'none', border: 'none', color: '#4ade80', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '0 0 0 10px', opacity: 0.7 }} aria-label="Dismiss">×</button>
-          </div>
-        )}
-        {error && (
-          <div style={{ padding: '10px 14px', background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, color: '#F87171', fontSize: 12, marginBottom: 16 }}>
-            {error}
-          </div>
-        )}
-
-        {/* ── Create user form ── */}
-        {showCreate && (
-          <div style={{ background: 'var(--dc-s2,#1e1e1e)', border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', borderRadius: 12, padding: 20, marginBottom: 20 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1,#F2F2F2)', marginBottom: 14 }}>New User</p>
-            <form onSubmit={createUser}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-                {([['name','Name','text'], ['email','Email','email'], ['password','Temporary password','password']] as [keyof CreateForm, string, string][]).map(([field, label, type]) => (
-                  <div key={field}>
-                    <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--dc-p3,#505050)', display: 'block', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</label>
-                    <input
-                      type={type}
-                      value={form[field] as string}
-                      onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
-                      required
-                      style={{
-                        width: '100%', padding: '7px 10px', borderRadius: 7,
-                        background: 'var(--dc-s3,#282828)', border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))',
-                        color: 'var(--dc-p1,#F2F2F2)', fontSize: 12, outline: 'none', boxSizing: 'border-box',
-                        fontFamily: 'inherit',
-                      }}
-                    />
-                  </div>
-                ))}
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--dc-p3,#505050)', display: 'block', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.06em' }}>Role</label>
-                  <select
-                    value={form.role}
-                    onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
-                    style={{
-                      width: '100%', padding: '7px 10px', borderRadius: 7,
-                      background: 'var(--dc-s3,#282828)', border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))',
-                      color: 'var(--dc-p1,#F2F2F2)', fontSize: 12, outline: 'none', boxSizing: 'border-box',
-                      fontFamily: 'inherit',
-                    }}
-                  >
-                    {ALL_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
-                  </select>
-                </div>
-              </div>
-              {formErr && <p style={{ fontSize: 11, color: '#F87171', marginBottom: 8 }}>{formErr}</p>}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button type="submit" disabled={saving} style={{ padding: '6px 14px', borderRadius: 7, border: 'none', background: 'var(--dc-acc,#E85D12)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                  {saving ? 'Creating…' : 'Create User'}
-                </button>
-                <button type="button" onClick={() => setShowCreate(false)} style={{ padding: '6px 14px', borderRadius: 7, border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', background: 'transparent', color: 'var(--dc-p2,#909090)', fontSize: 12, cursor: 'pointer' }}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* ── Filters ── */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input
-            type="search"
-            placeholder="Search name or email…"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            style={{
-              flex: 1, minWidth: 200, padding: '7px 12px', borderRadius: 8,
-              background: 'var(--dc-s2,#1e1e1e)', border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))',
-              color: 'var(--dc-p1,#F2F2F2)', fontSize: 12, outline: 'none', fontFamily: 'inherit',
-            }}
-          />
-          <select
-            value={roleFilter}
-            onChange={e => setRoleFilter(e.target.value as AppRole | 'all')}
-            style={{
-              padding: '7px 12px', borderRadius: 8,
-              background: 'var(--dc-s2,#1e1e1e)', border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))',
-              color: 'var(--dc-p1,#F2F2F2)', fontSize: 12, outline: 'none', fontFamily: 'inherit',
-            }}
-          >
-            <option value="all">All Roles</option>
-            {ALL_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
-          </select>
-          <span style={{ fontSize: 11, color: 'var(--dc-p3,#505050)', whiteSpace: 'nowrap' }}>
-            {filtered.length} of {total} users
-          </span>
         </div>
+      )}
+      {error && (
+        <div className={styles.errorBanner}>{error}</div>
+      )}
 
-        {/* ── Bulk action bar ── */}
-        {someSelected && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '8px 14px', background: 'rgba(232,93,18,0.08)', border: '1px solid rgba(232,93,18,0.25)', borderRadius: 10, marginBottom: 12 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-acc,#E85D12)' }}>{selectedIds.size} selected</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto' }}>
-              <select
-                value={bulkRole}
-                onChange={e => setBulkRole(e.target.value as AppRole)}
-                style={{ padding: '5px 8px', borderRadius: 6, background: 'var(--dc-s3,#282828)', border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', color: 'var(--dc-p1,#F2F2F2)', fontSize: 11, outline: 'none', fontFamily: 'inherit' }}
-              >
-                {ALL_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
-              </select>
-              <button type="button" onClick={bulkChangeRole} disabled={bulkProcessing} style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: 'rgba(96,165,250,0.15)', color: '#60A5FA', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                {bulkProcessing ? 'Applying…' : 'Apply Role'}
+      {/* ── Create user form ── */}
+      {showCreate && (
+        <div className={styles.createForm}>
+          <p className={styles.formTitle}>New User</p>
+          <form onSubmit={createUser}>
+            <div className={styles.formGrid}>
+              {([['name', 'Name', 'text'], ['email', 'Email', 'email'], ['password', 'Temporary password', 'password']] as [keyof CreateForm, string, string][]).map(([field, label, type]) => (
+                <div key={field}>
+                  <label className={styles.fieldLabel}>{label}</label>
+                  <input
+                    type={type}
+                    value={form[field] as string}
+                    onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
+                    required
+                    className={styles.formInput}
+                  />
+                </div>
+              ))}
+              <div>
+                <label className={styles.fieldLabel}>Role</label>
+                <select
+                  value={form.role}
+                  onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
+                  className={styles.formSelect}
+                >
+                  {ALL_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
+                </select>
+              </div>
+            </div>
+            {formErr && <p className={styles.formError}>{formErr}</p>}
+            <div className={styles.formActions}>
+              <button type="submit" disabled={saving} className={styles.submitBtn}>
+                {saving ? 'Creating…' : 'Create User'}
               </button>
-              <button type="button" onClick={() => setConfirmBulkDelete(true)} disabled={bulkProcessing} style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: 'rgba(248,113,113,0.15)', color: '#F87171', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                Delete Selected
-              </button>
-              <button type="button" onClick={() => setSelectedIds(new Set())} style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', background: 'transparent', color: 'var(--dc-p3,#505050)', fontSize: 11, cursor: 'pointer' }}>
-                Clear
+              <button type="button" onClick={() => setShowCreate(false)} className={styles.cancelBtn}>
+                Cancel
               </button>
             </div>
+          </form>
+        </div>
+      )}
+
+      {/* ── Filters ── */}
+      <div className={styles.filterRow}>
+        <input
+          type="search"
+          placeholder="Search name or email…"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          className={styles.searchInput}
+        />
+        <select
+          value={roleFilter}
+          onChange={e => setRoleFilter(e.target.value as AppRole | 'all')}
+          className={styles.roleSelect}
+        >
+          <option value="all">All Roles</option>
+          {ALL_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
+        </select>
+        <span className={styles.countLabel}>{filtered.length} of {total} users</span>
+      </div>
+
+      {/* ── Bulk action bar ── */}
+      {someSelected && (
+        <div className={styles.bulkBar}>
+          <span className={styles.bulkCount}>{selectedIds.size} selected</span>
+          <div className={styles.bulkActions}>
+            <select
+              value={bulkRole}
+              onChange={e => setBulkRole(e.target.value as AppRole)}
+              className={styles.bulkRoleSelect}
+            >
+              {ALL_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
+            </select>
+            <button
+              type="button"
+              onClick={bulkChangeRole}
+              disabled={bulkProcessing}
+              className={styles.applyRoleBtn}
+            >
+              {bulkProcessing ? 'Applying…' : 'Apply Role'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmBulkDelete(true)}
+              disabled={bulkProcessing}
+              className={styles.deleteSelectedBtn}
+            >
+              Delete Selected
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className={styles.clearBtn}
+            >
+              Clear
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ── User table ── */}
-        <div style={{ background: 'var(--dc-s2,#1e1e1e)', border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', borderRadius: 12, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))' }}>
-                <th style={{ padding: '10px 14px', width: 36 }}>
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    ref={el => { if (el) el.indeterminate = someSelected && !allSelected; }}
-                    onChange={toggleSelectAll}
-                    aria-label="Select all users"
-                    style={{ cursor: 'pointer', accentColor: 'var(--dc-acc,#E85D12)', width: 14, height: 14 }}
-                  />
-                </th>
-                {['User', 'Role', 'Status', 'Imports', 'Last Login', 'Actions'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--dc-p3,#505050)', whiteSpace: 'nowrap' }}>
-                    {h}
-                  </th>
-                ))}
+      {/* ── User table ── */}
+      <div className={styles.tableCard}>
+        <table className={styles.table}>
+          <thead>
+            <tr className={styles.theadRow}>
+              <th className={styles.checkboxTh}>
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={el => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                  onChange={toggleSelectAll}
+                  aria-label="Select all users"
+                  className={styles.checkboxInput}
+                />
+              </th>
+              {['User', 'Role', 'Status', 'Imports', 'Last Login', 'Actions'].map(h => (
+                <th key={h} className={styles.th}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={7} className={styles.noResults}>No users found.</td>
               </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={7} style={{ padding: '32px 14px', textAlign: 'center', color: 'var(--dc-p3,#505050)', fontStyle: 'italic' }}>
-                    No users found.
+            )}
+            {filtered.map(user => {
+              const isSelf = user.id === meId;
+              return (
+                // data-role drives --role-color via SCSS (Rule 12 / Rule 8)
+                <tr key={user.id} className={styles.row} data-role={user.role}>
+                  {/* Checkbox */}
+                  <td className={styles.checkboxCell}>
+                    {!isSelf && (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(user.id)}
+                        onChange={() => toggleSelect(user.id)}
+                        aria-label={`Select ${user.name}`}
+                        className={styles.checkboxInput}
+                      />
+                    )}
                   </td>
-                </tr>
-              )}
-              {filtered.map((user, idx) => {
-                const isSelf = user.id === meId;
-                const roleColor = ROLE_COLORS[user.role] ?? '#94A3B8';
-                return (
-                  <tr
-                    key={user.id}
-                    style={{
-                      borderBottom: idx < filtered.length - 1 ? '1px solid var(--dc-bdr,rgba(255,255,255,0.06))' : 'none',
-                      background: 'transparent',
-                      transition: 'background 120ms',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--dc-s3,rgba(255,255,255,0.03))')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    {/* Checkbox */}
-                    <td style={{ padding: '10px 14px', width: 36 }}>
-                      {!isSelf && (
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(user.id)}
-                          onChange={() => toggleSelect(user.id)}
-                          aria-label={`Select ${user.name}`}
-                          style={{ cursor: 'pointer', accentColor: 'var(--dc-acc,#E85D12)', width: 14, height: 14 }}
-                        />
-                      )}
-                    </td>
 
-                    {/* User cell */}
-                    <td style={{ padding: '10px 14px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{
-                          width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-                          background: roleColor + '22', border: `1px solid ${roleColor}44`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 11, fontWeight: 800, color: roleColor,
-                        }}>
-                          {user.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 600, color: 'var(--dc-p1,#F2F2F2)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                            {user.name}
-                            {isSelf && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: 'rgba(232,93,18,0.2)', color: 'var(--dc-acc,#E85D12)', textTransform: 'uppercase', letterSpacing: '.05em' }}>you</span>}
-                          </div>
-                          <div style={{ color: 'var(--dc-p3,#505050)', marginTop: 1 }}>{user.email}</div>
-                        </div>
+                  {/* User cell */}
+                  <td className={styles.td}>
+                    <div className={styles.userCell}>
+                      <div className={styles.avatar}>
+                        {user.name.charAt(0).toUpperCase()}
                       </div>
-                    </td>
+                      <div>
+                        <div className={styles.userName}>
+                          {user.name}
+                          {isSelf && <span className={styles.selfBadge}>you</span>}
+                        </div>
+                        <div className={styles.userEmail}>{user.email}</div>
+                      </div>
+                    </div>
+                  </td>
 
-                    {/* Role dropdown */}
-                    <td style={{ padding: '10px 14px' }}>
-                      <select
-                        value={user.role}
-                        onChange={e => changeRole(user, e.target.value as AppRole)}
-                        disabled={isSelf}
-                        style={{
-                          padding: '4px 8px', borderRadius: 6,
-                          background: roleColor + '18', border: `1px solid ${roleColor}44`,
-                          color: roleColor, fontSize: 11, fontWeight: 700, cursor: isSelf ? 'default' : 'pointer',
-                          outline: 'none', fontFamily: 'inherit',
-                        }}
-                      >
-                        {ALL_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
-                      </select>
-                    </td>
+                  {/* Role dropdown — inherits --role-color from .row[data-role] */}
+                  <td className={styles.td}>
+                    <select
+                      value={user.role}
+                      onChange={e => changeRole(user, e.target.value as AppRole)}
+                      disabled={isSelf}
+                      className={styles.roleDropdown}
+                    >
+                      {ALL_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
+                    </select>
+                  </td>
 
-                    {/* Active toggle */}
-                    <td style={{ padding: '10px 14px' }}>
-                      <button
-                        type="button"
-                        onClick={() => toggleActive(user)}
-                        disabled={isSelf}
-                        style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 5,
-                          padding: '3px 10px', borderRadius: 20, border: 'none',
-                          background: user.isActive ? 'rgba(34,197,94,0.14)' : 'rgba(248,113,113,0.12)',
-                          color: user.isActive ? '#22C55E' : '#F87171',
-                          fontSize: 10, fontWeight: 700, cursor: isSelf ? 'default' : 'pointer',
-                          textTransform: 'uppercase', letterSpacing: '.05em',
-                        }}
-                      >
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} />
-                        {user.isActive ? 'Active' : 'Inactive'}
-                      </button>
-                    </td>
+                  {/* Active toggle chip — data-active drives colour via SCSS */}
+                  <td className={styles.td}>
+                    <button
+                      type="button"
+                      onClick={() => toggleActive(user)}
+                      disabled={isSelf}
+                      data-active={String(user.isActive)}
+                      className={styles.activeToggle}
+                    >
+                      <span className={styles.statusDot} />
+                      {user.isActive ? 'Active' : 'Inactive'}
+                    </button>
+                  </td>
 
-                    {/* Import count */}
-                    <td style={{ padding: '10px 14px', fontFamily: 'monospace', color: 'var(--dc-p2,#909090)' }}>
-                      {user.importCount ?? 0}
-                    </td>
+                  {/* Import count */}
+                  <td className={styles.td}>
+                    <span className={styles.importCount}>{user.importCount ?? 0}</span>
+                  </td>
 
-                    {/* Last login */}
-                    <td style={{ padding: '10px 14px', color: 'var(--dc-p3,#505050)', whiteSpace: 'nowrap' }}>
+                  {/* Last login */}
+                  <td className={styles.td}>
+                    <span className={styles.loginDate}>
                       {user.lastLoginAt
                         ? new Date(user.lastLoginAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })
                         : '—'}
-                    </td>
+                    </span>
+                  </td>
 
-                    {/* Delete */}
-                    <td style={{ padding: '10px 14px' }}>
-                      {!isSelf && (
-                        <button
-                          type="button"
-                          onClick={() => setConfirmDelete(user)}
-                          style={{
-                            padding: '4px 10px', borderRadius: 6,
-                            border: '1px solid rgba(248,113,113,0.25)', background: 'transparent',
-                            color: '#F87171', fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                          }}
-                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(248,113,113,0.1)')}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                  {/* Delete */}
+                  <td className={styles.td}>
+                    {!isSelf && (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDelete(user)}
+                        className={styles.deleteBtn}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ── Bulk delete confirmation modal ── */}
+      {confirmBulkDelete && (
+        <div className={styles.confirmOverlay}>
+          <div className={styles.confirmModal}>
+            <p className={styles.confirmTitle}>
+              Delete {selectedIds.size} user{selectedIds.size > 1 ? 's' : ''}?
+            </p>
+            <p className={styles.confirmText}>
+              This will permanently delete{' '}
+              <strong>{selectedIds.size} account{selectedIds.size > 1 ? 's' : ''}</strong>{' '}
+              and all their data. This cannot be undone.
+            </p>
+            <div className={styles.confirmActions}>
+              <button
+                type="button"
+                onClick={bulkDelete}
+                disabled={bulkProcessing}
+                className={styles.confirmDelete}
+              >
+                {bulkProcessing ? 'Deleting…' : `Yes, delete ${selectedIds.size}`}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmBulkDelete(false)}
+                className={styles.confirmCancel}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
+      )}
 
-        {/* ── Bulk delete confirmation ── */}
-        {confirmBulkDelete && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-            <div style={{ background: 'var(--dc-s2,#1e1e1e)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 14, padding: 28, maxWidth: 400, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
-              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--dc-p1,#F2F2F2)', marginBottom: 8 }}>Delete {selectedIds.size} user{selectedIds.size > 1 ? 's' : ''}?</p>
-              <p style={{ fontSize: 13, color: 'var(--dc-p3,#505050)', marginBottom: 20 }}>
-                This will permanently delete <strong style={{ color: '#F87171' }}>{selectedIds.size} account{selectedIds.size > 1 ? 's' : ''}</strong> and all their data. This cannot be undone.
-              </p>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button type="button" onClick={bulkDelete} disabled={bulkProcessing} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: '#DC2626', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                  {bulkProcessing ? 'Deleting…' : `Yes, delete ${selectedIds.size}`}
-                </button>
-                <button type="button" onClick={() => setConfirmBulkDelete(false)} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', background: 'transparent', color: 'var(--dc-p2,#909090)', fontSize: 12, cursor: 'pointer' }}>
-                  Cancel
-                </button>
-              </div>
+      {/* ── Single-user delete confirmation modal ── */}
+      {confirmDelete && (
+        <div className={styles.confirmOverlay}>
+          <div className={styles.confirmModal}>
+            <p className={styles.confirmTitle}>Delete user?</p>
+            <p className={styles.confirmText}>
+              This will permanently delete{' '}
+              <strong>{confirmDelete.name}</strong> ({confirmDelete.email}) and all their data.
+              This cannot be undone.
+            </p>
+            <div className={styles.confirmActions}>
+              <button
+                type="button"
+                onClick={deleteUser}
+                disabled={saving}
+                className={styles.confirmDelete}
+              >
+                {saving ? 'Deleting…' : 'Yes, delete'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(null)}
+                className={styles.confirmCancel}
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        )}
-
-        {/* ── Delete confirmation ── */}
-        {confirmDelete && (
-          <div style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-          }}>
-            <div style={{ background: 'var(--dc-s2,#1e1e1e)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 14, padding: 28, maxWidth: 400, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
-              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--dc-p1,#F2F2F2)', marginBottom: 8 }}>Delete user?</p>
-              <p style={{ fontSize: 13, color: 'var(--dc-p3,#505050)', marginBottom: 20 }}>
-                This will permanently delete <strong style={{ color: '#F87171' }}>{confirmDelete.name}</strong> ({confirmDelete.email}) and all their data. This cannot be undone.
-              </p>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button
-                  type="button"
-                  onClick={deleteUser}
-                  disabled={saving}
-                  style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: '#DC2626', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-                >
-                  {saving ? 'Deleting…' : 'Yes, delete'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmDelete(null)}
-                  style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--dc-bdr,rgba(255,255,255,0.08))', background: 'transparent', color: 'var(--dc-p2,#909090)', fontSize: 12, cursor: 'pointer' }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
+      )}
     </AdminConsoleLayout>
   );
 }

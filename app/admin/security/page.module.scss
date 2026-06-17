@@ -1,0 +1,286 @@
+// Security page — SCSS module
+// All visual identity; Tailwind handles layout utilities in the TSX.
+
+// ── Loading / error states ─────────────────────────────────────────────────
+
+.loadingState {
+  color: var(--dc-p3, #505050);
+}
+
+.errorBanner {
+  background: var(--color-danger-soft);
+  border: 1px solid rgba(248, 113, 113, 0.18);
+  border-radius: var(--radius-xl);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-md);
+  color: #fca5a5;
+  margin-bottom: var(--space-4);
+}
+
+// ── Score banner ───────────────────────────────────────────────────────────
+// Dynamic bg/border driven by data-state attribute
+
+.scoreBanner {
+  border-radius: var(--radius-lg);
+  padding: 13px 18px;
+  margin-bottom: var(--space-5);
+
+  &[data-state='fail'] {
+    background: rgba(248, 113, 113, 0.06);
+    border: 1px solid rgba(248, 113, 113, 0.18);
+  }
+
+  &[data-state='warn'] {
+    background: rgba(245, 158, 11, 0.06);
+    border: 1px solid rgba(245, 158, 11, 0.18);
+  }
+
+  &[data-state='pass'] {
+    background: rgba(34, 197, 94, 0.06);
+    border: 1px solid rgba(34, 197, 94, 0.18);
+  }
+}
+
+.scoreNumber {
+  font-family: var(--font-mono, monospace);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  // JS supplies --score-color for this dynamic value (changes per score range)
+  color: var(--score-color, var(--dc-p2, #909090));
+}
+
+.scoreDivider {
+  font-size: var(--text-xs);
+  color: var(--dc-p2, #909090);
+  margin-top: 2px;
+}
+
+.scoreStatus {
+  font-size: var(--text-md);
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+  // JS supplies --score-color for this dynamic value (changes per score range)
+  color: var(--score-color, var(--dc-p2, #909090));
+}
+
+.scoreMeta {
+  font-size: var(--text-xs);
+  color: var(--dc-p2, #909090);
+}
+
+.bannerChip {
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+// ── Filter bar ─────────────────────────────────────────────────────────────
+
+.filterSelect {
+  background: var(--dc-s3, #282828);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  font-size: var(--text-sm);
+  color: var(--dc-p2, #909090);
+  outline: none;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-accent) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.filterCount {
+  font-size: var(--text-sm);
+  color: var(--dc-p3, #505050);
+}
+
+// ── Section group ──────────────────────────────────────────────────────────
+
+.sectionGroup {
+  margin-bottom: var(--space-5);
+}
+
+.sectionLabel {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: var(--space-2);
+  // JS supplies --section-color for this dynamic value (per fail/warn/pass/manual)
+  color: var(--section-color, var(--dc-p2, #909090));
+}
+
+.checkList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+// ── Check row ──────────────────────────────────────────────────────────────
+
+.checkRowCard {
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.checkRowBtn {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--dc-s3, #282828);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-accent) 60%, transparent);
+    outline-offset: -2px;
+  }
+}
+
+// Status dot — background/border/color driven by data-status attribute
+.statusDot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 9px;
+  font-weight: 700;
+
+  &[data-status='pass'] {
+    background: rgba(34, 197, 94, 0.12);
+    border: 1.5px solid var(--dc-green, #22c55e);
+    color: #4ade80;
+  }
+
+  &[data-status='fail'] {
+    background: rgba(248, 113, 113, 0.12);
+    border: 1.5px solid var(--dc-red, #f87171);
+    color: #fca5a5;
+  }
+
+  &[data-status='warn'] {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1.5px solid var(--dc-amber, #f59e0b);
+    color: #fcd34d;
+  }
+
+  &[data-status='manual'] {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+    color: var(--dc-p2, #909090);
+  }
+}
+
+.checkMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--dc-p1, #f2f2f2);
+}
+
+.checkChip {
+  font-size: 8px;
+}
+
+.checkDetail {
+  font-size: var(--text-xs);
+  color: var(--dc-p2, #909090);
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Expand chevron — rotation driven by data-expanded attribute
+.expandIcon {
+  flex-shrink: 0;
+  display: inline-block;
+  color: var(--dc-p2, #909090);
+  font-size: var(--text-xs);
+  transition: transform var(--transition-base), color var(--transition-base);
+
+  &[data-expanded='true'] {
+    transform: rotate(180deg);
+    color: var(--dc-acc2, #ff8a4c);
+  }
+}
+
+// ── Expanded detail panel ──────────────────────────────────────────────────
+
+.expandedPanel {
+  padding: 8px 12px 12px;
+  border-top: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+}
+
+.expandedDescription {
+  font-size: var(--text-sm);
+  color: var(--dc-p2, #909090);
+  line-height: 1.6;
+}
+
+.fixBox {
+  background: rgba(232, 93, 18, 0.04);
+  border: 1px solid rgba(232, 93, 18, 0.12);
+  border-left: 2px solid var(--dc-acc, #e85d12);
+  border-radius: 0 7px 7px 0;
+  padding: 9px 12px;
+  margin-top: var(--space-2);
+}
+
+.fixLabel {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  color: var(--dc-acc2, #ff8a4c);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: var(--space-1);
+}
+
+.fixText {
+  font-size: var(--text-sm);
+  color: var(--dc-p2, #909090);
+}
+
+// ── About box ─────────────────────────────────────────────────────────────
+
+.aboutBox {
+  margin-top: var(--space-6);
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+}
+
+.aboutTitle {
+  font-weight: 700;
+  color: var(--dc-p1, #f2f2f2);
+  font-size: var(--text-base);
+  margin-bottom: var(--space-1);
+}
+
+.aboutText {
+  font-size: var(--text-base);
+  color: var(--dc-p2, #909090);
+  line-height: 1.6;
+}

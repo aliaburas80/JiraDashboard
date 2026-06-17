@@ -1,0 +1,625 @@
+// app/admin/theme/page.module.scss
+// Styles for the Theme & Branding admin page.
+// All visual styling lives here; Tailwind handles only layout utilities in the TSX.
+
+// ── Action buttons ────────────────────────────────────────────────────────────
+
+.actionRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.btnReset {
+  height: 42px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-md);
+  font-weight: 700;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-base), border-color var(--transition-base);
+
+  &:hover {
+    background: var(--color-subtle);
+    border-color: var(--color-border-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.btnSave {
+  height: 42px;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-md);
+  font-weight: 700;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-slow);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &--saved {
+    background: var(--color-success);
+  }
+}
+
+// ── Section card ──────────────────────────────────────────────────────────────
+
+.section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6) var(--space-6) 28px;
+  box-shadow: 0 3px 12px rgb(15 23 42 / 3.5%);
+  margin-bottom: var(--space-4);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.sectionDesc {
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+}
+
+// ── Active palette badge ───────────────────────────────────────────────────────
+// Dynamic accent color is supplied via CSS custom property --badge-accent (set in TSX).
+
+.activeBadge {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  // Dynamic: background and color come from --badge-bg / --badge-color set in TSX
+  background: var(--badge-bg);
+  color: var(--badge-color);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+}
+
+// ── Palette grid ──────────────────────────────────────────────────────────────
+
+.paletteGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
+// ── Palette card ──────────────────────────────────────────────────────────────
+// Per-card dynamic values (bg, border, accent, shadow) are set via CSS custom
+// properties in the TSX because they come from runtime palette data.
+
+.paletteCard {
+  width: 100%;
+  // Dynamic: --card-bg, --card-border, --card-shadow supplied from TSX
+  background: var(--card-bg);
+  border: var(--card-border);
+  border-radius: var(--radius-2xl);
+  padding: 0;
+  cursor: pointer;
+  transition: box-shadow var(--transition-base), border var(--transition-base);
+  box-shadow: var(--card-shadow);
+  text-align: left;
+  overflow: hidden;
+  position: relative;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+// ── Color stripe ──────────────────────────────────────────────────────────────
+
+.colorStripe {
+  display: flex;
+  height: 6px;
+}
+
+// Each stripe swatch: dynamic bg from --swatch-color set on element in TSX
+.stripeSwatch {
+  flex: 1;
+  // Dynamic: background set via --swatch-color in TSX
+  background: var(--swatch-color);
+}
+
+// ── Palette card body ─────────────────────────────────────────────────────────
+
+.cardBody {
+  padding: 14px var(--space-4);
+}
+
+.cardHeaderRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-2) + 2px;
+}
+
+.cardName {
+  font-size: var(--text-md);
+  font-weight: 700;
+  // Dynamic: color from --card-name-color in TSX
+  color: var(--card-name-color);
+  margin-bottom: 2px;
+}
+
+.cardTagline {
+  font-size: var(--text-2xs);
+  // Dynamic: color from --card-tagline-color in TSX
+  color: var(--card-tagline-color);
+  line-height: 1.5;
+}
+
+// The small badge inside each card (theme identifier label)
+.cardBadge {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  // Dynamic: --card-badge-bg and --card-badge-color from TSX
+  background: var(--card-badge-bg);
+  color: var(--card-badge-color);
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+  margin-left: var(--space-2);
+}
+
+// ── Mini KPI grid ─────────────────────────────────────────────────────────────
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: var(--space-2) + 2px;
+}
+
+.kpiCell {
+  // Dynamic: --kpi-bg and --kpi-border from TSX (comes from palette data)
+  background: var(--kpi-bg);
+  border: 1px solid var(--kpi-border);
+  border-radius: var(--radius-md);
+  padding: 7px var(--space-2);
+}
+
+.kpiLabel {
+  font-size: 8px;
+  // Dynamic: color from --kpi-label-color in TSX
+  color: var(--kpi-label-color);
+  margin-bottom: 2px;
+}
+
+.kpiValue {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  font-weight: 500;
+  // Dynamic: color from --kpi-value-color in TSX (per-cell, palette-driven)
+  color: var(--kpi-value-color);
+  line-height: 1;
+}
+
+// ── Nav preview strip ─────────────────────────────────────────────────────────
+
+.navStrip {
+  // Dynamic: --nav-bg and --nav-border from TSX
+  background: var(--nav-bg);
+  border: 1px solid var(--nav-border);
+  border-radius: var(--radius-full);
+  padding: 5px var(--space-2) + 2px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-2xs);
+}
+
+.navLogo {
+  font-weight: 700;
+  // Dynamic: color from --nav-logo-color in TSX
+  color: var(--nav-logo-color);
+  font-size: var(--text-2xs);
+}
+
+.navActive {
+  margin-left: var(--space-1);
+  // Dynamic: --nav-active-bg and --nav-active-color from TSX
+  background: var(--nav-active-bg);
+  color: var(--nav-active-color);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+}
+
+.navMuted {
+  // Dynamic: color from --nav-muted-color in TSX
+  color: var(--nav-muted-color);
+  margin-left: 2px;
+}
+
+.navCta {
+  margin-left: auto;
+  background: #E85D12;
+  color: #fff;
+  padding: 3px var(--space-2) + 2px;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: var(--text-2xs);
+}
+
+// ── Active checkmark overlay ──────────────────────────────────────────────────
+
+.activeCheck {
+  position: absolute;
+  top: var(--space-2) + 2px;
+  right: var(--space-2) + 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  // Dynamic: background from --check-bg in TSX (accent color)
+  background: var(--check-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ── Typography & Shape section ────────────────────────────────────────────────
+
+.controlLabel {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2) + 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.presetRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.presetBtn {
+  flex: 1;
+  padding: var(--space-2) + 2px var(--space-2);
+  font-weight: 700;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-subtle);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &--active {
+    border: 2px solid var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
+  }
+}
+
+.presetBtnSm {
+  font-size: var(--text-xs);
+}
+
+.presetBtnMd {
+  font-size: var(--text-base);
+}
+
+.presetBtnLg {
+  font-size: var(--text-lg);
+}
+
+// Border-radius variant preview sizes
+.radiusBtnSharp {
+  border-radius: var(--radius-xs);
+}
+
+.radiusBtnDefault {
+  border-radius: var(--radius-md);
+}
+
+.radiusBtnRounded {
+  border-radius: var(--radius-2xl);
+}
+
+.presetHint {
+  display: block;
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+// ── Font stack reference box ──────────────────────────────────────────────────
+
+.fontRef {
+  margin-top: var(--space-5);
+  padding: 14px var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-subtle);
+  border: 1px solid var(--color-border);
+}
+
+.fontRefLabel {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--space-2) + 2px;
+}
+
+.fontRefGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.fontSample {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+
+  &--jakarta {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  &--mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+  }
+}
+
+.fontSampleDesc {
+  font-size: var(--text-2xs);
+  color: var(--color-text-secondary);
+}
+
+// ── Branding section ──────────────────────────────────────────────────────────
+
+.brandingGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  margin-bottom: var(--space-5);
+}
+
+.fieldLabel {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.textInput {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-subtle);
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color var(--transition-base);
+
+  &:focus {
+    border-color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.inputHint {
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  margin-top: 6px;
+}
+
+// ── Logo upload ───────────────────────────────────────────────────────────────
+
+.logoLabel {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.logoRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.logoDropzone {
+  width: 120px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  border: 1.5px dashed var(--color-border);
+  background: var(--color-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color var(--transition-base), background var(--transition-base);
+
+  &:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft, #eff6ff);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &--hasImage {
+    background: transparent;
+  }
+}
+
+.logoPreview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.logoUploadBtn {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: block;
+  margin-bottom: var(--space-1);
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.logoRemoveBtn {
+  font-size: var(--text-xs);
+  color: var(--color-danger);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-danger);
+    outline-offset: 2px;
+  }
+}
+
+.logoHint {
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+}
+
+.hiddenInput {
+  display: none;
+}
+
+// ── Token reference section ───────────────────────────────────────────────────
+
+.tokenGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-2);
+}
+
+.tokenCard {
+  background: var(--color-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-2) + 2px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+// Dynamic swatch: background set via --swatch-color in TSX (the token's resolved value)
+.tokenSwatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  background: var(--swatch-color);
+  border: 1px solid rgb(0 0 0 / 8%);
+}
+
+.tokenInfo {
+  min-width: 0;
+}
+
+.tokenName {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--text-2xs);
+  color: var(--color-text-secondary);
+  margin-bottom: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tokenVal {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--text-2xs);
+  color: var(--color-text-primary);
+  margin-bottom: 1px;
+}
+
+.tokenRole {
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+// ── Code inline ───────────────────────────────────────────────────────────────
+
+.code {
+  font-size: var(--text-xs);
+  background: var(--color-subtle);
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+}
