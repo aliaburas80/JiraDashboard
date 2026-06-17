@@ -9,6 +9,7 @@ import {
   StickyToolbar, FilterChip, ToolbarSpacer,
   PageHeader, PageLoading, shellStyles,
 } from '@/components/dashboard/DashboardPageShell';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import styles from './page.module.scss';
 
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
@@ -147,7 +148,7 @@ export default function SmartActionsPage() {
                 // --action-accent / --badge-bg / --badge-color are data-driven (action.type).
                 <div key={i} className={styles.actionCard}
                   style={{ '--action-accent': tok.color } as CSSProperties}>
-                  <span className={styles.actionIcon}>{action.icon}</span>
+                  <span className={styles.actionIcon}><SvgIcon name={action.icon} size={18} /></span>
                   <div className={styles.actionBody}>
                     <div className={styles.actionHeader}>
                       <span className={styles.actionTypeBadge}

@@ -5,6 +5,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { computePortfolioSummary, type EpicSummary } from '@/lib/portfolioHealth';
 import type { DashboardMetrics } from '@/types/metrics';
@@ -109,7 +110,7 @@ function GanttTimeline({ timelines }: { timelines: EpicTimeline[] }) {
   if (dated.length === 0) {
     return (
       <div className={styles.emptyState} style={{ borderRadius: 0, border: 'none', padding: '48px 24px' }}>
-        <div className={styles.emptyIcon}>📅</div>
+        <div className={styles.emptyIcon}><SvgIcon name="calendar" size={40} /></div>
         <p className={styles.emptyTitle}>No date data for Gantt view</p>
         <p className={styles.emptyText}>
           Ensure your Jira export includes <strong>Created</strong> and <strong>Resolved</strong> date columns.
@@ -432,7 +433,7 @@ export default function RoadmapPage() {
     <AppShell showNav>
       <div className={styles.page}>
         <div className={styles.emptyState}>
-          <div className={styles.emptyIcon}>🗺️</div>
+          <div className={styles.emptyIcon}><SvgIcon name="roadmap" size={40} /></div>
           <p className={styles.emptyTitle}>No data uploaded yet</p>
           <p className={styles.emptyText}>Upload a Jira export to see your epic roadmap and delivery forecast.</p>
           <button onClick={() => router.push('/')} className={styles.uploadBtn}>Upload data</button>
@@ -482,7 +483,7 @@ export default function RoadmapPage() {
         {/* ── Page header ── */}
         <div className={styles.pageHeader}>
           <div>
-            <div className={styles.breadcrumb}>🗺️ Planning</div>
+            <div className={styles.breadcrumb}><SvgIcon name="roadmap" size={14} /> Planning</div>
             <h1 className={styles.title}>Epic Roadmap</h1>
             <p className={styles.subtitle}>Delivery timeline, forecasts & health — based on your Jira data</p>
           </div>
@@ -495,7 +496,8 @@ export default function RoadmapPage() {
                 className={clsx(styles.viewBtn, { [styles.active]: view === v })}
                 aria-pressed={view === v}
               >
-                {v === 'gantt' ? '📊 Timeline' : '📋 Cards'}
+                <SvgIcon name={v === 'gantt' ? 'chartBar' : 'clipboard'} size={14} />
+                {v === 'gantt' ? 'Timeline' : 'Cards'}
               </button>
             ))}
           </div>
@@ -506,7 +508,9 @@ export default function RoadmapPage() {
           {kpis.map(k => (
             <div key={k.label} className={styles.kpiCard} role="listitem">
               {/* EXCEPTION: bg is data-driven from health/status — CSS custom property */}
-              <div className={styles.kpiIconBox} style={{ background: k.bg } as CSSProperties}>{k.icon}</div>
+              <div className={styles.kpiIconBox} style={{ background: k.bg } as CSSProperties}>
+                <SvgIcon name={k.icon} size={20} style={{ color: k.color }} />
+              </div>
               <div className={styles.kpiBody}>
                 {/* EXCEPTION: color is data-driven from health/status */}
                 <div className={styles.kpiValue} style={{ color: k.color } as CSSProperties}>{k.value}</div>
@@ -564,7 +568,12 @@ export default function RoadmapPage() {
           <>
             <div className={styles.cardsHeader}>
               <div className={styles.filterGroup} role="group" aria-label="Filter epics">
-                {([['active', 'In Progress'], ['all', 'All Epics'], ['critical', '🔴 Critical'], ['done', '✅ Done']] as const).map(([f, lbl]) => (
+                {([
+                  ['active', 'In Progress', null],
+                  ['all', 'All Epics', null],
+                  ['critical', 'Critical', 'statusError'],
+                  ['done', 'Done', 'checkCircle'],
+                ] as const).map(([f, lbl, icon]) => (
                   <button
                     key={f}
                     type="button"
@@ -572,6 +581,7 @@ export default function RoadmapPage() {
                     className={clsx(styles.filterBtn, { [styles.active]: filter === f })}
                     aria-pressed={filter === f}
                   >
+                    {icon && <SvgIcon name={icon} size={13} />}
                     {lbl}
                   </button>
                 ))}
@@ -590,7 +600,7 @@ export default function RoadmapPage() {
 
             {sorted.length === 0 ? (
               <div className={styles.emptyState}>
-                <div className={styles.emptyIcon}>🗺️</div>
+                <div className={styles.emptyIcon}><SvgIcon name="roadmap" size={40} /></div>
                 <p className={styles.emptyTitle}>No epics match this filter</p>
               </div>
             ) : (
@@ -604,7 +614,7 @@ export default function RoadmapPage() {
         {/* ── No epics at all ── */}
         {epics.length === 0 && (
           <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>🗺️</div>
+            <div className={styles.emptyIcon}><SvgIcon name="roadmap" size={40} /></div>
             <p className={styles.emptyTitle}>No epic data found</p>
             <p className={styles.emptyText}>Upload a Jira export that includes the <strong>Epic Link</strong> or <strong>Epic Name</strong> column.</p>
           </div>

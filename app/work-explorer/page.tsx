@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import DCStatusChip from '@/components/dc-shell/DCStatusChip';
 import LoadingState from '@/components/ui/LoadingState';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { loadMetricsWithSource } from '@/lib/storage';
 import styles from './page.module.scss';
@@ -25,16 +26,16 @@ function statusCat(status: string): 'done' | 'in-progress' | 'blocked' | 'review
 
 // ── Type icon ─────────────────────────────────────────────────────────────────
 
-const TYPE_CFG: Record<string, { fill: string; letter: string }> = {
-  bug:         { fill: '#F87171', letter: 'B' },
-  story:       { fill: '#4ade80', letter: 'S' },
-  task:        { fill: '#60A5FA', letter: 'T' },
-  epic:        { fill: '#A78BFA', letter: 'E' },
-  'sub-task':  { fill: '#93c5fd', letter: '↘' },
-  feature:     { fill: '#FB923C', letter: 'F' },
-  improvement: { fill: '#22D3EE', letter: 'I' },
-  spike:       { fill: '#F472B6', letter: 'R' },
-  'test case': { fill: '#FACC15', letter: 'Q' },
+const TYPE_CFG: Record<string, { color: string; icon: string }> = {
+  bug:         { color: '#F87171', icon: 'bug' },
+  story:       { color: '#4ade80', icon: 'story' },
+  task:        { color: '#60A5FA', icon: 'task' },
+  epic:        { color: '#A78BFA', icon: 'epic' },
+  'sub-task':  { color: '#93c5fd', icon: 'subtasks' },
+  feature:     { color: '#FB923C', icon: 'component' },
+  improvement: { color: '#22D3EE', icon: 'chartTrendUp' },
+  spike:       { color: '#F472B6', icon: 'flask' },
+  'test case': { color: '#FACC15', icon: 'checkCircle' },
 };
 
 function resolveTypeKey(type: string): string {
@@ -54,15 +55,7 @@ function resolveTypeKey(type: string): string {
 function TypeIcon({ type }: { type: string }) {
   const key = resolveTypeKey(type);
   const c = TYPE_CFG[key] ?? TYPE_CFG.task;
-  return (
-    // fill/textAnchor/fontSize/fontWeight are SVG presentation attributes — not style props
-    <svg width="16" height="16" viewBox="0 0 16 16" className={styles.typeIcon} aria-hidden="true">
-      <rect width="16" height="16" rx="3" fill={c.fill} />
-      <text x="8" y="11.5" textAnchor="middle" fontSize="8" fontWeight="800" fill="#060606">
-        {c.letter}
-      </text>
-    </svg>
-  );
+  return <SvgIcon name={c.icon} size={16} className={styles.typeIcon} style={{ color: c.color }} />;
 }
 
 // ── Priority ──────────────────────────────────────────────────────────────────
@@ -200,11 +193,7 @@ export default function WorkExplorerPage() {
         {/* ── Header ── */}
         <header className={styles.pageHeader}>
           <div className={styles.breadcrumb}>
-            {/* Jira-style project badge — fill is SVG presentation attribute */}
-            <svg width="18" height="18" viewBox="0 0 18 18" className={styles.jiraIcon} aria-hidden="true">
-              <rect width="18" height="18" rx="4" fill="#FF8A4C" opacity="0.18" />
-              <text x="9" y="13" textAnchor="middle" fontSize="10" fontWeight="900" fill="#FF8A4C">J</text>
-            </svg>
+            <SvgIcon name="project" size={18} className={styles.jiraIcon} style={{ color: '#FF8A4C' }} />
             <span className={styles.breadcrumbProject}>Project Backlog</span>
             <span className={styles.breadcrumbSep}>/</span>
             <span className={styles.breadcrumbCurrent}>Work Explorer</span>
@@ -239,10 +228,7 @@ export default function WorkExplorerPage() {
         {/* ── Toolbar ── */}
         <div className={styles.toolbar} role="search">
           <div className={styles.searchWrap}>
-            <svg className={styles.searchIcon} width="14" height="14" viewBox="0 0 24 24"
-              fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-            </svg>
+            <SvgIcon name="search" size={14} className={styles.searchIcon} />
             <input
               type="search"
               value={search}
@@ -285,7 +271,7 @@ export default function WorkExplorerPage() {
           <div className={styles.tableCard}>
             {pageItems.length === 0 ? (
               <div className={styles.emptyTable}>
-                <div className={styles.emptyIcon}>🔍</div>
+                <div className={styles.emptyIcon}><SvgIcon name="search" size={40} /></div>
                 <p className={styles.emptyTitle}>No issues match your filters</p>
                 <p className={styles.emptyBody}>Try adjusting the search query or filter selections above.</p>
               </div>
@@ -504,7 +490,7 @@ export default function WorkExplorerPage() {
                 {/* Health note */}
                 {selected.reason && (
                   <div className={styles.healthNote}>
-                    <p className={styles.healthNoteTitle}>⚠ Health note</p>
+                    <p className={styles.healthNoteTitle}><SvgIcon name="warning" size={14} /> Health note</p>
                     <p className={styles.healthNoteBody}>{selected.reason}</p>
                   </div>
                 )}

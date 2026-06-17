@@ -5,6 +5,7 @@
 
 import { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
 import { getMetricsSource } from '@/lib/storage';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -154,7 +155,7 @@ export function DataSourceBadge({ className = '', compact = false }: { className
           <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="40" strokeDashoffset="15" />
         </svg>
       ) : (
-        <span aria-hidden="true">{cfg.icon}</span>
+        <SvgIcon name={cfg.icon} size={12} />
       )}
       <span>{displayLabel}</span>
     </div>

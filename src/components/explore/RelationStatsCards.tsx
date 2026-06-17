@@ -1,5 +1,6 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { RelationStats } from '@/types/relations';
 
 interface Props { stats: RelationStats }
@@ -31,7 +32,7 @@ export default function RelationStatsCards({ stats }: Props) {
       {/* Largest unfinished branch card */}
       {branch && branch.openCount >= 2 && (
         <div className="bg-purple-50 border border-purple-200 rounded-xl px-5 py-3 flex items-center gap-4">
-          <span className="text-2xl shrink-0">📊</span>
+          <SvgIcon name="chartBar" size={24} className="shrink-0 text-purple-700" />
           <div className="flex-1 min-w-0">
             <p className="text-xs font-black text-purple-800 mb-0.5">Largest Unfinished Branch</p>
             <p className="text-sm font-bold text-purple-900 truncate" title={branch.rootLabel}>{branch.rootLabel}</p>

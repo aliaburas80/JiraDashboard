@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import { markMetricsSource, saveMetrics } from '@/lib/storage';
 
 interface Snapshot {
@@ -100,9 +101,7 @@ export default function SnapshotsPage() {
                 onClick={() => router.push('/snapshots/compare')}
                 className="btn-secondary px-4 py-2 text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100"
               >
-                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-                  <path d="M16 3h5v5h-2V5h-3V3ZM3 3h5v2H5v3H3V3Zm13 16v-2h3v-3h2v5h-5ZM3 16h2v3h3v2H3v-5Zm7-12h4v2h-4V4Zm-2 2H6v4H4V6h4Zm10 0h2v4h-2V6Zm-4 8h4v4h-2v-2h-2v-2Zm-6 0v2H6v2H4v-4h4Z"/>
-                </svg>
+                <SvgIcon name="compare" size={16} />
                 Compare
               </button>
             )}
@@ -111,9 +110,7 @@ export default function SnapshotsPage() {
               onClick={() => router.push('/dashboard')}
               className="btn-primary px-4 py-2"
             >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-                <path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/>
-              </svg>
+              <SvgIcon name="dashboard" size={16} />
               Go to Dashboard
             </button>
           </div>
@@ -123,7 +120,7 @@ export default function SnapshotsPage() {
 
         {snapshots.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
-            <span className="text-4xl mb-4 block">📸</span>
+            <SvgIcon name="camera" size={40} className="mx-auto mb-4 text-slate-400" />
             <p className="text-base font-black text-slate-700 mb-2">No snapshots yet</p>
             <p className="text-sm text-slate-500 mb-4">
               Go to the Full Report and click <strong>&quot;Save snapshot&quot;</strong> in the sticky filter bar to capture a named point-in-time report.
@@ -133,9 +130,7 @@ export default function SnapshotsPage() {
               onClick={() => router.push('/dashboard')}
               className="btn-primary px-5 py-2.5"
             >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
-                <path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/>
-              </svg>
+              <SvgIcon name="dashboard" size={16} />
               Open Full Report
             </button>
           </div>
@@ -145,7 +140,7 @@ export default function SnapshotsPage() {
               {snapshots.map(snap => (
                 <li key={snap.id} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 group">
                   {/* Icon */}
-                  <span className="text-xl shrink-0">📸</span>
+                  <SvgIcon name="camera" size={20} className="shrink-0 text-slate-400" />
 
                   {/* Name + date */}
                   <div className="flex-1 min-w-0">
@@ -166,9 +161,7 @@ export default function SnapshotsPage() {
                       {loadingId === snap.id ? 'Loading…' : (
                         <>
                           Load
-                          <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current">
-                            <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8Z"/>
-                          </svg>
+                          <SvgIcon name="arrowRight" size={12} />
                         </>
                       )}
                     </button>

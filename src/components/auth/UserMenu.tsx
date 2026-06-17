@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { roleLabel } from '@/lib/roles';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import styles from './UserMenu.module.scss';
 
 interface Me { id: string; name: string; email: string; role: string }
@@ -60,14 +61,7 @@ export default function UserMenu() {
       >
         <span className={styles.avatar} aria-hidden="true">{initials}</span>
         <span className={styles.username}>{me.email.split('@')[0]}</span>
-        <svg
-          width="9" height="9" viewBox="0 0 24 24"
-          fill="none" stroke="currentColor" strokeWidth="2.5"
-          className={clsx(styles.chevron, { [styles.open]: open })}
-          aria-hidden="true"
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        <SvgIcon name="chevronDown" size={9} className={clsx(styles.chevron, { [styles.open]: open })} />
       </button>
 
       {open && (
@@ -86,23 +80,23 @@ export default function UserMenu() {
             onClick={() => setOpen(false)}
             className={styles.menuItem}
           >
-            <span aria-hidden="true">👤</span> My Profile
+            <SvgIcon name="person" size={14} /> My Profile
           </Link>
 
           {/* Admin-only links */}
           {me.role === 'admin' && (
             <>
               <Link href="/admin/users" role="menuitem" onClick={() => setOpen(false)} className={styles.menuItem}>
-                <span aria-hidden="true">👥</span> User Management
+                <SvgIcon name="people" size={14} /> User Management
               </Link>
               <Link href="/admin/logs" role="menuitem" onClick={() => setOpen(false)} className={styles.menuItem}>
-                <span aria-hidden="true">🗂️</span> Import Logs
+                <SvgIcon name="folder" size={14} /> Import Logs
               </Link>
               <Link href="/admin/security" role="menuitem" onClick={() => setOpen(false)} className={styles.menuItem}>
-                <span aria-hidden="true">🔒</span> Security
+                <SvgIcon name="lock" size={14} /> Security
               </Link>
               <Link href="/admin/settings" role="menuitem" onClick={() => setOpen(false)} className={styles.menuItem}>
-                <span aria-hidden="true">⚙️</span> Settings
+                <SvgIcon name="settings" size={14} /> Settings
               </Link>
             </>
           )}

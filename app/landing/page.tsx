@@ -5,6 +5,7 @@
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import AppShell from '@/components/layout/AppShell';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 // ── Feature data ──────────────────────────────────────────────────────────────
 
@@ -50,7 +51,7 @@ function FeatureCard({ icon, title, description, href, color }: typeof FEATURES[
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
           style={{ background: `${color}22` }}>
-          {icon}
+          <SvgIcon name={icon} size={22} style={{ color }} />
         </div>
         <h3 className="text-sm font-black" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{title}</h3>
       </div>
@@ -85,7 +86,8 @@ export default function LandingPage() {
           </div>
           <div className="inline-flex items-center gap-2 mb-5 chip c-acc"
             style={{ borderRadius: 100, padding: '4px 12px', fontSize: 12 }}>
-            ⚡ Zero-credential Jira intelligence
+            <SvgIcon name="priorityHigh" size={12} />
+            Zero-credential Jira intelligence
           </div>
           <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-tight mb-4"
             style={{ color: 'var(--dc-p1, #F2F2F2)' }}>
@@ -100,13 +102,13 @@ export default function LandingPage() {
             <button type="button" onClick={() => router.push('/')}
               className="inline-flex items-center gap-2 rounded-[10px] px-7 py-3 text-sm font-extrabold text-white transition hover:opacity-90"
               style={{ background: 'var(--dc-acc, #E85D12)' }}>
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true"><path d="M11 3h2v10.2l3.6-3.6L18 11l-6 6-6-6 1.4-1.4 3.6 3.6V3ZM5 19h14v2H5v-2Z"/></svg>
+              <SvgIcon name="upload" size={16} />
               Upload Jira Export
             </button>
             <button type="button" onClick={() => router.push('/dashboard')}
               className="inline-flex items-center gap-2 rounded-[10px] px-7 py-3 text-sm font-extrabold transition"
               style={{ background: 'rgba(232,93,18,0.09)', color: 'var(--dc-acc2, #FF8A4C)', border: '1px solid rgba(232,93,18,0.22)' }}>
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true"><path d="M4 19h16v2H2V3h2v16Zm3-2 4-5 3 3.5L19 8l1.7 1.1-6.5 9.8-3.1-3.6L8.5 18 7 17Z"/></svg>
+              <SvgIcon name="dashboard" size={16} />
               Open Dashboard
             </button>
           </div>
@@ -130,7 +132,7 @@ export default function LandingPage() {
             {HOW_IT_WORKS.map(step => (
               <div key={step.step} className="rounded-2xl p-6 text-center"
                 style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-                <div className="text-4xl mb-3">{step.icon}</div>
+                <SvgIcon name={step.icon} size={40} className="mx-auto mb-3" style={{ color: 'var(--dc-acc2, #FF8A4C)' }} />
                 <div className="chip c-acc mb-2" style={{ display: 'inline-flex', borderRadius: 100, fontSize: 9, letterSpacing: '0.08em' }}>
                   STEP {step.step}
                 </div>
@@ -156,9 +158,7 @@ export default function LandingPage() {
           <div className="flex justify-center mb-4">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
               style={{ background: 'rgba(232,93,18,0.12)' }}>
-              <svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: 'var(--dc-acc2, #FF8A4C)' }} aria-hidden="true">
-                <path d="M13.7 2.3 4.8 13.1c-.5.6-.1 1.5.7 1.5h5.2l-1 6.6c-.1.8.9 1.2 1.4.6l8.1-10.5c.5-.6.1-1.5-.7-1.5h-4.8l1.4-6.8c.2-.8-.9-1.3-1.4-.7Z"/>
-              </svg>
+              <SvgIcon name="priorityHigh" size={28} style={{ color: 'var(--dc-acc2, #FF8A4C)' }} />
             </div>
           </div>
           <h2 className="text-2xl font-black mb-2" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Ready to get started?</h2>

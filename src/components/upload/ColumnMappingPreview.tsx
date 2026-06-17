@@ -4,6 +4,7 @@
 // which important fields are missing before committing to the analysis.
 'use client';
 import { useEffect, useState } from 'react';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { ColumnMappingResult, ColumnStatus } from '@/types/columnMapping';
 
 const STATUS_CONFIG: Record<ColumnStatus, { label: string; chip: string; icon: string }> = {
@@ -65,7 +66,10 @@ export default function ColumnMappingPreview({ mapping, onProceed, onReupload, a
       {/* Missing essentials — blocking */}
       {mapping.missingEssential.length > 0 && (
         <div className="px-5 py-3 bg-red-50 border-b border-red-200">
-          <p className="text-xs font-black text-red-800 mb-1">⚠ Required columns missing</p>
+          <p className="flex items-center gap-1.5 text-xs font-black text-red-800 mb-1">
+            <SvgIcon name="warning" size={13} />
+            Required columns missing
+          </p>
           <div className="flex flex-wrap gap-1.5">
             {mapping.missingEssential.map(f => (
               <span key={f} className="text-[10px] font-bold bg-red-100 text-red-800 border border-red-300 rounded-full px-2 py-0.5">{f}</span>
@@ -115,7 +119,7 @@ export default function ColumnMappingPreview({ mapping, onProceed, onReupload, a
                 title={c.status === 'aliased' ? `${c.original} → ${c.canonical}` : c.original}
                 className={`inline-flex items-center gap-1 text-[10px] font-bold border rounded-full px-2 py-0.5 ${cfg.chip}`}
               >
-                <span>{cfg.icon}</span>
+                <SvgIcon name={cfg.icon} size={10} />
                 {c.canonical.length > 20 ? c.canonical.slice(0, 20) + '…' : c.canonical}
               </span>
             );
@@ -166,7 +170,9 @@ export default function ColumnMappingPreview({ mapping, onProceed, onReupload, a
       <div className="px-5 pb-3 flex flex-wrap gap-3">
         {Object.entries(STATUS_CONFIG).filter(([k]) => k !== 'missing').map(([, cfg]) => (
           <span key={cfg.label} className="flex items-center gap-1 text-[9px] text-slate-400">
-            <span className={`inline-block text-[9px] font-bold border rounded-full px-1.5 py-0 ${cfg.chip}`}>{cfg.icon}</span>
+            <span className={`inline-flex items-center justify-center border rounded-full px-1.5 py-0 ${cfg.chip}`}>
+              <SvgIcon name={cfg.icon} size={9} />
+            </span>
             {cfg.label}
           </span>
         ))}

@@ -10,6 +10,7 @@ import {
   StickyToolbar, ToolbarSpacer,
   PageHeader, MiniKpiCard, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import styles from './page.module.scss';
 
 const DONE_STATUSES = ['done', 'closed', 'resolved'];
@@ -136,17 +137,17 @@ export default function SummaryPage() {
           <div className={styles.alertStrip}>
             {topBlockers.length > 0 && (
               <div className={`${styles.alertChip} ${styles.alertChipBlocked}`}>
-                <span>🚫</span> {topBlockers.length} blocked
+                <SvgIcon name="priorityBlocker" size={14} /> {topBlockers.length} blocked
               </div>
             )}
             {overdueItems.length > 0 && (
               <div className={`${styles.alertChip} ${styles.alertChipOverdue}`}>
-                <span>⏰</span> {overdueItems.length} overdue
+                <SvgIcon name="clock" size={14} /> {overdueItems.length} overdue
               </div>
             )}
             {orphanCount > 0 && (
               <div className={`${styles.alertChip} ${styles.alertChipOrphan}`}>
-                <span>👻</span> {orphanCount} orphans
+                <SvgIcon name="question" size={14} /> {orphanCount} orphans
               </div>
             )}
           </div>
@@ -160,7 +161,7 @@ export default function SummaryPage() {
                 const tok = ACTION_TOKENS[a.type] ?? ACTION_TOKENS.info;
                 return (
                   <div key={i} className={styles.actionRow}>
-                    <span className={styles.actionIcon}>{a.icon}</span>
+                    <span className={styles.actionIcon}><SvgIcon name={a.icon} size={18} /></span>
                     <div className={styles.actionBody}>
                       {/* --action-color is data-driven (action.type) */}
                       <p className={styles.actionTitle} style={{ '--action-color': tok.color } as CSSProperties}>

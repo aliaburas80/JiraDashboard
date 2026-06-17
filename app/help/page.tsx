@@ -3,6 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import AppShell from '@/components/layout/AppShell';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 interface Item { q: string; a: string | React.ReactNode; }
 interface Section { id: string; icon: string; title: string; items: Item[]; }
@@ -316,12 +317,12 @@ const SECTIONS: Section[] = [
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12 }}>
             <p style={{ color: 'var(--dc-p2, #909090)', margin: 0 }}>Every page shows a <strong style={{ color: 'var(--dc-p1, #F2F2F2)', fontWeight: 700 }}>data source badge</strong> in the top navigation bar indicating where the current data came from:</p>
             <ul style={{ paddingLeft: 16, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ fontWeight: 700, color: '#FF8A4C' }}>☁️ S3</span> — loaded or cached from Amazon S3</li>
-              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ fontWeight: 700, color: '#60a5fa' }}>🔷 Azure</span> — loaded or cached from Azure Blob Storage</li>
-              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ fontWeight: 700, color: '#4ade80' }}>🌐 GCP</span> — loaded or cached from Google Cloud Storage</li>
-              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ fontWeight: 700, color: 'var(--dc-p2, #909090)' }}>💾 Local cache</span> — cloud provider is set but data served from local cache (no re-fetch needed)</li>
-              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ fontWeight: 700, color: '#c084fc' }}>📤 Jira upload</span> — data came from a fresh Jira CSV upload in this browser session</li>
-              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ fontWeight: 700, color: '#fcd34d' }}>⚠️ localStorage fallback</span> — bucket/server metrics were unavailable; data came from this browser&apos;s saved fallback copy</li>
+              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#FF8A4C' }}><SvgIcon name="cloud" size={12} /> S3</span> — loaded or cached from Amazon S3</li>
+              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#60a5fa' }}><SvgIcon name="cloud" size={12} /> Azure</span> — loaded or cached from Azure Blob Storage</li>
+              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#4ade80' }}><SvgIcon name="globe" size={12} /> GCP</span> — loaded or cached from Google Cloud Storage</li>
+              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 700, color: 'var(--dc-p2, #909090)' }}><SvgIcon name="save" size={12} /> Local cache</span> — cloud provider is set but data served from local cache (no re-fetch needed)</li>
+              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#c084fc' }}><SvgIcon name="upload" size={12} /> Jira upload</span> — data came from a fresh Jira CSV upload in this browser session</li>
+              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#fcd34d' }}><SvgIcon name="warning" size={12} /> localStorage fallback</span> — bucket/server metrics were unavailable; data came from this browser&apos;s saved fallback copy</li>
             </ul>
             <p style={{ color: 'var(--dc-p2, #909090)', margin: 0, marginTop: 4 }}>When data is actively loading from the cloud, a blue <strong style={{ color: 'var(--dc-p1, #F2F2F2)', fontWeight: 700 }}>loading banner</strong> appears at the top of the page: <em>&ldquo;Loading data from Amazon S3…&rdquo;</em></p>
           </div>
@@ -664,7 +665,7 @@ function SectionCard({ section, expandedItem, onToggleItem, forceOpen = false, q
         onClick={() => setOpen(v => !v)}
         aria-expanded={isOpen}
       >
-        <span style={{ fontSize: 18, flexShrink: 0 }} aria-hidden>{section.icon}</span>
+        <SvgIcon name={section.icon} size={18} style={{ color: isOpen ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p2, #909090)' }} />
         <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: isOpen ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p1, #F2F2F2)' }}>{section.title}</span>
         <span style={{ fontSize: 10, color: 'var(--dc-p2, #909090)', flexShrink: 0, marginRight: 6 }}>
           {section.items.length} {section.items.length === 1 ? 'topic' : 'topics'}
@@ -749,7 +750,7 @@ export default function HelpPage() {
 
         {/* Search */}
         <div style={{ position: 'relative', marginBottom: 20 }}>
-          <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--dc-p3, #505050)', fontSize: 14, pointerEvents: 'none' }}>🔍</span>
+          <SvgIcon name="search" size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--dc-p3, #505050)', pointerEvents: 'none' }} />
           <input
             type="search"
             placeholder="Search help topics..."
@@ -787,7 +788,7 @@ export default function HelpPage() {
                   onMouseEnter={e => { e.currentTarget.style.background = 'var(--dc-s3, #282828)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = isActive ? 'var(--dc-s3, #282828)' : 'var(--dc-s2, #1E1E1E)'; }}
                 >
-                  <div style={{ fontSize: 22, marginBottom: 6 }}>{card.icon}</div>
+                  <SvgIcon name={card.icon} size={22} style={{ color: 'var(--dc-acc2, #FF8A4C)', marginBottom: 6 }} />
                   <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--dc-p1, #F2F2F2)', marginBottom: 4 }}>{card.title}</div>
                   <div style={{ fontSize: 11, color: 'var(--dc-p2, #909090)', marginBottom: 10, lineHeight: 1.5 }}>{card.desc}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
@@ -825,7 +826,7 @@ export default function HelpPage() {
                     transition: 'all 150ms',
                   }}
                 >
-                  <span style={{ fontSize: 11 }}>{g.icon}</span>
+                  <SvgIcon name={g.icon} size={11} />
                   {g.label}
                 </button>
               );
@@ -836,7 +837,7 @@ export default function HelpPage() {
         {/* Sections */}
         {visibleSections.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--dc-p3, #505050)' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+            <SvgIcon name="search" size={40} style={{ margin: '0 auto 12px', color: 'var(--dc-p3, #505050)' }} />
             <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--dc-p2, #909090)', marginBottom: 4 }}>No results for &ldquo;{search}&rdquo;</div>
             <div style={{ fontSize: 13 }}>Try a different keyword or clear the search box.</div>
           </div>

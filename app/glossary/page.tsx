@@ -2,6 +2,7 @@
 'use client';
 import { useState, useMemo, type CSSProperties } from 'react';
 import AppShell from '@/components/layout/AppShell';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface GlossaryRow { term: string; full: string; meaning: string; }
@@ -256,7 +257,7 @@ function TermCard({ term, expanded, onToggle }: { term: FlatTerm; expanded: bool
       </div>
       {!expanded && (
         <div style={{ marginTop: 6, fontSize: 10, color: 'var(--dc-p3, #505050)', display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span>⚡</span> Click to expand
+          <SvgIcon name="priorityHigh" size={10} /> Click to expand
         </div>
       )}
       {expanded && (
@@ -332,8 +333,12 @@ export default function GlossaryPage() {
 
         {/* ── Search ── */}
         <div className="relative mb-6">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-base"
-            style={{ color: 'var(--dc-p3, #505050)' }}>🔍</span>
+          <SvgIcon
+            name="search"
+            size={16}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: 'var(--dc-p3, #505050)' }}
+          />
           <input
             type="text"
             value={search}
@@ -379,7 +384,7 @@ export default function GlossaryPage() {
                   onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = 'var(--dc-p1, #F2F2F2)'; }}
                   onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = 'var(--dc-p2, #909090)'; }}
                 >
-                  <span>{cat.icon}</span>
+                  <SvgIcon name={cat.icon} size={14} />
                   {cat.label}
                 </button>
               );
@@ -395,7 +400,7 @@ export default function GlossaryPage() {
         {/* ── Term grid ── */}
         {filtered.length === 0 ? (
           <div className="text-center py-16" style={{ color: 'var(--dc-p3, #505050)' }}>
-            <div className="text-4xl mb-3">🔍</div>
+            <SvgIcon name="search" size={40} className="mx-auto mb-3" />
             <p style={{ fontWeight: 600, color: 'var(--dc-p2, #909090)', marginBottom: 4 }}>No terms found</p>
             <p style={{ fontSize: 13 }}>Try a different search term or browse a category.</p>
           </div>

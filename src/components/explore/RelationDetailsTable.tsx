@@ -1,6 +1,7 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
 import { useState, useMemo } from 'react';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { RelationNode } from '@/types/relations';
 import { NODE_TYPE_CONFIG } from './nodeStyles';
 
@@ -88,10 +89,16 @@ export default function RelationDetailsTable({ nodes, orphanNodes, onFocusNode }
               </div>
               <p className="text-xs text-slate-700 mt-1 line-clamp-2">{node.summary}</p>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
-                <span className="text-xs font-semibold" style={{ color: cfg.color }}>{cfg.icon} {node.type}</span>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: cfg.color }}>
+                  <SvgIcon name={cfg.icon} size={12} />
+                  {node.type}
+                </span>
                 <span className="text-xs text-slate-500">{node.status}</span>
                 {node.assignee && node.assignee !== 'Unassigned' && (
-                  <span className="text-xs text-slate-400">👤 {node.assignee}</span>
+                  <span className="inline-flex items-center gap-1 text-xs text-slate-400">
+                    <SvgIcon name="person" size={12} />
+                    {node.assignee}
+                  </span>
                 )}
                 {(node.storyPoints ?? 0) > 0 && (
                   <span className="text-xs text-violet-600 font-semibold">{node.storyPoints}pt</span>
@@ -135,7 +142,10 @@ export default function RelationDetailsTable({ nodes, orphanNodes, onFocusNode }
                     <span className="block truncate text-xs text-slate-700" title={node.summary}>{node.summary}</span>
                   </td>
                   <td className="py-2 px-2">
-                    <span className="text-xs font-semibold" style={{ color: cfg.color }}>{cfg.icon} {node.type}</span>
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: cfg.color }}>
+                      <SvgIcon name={cfg.icon} size={12} />
+                      {node.type}
+                    </span>
                   </td>
                   <td className="py-2 px-2 text-xs text-slate-600 whitespace-nowrap">{node.status}</td>
                   <td className="py-2 px-2 text-xs text-slate-600 whitespace-nowrap">{node.assignee}</td>

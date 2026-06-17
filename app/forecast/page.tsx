@@ -4,6 +4,7 @@
 import { CSSProperties, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics } from '@/types/metrics';
 import type { SprintThroughputSummary, SprintThroughput, SprintDeliveryPattern } from '@/types/throughput';
@@ -590,7 +591,7 @@ export default function ForecastPage() {
 
         {/* ── Header ── */}
         <div className={styles.header}>
-          <div className={styles.planningBadge}>🔮 Planning</div>
+          <div className={styles.planningBadge}><SvgIcon name="eye" size={14} /> Planning</div>
           <h1 className={styles.title}>Delivery Forecast</h1>
           <p className={styles.desc}>
             Velocity-based delivery outlook — how many sprints remain, when you&apos;ll ship, and what&apos;s putting that date at risk.
@@ -600,7 +601,7 @@ export default function ForecastPage() {
         {/* ── Insufficient data ── */}
         {result.status === 'insufficient_data' ? (
           <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>📊</div>
+            <div className={styles.emptyIcon}><SvgIcon name="chartBar" size={40} /></div>
             <h2 className={styles.emptyTitle}>Not enough data to forecast</h2>
             <p className={styles.emptyBody}>
               Upload Jira data that includes sprint history with completed issue counts.
@@ -614,7 +615,7 @@ export default function ForecastPage() {
               className={styles.statusBanner}
               style={{ '--banner-bg': meta.bg, '--banner-border': meta.border, '--banner-text': meta.text, '--banner-color': meta.color } as CSSProperties}
             >
-              <div className={styles.bannerIcon}>{meta.icon}</div>
+              <div className={styles.bannerIcon}><SvgIcon name={meta.icon} size={28} /></div>
               <div className={styles.bannerContent}>
                 <div className={styles.bannerRow}>
                   <h2 className={styles.bannerTitle}>{meta.label}</h2>
@@ -626,7 +627,9 @@ export default function ForecastPage() {
                   </span>
                 </div>
                 {result.status === 'complete' ? (
-                  <p className={styles.bannerBody}>All {result.totalIssues.toLocaleString()} issues are complete. 🎉</p>
+                  <p className={styles.bannerBody}>
+                    All {result.totalIssues.toLocaleString()} issues are complete. <SvgIcon name="party" size={14} style={{ verticalAlign: '-2px' }} />
+                  </p>
                 ) : (
                   <p className={styles.bannerBody}>
                     <strong>
@@ -674,7 +677,7 @@ export default function ForecastPage() {
                 },
               ].map(c => (
                 <div key={c.label} className={styles.kpiCard} style={{ '--kpi-color': c.color, '--anim-delay': c.delay } as CSSProperties}>
-                  <div className={styles.kpiIcon}>{c.icon}</div>
+                  <div className={styles.kpiIcon}><SvgIcon name={c.icon} size={24} /></div>
                   <p className={styles.kpiVal}>{c.value}</p>
                   <p className={styles.kpiLabel}>{c.label}</p>
                 </div>
@@ -708,7 +711,7 @@ export default function ForecastPage() {
                     },
                     {
                       label: 'Best Sprint', sub: throughput.bestSprintName || '—',
-                      val: '🏆',
+                      val: 'star',
                       color: 'var(--dc-green, #22C55E)',
                     },
                     {
@@ -723,7 +726,9 @@ export default function ForecastPage() {
                     },
                   ].map(s => (
                     <div key={s.label} className={styles.healthStat}>
-                      <div className={styles.healthStatVal} style={{ '--stat-color': s.color } as CSSProperties}>{s.val}</div>
+                      <div className={styles.healthStatVal} style={{ '--stat-color': s.color } as CSSProperties}>
+                        {s.val === 'star' ? <SvgIcon name="star" size={20} /> : s.val}
+                      </div>
                       <div className={styles.healthStatLabel}>{s.label}</div>
                       <div className={styles.healthStatSub}>{s.sub}</div>
                     </div>
@@ -755,7 +760,7 @@ export default function ForecastPage() {
             <div className={styles.ringCard} style={{ '--anim-delay': '0.16s' } as CSSProperties}>
               <CompletionRing pct={result.completionPct} color="var(--dc-acc2, #FF8A4C)" />
               <div className={styles.trendPill} style={{ '--trend-color': trend.color } as CSSProperties}>
-                <span>{trend.icon}</span> {trend.label}
+                <SvgIcon name={trend.icon} size={14} /> {trend.label}
               </div>
               <div className={styles.riskPair}>
                 <div className={styles.riskMini} data-type="blocked" data-active={result.blockedCount > 0 ? 'true' : 'false'}>
@@ -802,7 +807,7 @@ export default function ForecastPage() {
                 <div className={styles.chartLegend}>
                   <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#FF8A4C' } as CSSProperties} /> Last 3</span>
                   <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#323232' } as CSSProperties} /> Earlier</span>
-                  <span className={styles.legendItem} style={{ color: trend.color }}>{trend.icon} {trend.label}</span>
+                  <span className={styles.legendItem} style={{ color: trend.color }}><SvgIcon name={trend.icon} size={12} /> {trend.label}</span>
                 </div>
               </div>
               <VelocityChart points={result.sprintPoints} avg={result.avgThroughput} />
@@ -932,7 +937,7 @@ export default function ForecastPage() {
                 <div className={styles.chartCard} style={{ '--anim-delay': '0.32s' } as CSSProperties}>
                   <div className={styles.chartHead}>
                     <div className={styles.chartTitleGroup}>
-                      <h2 className={styles.chartTitle}>🎯 Delivery Levers</h2>
+                      <h2 className={styles.chartTitle}><SvgIcon name="target" size={18} /> Delivery Levers</h2>
                       <p className={styles.chartSubtitle}>
                         What it takes to hit a target window — either increase velocity or reduce scope.
                         Currently {result.avgThroughput} items/sprint with{' '}
@@ -956,7 +961,9 @@ export default function ForecastPage() {
                         <div className={styles.leverUnit}>items / sprint</div>
                         <div className={styles.leverGap}
                           style={{ '--gap-bg': gapBg(l.gap), '--gap-color': gapColor(l.gap) } as CSSProperties}>
-                          {l.gap <= 0 ? '✅ Achievable now' : `+${Math.ceil(l.gap)} more/sprint`}
+                          {l.gap <= 0 ? (
+                            <><SvgIcon name="checkCircle" size={13} /> Achievable now</>
+                          ) : `+${Math.ceil(l.gap)} more/sprint`}
                         </div>
                       </div>
                     ))}
@@ -980,7 +987,9 @@ export default function ForecastPage() {
                           <div className={styles.leverUnit}>items from scope</div>
                           <div className={styles.leverGap}
                             style={{ '--gap-bg': l.cut === 0 ? 'rgba(34,197,94,0.12)' : 'rgba(248,113,113,0.08)', '--gap-color': col } as CSSProperties}>
-                            {l.cut === 0 ? '✅ Achievable' : `${pct}% descope`}
+                            {l.cut === 0 ? (
+                              <><SvgIcon name="checkCircle" size={13} /> Achievable</>
+                            ) : `${pct}% descope`}
                           </div>
                         </div>
                       );
@@ -996,7 +1005,7 @@ export default function ForecastPage() {
 
             {/* ── Next Quarter Plan ── */}
             <div className={styles.chartCard} style={{ '--anim-delay': '0.34s' } as CSSProperties}>
-              <h2 className={styles.chartTitle}>📅 Next Quarter Plan</h2>
+              <h2 className={styles.chartTitle}><SvgIcon name="calendar" size={18} /> Next Quarter Plan</h2>
               <p className={styles.chartSubtitle} style={{ marginBottom: 16 }}>
                 At {result.avgThroughput} items/sprint average, how much of the remaining backlog can fit within one quarter (6 sprints)?
               </p>
@@ -1015,8 +1024,8 @@ export default function ForecastPage() {
                     ))}
                   </div>
                   {result.remainingIssues <= result.avgThroughput * 6
-                    ? <p className={styles.quarterNoteGreen}>✅ Full backlog is achievable within one quarter at current velocity.</p>
-                    : <p className={styles.quarterNoteAmber}>⚠️ Backlog exceeds quarterly capacity — consider descoping or splitting into milestones.</p>
+                    ? <p className={styles.quarterNoteGreen}><SvgIcon name="checkCircle" size={14} /> Full backlog is achievable within one quarter at current velocity.</p>
+                    : <p className={styles.quarterNoteAmber}><SvgIcon name="warning" size={14} /> Backlog exceeds quarterly capacity — consider descoping or splitting into milestones.</p>
                   }
                 </>
               ) : (
@@ -1028,7 +1037,7 @@ export default function ForecastPage() {
             <div className={styles.chartCard} style={{ '--anim-delay': '0.36s' } as CSSProperties}>
               <div className={styles.chartHead}>
                 <div className={styles.chartTitleGroup}>
-                  <h2 className={styles.chartTitle}>📋 What Drives This Forecast</h2>
+                  <h2 className={styles.chartTitle}><SvgIcon name="clipboard" size={18} /> What Drives This Forecast</h2>
                   <p className={styles.chartSubtitle}>
                     The forecast is only as good as the data behind it. Here&apos;s what each field in your Jira export contributes — and what you&apos;re missing.
                   </p>
@@ -1037,7 +1046,7 @@ export default function ForecastPage() {
               <div className={styles.reqGrid}>
                 {REQUIREMENTS.map(r => (
                   <div key={r.title} className={styles.reqItem}>
-                    <div className={styles.reqIcon}>{r.icon}</div>
+                    <div className={styles.reqIcon}><SvgIcon name={r.icon} size={22} /></div>
                     <div className={styles.reqBody}>
                       <div className={styles.reqBadge} data-level={r.level}>
                         {r.level.toUpperCase()}
@@ -1053,7 +1062,7 @@ export default function ForecastPage() {
 
             {/* ── Recommendations ── */}
             <div className={styles.chartCard} style={{ '--anim-delay': '0.40s' } as CSSProperties}>
-              <h2 className={styles.chartTitle}>💡 Recommendations</h2>
+              <h2 className={styles.chartTitle}><SvgIcon name="lightbulb" size={18} /> Recommendations</h2>
               <p className={styles.chartSubtitle} style={{ marginBottom: 12 }}>
                 Actionable steps to improve forecast confidence and reduce delivery risk.
               </p>

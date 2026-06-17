@@ -281,7 +281,9 @@ describe('callExternal — single entry point (mocked fetch)', () => {
 
   test('TC-GW-18: a successful call returns ok:true with data, timing, and a generated requestId', async () => {
     enableJira();
-    const fetchSpy = jest.fn(async () => ({ ok: true, status: 200, json: async () => ({ issues: ['PROJ-1'] }) }));
+    const fetchSpy = jest.fn<Promise<{ ok: boolean; status: number; json: () => Promise<{ issues: string[] }> }>, [string]>(
+      async () => ({ ok: true, status: 200, json: async () => ({ issues: ['PROJ-1'] }) })
+    );
     (global as any).fetch = fetchSpy;
 
     const { callExternal } = await import('../server/gateway/externalGateway');

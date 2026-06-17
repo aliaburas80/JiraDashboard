@@ -1,7 +1,7 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import { iconUrl, isIconName, type IconName } from '@/lib/icons';
+import { iconUrl, resolveIconName, type IconName } from '@/lib/icons';
 
 interface SvgIconProps {
   name: IconName | string;
@@ -12,7 +12,8 @@ interface SvgIconProps {
 }
 
 export function SvgIcon({ name, size = '1em', className, title, style }: SvgIconProps) {
-  const src = isIconName(name) ? iconUrl(name) : name.startsWith('/icons/') ? name : iconUrl('question');
+  const resolvedName = resolveIconName(name);
+  const src = resolvedName ? iconUrl(resolvedName) : name.startsWith('/icons/') ? name : iconUrl('question');
   const dimension = typeof size === 'number' ? `${size}px` : size;
 
   return (
