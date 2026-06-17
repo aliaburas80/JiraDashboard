@@ -3,6 +3,7 @@
 // Admin panel for viewing and saving encrypted app config (SMTP + app URL) to cloud storage.
 
 import { useEffect, useState } from 'react';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 interface SafeConfig {
   host:    string;
@@ -132,7 +133,7 @@ export default function AppConfigPanel() {
           ? 'border-green-200 bg-green-50 text-green-700'
           : 'border-amber-200 bg-amber-50 text-amber-700'
       }`}>
-        <span className="text-base">{source === 'cloud' ? '☁️' : '🔧'}</span>
+        <SvgIcon name={source === 'cloud' ? 'cloud' : 'tools'} size={16} />
         <div>
           <p className="font-bold text-sm">
             {source === 'cloud' ? 'Loaded from encrypted cloud config' : 'Using .env fallback — no cloud config found'}
@@ -148,7 +149,7 @@ export default function AppConfigPanel() {
       {/* Encryption key warning */}
       {!hasEncKey && (
         <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <span className="text-base mt-0.5">⚠️</span>
+          <SvgIcon name="warning" size={16} className="mt-0.5" />
           <div>
             <p className="font-bold">CONFIG_ENCRYPTION_KEY not set</p>
             <p className="text-[11px] mt-0.5">
@@ -162,7 +163,7 @@ export default function AppConfigPanel() {
       {/* SMTP section */}
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-lg">📧</span>
+          <SvgIcon name="email" size={18} />
           <div>
             <h3 className="text-sm font-black text-slate-900">SMTP / Email</h3>
             <p className="text-[11px] text-slate-400">Used for welcome emails when an add-member request is accepted.</p>
@@ -187,7 +188,7 @@ export default function AppConfigPanel() {
       {/* App URL section */}
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-lg">🔗</span>
+          <SvgIcon name="link" size={18} />
           <div>
             <h3 className="text-sm font-black text-slate-900">App URL</h3>
             <p className="text-[11px] text-slate-400">Used in email templates as the login link base URL.</p>
@@ -209,7 +210,7 @@ export default function AppConfigPanel() {
           status.type === 'error'   ? 'border-red-200 bg-red-50 text-red-700' :
                                       'border-blue-200 bg-blue-50 text-blue-700'
         }`}>
-          <span>{status.type === 'success' ? '✅' : status.type === 'error' ? '⚠️' : 'ℹ️'}</span>
+          <SvgIcon name={status.type === 'success' ? 'checkCircle' : status.type === 'error' ? 'warning' : 'info'} size={14} />
           <p className="font-semibold">{status.msg}</p>
         </div>
       )}
@@ -222,7 +223,7 @@ export default function AppConfigPanel() {
           disabled={saving || !hasEncKey}
           className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {saving ? 'Saving…' : '🔐 Encrypt & Save to Cloud'}
+          {saving ? 'Saving…' : <><SvgIcon name="lock" size={14} /> Encrypt & Save to Cloud</>}
         </button>
         <button
           type="button"
@@ -230,7 +231,7 @@ export default function AppConfigPanel() {
           disabled={testing}
           className="btn-secondary disabled:opacity-50"
         >
-          {testing ? 'Sending…' : '📨 Send Test Email'}
+          {testing ? 'Sending…' : <><SvgIcon name="send" size={14} /> Send Test Email</>}
         </button>
       </div>
 

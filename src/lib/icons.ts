@@ -129,6 +129,8 @@ export const ICONS = {
   timeline: '0372-timeline.svg',
   tools: '0373-tools.svg',
   upload: '0378-upload.svg',
+  videoPause: '0383-video-pause.svg',
+  videoPlay: '0385-video-play.svg',
   warning: '0882-warning-outline.svg',
   workItem: '0399-work-item.svg',
   workItems: '0400-work-items.svg',
@@ -218,6 +220,11 @@ const ICON_ALIASES: Record<string, IconName> = {
   '💡': 'lightbulb',
   '📸': 'camera',
   '❤️': 'heart',
+  '🏥': 'heart',
+  '🗃️': 'archive',
+  '📁': 'folder',
+  '💠': 'component',
+  '💎': 'statusVerified',
 };
 
 export function iconUrl(name: IconName): string {

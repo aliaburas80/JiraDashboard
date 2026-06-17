@@ -110,9 +110,9 @@ export default function MidSprintDeliveryPanel({ insights }: Props) {
           {avgMid !== null && (
             <span className={avgMidCls} style={{ fontSize: 10, borderRadius: 100 }}>Avg midpoint: {avgMid}%</span>
           )}
-          {healthy   > 0 && <span className="chip c-gr"  style={{ fontSize: 10, borderRadius: 100 }}>✅ {healthy} healthy</span>}
-          {endLoaded > 0 && <span className="chip c-am"  style={{ fontSize: 10, borderRadius: 100 }}>⏱ {endLoaded} end-loaded</span>}
-          {blocked   > 0 && <span className="chip c-rd"  style={{ fontSize: 10, borderRadius: 100 }}>🚫 {blocked} blocked</span>}
+          {healthy   > 0 && <span className="chip c-gr"  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, borderRadius: 100 }}><SvgIcon name="checkCircle" size={11} /> {healthy} healthy</span>}
+          {endLoaded > 0 && <span className="chip c-am"  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, borderRadius: 100 }}><SvgIcon name="stopwatch" size={11} /> {endLoaded} end-loaded</span>}
+          {blocked   > 0 && <span className="chip c-rd"  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, borderRadius: 100 }}><SvgIcon name="priorityBlocker" size={11} /> {blocked} blocked</span>}
         </div>
       </div>
 

@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { DashboardMetrics } from '@/types/metrics';
 import {
   StickyToolbar, ToolbarSpacer, ToolbarButton,
@@ -65,7 +66,7 @@ export default function QuarterStatisticsPage() {
 
         {quarters.length === 0 ? (
           <div style={{ padding: '60px 0', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>📊</div>
+            <SvgIcon name="chartBar" size={36} style={{ margin: '0 auto 12px' }} />
             No quarterly data available. Upload a file with date fields to see trends.
           </div>
         ) : (

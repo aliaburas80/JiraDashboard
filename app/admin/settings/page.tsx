@@ -1,6 +1,6 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DataRetentionSettings from '@/components/admin/DataRetentionSettings';
 import HealthThresholdSettings from '@/components/admin/HealthThresholdSettings';
@@ -123,12 +123,10 @@ function ConnectionGuide({ provider, installCmd }: { provider: string; installCm
         className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <span className="text-base">📋</span>
+          <SvgIcon name="clipboard" size={16} />
           <span className="text-xs font-black text-blue-800">{guide.title}</span>
         </div>
-        <svg viewBox="0 0 24 24" className={`w-4 h-4 fill-current text-blue-600 transition-transform ${open ? 'rotate-180' : ''}`}>
-          <path d="m7 9 5 5 5-5 1.4 1.4L12 16.8 5.6 10.4 7 9Z"/>
-        </svg>
+        <SvgIcon name="chevronDown" size={16} className={`text-blue-600 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
@@ -177,7 +175,7 @@ function DbHealthBadge() {
     <div className={`flex items-center gap-2 text-[10px] font-bold px-3 py-1.5 rounded-full border ${
       health.healthy ? 'bg-green-50 border-green-200 text-green-700' : 'bg-amber-50 border-amber-200 text-amber-700'
     }`}>
-      <span>{health.healthy ? '✓' : '⚠'}</span>
+      <SvgIcon name={health.healthy ? 'check' : 'warning'} size={11} />
       <span>
         {health.dbExists
           ? `Local DB: ${health.users} user${health.users !== 1 ? 's' : ''} · ${health.imports} import${health.imports !== 1 ? 's' : ''} · ${health.dbSizeKb}KB`
@@ -214,13 +212,13 @@ function AutoRestoreSection({ setMsg }: {
       const d   = await r.json();
 
       if (d.ok || d.action === 'restored') {
-        setMsg({ text: `✓ Restored from cloud: ${d.key ?? ''}. Files: ${d.restored?.join(', ') ?? ''}`, ok: true });
+        setMsg({ text: `Restored from cloud: ${d.key ?? ''}. Files: ${d.restored?.join(', ') ?? ''}`, ok: true });
         // Refresh health badge
         fetch('/api/admin/storage/auto-restore').then(r => r.json()).then(setHealth).catch(() => {});
       } else if (d.action === 'skipped') {
-        setMsg({ text: `ℹ ${d.reason}`, ok: true });
+        setMsg({ text: d.reason, ok: true });
       } else {
-        setMsg({ text: `✗ Auto-restore: ${d.reason ?? d.error}`, ok: false });
+        setMsg({ text: `Auto-restore: ${d.reason ?? d.error}`, ok: false });
       }
     } catch {
       setMsg({ text: 'Auto-restore failed. Check server logs.', ok: false });
@@ -236,7 +234,10 @@ function AutoRestoreSection({ setMsg }: {
       <div className="flex items-start gap-3 flex-wrap">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-black text-slate-800 mb-1">
-            {dbMissing ? '⚠ Local database missing or empty — restore from cloud' : '↺ Disaster Recovery / Auto-restore'}
+            <span className="inline-flex items-center gap-1.5">
+              <SvgIcon name={dbMissing ? 'warning' : 'refresh'} size={12} />
+              {dbMissing ? 'Local database missing or empty — restore from cloud' : 'Disaster Recovery / Auto-restore'}
+            </span>
           </p>
           <p className="text-[10px] text-slate-600 leading-relaxed">
             {dbMissing
@@ -252,17 +253,17 @@ function AutoRestoreSection({ setMsg }: {
           {dbMissing ? (
             <button type="button" onClick={() => handleAutoRestore(true)} disabled={restoring}
               className="btn-warning px-4 py-2 text-xs font-bold">
-              {restoring ? 'Restoring…' : '↺ Restore from cloud'}
+              {restoring ? 'Restoring…' : <><SvgIcon name="refresh" size={12} /> Restore from cloud</>}
             </button>
           ) : (
             <>
               <button type="button" onClick={() => handleAutoRestore(false)} disabled={restoring}
                 className="btn-secondary px-4 py-2 text-xs">
-                {restoring ? 'Checking…' : '↺ Auto-restore (if empty DB)'}
+                {restoring ? 'Checking…' : <><SvgIcon name="refresh" size={12} /> Auto-restore (if empty DB)</>}
               </button>
               <button type="button" onClick={() => handleAutoRestore(true)} disabled={restoring}
                 className="btn-outline-danger px-4 py-2 text-xs">
-                {restoring ? 'Restoring…' : '↺ Force restore (overwrite)'}
+                {restoring ? 'Restoring…' : <><SvgIcon name="refresh" size={12} /> Force restore (overwrite)</>}
               </button>
             </>
           )}
@@ -313,7 +314,7 @@ function CloudBackupList({ savedProvider, setMsg }: {
       a.download = key.split('/').pop() ?? 'backup.json';
       a.click();
       URL.revokeObjectURL(url);
-      setMsg({ text: `✓ Downloaded: ${a.download}`, ok: true });
+      setMsg({ text: `Downloaded: ${a.download}`, ok: true });
     } catch {
       setMsg({ text: 'Download failed. Check server logs.', ok: false });
     }
@@ -327,9 +328,9 @@ function CloudBackupList({ savedProvider, setMsg }: {
       const r = await fetch(`/api/admin/storage/download?key=${encodeURIComponent(key)}&restore=true`);
       const d = await r.json();
       if (d.ok) {
-        setMsg({ text: `✓ Restored from cloud: ${d.restored?.join(', ')}`, ok: true });
+        setMsg({ text: `Restored from cloud: ${d.restored?.join(', ')}`, ok: true });
       } else {
-        setMsg({ text: `✗ Restore failed: ${d.error ?? 'Unknown error'}`, ok: false });
+        setMsg({ text: `Restore failed: ${d.error ?? 'Unknown error'}`, ok: false });
       }
     } catch {
       setMsg({ text: 'Restore failed. Check server logs.', ok: false });
@@ -396,7 +397,7 @@ function CloudBackupList({ savedProvider, setMsg }: {
                         <span className="text-slate-200">|</span>
                         <button type="button" onClick={() => handleRestore(b.key)} disabled={isRestoring}
                           className="text-[10px] font-bold text-amber-600 hover:underline disabled:opacity-40 whitespace-nowrap">
-                          {isRestoring ? 'Restoring…' : '↺ Restore'}
+                          {isRestoring ? 'Restoring…' : <><SvgIcon name="refresh" size={12} /> Restore</>}
                         </button>
                       </div>
                     </td>
@@ -493,7 +494,7 @@ function CloudStorageSettings() {
 
   async function handleSave(): Promise<boolean> {
     const validErr = validateFields(active, s3Form, azForm, gcpForm);
-    if (validErr) { setMsg({ text: `⚠ ${validErr}`, ok: false }); return false; }
+    if (validErr) { setMsg({ text: validErr, ok: false }); return false; }
 
     setSaving(true); setMsg(null);
     const body: any = { active };
@@ -513,7 +514,7 @@ function CloudStorageSettings() {
       const r = await fetch('/api/admin/storage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const d = await r.json();
       if (d.ok) {
-        setMsg({ text: '✓ Settings saved.', ok: true });
+        setMsg({ text: 'Settings saved.', ok: true });
         const s3HasTypedCredentials = active === 's3' && !!(s3Form.accessKeyId.trim() && s3Form.secretAccessKey.trim());
         setData((prev: any) => ({
           ...prev,
@@ -555,8 +556,8 @@ function CloudStorageSettings() {
       const r = await fetch('/api/admin/storage?action=test', { method: 'POST' });
       const d = await r.json();
       setMsg(d.ok
-        ? { text: '✓ Connection successful!', ok: true }
-        : { text: `✗ Connection failed: ${d.error}`, ok: false, cause: d.cause, fix: d.fix, credDiag: d.credDiag });
+        ? { text: 'Connection successful!', ok: true }
+        : { text: `Connection failed: ${d.error}`, ok: false, cause: d.cause, fix: d.fix, credDiag: d.credDiag });
       if (!d.ok && d.credDiag && !d.credDiag.hasFormCredentials && !d.credDiag.hasEnvCredentials && !d.credDiag.hasAwsProfile && !d.credDiag.hasSharedCredentialsFile) {
         setEditMode(true);
       }
@@ -573,7 +574,7 @@ function CloudStorageSettings() {
       if (!saved) { setUploading(false); return; }
       const r = await fetch('/api/admin/storage?action=upload', { method: 'POST' });
       const d = await r.json();
-      setMsg(d.ok ? { text: `✓ Backup uploaded to ${active}: ${d.key}`, ok: true } : { text: `✗ Upload failed: ${d.error}`, ok: false });
+      setMsg(d.ok ? { text: `Backup uploaded to ${active}: ${d.key}`, ok: true } : { text: `Upload failed: ${d.error}`, ok: false });
     } catch { setMsg({ text: 'Upload failed. Check server logs.', ok: false }); }
     finally { setUploading(false); }
   }
@@ -750,13 +751,13 @@ function CloudStorageSettings() {
         <div className={`rounded-xl border text-sm ${msg.ok ? 'bg-green-50 border-green-200 text-green-700 px-4 py-3' : 'bg-red-50 border-red-200 text-red-800'}`}>
           {msg.ok ? (
             <div className="flex items-center gap-2 font-semibold">
-              <span>✓</span><span>{msg.text}</span>
+              <SvgIcon name="checkCircle" size={14} /><span>{msg.text}</span>
             </div>
           ) : (
             <div className="divide-y divide-red-200">
               {/* Error headline */}
               <div className="flex items-start gap-2 px-4 py-3 font-bold">
-                <span className="shrink-0 text-red-600">✗</span>
+                <SvgIcon name="cross" size={14} className="shrink-0 text-red-600" />
                 <span className="text-red-700">{msg.text}</span>
               </div>
               {/* Cause + Fix explanation */}
@@ -787,7 +788,7 @@ function CloudStorageSettings() {
                         ].map(row => (
                           <div key={row.label} className="flex items-center gap-2">
                             <span className={`text-sm font-black shrink-0 ${row.ok ? 'text-green-600' : 'text-red-500'}`}>
-                              {row.ok ? '✓' : '✗'}
+                              <SvgIcon name={row.ok ? 'check' : 'cross'} size={13} />
                             </span>
                             <span className={`text-[10px] font-mono ${row.ok ? 'text-green-700' : 'text-red-500'}`}>{row.label}</span>
                           </div>
@@ -855,7 +856,7 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
   }
 
   useEffect(() => { loadUsers(); }, []);
-  useEffect(() => { onUsersChange(users); }, [users]); // keep parent stat cards in sync
+  useEffect(() => { onUsersChange(users); }, [onUsersChange, users]); // keep parent stat cards in sync
 
   async function createUser() {
     setSaving(true); setMsg(null);
@@ -1021,7 +1022,7 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
 
       <section className="rounded-[14px] p-5" style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
         <div className="mb-5 flex items-center gap-3">
-          <span className="grid h-8 w-8 place-items-center rounded-[10px]" style={{ background: 'var(--dc-s3, #282828)', color: 'var(--dc-p2, #909090)' }}>👤</span>
+          <span className="grid h-8 w-8 place-items-center rounded-[10px]" style={{ background: 'var(--dc-s3, #282828)', color: 'var(--dc-p2, #909090)' }}><SvgIcon name="person" size={16} /></span>
           <div>
             <h3 className="text-lg font-black tracking-tight" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Add User</h3>
             <p className="text-sm" style={{ color: 'var(--dc-p2, #909090)' }}>Create a new user account and assign a role.</p>
@@ -1131,7 +1132,7 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
                 className="inline-flex h-[34px] items-center gap-1.5 rounded-[8px] px-3 text-xs font-extrabold transition disabled:opacity-50"
                 style={{ background: 'rgba(248,113,113,0.13)', border: '1px solid rgba(248,113,113,0.25)', color: '#fca5a5' }}
               >
-                🗑 Delete {selected.size}
+                <SvgIcon name="delete" size={14} /> Delete {selected.size}
               </button>
               <button
                 type="button"
@@ -1229,7 +1230,7 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
                             onMouseEnter={e => (e.currentTarget.style.color = 'var(--dc-amber, #F59E0B)')}
                             onMouseLeave={e => (e.currentTarget.style.color = 'var(--dc-p2, #909090)')}
                             aria-label={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}>
-                            {user.isActive ? '⏸' : '▶'}
+                            <SvgIcon name={user.isActive ? 'videoPause' : 'videoPlay'} size={15} />
                           </button>
                           <button type="button" onClick={() => setDeleteTarget(user)}
                             title={`Delete ${user.name}`}
@@ -1238,7 +1239,7 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
                             onMouseEnter={e => (e.currentTarget.style.color = 'var(--dc-red, #F87171)')}
                             onMouseLeave={e => (e.currentTarget.style.color = 'var(--dc-p2, #909090)')}
                             aria-label={`Delete ${user.name}`}>
-                            🗑
+                            <SvgIcon name="delete" size={15} />
                           </button>
                         </div>
                       </td>
@@ -1350,6 +1351,14 @@ export default function AdminSettingsPage() {
     return data;
   }
 
+  const handleUsersChange = useCallback((users: ManagedUser[]) => {
+    setUserSummary({
+      total:  users.length,
+      active: users.filter(u => u.isActive).length,
+      admins: users.filter(u => u.role === 'admin').length,
+    });
+  }, []);
+
   if (loading) return <div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading settings…</div>;
 
   const selectedTab = activeTabMeta(tab);
@@ -1375,11 +1384,7 @@ export default function AdminSettingsPage() {
         <section>
           {tab === 'users' && (
             <UserManagementSettings
-              onUsersChange={users => setUserSummary({
-                total:  users.length,
-                active: users.filter(u => u.isActive).length,
-                admins: users.filter(u => u.role === 'admin').length,
-              })}
+              onUsersChange={handleUsersChange}
             />
           )}
           {tab === 'requests' && <UserAddRequestsPanel />}

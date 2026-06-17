@@ -6,6 +6,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { DashboardMetrics } from '@/types/metrics';
 import { loadMetricsWithSource } from '@/lib/storage';
 import SprintVelocityChart from '@/components/charts/SprintVelocityChart';
@@ -123,11 +124,11 @@ function Widget({
       style={{ '--widget-delay': `${delay}ms`, '--widget-dur': '320ms' } as CSSProperties}
     >
       <header className={styles.widgetHead}>
-        <div className={styles.widgetIconBox} aria-hidden="true">{icon}</div>
+        <div className={styles.widgetIconBox} aria-hidden="true"><SvgIcon name={icon} size={20} /></div>
         <div className={styles.widgetMeta}>
           <p className={styles.widgetTitle}>{title}</p>
           <p className={styles.widgetDesc}>{desc}</p>
-          <span className={styles.widgetSource}>📥 {source}</span>
+          <span className={styles.widgetSource}><SvgIcon name="download" size={12} /> {source}</span>
         </div>
       </header>
       <div className={styles.widgetBody}>{children}</div>
@@ -409,7 +410,8 @@ export default function ChartsPage() {
             className={clsx(styles.tabBtn, tab === 'charts' && styles.tabBtnActive)}
             onClick={() => setTab('charts')}
           >
-            📊 Bar Charts
+            <SvgIcon name="chartBar" size={14} />
+            Bar Charts
           </button>
           <button
             type="button"

@@ -2,6 +2,7 @@
 // USERREQ-16–20 — Admin panel to review, accept, and reject add-member requests.
 'use client';
 import { useCallback, useEffect, useState } from 'react';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 function generateTempPassword(): string {
   const upper   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -304,7 +305,7 @@ export default function UserAddRequestsPanel() {
                           onClick={() => decide(req.id, 'accept')}
                           className="px-4 py-2 rounded-xl text-sm font-bold bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                         >
-                          {acting === req.id ? <Spinner /> : '✓'} Accept & create account
+                          {acting === req.id ? <Spinner /> : <SvgIcon name="check" size={12} />} Accept & create account
                         </button>
                         <button
                           type="button"
@@ -331,18 +332,18 @@ export default function UserAddRequestsPanel() {
                           onClick={() => copyPassword(req.id)}
                           className="px-3 py-2 rounded-lg text-xs font-bold border border-green-200 bg-white hover:bg-green-50 text-green-700 transition-colors shrink-0"
                         >
-                          {copied === req.id ? '✓ Copied' : 'Copy'}
+                          {copied === req.id ? <><SvgIcon name="check" size={12} /> Copied</> : 'Copy'}
                         </button>
                       </div>
                       {/* Email delivery status */}
                       {emailSentMap[req.id] === true && (
                         <p className="text-[11px] font-semibold text-green-700 flex items-center gap-1">
-                          ✅ Welcome email sent to {req.requestedEmail}
+                          <SvgIcon name="checkCircle" size={12} /> Welcome email sent to {req.requestedEmail}
                         </p>
                       )}
                       {emailSentMap[req.id] === false && (
                         <p className="text-[11px] font-semibold text-amber-700 flex items-center gap-1">
-                          ⚠️ Email not sent — SMTP not configured. Share the password manually.
+                          <SvgIcon name="warning" size={12} /> Email not sent — SMTP not configured. Share the password manually.
                         </p>
                       )}
                       <p className="text-[11px] text-green-600">

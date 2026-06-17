@@ -3,6 +3,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { ROLE_OPTIONS, ASSIGNABLE_ROLES } from '@/lib/roles';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 interface Props {
   onClose: () => void;
@@ -180,8 +181,9 @@ export default function RequestAddMemberModal({ onClose, onSuccess }: Props) {
                   <option value="user">User</option>
                 </select>
                 {isHighPrivilege && (
-                  <p className="mt-1.5 text-xs font-semibold text-amber-600">
-                    ⚠ {role === 'admin' ? 'Admin' : 'C-level'} roles have elevated access. Provide a detailed justification below.
+                  <p className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-amber-600">
+                    <SvgIcon name="warning" size={12} />
+                    {role === 'admin' ? 'Admin' : 'C-level'} roles have elevated access. Provide a detailed justification below.
                   </p>
                 )}
               </div>

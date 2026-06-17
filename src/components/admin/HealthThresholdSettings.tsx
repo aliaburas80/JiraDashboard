@@ -43,19 +43,19 @@ function ThresholdField({
 export default function HealthThresholdSettings({ thresholds, onSave }: Props) {
   const [form, setForm]   = useState<HealthThresholds>({ ...thresholds });
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg]     = useState('');
+  const [msg, setMsg]     = useState<{ text: string; ok: boolean } | null>(null);
 
   function setField(key: keyof HealthThresholds, value: number) {
     setForm(f => ({ ...f, [key]: value }));
   }
 
   async function handleSave() {
-    setSaving(true); setMsg('');
+    setSaving(true); setMsg(null);
     try {
       await onSave(form);
-      setMsg('✓ Thresholds saved. Next upload will use the new thresholds.');
-    } catch { setMsg('Failed to save.'); }
-    finally { setSaving(false); setTimeout(() => setMsg(''), 5000); }
+      setMsg({ text: 'Thresholds saved. Next upload will use the new thresholds.', ok: true });
+    } catch { setMsg({ text: 'Failed to save.', ok: false }); }
+    finally { setSaving(false); setTimeout(() => setMsg(null), 5000); }
   }
 
   function handleReset() {
@@ -96,11 +96,13 @@ export default function HealthThresholdSettings({ thresholds, onSave }: Props) {
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600">
         <p className="font-bold text-slate-700 mb-1">Current thresholds preview</p>
         <div className="flex flex-wrap gap-2 mt-2">
-          <span className="bg-amber-100 text-amber-800 border border-amber-200 rounded px-2 py-0.5 font-semibold">
-            ⚠ Warning: cycle &gt;{form.cycleTimeWarningDays}d · active &gt;{form.activeAgeWarningDays}d
+          <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 border border-amber-200 rounded px-2 py-0.5 font-semibold">
+            <SvgIcon name="warning" size={12} />
+            Warning: cycle &gt;{form.cycleTimeWarningDays}d · active &gt;{form.activeAgeWarningDays}d
           </span>
-          <span className="bg-red-100 text-red-800 border border-red-200 rounded px-2 py-0.5 font-semibold">
-            🔴 Critical: cycle &gt;{form.cycleTimeCriticalDays}d · active &gt;{form.activeAgeCriticalDays}d · blocked &gt;{form.blockedRatioCriticalPct}%
+          <span className="inline-flex items-center gap-1 bg-red-100 text-red-800 border border-red-200 rounded px-2 py-0.5 font-semibold">
+            <SvgIcon name="statusError" size={12} />
+            Critical: cycle &gt;{form.cycleTimeCriticalDays}d · active &gt;{form.activeAgeCriticalDays}d · blocked &gt;{form.blockedRatioCriticalPct}%
           </span>
         </div>
         <p className="text-slate-400 mt-2">Changes take effect on the next Jira export upload.</p>
@@ -143,8 +145,9 @@ export default function HealthThresholdSettings({ thresholds, onSave }: Props) {
           Reset to defaults
         </button>
         {msg && (
-          <span className={`text-xs font-semibold ${msg.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>
-            {msg}
+          <span className={`inline-flex items-center gap-1 text-xs font-semibold ${msg.ok ? 'text-green-600' : 'text-red-600'}`}>
+            <SvgIcon name={msg.ok ? 'checkCircle' : 'warning'} size={12} />
+            {msg.text}
           </span>
         )}
       </div>

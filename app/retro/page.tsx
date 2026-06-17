@@ -3,6 +3,7 @@
 'use client';
 import { useState } from 'react';
 import AppShell from '@/components/layout/AppShell';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -185,7 +186,7 @@ export default function RetroPage() {
             cursor: 'pointer',
             transition: 'all 0.15s',
           }}>
-            <div style={{ fontSize: 22, marginBottom: 12 }}>📥</div>
+            <SvgIcon name="download" size={22} style={{ color: 'var(--dc-acc2)', marginBottom: 12 }} />
             <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dc-p1)', marginBottom: 6 }}>Download Template</h2>
             <p style={{ fontSize: 11, color: 'var(--dc-p2)', lineHeight: 1.6, marginBottom: 12 }}>Download a CSV template to fill with your team offline, then upload it here.</p>
             <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--dc-acc2)' }}>Download CSV →</p>
@@ -199,7 +200,7 @@ export default function RetroPage() {
             padding: 20,
             opacity: 0.6,
           }}>
-            <div style={{ fontSize: 22, marginBottom: 12 }}>📤</div>
+            <SvgIcon name="upload" size={22} style={{ color: 'var(--dc-p3)', marginBottom: 12 }} />
             <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dc-p1)', marginBottom: 6 }}>Upload Retro File</h2>
             <p style={{ fontSize: 11, color: 'var(--dc-p2)', lineHeight: 1.6, marginBottom: 12 }}>Upload a completed CSV or Excel retrospective for automated analysis.</p>
             <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--dc-p3)' }}>Coming soon</p>

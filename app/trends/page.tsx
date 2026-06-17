@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import TrendChart, { type TrendDataPoint } from '@/components/trends/TrendChart';
 import type { TrendPoint } from '@/types/trends';
 
@@ -94,7 +95,7 @@ export default function TrendsPage() {
         {/* No data state */}
         {!hasData && !error && (
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
-            <span className="text-5xl mb-4 block">📈</span>
+            <SvgIcon name="chartTrendUp" size={48} className="mx-auto mb-4 text-slate-400" />
             <p className="text-base font-black text-slate-700 mb-2">No trend data yet</p>
             <p className="text-sm text-slate-500 mb-2 max-w-md mx-auto">
               Trends appear after you upload Jira exports <strong>at least twice</strong> — for example at the end of Sprint 14 and Sprint 15.

@@ -1,6 +1,7 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
 import { useState } from 'react';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { RetentionSettings, RetentionStats, RetentionPeriod } from '@/types/settings';
 
 const PERIODS: { value: RetentionPeriod; label: string }[] = [
@@ -58,37 +59,37 @@ function Toggle({ label, description, checked, onChange }: {
 export default function DataRetentionSettings({ settings, stats, onSave, onCleanup, onClearAll }: Props) {
   const [form, setForm]       = useState<RetentionSettings>({ ...settings });
   const [saving, setSaving]   = useState(false);
-  const [msg, setMsg]         = useState('');
+  const [msg, setMsg]         = useState<{ text: string; ok: boolean } | null>(null);
   const [cleaning, setCleaning]   = useState(false);
   const [clearing, setClearing]   = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
 
   async function handleSave() {
-    setSaving(true); setMsg('');
+    setSaving(true); setMsg(null);
     try {
       await onSave(form);
-      setMsg('✓ Settings saved.');
-    } catch { setMsg('Failed to save.'); }
-    finally { setSaving(false); setTimeout(() => setMsg(''), 3000); }
+      setMsg({ text: 'Settings saved.', ok: true });
+    } catch { setMsg({ text: 'Failed to save.', ok: false }); }
+    finally { setSaving(false); setTimeout(() => setMsg(null), 3000); }
   }
 
   async function handleCleanup() {
-    setCleaning(true); setMsg('');
+    setCleaning(true); setMsg(null);
     try {
       const r = await onCleanup();
-      setMsg(`✓ Deleted ${r.logsDeleted} logs and ${r.snapshotsDeleted} snapshots.`);
-    } catch { setMsg('Cleanup failed.'); }
-    finally { setCleaning(false); setTimeout(() => setMsg(''), 4000); }
+      setMsg({ text: `Deleted ${r.logsDeleted} logs and ${r.snapshotsDeleted} snapshots.`, ok: true });
+    } catch { setMsg({ text: 'Cleanup failed.', ok: false }); }
+    finally { setCleaning(false); setTimeout(() => setMsg(null), 4000); }
   }
 
   async function handleClearAll() {
     if (!confirmClear) { setConfirmClear(true); return; }
-    setClearing(true); setMsg(''); setConfirmClear(false);
+    setClearing(true); setMsg(null); setConfirmClear(false);
     try {
       const r = await onClearAll();
-      setMsg(`✓ Cleared all data: ${r.logsDeleted} logs + ${r.snapshotsDeleted} snapshots deleted.`);
-    } catch { setMsg('Clear failed.'); }
-    finally { setClearing(false); setTimeout(() => setMsg(''), 5000); }
+      setMsg({ text: `Cleared all data: ${r.logsDeleted} logs + ${r.snapshotsDeleted} snapshots deleted.`, ok: true });
+    } catch { setMsg({ text: 'Clear failed.', ok: false }); }
+    finally { setClearing(false); setTimeout(() => setMsg(null), 5000); }
   }
 
   const period = PERIODS.find(p => p.value === form.retentionDays) ?? PERIODS[4];
@@ -191,7 +192,10 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
             {saving ? 'Saving…' : 'Save Settings'}
           </button>
           {msg && (
-            <span className="text-xs font-semibold" style={{ color: msg.startsWith('✓') ? '#4ade80' : '#fca5a5' }}>{msg}</span>
+            <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: msg.ok ? '#4ade80' : '#fca5a5' }}>
+              <SvgIcon name={msg.ok ? 'checkCircle' : 'warning'} size={12} />
+              {msg.text}
+            </span>
           )}
         </div>
       </div>
@@ -222,7 +226,7 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
               : { background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.20)', color: '#fca5a5' }
             }
           >
-            {clearing ? 'Clearing…' : confirmClear ? '⚠ Confirm — Delete ALL data' : 'Clear All Data'}
+            {clearing ? 'Clearing…' : confirmClear ? <><SvgIcon name="warning" size={14} /> Confirm — Delete ALL data</> : 'Clear All Data'}
           </button>
 
           {confirmClear && (

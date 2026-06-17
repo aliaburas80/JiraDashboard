@@ -2,6 +2,7 @@
 
 import { type ReactNode, type CSSProperties } from 'react';
 import clsx from 'clsx';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import styles from './DashboardPageShell.module.scss';
 
 // ─── Bar animation CSS-custom-property helpers ────────────────────────────────
@@ -116,7 +117,7 @@ export function SectionCard({ children, title }: { children: ReactNode; title?: 
 export function EmptyPage({ message }: { message: string }) {
   return (
     <div className={styles.emptyPage}>
-      <div className={styles.emptyPageIcon} aria-hidden="true">📊</div>
+      <div className={styles.emptyPageIcon} aria-hidden="true"><SvgIcon name="chartBar" size={40} /></div>
       {message}
     </div>
   );

@@ -4,6 +4,7 @@
 'use client';
 
 import type { SprintThroughputSummary } from '@/types/throughput';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 interface Props {
   summary: SprintThroughputSummary;
@@ -79,7 +80,7 @@ export default function SprintVelocityChart({ summary }: Props) {
     return (
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-lg">📈</span>
+          <SvgIcon name="chartTrendUp" size={18} />
           <h3 className="text-sm font-black uppercase tracking-wider text-slate-700">Sprint Velocity — Story Points</h3>
         </div>
         <p className="text-sm text-slate-400 italic">
@@ -95,15 +96,15 @@ export default function SprintVelocityChart({ summary }: Props) {
   // Trend arrow
   const trendColor = summary.trendDirection === 'Improving' ? '#16a34a'
     : summary.trendDirection === 'Declining' ? '#dc2626' : '#94a3b8';
-  const trendIcon  = summary.trendDirection === 'Improving' ? '↑'
-    : summary.trendDirection === 'Declining' ? '↓' : '→';
+  const trendIcon  = summary.trendDirection === 'Improving' ? 'arrowUp'
+    : summary.trendDirection === 'Declining' ? 'arrowDown' : 'arrowRight';
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-slate-100 bg-slate-50">
         <div className="flex items-center gap-2">
-          <span className="text-lg">📈</span>
+          <SvgIcon name="chartTrendUp" size={18} />
           <div>
             <h3 className="text-sm font-black uppercase tracking-wider text-slate-700">
               Sprint Velocity — Story Points
@@ -123,7 +124,8 @@ export default function SprintVelocityChart({ summary }: Props) {
           <div className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-center">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trend</p>
             <p className="text-lg font-black leading-none" style={{ color: trendColor }}>
-              {trendIcon} <span className="text-xs">{summary.trendDirection}</span>
+              <SvgIcon name={trendIcon} size={14} style={{ display: 'inline-block', verticalAlign: '-2px', marginRight: 3 }} />
+              <span className="text-xs">{summary.trendDirection}</span>
             </p>
           </div>
           <div className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-center min-w-[90px] max-w-[140px]">
