@@ -14,6 +14,8 @@ Thumbs.db
 
 # Next.js build output
 .next/
+.next-*/
+.next.bad*/
 out/
 next-env.d.ts
 
