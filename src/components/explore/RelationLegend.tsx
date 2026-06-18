@@ -43,12 +43,11 @@ export default function RelationLegend() {
             { style: 'dashed', color: '#f97316', label: 'Orphan link' },
           ].map(({ style, color, label }) => (
             <div key={label} className="flex items-center gap-2 mb-1">
-              <svg width="28" height="6">
-                <line x1="0" y1="3" x2="28" y2="3"
-                  stroke={color} strokeWidth="2"
-                  strokeDasharray={style === 'dashed' ? '5,3' : '0'}
-                />
-              </svg>
+              <span
+                aria-hidden
+                className="w-7 shrink-0 border-t-2"
+                style={{ borderColor: color, borderStyle: style === 'dashed' ? 'dashed' : 'solid' }}
+              />
               <span className="text-slate-600">{label}</span>
             </div>
           ))}

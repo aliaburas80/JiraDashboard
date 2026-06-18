@@ -122,6 +122,7 @@ export const ICONS = {
   taskInProgress: '0353-task-in-progress.svg',
   taskTodo: '0354-task-to-do.svg',
   teams: '0356-teams.svg',
+  terminal: '0812-terminal.svg',
   text: '0357-text.svg',
   theme: '0369-theme.svg',
   thumbsDown: '0370-thumbs-down.svg',

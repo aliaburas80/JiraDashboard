@@ -8,10 +8,10 @@ import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { ColumnMappingResult, ColumnStatus } from '@/types/columnMapping';
 
 const STATUS_CONFIG: Record<ColumnStatus, { label: string; chip: string; icon: string }> = {
-  mapped:       { label: 'Mapped',        chip: 'bg-green-100 text-green-800 border-green-200', icon: '✓' },
-  aliased:      { label: 'Auto-renamed',  chip: 'bg-blue-100 text-blue-800 border-blue-200',   icon: '↔' },
-  unrecognised: { label: 'Unrecognised',  chip: 'bg-slate-100 text-slate-500 border-slate-200', icon: '?' },
-  missing:      { label: 'Missing',       chip: 'bg-red-100 text-red-800 border-red-200',       icon: '✗' },
+  mapped:       { label: 'Mapped',        chip: 'bg-green-100 text-green-800 border-green-200', icon: 'check' },
+  aliased:      { label: 'Auto-renamed',  chip: 'bg-blue-100 text-blue-800 border-blue-200',   icon: 'changes' },
+  unrecognised: { label: 'Unrecognised',  chip: 'bg-slate-100 text-slate-500 border-slate-200', icon: 'question' },
+  missing:      { label: 'Missing',       chip: 'bg-red-100 text-red-800 border-red-200',       icon: 'cross' },
 };
 
 function ScoreBadge({ score }: { score: number }) {

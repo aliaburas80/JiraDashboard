@@ -5,10 +5,10 @@ import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { ReleaseReadinessResult, ReleaseVerdict } from '@/types/releaseReadiness';
 
 const VERDICT_CONFIG: Record<ReleaseVerdict, { bg: string; border: string; text: string; icon: string; badge: string }> = {
-  'Go':                { bg: 'bg-green-50',  border: 'border-green-300',  text: 'text-green-900', icon: '✅', badge: 'bg-green-600 text-white' },
-  'Conditional Go':    { bg: 'bg-amber-50',  border: 'border-amber-300',  text: 'text-amber-900', icon: '⚠️', badge: 'bg-amber-500 text-white' },
-  'No-Go':             { bg: 'bg-red-50',    border: 'border-red-300',    text: 'text-red-900',   icon: '🚫', badge: 'bg-red-600 text-white' },
-  'Insufficient Data': { bg: 'bg-slate-50',  border: 'border-slate-200',  text: 'text-slate-600', icon: '❓', badge: 'bg-slate-400 text-white' },
+  'Go':                { bg: 'bg-green-50',  border: 'border-green-300',  text: 'text-green-900', icon: 'checkCircle', badge: 'bg-green-600 text-white' },
+  'Conditional Go':    { bg: 'bg-amber-50',  border: 'border-amber-300',  text: 'text-amber-900', icon: 'warning', badge: 'bg-amber-500 text-white' },
+  'No-Go':             { bg: 'bg-red-50',    border: 'border-red-300',    text: 'text-red-900',   icon: 'priorityBlocker', badge: 'bg-red-600 text-white' },
+  'Insufficient Data': { bg: 'bg-slate-50',  border: 'border-slate-200',  text: 'text-slate-600', icon: 'question', badge: 'bg-slate-400 text-white' },
 };
 
 interface Props { result: ReleaseReadinessResult }

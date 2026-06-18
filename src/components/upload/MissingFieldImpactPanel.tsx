@@ -6,10 +6,10 @@ import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { FieldImpact, FieldImpactReport, CheckSeverity } from '@/types/dataQuality';
 
 const SEV_CONFIG: Record<CheckSeverity, { badge: string; dot: string; icon: string }> = {
-  critical: { badge: 'bg-red-100 text-red-800 border-red-200',    dot: 'bg-red-500',    icon: '🔴' },
-  high:     { badge: 'bg-orange-100 text-orange-800 border-orange-200', dot: 'bg-orange-500', icon: '🟠' },
-  medium:   { badge: 'bg-amber-100 text-amber-700 border-amber-200',  dot: 'bg-amber-400',  icon: '🟡' },
-  low:      { badge: 'bg-slate-100 text-slate-600 border-slate-200',  dot: 'bg-slate-400',  icon: '⚪' },
+  critical: { badge: 'bg-red-100 text-red-800 border-red-200',    dot: 'bg-red-500',    icon: 'statusError' },
+  high:     { badge: 'bg-orange-100 text-orange-800 border-orange-200', dot: 'bg-orange-500', icon: 'priorityHigh' },
+  medium:   { badge: 'bg-amber-100 text-amber-700 border-amber-200',  dot: 'bg-amber-400',  icon: 'statusWarning' },
+  low:      { badge: 'bg-slate-100 text-slate-600 border-slate-200',  dot: 'bg-slate-400',  icon: 'statusInfo' },
 };
 
 function ImpactRow({ impact }: { impact: FieldImpact }) {
