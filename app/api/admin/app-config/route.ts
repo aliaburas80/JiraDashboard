@@ -8,7 +8,7 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { getAppConfig, getSafeConfig, saveToCloud, invalidateConfig, type AppConfig } from '@/lib/app-config';
-import { sendEmail, sendEmailWith } from '@/lib/email';
+import { describeSmtpErrorDetails, sendEmailWith } from '@/lib/email';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -107,7 +107,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     });
     return NextResponse.json({ ok: sent, skipped: !sent });
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    const description = describeSmtpErrorDetails(err, smtpToTest);
+    return NextResponse.json({
+      error:    description.message,
+      solution: description.solution,
+      details:  description.details,
+    }, { status: 500 });
   }
 }
 

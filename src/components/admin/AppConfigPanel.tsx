@@ -46,7 +46,8 @@ export default function AppConfigPanel() {
   const [testing,  setTesting]  = useState(false);
   const [hasEncKey, setHasEncKey] = useState(false);
   const [source,   setSource]   = useState<'cloud' | 'env'>('env');
-  const [status,   setStatus]   = useState<{ type: 'success' | 'error' | 'info'; msg: string } | null>(null);
+  const [status,   setStatus]   = useState<{ type: 'success' | 'error' | 'info'; msg: string; solution?: string; details?: string } | null>(null);
+  const [showStatusSolution, setShowStatusSolution] = useState(false);
 
   const [host,    setHost]    = useState('');
   const [port,    setPort]    = useState('587');
@@ -76,6 +77,7 @@ export default function AppConfigPanel() {
   async function handleSave() {
     setSaving(true);
     setStatus(null);
+    setShowStatusSolution(false);
     try {
       const res = await fetch('/api/admin/app-config', {
         method: 'PUT',
@@ -86,7 +88,15 @@ export default function AppConfigPanel() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) { setStatus({ type: 'error', msg: data.error ?? 'Save failed.' }); return; }
+      if (!res.ok) {
+        setStatus({
+          type: 'error',
+          msg: data.error ?? 'Save failed.',
+          solution: data.solution ?? 'Review the entered settings and try saving again.',
+          details: data.details,
+        });
+        return;
+      }
       setPass('');
       setSource('cloud');
       setStatus({ type: 'success', msg: 'Config encrypted and saved to cloud storage.' });
@@ -100,6 +110,7 @@ export default function AppConfigPanel() {
   async function handleTest() {
     setTesting(true);
     setStatus(null);
+    setShowStatusSolution(false);
     try {
       // Pass the current form values so the test uses what's on screen,
       // not stale cloud config — critical when the user has edited fields
@@ -112,7 +123,15 @@ export default function AppConfigPanel() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) { setStatus({ type: 'error', msg: data.error ?? 'Test failed.' }); return; }
+      if (!res.ok) {
+        setStatus({
+          type: 'error',
+          msg: data.error ?? 'Test failed.',
+          solution: data.solution ?? 'Check SMTP host, port, username, password, and From address, then try again.',
+          details: data.details,
+        });
+        return;
+      }
       if (data.skipped) { setStatus({ type: 'info', msg: 'SMTP not configured — fill in Host, Username, and Password first.' }); return; }
       setStatus({ type: 'success', msg: `Test email sent to ${user} — check your inbox.` });
     } catch {
@@ -180,7 +199,9 @@ export default function AppConfigPanel() {
           type="password"
           onChange={setPass}
           placeholder={source === 'cloud' ? '••••••••  (unchanged)' : 'Enter App Password'}
-          hint={source === 'cloud' ? 'Leave blank to keep the existing stored password.' : 'For Gmail: use a 16-char App Password (no spaces).'}
+          hint={source === 'cloud'
+            ? 'Leave blank to keep the existing stored password. For Gmail 535 errors, paste a fresh 16-character Google App Password here and test before saving.'
+            : 'For Gmail: use a fresh 16-character Google App Password, not your normal Google password.'}
         />
         <Field label="From address" value={from} onChange={setFrom} placeholder="Delivery Clarity <you@gmail.com>" />
       </div>
@@ -207,11 +228,32 @@ export default function AppConfigPanel() {
       {status && (
         <div className={`flex items-start gap-2 rounded-xl border px-4 py-3 text-sm ${
           status.type === 'success' ? 'border-green-200 bg-green-50 text-green-700' :
-          status.type === 'error'   ? 'border-red-200 bg-red-50 text-red-700' :
+          status.type === 'error'   ? 'border-blue-300 bg-blue-50 text-blue-800' :
                                       'border-blue-200 bg-blue-50 text-blue-700'
         }`}>
-          <SvgIcon name={status.type === 'success' ? 'checkCircle' : status.type === 'error' ? 'warning' : 'info'} size={14} />
-          <p className="font-semibold">{status.msg}</p>
+          <SvgIcon name={status.type === 'success' ? 'checkCircle' : status.type === 'error' ? 'info' : 'info'} size={14} />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">{status.msg}</p>
+            {status.type === 'error' && (status.solution || status.details) && (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowStatusSolution(v => !v)}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 underline underline-offset-2"
+                  aria-expanded={showStatusSolution}
+                >
+                  {showStatusSolution ? 'Hide solution' : 'Show solution'}
+                  <SvgIcon name={showStatusSolution ? 'chevronUp' : 'chevronDown'} size={11} />
+                </button>
+                {showStatusSolution && (
+                  <div className="mt-2 rounded-lg border border-blue-200 bg-white px-3 py-2 text-[11px] leading-relaxed text-blue-800">
+                    {status.solution && <p><span className="font-black">Solution: </span>{status.solution}</p>}
+                    {status.details && <p className="mt-1 text-blue-600"><span className="font-black">Details: </span>{status.details}</p>}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

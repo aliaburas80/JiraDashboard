@@ -13,6 +13,12 @@ interface EmailOptions {
   html?:   string;
 }
 
+interface SmtpErrorDescription {
+  message:  string;
+  solution: string;
+  details?: string;
+}
+
 function createTransporter(smtp: AppSmtpConfig) {
   const isGmail = smtp.host.toLowerCase() === 'smtp.gmail.com';
   return isGmail
@@ -25,6 +31,52 @@ function createTransporter(smtp: AppSmtpConfig) {
         connectionTimeout: 10_000,
         greetingTimeout:   10_000,
       });
+}
+
+export function describeSmtpErrorDetails(err: unknown, smtp?: AppSmtpConfig): SmtpErrorDescription {
+  const message = err instanceof Error ? err.message : String(err ?? 'Unknown SMTP error');
+  const code = typeof err === 'object' && err && 'code' in err ? String((err as { code?: unknown }).code ?? '') : '';
+  const responseCode = typeof err === 'object' && err && 'responseCode' in err
+    ? Number((err as { responseCode?: unknown }).responseCode)
+    : undefined;
+  const response = typeof err === 'object' && err && 'response' in err ? String((err as { response?: unknown }).response ?? '') : '';
+  const combined = `${code} ${responseCode ?? ''} ${response} ${message}`.toLowerCase();
+  const isGmail = smtp?.host?.toLowerCase() === 'smtp.gmail.com' || smtp?.user?.toLowerCase().endsWith('@gmail.com');
+
+  if (isGmail && (responseCode === 535 || combined.includes('535') || combined.includes('invalid login') || combined.includes('application-specific password'))) {
+    return {
+      message:  'Gmail rejected the SMTP login.',
+      solution: 'Generate a new 16-character Google App Password, paste it into Admin > App Config > Password, then click Send Test Email again. Do not use your normal Google password.',
+      details:  'This commonly happens when the old App Password was revoked, expired, copied with spaces, or the Google account no longer allows SMTP app access.',
+    };
+  }
+
+  if (combined.includes('eauth') || combined.includes('authentication')) {
+    return {
+      message:  'SMTP authentication failed.',
+      solution: 'Check the SMTP username and password, then send a test email again. If this is Gmail, use a Google App Password instead of your normal account password.',
+      details:  message,
+    };
+  }
+
+  if (combined.includes('etimedout') || combined.includes('timeout')) {
+    return {
+      message:  'SMTP connection timed out.',
+      solution: 'Check the SMTP host, port, firewall, and provider settings. For Gmail, use smtp.gmail.com with port 587.',
+      details:  message,
+    };
+  }
+
+  return {
+    message:  'SMTP test failed.',
+    solution: 'Review the SMTP host, port, username, password, and From address, then try Send Test Email again.',
+    details:  message,
+  };
+}
+
+export function describeSmtpError(err: unknown, smtp?: AppSmtpConfig): string {
+  const description = describeSmtpErrorDetails(err, smtp);
+  return `${description.message} ${description.solution}`.trim();
 }
 
 // Send using explicit SMTP config — used by the admin test endpoint so it can
