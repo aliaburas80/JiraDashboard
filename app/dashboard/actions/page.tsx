@@ -58,38 +58,38 @@ export default function SmartActionsPage() {
     const orphans = flowItems.filter(i => i.isOrphan).length;
     const critBlockers = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('block'));
     if (critBlockers.length)
-      acts.push({ type: 'critical', icon: '🚫', status: 'open',
+      acts.push({ type: 'critical', icon: 'priorityBlocker', status: 'open',
         title: `Unblock ${critBlockers.length} critical item${critBlockers.length > 1 ? 's' : ''}`,
         detail: `${critBlockers[0].key}: ${(critBlockers[0].summary || (critBlockers[0].reason ?? '')).slice(0, 80)}`,
         suggestedOwner: 'Scrum Master / Delivery Manager' });
     const staleActive = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('in progress over 14'));
     if (staleActive.length)
-      acts.push({ type: 'critical', icon: '⏳', status: 'open',
+      acts.push({ type: 'critical', icon: 'clock', status: 'open',
         title: `${staleActive.length} item${staleActive.length > 1 ? 's' : ''} stalled in progress`,
         detail: `${staleActive[0].key} has been active for ${Math.round((staleActive[0] as any).activeAgeDays || 0)} days`,
         suggestedOwner: 'Engineering Manager' });
     const capacity = ((metrics?.capacity || []) as any[]);
     const overloaded = capacity.filter((c: any) => c.loadShare > 35);
     if (overloaded.length && capacity.length > 2)
-      acts.push({ type: 'warning', icon: '⚖️', status: 'open',
+      acts.push({ type: 'warning', icon: 'scales', status: 'open',
         title: 'Team capacity imbalance detected',
         detail: `${overloaded[0].assignee} carries ${overloaded[0].loadShare}% — consider redistributing`,
         suggestedOwner: 'Engineering Manager' });
     if (orphans > 0)
-      acts.push({ type: 'info', icon: '👻', status: 'open',
+      acts.push({ type: 'info', icon: 'question', status: 'open',
         title: `Link ${orphans} orphan item${orphans > 1 ? 's' : ''} to epics`,
         detail: 'Items without epic reduce scope traceability and epic completion accuracy',
         suggestedOwner: 'Product Owner' });
     const epics = (metrics?.epics as any[]) ?? [];
     const critEpics = epics.filter((e: any) => (e.critical ?? 0) > 0);
     if (critEpics.length)
-      acts.push({ type: 'warning', icon: '🚨', status: 'open',
+      acts.push({ type: 'warning', icon: 'alert', status: 'open',
         title: `${critEpics.length} epic${critEpics.length > 1 ? 's' : ''} in critical state`,
         detail: `${critEpics[0].epic || 'Top epic'}: ${critEpics[0].completion ?? 0}% complete — needs attention`,
         suggestedOwner: 'Engineering Manager' });
     const rels = metrics?.relations as any;
     if (rels?.blockedItems?.length)
-      acts.push({ type: 'critical', icon: '🔗', status: 'open',
+      acts.push({ type: 'critical', icon: 'link', status: 'open',
         title: `${rels.blockedItems.length} item${rels.blockedItems.length > 1 ? 's' : ''} explicitly blocked`,
         detail: `${rels.blockedItems[0].key} is blocked by ${rels.blockedItems[0].blockedBy}`,
         suggestedOwner: 'Scrum Master / Delivery Manager' });
@@ -169,7 +169,7 @@ export default function SmartActionsPage() {
           </div>
         ) : (
           <div className={shellStyles.emptySection}>
-            <div className={shellStyles.emptySectionIcon}>✅</div>
+            <div className={shellStyles.emptySectionIcon}><SvgIcon name="checkCircle" size={32} /></div>
             No {priorityFilter !== 'all' ? priorityFilter + ' ' : ''}actions at this time.
           </div>
         )}

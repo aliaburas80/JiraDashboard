@@ -10,7 +10,7 @@ interface Section { id: string; icon: string; title: string; items: Item[]; }
 
 const SECTIONS: Section[] = [
   {
-    id: 'welcome', icon: '🚀', title: 'Welcome — Getting Started',
+    id: 'welcome', icon: 'release', title: 'Welcome — Getting Started',
     items: [
       { q: 'Meet Delivery Clarity', a: 'Delivery Clarity is your Jira Delivery Intelligence board. Drop in any Jira export and immediately see sprint health, flow efficiency, risk signals, capacity, and epic readiness — all in one place, with no Jira login required.' },
       { q: 'Step 1 — Export from Jira', a: 'In Jira, open your board or backlog and choose Export → Excel or CSV. For the richest analysis, include at minimum these columns: Summary, Issue Key, Issue Type, Status, Priority, Assignee, Sprint, Story Points, Created, Updated, Resolved / Resolution Date, Labels, Epic Link / Epic Name, and Linked Issues. Export the full backlog — not just the active sprint — to enable quarter trends and epic analysis.' },
@@ -22,7 +22,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'summary', icon: '📋', title: 'Summary Page',
+    id: 'summary', icon: 'clipboard', title: 'Summary Page',
     items: [
       { q: 'Health banner', a: 'The banner at the top of the Summary page answers three questions in one row: is the project healthy, how far off target are we, and what changed since last time? Three states are possible — Healthy (zero warning or critical items), At Risk (1–3 items need attention), and Urgent Attention (4+ items carry warning or critical health signals and require escalation or re-planning).' },
       { q: 'KPI cards', a: 'Six cards sit directly below the health banner: Completion Rate, Open Alerts, Active Items, Avg Lead Time, Avg Cycle Time, and Story Points. Each card shows the current value, a trend arrow versus the previous period, and a colour signal (green = healthy, amber = watch, red = act).' },
@@ -32,7 +32,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'filters', icon: '🎯', title: 'Quick Filters',
+    id: 'filters', icon: 'target', title: 'Quick Filters',
     items: [
       { q: 'All', a: 'Resets all active quick filters and shows the complete set of issues in the flow table. Any column filters or search terms you have applied independently are preserved.' },
       { q: 'High Risk', a: 'Shows items whose health classification is Critical. These are issues that are active for more than 14 days, have exceeded their cycle time threshold, carry a Blocked flag, have a passed due date, or are labelled High/Highest/Critical priority and remain open.' },
@@ -42,7 +42,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'attention', icon: '⚠️', title: 'Attention Cards',
+    id: 'attention', icon: 'warning', title: 'Attention Cards',
     items: [
       { q: 'Blockers', a: 'A blocker is any item where the Blocked field is true, the status name includes "blocked", or a "is blocked by" link points to an open issue. Attention cards for blockers show the blocking issue key, how long the item has been blocked, and the assignee responsible for resolving it.' },
       { q: 'Overdue items', a: 'An item is overdue when its Due Date field is set and the date has passed while the issue remains open (not Done, Closed, or Resolved). The attention card shows the number of calendar days past due and the original due date.' },
@@ -50,7 +50,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'kpi', icon: '📊', title: 'KPI Cards',
+    id: 'kpi', icon: 'chartBar', title: 'KPI Cards',
     items: [
       { q: 'Completion Rate', a: 'Percentage of all issues in the export that have a status of Done, Closed, or Resolved. Calculated as: (done issues / total issues) × 100. This is the primary delivery health indicator and is weighted at 28% of the overall Delivery Health Score.' },
       { q: 'Open Alerts', a: 'Count of issues classified as Warning or Critical health. Warning items have been active 7–14 days or waited more than 30 days without being started. Critical items exceed 14 days active, are blocked, are overdue, or carry the highest priority and are still open.' },
@@ -61,7 +61,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'charts', icon: '📈', title: 'Charts Page',
+    id: 'charts', icon: 'chartTrendUp', title: 'Charts Page',
     items: [
       { q: 'Donut charts', a: 'Two donut charts appear at the top of the Charts page. The left donut shows the distribution of issues by Status (Done, In Progress, To Do, Blocked, etc.). The right donut shows the distribution by Health classification (Healthy, Warning, Critical). Hover over any segment to see the exact count and percentage.' },
       { q: 'Bar charts', a: 'Stacked bar charts show sprint-over-sprint progress, breaking each sprint into Done, In Progress, and Not Started segments. A separate bar chart shows story points planned versus delivered per sprint. These are the fastest way to spot a sprint that fell significantly short of its commitment.' },
@@ -69,7 +69,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'composition', icon: '🧩', title: 'Delivery Composition',
+    id: 'composition', icon: 'component', title: 'Delivery Composition',
     items: [
       { q: 'What the Delivery Composition panel shows', a: 'The Delivery Composition panel is a stacked horizontal bar showing what proportion of the current delivery period is in each state. It gives you an instant visual sense of how healthy the overall pipeline is — whether most work is done, in progress, or not yet started.' },
       { q: 'Segment colours', a: 'Done / Closed / Resolved: green. In Progress / In Development / In Review: blue. Blocked: red. To Do / Backlog / Open: grey. The exact colours follow the status category from Jira — the engine groups any status not matching "done" or "in progress" into the backlog segment.' },
@@ -77,7 +77,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'controls', icon: '🎛️', title: 'Delivery Controls',
+    id: 'controls', icon: 'settings', title: 'Delivery Controls',
     items: [
       { q: 'Flow Efficiency', a: 'Flow Efficiency = (active work time / total elapsed time) × 100. A score above 40% is generally considered healthy for software teams. Anything below 25% indicates items spend most of their life waiting — in queues, in review, or blocked — rather than being actively worked on.' },
       { q: 'Story Points panel', a: "The Story Points panel breaks down points into: Completed, In Progress, and Remaining. It also shows the sprint's velocity (points completed per sprint) and a burn-down projection. If the remaining points exceed the projected capacity before the sprint ends, the panel highlights this as a risk." },
@@ -85,7 +85,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'quarters', icon: '📅', title: 'Quarters',
+    id: 'quarters', icon: 'calendar', title: 'Quarters',
     items: [
       { q: 'Grouping logic', a: 'The Quarters page groups all issues by the quarter in which they were resolved (or created, if unresolved). Q1 = Jan–Mar, Q2 = Apr–Jun, Q3 = Jul–Sep, Q4 = Oct–Dec. Issues without a date fall into an "Undated" bucket. The grouping uses the fiscal year of the export data, not the calendar year of the upload.' },
       { q: 'Completion rate per quarter', a: 'For each quarter, the page shows the total issues, the number completed, and the completion rate as a percentage. A declining rate quarter-over-quarter is a leading indicator of accumulating technical debt or backlog growth outpacing delivery.' },
@@ -93,7 +93,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'kanban', icon: '🗂️', title: 'Kanban',
+    id: 'kanban', icon: 'folder', title: 'Kanban',
     items: [
       { q: 'Status distribution', a: 'The Kanban page maps every issue to its Jira status and groups them into standard Kanban columns: Backlog, To Do, In Progress, Review, Done, and Blocked. Each column shows the item count, total story points, and percentage of overall work. Items are sorted within each column by priority.' },
       { q: 'Health table', a: 'Below the column cards is a health table listing each issue with its status, health classification, days in current status, assignee, and priority. You can sort by any column. Red rows are Critical-health items; amber rows are Warning-health items.' },
@@ -101,7 +101,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'sprint', icon: '⚡', title: 'Sprint',
+    id: 'sprint', icon: 'priorityHigh', title: 'Sprint',
     items: [
       { q: 'Sprint comparison', a: 'The Sprint page shows all sprints present in the export side by side, sorted from oldest to newest. For each sprint you see: planned points, completed points, completion percentage, number of issues, number of blockers, and average cycle time. Tap any sprint header to expand the full issue list for that sprint.' },
       { q: 'Sprint status', a: 'Each sprint is tagged as Active, Closed, or Future based on the sprint state field in the Jira export. If your export does not include sprint state metadata, the engine infers status: a sprint whose start and end dates bracket today is Active; one whose end date is in the past is Closed; one whose start date is in the future is Future.' },
@@ -109,7 +109,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'ownership', icon: '👤', title: 'Ownership',
+    id: 'ownership', icon: 'person', title: 'Ownership',
     items: [
       { q: 'Capacity view', a: 'The Ownership page lists every assignee in the export along with their current WIP (work-in-progress count), total assigned items, completed items, completion rate, average cycle time, and assigned story points. This gives team leads an instant capacity snapshot without needing a separate report.' },
       { q: 'Epic performance per owner', a: 'For each assignee, the page breaks down their items by epic. This makes it easy to see whether one person is carrying a disproportionate share of a high-risk epic, or whether a critical epic has no clear owner.' },
@@ -117,7 +117,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'readiness', icon: '🏁', title: 'Readiness',
+    id: 'readiness', icon: 'flag', title: 'Readiness',
     items: [
       { q: 'At-risk epics', a: 'The Readiness page scores each epic on a 0–100 readiness scale based on: percentage of child issues completed (40%), absence of critical-health child issues (30%), absence of open blockers (20%), and presence of a due date (10%). Epics scoring below 50 are flagged as At Risk.' },
       { q: 'Dependencies', a: 'The Dependencies panel shows all "is blocked by", "depends on", and "relates to" link types across all issues. Issues with unresolved inbound dependencies are listed with the count of open blockers. This is the fastest way to identify a release that is being held up by another team or another epic.' },
@@ -125,7 +125,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'justification', icon: '💬', title: 'Justification',
+    id: 'justification', icon: 'comment', title: 'Justification',
     items: [
       { q: 'What is Justification?', a: 'Justification is the plain-language insights panel. Instead of showing raw numbers, it narrates the most important signals from the current data as short sentences. Example outputs: "5 items have been in progress for more than 14 days — consider breaking them down or reassigning." or "Sprint velocity has dropped 30% from the previous sprint."' },
       { q: 'How insights are generated', a: 'Insights are generated server-side by comparing computed metric values against threshold rules. They are not AI-generated — they are deterministic logic that fires when a metric crosses a threshold. Each insight links to the relevant section of the dashboard so you can drill in immediately.' },
@@ -133,7 +133,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'flow', icon: '🔍', title: 'Flow Table — Story & Task Flow Health',
+    id: 'flow', icon: 'search', title: 'Flow Table — Story & Task Flow Health',
     items: [
       { q: 'The 11 filters', a: 'The Flow Table supports 11 independent filters: (1) Issue Key search, (2) Status multi-select, (3) Sprint multi-select, (4) Assignee multi-select, (5) Health classification (Healthy / Warning / Critical), (6) Labels multi-select, (7) Issue Type multi-select, (8) Priority multi-select, (9) Epic multi-select, (10) Reason keyword search (searches the health reason field), (11) Date range (filters by created or resolved date). All filters are ANDed together.' },
       { q: 'Time metrics', a: 'For each issue the table shows three time columns: Lead Time (days from Created to Done), Cycle Time (days from first In Progress to Done), and Wait Time (Lead Time minus Cycle Time — the time spent waiting before work started). For in-progress items, these are calculated using today as the end date.' },
@@ -141,7 +141,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'labels', icon: '🏷️', title: 'Labels & Classification',
+    id: 'labels', icon: 'tag', title: 'Labels & Classification',
     items: [
       { q: 'Label distribution', a: 'The Labels section shows a frequency chart of all labels present in the export. Labels are normalised to lowercase before counting so "bug" and "Bug" are treated as the same label. The top 20 labels are shown by default; tap "Show all" to see the full list.' },
       { q: 'Label health', a: 'For each label, the engine computes the health breakdown of all issues carrying that label: percentage Healthy, Warning, and Critical. Labels where more than 30% of issues are Critical are highlighted in red. This helps identify label-based workstreams (e.g. a "migration" label) that are in distress.' },
@@ -149,7 +149,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'relations', icon: '🔗', title: 'Relations',
+    id: 'relations', icon: 'link', title: 'Relations',
     items: [
       { q: 'Link types', a: 'Delivery Clarity recognises five Jira link types: "is blocked by" / "blocks", "depends on" / "is depended on by", "relates to", "duplicates" / "is duplicated by", and "is cloned by" / "clones". Each type is shown in the Relations panel with a count of open links of that type.' },
       { q: 'Most connected items', a: 'The Most Connected list ranks issues by total inbound + outbound link count. Highly connected items are often architectural or integration issues. If a highly connected item is also Critical health, it represents a systemic risk — one unresolved issue that is blocking many others.' },
@@ -157,7 +157,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'export-guide', icon: '📤', title: 'Jira Export Guide',
+    id: 'export-guide', icon: 'upload', title: 'Jira Export Guide',
     items: [
       {
         q: 'Step-by-step export instructions',
@@ -188,7 +188,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'aliases', icon: '🔤', title: 'Field Aliases',
+    id: 'aliases', icon: 'text', title: 'Field Aliases',
     items: [
       { q: 'What are field aliases?', a: 'Jira exports use different column names depending on the Jira version, the export method, and any custom field configuration. Delivery Clarity maps a broad set of known aliases to the canonical field names it uses internally. This means you do not need to rename columns before uploading.' },
       {
@@ -226,7 +226,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'api', icon: '⚙️', title: 'API Routes',
+    id: 'api', icon: 'settings', title: 'API Routes',
     items: [
       {
         q: 'Available API endpoints',
@@ -267,7 +267,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'explorer-export', icon: '📥', title: 'Explorer Export',
+    id: 'explorer-export', icon: 'download', title: 'Explorer Export',
     items: [
       { q: 'How do I export from the Work Item Explorer?', a: 'After exploring any issue key on the /explore page, an "↓ Export" dropdown button appears in the results header. Choose "Export to Excel (.xlsx)" for a 5-sheet workbook (Summary, All Issues, Risk Items, Orphans, Insights) or "Export to CSV (.csv)" for a flat table. The file is named explorer-{key}-{date}.' },
       { q: 'What is included in the Excel workbook?', a: 'Sheet 1 (Summary): focus issue key, delivery stats, confidence score, largest unfinished branch, and insights. Sheet 2 (All Issues): all connected nodes and orphans with health, risk-path, blocked, and role columns. Sheet 3 (Risk Items): only blocked, critical, or on-risk-path items. Sheet 4 (Orphans): orphan items only. Sheet 5 (Insights): generated insight text bullets.' },
@@ -275,7 +275,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'teams', icon: '👥', title: 'Teams',
+    id: 'teams', icon: 'people', title: 'Teams',
     items: [
       { q: 'What is the Teams page?', a: 'The /teams page shows a side-by-side health comparison for each team member (assignee) in your Jira data. It computes a Team Health Score (0–100) per person based on their completion rate, critical items, and blocked items.' },
       { q: 'How is the Team Health Score calculated?', a: 'Score = (done/total) × 50 + (1 − critical/total) × 30 + (1 − blocked/total) × 20, clamped 0–100. Bands: Healthy ≥ 70 / At Risk ≥ 40 / Critical < 40.' },
@@ -284,7 +284,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'portfolio', icon: '🗂️', title: 'Portfolio',
+    id: 'portfolio', icon: 'folder', title: 'Portfolio',
     items: [
       { q: 'What is the Portfolio page?', a: 'The /portfolio page aggregates all epics, projects, sprints, and quarters into a single Portfolio Score (0–100) and health view. It is designed for programme leads and directors who need a cross-team delivery snapshot.' },
       { q: 'How is the Portfolio Score calculated?', a: 'Score = epic completion × 40% + project completion × 30% + sprint performance × 20% + data quality × 10%, weighted by issue count. Bands: Excellent ≥ 85 / Good ≥ 70 / Moderate ≥ 55 / At Risk ≥ 35 / Critical < 35.' },
@@ -293,7 +293,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'release-confidence', icon: '📉', title: 'Release Confidence Trend',
+    id: 'release-confidence', icon: 'chartTrendDown', title: 'Release Confidence Trend',
     items: [
       { q: 'What is the Release Confidence Score?', a: 'A 0–100 score computed on every upload that specifically measures release readiness — not just general health. It weights completion (55 pts), absence of blockers (25 pts), absence of critical items (12 pts), and absence of open defects (8 pts).' },
       { q: 'Where do I see the Release Confidence Trend?', a: 'On the /trends page (requires 2+ uploads while logged in): a purple "Release Confidence" chart, a stat card in the summary row, and a "Rel. Confidence" column in the upload log table — colour-coded green ≥ 80%, amber ≥ 60%, red < 60%.' },
@@ -301,7 +301,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'filter-bar', icon: '🔍', title: 'Filter Bar',
+    id: 'filter-bar', icon: 'search', title: 'Filter Bar',
     items: [
       { q: 'What do the filter tabs at the top of the dashboard do?', a: 'The filter bar has four quick-filter tabs: All (show everything), High Risk (critical and warning items), Blocked (items with blocked flag), Needs Review (items needing attention). The active tab shows a coloured underline — blue for All, red for High Risk, orange for Blocked, purple for Needs Review.' },
       { q: 'What does the red dot on "High Risk" mean?', a: 'A red dot badge on the High Risk tab means there are currently blocked or critical items in your data. It disappears when no high-risk items exist.' },
@@ -309,7 +309,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'cloud-sync', icon: '🔄', title: 'Cloud Sync & Data Source',
+    id: 'cloud-sync', icon: 'refresh', title: 'Cloud Sync & Data Source',
     items: [
       {
         q: 'Where does my data come from — and how do I know?',
@@ -329,16 +329,16 @@ const SECTIONS: Section[] = [
         ),
       },
       { q: 'How does the cloud sync work? Will it re-download from S3 every time?', a: 'No — the app uses a cache-first strategy. On startup it checks whether the local cache is already current by comparing a content hash. If the hash matches the latest cloud backup, no download happens. You only get a real download when the cloud has a newer version than your local cache.' },
-      { q: 'What happens if the cloud is unreachable?', a: 'The app first tries the bucket-backed server copy through /api/metrics/latest. If that is unavailable, it falls back to the browser localStorage copy and shows a "⚠️ localStorage fallback" badge. Local server changes waiting to be pushed are protected: startup sync will not overwrite them with an older bucket backup.' },
-      { q: 'What happens when I upload a new Jira file?', a: "After every successful Jira CSV upload, the app writes the latest dashboard metrics to data/latest-metrics.json, stores a browser fallback copy, and immediately pushes a fresh backup to your configured cloud bucket (non-blocking — it doesn't slow down your upload). The data source badge updates to \"📤 Jira upload\"." },
+      { q: 'What happens if the cloud is unreachable?', a: 'The app first tries the bucket-backed server copy through /api/metrics/latest. If that is unavailable, it falls back to the browser localStorage copy and shows a "localStorage fallback" warning badge. Local server changes waiting to be pushed are protected: startup sync will not overwrite them with an older bucket backup.' },
+      { q: 'What happens when I upload a new Jira file?', a: "After every successful Jira CSV upload, the app writes the latest dashboard metrics to data/latest-metrics.json, stores a browser fallback copy, and immediately pushes a fresh backup to your configured cloud bucket (non-blocking — it doesn't slow down your upload). The data source badge updates to \"Jira upload\"." },
       { q: 'What happens when I switch from S3 to Azure (or any other provider)?', a: 'The app downloads the latest backup from your current cloud provider first, then pushes it to the new provider — so no data is lost during a provider switch. Both providers end up with the same version. After the switch, all new backups go to the new provider.' },
       { q: 'What if I switch to Local storage from the Cloud Storage settings?', a: 'When you select "Local Storage" in Admin Settings → Cloud Storage, the app downloads the latest backup from your cloud bucket first (so you have it locally), then switches to local-only mode. From that point, backups are saved to data/cloud-backups/ on the server instead of the cloud.' },
       { q: 'Are all cloud backups the same version? How do I avoid having outdated copies?', a: 'Yes — the sync strategy ensures all copies are always at the same version. Push-on-change: every data modification immediately pushes to cloud. If the push fails (network issue), the change is marked as pending and retried on next startup or sync. You can also manually trigger a sync from Admin Settings → Cloud Storage → Sync button.' },
-      { q: 'How do I manually check or trigger a sync?', a: 'Go to Admin Settings → ☁️ Cloud Storage tab. The "Disaster Recovery / Auto-restore" section shows the current sync status (last fetched, last pushed, pending push indicator). Use the "↺ Auto-restore (if empty DB)" or "↺ Force restore (overwrite)" buttons to manually pull from cloud.' },
+      { q: 'How do I manually check or trigger a sync?', a: 'Go to Admin Settings → Cloud Storage tab. The "Disaster Recovery / Auto-restore" section shows the current sync status (last fetched, last pushed, pending push indicator). Use the "Auto-restore (if empty DB)" or "Force restore (overwrite)" buttons to manually pull from cloud.' },
     ],
   },
   {
-    id: 'cloud-storage', icon: '☁️', title: 'Cloud Storage',
+    id: 'cloud-storage', icon: 'cloud', title: 'Cloud Storage',
     items: [
       { q: 'What is the Cloud Storage feature?', a: 'The Cloud Storage tab in /admin/settings allows admins to configure a cloud provider (AWS S3, Azure Blob, or Google Cloud Storage) to receive automatic backup files. Backups include the SQLite database, config files, import logs, and data/latest-metrics.json so the dashboard can load from the bucket-backed server copy on the next session.' },
       { q: 'Which providers are supported?', a: 'Four options: (1) Local — saves to data/cloud-backups/ on the server, no credentials needed. (2) AWS S3 — also compatible with MinIO, Backblaze B2, Cloudflare R2. (3) Azure Blob Storage. (4) Google Cloud Storage. Each requires its SDK: @aws-sdk/client-s3, @azure/storage-blob, @google-cloud/storage.' },
@@ -348,7 +348,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'diagnostics', icon: '🩺', title: 'System Diagnostics',
+    id: 'diagnostics', icon: 'statusInfo', title: 'System Diagnostics',
     items: [
       { q: 'What is the System Diagnostics page?', a: 'The /admin/diagnostics page (admin-only) shows a live system health snapshot including: an Ops Health Score (0–100), database row counts (users, sessions, imports, snapshots), import success rate and average health score, environment variable checks, system info (Node version, uptime), and the last 8 audit events.' },
       { q: 'How is the Ops Health Score calculated?', a: 'Score starts at 100 and loses points for: missing SESSION_SECRET (−30), non-production NODE_ENV (−10), open registration enabled (−10), failed imports (−1 each, max −10), and zero active sessions when users exist (−5). Score is clamped to 0–100.' },
@@ -357,14 +357,14 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'about', icon: '🏠', title: 'About / Feature Overview',
+    id: 'about', icon: 'home', title: 'About / Feature Overview',
     items: [
       { q: 'What is the About (Landing) page?', a: 'The /landing page is an in-app product showcase. It shows all 12 major features with clickable cards (each linking directly to that feature), a "How it works" section, key product stats, and a branded CTA footer. Access it via Reference → About in the nav, or click "See all 12 features →" on the upload page.' },
       { q: 'Which features are shown on the landing page?', a: 'Sprint Throughput, Work Item Explorer, Upload-to-Upload Trends, Team Health, Portfolio Summary, Release Readiness, Visual Analytics, Customer View, Smart Export Suite, Dashboard Snapshots, Data Quality Score, and Admin Diagnostics.' },
     ],
   },
   {
-    id: 'branding', icon: '🎨', title: 'Branding',
+    id: 'branding', icon: 'palette', title: 'Branding',
     items: [
       { q: 'Why do the login and register pages show a logo instead of text?', a: 'The login and register pages now display the Delivery Clarity horizontal logo SVG instead of plain text, for consistent visual branding across all user-facing pages.' },
       { q: 'Does the product have a favicon?', a: 'Yes — the browser tab shows a Delivery Clarity lightning bolt favicon (SVG + ICO fallback). On iOS/Android home screens, the 128×128 PNG icon is used as the apple-touch-icon.' },
@@ -372,7 +372,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'deployment', icon: '🚢', title: 'Deployment',
+    id: 'deployment', icon: 'release', title: 'Deployment',
     items: [
       { q: 'What is the recommended way to deploy Delivery Clarity?', a: 'Docker is the recommended deployment method for production. Clone the repo, copy .env.example to .env, set SESSION_SECRET (openssl rand -hex 32) and ADMIN_PASSWORD, then run: docker compose up -d --build. The app will be available on port 3000. Full instructions are in product/DEPLOYMENT_GUIDE.md and the Developer Portal → Deployment Guide.' },
       { q: 'Can I deploy on Vercel?', a: "Vercel works for demos and previews but is NOT recommended for production. Vercel's serverless functions have no persistent filesystem, so SQLite data, data/latest-metrics.json, cache metadata, user accounts, import logs, and sessions are lost between cold starts. The CSV-upload → dashboard flow can still work when browser localStorage fallback is available." },
@@ -383,7 +383,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'chart-customization', icon: '📊', title: 'Chart Customization',
+    id: 'chart-customization', icon: 'chartBar', title: 'Chart Customization',
     items: [
       { q: 'Where is the chart customizer?', a: 'Click the "Customise" button in the top-right of the Visual Analytics (/charts) page header. A blue dot appears when your settings differ from the defaults.' },
       { q: 'What can I customise per chart?', a: 'Three things per chart: (1) Visibility — toggle the chart on or off. (2) Column width — 1/3 (narrow), 2/3 (medium), or Full (full width). (3) Order — use ▲▼ buttons to move charts up or down in the panel.' },
@@ -391,7 +391,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'layout-builder', icon: '☰', title: 'Layout Builder',
+    id: 'layout-builder', icon: 'menu', title: 'Layout Builder',
     items: [
       { q: 'Where is the Layout Builder?', a: 'Click the "Layout" button (☰) on the right side of the section switcher bar at the top of the Dashboard (/dashboard). A blue dot appears on the button when your layout differs from the default.' },
       { q: 'What can I customise in the Layout Builder?', a: 'Two things: (1) Section order — use the ▲ and ▼ arrow buttons to move any of the 14 dashboard sections up or down. This changes their order in the section switcher tabs. (2) Section visibility — toggle each section on or off. Hidden sections disappear from both the switcher and the dashboard body.' },
@@ -400,25 +400,25 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'theme-customization', icon: '🎨', title: 'Theme Customization',
+    id: 'theme-customization', icon: 'palette', title: 'Theme Customization',
     items: [
-      { q: 'Where is the theme customizer?', a: 'Click the 🎨 palette icon in the top-right of the header, next to the dark/light mode toggle. The panel opens inline.' },
+      { q: 'Where is the theme customizer?', a: 'Click the palette icon in the top-right of the header, next to the dark/light mode toggle. The panel opens inline.' },
       { q: 'What can I customise?', a: 'Three settings: (1) Accent colour — 7 presets (Blue, Purple, Teal, Orange, Indigo, Rose, Slate) that change all primary action buttons and focus elements. (2) Corner radius — Sharp (4px), Default (12px), or Rounded (18px). (3) Text size — Small (13px), Medium (14px), or Large (16px).' },
       { q: 'Where are my theme settings saved?', a: 'Settings are saved to your browser localStorage (dc_theme_custom) and applied automatically on every page load. They are browser-specific — other users keep their own settings.' },
       { q: 'How do I reset to the default theme?', a: 'Click "Reset" in the theme customizer panel. This restores Blue accent, Default radius, and Medium font size.' },
     ],
   },
   {
-    id: 'product-tour', icon: '🎯', title: 'Product Tour',
+    id: 'product-tour', icon: 'target', title: 'Product Tour',
     items: [
-      { q: 'How do I start the guided tour?', a: 'Two ways: (1) On the Overview (/summary) page, click the "Take a tour" button in the CTA row — it navigates to the dashboard and starts the tour automatically. (2) On the Dashboard (/dashboard), click the small "Tour" (ℹ️) button in the top-right of the header card.' },
+      { q: 'How do I start the guided tour?', a: 'Two ways: (1) On the Overview (/summary) page, click the "Take a tour" button in the CTA row — it navigates to the dashboard and starts the tour automatically. (2) On the Dashboard (/dashboard), click the small "Tour" info button in the top-right of the header card.' },
       { q: 'What does the tour cover?', a: '8 steps: Welcome → Section Switcher (tab navigation) → Health Score & Key Metrics → Priority Attention (blockers/overdue) → Smart Recommendations (action cards) → Sprint Throughput → Work Item Explorer (opens /explore) → Done.' },
       { q: 'How do I navigate the tour?', a: 'Click "Next →" and "← Back" buttons, or use arrow keys (→ Next, ← Back). Press Esc or click "Skip tour" at any time to exit.' },
       { q: 'How do I replay the tour after completing it?', a: 'Click the "Tour" button on the dashboard at any time — it always restarts from Step 1. Or run resetTour() in the browser console to fully clear the completed state.' },
     ],
   },
   {
-    id: 'export-sheets', icon: '📋', title: 'Export Sheets Reference',
+    id: 'export-sheets', icon: 'clipboard', title: 'Export Sheets Reference',
     items: [
       {
         q: 'What sheets are included in the main Excel export (17 sheets)?',
@@ -481,7 +481,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'rec-owners', icon: '👤', title: 'Recommendation Owners',
+    id: 'rec-owners', icon: 'person', title: 'Recommendation Owners',
     items: [
       { q: 'How do I assign an owner to a recommendation?', a: 'On the dashboard Smart Recommendations section, each card shows a "+ Assign" button with the suggested owner role as a hint (e.g., "+ Assign (Scrum Master / Delivery Manager)"). Click it to open an inline input, type the owner name, then press Enter or click Save.' },
       { q: 'Where is the owner assignment saved?', a: 'Owner assignments are saved to your browser localStorage (dc_rec_owners key). They persist across page reloads but are specific to your browser. They are not synced to the server or visible to other users.' },
@@ -489,7 +489,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'executive-pdf', icon: '📄', title: 'Executive PDF',
+    id: 'executive-pdf', icon: 'file', title: 'Executive PDF',
     items: [
       { q: 'What is the Executive PDF export?', a: 'The "Executive PDF" button on the Overview (/summary) page generates a print-optimised single-page HTML file designed to fit on one A4 landscape page. It contains: health score, 6 KPI cards, top 5 epic progress bars, top 4 team capacity bars, insights, and the top 3 recommendations.' },
       { q: 'How do I save it as a PDF?', a: 'After clicking "Executive PDF", a file named executive-summary-{date}.html downloads. Open it in your browser, then press Ctrl+P (Windows) or Cmd+P (Mac) → change destination to "Save as PDF" → Print. The layout is optimised to fit one page in landscape orientation.' },
@@ -497,19 +497,19 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'member-requests', icon: '👤', title: 'Member Requests & Email',
+    id: 'member-requests', icon: 'person', title: 'Member Requests & Email',
     items: [
       { q: 'How do I request a new user to be added to the platform?', a: "Go to /members and click \"Request add member\" (visible to non-admin users). Fill in the new user's full name, email, requested role, and a business reason. Submit the form — the request is sent to the admin queue. You will receive an in-app notification when the admin accepts or rejects it." },
       { q: 'How does the admin accept a member request?', a: 'Go to Admin Settings → Member Requests tab. Expand the pending card. Click "Generate" to auto-fill a secure 14-character temporary password (or type one manually). Click Accept. The new user account is created, the requester receives an in-app notification, and a welcome email is sent to the new user automatically.' },
       { q: 'What is the "Generate" button in the accept panel?', a: 'The Generate button auto-fills the temporary password field with a cryptographically secure 14-character password. It meets all complexity rules: at least 2 uppercase letters, 2 digits, and 2 special characters. You can click it multiple times to get a different password. The Accept button activates as soon as a valid password is present.' },
-      { q: 'Does the new user receive an email with their credentials?', a: "Yes — when an admin accepts a request, a welcome email is automatically sent to the new user's email address. The email contains their login email, temporary password, and a \"Log In Now\" link. The admin panel shows a green ✅ \"Welcome email sent\" badge on success, or an amber ⚠️ badge if SMTP is not configured." },
+      { q: 'Does the new user receive an email with their credentials?', a: "Yes — when an admin accepts a request, a welcome email is automatically sent to the new user's email address. The email contains their login email, temporary password, and a \"Log In Now\" link. The admin panel shows a green \"Welcome email sent\" badge on success, or an amber warning badge if SMTP is not configured." },
       { q: 'What does the new user need to do after receiving the welcome email?', a: 'The new user clicks the "Log In Now" link in the email, enters their email and temporary password, and is redirected to /change-password. They must set a new permanent password before accessing the dashboard. After changing it, they land on the dashboard — fully onboarded.' },
       { q: 'Why did I receive a notification when my request was accepted?', a: 'In-app notifications are sent automatically on both accept and reject. An accepted notification includes the new user\'s email and role. Click the notification to navigate directly to /members (as the requester) or to Admin Settings → Member Requests (as an admin).' },
       { q: 'Do notifications navigate me somewhere when I click them?', a: 'Yes. Clicking a navigable notification (one with a → arrow) marks it as read, closes the dropdown, and routes you to the relevant page. Accepted/rejected request notifications take non-admin users to /members and admin users to Admin Settings → Member Requests.' },
     ],
   },
   {
-    id: 'roadmap', icon: '🗺️', title: 'Roadmap',
+    id: 'roadmap', icon: 'roadmap', title: 'Roadmap',
     items: [
       { q: 'What does the Roadmap page show?', a: 'The Roadmap page (/roadmap) shows every epic from your uploaded Jira data as a card with a progress bar, health indicator, delivery forecast label, and confidence badge. It is accessible from the Planning dropdown in the header.' },
       { q: 'How are delivery forecasts calculated?', a: 'Forecasts use linear velocity extrapolation: remaining issues ÷ average throughput (items completed per sprint) = sprints remaining. Weeks = ceil(sprints × 2), assuming 2-week sprints. Labels are: Complete, Within 2 weeks, ~N weeks, ~N months, or Insufficient data.' },
@@ -519,7 +519,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'forecast', icon: '🔮', title: 'Forecast',
+    id: 'forecast', icon: 'eye', title: 'Forecast',
     items: [
       { q: 'What does the Forecast page show?', a: 'The Forecast page (/forecast) shows your overall delivery status (On Track / At Risk / Off Track / Complete / Insufficient Data), a burn-up chart of actual vs forecast vs target, a KPI row, a next-quarter capacity plan, risk signals, and actionable recommendations.' },
       { q: 'What do the forecast statuses mean?', a: 'Complete = all issues done. On Track = 6 or fewer sprints remaining at current velocity. At Risk = 7–12 sprints remaining. Off Track = more than 12 sprints remaining. Insufficient Data = no sprint throughput history available.' },
@@ -528,7 +528,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'retro', icon: '🔄', title: 'Retrospective',
+    id: 'retro', icon: 'refresh', title: 'Retrospective',
     items: [
       { q: 'What does the Retrospective page do?', a: 'The Retro page (/retro) is a sprint retrospective tool. You can fill out a retrospective directly in the app, download a CSV template to fill offline, or upload a completed file (coming soon). On submit, the app generates improvement suggestions based on your inputs.' },
       { q: 'How do I run a retrospective in the app?', a: 'Click "Fill in App" on the Retro landing page. Fill in: Sprint Name (required), Team Name, Retro Date, Sprint Goal, Sprint Goal Met (yes/partial/no), What Went Well entries, What Did Not Go Well entries, Blockers, and Action Items (each with owner, due date, and priority). Click "Submit & Get Suggestions" when done.' },
@@ -537,7 +537,7 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'troubleshooting', icon: '🛠️', title: 'Troubleshooting',
+    id: 'troubleshooting', icon: 'tools', title: 'Troubleshooting',
     items: [
       { q: '"No file uploaded" or upload button does nothing', a: 'Check that your browser allows file access (some corporate security tools block file dialogs). Ensure the file is a .csv, .xls, or .xlsx — PDF and Word exports are not supported. Check that the file is under 20 MB. If you are on a slow connection, wait for the progress indicator to complete before navigating away.' },
       { q: '"Unsupported file type" error', a: 'Delivery Clarity only accepts .csv, .xls, and .xlsx files exported directly from Jira. Do not upload Jira XML exports, JSON exports, PDF reports, or Word documents. If your Jira instance exports as .xlsm (macro-enabled Excel), save a copy as .xlsx before uploading.' },
@@ -552,23 +552,23 @@ const SECTIONS: Section[] = [
 ];
 
 const SECTION_GROUPS: { id: string; label: string; icon: string; sectionIds: string[] }[] = [
-  { id: 'start',    label: 'Getting Started', icon: '🚀', sectionIds: ['welcome'] },
-  { id: 'dash',     label: 'Dashboard',       icon: '📊', sectionIds: ['summary','filters','attention','kpi','charts','composition','controls'] },
-  { id: 'planning', label: 'Planning',        icon: '📅', sectionIds: ['quarters','kanban','sprint','ownership','readiness'] },
-  { id: 'analysis', label: 'Analysis',        icon: '🔍', sectionIds: ['justification','flow','labels','relations','teams','portfolio','release-confidence','filter-bar'] },
-  { id: 'export',   label: 'Export & Data',   icon: '📤', sectionIds: ['export-guide','aliases','api','explorer-export','export-sheets','executive-pdf'] },
-  { id: 'system',   label: 'System',          icon: '☁️', sectionIds: ['cloud-sync','cloud-storage','diagnostics','deployment','about','branding'] },
-  { id: 'ux',       label: 'Customization',   icon: '🎨', sectionIds: ['chart-customization','layout-builder','theme-customization','product-tour'] },
-  { id: 'delivery', label: 'Delivery Intel',  icon: '🗺️', sectionIds: ['roadmap','forecast','retro'] },
-  { id: 'people',   label: 'People',          icon: '👥', sectionIds: ['member-requests','rec-owners'] },
-  { id: 'support',  label: 'Troubleshooting', icon: '🛠️', sectionIds: ['troubleshooting'] },
+  { id: 'start',    label: 'Getting Started', icon: 'release', sectionIds: ['welcome'] },
+  { id: 'dash',     label: 'Dashboard',       icon: 'chartBar', sectionIds: ['summary','filters','attention','kpi','charts','composition','controls'] },
+  { id: 'planning', label: 'Planning',        icon: 'calendar', sectionIds: ['quarters','kanban','sprint','ownership','readiness'] },
+  { id: 'analysis', label: 'Analysis',        icon: 'search', sectionIds: ['justification','flow','labels','relations','teams','portfolio','release-confidence','filter-bar'] },
+  { id: 'export',   label: 'Export & Data',   icon: 'upload', sectionIds: ['export-guide','aliases','api','explorer-export','export-sheets','executive-pdf'] },
+  { id: 'system',   label: 'System',          icon: 'cloud', sectionIds: ['cloud-sync','cloud-storage','diagnostics','deployment','about','branding'] },
+  { id: 'ux',       label: 'Customization',   icon: 'palette', sectionIds: ['chart-customization','layout-builder','theme-customization','product-tour'] },
+  { id: 'delivery', label: 'Delivery Intel',  icon: 'roadmap', sectionIds: ['roadmap','forecast','retro'] },
+  { id: 'people',   label: 'People',          icon: 'people', sectionIds: ['member-requests','rec-owners'] },
+  { id: 'support',  label: 'Troubleshooting', icon: 'tools', sectionIds: ['troubleshooting'] },
 ];
 
 const HERO_CARDS = [
-  { icon: '🚀', title: 'Get Started',      desc: 'Upload your Jira data and navigate the dashboard.',      groupIds: ['start', 'dash'],                     color: '#3B82F6' },
-  { icon: '📅', title: 'Plan & Deliver',   desc: 'Sprint planning, roadmap, forecast, and retro.',         groupIds: ['planning', 'delivery'],              color: '#8B5CF6' },
-  { icon: '🔍', title: 'Analyze & Teams', desc: 'Flow analysis, labels, relations, and people.',          groupIds: ['analysis', 'people'],                color: '#10B981' },
-  { icon: '📤', title: 'Data & Export',    desc: 'Export formats, cloud, customization, and system.',      groupIds: ['export', 'system', 'ux', 'support'],  color: '#F59E0B' },
+  { icon: 'release', title: 'Get Started',      desc: 'Upload your Jira data and navigate the dashboard.',      groupIds: ['start', 'dash'],                     color: '#3B82F6' },
+  { icon: 'calendar', title: 'Plan & Deliver',   desc: 'Sprint planning, roadmap, forecast, and retro.',         groupIds: ['planning', 'delivery'],              color: '#8B5CF6' },
+  { icon: 'search', title: 'Analyze & Teams', desc: 'Flow analysis, labels, relations, and people.',          groupIds: ['analysis', 'people'],                color: '#10B981' },
+  { icon: 'upload', title: 'Data & Export',    desc: 'Export formats, cloud, customization, and system.',      groupIds: ['export', 'system', 'ux', 'support'],  color: '#F59E0B' },
 ];
 
 // ── AccordionItem ──────────────────────────────────────────────────────────────
@@ -811,7 +811,7 @@ export default function HelpPage() {
         {/* Group Filter Pills */}
         {!isSearching && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20 }}>
-            {[{ id: 'all', label: 'All topics', icon: '📚' }, ...SECTION_GROUPS].map(g => {
+            {[{ id: 'all', label: 'All topics', icon: 'book' }, ...SECTION_GROUPS].map(g => {
               const isActive = activeGroupId === g.id;
               return (
                 <button

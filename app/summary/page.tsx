@@ -56,20 +56,20 @@ export default function SummaryPage() {
     const orphans = flowItems.filter(i => i.isOrphan).length;
     const critBlockers = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('block'));
     if (critBlockers.length)
-      acts.push({ type: 'critical', icon: '🚫', title: `Unblock ${critBlockers.length} critical item${critBlockers.length > 1 ? 's' : ''}`, detail: `${critBlockers[0].key}: ${(critBlockers[0].summary || (critBlockers[0].reason ?? '')).slice(0, 70)}`, suggestedOwner: 'Scrum Master / Delivery Manager' });
+      acts.push({ type: 'critical', icon: 'priorityBlocker', title: `Unblock ${critBlockers.length} critical item${critBlockers.length > 1 ? 's' : ''}`, detail: `${critBlockers[0].key}: ${(critBlockers[0].summary || (critBlockers[0].reason ?? '')).slice(0, 70)}`, suggestedOwner: 'Scrum Master / Delivery Manager' });
     const staleActive = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('in progress over 14'));
     if (staleActive.length)
-      acts.push({ type: 'critical', icon: '⏳', title: `${staleActive.length} item${staleActive.length > 1 ? 's' : ''} stalled in progress`, detail: `${staleActive[0].key} has been active for ${Math.round((staleActive[0] as any).activeAgeDays || 0)} days`, suggestedOwner: 'Engineering Manager' });
+      acts.push({ type: 'critical', icon: 'clock', title: `${staleActive.length} item${staleActive.length > 1 ? 's' : ''} stalled in progress`, detail: `${staleActive[0].key} has been active for ${Math.round((staleActive[0] as any).activeAgeDays || 0)} days`, suggestedOwner: 'Engineering Manager' });
     const capacity = ((metrics?.capacity || []) as any[]);
     const overloaded = capacity.filter((c: any) => c.loadShare > 35);
     if (overloaded.length && capacity.length > 2)
-      acts.push({ type: 'warning', icon: '⚖️', title: 'Team capacity imbalance detected', detail: `${overloaded[0].assignee} carries ${overloaded[0].loadShare}% — consider redistributing`, suggestedOwner: 'Engineering Manager' });
+      acts.push({ type: 'warning', icon: 'scales', title: 'Team capacity imbalance detected', detail: `${overloaded[0].assignee} carries ${overloaded[0].loadShare}% — consider redistributing`, suggestedOwner: 'Engineering Manager' });
     if (orphans > 0)
-      acts.push({ type: 'info', icon: '👻', title: `Link ${orphans} orphan item${orphans > 1 ? 's' : ''} to epics`, detail: 'Items without epic reduce scope traceability and epic completion accuracy', suggestedOwner: 'Product Owner' });
+      acts.push({ type: 'info', icon: 'question', title: `Link ${orphans} orphan item${orphans > 1 ? 's' : ''} to epics`, detail: 'Items without epic reduce scope traceability and epic completion accuracy', suggestedOwner: 'Product Owner' });
     const epics = (metrics?.epics as any[]) ?? [];
     const critEpics = epics.filter((e: any) => (e.critical ?? 0) > 0);
     if (critEpics.length)
-      acts.push({ type: 'warning', icon: '🚨', title: `${critEpics.length} epic${critEpics.length > 1 ? 's' : ''} in critical state`, detail: `${critEpics[0].epic || 'Top epic'}: ${critEpics[0].completion ?? 0}% complete — needs attention`, suggestedOwner: 'Engineering Manager' });
+      acts.push({ type: 'warning', icon: 'alert', title: `${critEpics.length} epic${critEpics.length > 1 ? 's' : ''} in critical state`, detail: `${critEpics[0].epic || 'Top epic'}: ${critEpics[0].completion ?? 0}% complete — needs attention`, suggestedOwner: 'Engineering Manager' });
     return acts.slice(0, 5);
   }, [flowItems, metrics]);
 
@@ -79,7 +79,7 @@ export default function SummaryPage() {
   const flow = metrics.flow;
   const prediction = metrics.prediction;
   const estimatedDone = prediction?.complete
-    ? 'Done ✅'
+    ? 'Done'
     : (prediction?.predictedDate ?? (prediction?.daysRemaining != null ? `~${prediction.daysRemaining}d` : 'N/A'));
   const topBlockers = flowItems.filter(i => norm(i.reason).includes('block')).slice(0, 5);
   const overdueItems = flowItems.filter(i => Number(i.ageDays) > 10 && !DONE_STATUSES.includes(norm(i.status))).slice(0, 5);

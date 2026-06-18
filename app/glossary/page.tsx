@@ -15,7 +15,7 @@ interface GlossarySection {
 // ── Data ───────────────────────────────────────────────────────────────────────
 const SECTIONS: GlossarySection[] = [
   {
-    id: 'priority', title: 'A — Priority Levels', icon: '🎯', category: 'priority',
+    id: 'priority', title: 'A — Priority Levels', icon: 'target', category: 'priority',
     description: 'How tasks and issues are ranked by urgency.',
     rows: [
       { term: 'P0', full: 'Priority Zero — Critical', meaning: 'Must be done immediately. Blocks everything else. No other work starts until P0 is resolved.' },
@@ -25,7 +25,7 @@ const SECTIONS: GlossarySection[] = [
     ],
   },
   {
-    id: 'agile', title: 'B — Agile & Delivery Terms', icon: '🔄', category: 'delivery',
+    id: 'agile', title: 'B — Agile & Delivery Terms', icon: 'refresh', category: 'delivery',
     description: 'Common Agile and Scrum vocabulary used throughout Delivery Clarity.',
     rows: [
       { term: 'SP',        full: 'Story Points',              meaning: 'A unit used to estimate effort. Not hours — a relative measure of complexity. Higher = more effort.' },
@@ -37,7 +37,7 @@ const SECTIONS: GlossarySection[] = [
     ],
   },
   {
-    id: 'metrics', title: 'C — Delivery Metrics', icon: '📊', category: 'delivery',
+    id: 'metrics', title: 'C — Delivery Metrics', icon: 'chartBar', category: 'delivery',
     description: 'The formulas and measurements Delivery Clarity computes from your Jira export.',
     rows: [
       { term: 'Lead Time',       full: 'Lead Time',               meaning: 'Time from when an issue was created to when it was done. Measures end-to-end process speed.' },
@@ -54,7 +54,7 @@ const SECTIONS: GlossarySection[] = [
     ],
   },
   {
-    id: 'health', title: 'D — Health & Status', icon: '❤️', category: 'delivery',
+    id: 'health', title: 'D — Health & Status', icon: 'heart', category: 'delivery',
     description: 'How Delivery Clarity classifies the health of your delivery.',
     rows: [
       { term: 'Excellent',              full: 'Health ≥ 90',    meaning: 'Delivery is on track with very low risk.' },
@@ -72,7 +72,7 @@ const SECTIONS: GlossarySection[] = [
     ],
   },
   {
-    id: 'issue-types', title: 'E — Issue Types', icon: '🗂️', category: 'reference',
+    id: 'issue-types', title: 'E — Issue Types', icon: 'folder', category: 'reference',
     description: 'The types of work items Delivery Clarity recognises from your Jira export.',
     rows: [
       { term: 'Epic',           full: 'Epic',           meaning: 'A large body of work grouping many Stories and Tasks. Usually spans multiple sprints.' },
@@ -87,7 +87,7 @@ const SECTIONS: GlossarySection[] = [
     ],
   },
   {
-    id: 'goal-outcomes', title: 'F — Sprint Goal Outcomes', icon: '🏁', category: 'delivery',
+    id: 'goal-outcomes', title: 'F — Sprint Goal Outcomes', icon: 'flag', category: 'delivery',
     description: 'How Delivery Clarity classifies whether a sprint achieved its goal.',
     rows: [
       { term: 'Met',           full: 'Goal Met',      meaning: 'Sprint completion ≥ 90%. The sprint goal was fully achieved.' },
@@ -97,7 +97,7 @@ const SECTIONS: GlossarySection[] = [
     ],
   },
   {
-    id: 'doc-codes', title: 'G — Document Codes', icon: '📄', category: 'reference',
+    id: 'doc-codes', title: 'G — Document Codes', icon: 'file', category: 'reference',
     description: 'Reference codes used in Delivery Clarity product documentation.',
     rows: [
       { term: 'BRD',  full: 'Business Requirements Document',     meaning: 'Explains what the product must do and why, in business language.' },
@@ -114,7 +114,7 @@ const SECTIONS: GlossarySection[] = [
     ],
   },
   {
-    id: 'features', title: 'H — Feature Codes', icon: '⚡', category: 'reference',
+    id: 'features', title: 'H — Feature Codes', icon: 'priorityHigh', category: 'reference',
     description: 'Internal codes used to identify the four main features of Delivery Clarity v3.0.',
     rows: [
       { term: 'F1', full: 'Throughput & Delivery Analytics', meaning: 'Sprint throughput, mid-sprint patterns, Kanban flow analytics.' },
@@ -124,7 +124,7 @@ const SECTIONS: GlossarySection[] = [
     ],
   },
   {
-    id: 'tech', title: 'I — Technology Abbreviations', icon: '💻', category: 'reference',
+    id: 'tech', title: 'I — Technology Abbreviations', icon: 'terminal', category: 'reference',
     description: 'Technical terms used in developer documentation and the app itself.',
     rows: [
       { term: 'API',            full: 'Application Programming Interface', meaning: 'A way for two software systems to communicate. In this app, it means the /api/... endpoints.' },
@@ -142,7 +142,7 @@ const SECTIONS: GlossarySection[] = [
     ],
   },
   {
-    id: 'roles', title: 'J — User Roles', icon: '👥', category: 'people',
+    id: 'roles', title: 'J — User Roles', icon: 'people', category: 'people',
     description: 'What each role can access in Delivery Clarity.',
     rows: [
       { term: 'admin',         full: 'Administrator',    meaning: 'Full system access: manage users, see all import logs, access admin pages, retention, backup, restore, and security.' },
@@ -155,7 +155,7 @@ const SECTIONS: GlossarySection[] = [
     ],
   },
   {
-    id: 'p2-scores', title: 'K — Analytics Scores & UI Terms', icon: '📈', category: 'delivery',
+    id: 'p2-scores', title: 'K — Analytics Scores & UI Terms', icon: 'chartTrendUp', category: 'delivery',
     description: 'Composite scores, bands, and UI components introduced in v4.1+.',
     rows: [
       { term: 'Release Confidence', full: 'Release Confidence Score (0–100)', meaning: 'Per-upload score tracking release readiness: completion (55 pts) + no-blockers (25 pts) + no-critical (12 pts) + no-defects (8 pts).' },
@@ -175,7 +175,7 @@ const SECTIONS: GlossarySection[] = [
     ],
   },
   {
-    id: 'email', title: 'L — Email & Member-Request Terms', icon: '✉️', category: 'people',
+    id: 'email', title: 'L — Email & Member-Request Terms', icon: 'email', category: 'people',
     description: 'Terms related to the v4.5 user-add-request workflow, welcome email, and SMTP configuration.',
     rows: [
       { term: 'SMTP',               full: 'Simple Mail Transfer Protocol', meaning: 'The standard internet protocol for sending email. Configured via SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS in .env.' },
@@ -190,7 +190,7 @@ const SECTIONS: GlossarySection[] = [
     ],
   },
   {
-    id: 'planning', title: 'M — Planning & Forecasting Terms', icon: '🗺️', category: 'delivery',
+    id: 'planning', title: 'M — Planning & Forecasting Terms', icon: 'roadmap', category: 'delivery',
     description: 'Terms related to the v4.6 Roadmap, Forecast, and Retro pages and the Planning nav group.',
     rows: [
       { term: 'Roadmap Page',       full: '/roadmap',               meaning: 'Delivery Clarity page showing every epic as a card with progress bar, health indicator, forecast label, and confidence badge.' },
@@ -209,11 +209,11 @@ const SECTIONS: GlossarySection[] = [
 
 // ── Category config ────────────────────────────────────────────────────────────
 const CATS = [
-  { id: 'all',       label: 'All terms',       icon: '📚' },
-  { id: 'priority',  label: 'Priority levels', icon: '🎯' },
-  { id: 'delivery',  label: 'Delivery terms',  icon: '🚀' },
-  { id: 'reference', label: 'Reference codes', icon: '📄' },
-  { id: 'people',    label: 'People & roles',  icon: '👥' },
+  { id: 'all',       label: 'All terms',       icon: 'book' },
+  { id: 'priority',  label: 'Priority levels', icon: 'target' },
+  { id: 'delivery',  label: 'Delivery terms',  icon: 'release' },
+  { id: 'reference', label: 'Reference codes', icon: 'file' },
+  { id: 'people',    label: 'People & roles',  icon: 'people' },
 ];
 
 // ── Tag badge style helper ─────────────────────────────────────────────────────

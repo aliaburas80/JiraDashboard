@@ -454,12 +454,12 @@ export default function RoadmapPage() {
   const doneIssues  = epics.reduce((s, e) => s + e.completedIssues, 0);
 
   const kpis = [
-    { icon: '📋', label: 'Total Epics',  value: totalEpics,        sub: `${doneEpics} complete`,      color: 'var(--color-text-primary)',        bg: 'var(--color-muted, #e2e8f0)' },
-    { icon: '✅', label: 'Done',         value: doneEpics,         sub: `${Math.round(doneEpics / Math.max(1, totalEpics) * 100)}% of total`, color: 'var(--color-success, #22c55e)',    bg: '#dcfce7' },
-    { icon: '🚀', label: 'In Progress',  value: activeEpics,       sub: `${onTrack} on track`,        color: 'var(--color-primary, #2563eb)',    bg: '#dbeafe' },
-    { icon: '⚠️', label: 'At Risk',      value: atRisk,            sub: atRisk > 0 ? 'Needs attention' : 'All clear', color: atRisk > 0 ? 'var(--color-warning, #f59e0b)' : 'var(--color-text-muted)', bg: atRisk > 0 ? '#fef9c3' : 'var(--color-muted)' },
-    { icon: '🔴', label: 'Critical',     value: critEpics,         sub: critEpics > 0 ? 'Immediate action' : 'None critical', color: critEpics > 0 ? 'var(--color-danger, #f87171)' : 'var(--color-text-muted)', bg: critEpics > 0 ? '#fee2e2' : 'var(--color-muted)' },
-    { icon: '📊', label: 'Issues Done',  value: `${doneIssues}/${totalIssues}`, sub: `${Math.round(doneIssues / Math.max(1, totalIssues) * 100)}% complete`, color: 'var(--color-text-primary)', bg: 'var(--color-muted, #e2e8f0)' },
+    { icon: 'clipboard', label: 'Total Epics',  value: totalEpics,        sub: `${doneEpics} complete`,      color: 'var(--color-text-primary)',        bg: 'var(--color-muted, #e2e8f0)' },
+    { icon: 'checkCircle', label: 'Done',         value: doneEpics,         sub: `${Math.round(doneEpics / Math.max(1, totalEpics) * 100)}% of total`, color: 'var(--color-success, #22c55e)',    bg: '#dcfce7' },
+    { icon: 'release', label: 'In Progress',  value: activeEpics,       sub: `${onTrack} on track`,        color: 'var(--color-primary, #2563eb)',    bg: '#dbeafe' },
+    { icon: 'warning', label: 'At Risk',      value: atRisk,            sub: atRisk > 0 ? 'Needs attention' : 'All clear', color: atRisk > 0 ? 'var(--color-warning, #f59e0b)' : 'var(--color-text-muted)', bg: atRisk > 0 ? '#fef9c3' : 'var(--color-muted)' },
+    { icon: 'statusError', label: 'Critical',     value: critEpics,         sub: critEpics > 0 ? 'Immediate action' : 'None critical', color: critEpics > 0 ? 'var(--color-danger, #f87171)' : 'var(--color-text-muted)', bg: critEpics > 0 ? '#fee2e2' : 'var(--color-muted)' },
+    { icon: 'chartBar', label: 'Issues Done',  value: `${doneIssues}/${totalIssues}`, sub: `${Math.round(doneIssues / Math.max(1, totalIssues) * 100)}% complete`, color: 'var(--color-text-primary)', bg: 'var(--color-muted, #e2e8f0)' },
   ];
 
   // ── Filtered + sorted cards ────────────────────────────────────────────────

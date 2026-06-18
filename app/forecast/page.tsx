@@ -278,13 +278,13 @@ function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }
       {remaining > 0 && recentVel > 0 && (
         <g className={styles.pathFade} style={{ '--fade-delay': '1.5s' } as React.CSSProperties}>
           <text x={PL + 6} y={16} fontSize="10" fill="#22C55E" textAnchor="start" fontWeight="700">
-            🟢 Best — {fmtDate(sprintsOpt)}
+            Best — {fmtDate(sprintsOpt)}
           </text>
           <text x={PL + 6} y={32} fontSize="10" fill="#888" textAnchor="start" fontWeight="600">
             → Expected — {fmtDate(sprintsExp)}
           </text>
           <text x={PL + 6} y={48} fontSize="10" fill="#F87171" textAnchor="start" fontWeight="700">
-            🔴 Worst — {fmtDate(sprintsPess)}
+            Worst — {fmtDate(sprintsPess)}
           </text>
         </g>
       )}
@@ -500,11 +500,11 @@ function CombinedBurnChart({ points, total }: { points: SprintPoint[]; total: nu
 // ── Metadata maps ──────────────────────────────────────────────────────────────
 
 const STATUS_META = {
-  on_track:          { label: 'On Track',         color: '#22C55E', bg: 'rgba(34,197,94,0.07)',    border: 'rgba(34,197,94,0.18)',    text: '#4ade80', icon: '✅' },
-  at_risk:           { label: 'At Risk',           color: '#F59E0B', bg: 'rgba(245,158,11,0.07)',   border: 'rgba(245,158,11,0.18)',   text: '#fcd34d', icon: '⚠️' },
-  off_track:         { label: 'Off Track',         color: '#F87171', bg: 'rgba(248,113,113,0.07)',  border: 'rgba(248,113,113,0.18)',  text: '#fca5a5', icon: '❌' },
-  complete:          { label: 'Complete',          color: '#FF8A4C', bg: 'rgba(232,93,18,0.07)',    border: 'rgba(232,93,18,0.18)',    text: '#FF8A4C', icon: '🎉' },
-  insufficient_data: { label: 'Insufficient Data', color: '#F59E0B', bg: 'rgba(245,158,11,0.05)',   border: 'rgba(245,158,11,0.18)',   text: '#F59E0B', icon: 'ℹ️' },
+  on_track:          { label: 'On Track',         color: '#22C55E', bg: 'rgba(34,197,94,0.07)',    border: 'rgba(34,197,94,0.18)',    text: '#4ade80', icon: 'checkCircle' },
+  at_risk:           { label: 'At Risk',           color: '#F59E0B', bg: 'rgba(245,158,11,0.07)',   border: 'rgba(245,158,11,0.18)',   text: '#fcd34d', icon: 'warning' },
+  off_track:         { label: 'Off Track',         color: '#F87171', bg: 'rgba(248,113,113,0.07)',  border: 'rgba(248,113,113,0.18)',  text: '#fca5a5', icon: 'crossCircle' },
+  complete:          { label: 'Complete',          color: '#FF8A4C', bg: 'rgba(232,93,18,0.07)',    border: 'rgba(232,93,18,0.18)',    text: '#FF8A4C', icon: 'party' },
+  insufficient_data: { label: 'Insufficient Data', color: '#F59E0B', bg: 'rgba(245,158,11,0.05)',   border: 'rgba(245,158,11,0.18)',   text: '#F59E0B', icon: 'info' },
 };
 
 const CONF_META: Record<string, { bg: string; color: string; border: string; label: string }> = {
@@ -514,9 +514,9 @@ const CONF_META: Record<string, { bg: string; color: string; border: string; lab
 };
 
 const TREND_META = {
-  improving: { icon: '↑', color: 'var(--dc-green, #22C55E)', label: 'Velocity improving' },
-  stable:    { icon: '→', color: 'var(--dc-acc2, #FF8A4C)',  label: 'Velocity stable'    },
-  declining: { icon: '↓', color: 'var(--dc-red, #F87171)',   label: 'Velocity declining' },
+  improving: { icon: 'arrowUp', color: 'var(--dc-green, #22C55E)', label: 'Velocity improving' },
+  stable:    { icon: 'arrowRight', color: 'var(--dc-acc2, #FF8A4C)',  label: 'Velocity stable'    },
+  declining: { icon: 'arrowDown', color: 'var(--dc-red, #F87171)',   label: 'Velocity declining' },
 };
 
 const PATTERN_COLORS: Partial<Record<SprintDeliveryPattern, string>> = {
@@ -530,14 +530,14 @@ const PATTERN_COLORS: Partial<Record<SprintDeliveryPattern, string>> = {
 // ── Data requirements guide ────────────────────────────────────────────────────
 
 const REQUIREMENTS = [
-  { icon: '🏃', title: 'Sprint Assignment',   fields: 'Sprint · Actual Sprint',               level: 'required',  desc: 'Groups issues into sprints. Without this field no velocity can be calculated — the forecast cannot run.' },
-  { icon: '✅', title: 'Completion Status',   fields: 'Status (Done · Closed · Resolved)',     level: 'required',  desc: 'Identifies which issues count as done per sprint. Drives every velocity and completion-rate calculation.' },
-  { icon: '📅', title: 'Sprint Boundaries',   fields: 'Sprint Start · Sprint End',             level: 'important', desc: 'Enables mid-sprint delivery pattern analysis and accurate per-sprint completion windows.' },
-  { icon: '⏱️', title: 'Flow Dates',          fields: 'In Progress Date · Done Date',          level: 'important', desc: 'Measures cycle time and lead time. Required for delivery confidence scoring and pattern detection.' },
-  { icon: '🔢', title: 'Story Points',         fields: 'Story Points',                          level: 'optional',  desc: 'Enables point-based velocity as an alternative to issue count. Useful when team size changes.' },
-  { icon: '🚧', title: 'Blocked Signals',      fields: 'Blocked Flag · Blocker Reason',         level: 'optional',  desc: 'Detects blocked items that suppress velocity. Improves confidence scoring and risk signal accuracy.' },
-  { icon: '➕', title: 'Scope Changes',        fields: 'Added After Sprint Start · Scope Change Type', level: 'optional', desc: 'Identifies instability when scope is added mid-sprint. Used to detect the "Scope Instability" pattern.' },
-  { icon: '🎯', title: 'Priority',             fields: 'Priority',                              level: 'optional',  desc: 'Critical or Highest priority issues are flagged as forecast risk factors when unresolved at sprint end.' },
+  { icon: 'sprint', title: 'Sprint Assignment',   fields: 'Sprint · Actual Sprint',               level: 'required',  desc: 'Groups issues into sprints. Without this field no velocity can be calculated — the forecast cannot run.' },
+  { icon: 'checkCircle', title: 'Completion Status',   fields: 'Status (Done · Closed · Resolved)',     level: 'required',  desc: 'Identifies which issues count as done per sprint. Drives every velocity and completion-rate calculation.' },
+  { icon: 'calendar', title: 'Sprint Boundaries',   fields: 'Sprint Start · Sprint End',             level: 'important', desc: 'Enables mid-sprint delivery pattern analysis and accurate per-sprint completion windows.' },
+  { icon: 'stopwatch', title: 'Flow Dates',          fields: 'In Progress Date · Done Date',          level: 'important', desc: 'Measures cycle time and lead time. Required for delivery confidence scoring and pattern detection.' },
+  { icon: 'dataNumber', title: 'Story Points',         fields: 'Story Points',                          level: 'optional',  desc: 'Enables point-based velocity as an alternative to issue count. Useful when team size changes.' },
+  { icon: 'priorityBlocker', title: 'Blocked Signals',      fields: 'Blocked Flag · Blocker Reason',         level: 'optional',  desc: 'Detects blocked items that suppress velocity. Improves confidence scoring and risk signal accuracy.' },
+  { icon: 'plusCircle', title: 'Scope Changes',        fields: 'Added After Sprint Start · Scope Change Type', level: 'optional', desc: 'Identifies instability when scope is added mid-sprint. Used to detect the "Scope Instability" pattern.' },
+  { icon: 'target', title: 'Priority',             fields: 'Priority',                              level: 'optional',  desc: 'Critical or Highest priority issues are flagged as forecast risk factors when unresolved at sprint end.' },
 ] as const;
 
 // ── Page ───────────────────────────────────────────────────────────────────────
@@ -660,14 +660,14 @@ export default function ForecastPage() {
             {/* ── KPI Row ── */}
             <div className={styles.kpiGrid}>
               {[
-                { label: 'Total Issues',   value: result.totalIssues,   icon: '📋', color: 'var(--dc-p1, #F2F2F2)',    delay: '0.08s' },
-                { label: `Done (${result.completionPct}%)`, value: result.doneIssues, icon: '✅', color: 'var(--dc-green, #22C55E)', delay: '0.12s' },
-                { label: 'Remaining',      value: result.remainingIssues, icon: '⏳', color: result.remainingIssues > 0 ? 'var(--dc-amber, #F59E0B)' : 'var(--dc-p3, #505050)', delay: '0.16s' },
-                { label: 'Avg / Sprint',   value: result.avgThroughput > 0 ? `${result.avgThroughput}` : '—', icon: '⚡', color: 'var(--dc-acc2, #FF8A4C)', delay: '0.20s' },
+                { label: 'Total Issues',   value: result.totalIssues,   icon: 'clipboard', color: 'var(--dc-p1, #F2F2F2)',    delay: '0.08s' },
+                { label: `Done (${result.completionPct}%)`, value: result.doneIssues, icon: 'checkCircle', color: 'var(--dc-green, #22C55E)', delay: '0.12s' },
+                { label: 'Remaining',      value: result.remainingIssues, icon: 'clock', color: result.remainingIssues > 0 ? 'var(--dc-amber, #F59E0B)' : 'var(--dc-p3, #505050)', delay: '0.16s' },
+                { label: 'Avg / Sprint',   value: result.avgThroughput > 0 ? `${result.avgThroughput}` : '—', icon: 'priorityHigh', color: 'var(--dc-acc2, #FF8A4C)', delay: '0.20s' },
                 {
                   label: 'Delivery Conf.',
                   value: throughput ? `${throughput.overallDeliveryConfidence}%` : `${result.completionPct}%`,
-                  icon: '🎯',
+                  icon: 'target',
                   color: (throughput?.overallDeliveryConfidence ?? result.completionPct) >= 70
                     ? 'var(--dc-green, #22C55E)'
                     : (throughput?.overallDeliveryConfidence ?? result.completionPct) >= 40
