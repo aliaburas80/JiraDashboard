@@ -7,26 +7,57 @@ import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import styles from './page.module.scss';
 
 interface ErrorLog {
-  id:           string;
-  errorCode:    string;
-  errorMessage: string;
-  prismaModel:  string | null;
-  operation:    string;
-  context:      string | null;
-  resolution:   string;
-  retryCount:   number;
+  id:            string;
+  errorCode:     string;
+  errorMessage:  string;
+  prismaModel:   string | null;
+  operation:     string;
+  context:       string | null;
+  resolution:    string;
+  retryCount:    number;
   lastRetriedAt: string | null;
-  resolvedAt:   string | null;
-  createdAt:    string;
+  resolvedAt:    string | null;
+  createdAt:     string;
 }
 
-const CODE_LABELS: Record<string, string> = {
-  P2003: 'Foreign key constraint — referenced record does not exist',
-  P2025: 'Record not found',
-  P2002: 'Unique constraint violation',
-  P2014: 'Relation violation',
-  UNKNOWN: 'Unknown error',
+// Human-readable error descriptions — what the code means + why it happens
+const ERROR_INFO: Record<string, { title: string; detail: string }> = {
+  P2003: {
+    title: 'Foreign key constraint failed',
+    detail: 'A linked record (e.g. a user account) was deleted before this write completed. Typically caused by a ghost session cookie outliving its user record.',
+  },
+  P2025: {
+    title: 'Record not found',
+    detail: 'The target record does not exist — it may have been deleted by a concurrent operation before this one ran.',
+  },
+  P2002: {
+    title: 'Unique constraint violation',
+    detail: 'A record with this unique value already exists. The write was rejected to prevent duplicates.',
+  },
+  P2014: {
+    title: 'Relation constraint violated',
+    detail: 'A required relation between tables is missing. Ensure all parent records exist before writing.',
+  },
+  UNKNOWN: {
+    title: 'Unexpected database error',
+    detail: 'An unclassified error occurred. Review the message and context below for details.',
+  },
 };
+
+// Resolution descriptions — what the system did (or what the admin should do)
+const RESOLUTION_GUIDE: Record<string, string> = {
+  logged:       'Recorded but not yet resolved. Use Retry to re-run the failed operation, or Dismiss if it is no longer relevant.',
+  'auto-fixed': 'The system automatically recovered — the operation was retried with a safe fallback (null userId) to preserve data integrity.',
+  retried:      'This operation was manually retried from the admin panel. See the retry count for history.',
+  resolved:     'Marked as resolved by an administrator. No further action needed.',
+  skipped:      'The operation was intentionally skipped to prevent cascading failures.',
+};
+
+function fmt(ts: string) {
+  return new Date(ts).toLocaleString('en-GB', {
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+  });
+}
 
 export default function SystemErrorsPage() {
   const router = useRouter();
@@ -134,11 +165,7 @@ export default function SystemErrorsPage() {
             <option value="retried">Retried</option>
             <option value="resolved">Resolved</option>
           </select>
-          <button
-            type="button"
-            onClick={() => load(filter)}
-            className={styles.btnRefresh}
-          >
+          <button type="button" onClick={() => load(filter)} className={styles.btnRefresh}>
             ↻ Refresh
           </button>
           {unresolved > 0 && (
@@ -166,78 +193,92 @@ export default function SystemErrorsPage() {
         </div>
       ) : (
         <div className={styles.cardList}>
-          {logs.map(log => (
-            <div
-              key={log.id}
-              // data-resolved drives border color and opacity in SCSS
-              data-resolved={log.resolvedAt ? 'true' : 'false'}
-              className={styles.card}
-            >
-              {/* Header row */}
-              <div className="flex items-start gap-2 flex-wrap mb-2">
-                <span className={styles.errorCodeBadge}>{log.errorCode}</span>
-                <span className={styles.operationBadge}>{log.operation}</span>
-                {log.prismaModel && (
-                  <span className={styles.modelBadge}>model: {log.prismaModel}</span>
-                )}
-                <span className={styles.timestamp}>
-                  {new Date(log.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-
-              {/* What failed */}
-              <div className="mb-2">
-                <p className={styles.sectionLabel}>What failed</p>
-                <p className={styles.sectionText}>
-                  {CODE_LABELS[log.errorCode] ?? log.errorCode} — {log.errorMessage.split('\n')[0]}
-                </p>
-              </div>
-
-              {/* Resolution */}
-              <div className="flex items-center gap-2 mb-2">
-                <p className={styles.resolutionLabel}>Resolution</p>
-                {/* data-resolution drives bg/color; no inline styles needed */}
-                <span data-resolution={log.resolution} className={styles.resolutionChip}>
-                  {log.resolution}
-                </span>
-                {log.retryCount > 0 && (
-                  <span className={styles.retryMeta}>
-                    {log.retryCount} retry attempt{log.retryCount !== 1 ? 's' : ''}
-                    {log.lastRetriedAt ? ` · last ${new Date(log.lastRetriedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : ''}
-                  </span>
-                )}
-              </div>
-
-              {/* Context */}
-              {log.context && (
-                <p className={clsx(styles.contextText, 'mb-2')}>
-                  Context: <span className={styles.contextValue}>{log.context}</span>
-                </p>
-              )}
-
-              {/* Actions */}
-              {!log.resolvedAt && (
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => retry(log.id)}
-                    disabled={actionId === log.id}
-                    className={styles.btnRetry}
-                  >
-                    {actionId === log.id ? 'Retrying…' : '🔁 Retry operation'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => markResolved(log.id)}
-                    disabled={actionId === log.id}
-                    className={styles.btnDismiss}
-                  >
-                    ✓ Dismiss
-                  </button>
+          {logs.map(log => {
+            const info = ERROR_INFO[log.errorCode] ?? ERROR_INFO.UNKNOWN;
+            return (
+              <div
+                key={log.id}
+                data-resolved={log.resolvedAt ? 'true' : 'false'}
+                className={styles.card}
+              >
+                {/* ── Header bar ── */}
+                <div className={styles.cardHeader}>
+                  <div className={styles.headerLeft}>
+                    <span className={styles.errorCodeBadge}>{log.errorCode}</span>
+                    <span className={styles.operationBadge}>{log.operation}</span>
+                    {log.prismaModel && (
+                      <span className={styles.modelBadge}>{log.prismaModel}</span>
+                    )}
+                  </div>
+                  <span className={styles.timestamp}>{fmt(log.createdAt)}</span>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {/* ── Two-panel body ── */}
+                <div className={styles.panelGrid}>
+                  {/* Left — What failed (red) */}
+                  <div className={styles.errorPanel}>
+                    <p className={styles.errorPanelLabel}>What failed</p>
+                    <p className={styles.errorTitle}>{info.title}</p>
+                    <p className={styles.errorDetail}>{info.detail}</p>
+                    <code className={styles.errorSnippet}>
+                      {log.errorMessage.split('\n')[0]}
+                    </code>
+                  </div>
+
+                  {/* Right — Resolution (green / blue / amber by data-resolution) */}
+                  <div className={styles.solutionPanel} data-resolution={log.resolution}>
+                    <div className={styles.solutionPanelHeader}>
+                      <p className={styles.solutionPanelLabel}>How it was handled</p>
+                      <span data-resolution={log.resolution} className={styles.resolutionChip}>
+                        {log.resolution}
+                      </span>
+                    </div>
+                    <p className={styles.solutionText}>
+                      {RESOLUTION_GUIDE[log.resolution] ?? 'No description available.'}
+                    </p>
+                    {log.retryCount > 0 && (
+                      <p className={styles.retryMeta}>
+                        {log.retryCount} retry attempt{log.retryCount !== 1 ? 's' : ''}
+                        {log.lastRetriedAt ? ` · last ${fmt(log.lastRetriedAt)}` : ''}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── Footer bar: context + actions ── */}
+                {(log.context || !log.resolvedAt) && (
+                  <div className={styles.cardFooter}>
+                    {log.context ? (
+                      <p className={styles.contextText}>
+                        <span className={styles.contextKey}>Context</span>
+                        <span className={styles.contextValue}>{log.context}</span>
+                      </p>
+                    ) : <span />}
+                    {!log.resolvedAt && (
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => retry(log.id)}
+                          disabled={actionId === log.id}
+                          className={styles.btnRetry}
+                        >
+                          {actionId === log.id ? 'Retrying…' : 'Retry operation'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => markResolved(log.id)}
+                          disabled={actionId === log.id}
+                          className={styles.btnDismiss}
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </AdminConsoleLayout>
