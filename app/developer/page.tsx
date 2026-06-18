@@ -790,6 +790,7 @@ Gateway calls are high-volume operational telemetry — every retry would be a r
 \`src/__tests__/gateway.test.ts\` covers endpoint policy (SSRF/allowlist/traversal), retry/backoff math, secret redaction + JSONL logging, config-file-driven provider resolution, and \`callExternal()\` end-to-end (happy path, policy rejection, SSRF-via-path-injection, retry-then-succeed, retry-exhaustion, non-retryable immediate fail).
 
 See **FR-313** in \`product/SRS.md\` and the full architecture section in \`product/DEVELOPER_GUIDE.md\`.`,
+};
 
 // ─── Nav config ───────────────────────────────────────────────────────────────
 
@@ -813,6 +814,7 @@ const SECTIONS = [
   { id: 'cloud-sync',  label: '🔄 Cloud Sync Architecture', group: 'Technical'       },
   { id: 'error-logger', label: '🛡️ Error Logger',           group: 'Technical'       },
   { id: 'gateway',     label: '🌐 Backend Gateway',         group: 'Technical'       },
+];
 
 // ── Package Reference data ────────────────────────────────────────────────────
 

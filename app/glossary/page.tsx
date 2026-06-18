@@ -208,7 +208,8 @@ const SECTIONS: GlossarySection[] = [
   {
     id: 'system-errors',
     title: 'L — System Errors & Reliability',
-    icon: '🛡️',
+    icon: 'shield',
+    category: 'reference',
     description: 'Terms related to the system error observability layer and database reliability helpers (v4.3.0).',
     rows: [
       { term: 'SystemErrorLog', full: 'System Error Log (Prisma model)', meaning: 'Database table that records every Prisma / DB failure captured by the app. Each row stores error code, message, model, operation, context, a JSON payload for replay, resolution state, retry count, and timestamps.' },
