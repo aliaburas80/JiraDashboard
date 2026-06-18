@@ -5,6 +5,45 @@
 
 ---
 
+## v4.3.0 — System Error Observability, Bulk Admin Operations & Ghost Session Protection (2026-06-18)
+
+### Admin — System Error Log
+- Added `/admin/system-errors` — new admin-only page that surfaces every Prisma / database failure captured by the system in real time.
+- Each error card uses a two-panel layout: **What failed** (red-accented, error code badge, human-readable cause, raw Prisma message snippet) and **How it was handled** (green / blue / amber per resolution state, with description of what the system did).
+- Error codes covered: `P2003` foreign-key constraint, `P2025` record not found, `P2002` unique constraint, `P2014` relation violation.
+- Resolution states: `logged` (needs attention), `auto-fixed` (system recovered automatically), `retried` (manually retried), `resolved` (dismissed by admin), `skipped` (cascade prevented).
+- Retry action re-runs the stored operation payload (AuditEvent or notification) against the live database.
+- Dismiss and "Mark all resolved" bulk actions available.
+- Added `SystemErrorLog` Prisma model: `id`, `errorCode`, `errorMessage`, `prismaModel`, `operation`, `context`, `payload` (JSON replay), `resolution`, `retryCount`, `lastRetriedAt`, `resolvedAt`, `createdAt`.
+- Added System Errors link to the admin sidebar nav.
+
+### Admin — Bulk User Operations
+- Admin users table now supports checkbox multi-select (select all excluding self, or per-row).
+- Bulk delete: confirmation dialog before removing all selected users.
+- Bulk role change: apply a new role to all selected users in one action.
+- Checkbox column is hidden when the admin is the only user in the list.
+
+### Reliability — Ghost Session Protection
+- Iron-session cookies persist for 8 hours even after a user account is deleted. API writes referencing the deleted `userId` now return HTTP 401: "Your account no longer exists. Please log in again."
+- `DELETE /api/admin/users` cancels all `pending` UserAddRequest entries for the deleted user's email before deletion, preventing orphaned add-request records.
+- `POST /api/user-add-requests` validates `session.userId` still exists in the database before creating the record.
+
+### Reliability — Safe Database Helpers (`src/lib/system-error-logger.ts`)
+- `safeAuditEvent(data)` — on P2003 retries with `userId: null` (preserving the audit record) and logs as `auto-fixed`.
+- `safeNotifications(data, context)` — wraps `notification.createMany` with retry + SystemErrorLog write.
+- `withDbRetry(fn, opts)` — exponential back-off retry (default 3 retries, 400 ms base delay); skips non-retriable codes P2003, P2025, P2002, P2014, P2015.
+- `logSystemError(opts)` — safe fire-and-forget write to `SystemErrorLog`; never throws.
+
+### Frontend — Admin SCSS Migration
+- All 6 admin/backend pages migrated from inline `style={{}}` props to per-page SCSS modules (`page.module.scss`).
+- Dynamic data-driven values routed exclusively through CSS custom properties (`--bar-width`, `--role-color`, `--swatch-color`, etc.).
+- Status and variant appearances driven by `data-*` attribute SCSS selectors throughout.
+
+### Login / Auth
+- Login error alert redesigned: error message shown in red, solution guidance in green, with "Show/Hide solution" toggle and contextual fix advice per error type.
+
+---
+
 ## v4.2.2 — Admin User Management & Role Scope (2026-06-06)
 
 ### Auth / users

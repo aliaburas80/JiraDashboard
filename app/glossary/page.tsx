@@ -212,6 +212,26 @@ const SECTIONS = [
       { term: 'prisma migrate deploy', full: '—', meaning: 'Prisma CLI command that applies pending schema migrations. Runs automatically in the Docker container start command. Must be run manually on VPS after updates.' },
     ],
   },
+  {
+    id: 'system-errors',
+    title: 'L — System Errors & Reliability',
+    icon: '🛡️',
+    description: 'Terms related to the system error observability layer and database reliability helpers (v4.3.0).',
+    rows: [
+      { term: 'SystemErrorLog', full: 'System Error Log (Prisma model)', meaning: 'Database table that records every Prisma / DB failure captured by the app. Each row stores error code, message, model, operation, context, a JSON payload for replay, resolution state, retry count, and timestamps.' },
+      { term: 'Ghost Session', full: 'Ghost Session / Stale Cookie', meaning: 'An iron-session cookie that remains valid after the user account it belongs to has been deleted. Any write that references the deleted userId causes a P2003 FK violation. The fix: validate session.userId exists before writes, return 401 if not.' },
+      { term: 'P2003', full: 'Prisma Error P2003 — Foreign Key Constraint', meaning: 'Database error thrown when a row references a parent record that does not exist. In this app, most commonly caused by ghost sessions referencing a deleted user.' },
+      { term: 'P2025', full: 'Prisma Error P2025 — Record Not Found', meaning: 'Thrown when update/delete targets a record that no longer exists. Not retriable.' },
+      { term: 'P2002', full: 'Prisma Error P2002 — Unique Constraint', meaning: 'Thrown when a write would create a duplicate in a unique column. Not retriable.' },
+      { term: 'safeAuditEvent', full: 'safeAuditEvent(data)', meaning: 'Helper in src/lib/system-error-logger.ts. Drop-in for prisma.auditEvent.create(). On P2003 retries with userId: null and logs the error as auto-fixed.' },
+      { term: 'safeNotifications', full: 'safeNotifications(data, context)', meaning: 'Helper that wraps prisma.notification.createMany() with exponential back-off retry and SystemErrorLog capture.' },
+      { term: 'withDbRetry', full: 'withDbRetry(fn, opts)', meaning: 'Utility that wraps any async Prisma call with up to 3 retries (400 ms base, doubling). Skips non-retriable error codes.' },
+      { term: 'auto-fixed', full: 'Resolution: auto-fixed', meaning: 'SystemErrorLog resolution state meaning the system automatically recovered from the error without admin intervention (e.g. safeAuditEvent retry with null userId).' },
+      { term: 'logged', full: 'Resolution: logged', meaning: 'SystemErrorLog resolution state meaning the error was recorded but has not yet been resolved. Admin action (Retry or Dismiss) is needed.' },
+      { term: 'Bulk User Ops', full: 'Bulk Admin User Operations', meaning: 'Admin feature at /admin/settings → Users. Checkbox multi-select enables bulk delete (with confirmation) and bulk role change for selected users, excluding the signed-in admin.' },
+      { term: 'UserAddRequest', full: 'User Add Request (Prisma model)', meaning: 'A pending invitation to add a new user to the system. When a user account is deleted, all pending UserAddRequests for that email are automatically cancelled to prevent FK violations.' },
+    ],
+  },
 ];
 
 // ── Components ────────────────────────────────────────────────────────────────

@@ -610,6 +610,80 @@ When loading, a blue banner appears below the header: "Loading data from Amazon 
 ## Startup Auto-Restore
 
 \`instrumentation.ts register()\` runs once on Node.js server start. If local DB is empty: find latest cloud backup → download → \`restoreBackup()\`. Uses \`new Function('m','return import(m)')\` to prevent webpack from tracing into cloud SDK packages at build time.`,
+
+  'error-logger': `# System Error Logger
+
+**File:** \`src/lib/system-error-logger.ts\`
+
+Centralised helpers that make every database write resilient and observable. All failures are captured in the \`SystemErrorLog\` Prisma table and surfaced at \`/admin/system-errors\`.
+
+## logSystemError(opts)
+
+Safe fire-and-forget write to \`SystemErrorLog\`. Never throws — if the log write fails, it is silently swallowed.
+
+\`\`\`ts
+await logSystemError({
+  errorCode:    'P2003',
+  errorMessage: e.message,
+  prismaModel:  'AuditEvent',
+  operation:    'create',
+  context:      'safeAuditEvent',
+  payload:      JSON.stringify(data),
+});
+\`\`\`
+
+## withDbRetry(fn, opts?)
+
+Wraps any async Prisma call with exponential back-off retries.
+
+\`\`\`ts
+await withDbRetry(
+  () => prisma.notification.createMany({ data }),
+  { context: 'safeNotifications', retries: 3, delayMs: 400 }
+);
+\`\`\`
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| \`retries\` | 3 | Max retry attempts |
+| \`delayMs\` | 400 | Base delay ms (doubles each attempt) |
+| \`context\` | '' | Label stored in SystemErrorLog |
+
+Non-retriable codes (P2003, P2025, P2002, P2014, P2015) are never retried.
+
+## safeAuditEvent(data)
+
+Drop-in for \`prisma.auditEvent.create()\`. On P2003 retries once with \`userId: null\` and logs as \`auto-fixed\`.
+
+## safeNotifications(data, context?)
+
+Drop-in for \`prisma.notification.createMany()\`. Wraps with \`withDbRetry\` and logs failures.
+
+## Ghost Session Guard
+
+Iron-session cookies survive 8 hours after account deletion. Every write endpoint must validate:
+
+\`\`\`ts
+const requester = await prisma.user.findUnique({
+  where: { id: session.userId }, select: { id: true },
+});
+if (!requester) {
+  return NextResponse.json(
+    { error: 'Your account no longer exists. Please sign in again.' },
+    { status: 401 }
+  );
+}
+\`\`\`
+
+## Admin Route
+
+**Page:** \`/admin/system-errors\`
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| \`/api/admin/system-errors\` | GET | Paginated list with optional \`?resolution=\` filter |
+| \`/api/admin/system-errors?action=retry\` | POST | Re-run stored payload |
+| \`/api/admin/system-errors\` | PATCH | \`{ id }\` resolve one · \`{ all: true }\` resolve all |`,
 };
 
 // ─── Nav config ───────────────────────────────────────────────────────────────
@@ -632,6 +706,7 @@ const SECTIONS = [
   { id: 'dev-guide',     label: '📖 Developer Guide',        group: 'Product Docs'    },
   { id: 'deployment',   label: '🚢 Deployment Guide',        group: 'Product Docs'    },
   { id: 'cloud-sync',  label: '🔄 Cloud Sync Architecture', group: 'Technical'       },
+  { id: 'error-logger', label: '🛡️ Error Logger',           group: 'Technical'       },
 ];
 
 // ── Package Reference data ────────────────────────────────────────────────────
