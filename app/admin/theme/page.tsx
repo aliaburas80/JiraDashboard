@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import type { CSSProperties } from 'react';
 import clsx from 'clsx';
 import {
   AdminConsoleLayout,
@@ -27,6 +26,26 @@ import styles from './page.module.scss';
 
 // ── Palette card ──────────────────────────────────────────────────────────────
 
+function paletteClass(id: PaletteId): string {
+  return styles[`palette${id[0].toUpperCase()}${id.slice(1)}`];
+}
+
+const TOKEN_SWATCH_CLASS: Record<string, string> = {
+  '--dc-bg': styles.tokenBg,
+  '--dc-s1': styles.tokenS1,
+  '--dc-s2': styles.tokenS2,
+  '--dc-s3': styles.tokenS3,
+  '--dc-accent': styles.tokenAccent,
+  '--dc-acc2': styles.tokenAcc2,
+  '--dc-cta': styles.tokenCta,
+  '--dc-p1': styles.tokenP1,
+  '--dc-p2': styles.tokenP2,
+  '--dc-p3': styles.tokenP3,
+  '--dc-green': styles.tokenGreen,
+  '--dc-amber': styles.tokenAmber,
+  '--dc-red': styles.tokenRed,
+};
+
 function PaletteCard({
   id,
   p,
@@ -38,37 +57,19 @@ function PaletteCard({
   active: boolean;
   onSelect: () => void;
 }) {
-  const isDark = id !== 'none';
-
-  // Dynamic per-card values from palette data — cannot be expressed as static SCSS
-  const cardDynamic: CSSProperties = {
-    '--card-bg': isDark ? p.bg : '#ffffff',
-    '--card-border': active
-      ? `2px solid ${p.acc}`
-      : `1px solid ${isDark ? p.bdr2 : '#e2e8f0'}`,
-    '--card-shadow': active
-      ? `0 0 0 3px ${p.acc}33, 0 8px 24px rgba(0,0,0,0.3)`
-      : '0 2px 8px rgba(0,0,0,0.1)',
-  } as CSSProperties;
-
   return (
     <button
       type="button"
       onClick={onSelect}
-      className={styles.paletteCard}
-      // eslint-disable-next-line react/forbid-dom-props
-      style={cardDynamic}
+      className={clsx(styles.paletteCard, paletteClass(id), { [styles.paletteCardActive]: active })}
       aria-pressed={active}
     >
-      {/* Color stripe — each swatch color comes from palette runtime data */}
       <div className={styles.colorStripe}>
-        {p.swatches.map((sw, i) => (
+        {p.swatches.map((_, i) => (
           <div
             key={i}
+            data-swatch={i}
             className={styles.stripeSwatch}
-            // Dynamic: each swatch has its own color from palette data
-            // eslint-disable-next-line react/forbid-dom-props
-            style={{ '--swatch-color': sw } as CSSProperties}
           />
         ))}
       </div>
@@ -77,32 +78,14 @@ function PaletteCard({
         {/* Header row */}
         <div className={styles.cardHeaderRow}>
           <div>
-            <div
-              className={styles.cardName}
-              // Dynamic: text color from palette data (dark vs light theme)
-              // eslint-disable-next-line react/forbid-dom-props
-              style={{ '--card-name-color': isDark ? p.p1 : '#0f172a' } as CSSProperties}
-            >
+            <div className={styles.cardName}>
               {p.label}
             </div>
-            <div
-              className={styles.cardTagline}
-              // Dynamic: muted text color from palette data
-              // eslint-disable-next-line react/forbid-dom-props
-              style={{ '--card-tagline-color': isDark ? p.p2 : '#64748b' } as CSSProperties}
-            >
+            <div className={styles.cardTagline}>
               {p.tagline}
             </div>
           </div>
-          <span
-            className={styles.cardBadge}
-            // Dynamic: badge bg/color are palette-specific accent values
-            // eslint-disable-next-line react/forbid-dom-props
-            style={{
-              '--card-badge-bg': `${p.acc}1a`,
-              '--card-badge-color': p.acc,
-            } as CSSProperties}
-          >
+          <span className={styles.cardBadge}>
             {p.badge}
           </span>
         </div>
@@ -110,34 +93,18 @@ function PaletteCard({
         {/* Mini KPI preview */}
         <div className={styles.kpiGrid}>
           {[
-            { label: 'Health', val: '73', color: p.acc },
-            { label: 'Blocked', val: '4',  color: '#E85D12' },
-            { label: 'Flow',    val: '68%', color: isDark ? p.p1 : '#0f172a' },
+            { label: 'Health', val: '73', className: styles.kpiValueHealth },
+            { label: 'Blocked', val: '4', className: styles.kpiValueBlocked },
+            { label: 'Flow', val: '68%', className: styles.kpiValueFlow },
           ].map(kpi => (
             <div
               key={kpi.label}
               className={styles.kpiCell}
-              // Dynamic: KPI cell bg/border come from palette data
-              // eslint-disable-next-line react/forbid-dom-props
-              style={{
-                '--kpi-bg': isDark ? p.s2 : '#f8fafc',
-                '--kpi-border': isDark ? p.bdr : '#e2e8f0',
-              } as CSSProperties}
             >
-              <div
-                className={styles.kpiLabel}
-                // Dynamic: label color from palette data
-                // eslint-disable-next-line react/forbid-dom-props
-                style={{ '--kpi-label-color': isDark ? p.p2 : '#64748b' } as CSSProperties}
-              >
+              <div className={styles.kpiLabel}>
                 {kpi.label}
               </div>
-              <div
-                className={styles.kpiValue}
-                // Dynamic: value color is per-KPI and palette-derived
-                // eslint-disable-next-line react/forbid-dom-props
-                style={{ '--kpi-value-color': kpi.color } as CSSProperties}
-              >
+              <div className={clsx(styles.kpiValue, kpi.className)}>
                 {kpi.val}
               </div>
             </div>
@@ -145,44 +112,18 @@ function PaletteCard({
         </div>
 
         {/* Nav preview strip */}
-        <div
-          className={styles.navStrip}
-          // Dynamic: nav strip bg/border from palette data
-          // eslint-disable-next-line react/forbid-dom-props
-          style={{
-            '--nav-bg': isDark ? p.s1 : '#ffffff',
-            '--nav-border': isDark ? p.bdr : '#e2e8f0',
-          } as CSSProperties}
-        >
+        <div className={styles.navStrip}>
           <svg width="14" height="14" viewBox="0 0 32 32" fill="none" className="shrink-0">
             <circle cx="16" cy="16" r="13" stroke={p.acc} strokeWidth="1.5" opacity=".5" />
             <path d="M11 16.5l3.5 3.5 6.5-7" stroke={p.acc} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           </svg>
-          <span
-            className={styles.navLogo}
-            // Dynamic: logo text color from palette data
-            // eslint-disable-next-line react/forbid-dom-props
-            style={{ '--nav-logo-color': isDark ? p.p1 : '#0f172a' } as CSSProperties}
-          >
+          <span className={styles.navLogo}>
             DC
           </span>
-          <span
-            className={styles.navActive}
-            // Dynamic: active nav item uses palette accent
-            // eslint-disable-next-line react/forbid-dom-props
-            style={{
-              '--nav-active-bg': `${p.acc}1a`,
-              '--nav-active-color': p.acc,
-            } as CSSProperties}
-          >
+          <span className={styles.navActive}>
             Dashboard
           </span>
-          <span
-            className={styles.navMuted}
-            // Dynamic: muted nav item color from palette data
-            // eslint-disable-next-line react/forbid-dom-props
-            style={{ '--nav-muted-color': isDark ? p.p3 : '#94a3b8' } as CSSProperties}
-          >
+          <span className={styles.navMuted}>
             Reports
           </span>
           <div className={styles.navCta}>Upload</div>
@@ -191,12 +132,7 @@ function PaletteCard({
 
       {/* Active checkmark */}
       {active && (
-        <div
-          className={styles.activeCheck}
-          // Dynamic: checkmark bg uses palette accent color
-          // eslint-disable-next-line react/forbid-dom-props
-          style={{ '--check-bg': p.acc } as CSSProperties}
-        >
+        <div className={styles.activeCheck}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <path d="M5 13l4 4L19 7" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -377,15 +313,7 @@ export default function AdminThemePage() {
                 Four themes from the UIUXTemplate design system. All dark except Default (Light).
               </p>
             </div>
-            <span
-              className={styles.activeBadge}
-              // Dynamic: badge uses active palette accent color from runtime palette data
-              // eslint-disable-next-line react/forbid-dom-props
-              style={{
-                '--badge-bg': `${activePal?.acc ?? '#2563eb'}1a`,
-                '--badge-color': activePal?.acc ?? '#2563eb',
-              } as CSSProperties}
-            >
+            <span className={clsx(styles.activeBadge, paletteClass(settings.palette))}>
               Active: {activePal?.badge ?? '—'}
             </span>
           </div>
@@ -539,10 +467,7 @@ export default function AdminThemePage() {
             ].map(tok => (
               <div key={tok.name} className={styles.tokenCard}>
                 <div
-                  className={styles.tokenSwatch}
-                  // Dynamic: swatch color is the resolved token value (from runtime palette data)
-                  // eslint-disable-next-line react/forbid-dom-props
-                  style={{ '--swatch-color': tok.val } as CSSProperties}
+                  className={clsx(styles.tokenSwatch, paletteClass(settings.palette), TOKEN_SWATCH_CLASS[tok.name])}
                 />
                 <div className={styles.tokenInfo}>
                   <p className={styles.tokenName}>{tok.name}</p>

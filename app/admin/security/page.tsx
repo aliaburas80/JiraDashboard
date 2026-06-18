@@ -1,7 +1,6 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 'use client';
 import { useEffect, useState } from 'react';
-import type { CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
@@ -23,11 +22,11 @@ function sevChipClass(sev: CheckSeverity): string {
   return 'chip c-nt';
 }
 
-const SECTION_HEADER: Record<'fail' | 'warn' | 'pass' | 'manual', { label: string; color: string }> = {
-  fail:   { label: 'Failing',       color: 'var(--dc-red, #F87171)' },
-  warn:   { label: 'Warnings',      color: 'var(--dc-amber, #F59E0B)' },
-  pass:   { label: 'Passing',       color: 'var(--dc-green, #22C55E)' },
-  manual: { label: 'Manual Review', color: 'var(--dc-p2, #909090)' },
+const SECTION_HEADER: Record<'fail' | 'warn' | 'pass' | 'manual', string> = {
+  fail:   'Failing',
+  warn:   'Warnings',
+  pass:   'Passing',
+  manual: 'Manual Review',
 };
 
 const CATEGORIES = ['Authentication', 'Access Control', 'Secrets', 'Environment', 'Database', 'Transport', 'Network', 'Privacy', 'Backup', 'Operations'];
@@ -107,7 +106,9 @@ export default function SecurityPage() {
     (statusFilter === 'all' || c.status === statusFilter)
   ) ?? [];
 
-  // scoreColor is dynamic (changes per score range) — supplied via CSS custom property
+  const scoreTone = report
+    ? report.overallScore >= 80 ? styles.scoreGood : report.overallScore >= 60 ? styles.scoreWarn : styles.scoreBad
+    : styles.scoreNeutral;
   const scoreColor = report
     ? report.overallScore >= 80 ? 'var(--dc-green, #22C55E)' : report.overallScore >= 60 ? 'var(--dc-amber, #F59E0B)' : 'var(--dc-red, #F87171)'
     : 'var(--dc-p2, #909090)';
@@ -142,13 +143,10 @@ export default function SecurityPage() {
 
         return (
           <>
-            {/* Score banner — bg/border via data-state; scoreColor via CSS custom property */}
+            {/* Score banner — bg/border via data-state; score color via score tone class */}
             <div
               data-state={bannerState}
-              className={styles.scoreBanner}
-              // --score-color is dynamic (data-driven color from score range) — CSS custom property exception per CLAUDE.md Rule 1
-              // eslint-disable-next-line react/forbid-dom-props
-              style={{ '--score-color': scoreColor } as CSSProperties}
+              className={clsx(styles.scoreBanner, scoreTone)}
             >
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0 text-center">
@@ -198,16 +196,14 @@ export default function SecurityPage() {
             {(['fail', 'warn', 'pass', 'manual'] as const).map(status => {
               const group = filtered.filter(c => c.status === status);
               if (!group.length) return null;
-              const hdr = SECTION_HEADER[status];
+              const label = SECTION_HEADER[status];
               return (
                 <div key={status} className={styles.sectionGroup}>
-                  {/* --section-color is dynamic (different per status group) — CSS custom property exception per CLAUDE.md Rule 1 */}
                   <p
+                    data-status={status}
                     className={styles.sectionLabel}
-                    // eslint-disable-next-line react/forbid-dom-props
-                    style={{ '--section-color': hdr.color } as CSSProperties}
                   >
-                    {hdr.label} ({group.length})
+                    {label} ({group.length})
                   </p>
                   <div className={styles.checkList}>
                     {group.map(c => <CheckRow key={c.id} c={c} />)}

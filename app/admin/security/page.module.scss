@@ -46,7 +46,6 @@
   font-size: 32px;
   font-weight: 700;
   line-height: 1;
-  // JS supplies --score-color for this dynamic value (changes per score range)
   color: var(--score-color, var(--dc-p2, #909090));
 }
 
@@ -60,8 +59,23 @@
   font-size: var(--text-md);
   font-weight: 600;
   margin-bottom: var(--space-1);
-  // JS supplies --score-color for this dynamic value (changes per score range)
   color: var(--score-color, var(--dc-p2, #909090));
+}
+
+.scoreGood {
+  --score-color: var(--dc-green, #22c55e);
+}
+
+.scoreWarn {
+  --score-color: var(--dc-amber, #f59e0b);
+}
+
+.scoreBad {
+  --score-color: var(--dc-red, #f87171);
+}
+
+.scoreNeutral {
+  --score-color: var(--dc-p2, #909090);
 }
 
 .scoreMeta {
@@ -109,8 +123,22 @@
   text-transform: uppercase;
   letter-spacing: 0.07em;
   margin-bottom: var(--space-2);
-  // JS supplies --section-color for this dynamic value (per fail/warn/pass/manual)
-  color: var(--section-color, var(--dc-p2, #909090));
+
+  &[data-status='fail'] {
+    color: var(--dc-red, #f87171);
+  }
+
+  &[data-status='warn'] {
+    color: var(--dc-amber, #f59e0b);
+  }
+
+  &[data-status='pass'] {
+    color: var(--dc-green, #22c55e);
+  }
+
+  &[data-status='manual'] {
+    color: var(--dc-p2, #909090);
+  }
 }
 
 .checkList {

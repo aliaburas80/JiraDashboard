@@ -209,10 +209,6 @@
   }
 }
 
-// ── Method badge ──────────────────────────────────────────────────────────────
-// Dynamic bg/color supplied via --method-bg / --method-color CSS custom props set in TSX,
-// because the colors come from runtime method-string evaluation.
-
 .methodBadge {
   font-family: var(--font-mono, monospace);
   font-size: var(--text-2xs);
@@ -221,9 +217,31 @@
   border-radius: var(--radius-xs);
   display: inline-block;
   letter-spacing: 0.05em;
-  // Dynamic: background and color set via --method-bg / --method-color in TSX
-  background: var(--method-bg);
-  color: var(--method-color);
+}
+
+.methodPost {
+  background: rgb(34 197 94 / 15%);
+  color: #4ade80;
+}
+
+.methodGet {
+  background: rgb(59 130 246 / 15%);
+  color: #93c5fd;
+}
+
+.methodDelete {
+  background: rgb(248 113 113 / 13%);
+  color: #fca5a5;
+}
+
+.methodEdit {
+  background: rgb(255 255 255 / 8%);
+  color: var(--color-text-secondary);
+}
+
+.methodDefault {
+  background: rgb(255 255 255 / 6%);
+  color: var(--color-text-muted);
 }
 
 // ── Endpoint path ─────────────────────────────────────────────────────────────

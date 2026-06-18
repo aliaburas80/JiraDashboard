@@ -18,3 +18,38 @@
 .kpiValue {
   color: var(--kpi-color, #2563eb);
 }
+
+.toneBlue {
+  --kpi-color: #2563eb;
+  --ops-color: #2563eb;
+}
+
+.toneGreen {
+  --kpi-color: #16a34a;
+  --ops-color: #16a34a;
+}
+
+.toneViolet {
+  --kpi-color: #7c3aed;
+  --ops-color: #7c3aed;
+}
+
+.toneCyan {
+  --kpi-color: #0891b2;
+  --ops-color: #0891b2;
+}
+
+.toneAmber {
+  --kpi-color: #f59e0b;
+  --ops-color: #f59e0b;
+}
+
+.toneRed {
+  --kpi-color: #dc2626;
+  --ops-color: #dc2626;
+}
+
+.toneSlate {
+  --kpi-color: #94a3b8;
+  --ops-color: #94a3b8;
+}

@@ -1,6 +1,5 @@
 'use client';
 
-import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
@@ -51,26 +50,15 @@ interface BackendViewData {
 
 function MethodBadge({ method }: { method: string }) {
   const upper = method.toUpperCase();
-
-  // Dynamic: badge bg/color are determined at runtime from the HTTP method string.
-  // No static SCSS class can express this mapping without duplicating the logic.
-  const [bg, color] =
-    upper === 'POST'
-      ? ['rgba(34,197,94,0.15)',   '#4ade80']
-      : upper === 'GET'
-      ? ['rgba(59,130,246,0.15)',   '#93c5fd']
-      : upper === 'DELETE'
-      ? ['rgba(248,113,113,0.13)',  '#fca5a5']
-      : upper === 'PUT' || upper === 'PATCH'
-      ? ['rgba(255,255,255,0.08)',  'var(--color-text-secondary)']
-      : ['rgba(255,255,255,0.06)',  'var(--color-text-muted)'];
+  const methodClass =
+    upper === 'POST' ? styles.methodPost :
+    upper === 'GET' ? styles.methodGet :
+    upper === 'DELETE' ? styles.methodDelete :
+    upper === 'PUT' || upper === 'PATCH' ? styles.methodEdit :
+    styles.methodDefault;
 
   return (
-    <span
-      className={styles.methodBadge}
-      // eslint-disable-next-line react/forbid-dom-props
-      style={{ '--method-bg': bg, '--method-color': color } as CSSProperties}
-    >
+    <span className={clsx(styles.methodBadge, methodClass)}>
       {upper}
     </span>
   );

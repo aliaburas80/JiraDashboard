@@ -2,7 +2,7 @@
 // System Health & Admin Diagnostics — 9.36
 'use client';
 
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import styles from './page.module.scss';
@@ -43,9 +43,15 @@ function uptime(s: number): string {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function KpiCard({ label, value, sub, color = '#2563eb' }: { label: string; value: string | number; sub?: string; color?: string }) {
+type Tone = 'blue' | 'green' | 'violet' | 'cyan' | 'amber' | 'red' | 'slate';
+
+function toneClass(tone: Tone): string {
+  return styles[`tone${tone[0].toUpperCase()}${tone.slice(1)}`];
+}
+
+function KpiCard({ label, value, sub, tone = 'blue' }: { label: string; value: string | number; sub?: string; tone?: Tone }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm" style={{ '--kpi-color': color } as CSSProperties}>
+    <div className={`bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm ${toneClass(tone)}`}>
       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
       <p className={`${styles.kpiValue} text-2xl font-black leading-none`}>{value}</p>
       {sub && <p className="text-[10px] text-slate-400 mt-1 font-semibold">{sub}</p>}
@@ -117,7 +123,7 @@ export default function DiagnosticsPage() {
     </div>
   );
 
-  const opsColor = data.opsScore >= 80 ? '#16a34a' : data.opsScore >= 60 ? '#f59e0b' : '#dc2626';
+  const opsTone: Tone = data.opsScore >= 80 ? 'green' : data.opsScore >= 60 ? 'amber' : 'red';
   const opsBand  = data.opsScore >= 80 ? 'Healthy'  : data.opsScore >= 60 ? 'Degraded' : 'At Risk';
   const envOkCount = Object.values(data.env).filter(Boolean).length;
   const envTotal   = Object.keys(data.env).length;
@@ -149,7 +155,7 @@ export default function DiagnosticsPage() {
       >
 
         {/* Ops score banner */}
-        <div className={styles.opsBanner} style={{ '--ops-color': opsColor } as CSSProperties}>
+        <div className={`${styles.opsBanner} ${toneClass(opsTone)}`}>
           <div className="flex items-center gap-4">
             <div className={styles.opsCircle}>
               <span className={`${styles.opsCircleValue} text-xl font-black leading-none`}>{data.opsScore}</span>
@@ -187,9 +193,9 @@ export default function DiagnosticsPage() {
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Database Overview</h2>
             <div className="grid grid-cols-2 gap-3">
               <KpiCard label="Total Users"    value={data.users.total}    sub={`${data.users.admins} admin${data.users.admins !== 1 ? 's' : ''}`} />
-              <KpiCard label="Active Users"   value={data.users.active}   sub="isActive = true"    color="#16a34a" />
-              <KpiCard label="Sessions"       value={data.sessions.total} sub={`${data.sessions.active} active`}   color="#7c3aed" />
-              <KpiCard label="Snapshots"      value={data.snapshots.total} sub="saved reports"     color="#0891b2" />
+              <KpiCard label="Active Users"   value={data.users.active}   sub="isActive = true"    tone="green" />
+              <KpiCard label="Sessions"       value={data.sessions.total} sub={`${data.sessions.active} active`}   tone="violet" />
+              <KpiCard label="Snapshots"      value={data.snapshots.total} sub="saved reports"     tone="cyan" />
             </div>
             <div className="mt-4 border-t border-slate-100 pt-3 space-y-1.5">
               <div className="flex justify-between text-xs">
@@ -207,10 +213,10 @@ export default function DiagnosticsPage() {
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Import Health</h2>
             <div className="grid grid-cols-2 gap-3">
-              <KpiCard label="Success Rate"    value={`${data.imports.successRate}%`}   sub={`${data.imports.successful} of ${data.imports.total}`} color={data.imports.successRate >= 90 ? '#16a34a' : data.imports.successRate >= 70 ? '#f59e0b' : '#dc2626'} />
-              <KpiCard label="Failed Imports"  value={data.imports.failed}               sub="errors + validation" color={data.imports.failed > 0 ? '#dc2626' : '#94a3b8'} />
-              <KpiCard label="Avg Health Score" value={`${data.imports.avgHealthScore}`} sub="on successful imports" color="#2563eb" />
-              <KpiCard label="Avg Processing"  value={`${data.imports.avgProcessingMs}ms`} sub="per upload" color="#f59e0b" />
+              <KpiCard label="Success Rate"    value={`${data.imports.successRate}%`}   sub={`${data.imports.successful} of ${data.imports.total}`} tone={data.imports.successRate >= 90 ? 'green' : data.imports.successRate >= 70 ? 'amber' : 'red'} />
+              <KpiCard label="Failed Imports"  value={data.imports.failed}               sub="errors + validation" tone={data.imports.failed > 0 ? 'red' : 'slate'} />
+              <KpiCard label="Avg Health Score" value={`${data.imports.avgHealthScore}`} sub="on successful imports" tone="blue" />
+              <KpiCard label="Avg Processing"  value={`${data.imports.avgProcessingMs}ms`} sub="per upload" tone="amber" />
             </div>
             {data.imports.lastAt && (
               <div className="mt-4 border-t border-slate-100 pt-3 space-y-1.5">
