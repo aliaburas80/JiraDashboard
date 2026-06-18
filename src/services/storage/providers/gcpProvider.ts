@@ -46,12 +46,12 @@ export class GcpStorageProvider implements StorageProvider {
     return this.config.prefix ? `${this.config.prefix.replace(/\/$/, '')}/${key}` : key;
   }
 
-  async upload(key: string, content: Buffer | string): Promise<string> {
+  async upload(key: string, content: Buffer | string, contentType = 'application/json'): Promise<string> {
     const bucket    = await this.getBucket();
     const remoteKey = this.prefixed(key);
     await bucket.file(remoteKey).save(
       typeof content === 'string' ? Buffer.from(content, 'utf-8') : content,
-      { contentType: 'application/json' }
+      { contentType }
     );
     return remoteKey;
   }

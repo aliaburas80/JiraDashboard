@@ -1,0 +1,173 @@
+// ─── UserMenu styles ──────────────────────────────────────────────────────────
+
+// ── Root wrapper (provides positioning context for the dropdown) ───────────────
+.root {
+  position: relative;
+}
+
+// ── Trigger button (pill with initials + username + chevron) ───────────────────
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 3px;
+  border-radius: var(--radius-chip, 20px);
+  border: 1px solid var(--color-border, #e2e8f0);
+  background: var(--color-surface, #fff);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  font-family: inherit;
+
+  &:hover { background: var(--color-subtle, #f8fafc); }
+
+  &.open { background: var(--color-muted, #f1f5f9); }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+// ── Avatar circle ──────────────────────────────────────────────────────────────
+.avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--color-primary, #2563eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: var(--text-xs, 10px);
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  flex-shrink: 0;
+}
+
+// ── Username label ─────────────────────────────────────────────────────────────
+.username {
+  font-size: var(--text-base, 12px);
+  font-weight: 600;
+  color: var(--color-text-primary, #334155);
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Chevron ────────────────────────────────────────────────────────────────────
+.chevron {
+  color: var(--color-text-muted, #94a3b8);
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+
+  &.open { transform: rotate(180deg); }
+}
+
+// ── Dropdown panel ─────────────────────────────────────────────────────────────
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-2xl, 14px);
+  box-shadow: var(--shadow-dropdown, 0 8px 24px rgb(0 0 0 / 10%));
+  z-index: var(--z-modal, 9999);
+  padding: 6px 0;
+  min-width: 200px;
+}
+
+// ── Identity block at top of dropdown ─────────────────────────────────────────
+.identity {
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid var(--color-muted, #f1f5f9);
+}
+
+.identityName {
+  font-size: var(--text-base, 12px);
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 1px;
+}
+
+.identityEmail {
+  font-size: var(--text-sm, 11px);
+  color: var(--color-text-muted, #94a3b8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 6px;
+}
+
+.roleBadge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  background: var(--color-primary-soft, #eff6ff);
+  color: var(--color-primary, #2563eb);
+  border: 1px solid var(--color-primary-border, #bfdbfe);
+  padding: 1px 6px;
+  border-radius: var(--radius-xs, 3px);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+// ── Menu item ──────────────────────────────────────────────────────────────────
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: var(--text-base, 12px);
+  font-weight: 600;
+  color: var(--color-text-primary, #334155);
+  text-decoration: none;
+  transition: background var(--transition-fast);
+  font-family: inherit;
+  background: transparent;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+
+  &:hover { background: var(--color-subtle, #f8fafc); }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: -2px;
+  }
+}
+
+// ── Divider before sign-out ────────────────────────────────────────────────────
+.divider {
+  border: none;
+  border-top: 1px solid var(--color-muted, #f1f5f9);
+  margin: 4px 0;
+}
+
+// ── Sign out button ────────────────────────────────────────────────────────────
+.signOut {
+  composes: menuItem;
+  color: var(--color-danger-strong, #dc2626);
+
+  &:hover { background: var(--color-danger-soft, rgb(248 113 113 / 8%)); }
+}
+
+// ── Sign-in link (unauthenticated state) ───────────────────────────────────────
+.signIn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: var(--text-base, 12px);
+  font-weight: 700;
+  color: var(--color-text-secondary, #64748b);
+  border: 1px solid var(--color-border, #e2e8f0);
+  text-decoration: none;
+  transition: background var(--transition-fast);
+
+  &:hover { background: var(--color-subtle, #f1f5f9); }
+}

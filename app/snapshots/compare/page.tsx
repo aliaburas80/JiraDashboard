@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { DashboardMetrics } from '@/types/metrics';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -245,7 +246,7 @@ export default function SnapshotComparePage() {
             {/* Same-data warning */}
             {isSameData && (
               <div className="bg-amber-50 border border-amber-300 rounded-2xl px-5 py-4 mb-5 flex items-start gap-3">
-                <span className="text-xl shrink-0">⚠️</span>
+                <SvgIcon name="warning" size={20} className="shrink-0 text-amber-700" />
                 <div>
                   <p className="text-sm font-black text-amber-900">These snapshots appear to contain the same data</p>
                   <p className="text-xs text-amber-700 mt-1 leading-snug">
@@ -261,7 +262,11 @@ export default function SnapshotComparePage() {
               overallDir === 'better' ? 'bg-green-50 border-green-200' :
               overallDir === 'worse'  ? 'bg-red-50 border-red-200'   : 'bg-slate-50 border-slate-200'
             }`}>
-              <span className="text-2xl">{overallDir === 'better' ? '📈' : overallDir === 'worse' ? '📉' : '↔️'}</span>
+              <SvgIcon
+                name={overallDir === 'better' ? 'chartTrendUp' : overallDir === 'worse' ? 'chartTrendDown' : 'changes'}
+                size={24}
+                className={overallDir === 'better' ? 'text-green-700' : overallDir === 'worse' ? 'text-red-700' : 'text-slate-500'}
+              />
               <div>
                 <p className={`text-sm font-black ${overallDir === 'better' ? 'text-green-800' : overallDir === 'worse' ? 'text-red-800' : 'text-slate-700'}`}>
                   {overallDir === 'better' ? `Delivery improved between snapshots`

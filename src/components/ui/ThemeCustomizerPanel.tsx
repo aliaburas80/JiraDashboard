@@ -3,10 +3,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import {
   ACCENT_PRESETS,
   RADIUS_PRESETS,
   FONT_SIZE_PRESETS,
+  PALETTE_PRESETS,
   loadThemeCustom,
   saveThemeCustom,
   applyThemeCustom,
@@ -16,6 +18,7 @@ import {
   type AccentId,
   type RadiusId,
   type FontSizeId,
+  type PaletteId,
 } from '@/lib/themeCustomizer';
 
 export default function ThemeCustomizerPanel() {
@@ -77,7 +80,7 @@ export default function ThemeCustomizerPanel() {
           }}
           className="dark:bg-slate-800 dark:border-slate-700"
         >
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Theme</p>
             <button type="button" onClick={handleReset}
               className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors">
@@ -85,33 +88,69 @@ export default function ThemeCustomizerPanel() {
             </button>
           </div>
 
-          {/* Accent colour */}
+          {/* Palette — UIUXTemplate themes */}
           <div className="mb-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Accent colour</p>
-            <div className="flex flex-wrap gap-2">
-              {(Object.entries(ACCENT_PRESETS) as [AccentId, typeof ACCENT_PRESETS[AccentId]][]).map(([id, preset]) => (
-                <button
-                  key={id}
-                  type="button"
-                  title={preset.label}
-                  onClick={() => update({ accent: id })}
-                  style={{
-                    width: 28, height: 28,
-                    borderRadius: '50%',
-                    background: preset.hex,
-                    border: settings.accent === id ? '3px solid #fff' : '2px solid transparent',
-                    boxShadow: settings.accent === id
-                      ? `0 0 0 2px ${preset.hex}`
-                      : '0 1px 3px rgba(0,0,0,0.15)',
-                    cursor: 'pointer',
-                    transition: 'box-shadow 150ms, border 150ms',
-                  }}
-                  aria-label={`Set accent to ${preset.label}`}
-                  aria-pressed={settings.accent === id}
-                />
-              ))}
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Palette</p>
+            <div className="grid grid-cols-5 gap-1.5 mb-1">
+              {(Object.entries(PALETTE_PRESETS) as [PaletteId, typeof PALETTE_PRESETS[PaletteId]][]).map(([id, p]) => {
+                const active = settings.palette === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    title={p.label}
+                    onClick={() => update({ palette: id })}
+                    style={{
+                      width: '100%', aspectRatio: '1', borderRadius: 6,
+                      background: `linear-gradient(135deg, ${p.swatches[0]} 50%, ${p.acc} 50%)`,
+                      border: active ? `2px solid ${p.acc}` : '2px solid transparent',
+                      boxShadow: active ? `0 0 0 1px ${p.acc}` : 'none',
+                      cursor: 'pointer', transition: 'all 150ms',
+                    }}
+                    aria-label={`Set palette to ${p.label}`}
+                    aria-pressed={active}
+                  />
+                );
+              })}
             </div>
+            <p style={{ fontSize: 9, color: '#94a3b8', marginBottom: 2 }}>
+              {PALETTE_PRESETS[settings.palette]?.label ?? 'Default'}
+            </p>
+            <Link href="/admin/theme" onClick={() => setOpen(false)}
+              style={{ fontSize: 9, color: 'var(--dc-accent, #2563eb)', textDecoration: 'none', fontWeight: 700 }}>
+              Full theme configurator →
+            </Link>
           </div>
+
+          {/* Accent colour (only shown when palette = none) */}
+          {settings.palette === 'none' && (
+            <div className="mb-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Accent colour</p>
+              <div className="flex flex-wrap gap-2">
+                {(Object.entries(ACCENT_PRESETS) as [AccentId, typeof ACCENT_PRESETS[AccentId]][]).map(([id, preset]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    title={preset.label}
+                    onClick={() => update({ accent: id })}
+                    style={{
+                      width: 28, height: 28,
+                      borderRadius: '50%',
+                      background: preset.hex,
+                      border: settings.accent === id ? '3px solid #fff' : '2px solid transparent',
+                      boxShadow: settings.accent === id
+                        ? `0 0 0 2px ${preset.hex}`
+                        : '0 1px 3px rgba(0,0,0,0.15)',
+                      cursor: 'pointer',
+                      transition: 'box-shadow 150ms, border 150ms',
+                    }}
+                    aria-label={`Set accent to ${preset.label}`}
+                    aria-pressed={settings.accent === id}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Border radius */}
           <div className="mb-4">

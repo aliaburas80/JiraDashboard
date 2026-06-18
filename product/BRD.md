@@ -7,10 +7,10 @@
 | Field | Detail |
 |---|---|
 | **Document Title** | Delivery Clarity — Business Requirements Document |
-| **Version** | 4.0 |
-| **Date** | 2026-06-03 |
+| **Version** | 4.9.2 |
+| **Date** | 2026-06-16 |
 | **Author** | Ali Abu Ras |
-| **Status** | Approved |
+| **Status** | Approved — reconciled with v4.9.2 (P0 pass 2026-06-16: navigation architecture overhaul, admin layout injection, developer wiki theme, frontend standards enforced; test suite 571/63 all passing; lint and build clean) |
 | **Classification** | Internal |
 
 ### Revision History
@@ -23,6 +23,7 @@
 | 0.4 | 2026-05-22 | Ali Abu Ras | Incorporated roadmap items into Future Scope; added glossary |
 | 1.0 | 2026-05-30 | Ali Abu Ras | Final review, all sections complete — approved for development baseline |
 | 4.0 | 2026-06-03 | Ali Abu Ras | v4 Quality & Trust Layer; scope updated; auth and database now in scope; BR-070–BR-090 added |
+| 4.9.2 | 2026-06-16 | Ali Abu Ras | P0 doc pass: navigation architecture overhaul (11 routed dashboard pages, DashboardTopbar, AdminNavSidebar, developer wiki, DC shell library, unified DC_NAV_GROUPS, frontend standards enforced) reflected in scope and capabilities |
 
 ---
 
@@ -133,9 +134,11 @@ The urgency of this problem is increasing as engineering organisations scale. Ea
 
 ## 6. Scope
 
-### In Scope (v1.0 — Current)
+### In Scope — v1.0 Historical Baseline (superseded by v4.0 section below)
 
-The following capabilities are in scope for the current v1.0 release of Delivery Clarity:
+> This subsection is preserved as a historical record of the original v1.0 baseline scope (pre-authentication, single-user). It no longer reflects the current product — see "In Scope (v4.0 — Current)" immediately below for the authoritative current scope, which supersedes every "v1.0" assumption in this subsection (in particular, authentication, multi-user roles, and historical comparison are now implemented and in scope).
+
+The following capabilities were in scope for the original v1.0 release of Delivery Clarity:
 
 - File upload and parsing: CSV, XLSX, and XLS Jira export files up to 20 MB, with 55+ column header aliases for automatic field normalisation
 - Backend validation of required fields (Issue Key, Issue Type, Summary, Status) with specific error messages on failure
@@ -197,11 +200,11 @@ The following capabilities are implemented and in scope as of v4.0:
 - Jira write-back or ticket creation (P3 roadmap)
 - AI-generated narrative via external LLM API (unscheduled)
 
-### Planned P1 (Queued — Not Yet Started)
+### P1 — Done / Verified (shipped in v4.2.x)
 
-- Calculation Reference clearly visible in `/developer` blue side menu (P1.1)
-- Clear Local Data — Admin window + Upload page with detection, warning, confirmation (P1.2)
-- Dashboard Section Show/Hide controls — Overview/Single/Full modes, smooth scroll, animation (P1.3)
+- Calculation Reference clearly visible in `/developer` blue side menu (P1.1) — Done, Verified
+- Clear Local Data — Admin window + Upload page with detection, warning, confirmation (P1.2) — Done, Verified
+- Dashboard Section Show/Hide controls — Overview/Single/Full modes, smooth scroll, animation (P1.3) — Done, Verified
 
 ### Future Scope (P2/P3/P4 Roadmap)
 
@@ -498,7 +501,7 @@ The following metrics define product success and will be measured at 30, 90, and
 2. Exported Jira files will include at minimum the four required fields: Issue Key, Issue Type, Summary, and Status. Richer analysis is conditional on additional columns being included in the export.
 3. The Jira export format is stable enough that column header aliases captured in the 55+ alias library cover the majority of real-world exports. Edge cases may require alias additions in future maintenance releases.
 4. The self-hosted deployment environment runs Node.js >= 18 and npm >= 9 on a server or workstation accessible to all intended users via a browser.
-5. No user authentication is required for v1.0 — all users who can reach the URL are treated as authorised. Teams requiring access control will implement an authentication proxy at the network or web server layer.
+5. *(Historical v1.0 assumption, superseded — see Section 6 "In Scope (v4.0 — Current)")* User authentication and role-based access control are now implemented and required: every route is gated by `iron-session` cookies and a role matrix enforced in `middleware.ts`. Admin-managed accounts replace the original "anyone who can reach the URL is authorised" model. Self-hosting teams no longer need to add an external authentication proxy.
 6. Browser state has a layered restore model: the app first loads the latest server/bucket metrics and then falls back to browser `localStorage` if needed.
 7. Jira Sprint field values in exports are assumed to be text strings (sprint names) from which sprint grouping and comparison can be derived.
 8. The "Blocked Flag" signal is available only in Jira exports that include a custom "Blocked Flag" field. Teams without this custom field will only have blocking links (not the flag) as a blocking signal.
@@ -507,7 +510,7 @@ The following metrics define product success and will be measured at 30, 90, and
 11. All date fields in Jira exports are in one of the supported formats: ISO 8601, Jira short date (DD/MMM/YY), Excel serial number, or native JavaScript Date-parseable strings.
 12. Users with mobile devices will primarily use the tool in a read/review capacity rather than as the primary upload path.
 13. The existing React and Node.js technology stack is approved for use and no technology substitution will be required during v1.0 delivery.
-14. The initial deployment is for internal use within a single organisation. Multi-tenancy requirements are not in scope for v1.0.
+14. The deployment remains single-organisation, self-hosted, and single-database (no cross-organisation multi-tenancy). Within that organisation, the product now supports multiple authenticated users with distinct roles (admin, manager, c_level, scrum_master, product_owner, engineering_manager, member) — multi-user support is implemented and in scope (see Section 6 "In Scope (v4.0 — Current)"); cross-organisation multi-tenancy remains out of scope.
 
 ---
 
@@ -532,7 +535,7 @@ The following metrics define product success and will be measured at 30, 90, and
 ### Regulatory / Compliance Constraints
 
 - **Data residency:** Because the product is self-hosted and processes no data outside the organisation's own infrastructure, there are no third-party data residency concerns. However, the deploying organisation is responsible for ensuring the server environment meets their own data classification requirements for Jira project data.
-- **Audit trail:** The import log provides a basic audit trail of file uploads (file name, timestamp, column statistics, row count). It does not record which users performed uploads, as there is no user authentication in v1.0.
+- **Audit trail:** *(Historical v1.0 limitation, resolved in v4.x)* The import log now records the authenticated `userId` for every upload alongside file name, timestamp, column statistics, and row count, since user authentication and role-based access are implemented (see Section 6 "In Scope (v4.0 — Current)" and `AuditEvent` in the Prisma schema).
 
 ---
 
@@ -769,6 +772,8 @@ The following metrics define product success and will be measured at 30, 90, and
 
 **BR-110 (Should — P3 — Done):** Different users prioritise different charts — a Scrum Master needs Sprint Velocity front and centre; a Director needs the Timeline and Label Distribution. Allowing per-user chart customisation (which charts to show, how wide each one is) personalises the analytics view without requiring a separate page or configuration by an admin.
 
+**BR-112 (Should — P3 — Done):** With ~16 collapsible sections on the dashboard, users need to gauge a section's health without opening it — scanning a long page to find the one section that needs attention is slow. Status chips on each section trigger, colour-coded by severity, let users spot what needs attention at a glance and decide which sections to expand first. This is a scanability and time-to-insight requirement.
+
 **BR-109 (Should — P3 — Done):** Different users have different needs from the dashboard. A Scrum Master cares about Sprint and Risks; a Director cares about Readiness and Throughput. Allowing each user to reorder and hide sections puts their most important data first without requiring a separate role-based view to be configured by an admin.
 
 **BR-108 (Should — P3 — Done):** Teams using Delivery Clarity across different departments or brands want the tool to feel like their own. Advanced theme customization — accent colour, border radius, and font size — gives each team/individual a personalised experience without requiring a code change or rebuild.
@@ -796,3 +801,32 @@ The following metrics define product success and will be measured at 30, 90, and
 **BR-097 (Should — P2 — Done):** The system MUST track release confidence as a trend over multiple uploads. Teams need to see whether their release readiness is improving or degrading sprint-over-sprint — not just a one-time snapshot. This is a continuous improvement visibility requirement.
 
 **BR-096 (Should — P2 — Done):** The Work Item Explorer (`/explore`) MUST allow users to export the current graph as an Excel workbook or CSV. This is a reporting and stakeholder-sharing requirement — users need to take explorer findings offline or embed them in delivery reports without re-entering data manually.
+
+**BR-113 (Must — P1 — Done 2026-06-10):** When an admin accepts a user add-member request, the system MUST deliver a welcome email to the newly created user's email address containing their temporary password and a login link. Email delivery MUST be graceful — if SMTP is not configured the acceptance still succeeds and the admin is shown a warning. The admin MUST receive a clear confirmation of whether the email was sent (✅/⚠️ status badge). This is an onboarding communication requirement; without it, new users have no automated way to receive their credentials.
+
+**BR-114 (Should — P1 — Done 2026-06-10):** In-app notifications relating to add-member request outcomes MUST be actionable — clicking a notification MUST navigate the user to the most relevant page: accepted-request notifications take the requester to `/members` (to see the new colleague); admin notifications take the admin to the Member Requests tab in Admin Settings. Notification links to admin settings MUST use a `?tab=requests` query parameter so the correct tab opens immediately. A non-navigable notification that requires a separate manual navigation step reduces time-to-action and creates friction in the admin workflow.
+
+---
+
+## Revision Note — v4.2.2 Reconciliation (2026-06-07)
+
+This BRD carried several "v1.0" baseline statements forward into the v4.0+ document body that contradicted the "In Scope (v4.0 — Current)" section and the actual shipped product. As part of the P0 reconciliation pass:
+
+- Section 6 "In Scope (v1.0 — Current)" was relabelled **"In Scope — v1.0 Historical Baseline (superseded by v4.0 section below)"** with an explicit pointer to the v4.0 section as the authoritative current scope.
+- The "Planned P1 (Queued — Not Yet Started)" list (Calculation Reference, Clear Local Data, Dashboard Section Switcher) was corrected to **"P1 — Done / Verified"**, matching SRS FR-283–FR-285 and TODO-List.md.
+- Assumption 5 ("No user authentication is required for v1.0") was corrected to reflect that authentication and role-based access are implemented and required.
+- Assumption 14 ("Multi-tenancy requirements are not in scope for v1.0") was corrected to distinguish implemented multi-user support (in scope, done) from out-of-scope cross-organisation multi-tenancy.
+- The audit-trail constraint ("does not record which users performed uploads, as there is no user authentication in v1.0") was corrected — `userId` is now recorded on every import log entry.
+- Document version bumped to 4.2.2 and status updated to reflect the Release Candidate verification (lint/test/build all passing, 469 tests / 48 suites).
+
+No business requirement IDs (BR-xxx) were renumbered or removed; only scope-framing and assumption/constraint language that contradicted the shipped v4.x product was corrected.
+
+---
+
+## Revision Note — v4.6 Roadmap, Forecast, Retro Pages + Planning Navigation (2026-06-10, P1)
+
+**BR-115 (Must — P1 — Done 2026-06-10):** The application MUST provide a delivery roadmap view (`/roadmap`) that shows the progress and estimated completion for every epic derived from uploaded Jira data. Users need a single page where they can see which epics are on track, which are critical, and roughly when each will complete — without manually calculating from raw issue counts. Roadmap visibility is a core stakeholder expectation for any team tracking multi-epic delivery work.
+
+**BR-116 (Must — P1 — Done 2026-06-10):** The application MUST provide a delivery forecast page (`/forecast`) that computes velocity-based delivery outlook from sprint history, renders a burn-up chart (actual + forecast + target), and gives actionable recommendations. Forecasting transforms raw throughput data into a forward-looking answer to "are we on track?" — the primary question delivery managers and C-level stakeholders ask. Without it, the dashboard is entirely backward-looking.
+
+**BR-117 (Should — P1 — Done 2026-06-10):** The application SHOULD provide a sprint retrospective tool (`/retro`) that allows teams to record observations and action items, download a CSV template for offline use, and receive automated improvement suggestions on submit. Retrospective data captures learning from delivery patterns; integrating it with the existing delivery metrics tool closes the Plan → Deliver → Review cycle in one workspace.

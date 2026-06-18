@@ -1,7 +1,8 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
-// Throughput formula tests — TC-T-01 to TC-T-10
+// Throughput formula tests — TC-T-01 to TC-T-11
 
 import { calculateSprintThroughput } from '../services/metrics/throughput.service';
+import { calculateDashboardMetrics } from '../services/metrics/metrics.service';
 
 function makeIssue(overrides: Record<string, unknown>) {
   return {
@@ -135,4 +136,61 @@ test('TC-T-10: 2+ blocked items → Blocked Sprint pattern', () => {
   const result = calculateSprintThroughput(issues);
   expect(result.sprints[0].blockedCount).toBe(2);
   expect(result.sprints[0].deliveryPattern).toBe('Blocked Sprint');
+});
+
+// TC-T-11: FR-215 data-contract — DashboardMetrics.throughput conforms to the
+// ThroughputMetrics shape (sprint/kanban/midSprint bundle) defined in
+// src/types/throughput.ts (F1-07/F1-08), and feeds the panels behind UC-043.
+test('TC-T-11: DashboardMetrics.throughput matches the ThroughputMetrics contract (FR-215)', () => {
+  const issues = [
+    ...Array(8).fill(null).map((_, i) => makeIssue({ 'Issue Key': `TP-d${i}`, 'Status': 'Done', 'Done Date': '2025-01-10' })),
+    ...Array(2).fill(null).map((_, i) => makeIssue({ 'Issue Key': `TP-o${i}`, 'Status': 'In Progress' })),
+  ];
+  const metrics = calculateDashboardMetrics(issues);
+
+  // Top-level bundle (ThroughputMetrics)
+  expect(metrics.throughput).toBeDefined();
+  expect(metrics.throughput).toEqual(
+    expect.objectContaining({
+      sprint: expect.any(Object),
+      kanban: expect.any(Object),
+      midSprint: expect.any(Array),
+    })
+  );
+
+  // SprintThroughputSummary — the fields FR-207/FR-211/FR-212 promise
+  const { sprint } = metrics.throughput;
+  expect(sprint.sprints).toEqual(expect.any(Array));
+  expect(sprint.sprints[0]).toEqual(
+    expect.objectContaining({
+      sprintName: expect.any(String),
+      committedCount: expect.any(Number),
+      completedCount: expect.any(Number),
+      completionPct: expect.any(Number),
+      goalOutcome: expect.any(String),
+      deliveryPattern: expect.any(String),
+      deliveryConfidence: expect.any(Number),
+    })
+  );
+  expect(typeof sprint.totalSprints).toBe('number');
+  expect(typeof sprint.averageThroughputCount).toBe('number');
+  expect(['Improving', 'Declining', 'Stable']).toContain(sprint.trendDirection);
+
+  // KanbanFlowSummary — the fields FR-213 promises
+  const { kanban } = metrics.throughput;
+  expect(typeof kanban.hasKanbanData).toBe('boolean');
+  expect(kanban.periods).toEqual(expect.any(Array));
+  expect(['Healthy', 'At Risk', 'Degraded']).toContain(kanban.overallFlowHealth);
+
+  // MidSprintInsight[] — one entry per sprint, matching the documented shape
+  expect(metrics.throughput.midSprint[0]).toEqual(
+    expect.objectContaining({
+      sprintName: expect.any(String),
+      midSprintPct: expect.any(Number),
+      pattern: expect.any(String),
+      isEndLoaded: expect.any(Boolean),
+      isScopeUnstable: expect.any(Boolean),
+      isBlocked: expect.any(Boolean),
+    })
+  );
 });

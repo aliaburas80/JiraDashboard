@@ -1,8 +1,11 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.scss';
 import { DataSourceProvider, CloudLoadingBanner } from '@/components/ui/DataSourceBadge';
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(appUrl),
   title:       'Delivery Clarity — Jira Intelligence',
   description: 'Turn any Jira export into sprint health, flow efficiency, and delivery intelligence.',
   icons: {
@@ -13,7 +16,6 @@ export const metadata: Metadata = {
     apple:            '/logo/delivery_clarity_mark_128.png',
     shortcut:         '/favicon.ico',
   },
-  themeColor:         '#2563eb',
   openGraph: {
     title:            'Delivery Clarity — Jira Intelligence',
     description:      'Turn any Jira export into sprint health, flow efficiency, and delivery intelligence.',
@@ -28,10 +30,14 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: '#2563eb',
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-slate-50 text-slate-900 antialiased overflow-x-hidden" style={{ fontFamily: "var(--font-inter, 'Inter', sans-serif)" }}>
+      <body className="antialiased overflow-x-hidden">
         <DataSourceProvider>
           <CloudLoadingBanner />
           {children}

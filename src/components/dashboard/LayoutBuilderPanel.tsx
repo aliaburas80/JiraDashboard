@@ -14,6 +14,7 @@ import {
   type SectionPref,
 } from '@/lib/layoutBuilder';
 import { DASHBOARD_SECTIONS } from '@/lib/dashboardSections';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 // ── Label / icon lookup ───────────────────────────────────────────────────────
 
@@ -74,9 +75,7 @@ export default function LayoutBuilderPanel({ onLayoutChange }: Props) {
         aria-expanded={open}
         className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-500 hover:text-slate-800 transition-colors px-2 py-1 rounded-lg hover:bg-slate-100"
       >
-        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
-          <path d="M3 5h18v2H3V5Zm0 7h18v2H3v-2Zm0 7h18v2H3v-2Z"/>
-        </svg>
+        <SvgIcon name="list" size={14} />
         Layout
         {!isDefault && (
           <span className="w-1.5 h-1.5 rounded-full bg-blue-500" aria-label="Custom layout active" />
@@ -132,7 +131,7 @@ export default function LayoutBuilderPanel({ onLayoutChange }: Props) {
                       className="w-5 h-4 flex items-center justify-center text-slate-300 hover:text-slate-600 disabled:opacity-20 disabled:cursor-not-allowed transition-colors rounded"
                       aria-label={`Move ${meta.label} up`}
                     >
-                      <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current"><path d="M12 4 4 12h5v8h6v-8h5L12 4Z"/></svg>
+                      <SvgIcon name="arrowUp" size={12} />
                     </button>
                     <button
                       type="button"
@@ -141,12 +140,12 @@ export default function LayoutBuilderPanel({ onLayoutChange }: Props) {
                       className="w-5 h-4 flex items-center justify-center text-slate-300 hover:text-slate-600 disabled:opacity-20 disabled:cursor-not-allowed transition-colors rounded"
                       aria-label={`Move ${meta.label} down`}
                     >
-                      <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current"><path d="M12 20 4 12h5V4h6v8h5L12 20Z"/></svg>
+                      <SvgIcon name="arrowDown" size={12} />
                     </button>
                   </div>
 
                   {/* Icon + label */}
-                  <span className="text-base shrink-0" aria-hidden="true">{meta.icon}</span>
+                  <SvgIcon name={meta.icon} size={16} className="text-slate-500" />
                   <span className={`flex-1 text-xs font-semibold min-w-0 truncate ${pref.visible ? 'text-slate-700' : 'text-slate-400 line-through'}`}>
                     {meta.label}
                   </span>

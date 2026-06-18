@@ -3,7 +3,7 @@ import AppShell from '@/components/layout/AppShell';
 
 export default function NotFound() {
   return (
-    <AppShell showNav={false}>
+    <AppShell showNav>
       <div className="min-h-[calc(100vh-10rem)] flex flex-col items-center justify-center gap-6 py-12 text-center">
         <p className="text-[8rem] font-black leading-none text-slate-200 select-none">404</p>
 

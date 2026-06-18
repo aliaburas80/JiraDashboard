@@ -1,0 +1,652 @@
+// ── Keyframes ──────────────────────────────────────────────────────────────────
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes barGrow {
+  from { width: 0; }
+  to   { width: var(--bar-w, 0%); }
+}
+
+@keyframes barGrowV {
+  from { height: 0; }
+  to   { height: var(--bar-h, 0%); }
+}
+
+@keyframes arcDraw {
+  from { stroke-dashoffset: var(--arc-len, 0); }
+  to   { stroke-dashoffset: var(--arc-end, 0); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spinIn {
+  from { opacity: 0; transform: rotate(-30deg) scale(0.9); }
+  to   { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+// ── Page shell ─────────────────────────────────────────────────────────────────
+.page {
+  animation: fadeUp 350ms ease both;
+}
+
+// ── Breadcrumb ─────────────────────────────────────────────────────────────────
+.breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary, #2563eb);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 6px;
+  transition: color var(--transition-fast, 120ms ease);
+
+  &:hover { color: var(--color-primary-hover, #1d4ed8); }
+}
+
+// ── Page header ────────────────────────────────────────────────────────────────
+.pageHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4, 16px);
+  margin-bottom: var(--space-6, 24px);
+}
+
+.headLeft { flex: 1; min-width: 240px; }
+
+.pageTitle {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--color-text-primary, #0f172a);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.pageSubtitle {
+  font-size: 12px;
+  color: var(--color-text-muted, #94a3b8);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+// ── KPI strip ─────────────────────────────────────────────────────────────────
+.kpiStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+}
+
+.kpiPill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: var(--radius-xl, 12px);
+  color: #fff;
+  min-width: 76px;
+  animation: countUp 400ms var(--pill-delay, 0ms) ease both;
+  // EXCEPTION: gradient is data-driven from metric category
+  background: var(--pill-gradient);
+}
+
+.kpiVal {
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.kpiLbl {
+  font-size: 9px;
+  font-weight: 700;
+  opacity: 0.88;
+  margin-top: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+// ── Tab bar ────────────────────────────────────────────────────────────────────
+.tabBar {
+  display: flex;
+  gap: 2px;
+  background: var(--color-subtle, #f1f5f9);
+  border-radius: var(--radius-xl, 12px);
+  padding: 4px;
+  margin-bottom: var(--space-5, 20px);
+  width: fit-content;
+}
+
+.tabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 18px;
+  border-radius: var(--radius-lg, 10px);
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: var(--color-text-secondary, #64748b);
+  transition: background var(--transition-fast, 120ms ease), color var(--transition-fast, 120ms ease), box-shadow var(--transition-fast, 120ms ease);
+
+  &:hover:not(.tabBtnActive) {
+    background: color-mix(in srgb, var(--color-primary, #2563eb) 8%, transparent);
+    color: var(--color-text-primary, #0f172a);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.tabBtnActive {
+  background: var(--color-surface, #fff);
+  color: var(--color-primary, #2563eb);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 10%);
+}
+
+// ── Grid ──────────────────────────────────────────────────────────────────────
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4, 16px);
+  margin-bottom: var(--space-8, 32px);
+
+  @media (min-width: 640px)  { grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 1024px) { grid-template-columns: repeat(3, 1fr); }
+}
+
+.colSpan2 {
+  @media (min-width: 640px)  { grid-column: span 2; }
+}
+
+.colSpan3 {
+  @media (min-width: 640px)  { grid-column: span 2; }
+  @media (min-width: 1024px) { grid-column: span 3; }
+}
+
+// ── Widget card ────────────────────────────────────────────────────────────────
+.widget {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-2xl, 16px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: fadeUp var(--widget-dur, 300ms) var(--widget-delay, 0ms) ease both;
+}
+
+.widgetHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.widgetIconBox {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md, 8px);
+  background: var(--icon-bg, color-mix(in srgb, var(--color-primary, #2563eb) 10%, transparent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.widgetMeta { flex: 1; min-width: 0; }
+
+.widgetTitle {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.widgetDesc {
+  font-size: 10px;
+  color: var(--color-text-muted, #94a3b8);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.widgetSource {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--color-primary, #2563eb);
+  background: color-mix(in srgb, var(--color-primary, #2563eb) 8%, transparent);
+  border-radius: var(--radius-full, 9999px);
+  padding: 2px 7px;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+.widgetBody {
+  padding: 16px 18px;
+  flex: 1;
+}
+
+// ── Animated horizontal bar ────────────────────────────────────────────────────
+.hBarRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  margin-bottom: 8px;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.hBarLabel {
+  width: 110px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.hBarTrack {
+  flex: 1;
+  height: 8px;
+  background: var(--color-subtle, #f1f5f9);
+  border-radius: var(--radius-full, 9999px);
+  overflow: hidden;
+}
+
+.hBarFill {
+  height: 100%;
+  border-radius: var(--radius-full, 9999px);
+  // EXCEPTION: width and color are data-driven
+  width: var(--bar-w, 0%);
+  background: var(--bar-color, var(--color-primary, #2563eb));
+  animation: barGrow 700ms var(--bar-delay, 0ms) cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+.hBarVal {
+  width: 38px;
+  text-align: right;
+  font-weight: 800;
+  color: var(--color-text-primary, #0f172a);
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+// ── Animated vertical bar ─────────────────────────────────────────────────────
+.vBarsWrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 110px;
+  width: 100%;
+}
+
+.vBarCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.vBarValLabel {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.vBarTrack {
+  width: 100%;
+  height: 82px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.vBarFill {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  // EXCEPTION: height and color are data-driven
+  height: var(--bar-h, 3%);
+  background: var(--bar-color, var(--color-primary, #2563eb));
+  animation: barGrowV 650ms var(--bar-delay, 0ms) cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+.vBarName {
+  font-size: 9px;
+  color: var(--color-text-muted, #94a3b8);
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Gantt rows — spacious flat design ─────────────────────────────────────────
+.ganttScaleRow {
+  display: grid;
+  grid-template-columns: 160px 1fr 80px 72px;
+  align-items: center;
+  gap: 16px;
+  padding: 0 0 8px;
+  border-bottom: 2px solid var(--color-border, #e2e8f0);
+  margin-bottom: 4px;
+}
+
+.ganttColHead {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted, #94a3b8);
+}
+
+.ganttScale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: color-mix(in srgb, var(--color-border, #e2e8f0) 80%, transparent);
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  user-select: none;
+}
+
+.ganttDoneHead {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted, #94a3b8);
+  text-align: right;
+}
+
+// Each epic row is a flat card with a left health accent
+.ganttRow {
+  display: grid;
+  grid-template-columns: 160px 1fr 80px 72px;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: var(--radius-xl, 12px);
+  margin-bottom: 6px;
+  border-left: 4px solid var(--row-accent, var(--color-border, #e2e8f0));
+  // EXCEPTION: row bg and left accent color are data-driven from health
+  background: var(--row-bg, color-mix(in srgb, var(--color-border, #e2e8f0) 18%, transparent));
+  transition: box-shadow var(--transition-fast, 120ms ease), transform var(--transition-fast, 120ms ease);
+
+  &:last-child { margin-bottom: 0; }
+
+  &:hover {
+    box-shadow: 0 2px 12px rgb(0 0 0 / 6%);
+    transform: translateX(2px);
+  }
+}
+
+.ganttRowLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ganttRowName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.ganttRowSub {
+  font-size: 10px;
+  color: var(--color-text-muted, #94a3b8);
+  font-weight: 500;
+}
+
+// Track area — the bar + tick lines
+.ganttTrack {
+  height: 10px;
+  background: color-mix(in srgb, var(--color-border, #e2e8f0) 60%, transparent);
+  border-radius: var(--radius-full, 9999px);
+  overflow: hidden;
+  position: relative;
+}
+
+.ganttFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: var(--radius-full, 9999px);
+  // EXCEPTION: width and color are data-driven
+  width: var(--bar-w, 0%);
+  background: var(--bar-color, #22c55e);
+  animation: barGrow 800ms var(--bar-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ganttTick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgb(255 255 255 / 55%);
+  pointer-events: none;
+
+  &:nth-child(1) { left: 25%; }
+  &:nth-child(2) { left: 50%; }
+  &:nth-child(3) { left: 75%; }
+}
+
+// Right: % value large + fraction small
+.ganttDoneCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.ganttPct {
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  // EXCEPTION: color is data-driven from health
+  color: var(--bar-color, #22c55e);
+}
+
+.ganttFraction {
+  font-size: 10px;
+  color: var(--color-text-muted, #94a3b8);
+  font-weight: 500;
+}
+
+// Health badge chip (right of %)
+.ganttHealthChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border-radius: var(--radius-full, 9999px);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  // EXCEPTION: bg/color driven by health variant
+  background: var(--chip-bg, var(--color-subtle, #f1f5f9));
+  color: var(--chip-fg, var(--color-text-muted, #94a3b8));
+  white-space: nowrap;
+}
+
+// ── SVG Donut (Circles tab) ───────────────────────────────────────────────────
+.donutWrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+
+.donutSvg {
+  flex-shrink: 0;
+  animation: spinIn 500ms var(--spin-delay, 0ms) ease both;
+  overflow: visible;
+}
+
+.donutArc {
+  fill: none;
+  stroke-linecap: round;
+  // EXCEPTION: stroke-dasharray and stroke-dashoffset are data-driven from segment value
+  stroke-dasharray: var(--arc-len, 0);
+  stroke-dashoffset: var(--arc-end, 0);
+  animation: arcDraw var(--arc-dur, 800ms) var(--arc-delay, 0ms) cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+.donutCenter {
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.donutCenterVal {
+  font-size: 18px;
+  font-weight: 900;
+  fill: var(--color-text-primary, #0f172a);
+}
+
+.donutCenterSub {
+  font-size: 9px;
+  font-weight: 600;
+  fill: var(--color-text-muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.donutLegend {
+  flex: 1;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.donutLegendRow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+}
+
+.donutLegendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full, 9999px);
+  flex-shrink: 0;
+  // EXCEPTION: background is data-driven from segment color
+  background: var(--dot-color);
+}
+
+.donutLegendLabel {
+  flex: 1;
+  color: var(--color-text-secondary, #64748b);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.donutLegendVal {
+  font-weight: 800;
+  color: var(--color-text-primary, #0f172a);
+  flex-shrink: 0;
+}
+
+.donutLegendPct {
+  width: 32px;
+  text-align: right;
+  color: var(--color-text-muted, #94a3b8);
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+.donutDivider {
+  border: none;
+  border-top: 1px solid var(--color-border, #e2e8f0);
+  margin: 2px 0;
+}
+
+.donutTotal {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--color-text-muted, #94a3b8);
+  padding-top: 2px;
+}
+
+.donutTotalVal {
+  font-weight: 800;
+  color: var(--color-text-primary, #0f172a);
+}
+
+// ── Empty states ─────────────────────────────────────────────────────────────
+.empty {
+  font-size: 12px;
+  color: var(--color-text-muted, #94a3b8);
+  font-style: italic;
+  padding: 8px 0;
+}
+
+// ── Legend pills row (below bar chart) ────────────────────────────────────────
+.legendRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full, 9999px);
+  flex-shrink: 0;
+  // EXCEPTION: background is data-driven
+  background: var(--dot-color);
+}
+
+// ── CTA row ───────────────────────────────────────────────────────────────────
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3, 12px);
+  padding-bottom: var(--space-4, 16px);
+}

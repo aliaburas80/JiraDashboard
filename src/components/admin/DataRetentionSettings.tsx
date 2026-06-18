@@ -1,13 +1,14 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
 import { useState } from 'react';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { RetentionSettings, RetentionStats, RetentionPeriod } from '@/types/settings';
 
 const PERIODS: { value: RetentionPeriod; label: string }[] = [
-  { value: 7,   label: '7 days'     },
-  { value: 30,  label: '30 days'    },
-  { value: 90,  label: '90 days'    },
-  { value: 365, label: '1 year'     },
+  { value: 7,   label: '7 days'      },
+  { value: 30,  label: '30 days'     },
+  { value: 90,  label: '90 days'     },
+  { value: 365, label: '1 year'      },
   { value: -1,  label: 'Keep forever' },
 ];
 
@@ -19,19 +20,37 @@ interface Props {
   onClearAll: () => Promise<{ logsDeleted: number; snapshotsDeleted: number }>;
 }
 
-function Toggle({ label, description, checked, onChange }: { label: string; description: string; checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ label, description, checked, onChange }: {
+  label: string; description: string; checked: boolean; onChange: (v: boolean) => void;
+}) {
   return (
-    <div className="flex items-start justify-between gap-4 py-3 border-b border-slate-100 last:border-0">
+    <div className="flex items-start justify-between gap-4 py-3 last:border-0"
+      style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
       <div>
-        <p className="text-sm font-semibold text-slate-800">{label}</p>
-        <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+        <p className="text-sm font-semibold" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{label}</p>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--dc-p2, #909090)' }}>{description}</p>
       </div>
       <button
         type="button"
         onClick={() => onChange(!checked)}
-        className={`relative shrink-0 w-10 h-5 rounded-full transition-colors ${checked ? 'bg-blue-600' : 'bg-slate-300'}`}
+        className="relative shrink-0 rounded-full transition-colors"
+        style={{
+          width: 34,
+          height: 18,
+          background: checked ? 'var(--dc-acc, #E85D12)' : 'var(--dc-s4, #323232)',
+          border: checked ? 'none' : '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))',
+        }}
       >
-        <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${checked ? 'translate-x-5' : ''}`} />
+        <span
+          className="absolute top-0.5 rounded-full transition-transform"
+          style={{
+            width: 14,
+            height: 14,
+            background: checked ? '#fff' : 'var(--dc-p3, #505050)',
+            left: 2,
+            transform: checked ? 'translateX(16px)' : 'translateX(0)',
+          }}
+        />
       </button>
     </div>
   );
@@ -40,37 +59,37 @@ function Toggle({ label, description, checked, onChange }: { label: string; desc
 export default function DataRetentionSettings({ settings, stats, onSave, onCleanup, onClearAll }: Props) {
   const [form, setForm]       = useState<RetentionSettings>({ ...settings });
   const [saving, setSaving]   = useState(false);
-  const [msg, setMsg]         = useState('');
+  const [msg, setMsg]         = useState<{ text: string; ok: boolean } | null>(null);
   const [cleaning, setCleaning]   = useState(false);
   const [clearing, setClearing]   = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
 
   async function handleSave() {
-    setSaving(true); setMsg('');
+    setSaving(true); setMsg(null);
     try {
       await onSave(form);
-      setMsg('✓ Settings saved.');
-    } catch { setMsg('Failed to save.'); }
-    finally { setSaving(false); setTimeout(() => setMsg(''), 3000); }
+      setMsg({ text: 'Settings saved.', ok: true });
+    } catch { setMsg({ text: 'Failed to save.', ok: false }); }
+    finally { setSaving(false); setTimeout(() => setMsg(null), 3000); }
   }
 
   async function handleCleanup() {
-    setCleaning(true); setMsg('');
+    setCleaning(true); setMsg(null);
     try {
       const r = await onCleanup();
-      setMsg(`✓ Deleted ${r.logsDeleted} logs and ${r.snapshotsDeleted} snapshots.`);
-    } catch { setMsg('Cleanup failed.'); }
-    finally { setCleaning(false); setTimeout(() => setMsg(''), 4000); }
+      setMsg({ text: `Deleted ${r.logsDeleted} logs and ${r.snapshotsDeleted} snapshots.`, ok: true });
+    } catch { setMsg({ text: 'Cleanup failed.', ok: false }); }
+    finally { setCleaning(false); setTimeout(() => setMsg(null), 4000); }
   }
 
   async function handleClearAll() {
     if (!confirmClear) { setConfirmClear(true); return; }
-    setClearing(true); setMsg(''); setConfirmClear(false);
+    setClearing(true); setMsg(null); setConfirmClear(false);
     try {
       const r = await onClearAll();
-      setMsg(`✓ Cleared all data: ${r.logsDeleted} logs + ${r.snapshotsDeleted} snapshots deleted.`);
-    } catch { setMsg('Clear failed.'); }
-    finally { setClearing(false); setTimeout(() => setMsg(''), 5000); }
+      setMsg({ text: `Cleared all data: ${r.logsDeleted} logs + ${r.snapshotsDeleted} snapshots deleted.`, ok: true });
+    } catch { setMsg({ text: 'Clear failed.', ok: false }); }
+    finally { setClearing(false); setTimeout(() => setMsg(null), 5000); }
   }
 
   const period = PERIODS.find(p => p.value === form.retentionDays) ?? PERIODS[4];
@@ -78,22 +97,23 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
   return (
     <div className="space-y-6">
 
-      {/* Stats */}
+      {/* Stat cards */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: 'Total Import Logs', value: stats.totalLogs, color: '#2563eb' },
-            { label: 'Eligible for Deletion', value: stats.logsEligible, color: stats.logsEligible > 0 ? '#dc2626' : '#16a34a' },
-            { label: 'Total Snapshots', value: stats.totalSnapshots, color: '#7c3aed' },
-            { label: 'Snapshots Eligible', value: stats.snapshotsEligible, color: stats.snapshotsEligible > 0 ? '#dc2626' : '#16a34a' },
+            { label: 'Total Import Logs',    value: stats.totalLogs,         color: 'var(--dc-p1, #F2F2F2)' },
+            { label: 'Eligible for Deletion', value: stats.logsEligible,      color: stats.logsEligible > 0 ? 'var(--dc-red, #F87171)' : '#22C55E' },
+            { label: 'Total Snapshots',       value: stats.totalSnapshots,    color: 'var(--dc-p1, #F2F2F2)' },
+            { label: 'Snapshots Eligible',    value: stats.snapshotsEligible, color: stats.snapshotsEligible > 0 ? 'var(--dc-red, #F87171)' : '#22C55E' },
           ].map(s => (
-            <div key={s.label} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{s.label}</p>
+            <div key={s.label} className="rounded-xl p-4"
+              style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+              <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--dc-p3, #505050)' }}>{s.label}</p>
               <p className="text-2xl font-black" style={{ color: s.color }}>{s.value}</p>
             </div>
           ))}
           {stats.oldestLogDate && (
-            <div className="col-span-2 sm:col-span-4 text-xs text-slate-400 text-right">
+            <div className="col-span-2 sm:col-span-4 text-xs text-right" style={{ color: 'var(--dc-p3, #505050)' }}>
               Oldest log: {new Date(stats.oldestLogDate).toLocaleDateString()} ·
               Newest: {stats.newestLogDate ? new Date(stats.newestLogDate).toLocaleDateString() : '—'}
             </div>
@@ -101,9 +121,10 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
         </div>
       )}
 
-      {/* Settings card */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-        <h3 className="text-sm font-black text-slate-700 uppercase tracking-wider mb-4">Storage Settings</h3>
+      {/* Storage settings card */}
+      <div className="rounded-2xl p-6"
+        style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+        <h3 className="text-xs font-black uppercase tracking-wider mb-4" style={{ color: 'var(--dc-p3, #505050)' }}>Storage Settings</h3>
 
         <Toggle
           label="Store upload logs"
@@ -131,26 +152,29 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
         />
 
         {/* Retention period */}
-        <div className="mt-4">
-          <p className="text-sm font-semibold text-slate-800 mb-2">Retention period</p>
+        <div className="mt-5">
+          <p className="text-sm font-semibold mb-3" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Retention period</p>
           <div className="flex flex-wrap gap-2">
-            {PERIODS.map(p => (
-              <button
-                key={p.value}
-                type="button"
-                onClick={() => setForm(f => ({ ...f, retentionDays: p.value }))}
-                className={`text-xs font-bold transition-colors ${
-                  form.retentionDays === p.value
-                    ? 'btn-primary px-4 py-2'
-                    : 'btn-secondary px-4 py-2'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+            {PERIODS.map(p => {
+              const active = form.retentionDays === p.value;
+              return (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, retentionDays: p.value }))}
+                  className="text-xs font-bold transition-colors"
+                  style={active
+                    ? { padding: '5px 14px', borderRadius: 100, background: 'rgba(232,93,18,0.12)', border: '1.5px solid rgba(232,93,18,0.3)', color: 'var(--dc-acc2, #FF8A4C)' }
+                    : { padding: '5px 14px', borderRadius: 100, background: 'transparent', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }
+                  }
+                >
+                  {p.label}
+                </button>
+              );
+            })}
           </div>
           {form.retentionDays !== -1 && (
-            <p className="text-xs text-slate-400 mt-2">
+            <p className="text-xs mt-2 italic" style={{ color: 'var(--dc-p3, #505050)' }}>
               Logs and snapshots older than {period.label} will be eligible for deletion.
             </p>
           )}
@@ -162,24 +186,32 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="btn-primary px-5 py-2 disabled:opacity-50"
+            className="inline-flex h-[38px] items-center rounded-[9px] px-5 text-sm font-extrabold text-white transition disabled:opacity-50"
+            style={{ background: 'var(--dc-acc, #E85D12)' }}
           >
             {saving ? 'Saving…' : 'Save Settings'}
           </button>
-          {msg && <span className={`text-xs font-semibold ${msg.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>{msg}</span>}
+          {msg && (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: msg.ok ? '#4ade80' : '#fca5a5' }}>
+              <SvgIcon name={msg.ok ? 'checkCircle' : 'warning'} size={12} />
+              {msg.text}
+            </span>
+          )}
         </div>
       </div>
 
       {/* Cleanup actions */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-        <h3 className="text-sm font-black text-slate-700 uppercase tracking-wider mb-4">Cleanup Actions</h3>
+      <div className="rounded-2xl p-6"
+        style={{ background: 'rgba(232,93,18,0.04)', border: '1px solid rgba(232,93,18,0.12)' }}>
+        <h3 className="text-xs font-black uppercase tracking-wider mb-4" style={{ color: 'var(--dc-p3, #505050)' }}>Cleanup Actions</h3>
 
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
             onClick={handleCleanup}
             disabled={cleaning || form.retentionDays === -1}
-            className="btn-warning disabled:opacity-40"
+            className="inline-flex h-[38px] items-center rounded-[100px] px-4 text-sm font-extrabold transition disabled:opacity-40"
+            style={{ background: 'transparent', border: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))', color: 'var(--dc-p1, #F2F2F2)' }}
           >
             {cleaning ? 'Running…' : `Apply Retention Policy (${period.label})`}
           </button>
@@ -188,26 +220,32 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
             type="button"
             onClick={handleClearAll}
             disabled={clearing}
-            className={confirmClear ? 'btn-danger' : 'btn-outline-danger'}
+            className="inline-flex h-[38px] items-center gap-1.5 rounded-[100px] px-4 text-sm font-extrabold transition disabled:opacity-50"
+            style={confirmClear
+              ? { background: 'rgba(248,113,113,0.20)', border: '1px solid rgba(248,113,113,0.40)', color: '#fca5a5' }
+              : { background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.20)', color: '#fca5a5' }
+            }
           >
-            {clearing ? 'Clearing…' : confirmClear ? '⚠ Confirm — Delete ALL data' : 'Clear All Data'}
+            {clearing ? 'Clearing…' : confirmClear ? <><SvgIcon name="warning" size={14} /> Confirm — Delete ALL data</> : 'Clear All Data'}
           </button>
+
           {confirmClear && (
             <button type="button" onClick={() => setConfirmClear(false)}
-              className="btn-ghost text-xs">
+              className="inline-flex h-[38px] items-center rounded-[100px] px-4 text-sm font-extrabold transition"
+              style={{ background: 'transparent', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }}>
               Cancel
             </button>
           )}
         </div>
 
-        <p className="text-xs text-slate-400 mt-3">
-          "Clear All Data" permanently deletes all import logs and snapshots for all users. This cannot be undone.
+        <p className="text-xs mt-3 italic" style={{ color: 'var(--dc-p3, #505050)' }}>
+          &quot;Clear All Data&quot; permanently deletes all import logs and snapshots for all users. This cannot be undone.
         </p>
       </div>
 
       {/* Last updated */}
       {settings.updatedAt && (
-        <p className="text-xs text-slate-400 text-right">
+        <p className="text-xs text-right" style={{ color: 'var(--dc-p3, #505050)' }}>
           Last updated {new Date(settings.updatedAt).toLocaleString()} by {settings.updatedBy}
         </p>
       )}

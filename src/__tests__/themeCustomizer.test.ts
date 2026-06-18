@@ -70,7 +70,7 @@ test('TC-TC-04: loadThemeCustom returns defaults when storage is empty', () => {
 // ── TC-TC-05: saveThemeCustom persists and loadThemeCustom retrieves ──────────
 
 test('TC-TC-05: saveThemeCustom persists settings and loadThemeCustom reads them', () => {
-  saveThemeCustom({ accent: 'purple', radius: 'rounded', fontSize: 'lg' });
+  saveThemeCustom({ accent: 'purple', radius: 'rounded', fontSize: 'lg', palette: 'copper' });
   const loaded = loadThemeCustom();
   expect(loaded.accent).toBe('purple');
   expect(loaded.radius).toBe('rounded');
@@ -80,7 +80,7 @@ test('TC-TC-05: saveThemeCustom persists settings and loadThemeCustom reads them
 // ── TC-TC-06: resetThemeCustom clears storage ─────────────────────────────────
 
 test('TC-TC-06: resetThemeCustom clears saved settings', () => {
-  saveThemeCustom({ accent: 'teal', radius: 'sharp', fontSize: 'sm' });
+  saveThemeCustom({ accent: 'teal', radius: 'sharp', fontSize: 'sm', palette: 'sage' });
   resetThemeCustom();
   const loaded = loadThemeCustom();
   expect(loaded).toEqual(DEFAULT_THEME);

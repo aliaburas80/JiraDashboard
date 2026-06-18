@@ -24,8 +24,13 @@ const ENDPOINTS = [
   { method: 'GET',  path: '/api/developer-view', description: 'Developer wiki — architecture, services, and data-flow docs' },
   { method: 'POST', path: '/api/auth/login',     description: 'Authenticate with email + password — sets session cookie' },
   { method: 'POST', path: '/api/auth/logout',    description: 'Clear session cookie' },
-  { method: 'POST', path: '/api/auth/register',  description: 'Create a new user account (requires ALLOW_OPEN_REGISTRATION=true)' },
+  { method: 'POST', path: '/api/auth/register',  description: 'Inactive public registration endpoint — returns 403' },
+  { method: 'POST', path: '/api/auth/change-password', description: 'Authenticated first-login password change' },
   { method: 'GET',  path: '/api/auth/me',        description: 'Return the current authenticated user' },
+  { method: 'GET/PATCH', path: '/api/profile',   description: 'Read or update the current user member profile' },
+  { method: 'GET/POST', path: '/api/profile/image', description: 'Upload or stream S3-backed profile images under images/profile/' },
+  { method: 'GET',  path: '/api/members',        description: 'List active members for the logged-in user directory' },
+  { method: 'GET/POST/PATCH/DELETE', path: '/api/admin/users', description: 'Admin-only user management' },
 ];
 
 export async function GET(req: NextRequest): Promise<NextResponse> {

@@ -6,14 +6,27 @@ import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { canAccessRoute, fallbackRouteForRole } from '@/lib/roles';
 
-const PROTECTED  = ['/dashboard', '/summary', '/charts', '/explore', '/backend', '/profile', '/customer', '/snapshots', '/trends', '/readiness', '/teams', '/portfolio', '/landing', '/glossary', '/developer', '/help', '/admin'];
+const PROTECTED  = [
+  '/', '/dashboard', '/summary', '/charts', '/explore', '/backend', '/profile',
+  '/members', '/customer', '/snapshots', '/trends', '/readiness', '/teams',
+  '/portfolio', '/landing', '/glossary', '/developer', '/help', '/admin',
+  '/change-password',
+  // Routes added v4.6–v4.9 — were missing from PROTECTED (unauthenticated access possible)
+  '/roadmap', '/forecast', '/retro',
+  '/data-quality', '/delivery-mix', '/flow-health', '/release-readiness',
+  '/sprint-kanban', '/work-explorer', '/column-mapping',
+];
 const ADMIN_ONLY = ['/admin'];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  const isProtected = PROTECTED.some(p => pathname.startsWith(p));
+  const isProtected = PROTECTED.some(p => p === '/' ? pathname === '/' : pathname.startsWith(p));
   const isAdminOnly = ADMIN_ONLY.some(p => pathname.startsWith(p));
+
+  if (pathname === '/register') {
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
 
   if (!isProtected && !isAdminOnly) return NextResponse.next();
 
@@ -23,8 +36,12 @@ export async function middleware(req: NextRequest) {
   if (!session.isLoggedIn) {
     const url = req.nextUrl.clone();
     url.pathname = '/login';
-    url.searchParams.set('redirect', pathname);
+    if (pathname !== '/') url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
+  }
+
+  if (session.mustChangePassword && pathname !== '/change-password') {
+    return NextResponse.redirect(new URL('/change-password', req.url));
   }
 
   if (isAdminOnly && session.role !== 'admin') {
@@ -44,6 +61,11 @@ export const config = {
     '/explore/:path*',   '/backend/:path*', '/profile/:path*',
     '/customer/:path*',  '/snapshots/:path*', '/trends/:path*', '/readiness/:path*',
     '/teams/:path*', '/portfolio/:path*', '/landing/:path*', '/glossary/:path*',
-    '/developer/:path*', '/help/:path*', '/admin/:path*',
+    '/', '/register/:path*', '/developer/:path*', '/help/:path*', '/admin/:path*',
+    '/change-password/:path*', '/members/:path*',
+    '/roadmap/:path*', '/forecast/:path*', '/retro/:path*',
+    '/data-quality/:path*', '/delivery-mix/:path*', '/flow-health/:path*',
+    '/release-readiness/:path*', '/sprint-kanban/:path*', '/work-explorer/:path*',
+    '/column-mapping/:path*',
   ],
 };

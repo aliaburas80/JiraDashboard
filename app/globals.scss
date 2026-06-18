@@ -2,10 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+// ─── Design token foundation (single source of truth) ─────────────────────────
+@import '../src/styles/tokens';
 
 :root {
-  --font-inter: 'Inter', sans-serif;
+  --font-inter:   'Inter', sans-serif;
+  --font-jakarta: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
   --color-bg: #f8fafc;
   --color-surface: #ffffff;
   --color-border: rgba(203,213,225,0.7);
@@ -14,10 +19,207 @@
   --radius-md: 12px;
   --radius-lg: 18px;
   --radius-full: 9999px;
-  /* Advanced theme customization — overridden by themeCustomizer.ts */
+
+  /* UIUXTemplate palette tokens — default (light). Overridden by themeCustomizer.ts */
+  --dc-bg:            #f8fafc;
+  --dc-s1:            #ffffff;
+  --dc-s2:            #f1f5f9;
+  --dc-s3:            #e2e8f0;
+  --dc-s4:            #cbd5e1;
+  --dc-p1:            #0f172a;
+  --dc-p2:            #64748b;
+  --dc-p3:            #94a3b8;
+  --dc-bdr:           rgba(203,213,225,0.7);
+  --dc-bdr2:          rgba(148,163,184,0.5);
+  --dc-acc2:          #3b82f6;
+  --dc-cta:           #2563eb;
+
+  /* Accent — overridden by themeCustomizer.ts */
   --dc-accent:        #2563eb;
   --dc-accent-hover:  #1d4ed8;
   --dc-accent-shadow: rgba(37,99,235,0.25);
+
+  /* UIUXTemplate motion */
+  --ease:             cubic-bezier(0.22,1,0.36,1);
+  --ease-back:        cubic-bezier(0.34,1.56,0.64,1);
+
+  /* Shared status colours — universal across all palettes */
+  --dc-green:  #22C55E;
+  --dc-amber:  #F59E0B;
+  --dc-red:    #F87171;
+  --dc-orange: #E85D12;
+}
+
+/* ── Base body — background, text colour, and font from design tokens ────── */
+/* Removes the need for inline styles on <body> in the root layout.            */
+body {
+  background: var(--dc-bg, #f8fafc);
+  color: var(--dc-p1, #0f172a);
+  font-family: var(--font-jakarta, var(--font-inter, 'Inter', sans-serif));
+}
+
+/* ── Global placeholder — always light/muted regardless of theme ─────────── */
+::placeholder {
+  color: var(--color-text-muted, #94a3b8);
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   UIUXTemplate Palette — global Tailwind override
+   When data-palette is active on <html>, every Tailwind colour utility is
+   remapped to the active design-token CSS variable.  Placed after
+   @tailwind utilities so these rules win via source-order + !important.
+   ───────────────────────────────────────────────────────────────────────────── */
+html[data-palette] {
+  background-color: var(--dc-bg);
+  color:            var(--dc-p1);
+  font-family:      var(--font-jakarta);
+
+  /* ── Body / page ───────────────────────────────────────────────────────── */
+  body { background-color: var(--dc-bg) !important; color: var(--dc-p1) !important; font-family: var(--font-jakarta) !important; }
+
+  /* ── Background utilities ──────────────────────────────────────────────── */
+  .bg-white,
+  .bg-gray-50,
+  .bg-slate-50              { background-color: var(--dc-s2)  !important; }
+  .bg-slate-100,
+  .bg-gray-100,
+  .bg-zinc-100,
+  .bg-neutral-100           { background-color: var(--dc-s2)  !important; }
+  .bg-slate-200,
+  .bg-gray-200              { background-color: var(--dc-s3)  !important; }
+  .bg-slate-700,
+  .bg-slate-800,
+  .bg-gray-700,
+  .bg-gray-800              { background-color: var(--dc-s3)  !important; }
+  .bg-slate-900,
+  .bg-slate-950,
+  .bg-gray-900,
+  .bg-black                 { background-color: var(--dc-s1)  !important; }
+
+  /* ── Text utilities ────────────────────────────────────────────────────── */
+  .text-slate-950, .text-slate-900, .text-slate-800,
+  .text-gray-950,  .text-gray-900,  .text-gray-800,
+  .text-zinc-900,  .text-neutral-900, .text-black  { color: var(--dc-p1) !important; }
+
+  .text-slate-700, .text-slate-600,
+  .text-gray-700,  .text-gray-600                  { color: var(--dc-p2) !important; }
+
+  .text-slate-500, .text-slate-400,
+  .text-gray-500,  .text-gray-400                  { color: var(--dc-p3) !important; }
+
+  .text-slate-300, .text-slate-200, .text-slate-100,
+  .text-gray-300                                   { color: var(--dc-bdr2) !important; }
+
+  /* ── Border utilities ──────────────────────────────────────────────────── */
+  .border-slate-100, .border-slate-200, .border-slate-300,
+  .border-gray-100,  .border-gray-200,  .border-gray-300   { border-color: var(--dc-bdr)  !important; }
+  .border-slate-600, .border-slate-700, .border-slate-800,
+  .border-gray-600,  .border-gray-700,  .border-gray-800   { border-color: var(--dc-bdr2) !important; }
+
+  /* ── Divide utilities ──────────────────────────────────────────────────── */
+  .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+  .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+  .divide-gray-200  > :not([hidden]) ~ :not([hidden])  { border-color: var(--dc-bdr) !important; }
+
+  /* ── Shadows ───────────────────────────────────────────────────────────── */
+  .shadow-sm { box-shadow: 0 1px 3px  rgba(0,0,0,0.35) !important; }
+  .shadow    { box-shadow: 0 2px 8px  rgba(0,0,0,0.35) !important; }
+  .shadow-md { box-shadow: 0 4px 16px rgba(0,0,0,0.4)  !important; }
+  .shadow-lg { box-shadow: 0 8px 32px rgba(0,0,0,0.5)  !important; }
+
+  /* ── Rings ─────────────────────────────────────────────────────────────── */
+  .ring-1, .ring-2 { --tw-ring-color: var(--dc-bdr) !important; }
+
+  /* ── Accent / interactive (blue → palette accent) ──────────────────────── */
+  .bg-blue-600, .bg-blue-500    { background-color: var(--dc-accent)       !important; }
+  .bg-blue-700                  { background-color: var(--dc-accent-hover)  !important; }
+  .bg-blue-50                   { background-color: rgba(0,0,0,0.15)        !important; }
+  .text-blue-600, .text-blue-700,
+  .text-blue-800, .text-blue-500 { color: var(--dc-acc2) !important; }
+  .border-blue-600, .border-blue-500 { border-color: var(--dc-accent) !important; }
+  .border-blue-200, .border-blue-300 { border-color: rgba(255,255,255,0.15) !important; }
+
+  /* ── Status colours — semantic, adapted for dark ───────────────────────── */
+  .bg-green-50, .bg-emerald-50  { background-color: rgba(34,197,94,0.12)   !important; }
+  .bg-amber-50, .bg-yellow-50   { background-color: rgba(245,158,11,0.12)  !important; }
+  .bg-red-50, .bg-rose-50       { background-color: rgba(248,113,113,0.12) !important; }
+  .bg-orange-50                 { background-color: rgba(232,93,18,0.12)   !important; }
+  .bg-purple-50, .bg-violet-50  { background-color: rgba(139,92,246,0.12)  !important; }
+  .bg-indigo-50, .bg-sky-50     { background-color: rgba(99,102,241,0.12)  !important; }
+
+  .text-green-700, .text-green-600, .text-green-800,
+  .text-emerald-700, .text-emerald-600               { color: #4ade80  !important; }
+  .text-amber-700, .text-amber-600, .text-amber-800,
+  .text-yellow-700                                   { color: #fcd34d  !important; }
+  .text-red-700, .text-red-600, .text-red-800,
+  .text-rose-700                                     { color: #fca5a5  !important; }
+  .text-orange-700, .text-orange-600, .text-orange-800 { color: var(--dc-cta) !important; }
+  .text-purple-700, .text-purple-600                 { color: #c4b5fd  !important; }
+
+  .border-green-200, .border-green-300, .border-emerald-200  { border-color: rgba(34,197,94,0.25)   !important; }
+  .border-amber-200, .border-amber-300, .border-yellow-200   { border-color: rgba(245,158,11,0.25)  !important; }
+  .border-red-200,   .border-red-300,   .border-rose-200     { border-color: rgba(248,113,113,0.25) !important; }
+  .border-orange-200, .border-orange-300                     { border-color: rgba(232,93,18,0.25)   !important; }
+
+  /* ── Hover states ──────────────────────────────────────────────────────── */
+  .hover\:bg-white:hover,
+  .hover\:bg-slate-50:hover,
+  .hover\:bg-gray-50:hover       { background-color: var(--dc-s3) !important; }
+  .hover\:bg-slate-100:hover,
+  .hover\:bg-gray-100:hover      { background-color: var(--dc-s4) !important; }
+  .hover\:bg-slate-200:hover     { background-color: var(--dc-s4) !important; }
+  .hover\:text-slate-900:hover,
+  .hover\:text-gray-900:hover    { color: var(--dc-p1) !important; }
+  .hover\:text-slate-700:hover,
+  .hover\:text-gray-700:hover    { color: var(--dc-p2) !important; }
+  .hover\:border-slate-300:hover { border-color: var(--dc-bdr2) !important; }
+
+  /* ── Form inputs ───────────────────────────────────────────────────────── */
+  input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
+  textarea, select {
+    background-color: var(--dc-s3) !important;
+    color:            var(--dc-p1) !important;
+    border-color:     var(--dc-bdr) !important;
+  }
+  ::placeholder { color: var(--dc-p3, #94a3b8) !important; opacity: 1 !important; }
+
+  /* ── Specific component classes ────────────────────────────────────────── */
+  .card {
+    background-color: var(--dc-s2) !important;
+    border-color:     var(--dc-bdr) !important;
+    color:            var(--dc-p1)  !important;
+  }
+  .badge-neutral {
+    background-color: var(--dc-s3) !important;
+    color:            var(--dc-p2) !important;
+    border-color:     var(--dc-bdr) !important;
+  }
+  .btn-secondary {
+    background-color: var(--dc-s3) !important;
+    color:            var(--dc-p1) !important;
+    border-color:     var(--dc-bdr) !important;
+    &:hover { background-color: var(--dc-s4) !important; }
+  }
+  .btn-ghost {
+    color: var(--dc-p2) !important;
+    &:hover { background-color: var(--dc-s3) !important; color: var(--dc-p1) !important; }
+  }
+  .btn-dark {
+    background-color: var(--dc-s3) !important;
+    color:            var(--dc-p1) !important;
+    &:hover { background-color: var(--dc-s4) !important; }
+  }
+
+  /* ── Scrollbar ─────────────────────────────────────────────────────────── */
+  * {
+    scrollbar-color: var(--dc-s3) var(--dc-bg);
+    scrollbar-width: thin;
+  }
+  ::-webkit-scrollbar       { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--dc-bg); }
+  ::-webkit-scrollbar-thumb { background: var(--dc-s4); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--dc-bdr2); }
 }
 
 @layer components {
@@ -78,14 +280,81 @@
   .btn-xs  { @apply px-2.5 py-0.5 text-[10px]; }
 }
 
-@keyframes fadeIn   { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
-@keyframes slideUp  { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:none } }
-@keyframes spin     { to { transform: rotate(360deg) } }
+@keyframes fadeIn      { from { opacity:0; transform:translateY(8px) }  to { opacity:1; transform:none } }
+@keyframes slideUp     { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:none } }
+@keyframes spin        { to { transform: rotate(360deg) } }
+/* Dashboard section animations */
+@keyframes barFill     { from { transform:scaleX(0) } to { transform:scaleX(1) } }
+@keyframes cardIn      { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:none } }
+@keyframes donutReveal { from { opacity:0; transform:scale(0.84) } to { opacity:1; transform:scale(1) } }
+@keyframes kpiPop      { from { opacity:0; transform:translateY(8px) scale(0.96) } to { opacity:1; transform:none } }
+
 .animate-fade-in  { animation: fadeIn  0.3s ease both; }
 .animate-slide-up { animation: slideUp 0.25s ease both; }
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-in, .animate-slide-up { animation: none; }
+  .animate-fade-in, .animate-slide-up,
+  [style*="barFill"], [style*="cardIn"], [style*="donutReveal"], [style*="kpiPop"] { animation: none !important; }
 }
 /* Ensure sections and their trigger headers clear the app header + sticky bar when scrolled to */
 .dashboard-section,
 [id^="trigger-"] { scroll-margin-top: 14rem; }
+
+/* Status/type chip pills */
+.chip { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: .04em; }
+.c-acc { background: rgba(232,93,18,0.12); color: var(--dc-acc2, #FF8A4C); }
+.c-gr  { background: rgba(34,197,94,0.11); color: #4ade80; }
+.c-am  { background: rgba(245,158,11,0.11); color: #fcd34d; }
+.c-or  { background: rgba(232,93,18,0.13); color: #fb923c; }
+.c-rd  { background: rgba(248,113,113,0.11); color: #fca5a5; }
+.c-nt  { background: rgba(144,144,144,0.10); color: var(--dc-p2, #909090); }
+
+/* Flow items table hover + orphan rows */
+.flow-table tr:hover td { background: rgba(255,255,255,0.025) !important; }
+.row-orphan td { background: rgba(255,138,76,0.04) !important; }
+
+/* Legacy utility card — used by work-explorer, data-quality, and similar pages */
+.dc-card {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-2xl, 14px);
+  box-shadow: var(--shadow-card, 0 1px 3px rgb(0 0 0 / 6%));
+}
+
+/* DCKpiCard utility classes */
+.dc-kpi-card {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-xl, 12px);
+  padding: 16px;
+  box-shadow: var(--dc-shadow-card, 0 1px 3px rgb(0 0 0 / 6%));
+}
+.dc-kpi-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.dc-kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dc-text-2, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+.dc-kpi-value {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.1;
+}
+.dc-kpi-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dc-text-3, #94a3b8);
+  margin: 0;
+}

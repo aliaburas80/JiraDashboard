@@ -1,6 +1,8 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 // Admin user management API tests.
 
+export {};
+
 const mockSession = {
   isLoggedIn: true,
   role: 'admin',
@@ -24,6 +26,7 @@ jest.mock('@/lib/prisma', () => ({
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
     auditEvent: { create: jest.fn() },
   },
@@ -73,7 +76,7 @@ test('admin users API creates a role-assigned user without returning password ha
   const { prisma } = await import('@/lib/prisma');
   const { syncFromCloud, pushToCloud } = await import('@/services/storage/cloudSync');
   (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
-  (prisma.user.create as jest.Mock).mockResolvedValue(user({ role: 'product_owner' }));
+  (prisma.user.create as jest.Mock).mockResolvedValue(user({ role: 'product_owner', mustChangePassword: true }));
   const { POST } = await import('../../app/api/admin/users/route');
 
   const response = await POST(request({
@@ -86,7 +89,11 @@ test('admin users API creates a role-assigned user without returning password ha
 
   expect(response.status).toBe(201);
   expect(body.user.role).toBe('product_owner');
+  expect(body.user.mustChangePassword).toBe(true);
   expect(body.user.passwordHash).toBeUndefined();
+  expect(prisma.user.create).toHaveBeenCalledWith(expect.objectContaining({
+    data: expect.objectContaining({ mustChangePassword: true }),
+  }));
   expect(prisma.auditEvent.create).toHaveBeenCalled();
   expect(syncFromCloud).toHaveBeenCalled();
   expect(pushToCloud).toHaveBeenCalled();
@@ -104,6 +111,64 @@ test('admin users API updates role and active state', async () => {
   expect(body.ok).toBe(true);
   expect(body.user.role).toBe('manager');
   expect(body.user.isActive).toBe(false);
+  expect(syncFromCloud).toHaveBeenCalled();
+  expect(pushToCloud).toHaveBeenCalled();
+});
+
+test('admin users API blocks disabling the signed-in admin', async () => {
+  const { prisma } = await import('@/lib/prisma');
+  const { PATCH } = await import('../../app/api/admin/users/route');
+
+  const response = await PATCH(request({ id: 'admin-1', isActive: false }));
+  const body = await response.json();
+
+  expect(response.status).toBe(400);
+  expect(body.error).toBe('You cannot disable your own account.');
+  expect(prisma.user.update).not.toHaveBeenCalled();
+});
+
+test('admin users API rejects duplicate email on create', async () => {
+  const { prisma } = await import('@/lib/prisma');
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue(user({ email: 'sam@test.com' }));
+  const { POST } = await import('../../app/api/admin/users/route');
+
+  const response = await POST(request({
+    name: 'Sam Two',
+    email: 'sam@test.com',
+    password: 'Password@123',
+    role: 'product_owner',
+  }));
+  const body = await response.json();
+
+  expect(response.status).toBe(409);
+  expect(body.error).toBe('An account with this email already exists.');
+  expect(prisma.user.create).not.toHaveBeenCalled();
+});
+
+test('admin users API blocks deleting the signed-in admin', async () => {
+  const { DELETE } = await import('../../app/api/admin/users/route');
+
+  const response = await DELETE(request({ id: 'admin-1' }));
+  const body = await response.json();
+
+  expect(response.status).toBe(400);
+  expect(body.error).toBe('You cannot delete your own account.');
+});
+
+test('admin users API deletes another user and syncs cloud data', async () => {
+  const { prisma } = await import('@/lib/prisma');
+  const { syncFromCloud, pushToCloud } = await import('@/services/storage/cloudSync');
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue(user({ id: 'user-2', email: 'delete@test.com' }));
+  (prisma.user.delete as jest.Mock).mockResolvedValue(user({ id: 'user-2', email: 'delete@test.com' }));
+  const { DELETE } = await import('../../app/api/admin/users/route');
+
+  const response = await DELETE(request({ id: 'user-2' }));
+  const body = await response.json();
+
+  expect(body.ok).toBe(true);
+  expect(body.deletedUserId).toBe('user-2');
+  expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'user-2' } });
+  expect(prisma.auditEvent.create).toHaveBeenCalled();
   expect(syncFromCloud).toHaveBeenCalled();
   expect(pushToCloud).toHaveBeenCalled();
 });

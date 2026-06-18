@@ -4,25 +4,25 @@
 export type { SectionMode, SwitcherSection } from '@/lib/dashboardSections';
 export { DASHBOARD_SECTIONS, OVERVIEW_KEYS } from '@/lib/dashboardSections';
 import { type SectionMode } from '@/lib/dashboardSections';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
-// ─── Icon SVG paths (from delivery-toolbar.html reference) ────────────────────
-const ICONS: Record<string, { path: string; color: string }> = {
-  full:            { path: 'M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z', color: '#2563eb' },
-  overview_mode:   { path: 'M12 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3Zm1 1v8h7A8 8 0 0 0 13 4Z', color: '#64748b' },
-  overview:        { path: 'M5 21V9h3v12H5Zm5 0V3h3v18h-3Zm5 0V13h3v8h-3Z', color: '#64748b' },
-  attention:       { path: 'M12 2 4 5.5v6.1c0 5 3.4 9.6 8 10.8 4.6-1.2 8-5.8 8-10.8V5.5L12 2Zm1 14h-2v-2h2v2Zm0-4h-2V7h2v5Z', color: '#ef4444' },
-  recommendations: { path: 'M12 5C7 5 3.2 8.1 1.6 12c1.6 3.9 5.4 7 10.4 7s8.8-3.1 10.4-7C20.8 8.1 17 5 12 5Zm0 10.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z', color: '#8b5cf6' },
-  ratios:          { path: 'm12 2 9 4.8-9 4.8-9-4.8L12 2Zm-7.6 8.1L12 14l7.6-3.9L21 11l-9 4.7L3 11l1.4-.9Zm0 4.3L12 18.3l7.6-3.9 1.4.9-9 4.7-9-4.7 1.4-.9Z', color: '#14b8a6' },
-  visuals:         { path: 'M4 19h16v2H2V3h2v16Zm3-2 4-5 3 3.5L19 8l1.7 1.1-6.5 9.8-3.1-3.6L8.5 18 7 17Z', color: '#334155' },
-  delivery:        { path: 'M3 5h13v10h2.2l1.8 2.2V19h-2a2 2 0 0 1-4 0H9a2 2 0 0 1-4 0H3V5Zm2 2v8h9V7H5Zm12 3v3h2.1L17 10Z', color: '#334155' },
-  quarters:        { path: 'M4 17.5 10.5 11l3.5 3.5L21 7.5V13h-2V10.9l-5 5-3.5-3.5L5.4 19 4 17.5Z', color: '#ff6b57' },
-  kanban:          { path: 'M4 4h16v16H4V4Zm2 2v12h12V6H6Zm2 2h3v8H8V8Zm5 0h3v8h-3V8Z', color: '#14b8a6' },
-  sprint:          { path: 'M7 7h9.2l-2.6-2.6L15 3l5 5-5 5-1.4-1.4L16.2 9H7a3 3 0 0 0 0 6h2v2H7A5 5 0 0 1 7 7Zm10 10H7.8l2.6 2.6L9 21l-5-5 5-5 1.4 1.4L7.8 15H17a3 3 0 0 0 0-6h-2V7h2a5 5 0 0 1 0 10Z', color: '#8b5cf6' },
-  ownership:       { path: 'M12 3a9 9 0 0 1 9 9h-2a7 7 0 1 0-7 7v2a9 9 0 0 1 0-18Zm1 1v8h7a8 8 0 0 0-7-8Zm2 10h2v2h-2v-2Zm-4 0h2v5h-2v-5Z', color: '#fb923c' },
-  labels:          { path: 'M20 11.2 12.8 4H5v7.8l7.2 7.2a2 2 0 0 0 2.8 0l5-5a2 2 0 0 0 0-2.8ZM7.5 9A1.5 1.5 0 1 1 7.5 6a1.5 1.5 0 0 1 0 3Z', color: '#38bdf8' },
-  relations:       { path: 'M6 2h9l5 5v15H6V2Zm8 2v4h4l-4-4ZM8 12h8v2H8v-2Zm0 4h8v2H8v-2Z', color: '#2563eb' },
-  readiness:       { path: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 13.5-4-4L8.4 10l2.6 2.6 5.6-5.6L18 8.5l-7 7Z', color: '#22c55e' },
-  throughput:      { path: 'M12 3a9 9 0 0 1 9 9 8.9 8.9 0 0 1-2.6 6.4l-1.4-1.4A7 7 0 1 0 5 12a6.9 6.9 0 0 0 2 5l-1.4 1.4A9 9 0 0 1 12 3Zm4.9 5.7-4.4 6.7a2.1 2.1 0 1 1-1.7-1.2l4.4-6.7 1.7 1.2Z', color: '#a855f7' },
+const ICONS: Record<string, { name: string; color: string }> = {
+  full:            { name: 'grid', color: '#2563eb' },
+  overview_mode:   { name: 'dashboard', color: '#64748b' },
+  overview:        { name: 'chartBar', color: '#64748b' },
+  attention:       { name: 'warning', color: '#ef4444' },
+  recommendations: { name: 'eye', color: '#8b5cf6' },
+  ratios:          { name: 'chartPie', color: '#14b8a6' },
+  visuals:         { name: 'chartTrendUp', color: '#334155' },
+  delivery:        { name: 'dataFlow', color: '#334155' },
+  quarters:        { name: 'calendar', color: '#ff6b57' },
+  kanban:          { name: 'board', color: '#14b8a6' },
+  sprint:          { name: 'sprint', color: '#8b5cf6' },
+  ownership:       { name: 'people', color: '#fb923c' },
+  labels:          { name: 'tag', color: '#38bdf8' },
+  relations:       { name: 'workItems', color: '#2563eb' },
+  readiness:       { name: 'checkCircle', color: '#22c55e' },
+  throughput:      { name: 'timeline', color: '#a855f7' },
 };
 
 const SECTION_KEYS = [
@@ -47,19 +47,10 @@ interface Props {
   onFocusSection: (key: string) => void;
 }
 
-function NavIcon({ path, color, size = 16 }: { path: string; color: string; size?: number }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true"
-      style={{ width: size, height: size, fill: color, flexShrink: 0 }}>
-      <path d={path} />
-    </svg>
-  );
-}
-
 function NavItem({
-  label, iconPath, iconColor, active, highlighted, dot, onClick,
+  label, iconName, iconColor, active, highlighted, dot, onClick,
 }: {
-  label: string; iconPath: string; iconColor: string;
+  label: string; iconName: string; iconColor: string;
   active: boolean; highlighted?: boolean; dot?: boolean; onClick: () => void;
 }) {
   return (
@@ -97,7 +88,7 @@ function NavItem({
           width: 7, height: 7, borderRadius: '50%', background: '#ef4444',
         }} aria-hidden="true" />
       )}
-      <NavIcon path={iconPath} color={active ? '#2563eb' : highlighted ? '#8b5cf6' : iconColor} size={12} />
+      <SvgIcon name={iconName} size={12} style={{ color: active ? '#2563eb' : highlighted ? '#8b5cf6' : iconColor }} />
       <span>{label}</span>
       {(active || highlighted) && (
         <span style={{
@@ -172,7 +163,7 @@ export default function DashboardSectionSwitcher({
         {/* Full */}
         <NavItem
           label="Full"
-          iconPath={ICONS.full.path}
+          iconName={ICONS.full.name}
           iconColor={ICONS.full.color}
           active={mode === 'full'}
           onClick={() => onMode('full')}
@@ -181,7 +172,7 @@ export default function DashboardSectionSwitcher({
         {/* Overview mode */}
         <NavItem
           label="Overview"
-          iconPath={ICONS.overview_mode.path}
+          iconName={ICONS.overview_mode.name}
           iconColor={ICONS.overview_mode.color}
           active={mode === 'overview'}
           onClick={() => onMode('overview')}
@@ -192,7 +183,7 @@ export default function DashboardSectionSwitcher({
           <NavItem
             key={k}
             label={SECTION_LABELS[k]}
-            iconPath={ICONS[k]?.path ?? ICONS.overview.path}
+            iconName={ICONS[k]?.name ?? ICONS.overview.name}
             iconColor={ICONS[k]?.color ?? '#64748b'}
             active={mode === k}
             highlighted={k === 'recommendations' && mode !== k}

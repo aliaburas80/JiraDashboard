@@ -434,3 +434,42 @@ SORT recommendations: Critical → High → Medium → Low
 6. `dc_metrics_source_v1` drives the data source badge so users can see bucket/cache/upload/snapshot/localStorage fallback.
 
 **Implementation:** `src/services/metrics/latestMetricsStorage.ts`, `app/api/metrics/latest/route.ts`, `src/lib/storage.ts`, `src/components/ui/DataSourceBadge.tsx`
+
+---
+
+## v4.6 Technical Method — Roadmap, Forecast, Retro, Planning Nav (2026-06-10)
+
+### New Pages
+
+| Page | Route | Component | Data source | Key functions |
+|---|---|---|---|---|
+| Roadmap | `/roadmap` | `app/roadmap/page.tsx` (client) | `loadMetricsWithSource()` + `computePortfolioSummary()` | `forecastEpic()`, `EpicCard` |
+| Forecast | `/forecast` | `app/forecast/page.tsx` (client) | `loadMetricsWithSource()` | `computeForecast()`, `BurnUpChart` |
+| Retro | `/retro` | `app/retro/page.tsx` (client) | None (local React state only) | `generateInsights()`, `downloadTemplate()`, `EntryList` |
+
+### Architecture Notes
+
+**Roadmap & Forecast reuse `loadMetricsWithSource()`** — same data-loading pattern used by all analytics pages. No new API routes added.
+
+**`computePortfolioSummary()` reused** — `src/lib/portfolioHealth.ts` already aggregates epics from raw metrics. The roadmap page calls it directly rather than duplicating epic aggregation logic.
+
+**Burn-up chart is pure inline SVG** — `BurnUpChart` component in `app/forecast/page.tsx` builds the chart with React JSX SVG elements. `xScale(i)` and `yScale(v)` are inline linear-scale functions. No charting library added.
+
+**Retro form is pure local state** — `RetroForm` lives in `useState`. No persistence, no API route. `downloadTemplate()` builds a CSV string client-side using `URL.createObjectURL(new Blob([csv]))` and triggers a `<a>` download — no server interaction.
+
+**`generateInsights()` is a pure function** — takes `RetroForm`, returns `string[]`. No side effects, no async, easily unit-testable.
+
+### Navigation Changes
+
+**`NAV_GROUPS` in `src/components/layout/AppShell.tsx`** — new "Planning" group inserted between "Delivery" and "Data":
+```
+{ label: 'Planning', items: [/roadmap, /forecast, /retro] }
+```
+
+**`PLANNING_ROUTES` constant in `src/lib/roles.ts`** — `['/roadmap', '/forecast', '/retro']` spread into every role's `allowedRoutePrefixesForRole()` return value. This constant keeps the three routes in sync across all role branches without duplicating the strings.
+
+### Help & Glossary Navigation
+
+**`SECTION_GROUPS` constant in `app/help/page.tsx`** — array of 9 groups, each with `id`, `label`, `icon`, `sectionIds[]`. The active group is derived inline: `SECTION_GROUPS.find(g => g.sectionIds.includes(activeId))`. Row 2 sub-section pills are only rendered when `subSections.length > 1`. No layout change to the max-w-3xl container or IntersectionObserver logic.
+
+**Glossary letter chips in `app/glossary/page.tsx`** — letter extracted from section title using `.split(' — ')[0].replace(/[^A-Z]/g, '')` on the `'A — Section Name'` naming convention. Each chip is a single `<button>` with icon + letter stacked vertically; HTML `title` attribute provides the full section name as a tooltip.

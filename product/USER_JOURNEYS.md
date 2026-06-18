@@ -1334,7 +1334,7 @@ All personas now experience a two-step flow after uploading:
 
 ---
 
-### UJ-017 — Returning User: Clearing Stale Browser Data (Planned P1.2)
+### UJ-017 — Returning User: Clearing Stale Browser Data (P1.2 — Done, Verified)
 
 **Persona:** Marcus, Scrum Master  
 **Goal:** Start fresh with a new sprint's data  
@@ -1367,7 +1367,7 @@ All personas now experience a two-step flow after uploading:
 
 ---
 
-### UJ-019 — Engineering Manager: Focused Dashboard Review Using Section Switcher (Planned P1.3)
+### UJ-019 — Engineering Manager: Focused Dashboard Review Using Section Switcher (P1.3 — Done, Verified)
 
 **Persona:** Sarah, Engineering Manager  
 **Goal:** Check sprint health quickly without the full dashboard  
@@ -1450,3 +1450,321 @@ All personas now experience a two-step flow after uploading:
 ## 9. Current Code Alignment — 2026-06-06
 
 Returning-user journeys now include bucket-first metrics restoration. After login/register or direct analytics-page navigation, the app tries `/api/metrics/latest`, which syncs from the configured bucket/cache and returns `data/latest-metrics.json` when available. If the server/bucket payload is missing, the user falls back to the browser `dc_metrics_v2` copy and sees the `localStorage fallback` source badge. This replaces the older journey assumption that refresh always requires a new upload.
+
+---
+
+## 10. v4.2.2 — Admin & Member Management Journeys (2026-06-07)
+
+*(Added to close TRACE-01 traceability gaps for F3-14, F3-15, F3-16 — see TODO-List.md Section 12.)*
+
+### UJ-024 — Admin Onboards and Manages a Teammate's Account
+
+**Persona:** Ali, administrator  
+**Goal:** Create a role-correct account for a new teammate and keep the roster accurate over time  
+**Entry point:** `/admin/settings` → Users tab
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens Users tab | Table loads: name/email, role, imports, snapshots, status, actions | Oriented |
+| 2 | Clicks "Add User", fills name/email/temp password/role | `POST /api/admin/users` validates fields and email uniqueness | Focused |
+| 3 | Submits with a duplicate email by mistake | HTTP 409 "An account with this email already exists" — form stays open | Mildly annoyed |
+| 4 | Corrects the email and resubmits | User created with `mustChangePassword=true`; `admin_user_create` audit event written | Satisfied |
+| 5 | Later, edits the user's display name inline and changes their role | `PATCH /api/admin/users` saves on blur; `admin_user_update` audit event written | In control |
+| 6 | Tries to disable or delete their own account by mistake | HTTP 400 self-protection response; account untouched | Reassured |
+
+**Pain point resolved:** Admins can confidently manage the whole roster from one screen — duplicate accounts and accidental self-lockout are prevented by the system, not by careful clicking.
+
+---
+
+### UJ-025 — Team Member Looks Up a Colleague in the Directory
+
+**Persona:** Marcus, Product Owner  
+**Goal:** Find a teammate's role and contact details without interrupting an admin  
+**Entry point:** Navigation → Members
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Clicks "Members" in navigation | `GET /api/members` returns active users sorted by name as cards | Curious |
+| 2 | Types a partial name into search | Grid filters in real time across name/email/position/role/bio | Efficient |
+| 3 | Clicks a matching card | Detail popup opens with email, phone, address, certificates, notes | Informed |
+| 4 | Notices no dedicated contact email is set for one member | Popup falls back to that member's account email automatically | Unblocked |
+| 5 | Calls the colleague directly using the listed phone number | — | Goal achieved |
+
+**Pain point resolved:** No more "who do I even ask" — every active teammate's role and contact info is one click away, without admin involvement.
+
+---
+
+### UJ-026 — New User Completes the Forced Password Change
+
+**Persona:** Dana, newly onboarded Scrum Master  
+**Goal:** Replace the admin-issued temporary password with a private one and start using the app  
+**Entry point:** `/login` (first sign-in with temporary credentials)
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Signs in with the temporary password | Login succeeds; `session.mustChangePassword = true` | Hopeful |
+| 2 | Tries to open `/dashboard` directly | Middleware redirects to `/change-password` — every route does, except this one | Slightly confused |
+| 3 | Enters a new password and a confirmation that don't match | Form blocks submission: "Passwords do not match" | Corrects course |
+| 4 | Re-enters the temporary password as the "new" one | API returns 400 — new password must differ from the temporary one | Understands the rule |
+| 5 | Enters a strong, different password (8+ chars, 1 uppercase, 1 number) that matches its confirmation | `POST /api/auth/change-password` succeeds; `mustChangePassword` cleared; `password_change` audit event written | Relieved |
+| 6 | Is redirected to `/dashboard` | Full route access restored without re-login | Confident |
+
+---
+
+### UJ-027 — Admin Uses the Flat Admin Console
+
+**Persona:** Ali, administrator  
+**Goal:** Manage settings quickly and with confidence using the flat admin-settings redesign  
+**Entry point:** `/admin/settings`
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens `/admin/settings` | Flat console loads with sticky sidebar, top context bar, page title/status, and summary cards | Oriented |
+| 2 | Clicks the Users tab in the sidebar | Table-first Users workflow appears with inline edit controls and summaries | Empowered |
+| 3 | Uses the top context bar to confirm current tab and status | Page shows contextual summary cards and action buttons | Confident |
+| 4 | Switches to Security and then Diagnostics | Content panel updates in place; sidebar remains visible | Efficient |
+| 5 | Finds the setting they need without extra page navigation | Control groups and status cards keep the flow clear | In control |
+
+**Pain point resolved:** The redesigned flat admin console reduces navigation friction and makes settings discovery faster and less error-prone.
+
+---
+
+## 11. v4.2.2 — Work Item Explorer Risk & Branch Insights Journeys (2026-06-08)
+
+### UJ-028 — Delivery Manager Investigates Risk Paths and Branch Health in the Explorer
+
+**Persona:** Delivery Manager  
+**Goal:** Quickly find where delivery risk concentrates and focus the stakeholder conversation on the riskiest branch  
+**Entry point:** `/explore`
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Searches an epic key | Graph renders with type-coded node cards, an orphan badge on unlinked items, and a legend overlay | Oriented |
+| 2 | Reads the insight panel and stat cards | Sees the risk-path count and a "Largest Unfinished Branch" card naming the root, open count, and completion % | Informed |
+| 3 | Scans the graph for red "⚠ RISK PATH" and purple "📊 MOST WORK" badges | Risky nodes and edges glow red; the branch with the most open work carries a purple badge | Focused |
+| 4 | Clicks "Show blocked branches" | Graph and table dim every node that isn't blocked or on a risk path to near-invisible | In control |
+| 5 | Reviews the narrowed view and filters the details table for the briefing | Only the at-risk subset remains in full color; "Show all" restores the complete graph | Confident |
+
+**Pain point resolved:** No more manually tracing which branch is blocking delivery — the graph highlights it automatically and lets the user filter straight to it, regardless of whether the underlying export uses raw Jira field names or normalized FlowItem fields.
+
+---
+
+## 12. v4.2.2 — Smart Excel Export Sheet & Trigger Journeys (2026-06-08)
+
+### UJ-029 — Product Owner Exports and Reads the Smart Workbook for an Offline Review
+
+**Persona:** Product Owner  
+**Goal:** Produce one forwardable file that captures risk, data-quality, cycle-time, and release-readiness analysis for stakeholders without dashboard access  
+**Entry point:** Dashboard sticky bar or `/summary` page
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens "Export" in the dashboard sticky bar (or the "Excel" tile on `/summary`) and picks "Excel (all data)" | Builds the 17-sheet workbook from the live metrics, downloads it as `delivery-clarity-report.xlsx`, and silently records the download milestone | Productive |
+| 2 | Opens "07 Risks and Blockers" | Sees every at-risk item sorted critical-first, each with a risk-tier suggested action — or a clean-bill-of-health message if none qualify | Informed |
+| 3 | Opens "08 Orphan & Data Quality" | Reads orphan/missing-field counts and percentages, then the itemized list of exactly which issues are missing an Epic Link or Parent Key | Clear-eyed |
+| 4 | Opens "11 Cycle & Lead Time" | Reads the P50/P75/P85/P95 lead- and cycle-time statistics, the SLA interpretation key, and the 20 slowest items ranked by lead time | Equipped |
+| 5 | Opens "14 Release Readiness" | Sees every Fix Version grouped with completion %, blocked/bug counts, and a Go / Conditional Go / No-Go verdict | Decisive |
+| 6 | Forwards the single `.xlsx` to the stakeholder list | Recipients filter and sort the same analysis in Excel without ever opening Delivery Clarity | Confident |
+
+**Pain point resolved:** No more re-explaining the dashboard live to people who can't access it — one click produces a self-contained workbook that mirrors the app's risk, data-quality, cycle-time, and readiness analysis, ready to forward as-is.
+
+---
+
+## 13. v4.2.2 — Dashboard Status Chips Journey (2026-06-08)
+
+### UJ-030 — Scrum Master Triages the Dashboard by Chip Colour
+
+**Persona:** Scrum Master  
+**Goal:** Find the two or three sections that need attention out of ~16 collapsed sections, in under a minute, before standup  
+**Entry point:** `/dashboard`, most sections collapsed from the prior visit
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Scrolls down the page reading only the section trigger bars | Each trigger shows its title plus status chips ("3 blocked", "Updated 2h ago") colour-coded by severity (red/amber/blue/green/slate) | Scanning |
+| 2 | Spots a red `critical` chip on two trigger bars among the otherwise green/slate ones | The red chips visually stand out against the calmer palette of the unaffected sections | Alert |
+| 3 | Clicks one flagged trigger | Section expands in place, chevron rotates, details confirm what the chip summarised | Informed |
+| 4 | Collapses it, opens the second flagged section, leaves the rest collapsed | Trusts the green/slate chips on the remaining sections as a signal that nothing there needs attention right now | Confident |
+
+**Pain point resolved:** No more expanding all 16 sections to find the two that changed — chip colour alone tells the user where to look first, turning a multi-minute audit into a few seconds of scanning.
+
+---
+
+---
+
+## 14. v4.1 — Branded HTML Export Journey (2026-06-08)
+
+### UJ-031 — Stakeholder Receives and Trusts a Branded HTML Report
+
+**Persona:** Director / external stakeholder without Delivery Clarity access  
+**Goal:** Recognise the report as a legitimate, professionally produced artifact at a glance, with no doubt about its source  
+**Entry point:** Inbox attachment — `jira-report.html` forwarded by a manager
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens the `.html` attachment in a browser | Browser tab shows the title "Delivery Clarity — Report" | Oriented |
+| 2 | Scans the top header | Sees the lightning-bolt brand mark in a blue gradient badge, the "Delivery Clarity" eyebrow label, and the "Delivery Report" heading with a generation timestamp | Reassured it's an official artifact |
+| 3 | Reads the colour-coded health badge and metric cards | Recognises the same visual language (health bands, colour palette) used across the live dashboard | Confident in consistency |
+| 4 | Scrolls to the footer | Reads "Generated by Delivery Clarity" plus "Ali Abu Ras · aliaburas80@gmail.com · Delivery Clarity v4.1" | Knows exactly who produced it and how to follow up |
+
+**Pain point resolved:** No more wondering whether a forwarded report is current or authentic — the redesigned brand header and footer make the artifact's source, version, and freshness unmistakable on first glance.
+
+**Related:** UC-076, SCN-035, FR-300, BR-105, TC-X-14
+
+---
+
+---
+
+## 15. v4.1 — Advanced Theme Customization Journey (2026-06-08)
+
+### UJ-032 — Engineering Manager Personalises the App's Look and Feel
+
+**Persona:** Engineering Manager  
+**Goal:** Make the interface feel like her own workspace — matching her team's brand colour and her own readability preferences — without admin help  
+**Entry point:** 🎨 palette icon in the AppShell header
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Clicks the palette icon next to the dark-mode toggle | Theme Customizer panel opens with 7 accent swatches, 3 radius presets, 3 text-size presets | Curious |
+| 2 | Picks the "Purple" accent swatch | Every primary button, nav indicator, and highlight switches to purple instantly, app-wide | Delighted |
+| 3 | Picks "Rounded" corners and "Large" text | Cards/buttons soften and text scales up immediately, no reload | In control |
+| 4 | Closes the panel and refreshes the page | Purple/rounded/large combination persists from local storage | Reassured it stuck |
+| 5 | Returns later and clicks "Reset" | App instantly reverts to the blue/default/medium baseline | Free to experiment |
+
+**Pain point resolved:** No more living with a one-size-fits-all interface — a self-service customizer lets each user shape the app's accent colour, shape, and text size to their own team brand and eyesight, persisted without any admin configuration.
+
+**Related:** UC-081, SCN-047, FR-304, BR-108, TC-TC-01–TC-TC-08
+
+---
+
+---
+
+## 16. v4.1 — Advanced Chart Customization Journey (2026-06-08)
+
+### UJ-033 — Director Curates the Charts Page for a Board Presentation
+
+**Persona:** Director of Engineering  
+**Goal:** Show only the one or two charts that matter for a specific audience, sized and ordered for maximum impact, without losing the full default view for everyday use  
+**Entry point:** Chart Customizer control on `/charts`
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Opens the Chart Customizer panel | All 11 charts listed with visibility toggles, span controls (1/3, 2/3, Full), and ▲▼ reorder arrows | Oriented |
+| 2 | Toggles off the eight charts he won't present | Those charts disappear from `/charts` immediately | Decluttered |
+| 3 | Sets "Sprint Velocity" to Full width and moves it to position 1 | Page re-renders with that chart first and largest | In control |
+| 4 | Closes the panel and refreshes right before the meeting | Layout persists exactly as configured, from `dc_chart_prefs` in local storage | Confident, presentation-ready |
+| 5 | After the meeting, clicks "Reset" | All 11 charts return at their registry-default span and order | Back to his everyday view |
+
+**Pain point resolved:** No more screen-sharing a cluttered 11-chart page and apologising for the noise — a self-service customizer lets any user spotlight exactly what their audience needs to see, and revert just as easily.
+
+**Related:** UC-091, SCN-048, FR-306, BR-110, TC-CC-01–TC-CC-08
+
+---
+
+---
+
+## 17. v4.5 — USERREQ UI: Member Add Request Workflow Journeys (2026-06-09, P1)
+
+### UJ-034 — Scrum Master Requests a New Team Member and Receives an In-App Notification
+
+**Persona:** Priya, Scrum Master — has been onboarded for months, knows the tool, manages team delivery  
+**Goal:** Get a new backend developer added to the platform quickly so they can see sprint progress  
+**Context:** The team just hired a developer who starts Monday; Priya doesn't have admin access to create the user herself
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Priya opens `/members` to find the new hire's profile — they don't see it | Members list loads; a "Request add member" button is visible at the top (non-admin view) | Slightly frustrated by the gap |
+| 2 | Clicks "Request add member" | `RequestAddMemberModal` opens with Full Name, Email, Requested Role, Reason fields | Focused, taking action |
+| 3 | Fills in the form: Name="Alex Chen", email, Role=Scrum Master, Reason="New backend hire starting Monday" | Client validates; Submit activates | Methodical |
+| 4 | Clicks Submit | Modal shows ✅ "Request submitted" | Satisfied — done in under 30 seconds |
+| 5 | Later that day, the bell icon in the header shows a red badge with a pulsing ring and wiggles | `NotificationBell` polled `/api/notifications` and found a new unread notification | Curious, mildly surprised |
+| 6 | Clicks the bell | Dropdown shows "✅ User request approved" with Alex's email, role, and the temporary password embedded | Relieved, ready to onboard |
+| 7 | Reads the temp password from the notification; shares it securely with Alex | Notification clicked; `readAt` set; badge clears | Efficient, professional |
+
+**Pain point resolved:** Non-admin team leads no longer need to interrupt the admin to create accounts — a structured request flow handles the handoff with full audit trail and in-app notification on both sides.
+
+**Related:** UC-097, UC-099, FR-320, FR-322, FR-323, SCN-049, TC-REQ-01–TC-REQ-16, TC-NOTIF-01–TC-NOTIF-05
+
+---
+
+### UJ-035 — New User Receives Welcome Email, Clicks Login Link, and Changes Password
+
+**Persona:** Alex Chen, brand-new backend developer — account just created by admin  
+**Goal:** Access the platform for the first time using the credentials emailed to them  
+**Context:** Priya (Scrum Master) submitted an add-member request; admin accepted; welcome email was sent automatically
+
+| Step | User Action | System Response | Emotional State |
+|------|------------|-----------------|-----------------|
+| 1 | Alex checks email inbox | Sees "Welcome to JiraDashboard — Your Account is Ready" from `JiraDashboard <aburasali80@gmail.com>` | Surprised, curious |
+| 2 | Opens the email | HTML email shows name, login email, temporary password, and a "Log In Now" button | Ready to proceed |
+| 3 | Clicks "Log In Now" button | Browser opens the app login page (styled correctly, not a stale build) | Engaged |
+| 4 | Types login email + temporary password from email; clicks Sign In | Server validates credentials; detects `mustChangePassword: true` | Slightly puzzled |
+| 5 | Redirected to `/change-password` | Page explains they must set a permanent password before continuing | Understands |
+| 6 | Enters and confirms a new password; submits | Server hashes password, clears `mustChangePassword`, issues session cookie | Relieved |
+| 7 | Lands on the dashboard | Full app available — projects, sprints, members, charts | Confident, onboarded |
+
+**Pain point resolved:** No admin handoff, no Slack DM with a password, no confusion about which temp password to use — one email contains everything and the login link takes the new user directly to first-login password change.
+
+**Related:** UC-100, SCN-050, FR-319, FR-321, FR-325, TC-EMAIL-01–TC-EMAIL-03
+
+---
+
+---
+
+## v4.6 User Journeys — Roadmap, Forecast, Retro (2026-06-10)
+
+---
+
+### UJ-036 — Delivery Manager Reviews Epic Roadmap
+
+| Step | Actor | Action | System Response | Notes |
+|------|-------|--------|-----------------|-------|
+| 1 | Delivery Manager | Clicks "Planning" in header nav | Dropdown shows Roadmap / Forecast / Retro | All roles can access |
+| 2 | Delivery Manager | Clicks "Roadmap" | `/roadmap` loads; computes portfolio + throughput | Redirects to `/` if no data |
+| 3 | System | Calculates avg throughput from sprint history | KPI strip + throughput banner rendered | 0 if no sprint data |
+| 4 | Delivery Manager | Reviews KPI strip | Sees Total Epics, Complete, Avg Progress, Critical | |
+| 5 | Delivery Manager | Scans epic cards | Progress bars, forecast labels, confidence badges visible | Expandable detail per card |
+| 6 | Delivery Manager | Sets filter to "Critical" | Only critical-health epics shown | |
+| 7 | Delivery Manager | Clicks an epic card | Detail panel expands: remaining issues, sprints est., critical count | |
+| 8 | Delivery Manager | Sets sort to "Forecast" | Epics ordered by weeks remaining (lowest first) | Null forecast sorted last |
+
+**Outcome:** Delivery manager has a prioritised view of epics by delivery risk in under 2 minutes.  
+**Related:** UC-101, FR-326, FR-327, SCN-051
+
+---
+
+### UJ-037 — Scrum Master Checks Delivery Forecast Before Sprint Planning
+
+| Step | Actor | Action | System Response | Notes |
+|------|-------|--------|-----------------|-------|
+| 1 | Scrum Master | Navigates to `/forecast` via Planning menu | Page loads, `computeForecast()` runs | |
+| 2 | System | Determines forecast status | Status banner displayed (on_track/at_risk/off_track/complete/insufficient_data) | |
+| 3 | Scrum Master | Reads status banner | Sees status, description, and icon | |
+| 4 | Scrum Master | Reviews KPI row | Total, Done, Remaining, Avg Throughput visible | |
+| 5 | Scrum Master | Reads burn-up chart | Actual line (solid), forecast extension (dashed), target (grey dashed) | Pure SVG — no library |
+| 6 | Scrum Master | Reads Next Quarter Plan | "At 6 sprints × N items/sprint you can complete M items" vs remaining | |
+| 7 | Scrum Master | Reviews recommendations | Prioritised list of actionable adjustments | |
+| 8 | Scrum Master | Uses insights in sprint planning | Adjusts scope or capacity based on forecast status | |
+
+**Outcome:** Sprint planning is informed by objective velocity data and a clear answer to "are we on track?"  
+**Related:** UC-102, FR-328, FR-329, SCN-052
+
+---
+
+### UJ-038 — Team Runs Sprint Retrospective in App
+
+| Step | Actor | Action | System Response | Notes |
+|------|-------|--------|-----------------|-------|
+| 1 | Scrum Master | Navigates to `/retro` via Planning menu | Three-card menu shown | |
+| 2 | Scrum Master | Clicks "Fill in App → Start" | Form view shown | |
+| 3 | Scrum Master | Fills Sprint Name, Team, Date, Goal, Goal Met | Form updates in React state | Sprint Name required to submit |
+| 4 | Scrum Master | Adds What Went Well entries (multi-item) | List grows with each "+ Add another" click | |
+| 5 | Scrum Master | Adds What Did Not Go Well entries | List grows | |
+| 6 | Scrum Master | Adds Blockers | List grows | |
+| 7 | Scrum Master | Adds Action Items with owner, due date, priority | Row per action item | H/M/L priority selector |
+| 8 | Scrum Master | Clicks "Submit & Get Suggestions" | `generateInsights()` runs; insights view shown | |
+| 9 | System | Evaluates form | Goal banner, suggestions list, action item summary rendered | Colour-coded by priority |
+| 10 | Scrum Master | Reviews suggestions | Sees missing-owner/due-date flags, goal advice, escalation advice | |
+| 11 | Scrum Master | Clicks "New Retrospective" | Form resets; menu view shown | |
+
+**Outcome:** Team has a structured retrospective with automated improvement suggestions and no spreadsheet required.  
+**Related:** UC-103, FR-330, FR-331, FR-332, SCN-053

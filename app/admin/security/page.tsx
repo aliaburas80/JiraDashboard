@@ -1,54 +1,72 @@
-// © 2025 Ali Abu Ras — aburasali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AppShell from '@/components/layout/AppShell';
+import clsx from 'clsx';
+import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { SecurityReport, SecurityCheck, CheckStatus, CheckSeverity } from '@/services/settings/securityCheck.service';
+import styles from './page.module.scss';
 
-const STATUS_CONFIG: Record<CheckStatus, { icon: string; label: string; cls: string }> = {
-  pass:   { icon: '✓', label: 'Pass',   cls: 'text-green-700 bg-green-100 border-green-300' },
-  fail:   { icon: '✗', label: 'Fail',   cls: 'text-red-700 bg-red-100 border-red-300'       },
-  warn:   { icon: '△', label: 'Warn',   cls: 'text-amber-700 bg-amber-100 border-amber-300' },
-  manual: { icon: '?', label: 'Manual', cls: 'text-slate-600 bg-slate-100 border-slate-300' },
+const STATUS_DOT_ICON: Record<CheckStatus, string> = {
+  pass:   'check',
+  fail:   'cross',
+  warn:   'warning',
+  manual: 'question',
 };
 
-const SEV_COLOR: Record<CheckSeverity, string> = {
-  critical: 'text-red-600',
-  high:     'text-orange-600',
-  medium:   'text-amber-600',
-  low:      'text-slate-500',
+function sevChipClass(sev: CheckSeverity): string {
+  if (sev === 'critical') return 'chip c-rd';
+  if (sev === 'high')     return 'chip c-or';
+  if (sev === 'medium')   return 'chip c-am';
+  return 'chip c-nt';
+}
+
+const SECTION_HEADER: Record<'fail' | 'warn' | 'pass' | 'manual', string> = {
+  fail:   'Failing',
+  warn:   'Warnings',
+  pass:   'Passing',
+  manual: 'Manual Review',
 };
 
 const CATEGORIES = ['Authentication', 'Access Control', 'Secrets', 'Environment', 'Database', 'Transport', 'Network', 'Privacy', 'Backup', 'Operations'];
 
 function CheckRow({ c }: { c: SecurityCheck }) {
   const [expanded, setExpanded] = useState(c.status === 'fail');
-  const s = STATUS_CONFIG[c.status];
+
   return (
-    <div className={`border rounded-xl overflow-hidden ${c.status === 'fail' ? 'border-red-200' : c.status === 'warn' ? 'border-amber-200' : 'border-slate-100'}`}>
-      <button type="button" onClick={() => setExpanded(v => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors">
-        <span className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center text-[11px] font-black ${s.cls}`}>
-          {s.icon}
+    <div className={styles.checkRowCard}>
+      <button
+        type="button"
+        onClick={() => setExpanded(v => !v)}
+        className={styles.checkRowBtn}
+      >
+        {/* Status dot — appearance driven by data-status; no inline styles needed */}
+        <span data-status={c.status} className={styles.statusDot}>
+          <SvgIcon name={STATUS_DOT_ICON[c.status]} size={10} />
         </span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-black text-slate-800">{c.label}</span>
-            <span className="text-[9px] font-bold text-slate-400 uppercase">{c.category}</span>
-            <span className={`text-[9px] font-bold ${SEV_COLOR[c.severity]}`}>{c.severity}</span>
-            {!c.isAuto && <span className="text-[9px] font-bold bg-slate-200 text-slate-600 rounded px-1">manual review</span>}
+
+        <div className={styles.checkMeta}>
+          <div className="flex items-center gap-1 flex-wrap">
+            <span className={styles.checkTitle}>{c.label}</span>
+            <span className={clsx('chip c-nt', styles.checkChip)}>{c.category}</span>
+            <span className={clsx(sevChipClass(c.severity), styles.checkChip)}>{c.severity}</span>
+            {!c.isAuto && <span className={clsx('chip c-nt', styles.checkChip)}>manual review</span>}
           </div>
-          <p className="text-xs text-slate-500 mt-0.5 truncate">{c.detail}</p>
+          <p className={styles.checkDetail}>{c.detail}</p>
         </div>
-        <span className={`text-slate-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}>▾</span>
+
+        {/* Chevron — rotation driven by data-expanded; no inline styles needed */}
+        <span data-expanded={String(expanded)} className={styles.expandIcon}>▾</span>
       </button>
+
       {expanded && (
-        <div className="px-4 pb-4 border-t border-slate-100 bg-slate-50/50 pt-3 space-y-2">
-          <p className="text-xs text-slate-600 leading-snug">{c.description}</p>
+        <div className={styles.expandedPanel}>
+          <p className={styles.expandedDescription}>{c.description}</p>
           {c.fix && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
-              <p className="text-[10px] font-black text-blue-700 mb-0.5">Fix / Action</p>
-              <p className="text-xs text-blue-800">{c.fix}</p>
+            <div className={styles.fixBox}>
+              <p className={styles.fixLabel}>Fix / Action</p>
+              <p className={styles.fixText}>{c.fix}</p>
             </div>
           )}
         </div>
@@ -77,96 +95,132 @@ export default function SecurityPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Running security checks…</div></AppShell>;
+  if (loading) return (
+    <div className={clsx('flex items-center justify-center h-64 animate-pulse', styles.loadingState)}>
+      Running security checks…
+    </div>
+  );
 
   const filtered = report?.checks.filter(c =>
     (catFilter === 'all' || c.category === catFilter) &&
     (statusFilter === 'all' || c.status === statusFilter)
   ) ?? [];
 
+  const scoreTone = report
+    ? report.overallScore >= 80 ? styles.scoreGood : report.overallScore >= 60 ? styles.scoreWarn : styles.scoreBad
+    : styles.scoreNeutral;
+  const scoreColor = report
+    ? report.overallScore >= 80 ? 'var(--dc-green, #22C55E)' : report.overallScore >= 60 ? 'var(--dc-amber, #F59E0B)' : 'var(--dc-red, #F87171)'
+    : 'var(--dc-p2, #909090)';
+
+  const securityStats = report ? [
+    { icon: 'shield', label: 'Security Score', value: String(report.overallScore), note: report.isProductionReady ? 'Production ready' : 'Review required', color: scoreColor, toneStyle: { background: report.overallScore >= 80 ? 'rgba(34,197,94,0.1)' : report.overallScore >= 60 ? 'rgba(245,158,11,0.1)' : 'rgba(248,113,113,0.1)', color: scoreColor } },
+    { icon: 'checkCircle', label: 'Passing',        value: String(report.passCount),   note: 'Automated checks', color: 'var(--dc-green, #22C55E)',   toneStyle: { background: 'rgba(34,197,94,0.1)',   color: 'var(--dc-green, #22C55E)' } },
+    { icon: 'warning', label: 'Warnings',       value: String(report.warnCount),   note: 'Needs attention',  color: 'var(--dc-amber, #F59E0B)',   toneStyle: { background: 'rgba(245,158,11,0.1)',  color: 'var(--dc-amber, #F59E0B)' } },
+    { icon: 'question', label: 'Manual Review',  value: String(report.manualCount), note: 'Runbook checks',   color: 'var(--dc-p2, #909090)',      toneStyle: { background: 'var(--dc-s3, #282828)', color: 'var(--dc-p2, #909090)' } },
+  ] : [];
+
   return (
-    <AppShell showNav>
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-black text-slate-900">Security Checklist</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Production security assessment — automated checks + manual review items.
-          </p>
-        </div>
+    <AdminConsoleLayout
+      title="Security Checklist"
+      description="Production security assessment — automated checks and manual review items."
+      stats={securityStats}
+      statusLabel={report?.isProductionReady ? 'Production ready' : 'Review required'}
+    >
+      {error && <div className={styles.errorBanner}>{error}</div>}
 
-        {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-4">{error}</div>}
+      {report && (() => {
+        // Banner state determined by fail/warn/pass; drives data-state on scoreBanner
+        const bannerState =
+          (report.criticalFails > 0 || report.failCount > 0) ? 'fail' :
+          report.warnCount > 0 ? 'warn' : 'pass';
 
-        {report && (
+        const statusText = report.isProductionReady
+          ? '✅ Ready for production' : report.criticalFails > 0
+          ? '🚫 Not production ready' : '⚠️ Review required before production';
+
+        const bannerChipCls = report.isProductionReady ? 'chip c-gr' : report.warnCount > 0 && !report.failCount ? 'chip c-am' : 'chip c-rd';
+
+        return (
           <>
-            {/* Score banner */}
-            <div className={`rounded-2xl border-2 px-6 py-4 mb-6 flex items-center gap-5 ${
-              report.criticalFails > 0 ? 'bg-red-50 border-red-300' :
-              report.failCount > 0     ? 'bg-orange-50 border-orange-300' :
-              report.warnCount > 0     ? 'bg-amber-50 border-amber-300' :
-              'bg-green-50 border-green-300'}`}>
-              <div className="text-center shrink-0">
-                <p className={`text-4xl font-black leading-none ${
-                  report.overallScore >= 80 ? 'text-green-700' :
-                  report.overallScore >= 60 ? 'text-amber-700' : 'text-red-700'}`}>
-                  {report.overallScore}
-                </p>
-                <p className="text-xs text-slate-500 mt-1">/ 100</p>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-black text-slate-800">
-                  {report.isProductionReady ? '✅ Ready for production' : report.criticalFails > 0 ? '🚫 Not production ready' : '⚠️ Review required before production'}
-                </p>
-                <div className="flex flex-wrap gap-3 mt-2 text-xs">
-                  <span className="text-green-700 font-bold">✓ {report.passCount} pass</span>
-                  {report.failCount > 0 && <span className="text-red-700 font-bold">✗ {report.failCount} fail</span>}
-                  {report.warnCount > 0 && <span className="text-amber-700 font-bold">△ {report.warnCount} warn</span>}
-                  <span className="text-slate-500">? {report.manualCount} manual review</span>
+            {/* Score banner — bg/border via data-state; score color via score tone class */}
+            <div
+              data-state={bannerState}
+              className={clsx(styles.scoreBanner, scoreTone)}
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 text-center">
+                  <div className={styles.scoreNumber}>{report.overallScore}</div>
+                  <div className={styles.scoreDivider}>/100</div>
                 </div>
+                <div className="flex-1">
+                  <div className={styles.scoreStatus}>{statusText}</div>
+                  <div className={clsx(styles.scoreMeta, 'flex flex-wrap gap-2')}>
+                    <span>✓ {report.passCount} pass</span>
+                    {report.failCount > 0 && <span>✗ {report.failCount} fail</span>}
+                    {report.warnCount > 0 && <span>△ {report.warnCount} warn</span>}
+                    <span>? {report.manualCount} manual review</span>
+                  </div>
+                </div>
+                <span className={clsx(bannerChipCls, styles.bannerChip)}>
+                  {report.isProductionReady ? 'Production ready' : report.failCount > 0 ? 'Not ready' : 'Review needed'}
+                </span>
               </div>
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap gap-3 mb-4">
-              <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
-                className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none">
+            <div className="flex flex-wrap gap-2 mb-4 items-center">
+              <select
+                value={catFilter}
+                onChange={e => setCatFilter(e.target.value)}
+                className={styles.filterSelect}
+              >
                 <option value="all">All categories</option>
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-                className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none">
-                {['all','pass','fail','warn','manual'].map(s => (
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+                className={styles.filterSelect}
+              >
+                {['all', 'pass', 'fail', 'warn', 'manual'].map(s => (
                   <option key={s} value={s}>{s === 'all' ? 'All statuses' : s}</option>
                 ))}
               </select>
-              <span className="text-xs text-slate-400 self-center">{filtered.length} check{filtered.length !== 1 ? 's' : ''}</span>
+              <span className={styles.filterCount}>
+                {filtered.length} check{filtered.length !== 1 ? 's' : ''}
+              </span>
             </div>
 
-            {/* Checks grouped by fail/warn/pass/manual */}
-            {(['fail','warn','pass','manual'] as const).map(status => {
+            {/* Checks grouped by status */}
+            {(['fail', 'warn', 'pass', 'manual'] as const).map(status => {
               const group = filtered.filter(c => c.status === status);
               if (!group.length) return null;
-              const labels = { fail: '✗ Failing', warn: '△ Warnings', pass: '✓ Passing', manual: '? Manual Review' };
+              const label = SECTION_HEADER[status];
               return (
-                <div key={status} className="mb-5">
-                  <p className={`text-xs font-black uppercase tracking-widest mb-2 ${
-                    status === 'fail' ? 'text-red-600' : status === 'warn' ? 'text-amber-600' :
-                    status === 'pass' ? 'text-green-600' : 'text-slate-500'}`}>
-                    {labels[status]} ({group.length})
+                <div key={status} className={styles.sectionGroup}>
+                  <p
+                    data-status={status}
+                    className={styles.sectionLabel}
+                  >
+                    {label} ({group.length})
                   </p>
-                  <div className="space-y-2">
+                  <div className={styles.checkList}>
                     {group.map(c => <CheckRow key={c.id} c={c} />)}
                   </div>
                 </div>
               );
             })}
 
-            <div className="mt-6 bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-500">
-              <p className="font-bold text-slate-700 mb-1">About this checklist</p>
-              <p>Automated checks are evaluated server-side. Manual review items cannot be automatically verified — mark them as confirmed in your deployment runbook.</p>
+            <div className={styles.aboutBox}>
+              <p className={styles.aboutTitle}>About this checklist</p>
+              <p className={styles.aboutText}>
+                Automated checks are evaluated server-side. Manual review items cannot be automatically verified — mark them as confirmed in your deployment runbook.
+              </p>
             </div>
           </>
-        )}
-      </div>
-    </AppShell>
+        );
+      })()}
+    </AdminConsoleLayout>
   );
 }

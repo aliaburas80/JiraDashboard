@@ -1,13 +1,14 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
 import { useState } from 'react';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { ReleaseReadinessResult, ReleaseVerdict } from '@/types/releaseReadiness';
 
 const VERDICT_CONFIG: Record<ReleaseVerdict, { bg: string; border: string; text: string; icon: string; badge: string }> = {
-  'Go':                { bg: 'bg-green-50',  border: 'border-green-300',  text: 'text-green-900', icon: '✅', badge: 'bg-green-600 text-white' },
-  'Conditional Go':    { bg: 'bg-amber-50',  border: 'border-amber-300',  text: 'text-amber-900', icon: '⚠️', badge: 'bg-amber-500 text-white' },
-  'No-Go':             { bg: 'bg-red-50',    border: 'border-red-300',    text: 'text-red-900',   icon: '🚫', badge: 'bg-red-600 text-white' },
-  'Insufficient Data': { bg: 'bg-slate-50',  border: 'border-slate-200',  text: 'text-slate-600', icon: '❓', badge: 'bg-slate-400 text-white' },
+  'Go':                { bg: 'bg-green-50',  border: 'border-green-300',  text: 'text-green-900', icon: 'checkCircle', badge: 'bg-green-600 text-white' },
+  'Conditional Go':    { bg: 'bg-amber-50',  border: 'border-amber-300',  text: 'text-amber-900', icon: 'warning', badge: 'bg-amber-500 text-white' },
+  'No-Go':             { bg: 'bg-red-50',    border: 'border-red-300',    text: 'text-red-900',   icon: 'priorityBlocker', badge: 'bg-red-600 text-white' },
+  'Insufficient Data': { bg: 'bg-slate-50',  border: 'border-slate-200',  text: 'text-slate-600', icon: 'question', badge: 'bg-slate-400 text-white' },
 };
 
 interface Props { result: ReleaseReadinessResult }
@@ -28,8 +29,9 @@ export default function ReleaseReadinessCard({ result }: Props) {
         className="w-full flex items-center gap-4 px-5 py-4 text-left hover:brightness-95 transition-all"
       >
         {/* Verdict badge */}
-        <span className={`text-xs font-black px-3 py-1.5 rounded-full shrink-0 ${cfg.badge}`}>
-          {cfg.icon} {result.verdict}
+        <span className={`inline-flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-full shrink-0 ${cfg.badge}`}>
+          <SvgIcon name={cfg.icon} size={14} />
+          {result.verdict}
         </span>
 
         {/* Version + summary */}
@@ -81,7 +83,10 @@ export default function ReleaseReadinessCard({ result }: Props) {
           {/* Blocking failures */}
           {blockingFail.length > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-              <p className="text-xs font-black text-red-800 mb-1.5">🚫 Blocking issues — must resolve before release</p>
+              <p className="flex items-center gap-1.5 text-xs font-black text-red-800 mb-1.5">
+                <SvgIcon name="priorityBlocker" size={14} />
+                Blocking issues — must resolve before release
+              </p>
               {blockingFail.map(c => (
                 <p key={c.id} className="text-xs text-red-700 mb-0.5">• {c.detail}</p>
               ))}
@@ -96,9 +101,11 @@ export default function ReleaseReadinessCard({ result }: Props) {
             <div className="space-y-1.5">
               {result.checklist.map(item => (
                 <div key={item.id} className="flex items-start gap-2.5">
-                  <span className={`mt-0.5 text-sm shrink-0 ${item.passed ? 'text-green-600' : item.blocking ? 'text-red-600' : 'text-amber-500'}`}>
-                    {item.passed ? '✓' : item.blocking ? '✗' : '△'}
-                  </span>
+                  <SvgIcon
+                    name={item.passed ? 'check' : item.blocking ? 'cross' : 'warning'}
+                    size={14}
+                    className={`mt-0.5 shrink-0 ${item.passed ? 'text-green-600' : item.blocking ? 'text-red-600' : 'text-amber-500'}`}
+                  />
                   <div className="flex-1 min-w-0">
                     <p className={`text-xs font-semibold ${item.passed ? 'text-slate-700' : item.blocking ? 'text-red-800' : 'text-amber-800'}`}>
                       {item.label}

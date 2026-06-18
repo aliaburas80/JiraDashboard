@@ -1,6 +1,7 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
 import { useState } from 'react';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { OrphanRules } from '@/types/orphanRules';
 import { DEFAULT_ORPHAN_RULES, OPTIONAL_PARENT_FIELDS, COMMON_ISSUE_TYPES } from '@/types/orphanRules';
 
@@ -54,19 +55,19 @@ function ChipSelect({ label, description, all, selected, onChange }: {
 export default function OrphanRulesSettings({ rules, onSave }: Props) {
   const [form, setForm]   = useState<OrphanRules>({ ...rules });
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg]     = useState('');
+  const [msg, setMsg]     = useState<{ text: string; ok: boolean } | null>(null);
 
   async function handleSave() {
     if (form.parentLinkFields.length === 0) {
-      setMsg('Select at least one parent link field.');
+      setMsg({ text: 'Select at least one parent link field.', ok: false });
       return;
     }
-    setSaving(true); setMsg('');
+    setSaving(true); setMsg(null);
     try {
       await onSave(form);
-      setMsg('✓ Orphan rules saved. Next upload will use the new rules.');
-    } catch (e: any) { setMsg(e?.message ?? 'Failed to save.'); }
-    finally { setSaving(false); setTimeout(() => setMsg(''), 5000); }
+      setMsg({ text: 'Orphan rules saved. Next upload will use the new rules.', ok: true });
+    } catch (e: any) { setMsg({ text: e?.message ?? 'Failed to save.', ok: false }); }
+    finally { setSaving(false); setTimeout(() => setMsg(null), 5000); }
   }
 
   function handleReset() {
@@ -151,7 +152,12 @@ export default function OrphanRulesSettings({ rules, onSave }: Props) {
           className="btn-secondary px-4 py-2.5">
           Reset to defaults
         </button>
-        {msg && <span className={`text-xs font-semibold ${msg.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>{msg}</span>}
+        {msg && (
+          <span className={`inline-flex items-center gap-1 text-xs font-semibold ${msg.ok ? 'text-green-600' : 'text-red-600'}`}>
+            <SvgIcon name={msg.ok ? 'checkCircle' : 'warning'} size={12} />
+            {msg.text}
+          </span>
+        )}
       </div>
 
       {rules.updatedAt && (

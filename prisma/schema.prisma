@@ -16,15 +16,24 @@ model User {
   passwordHash String
   role         String    @default("user") // "user" | "admin"
   avatarUrl    String?
+  position     String?
+  phone        String?
+  contactEmail String?
+  address      String?
+  certificates String?
+  bio          String?
   isActive     Boolean   @default(true)
+  mustChangePassword Boolean @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   lastLoginAt  DateTime?
 
-  sessions   Session[]
-  importLogs ImportLog[]
-  snapshots  DashboardSnapshot[]
-  auditEvents AuditEvent[]
+  sessions        Session[]
+  importLogs      ImportLog[]
+  snapshots       DashboardSnapshot[]
+  auditEvents     AuditEvent[]
+  userAddRequests UserAddRequest[]     @relation("UserAddRequestRequester")
+  notifications   Notification[]       @relation("UserNotifications")
 }
 
 model Session {
@@ -37,6 +46,9 @@ model Session {
   ipAddress        String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model ImportLog {
@@ -58,6 +70,8 @@ model ImportLog {
 
   user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   snapshots DashboardSnapshot[]
+
+  @@index([userId])
 }
 
 model DashboardSnapshot {
@@ -70,6 +84,8 @@ model DashboardSnapshot {
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   importLog ImportLog? @relation(fields: [importLogId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
 }
 
 model AuditEvent {
@@ -82,4 +98,71 @@ model AuditEvent {
   userAgent        String?
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ── User Add-Member Request Workflow (USERREQ-07–09) ─────────────────────────
+
+model UserAddRequest {
+  id                 String    @id @default(cuid())
+  requestedName      String
+  requestedEmail     String
+  requestedRole      String
+  reason             String
+  teamOrProject      String?
+  notes              String?
+  // Status: "pending" | "accepted" | "rejected" | "cancelled" | "expired"
+  status             String    @default("pending")
+  requestedByUserId  String
+  adminDecisionById  String?
+  adminDecisionAt    DateTime?
+  adminDecisionNote  String?
+  createdUserId      String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  requestedBy User @relation("UserAddRequestRequester", fields: [requestedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([requestedByUserId])
+  @@index([status])
+}
+
+model Notification {
+  id                String    @id @default(cuid())
+  recipientUserId   String
+  type              String
+  title             String
+  message           String
+  relatedEntityType String?
+  relatedEntityId   String?
+  readAt            DateTime?
+  createdAt         DateTime  @default(now())
+
+  recipient User @relation("UserNotifications", fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId])
+  @@index([readAt])
+}
+
+// ── System Error Log (P-SYSERR) ───────────────────────────────────────────────
+
+model SystemErrorLog {
+  id            String    @id @default(cuid())
+  errorCode     String    // Prisma code (P2003, P2025, …) or "UNKNOWN"
+  errorMessage  String
+  prismaModel   String?   // model that failed, e.g. "AuditEvent"
+  operation     String    // e.g. "auditEvent.create", "notification.createMany"
+  context       String?   // route / action that triggered the error
+  payload       String?   // JSON-serialised data for retry
+  resolution    String    @default("logged") // "logged" | "auto-fixed" | "retried" | "resolved" | "skipped"
+  retryCount    Int       @default(0)
+  lastRetriedAt DateTime?
+  resolvedAt    DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([errorCode])
+  @@index([createdAt])
+  @@index([resolution])
 }

@@ -4,6 +4,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { TrendPoint } from '@/types/trends';
 
 // ── Change entry ──────────────────────────────────────────────────────────────
@@ -149,7 +150,7 @@ export default function WhatChangedPanel({ collapsed = false }: Props) {
         className="w-full flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-slate-50 transition-colors text-left"
       >
         <div className="flex items-center gap-3">
-          <span className="text-lg">🔄</span>
+          <SvgIcon name="refresh" size={18} className="text-blue-600" />
           <div>
             <p className="text-sm font-black text-slate-800">What changed since last upload?</p>
             <p className="text-xs text-slate-500 mt-0.5">

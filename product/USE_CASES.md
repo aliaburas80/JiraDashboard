@@ -5,12 +5,12 @@
 | Field | Detail |
 |---|---|
 | **Document Title** | Delivery Clarity — Use Cases |
-| **Version** | 4.0 |
-| **Date** | 2026-06-03 |
+| **Version** | 4.4.0 |
+| **Date** | 2026-06-09 |
 | **Author** | Ali Abu Ras |
 | **Status** | Active |
 | **Classification** | Internal |
-| **Derived From** | BRD v4.0, SRS v4.0.0 |
+| **Derived From** | BRD v4.0, SRS v4.2.2 |
 
 ### Revision History
 
@@ -19,6 +19,8 @@
 | 0.1 | 2026-05-30 | Ali Abu Ras | Initial draft — all 40 use cases, actors, diagrams |
 | 1.0 | 2026-05-30 | Ali Abu Ras | Final review — approved as baseline |
 | 4.0 | 2026-06-03 | Ali Abu Ras | v4 addendum: UC-051–059 — data quality, confidence, snapshots, thresholds, clear data, section switcher, calculation reference |
+| 4.2.2 | 2026-06-07 | Ali Abu Ras | P0 reconciliation — scope updated from v1.0 baseline language to current v4.2.x reality: authentication, role-based access, admin user management, snapshots/trends, cloud-backed metrics, Clear Local Data, Dashboard Section Switcher, Calculation Reference, and System Tour are now in scope and implemented |
+| 4.4.0 | 2026-06-09 | Ali Abu Ras | P1 — User Add-Member Request Workflow added to scope (implemented): UC-095 (Submit Request), UC-096 (Admin Accept/Reject); related FR-314–FR-319; USERREQ-10–14 closed |
 
 ---
 
@@ -26,30 +28,39 @@
 
 ### 1.1 Purpose
 
-This Use Cases document specifies the complete behavioural requirements for Delivery Clarity v1.0 from the perspective of every actor who interacts with the system. It translates the business requirements captured in the BRD and the technical requirements specified in the SRS into concrete, scenario-based descriptions of how users and external systems interact with Delivery Clarity to achieve their goals.
+This Use Cases document specifies the complete behavioural requirements for Delivery Clarity v4.2.x from the perspective of every actor who interacts with the system. It translates the business requirements captured in the BRD and the technical requirements specified in the SRS into concrete, scenario-based descriptions of how users and external systems interact with Delivery Clarity to achieve their goals.
 
-Each use case describes a discrete unit of observable system behaviour that produces a result of value to at least one actor. Together, the 40 use cases in this document constitute the full interaction surface of Delivery Clarity v1.0.
+Each use case describes a discrete unit of observable system behaviour that produces a result of value to at least one actor. The original baseline of 40 use cases (v1.0) has been extended by the v4.0–v4.2 addenda (UC-051 onward, plus the v4.0/v4.1/v4.2 use-case sections later in this document) to cover authentication, role-based access, admin user management, snapshots, trends, cloud storage, and the admin console redesign. Together they constitute the full interaction surface of Delivery Clarity v4.2.x.
 
 ### 1.2 Scope
 
-This document covers every interaction available to users of the Delivery Clarity v1.0 system, including:
+This document covers every interaction available to users of the current Delivery Clarity v4.2.x system, including:
 
 - File upload, parsing, and validation flows (including all error paths)
 - All 14 dashboard sections and their interactive behaviours
 - The Manager Quick Overview Report
 - Smart Recommendations navigation
 - The Flow Health table and its 11 filter dimensions
-- Help Guide navigation
+- Help Guide navigation and System Tour
 - Theme toggling and accessibility features
 - Backend control centre and import log interactions
+- Authentication, role-based access control, and admin-managed user accounts (in scope — implemented)
+- Snapshots, snapshot comparison, and upload-to-upload trend analysis (in scope — implemented)
+- Cloud-backed metrics startup and admin Cloud Storage management (in scope — implemented)
+- Clear Local Data (Admin Settings + Upload/Landing page) (in scope — implemented)
+- Dashboard Section Switcher and Calculation Reference (in scope — implemented)
 - All known error, rate-limit, and degraded-state scenarios
 
-Out of scope for this document (consistent with BRD Section 6):
+Out of scope for this document (consistent with BRD Section 6 roadmap classification):
 
-- Jira OAuth / API integration
-- User authentication and multi-user workspaces
-- Scheduled email or Slack report delivery
-- Historical sprint-over-sprint comparison across separate uploads
+- Jira OAuth / API integration (P3 roadmap)
+- Jira write-back / ticket creation (P3 roadmap)
+- Scheduled email or Slack report delivery (P4 roadmap)
+- In-app Notification Center, Maintenance Mode, browser push notifications (P4 roadmap)
+- Role-Based Delivery Coaching Insights, Retrospective Upload/Template/In-App Form, and Forecasting & Delivery Adjustment Report (P1/P2 roadmap — not yet implemented; see TODO-List.md)
+- ~~User Add-Member Request Workflow~~ — **now in scope and implemented** (v4.4, 2026-06-09): `UC-095`/`UC-096`, `FR-314`–`FR-319`; see Addendum B in `product/SRS.md`
+
+> **Backend Integration Gateway (FR-313 — foundation implemented 2026-06-08):** the routing/policy/retry/audit chokepoint that future external integrations (Jira, cloud storage, email, Slack, Teams, push) will route through is now built (`src/server/gateway/`), but it has **no end-user-facing UI or use case** — it is a server-only foundation with zero live providers wired up. There is intentionally no UC for it here (consistent with this document's "no UC for vaporware" principle); see `product/DEVELOPER_GUIDE.md` § "Backend Integration Gateway" for its architecture and `FR-313` in `product/SRS.md` for its behavioural contract.
 
 ### 1.3 How to Read Use Cases
 
@@ -1927,9 +1938,11 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 ---
 
-### UC-043: Return from Full Report to Summary
+### UC-092: Return from Full Report to Summary
 
-- **ID:** UC-043
+*(Renumbered 2026-06-08 from a colliding `UC-043` — see TODO-List.md Section 12 Gaps Summary item 6.)*
+
+- **ID:** UC-092
 - **Name:** Return from Full Report to Summary
 - **Actor(s):** Engineering Manager, Scrum Master
 - **Trigger:** Clicks "← Back to Overview" breadcrumb in DashboardPage
@@ -1948,9 +1961,11 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 ---
 
-### UC-044: Direct URL Access to Protected Route Without Data
+### UC-093: Direct URL Access to Protected Route Without Data
 
-- **ID:** UC-044
+*(Renumbered 2026-06-08 from a colliding `UC-044` — see TODO-List.md Section 12 Gaps Summary item 6.)*
+
+- **ID:** UC-093
 - **Name:** Redirect When No Data Loaded
 - **Actor(s):** Any user
 - **Trigger:** User types /summary or /dashboard directly in browser address bar
@@ -1990,7 +2005,7 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 3b. Pattern classification defaults to "Unknown"
 
 **Postcondition:** User understands team sprint performance and delivery trend  
-**Related FR:** FR-207 to FR-214
+**Related FR:** FR-207 to FR-215 — every panel in this flow (`SprintThroughputPanel`, `MidSprintDeliveryPanel`, `KanbanThroughputPanel`) reads its data from the `metrics.throughput: ThroughputMetrics` bundle (`src/types/throughput.ts`) that `FR-215` requires `POST /api/upload` to populate; see `TC-T-11` for the shape-contract test covering this data layer.
 
 ---
 
@@ -2554,4 +2569,657 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 6. Header data source badge shows the cloud/cache source.
 7. Dashboard renders without requiring a fresh Jira upload.
 **Alternative Flow:** If `/api/metrics/latest` returns `{ available:false }`, the client falls back to `dc_metrics_v2` and shows `localStorage fallback`.
-**Related FR:** FR-307, FR-308, FR-309
+**Related FR:** FR-307, FR-309 *(corrected 2026-06-08 — `FR-308` was a stale copy-paste reference to the unrelated status-chip FR; `FR-309` was a phantom reference until newly written this same pass to formally document this restore-and-fallback flow — see TODO-List.md Section 12 Gaps Summary item 6)*
+
+---
+
+## v4.2.2 — Admin & Member Management Use Cases (2026-06-07)
+
+*(Added to close TRACE-01 traceability gaps for F3-14, F3-15, F3-16 — see TODO-List.md Section 12.)*
+
+### UC-084 — Admin Manages User Accounts
+
+**Actor:** Admin user  
+**Trigger:** Admin opens `/admin/settings` → Users tab  
+**Main Flow:**
+1. Admin views the user table: name/email (inline-editable), role dropdown, import count, snapshot count, Active/Disabled status badge, and row actions
+2. Admin opens "Add User", enters full name, email, temporary password, and selects a role from `ASSIGNABLE_ROLES` (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`)
+3. `POST /api/admin/users` validates name/email/password/role, checks the email is not already taken, hashes the password, and creates the user with `mustChangePassword = true`
+4. System writes an `admin_user_create` AuditEvent and pushes an updated backup to cloud storage when configured
+5. Admin edits a user's display name inline (saved on blur), changes their role via the row dropdown, or toggles their Active/Disabled status — each change calls `PATCH /api/admin/users` and writes an `admin_user_update` AuditEvent
+6. Admin removes a user via the row delete action (with confirmation) — `DELETE /api/admin/users` writes an `admin_user_delete` AuditEvent and pushes an updated cloud backup
+
+**Alternate Flow A — Email already exists:**  
+3a. `POST /api/admin/users` returns HTTP 409 "An account with this email already exists" — no user created
+
+**Alternate Flow B — Self-disable attempt:**  
+5a. Admin tries to set `isActive = false` on their own account → `PATCH /api/admin/users` returns HTTP 400; account remains active
+
+**Alternate Flow C — Self-delete attempt:**  
+6a. Admin tries to delete their own account → `DELETE /api/admin/users` returns HTTP 400 "You cannot delete your own account."; no deletion occurs
+
+**Alternate Flow D — Non-admin access:**  
+1a. `session.role !== 'admin'` → `GET/POST/PATCH/DELETE /api/admin/users` return HTTP 403; the Users tab is not reachable
+
+**Postcondition:** The user roster reflects the admin's changes; every create/update/delete is recorded in `AuditEvent`; password hashes are never present in any API response (`safeUser()` strips `passwordHash`)  
+**Related FR:** FR-235A, FR-235B, FR-235C
+
+---
+
+### UC-085 — Browse Member Directory
+
+**Actor:** Any authenticated user (any role)  
+**Trigger:** User navigates to `/members`  
+**Main Flow:**
+1. Page calls `GET /api/auth/me`; anonymous users (HTTP 401) are redirected to `/login`
+2. `GET /api/members` returns active users (`isActive: true`) sorted by name, each with name, position (falls back to role label), role badge, contact email, avatar, and a bio/certificates preview
+3. User types in the search box — the member grid filters in real time across name, email, position, role label, and bio (case-insensitive)
+4. User clicks a member card — a detail popup opens showing contact email, telephone (or "Not shared"), address, certificates, and team-facing notes
+
+**Alternate Flow — No dedicated contact email set:**  
+2a. `contactEmailFor()` falls back to the member's account `email` when `contactEmail` is empty
+
+**Postcondition:** User finds a teammate's role and contact details without leaving the app; disabled accounts never appear in the directory  
+**Related FR:** FR-235G
+
+---
+
+### UC-086 — Complete Forced First-Login Password Change
+
+**Actor:** Newly created user with `mustChangePassword = true`  
+**Trigger:** User signs in for the first time using the admin-issued temporary password  
+**Main Flow:**
+1. `POST /api/auth/login` succeeds; `session.mustChangePassword` is set to `true` from the user record
+2. Middleware redirects every protected-route request — except `/change-password` itself — to `/change-password` while the flag is set
+3. User enters the temporary password, a new password, and a confirmation on `/change-password`
+4. Client validates that the new password and confirmation match
+5. `POST /api/auth/change-password` verifies the temporary password against the stored hash, checks the new password meets strength rules (8+ chars, 1 uppercase, 1 number) via `validatePasswordStrength()`, and confirms the new password differs from the temporary one
+6. System hashes and stores the new password, sets `mustChangePassword = false`, writes a `password_change` AuditEvent, updates `session.mustChangePassword`, and attempts a cloud backup push (non-blocking on failure)
+7. User is redirected to `/dashboard` with full route access restored — no re-login required
+
+**Alternate Flow A — Passwords don't match:**  
+4a. Client blocks submission with "Passwords do not match"; no API call made
+
+**Alternate Flow B — New password too weak, or identical to the temporary password:**  
+5a. `POST /api/auth/change-password` returns HTTP 400 with the specific validation message (e.g. "Password must be at least 8 characters", "New password must be different from your current password"); the user corrects and resubmits
+
+**Alternate Flow C — Wrong temporary password entered:**  
+5b. `POST /api/auth/change-password` returns HTTP 401; `mustChangePassword` remains `true` and the user stays on `/change-password`
+
+**Postcondition:** User has a private password known only to them, `mustChangePassword = false`, and unrestricted access to all routes their role permits  
+**Related FR:** FR-235D
+
+---
+
+### UC-087 — Navigate Flat Admin Console
+
+**Actor:** Admin user  
+**Trigger:** Admin opens `/admin/settings`  
+**Main Flow:**
+1. Admin opens `/admin/settings`; the flat admin console loads with a sticky sidebar, top context bar, page title/status area, and a content panel.
+2. The left sidebar shows setting categories and remains visible while scrolling.
+3. The top context bar displays the current tab, a page status badge, and an action button when the selected tab supports a primary task.
+4. The selected settings tab shows summary cards and operational panels relevant to that area — the Users tab surfaces a table-first workflow, the Security tab shows danger-zone actions, and Diagnostics shows health indicators.
+5. Admin switches tabs in the sidebar; the content panel updates in place without losing the flat admin console layout.
+6. Admin reviews status and settings using the flat console design and navigates to the appropriate task-specific flow.
+
+**Alternate Flow A — Validation error on save:**  
+4a. Admin saves a change and a validation error occurs; the console remains on the same tab and highlights the field needing correction.
+
+**Postcondition:** Admin successfully interacts with the redesigned flat admin console, using the persistent sidebar and contextual summary cards to find and manage settings quickly.  
+**Related FR:** FR-260A
+
+---
+
+## v4.2.2 — Work Item Explorer Risk & Branch Insights Use Cases (2026-06-08)
+
+### UC-088 — Investigate Delivery Risk and Branch Health in the Work Item Explorer
+
+**Actor:** Scrum Master, Product Owner, Delivery Manager  
+**Trigger:** User has loaded a relation graph on `/explore` and wants to identify where delivery risk concentrates  
+**Main Flow:**
+1. User loads a graph for an issue key; the system computes risk paths from every blocked-or-critical, not-done node up to the root and marks every node and edge on that path
+2. Nodes on a risk path render with a solid red border, red-tinted background, and a "⚠ RISK PATH" badge; their connecting edges render thicker, animated, and red
+3. The system also computes the largest unfinished branch — the direct child of the focus node whose subtree holds the most open (non-done) items — and marks its nodes with a solid purple border and "📊 MOST WORK" badge
+4. The stats panel shows a "Largest Unfinished Branch" card naming the root issue, its open count, total count, and completion percentage whenever that branch has 2 or more open items
+5. User clicks "Show blocked branches"; the graph and details table narrow to only nodes that are blocked or on a risk path, while every other node dims to 20% opacity and grayscale and its edges dim to near-invisible
+6. User clicks "Show all" to restore the full, undimmed graph
+
+**Alternate Flow A — No risk in the dataset:**  
+1a. No node is blocked or critical-and-not-done → no node or edge is marked `isOnRiskPath`; the "Show blocked branches" toggle does not render because the blocked/critical count is zero
+
+**Alternate Flow B — Mixed raw/normalized issue data:**  
+1b. The underlying dataset mixes raw JiraIssue export field names (`Issue Key`, `Status`, `Blocked Flag`, `Parent Key`, `Epic Link`) and normalized FlowItem field names (`key`, `status`, `isBlocked`, `parent`, `epic`); the relation graph builder resolves both formats through the same field accessors (raw name first, FlowItem name as fallback), so the risk-path, branch, and filter computations behave identically regardless of which format — or mixture — the source data uses
+
+**Postcondition:** User can immediately see where delivery risk concentrates, which branch needs the most attention, and can narrow the view to only the at-risk subset of the graph and table — without leaving the Explorer or running a manual Jira query  
+**Related FR:** FR-225A, FR-225B, FR-225C, FR-225D
+
+---
+
+## v4.2.2 — Smart Excel Export Sheet & Trigger Use Cases (2026-06-08)
+
+### UC-089 — Trigger and Review the Smart Excel Workbook from the Dashboard or Summary Page
+
+**Actor:** Scrum Master, Product Owner, Delivery Manager, C-level stakeholder  
+**Trigger:** User wants a shareable, offline-readable statistical breakdown of the current project without re-opening the app  
+**Main Flow:**
+1. User opens the Export control — the green "Export" button in the dashboard sticky bar, or the "Excel" tile in the `/summary` page's Export group
+2. User selects "Excel (all data)"; the system builds the 17-sheet smart workbook from the currently loaded `DashboardMetrics` and downloads it as `delivery-clarity-report.xlsx` (or a caller-supplied filename), then silently records the `download_report` onboarding step
+3. User opens sheet "07 Risks and Blockers" and finds every blocked, critical, warning, or aged-beyond-14-day item listed critical-first, each annotated with a risk-tier suggested action ("Escalate immediately…", "Review in next standup…", or "Monitor — add to sprint backlog review")
+4. User opens sheet "08 Orphan & Data Quality" and finds a summary table of orphan/missing-story-point/unassigned/no-sprint counts and percentages, followed by an itemized list of every orphan issue and what it is missing
+5. User opens sheet "11 Cycle & Lead Time" and finds average, median (P50), P75, P85, P95, min, max, and sample-size statistics for both lead time and cycle time, an interpretation key, and the 20 slowest items ranked by lead time
+6. User opens sheet "14 Release Readiness" and finds every Fix Version grouped with its scope/done/open/bug/blocked/critical counts, completion percentage, and a Go / Conditional Go / No-Go readiness verdict
+
+**Alternate Flow A — Healthy dataset, no risk or orphans:**  
+3a. No item meets the risk criteria → sheet 07 shows "No risk items detected — delivery health looks good." instead of a table  
+4a. No item is an orphan → sheet 08 shows "No orphan items detected — hierarchy is complete." instead of a detail block
+
+**Alternate Flow B — Onboarding tracking unavailable:**  
+2b. `localStorage` or the onboarding module is unavailable (e.g. private browsing, server-side context) → the workbook still downloads normally; the onboarding-step write is swallowed silently and never blocks or fails the export
+
+**Postcondition:** User holds a single offline workbook that reproduces the dashboard's risk, data-quality, cycle-time, and release-readiness analysis without needing the app open or a live Jira connection  
+**Related FR:** FR-236, FR-310, FR-311 *(FR-310/FR-311 renumbered 2026-06-08 from colliding `FR-242`/`FR-243` — see TODO-List.md Section 12 Gaps Summary item 6)*
+
+---
+
+## v4.2.2 — Dashboard Status Chips Use Case (2026-06-08)
+
+### UC-090 — Scan Section Health via Status Chips Before Expanding
+
+**Actor:** Scrum Master, Product Owner, Delivery Manager, C-level stakeholder
+**Trigger:** User lands on `/dashboard` with most of the ~16 collapsible sections collapsed and wants to decide which to open first
+**Main Flow:**
+1. User scans down the page without expanding any section; each section's trigger bar shows its icon, title, and zero or more small rounded "status chips" summarising that section's state (e.g., "3 actions", "2 critical", "Updated 2h ago")
+2. User reads each chip's colour — red for `critical`, amber for `warning`, blue for `info`, green for `good`, slate for `neutral` — and immediately identifies the sections that need attention without opening them
+3. User clicks the trigger of the section whose chips show the most severe (red/critical) summary; the section expands in place and the chevron rotates to indicate the open state
+4. User repeats the scan-then-expand pattern down the page, using chip colour as the primary signal for where to focus first
+
+**Alternate Flow A — Section has no chips:**
+1a. A section has nothing noteworthy to summarise (e.g., an empty filter state) → its trigger renders with no chips, signalling "nothing to scan here" by omission
+
+**Postcondition:** User identifies which of the ~16 dashboard sections need attention and in what order, without having to expand each one individually  
+**Related FR:** FR-308, BR-112
+
+---
+
+---
+
+## v4.1 — Advanced Chart Customization Use Case (2026-06-08)
+
+### UC-091 — User Personalises the Charts Page Layout
+
+**Actor:** Any authenticated user viewing `/charts` (Scrum Master, Director, Engineering Manager, etc.)
+**Trigger:** User finds the default 11-chart layout doesn't match what matters most to their role
+**Main Flow:**
+1. User opens `/charts` and clicks the Chart Customizer control
+2. Chart Customizer panel opens — all 11 charts are listed with a visibility toggle, a column-span control (1/3, 2/3, Full width), and ▲▼ reorder controls
+3. User toggles off charts they never reference (e.g., "Label Distribution") — those charts disappear from the page immediately
+4. User sets "Sprint Velocity" to "Full width" so it's the most prominent chart on the page
+5. User moves "Timeline" to the top of the order using the ▲ control
+6. Panel closes — the page now renders only the chosen charts, in the chosen order and widths
+7. Settings persist to `dc_chart_prefs` in local storage and are re-applied on every subsequent visit
+**Alternate Flow A — Reset to defaults:**
+6a. User clicks "Reset" in the panel → all charts become visible again at their registry-default span and order
+**Postcondition:** User's `/charts` page reliably shows only the charts they care about, sized and ordered the way they prefer, every time they return — without any admin configuration
+**Related FR:** FR-306, BR-110
+
+---
+
+### UC-094 — User Merges Multiple Jira Exports into One Unified Report
+
+*(Written 2026-06-08 to close TRACE-02 / Gaps Summary COVER-06 — the multi-file merge control had a live route, UI, and pure merge function with zero FR/UC/TC anchor.)*
+
+**Actor:** Engineering Manager, Scrum Master, or Product Owner who exports overlapping date ranges or per-team Jira backlogs separately
+**Trigger:** User has 2–10 separate Jira export files (e.g., one per team or sprint window) covering overlapping issues and wants one combined dashboard rather than uploading and reviewing them one at a time
+**Main Flow:**
+1. User opens the landing/upload page and expands the "Combine multiple exports" panel
+2. User adds 2–10 `.csv`/`.xlsx`/`.xls` files (≤20 MB each) via the file picker or drag-and-drop; the panel shows the running file count
+3. User clicks "Merge & Analyse" — the browser POSTs all files as `multipart/form-data` to `POST /api/upload/merge`
+4. System parses and validates every file individually (same parsing/validation pipeline as a single upload — FR-001/FR-003/FR-001-adjacent validation rules)
+5. System merges the parsed issue arrays via `mergeIssueArrays()`: issues are deduplicated by `Issue Key`, and when the same key appears in more than one file, each field keeps whichever file's value is more complete (a non-empty value wins over an empty one; between two non-empty strings, the longer one wins)
+6. System computes `DashboardMetrics` from the deduplicated, merged issue set, persists them via `writeLatestMetrics()`, and opportunistically pushes the result to cloud storage
+7. System returns `{ metrics, warnings, mergeStats: { fileCount, totalBeforeMerge, duplicatesRemoved, uniqueIssues } }`
+8. User sees a brief merge summary ("4 files combined — 37 duplicates removed, 412 unique issues") before the page redirects to the dashboard rendered from the unified metrics
+**Alternate Flow A — Validation/format failure on one file:**
+4a. One file is the wrong extension, exceeds 20 MB, or fails Jira-issue validation → the system returns HTTP 400/422 naming that specific file and the reason; no merge or metrics computation occurs and the other files' data is discarded (all-or-nothing — the user re-selects and retries)
+**Alternate Flow B — File-count limits:**
+2a. User selects fewer than 2 files → the "Merge & Analyse" action is disabled with a "Add at least 2 files to merge" hint
+2b. User selects more than 10 files → the system rejects the request with HTTP 400 ("Maximum 10 files allowed")
+**Postcondition:** A single unified `DashboardMetrics` object — built from every unique issue across all uploaded files, with cross-file duplicates resolved field-by-field toward the most complete data — is persisted as the latest metrics and rendered on the dashboard, without the user needing to manually reconcile overlapping exports
+**Related FR:** FR-312, FR-001
+
+---
+
+## v4.4 — User Add-Member Request Workflow Use Cases (2026-06-09, P1)
+
+*(Added to close USERREQ-10–14, REC-12 from TODO-List.md. Related FR: FR-314–FR-319.)*
+
+### UC-095 — Submit a User Add-Member Request
+
+**Actor:** Any authenticated user (any role)  
+**Trigger:** User wants a new colleague to be added to Delivery Clarity but lacks admin rights to create accounts directly  
+**Precondition:** User is logged in; the colleague does not yet have a Delivery Clarity account  
+**Main Flow:**
+1. User clicks "Request Add Member" in the team area, member directory, or profile/header quick action
+2. A request modal opens with fields: Full Name (required), Email (required), Requested Role (required), Business Reason (required), Team/Project (optional), Notes (optional)
+3. User fills in the form; system performs real-time client-side validation (non-empty required fields, valid email format)
+4. User submits; browser POSTs to `POST /api/user-add-requests`
+5. System checks: no existing user account for that email (HTTP 409 "An account with this email already exists."); no existing pending request for that email (HTTP 409 "A pending request for this email already exists.")
+6. System creates the `UserAddRequest` with `status: "pending"` and writes a `user_add_request_submit` audit event
+7. System returns HTTP 201 with the new request summary; modal closes and user sees a success notice: "Request submitted — an admin will review it shortly"
+8. User later navigates to their request history (via `GET /api/user-add-requests/mine`) and can see the request status as `pending`, `accepted`, or `rejected`
+
+**Alternate Flow A — Role requires high-privilege confirmation:**  
+2a. User selects `admin` or `c_level` as the requested role → an inline warning appears ("This role grants elevated system access — the admin will review carefully") before submission
+
+**Alternate Flow B — Duplicate email check:**  
+5a. The `requestedEmail` already belongs to a registered user → HTTP 409 "An account with this email already exists."; user is asked to verify the email or choose a different address
+
+**Alternate Flow C — Pending request already exists:**  
+5b. A pending `UserAddRequest` for this email already exists → HTTP 409 "A pending request for this email already exists."; user sees this and may wait for the admin's decision or contact the admin directly
+
+**Exception Flow — Unauthenticated:**  
+0a. If the session is not active, `POST /api/user-add-requests` returns 401 and the modal shows a session-expired notice
+
+**Postcondition:** A `UserAddRequest` record in `pending` status exists in the database, awaiting admin review; the requester can track it from their own requests list  
+**Related FR:** FR-316, FR-317
+
+---
+
+### UC-096 — Admin Reviews and Acts on User Add-Member Requests
+
+**Actor:** Admin user  
+**Trigger:** Admin receives an in-app notification or navigates to the user-request queue in `/admin/settings → User Requests`  
+**Precondition:** One or more `UserAddRequest` records with `status: "pending"` exist in the database  
+**Main Flow:**
+1. Admin navigates to `/admin/settings` → "User Requests" tab; `GET /api/admin/user-add-requests` returns all requests with requester name/email and requested role, ordered newest first
+2. Admin reviews the pending request: requested name, email, role, business reason, requester, date submitted, and any duplicate/high-privilege warning flags
+3. **Accept path:** Admin clicks "Accept" (optionally adds a decision note) → `PATCH /api/admin/user-add-requests/:id/accept`:
+   - System validates `status === "pending"` and the email is still available
+   - System creates the `User` account with `mustChangePassword: true` and a securely-generated temporary password (bcrypt 12 rounds)
+   - System marks the request `accepted`, records `adminDecisionById`/`adminDecisionAt`/`adminDecisionNote`/`createdUserId`
+   - System creates a `Notification` for the requester: "Your request to add [email] as [role] has been approved"
+   - System writes a `user_add_request_accept` audit event
+   - Response: HTTP 200 `{ ok: true, createdUser: { id, name, email, role, mustChangePassword: true } }`
+4. **Reject path:** Admin clicks "Reject" (optionally provides a reason) → `PATCH /api/admin/user-add-requests/:id/reject`:
+   - System validates `status === "pending"`
+   - System marks the request `rejected`, records decision metadata
+   - System creates a `Notification` for the requester: "Your request was not approved" with the optional reason note
+   - System writes a `user_add_request_reject` audit event
+   - Response: HTTP 200 `{ ok: true }`
+
+**Alternate Flow A — Request already decided:**  
+3a./4a. `status !== "pending"` → HTTP 409 "Request is already accepted/rejected and cannot be accepted/rejected."; no double-processing occurs
+
+**Alternate Flow B — Email taken at decision time:**  
+3b. The `requestedEmail` was registered by another admin in the window between submission and acceptance → HTTP 409 "An account with this email already exists."; admin must reject or coordinate manually
+
+**Alternate Flow C — Non-admin access attempt:**  
+1a. `session.role !== "admin"` → HTTP 403 "Admin access required."; the User Requests tab is not reachable from the UI
+
+**Postcondition:** The request is either accepted (a new user account exists, the requester is notified, both events are audited) or rejected (the requester is notified, the event is audited); `status` is now immutable for normal flows  
+**Related FR:** FR-318, FR-319, FR-235B, FR-235D
+
+---
+
+---
+
+## v4.5 — USERREQ UI: Request Modal, Admin Queue, Notification Bell (2026-06-09, P1)
+
+### UC-097 — Non-Admin User Submits a Member Add Request via the Members Page
+
+- **ID:** UC-097
+- **Title:** Non-Admin User Submits a Member Add Request
+- **Actor:** Non-admin authenticated user (Scrum Master, Product Owner, Manager, C-level, User)
+- **Precondition:** User is logged in with a non-admin role; the candidate to be added does not yet have an account
+- **Trigger:** User clicks "Request add member" on the Members page (`/members`)
+
+**Main Flow:**
+1. System shows the "Request add member" button on `/members` only for non-admin users
+2. User clicks the button; `RequestAddMemberModal` opens
+3. User fills in Full Name, Email Address, Requested Role, and Business Reason (required); optionally Team/Project and Notes
+4. If Requested Role is `admin` or `c_level`, system shows a high-privilege warning and requires Reason ≥ 20 characters
+5. User clicks Submit; client validates all required fields; if valid, POSTs to `POST /api/user-add-requests`
+6. System validates: email not already registered (409), no pending request for same email (409), role in ASSIGNABLE_ROLES (400)
+7. On success, system creates a `UserAddRequest` with `status: "pending"`, writes audit event, returns HTTP 201
+8. Modal replaces the form with a ✅ "Request submitted" confirmation message
+9. User closes the modal
+
+**Alternate Flow A — Validation failure:**
+5a. Required field missing or email format invalid → client-side inline error; Submit remains disabled
+
+**Alternate Flow B — Duplicate email:**
+7b. Server returns HTTP 409 "An account with this email already exists." → modal displays error inline; user corrects and resubmits
+
+**Postcondition:** A `UserAddRequest` with `status: "pending"` exists; admin will see it in the Member Requests panel  
+**Related FR:** FR-316, FR-320, FR-235B
+
+---
+
+### UC-098 — Admin Reviews, Enters Temp Password, and Acts on a Member Add Request
+
+- **ID:** UC-098
+- **Title:** Admin Accepts or Rejects a Member Add Request with Mandatory Temp Password Entry
+- **Actor:** Admin
+- **Precondition:** At least one `UserAddRequest` with `status: "pending"` exists
+- **Trigger:** Admin navigates to Admin Settings → Member Requests tab (or clicks the amber notification banner)
+
+**Main Flow:**
+1. Admin opens `/admin/settings` → "Member Requests" tab; `UserAddRequestsPanel` loads pending requests via `GET /api/admin/user-add-requests?status=pending`
+2. Admin expands a request card to review requested name, email, role, business reason, requester details, and submission date
+3. **Accept path:** Admin types a temporary password into the mandatory amber field (≥ 8 chars, ≥ 1 uppercase, ≥ 1 digit); field shows inline error if strength fails; Accept button is disabled until the field is non-empty
+4. Admin optionally types a decision note; clicks Accept
+5. System calls `PATCH /api/admin/user-add-requests/[id]/accept` with `{ tempPassword, adminDecisionNote? }`
+6. Server validates pending status, email availability, and password strength; creates user with `mustChangePassword: true`; marks request accepted; notifies requester; audits
+7. Panel shows a green copyable password box; admin copies it to share via secure channel if needed
+
+**Reject path (alternative to steps 3–7):**
+3r. Admin optionally types a decision note; clicks Reject
+4r. System calls `PATCH /api/admin/user-add-requests/[id]/reject`; marks rejected; notifies requester; audits
+
+**Alternate Flow A — Password strength fails:**
+4a. Server returns HTTP 400 with strength error → panel shows error inline; admin corrects and retries
+
+**Alternate Flow B — Email taken between submission and acceptance:**
+6b. Server returns HTTP 409 "An account with this email already exists." → panel shows error; admin must reject or coordinate
+
+**Postcondition:** Request is accepted (new user account exists, temp password shared, requester notified) or rejected (requester notified); both outcomes audited  
+**Related FR:** FR-319, FR-321
+
+---
+
+### UC-099 — User Receives and Views an In-App Notification About Their Request Outcome
+
+- **ID:** UC-099
+- **Title:** User Views In-App Notification for Request Accept/Reject
+- **Actor:** Authenticated user (any role, the requester)
+- **Precondition:** Admin has accepted or rejected the user's `UserAddRequest`; a `Notification` record now exists with `recipientUserId = session.userId`
+- **Trigger:** User is anywhere in the app; `NotificationBell` polls and detects an unread notification
+
+**Main Flow:**
+1. `NotificationBell` polls `GET /api/notifications` every 30s; finds unread notification; badge count increments
+2. Bell icon wiggles; pulsing red ring appears on badge
+3. User clicks the bell icon; dropdown opens showing the notification with ✅ or ❌ icon, title, and message (including temp password if accepted)
+4. User reads the message; system calls `PATCH /api/notifications/[id]/read` on click; badge count decrements; notification moves to read state
+5. User can also click "Mark all read" to bulk-clear all unread notifications
+
+**Admin-specific sub-flow:**
+1a. If `role === "admin"` and `pendingRequests > 0`, a persistent amber strip banner appears fixed below the nav header; clicking it navigates to `/admin/settings` (Member Requests tab)
+
+**Postcondition:** Notification is marked `readAt: <timestamp>`; `GET /api/notifications` no longer counts it as unread  
+**Related FR:** FR-322, FR-323, FR-314, FR-315
+
+---
+
+### UC-100 — New User Receives Welcome Email and Logs In for the First Time
+
+- **ID:** UC-100
+- **Title:** New User First Login via Welcome Email
+- **Actor:** New user (just created by admin via `UserAddRequest` accept)
+- **Precondition:** Admin has accepted the request; `sendEmail()` returned `true`; new user record exists with `mustChangePassword: true`
+- **Trigger:** New user opens welcome email delivered to their inbox
+
+**Main Flow:**
+1. New user receives an HTML welcome email from `JiraDashboard <aburasali80@gmail.com>` with subject "Welcome to JiraDashboard — Your Account is Ready"
+2. Email body contains full name, login email, temporary password, and a "Log In Now" button/link pointing to the app login page
+3. User clicks the login link; opens the app in their browser
+4. User enters their email and the temporary password from the email; submits the login form
+5. Server authenticates; detects `mustChangePassword: true`; redirects to `/change-password`
+6. User enters a new password (confirmed twice); submits
+7. Server hashes the new password, sets `mustChangePassword: false`, returns the user to the app
+8. User lands on the dashboard — fully onboarded
+
+**Alternate Flow — Email Not Sent (SMTP not configured):**
+3a. Admin panel shows ⚠️ "Email not sent — SMTP not configured"; admin must share the temp password manually (via in-app notification or secure channel)
+
+**Alternate Flow — Wrong Credentials:**
+5a. If user misreads the temp password, login returns 401; user can retry or request admin to reset
+
+**Postcondition:** User is authenticated, `mustChangePassword = false`, and has set their own password  
+**Related FR:** FR-319, FR-321, FR-325  
+**Related:** UC-097, UC-098, UJ-035, SCN-050
+
+---
+
+## v4.6 Use Cases — Roadmap, Forecast, Retro (2026-06-10)
+
+---
+
+### UC-101 — View Delivery Roadmap
+
+- **ID:** UC-101
+- **Title:** View Epic Roadmap with Delivery Forecasts
+- **Actor:** Any authenticated user
+- **Precondition:** User is logged in; metrics data has been uploaded (Jira export with epic data)
+- **Trigger:** User navigates to `/roadmap` via the Planning nav group
+
+**Main Flow:**
+1. Page loads, calls `loadMetricsWithSource()` and `computePortfolioSummary()`
+2. Average throughput calculated from sprint completion history
+3. Each epic is passed through `forecastEpic()` → remaining issues, sprints est., weeks est., forecast label, confidence
+4. Summary KPI strip shows: Total Epics, Complete, Avg Progress, Critical
+5. Throughput context banner shows avg items/sprint and forecasting assumptions
+6. Epic cards rendered with progress bar (green/amber/red by health), forecast label, confidence badge
+7. User applies filter (In Progress / All / Critical / Done) and sort (Forecast / Progress / Name)
+8. User clicks an epic card to expand detail: remaining issues, sprints est., critical count
+
+**Alternate Flow — No epic data:**
+3a. Empty state shown: "No epic data found — upload a Jira export with Epic Link/Epic Name column"
+
+**Alternate Flow — No sprint data:**
+2a. `avgThroughput = 0`; all forecasts show "Insufficient data" with low confidence
+
+**Postcondition:** User has visibility into epic progress, health, and estimated completion dates  
+**Related FR:** FR-326, FR-327  
+**Related:** UC-102, BR-115, SCN-051
+
+---
+
+### UC-102 — View Delivery Forecast
+
+- **ID:** UC-102
+- **Title:** View Velocity-Based Delivery Forecast and Burn-Up Chart
+- **Actor:** Any authenticated user
+- **Precondition:** User is logged in; metrics data uploaded
+- **Trigger:** User navigates to `/forecast` via the Planning nav group
+
+**Main Flow:**
+1. Page loads and calls `computeForecast(metrics)`
+2. Status banner displayed: on_track (green) / at_risk (amber) / off_track (red) / complete (blue) / insufficient_data (grey)
+3. KPI row shows: Total Issues, Done, Remaining, Avg Throughput
+4. Burn-up chart renders: solid blue actual line, dashed blue forecast extension, grey dashed target line
+5. Next Quarter Plan section shows: achievable item count at 6 sprints × avgThroughput vs remaining
+6. Risk signals highlight blocked and critical issue counts
+7. Recommendations list shows prioritised actionable adjustments
+
+**Alternate Flow — Insufficient data:**
+2a. Status banner shows "Insufficient data" with grey styling and a message explaining what data is missing
+
+**Postcondition:** User understands current delivery trajectory, confidence level, and next actions  
+**Related FR:** FR-328, FR-329  
+**Related:** UC-101, BR-116, SCN-052
+
+---
+
+### UC-103 — Run a Sprint Retrospective in App
+
+- **ID:** UC-103
+- **Title:** Fill Out Sprint Retrospective and Receive Suggestions
+- **Actor:** Any authenticated user (typically Scrum Master or team lead)
+- **Precondition:** User is logged in; sprint has completed
+- **Trigger:** User navigates to `/retro` via Planning nav and clicks "Fill in App"
+
+**Main Flow:**
+1. User lands on three-card menu; clicks "Fill in App → Start"
+2. Form view shown: Sprint Name, Team Name, Retro Date, Sprint Goal Met, Sprint Goal
+3. User fills What Went Well, What Did Not Go Well, Blockers entries (multi-item lists with add/remove)
+4. User fills Action Items: text, owner, due date, priority per item
+5. User clicks "Submit & Get Suggestions" (disabled until Sprint Name filled)
+6. `generateInsights(form)` runs; insights view shown
+7. Goal-status banner (green/amber/red) shown; suggestions list rendered
+8. Colour-coded action item summary shown (red=high, amber=medium, green=low)
+
+**Alternate Flow — Missing owners:**
+7a. Insight: "N action items are missing an owner — assign owners to ensure accountability."
+
+**Alternate Flow — Sprint goal not met:**
+7a. Insight: "Sprint goal was not met. Review capacity planning and scope commitment for the next sprint."
+
+**Postcondition:** Team has a recorded retrospective with actionable improvement suggestions  
+**Related FR:** FR-330, FR-331, FR-332  
+**Related:** UC-104, UC-105, BR-117, SCN-053
+
+---
+
+### UC-104 — Download Retrospective Template
+
+- **ID:** UC-104
+- **Title:** Download Retrospective CSV Template
+- **Actor:** Any authenticated user
+- **Precondition:** User is logged in
+- **Trigger:** User navigates to `/retro` and clicks "Download CSV →"
+
+**Main Flow:**
+1. User lands on `/retro` menu view
+2. Clicks "Download CSV →" on the Download Template card
+3. `downloadTemplate()` executes client-side: builds CSV string, creates a `Blob`, triggers browser download
+4. File `Retrospective_Template.csv` saves to user's downloads folder with header row + 2 example rows
+
+**Postcondition:** User has a template they can fill offline and share with their team  
+**Related FR:** FR-333  
+**Related:** UC-103
+
+---
+
+### UC-105 — Navigate to Planning Pages via Header
+
+- **ID:** UC-105
+- **Title:** Access Roadmap, Forecast, or Retro via Planning Header Group
+- **Actor:** Any authenticated user (any role)
+- **Precondition:** User is logged in; `showNav` is true
+- **Trigger:** User clicks the "Planning" dropdown in the AppShell header
+
+**Main Flow:**
+1. User clicks "Planning" button in the desktop header nav
+2. Dropdown opens showing: 🗺️ Roadmap, 🔮 Forecast, 🔄 Retro
+3. User clicks the desired page link
+4. Dropdown closes; page navigates
+
+**Alternate Flow — Mobile:**
+2a. User taps the hamburger icon → mobile nav panel opens → Planning section visible with all three links in a 2-column grid
+
+**Postcondition:** User arrives at the selected planning page  
+**Related FR:** FR-334, FR-335  
+**Related:** UC-101, UC-102, UC-103
+
+---
+
+### UC-106 — Use Grouped Help Navigation
+
+- **ID:** UC-106
+- **Title:** Navigate /help Using Category Groups and Sub-section Pills
+- **Actor:** Any authenticated user
+- **Precondition:** User is on the `/help` page
+- **Trigger:** User wants to find a specific help section
+
+**Main Flow:**
+1. User sees Row 1: 9 category group pills (Getting Started, Dashboard, Planning, Analysis, Export & Data, System, Customization, People, Troubleshooting)
+2. User clicks a group pill; page scrolls to the first section in that group
+3. Row 2 appears (if group has > 1 section) showing sub-section pills for that group only
+4. User clicks a sub-section pill to scroll directly to that section
+5. As the user scrolls, the active group pill updates via IntersectionObserver
+
+**Alternate Flow — Single-section group:**
+3a. Row 2 is hidden; clicking the group pill is sufficient to reach the only section
+
+**Postcondition:** User finds the relevant help section with at most 2 clicks  
+**Related FR:** FR-336  
+**Related:** NAV-01
+
+---
+
+## v4.9.0 — Navigation Architecture Overhaul Use Cases (2026-06-16)
+
+### UC-107 — Navigate Dashboard Sub-Pages
+
+- **ID:** UC-107
+- **Title:** Navigate to a Specific Dashboard Analysis Section via the Sidebar
+- **Actor:** Any authenticated user (role-appropriate sections visible)
+- **Precondition:** User is logged in; metrics have been loaded; user is on any `/dashboard/*` route
+- **Trigger:** User clicks a section link in the DashboardSidebarNav
+
+**Main Flow:**
+1. User sees DashboardSidebarNav (fixed 228px left sidebar) with 15 section links grouped into Overview, Delivery, and Deep Dive groups
+2. User clicks a section (e.g. "Flow Health" or "Sprint Status")
+3. Next.js App Router navigates to the corresponding `/dashboard/[section]` page
+4. Page loads, calls `loadMetricsWithSource()`, and renders the section's analysis
+5. Active sidebar item highlights with blue left border and primary-soft background
+6. DashboardTopbar health pill and "New Upload" CTA remain visible throughout
+
+**Alternate Flow — No metrics loaded:**
+4a. Page redirects to `/` (upload page) with no flash of content
+
+**Alternate Flow — Mobile:**
+1a. On mobile, DashboardSidebarNav is hidden; user navigates via the AppShell mobile hamburger
+
+**Postcondition:** User is viewing the selected delivery analysis section in full detail  
+**Related FR:** FR-337 (dashboard routing; see §4.9.0 scope entry)  
+**Related:** UC-108, DC_NAV_GROUPS
+
+---
+
+### UC-108 — Access Standalone Analytics Page
+
+- **ID:** UC-108
+- **Title:** Navigate to a Standalone Analytics Route (Data Quality, Flow Health, etc.)
+- **Actor:** Any authenticated user (role must permit the route per `canAccessRoute`)
+- **Precondition:** User is logged in; Jira export has been uploaded
+- **Trigger:** User navigates to one of the 6 standalone analytics routes via the nav or direct URL
+
+**Main Flow:**
+1. User navigates to one of: `/data-quality`, `/delivery-mix`, `/flow-health`, `/release-readiness`, `/sprint-kanban`, `/work-explorer`
+2. Middleware checks authentication (PROTECTED list) and role access (`canAccessRoute`)
+3. Page renders with AppShell header and full-page analytics view
+4. Page calls `loadMetricsWithSource()` to load metrics
+5. Page renders KPI cards, charts, tables specific to its domain:
+   - `/data-quality` — Score ring (0–100%), 10-field check table, field impact report
+   - `/delivery-mix` — Issue-type donut, status distribution bar, sprint composition
+   - `/flow-health` — Lead time, cycle time, age bracket histogram, flow items table
+   - `/release-readiness` — Go/Conditional-Go/No-Go per Fix Version
+   - `/sprint-kanban` — Velocity KPIs, WIP, cycle time, sprint completion rates
+   - `/work-explorer` — Filterable table of all work items with risk/orphan status
+
+**Alternate Flow — Role without access:**
+2a. Middleware redirects to `fallbackRouteForRole(role)` (typically `/dashboard`)
+
+**Alternate Flow — No metrics:**
+4a. Page redirects to `/` (upload)
+
+**Postcondition:** User views full-page analytics for the chosen domain  
+**Related FR:** FR-225A–D (explorer), FR-242 (data quality), FR-309 (metrics loading)  
+**Related:** UC-107, UC-046
+
+---
+
+### UC-109 — Admin Manages App Configuration (SMTP + Email Settings)
+
+- **ID:** UC-109
+- **Title:** Admin Views and Updates App-Level SMTP Configuration
+- **Actor:** Admin
+- **Precondition:** Admin is logged in; `/admin/settings` Config tab is accessible
+- **Trigger:** Admin navigates to `/admin/settings` and selects the "App Config" (⚙️) tab
+
+**Main Flow:**
+1. Admin selects the Config tab in AdminNavSidebar or admin settings
+2. Page loads current config via `GET /api/admin/app-config` — passwords are masked in the response
+3. Admin views/edits: SMTP host, port, user, password, from address, app URL
+4. Admin clicks "Save" → `PUT /api/admin/app-config` encrypts the config and saves to cloud storage
+5. Admin optionally clicks "Send Test Email" → `POST /api/admin/app-config?action=test` sends a test email to the logged-in admin's address
+6. Admin sees ✅ success or ⚠️ error based on the email delivery result
+
+**Alternate Flow — SMTP not configured:**
+5a. Test email returns `{ emailSent: false }` with a "SMTP not configured" message
+
+**Postcondition:** SMTP config is encrypted and stored in cloud; welcome emails for new users will be sent using this config  
+**Related FR:** FR-325 (email on accept), FR-325-adjacent (app-config API)  
+**Related:** UC-100, STORAGE-DEC-06
