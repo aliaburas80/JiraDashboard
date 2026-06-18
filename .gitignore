@@ -14,9 +14,8 @@ Thumbs.db
 
 # Next.js build output
 .next/
-.next-jira-dashboard/
-.next.bad-*/
-/Users/
+.next-*/
+.next.bad*/
 out/
 next-env.d.ts
 

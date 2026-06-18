@@ -1507,6 +1507,113 @@ Set `client_max_body_size 25M;` in the nginx site config. Without this, Jira CSV
 
 ---
 
+## System Error Logger (`src/lib/system-error-logger.ts`)
+
+Centralised helpers that make every database write resilient and observable.
+
+### `logSystemError(opts)`
+
+Writes a row to the `SystemErrorLog` table. Never throws — if the log write itself fails, it is silently swallowed to avoid cascading errors.
+
+```ts
+await logSystemError({
+  errorCode:   'P2003',
+  errorMessage: e.message,
+  prismaModel:  'AuditEvent',
+  operation:    'create',
+  context:      'safeAuditEvent',
+  payload:      JSON.stringify(data),  // stored for replay
+});
+```
+
+### `withDbRetry(fn, opts?)`
+
+Wraps any `async` Prisma call with exponential back-off retries.
+
+```ts
+await withDbRetry(
+  () => prisma.notification.createMany({ data }),
+  { context: 'safeNotifications', retries: 3, delayMs: 400 }
+);
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `retries` | `3` | Maximum retry attempts |
+| `delayMs` | `400` | Base delay (doubles each attempt) |
+| `context` | `''` | Label stored in SystemErrorLog |
+
+Non-retriable codes (P2003, P2025, P2002, P2014, P2015) are never retried — the error is logged immediately and rethrown.
+
+### `safeAuditEvent(data)`
+
+Drop-in replacement for `prisma.auditEvent.create()`. On Prisma P2003 (foreign key — typically a deleted user still holding a valid session cookie), retries once with `userId: null` to preserve the audit record, and logs the incident to `SystemErrorLog` as `auto-fixed`.
+
+```ts
+// Before
+await prisma.auditEvent.create({ data: { userId, eventType, ... } });
+
+// After
+await safeAuditEvent({ userId, eventType, ... });
+```
+
+### `safeNotifications(data, context?)`
+
+Drop-in replacement for `prisma.notification.createMany()`. Wraps with `withDbRetry` and logs failures to `SystemErrorLog`.
+
+### Ghost Session Pattern
+
+Iron-session cookies have an 8-hour TTL. When a user account is deleted the cookie remains valid, causing FK violations on any subsequent write. The canonical guard:
+
+```ts
+// In any API route that creates records referencing session.userId
+const requester = await prisma.user.findUnique({
+  where: { id: session.userId },
+  select: { id: true },
+});
+if (!requester) {
+  return NextResponse.json(
+    { error: 'Your account no longer exists. Please sign in again.' },
+    { status: 401 }
+  );
+}
+```
+
+Additionally, `DELETE /api/admin/users` cancels pending add-requests for the deleted user's email before deletion:
+
+```ts
+await prisma.userAddRequest.updateMany({
+  where: { requestedEmail: user.email, status: 'pending' },
+  data:  { status: 'cancelled', adminDecisionNote: 'User account deleted.' },
+});
+```
+
+### `SystemErrorLog` — Prisma Model
+
+```prisma
+model SystemErrorLog {
+  id            String    @id @default(cuid())
+  errorCode     String
+  errorMessage  String
+  prismaModel   String?
+  operation     String
+  context       String?
+  payload       String?   // JSON — used for retry replay
+  resolution    String    @default("logged")
+  retryCount    Int       @default(0)
+  lastRetriedAt DateTime?
+  resolvedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  @@index([errorCode])
+  @@index([createdAt])
+  @@index([resolution])
+}
+```
+
+Resolution values: `logged` · `auto-fixed` · `retried` · `resolved` · `skipped`
+
+---
+
 ### In-App Notification Bell and APIs (Implemented — v4.5)
 
 **API routes:**

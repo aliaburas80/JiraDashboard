@@ -387,6 +387,8 @@ All pages are Next.js App Router routes under `app/`. Client components are mark
 | `ImportLog` | id, userId, fileName, fileSize, fileType, totalIssues, doneIssues, healthScore, processingTimeMs, createdAt |
 | `DashboardSnapshot` | id, userId, name, metrics (JSON), createdAt |
 | `AuditEvent` | id, userId, eventType, eventDescription, ipAddress, userAgent, createdAt |
+| `SystemErrorLog` | id, errorCode, errorMessage, prismaModel, operation, context, payload (JSON), resolution (`logged`/`auto-fixed`/`retried`/`resolved`/`skipped`), retryCount, lastRetriedAt, resolvedAt, createdAt |
+| `UserAddRequest` | id, requestedEmail, requestedByUserId, status (`pending`/`approved`/`rejected`/`cancelled`), adminDecisionNote, createdAt |
 
 ---
 
@@ -1907,6 +1909,13 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 **FR-291 (P2 — Done):** On every successful upload the system MUST compute a Release Confidence Score (0–100) using the formula: completion rate × 0.55 + (1 − blocked/total) × 25 + (1 − critical/total) × 12 + max(0, 8 − defects × 2). The score MUST be persisted in `ImportLog.metadataJson` as `releaseConfidenceScore` and returned by `GET /api/trends`. The `/trends` page MUST display it as a trend chart, a summary stat card, and a column in the upload log table.
 
 **FR-290 (P2 — Done):** The `/explore` Work Item Explorer MUST provide an Export dropdown button once a graph is loaded. It MUST offer two formats: (1) Excel (.xlsx) — 5-sheet workbook: Summary (focus stats + insights + largest branch), All Issues (all connected nodes + orphans), Risk Items (blocked/critical/risk-path only), Orphans, and Insights; (2) CSV — flat table of all nodes. Files MUST be named `explorer-{key}-{date}.xlsx / .csv`.
+
+**FR-303 (P0 — Done):** The system MUST provide a `/admin/system-errors` page (admin-only) that lists all `SystemErrorLog` entries. Each entry MUST display: error code badge, operation, Prisma model, a human-readable description of the failure cause, a human-readable description of the resolution, the resolution state chip (`logged` / `auto-fixed` / `retried` / `resolved` / `skipped`), retry count, last retried timestamp, and a context label. Unresolved entries MUST show a "Retry operation" button that re-runs the stored payload and a "Dismiss" button that marks the entry resolved. A "Mark all resolved" bulk action MUST be available when unresolved entries exist. The page MUST support filtering by resolution state. A `GET /api/admin/system-errors` endpoint MUST return paginated error logs. A `POST /api/admin/system-errors?action=retry` endpoint MUST re-execute the stored operation. A `PATCH /api/admin/system-errors` endpoint MUST accept `{ id }` (resolve one) or `{ all: true }` (resolve all). The page MUST appear in the admin sidebar navigation.
+
+**FR-302 (P0 — Done):** The admin users table at `/admin/settings → Users` MUST support checkbox-based multi-select. A "select all" checkbox in the table header MUST select all users except the currently authenticated admin. Individual row checkboxes MUST toggle selection. When one or more users are selected a bulk action bar MUST appear offering: "Delete selected" (with a confirmation dialog before execution) and "Change role to…" (a role selector that applies the chosen role to all selected users). The "Delete selected" action MUST cancel any `pending` `UserAddRequest` records for the deleted users' emails before deletion.
+
+**FR-301-sec (P0 — Done):** The system MUST guard against ghost-session foreign-key violations. When an API endpoint performs a database write that references `session.userId`, it MUST first verify the user record exists via a `findUnique` call. If the user no longer exists the endpoint MUST return HTTP 401 with the message "Your account no longer exists. Please sign in again." All `AuditEvent` and `Notification` creation calls MUST use the safe wrappers `safeAuditEvent()` and `safeNotifications()` defined in `src/lib/system-error-logger.ts`; these wrappers automatically retry with `userId: null` on Prisma P2003 errors and log the failure to `SystemErrorLog`. The `DELETE /api/admin/users` handler MUST set the status of all `pending` `UserAddRequest` entries for the deleted user's email to `cancelled` before the deletion query executes.
+
 
 ---
 

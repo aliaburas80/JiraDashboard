@@ -527,6 +527,40 @@ const SECTIONS: Section[] = [
       { q: 'What is the Next Quarter Plan?', a: 'It shows how many issues you can realistically complete in 6 sprints at your current throughput, compared to how many remain. If the achievable count is less than remaining, the plan flags that the quarter target is not achievable at current velocity.' },
     ],
   },
+
+  // 27. Admin — System Errors
+  {
+    id: 'system-errors',
+    icon: '🛡️',
+    title: 'Admin — System Errors',
+    items: [
+      {
+        q: 'What is the System Errors page?',
+        a: 'The /admin/system-errors page (admin-only) records every database failure the app encounters — for example, when a write fails because a referenced user was deleted. Each entry shows a red "What failed" panel explaining the error and a green/blue "How it was handled" panel showing what the system did. You can retry failed operations or dismiss them.',
+      },
+      {
+        q: 'What do the resolution states mean?',
+        a: 'logged — recorded but not yet resolved; needs your attention. auto-fixed — the system retried automatically with a safe fallback (e.g. null userId) and succeeded. retried — you manually retried the operation from this page. resolved — marked as resolved by an admin. skipped — the operation was intentionally skipped to prevent a cascade of errors.',
+      },
+      {
+        q: 'What is a "ghost session"?',
+        a: 'When an admin deletes a user account, that user\'s login cookie remains valid for up to 8 hours. If the deleted user tries to perform an action during that window, the server detects the missing account and returns a "Your account no longer exists" message instead of a database error. This prevents corrupted data from being written.',
+      },
+      {
+        q: 'What does "Foreign key constraint failed" (P2003) mean?',
+        a: 'A Prisma P2003 error means a write referenced a parent record that no longer exists — most commonly a deleted user account. The system automatically retries audit events with a null user ID so the record is never lost, and logs the incident as "auto-fixed".',
+      },
+      {
+        q: 'Can I retry a failed operation?',
+        a: 'Yes. Click "Retry operation" on any unresolved error entry. The system will re-run the original database operation using the stored payload. The result is shown immediately and the retry count is incremented. If the retry fails again, a new error entry is created.',
+      },
+      {
+        q: 'How do I use bulk user operations?',
+        a: 'In /admin/settings → Users, check the box in the table header to select all users (your own row is always excluded). Or check individual rows. Once you have a selection, a blue action bar appears with two options: "Delete selected" (confirmation dialog required) and "Change role to…" (apply a new role to all selected users at once).',
+      },
+    ],
+  },
+
   {
     id: 'retro', icon: 'refresh', title: 'Retrospective',
     items: [
