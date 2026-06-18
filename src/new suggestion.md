@@ -1,0 +1,1 @@
+No inline style, check each file, and keep us teilwind, and any need inline make it scss and then called here, i need everythig be dynamic for future change 

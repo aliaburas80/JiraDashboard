@@ -2,101 +2,91 @@
 'use client';
 import type { KanbanFlowSummary, KanbanPeriod, KanbanFlowHealth, KanbanBottleneckStatus } from '@/types/throughput';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function healthStyle(h: KanbanFlowHealth): string {
+function healthChip(h: KanbanFlowHealth): string {
   switch (h) {
-    case 'Healthy':   return 'bg-green-100 text-green-800 border-green-200';
-    case 'At Risk':   return 'bg-amber-100 text-amber-800 border-amber-200';
-    case 'Degraded':  return 'bg-red-100 text-red-800 border-red-200';
+    case 'Healthy':  return 'chip c-gr';
+    case 'At Risk':  return 'chip c-am';
+    case 'Degraded': return 'chip c-rd';
   }
 }
 
-function bottleneckStyle(b: KanbanBottleneckStatus): string {
+function bottleneckColor(b: KanbanBottleneckStatus): string {
   switch (b) {
-    case 'None':     return 'text-green-700';
-    case 'Mild':     return 'text-amber-600';
-    case 'Moderate': return 'text-orange-600';
-    case 'Severe':   return 'text-red-700 font-bold';
+    case 'None':     return 'var(--dc-green, #22C55E)';
+    case 'Mild':     return 'var(--dc-acc2, #FF8A4C)';
+    case 'Moderate': return 'var(--dc-amber, #F59E0B)';
+    case 'Severe':   return 'var(--dc-acc, #E85D12)';
   }
 }
 
 function trendArrow(trend: number): JSX.Element {
-  if (trend > 0) return <span className="text-green-600 font-bold">+{trend}↑</span>;
-  if (trend < 0) return <span className="text-red-500 font-bold">{trend}↓</span>;
-  return <span className="text-slate-400">→</span>;
+  if (trend > 0) return <span className="font-bold" style={{ color: 'var(--dc-green, #22C55E)' }}>+{trend}↑</span>;
+  if (trend < 0) return <span className="font-bold" style={{ color: 'var(--dc-red, #F87171)' }}>{trend}↓</span>;
+  return <span style={{ color: 'var(--dc-p3, #505050)' }}>→</span>;
 }
 
-function FlowBar({ value, max, color }: { value: number; max: number; color: string }) {
+function FlowBar({ value, max }: { value: number; max: number }) {
   const w = max > 0 ? Math.round((value / max) * 100) : 0;
   return (
-    <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
-      <div className="h-full rounded-full" style={{ width: `${w}%`, background: color }} />
+    <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: 'var(--dc-s3, #282828)' }}>
+      <div className="h-full rounded-full" style={{ width: `${w}%`, background: 'var(--dc-acc2, #FF8A4C)' }} />
     </div>
   );
 }
 
 function PeriodRow({ period, maxThroughput }: { period: KanbanPeriod; maxThroughput: number }) {
-  return (
-    <tr className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-      {/* Period */}
-      <td className="py-2.5 pl-4 pr-2 text-xs font-semibold text-slate-800 whitespace-nowrap">{period.periodLabel}</td>
+  const flowEffColor = period.flowEfficiencyPct > 80
+    ? 'var(--dc-acc2, #FF8A4C)'
+    : period.flowEfficiencyPct >= 50
+    ? 'var(--dc-amber, #F59E0B)'
+    : 'var(--dc-red, #F87171)';
 
-      {/* Throughput + trend */}
+  return (
+    <tr style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
+      className="transition-colors hover:[&>td]:bg-[rgba(255,255,255,0.025)]">
+      <td className="py-2.5 pl-4 pr-2 text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--dc-p2, #909090)' }}>
+        {period.periodLabel}
+      </td>
       <td className="py-2.5 px-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-900 w-6 text-right">{period.completedCount}</span>
-          <FlowBar value={period.completedCount} max={maxThroughput} color="#2563eb" />
+          <span className="text-xs font-bold w-6 text-right" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{period.completedCount}</span>
+          <FlowBar value={period.completedCount} max={maxThroughput} />
           <span className="text-[11px] w-8 text-right shrink-0">{trendArrow(period.throughputTrend)}</span>
         </div>
       </td>
-
-      {/* Cycle time */}
-      <td className="py-2.5 px-2 text-center text-xs text-slate-700">
+      <td className="py-2.5 px-2 text-center text-xs" style={{ color: 'var(--dc-p1, #F2F2F2)', fontFamily: 'var(--font-mono, monospace)' }}>
         {period.avgCycleTimeDays > 0 ? `${period.avgCycleTimeDays}d` : '—'}
       </td>
-
-      {/* Lead time */}
-      <td className="py-2.5 px-2 text-center text-xs text-slate-700">
+      <td className="py-2.5 px-2 text-center text-xs" style={{ color: 'var(--dc-p1, #F2F2F2)', fontFamily: 'var(--font-mono, monospace)' }}>
         {period.avgLeadTimeDays > 0 ? `${period.avgLeadTimeDays}d` : '—'}
       </td>
-
-      {/* Flow efficiency */}
       <td className="py-2.5 px-2 text-center">
-        <span className={`text-xs font-bold ${period.flowEfficiencyPct >= 50 ? 'text-green-700' : period.flowEfficiencyPct >= 30 ? 'text-amber-700' : 'text-red-600'}`}>
+        <span className="text-xs font-bold" style={{ color: flowEffColor }}>
           {period.avgLeadTimeDays > 0 ? `${period.flowEfficiencyPct}%` : '—'}
         </span>
       </td>
-
-      {/* WIP / Aging */}
-      <td className="py-2.5 px-2 text-center text-xs text-slate-700">
+      <td className="py-2.5 px-2 text-center text-xs" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>
         {period.wipAverage}
         {period.agingWipCount > 0 && (
-          <span className="ml-1 text-orange-600 font-bold">({period.agingWipCount}⏰)</span>
+          <span className="ml-1 font-bold" style={{ color: 'var(--dc-red, #F87171)' }}>({period.agingWipCount}🔴)</span>
         )}
       </td>
-
-      {/* Blocked / Reopened */}
       <td className="py-2.5 px-2 text-center text-xs">
         {period.blockedCount > 0 && (
-          <span className="inline-block bg-red-50 text-red-700 font-bold px-1.5 rounded text-[10px] mr-1">{period.blockedCount}B</span>
+          <span className="chip c-rd mr-1" style={{ fontSize: 10 }}>{period.blockedCount}B</span>
         )}
         {period.reopenedCount > 0 && (
-          <span className="inline-block bg-purple-50 text-purple-700 font-bold px-1.5 rounded text-[10px]">{period.reopenedCount}R</span>
+          <span className="chip c-or" style={{ fontSize: 10 }}>{period.reopenedCount}R</span>
         )}
         {period.blockedCount === 0 && period.reopenedCount === 0 && (
-          <span className="text-slate-300">—</span>
+          <span style={{ color: 'var(--dc-p3, #505050)' }}>—</span>
         )}
       </td>
-
-      {/* Bottleneck */}
-      <td className="py-2.5 px-2 text-center text-xs">
-        <span className={bottleneckStyle(period.bottleneckStatus)}>{period.bottleneckStatus}</span>
+      <td className="py-2.5 px-2 text-center text-xs font-bold" style={{ color: bottleneckColor(period.bottleneckStatus) }}>
+        {period.bottleneckStatus}
       </td>
-
-      {/* Flow health */}
       <td className="py-2.5 px-2 pr-4 text-center">
-        <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border ${healthStyle(period.flowHealth)}`}>
+        <span className={`${healthChip(period.flowHealth)}`} style={{ fontSize: 10, borderRadius: 100 }}>
           {period.flowHealth}
         </span>
       </td>
@@ -104,14 +94,13 @@ function PeriodRow({ period, maxThroughput }: { period: KanbanPeriod; maxThrough
   );
 }
 
-// ── Main panel ────────────────────────────────────────────────────────────────
-
 interface Props { summary: KanbanFlowSummary }
 
 export default function KanbanThroughputPanel({ summary }: Props) {
   if (!summary.hasKanbanData || !summary.periods.length) {
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 text-sm text-slate-400 italic shadow-sm">
+      <div className="rounded-2xl p-6 text-sm italic shadow-sm"
+        style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr)', color: 'var(--dc-p3, #505050)' }}>
         No Kanban flow data detected. Issues without a <strong>Sprint</strong> field and at least one completed item are analysed here.
       </div>
     );
@@ -119,32 +108,40 @@ export default function KanbanThroughputPanel({ summary }: Props) {
 
   const maxThroughput = Math.max(...summary.periods.map(p => p.completedCount), 1);
 
+  const flowEffColor = summary.avgFlowEfficiencyPct > 80
+    ? 'var(--dc-acc2, #FF8A4C)'
+    : 'var(--dc-amber, #F59E0B)';
+
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+    <div className="rounded-2xl shadow-sm overflow-hidden"
+      style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
+        style={{ borderBottom: '1px solid var(--dc-bdr)', background: 'var(--dc-s1, #141414)' }}>
         <div>
-          <h3 className="text-sm font-black uppercase tracking-wider text-slate-700">Kanban Flow</h3>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h3 className="text-sm font-black uppercase tracking-wider" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Kanban Flow</h3>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--dc-p3, #505050)' }}>
             {summary.periods.length} reporting period{summary.periods.length !== 1 ? 's' : ''} · non-sprint issues
           </p>
         </div>
-        <span className={`text-xs font-bold px-3 py-1 rounded-full border ${healthStyle(summary.overallFlowHealth)}`}>
+        <span className={`${healthChip(summary.overallFlowHealth)}`} style={{ fontSize: 10, borderRadius: 100 }}>
           {summary.overallFlowHealth}
         </span>
       </div>
 
       {/* Headline metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 border-b border-slate-100">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4" style={{ borderBottom: '1px solid var(--dc-bdr)' }}>
         {[
-          { label: 'Avg Throughput / Period', value: summary.avgThroughputPerPeriod, unit: 'issues', color: '#2563eb' },
-          { label: 'Avg Cycle Time',          value: summary.avgCycleTimeDays > 0 ? `${summary.avgCycleTimeDays}d` : '—', color: '#0f766e' },
-          { label: 'Avg Lead Time',           value: summary.avgLeadTimeDays > 0 ? `${summary.avgLeadTimeDays}d` : '—', color: '#7c3aed' },
-          { label: 'Avg Flow Efficiency',     value: summary.avgLeadTimeDays > 0 ? `${summary.avgFlowEfficiencyPct}%` : '—', color: summary.avgFlowEfficiencyPct >= 50 ? '#16a34a' : '#d97706' },
+          { label: 'Avg Throughput / Period', value: summary.avgThroughputPerPeriod,  unit: 'issues', color: 'var(--dc-acc2, #FF8A4C)' },
+          { label: 'Avg Cycle Time',          value: summary.avgCycleTimeDays > 0 ? `${summary.avgCycleTimeDays}d` : '—', color: 'var(--dc-p1, #F2F2F2)', mono: true },
+          { label: 'Avg Lead Time',           value: summary.avgLeadTimeDays > 0 ? `${summary.avgLeadTimeDays}d` : '—',   color: 'var(--dc-p1, #F2F2F2)', mono: true },
+          { label: 'Avg Flow Efficiency',     value: summary.avgLeadTimeDays > 0 ? `${summary.avgFlowEfficiencyPct}%` : '—', color: flowEffColor },
         ].map(m => (
-          <div key={m.label} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{m.label}</p>
-            <p className="text-xl font-black leading-none" style={{ color: m.color }}>{m.value}</p>
+          <div key={m.label} className="rounded-xl px-4 py-3"
+            style={{ background: 'var(--dc-s1, #141414)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--dc-p3, #505050)' }}>{m.label}</p>
+            <p className="text-xl font-black leading-none" style={{ color: m.color, fontFamily: (m as any).mono ? 'var(--font-mono, monospace)' : undefined }}>{m.value}</p>
           </div>
         ))}
       </div>
@@ -153,9 +150,10 @@ export default function KanbanThroughputPanel({ summary }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-left">
+            <tr style={{ borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))', background: 'var(--dc-s1, #141414)' }}>
               {['Period', 'Throughput', 'Cycle', 'Lead', 'Flow Eff.', 'WIP (Aging)', 'Blocked / Reopened', 'Bottleneck', 'Health'].map(h => (
-                <th key={h} className="py-2 px-2 first:pl-4 last:pr-4 text-[10px] font-800 uppercase tracking-wider text-slate-500 text-center first:text-left">
+                <th key={h} className="py-2 px-2 first:pl-4 last:pr-4 text-[10px] font-bold uppercase tracking-wider text-center first:text-left"
+                  style={{ color: 'var(--dc-p3, #505050)' }}>
                   {h}
                 </th>
               ))}
@@ -170,8 +168,9 @@ export default function KanbanThroughputPanel({ summary }: Props) {
       </div>
 
       {/* Legend */}
-      <div className="px-4 py-3 border-t border-slate-100 bg-slate-50 text-[10px] text-slate-400">
-        B = Blocked · R = Reopened · ⏰ = Aging WIP ({'>'}14 days active) · Flow Eff. = Cycle Time / Lead Time × 100
+      <div className="px-4 py-3 text-[10px]"
+        style={{ borderTop: '1px solid var(--dc-bdr)', background: 'var(--dc-s1, #141414)', color: 'var(--dc-p3, #505050)' }}>
+        B = Blocked · R = Reopened · 🔴 = Aging WIP ({'>'}{`14 days active`}) · Flow Eff. = Cycle Time / Lead Time × 100
       </div>
     </div>
   );

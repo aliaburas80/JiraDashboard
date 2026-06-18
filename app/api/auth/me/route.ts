@@ -16,5 +16,6 @@ export async function GET(): Promise<NextResponse> {
     email:  session.email,
     name:   session.name,
     role:   session.role,
+    mustChangePassword: Boolean(session.mustChangePassword),
   });
 }

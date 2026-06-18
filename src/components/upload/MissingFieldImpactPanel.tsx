@@ -2,13 +2,14 @@
 // Shows what specific data each missing/incomplete column is causing in the dashboard.
 'use client';
 import { useState } from 'react';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { FieldImpact, FieldImpactReport, CheckSeverity } from '@/types/dataQuality';
 
 const SEV_CONFIG: Record<CheckSeverity, { badge: string; dot: string; icon: string }> = {
-  critical: { badge: 'bg-red-100 text-red-800 border-red-200',    dot: 'bg-red-500',    icon: '🔴' },
-  high:     { badge: 'bg-orange-100 text-orange-800 border-orange-200', dot: 'bg-orange-500', icon: '🟠' },
-  medium:   { badge: 'bg-amber-100 text-amber-700 border-amber-200',  dot: 'bg-amber-400',  icon: '🟡' },
-  low:      { badge: 'bg-slate-100 text-slate-600 border-slate-200',  dot: 'bg-slate-400',  icon: '⚪' },
+  critical: { badge: 'bg-red-100 text-red-800 border-red-200',    dot: 'bg-red-500',    icon: 'statusError' },
+  high:     { badge: 'bg-orange-100 text-orange-800 border-orange-200', dot: 'bg-orange-500', icon: 'priorityHigh' },
+  medium:   { badge: 'bg-amber-100 text-amber-700 border-amber-200',  dot: 'bg-amber-400',  icon: 'statusWarning' },
+  low:      { badge: 'bg-slate-100 text-slate-600 border-slate-200',  dot: 'bg-slate-400',  icon: 'statusInfo' },
 };
 
 function ImpactRow({ impact }: { impact: FieldImpact }) {
@@ -23,7 +24,7 @@ function ImpactRow({ impact }: { impact: FieldImpact }) {
         onClick={() => setExpanded(v => !v)}
         className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors"
       >
-        <span className="text-base shrink-0 mt-0.5">{sev.icon}</span>
+        <SvgIcon name={sev.icon} size={16} className="shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-black text-slate-800">{impact.label}</span>
@@ -58,7 +59,7 @@ function ImpactRow({ impact }: { impact: FieldImpact }) {
 
           {/* What you'll gain */}
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-green-700 mb-1">What you'll gain</p>
+            <p className="text-[10px] font-black uppercase tracking-wider text-green-700 mb-1">What you&apos;ll gain</p>
             <p className="text-xs text-green-800 bg-green-50 border border-green-200 rounded-lg px-3 py-2 leading-snug">
               ✓ {impact.whatYoullGain}
             </p>
@@ -66,8 +67,9 @@ function ImpactRow({ impact }: { impact: FieldImpact }) {
 
           {/* Fallback used */}
           {impact.fallbackUsed && (
-            <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              ⚠ Fallback: {impact.fallbackUsed}
+            <div className="flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              <SvgIcon name="warning" size={13} />
+              Fallback: {impact.fallbackUsed}
             </div>
           )}
 
@@ -105,7 +107,7 @@ export default function MissingFieldImpactPanel({ report, compact = false }: Pro
   if (!report.hasIssues) {
     return (
       <div className="bg-green-50 border border-green-200 rounded-2xl px-5 py-4 flex items-center gap-3">
-        <span className="text-2xl">✅</span>
+        <SvgIcon name="checkCircle" size={24} className="text-green-700" />
         <div>
           <p className="text-sm font-black text-green-800">All important columns are present</p>
           <p className="text-xs text-green-600 mt-0.5">No missing-column impacts detected. Metrics are fully reliable.</p>

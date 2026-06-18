@@ -583,6 +583,8 @@ You click "← Back" and you're back on the dashboard, right where you were.
 
 **Outcome:** Sarah runs a data-backed retrospective focused on the end-loading pattern and velocity decline.
 
+**Related:** UC-043, UJ-010, FR-207–FR-215, TC-T-01–TC-T-11
+
 ---
 
 ### SCN-013 — Product Owner Explores Epic Structure Before Sprint Planning
@@ -1059,3 +1061,332 @@ You click "← Back" and you're back on the dashboard, right where you were.
 **Outcome:** Sarah can resume analysis without re-uploading unless she wants a fresher Jira export.
 
 **Related:** UC-083, TC-CS-09–12
+
+---
+
+## v4.2.2 — Admin & Member Management Scenarios (2026-06-07)
+
+*(Added to close TRACE-01 traceability gaps for F3-14, F3-15, F3-16 — see TODO-List.md Section 12.)*
+
+### SCN-039 — Admin Onboards a New Scrum Master
+
+**Persona:** Ali, administrator  
+**Context:** A new Scrum Master, Dana, is joining the team and needs an account before Monday's sprint planning.
+
+**Scenario:**
+1. Ali opens `/admin/settings` → Users and clicks "Add User"
+2. Ali enters Dana's name and work email, sets a temporary password, and selects role "Scrum Master"
+3. The system rejects a duplicate email on the first try (Dana's personal email was already registered by mistake) — Ali switches to her work email and the user is created
+4. The new account is created with `mustChangePassword = true`; an `admin_user_create` audit event is written
+5. Ali messages Dana the temporary password and login URL outside the app
+
+**Outcome:** Dana has a role-scoped account ready for first login; Ali's action is fully audited and the change is pushed to cloud backup.
+
+**Related:** UC-084, TC-AU-01–05
+
+---
+
+### SCN-040 — Admin Tries to Lock Themselves Out
+
+**Persona:** Ali, the only active administrator  
+**Context:** While cleaning up the user list, Ali accidentally selects their own row.
+
+**Scenario:**
+1. Ali toggles their own account to "Disabled" in the user table
+2. `PATCH /api/admin/users` rejects the change with HTTP 400 — the row stays Active
+3. Ali then clicks "Delete" on their own row
+4. `DELETE /api/admin/users` rejects the request with "You cannot delete your own account." — no audit event for deletion is written
+5. Ali realizes the self-protection is intentional and moves on to the correct row
+
+**Outcome:** The team never loses its only administrator account, even from an accidental click.
+
+**Related:** UC-084 (Alternate Flows B & C), TC-AU-04
+
+---
+
+### SCN-041 — New Hire Looks Up a Teammate's Contact Details
+
+**Persona:** Marcus, newly added Product Owner  
+**Context:** Marcus needs to reach the Engineering Manager about a blocked sprint item but doesn't have her phone number.
+
+**Scenario:**
+1. Marcus signs in and opens `/members` from the navigation
+2. He types "Sarah" into the search box — the grid filters to one matching card in real time
+3. He clicks Sarah's card — a detail popup shows her contact email, telephone, address, and certificates
+4. Sarah hasn't set a dedicated contact email, so the popup shows her account email instead
+5. Marcus copies the phone number and calls her directly
+
+**Outcome:** Marcus resolves the blocker within minutes without pinging an admin for contact info.
+
+**Related:** UC-085
+
+---
+
+### SCN-042 — Newly Created User Completes Forced Password Setup
+
+**Persona:** Dana, newly onboarded Scrum Master (continuing from SCN-039)  
+**Context:** Dana has just received her temporary password and login URL from Ali.
+
+**Scenario:**
+1. Dana signs in with the temporary password — `session.mustChangePassword` is `true`
+2. She tries to open `/dashboard` directly but middleware redirects her to `/change-password` every time
+3. On her first attempt she types the new password and a confirmation that don't match — the form blocks submission with "Passwords do not match"
+4. On her second attempt she reuses the temporary password as her "new" password — the API returns 400 because the new password must differ from the temporary one
+5. She enters a new password meeting the strength rules (8+ chars, 1 uppercase, 1 number) and a matching confirmation
+6. `POST /api/auth/change-password` succeeds, `mustChangePassword` is cleared, a `password_change` audit event is recorded, and Dana is redirected to `/dashboard` with full access
+
+**Outcome:** Dana is now using a private password of her own choosing, and the forced-change flow has produced an auditable record without ever exposing the temporary password to anyone but Ali.
+
+**Related:** UC-086
+
+---
+
+### SCN-043 — Admin Reviews the Flat Admin Console
+
+**Persona:** Ali, administrator  
+**Context:** Ali needs to audit system health and manage settings from a single unified admin console.
+
+**Scenario:**
+1. Ali signs in and opens `/admin/settings`; the flat admin console loads with a sticky sidebar and top context bar.
+2. He verifies the current tab name, page status badge, and contextual summary cards for the selected settings area.
+3. He selects the Users tab from the sidebar and reviews the table-first workflow with inline-edit controls.
+4. He clicks the Security tab; the page updates the main panel in place while the sidebar remains visible.
+5. He switches to Diagnostics and confirms the top context bar updates to reflect the selected area.
+
+**Outcome:** Ali completes his review and trusts the new admin console layout because related controls and status information are clearly grouped and easy to navigate.
+
+**Related:** UC-087
+
+---
+
+## v4.2.2 — Work Item Explorer Risk & Branch Insights Scenarios (2026-06-08)
+
+### SCN-044 — Delivery Manager Reads the Visual Graph and Filters to Risk
+
+**Persona:** Priya, Delivery Manager, preparing a stakeholder risk briefing  
+**Context:** Priya needs to show exactly where delivery risk concentrates inside `EPIC-30` before a release-readiness review.
+
+**Scenario:**
+1. Priya opens `/explore` and searches `EPIC-30`; the graph renders with distinctly colored, type-coded node cards — purple Epic, blue Stories, slate Tasks, red Bugs — each showing its type icon, status, assignee, and health dot.
+2. She spots `PROJ-77` with a dashed orange border and an "ORPHAN" badge because it has neither an Epic Link nor a Parent Key, and opens the legend overlay to confirm what the dashed border, badges, and edge styles mean.
+3. The insight panel reads "2 items are on the risk path toward EPIC-30" and "STORY-31 is the largest unfinished branch with 4 open items."
+4. She scans the seven KPI stat cards (Total Items, Done, Open, Blocked, Bugs, Story Points, Orphans) plus the new "Largest Unfinished Branch" card naming `STORY-31`, its open count, total count, and completion percentage.
+5. In the graph, `STORY-31` and its risky descendants glow with a solid red "⚠ RISK PATH" border and animated red edges, while `STORY-31`'s branch carries a purple "📊 MOST WORK" badge.
+6. Priya clicks "Show blocked branches (3)"; the graph and details table dim every node that isn't blocked or on the risk path to near-invisible, leaving only the at-risk subset in full color.
+7. She filters the details table by Health = Critical and screenshots the narrowed view for the stakeholder briefing, then clicks "Show all" to restore the full graph.
+
+**Outcome:** Priya identifies exactly where delivery risk concentrates and which branch needs the most attention — all from one screen, without a manual Jira query.
+
+**Related:** UC-046, UC-088, TC-E-01–TC-E-08, TC-RP-01–TC-RP-08, TC-LB-01–TC-LB-08, TC-BF-01–TC-BF-08
+
+---
+
+## v4.2.2 — Smart Excel Export Sheet & Trigger Scenarios (2026-06-08)
+
+### SCN-045 — Product Owner Exports the Smart Workbook for an Offline Release Review
+
+**Persona:** Marcus, Product Owner, preparing for an offline release-readiness sync with stakeholders who don't have dashboard access  
+**Context:** Marcus needs a single file that captures risk, data-quality, cycle-time, and release-readiness analysis without anyone needing to open Delivery Clarity.
+
+**Scenario:**
+1. From the dashboard sticky bar, Marcus opens the green "Export" dropdown and clicks "Excel (all data)"; the workbook downloads instantly as `delivery-clarity-report.xlsx` and the app quietly records his "downloaded a report" onboarding milestone.
+2. He opens "07 Risks and Blockers" first and sees `PROJ-118` at the very top in red with risk level `CRITICAL`, blocked = `YES`, and the action "Escalate immediately — assign owner and resolution date" — followed by the warning-tier items each carrying "Review in next standup — prevent further aging."
+3. On "08 Orphan & Data Quality" he reads the summary block: 6 orphan items (12%), 9 missing story points (18%), 4 unassigned (8%), 3 with no sprint (6%) — each row naming the dashboard impact and the Jira-side fix — then scrolls to the itemized orphan list to see exactly which issues need an Epic Link.
+4. On "11 Cycle & Lead Time" he reads that the team's P85 lead time is 18 days — "use this as your delivery SLA" — and scans the 20 slowest items, spotting that three of them belong to the release he's reviewing.
+5. On "14 Release Readiness" he finds `v2.4.0` at 80% complete with 1 blocked item and 1 open bug marked "Conditional Go," while `v2.5.0` sits at 50% and "No-Go" — exactly the evidence he needs to push the v2.5.0 date.
+6. He forwards the single `.xlsx` attachment to the stakeholder distribution list; everyone can filter and sort the same data in Excel without ever logging into Delivery Clarity.
+
+**Outcome:** Marcus produces one offline-readable artifact that reproduces the dashboard's risk, data-quality, cycle-time, and readiness analysis — turning a live-dashboard walkthrough into a forwardable file.
+
+**Related:** UC-049, UC-089, FR-236, FR-310, FR-311, TC-X-09–TC-X-13b *(FR-310/FR-311 renumbered 2026-06-08 from colliding `FR-242`/`FR-243` — see TODO-List.md Section 12 Gaps Summary item 6)*
+
+---
+
+## v4.2.2 — Dashboard Status Chips Scenario (2026-06-08)
+
+### SCN-046 — Scrum Master Triages a Long Dashboard by Chip Colour Alone
+
+**Persona:** Dana, Scrum Master, opening the dashboard at the start of standup with five minutes before the meeting  
+**Context:** Dana's dashboard has 16 collapsible sections, most of them collapsed from her last visit; she needs to know which ones changed overnight without expanding each one.
+
+**Scenario:**
+1. Dana scrolls down the page slowly, reading only the trigger bars — each shows a title plus a row of small rounded chips like "2 critical", "5 actions", "Updated 3h ago".
+2. She immediately spots a red `critical` chip on the "Smart Recommendations" trigger and a red chip reading "3 blocked" on the "Flow & Risk" trigger — both jump out against the otherwise green and slate chips on the other 14 sections.
+3. She clicks the "Flow & Risk" trigger first; it expands in place, the chevron rotates, and she confirms the three blocked items are the ones she needs to raise in standup.
+4. She collapses it again, opens "Smart Recommendations" next, and leaves the remaining sections — all showing only green `good` or slate `neutral` chips — collapsed, trusting the colour signal that nothing there needs her attention this morning.
+
+**Outcome:** Dana triages a 16-section dashboard in under a minute by scanning chip colour alone, opening only the two sections that actually need her attention before standup.
+
+**Related:** UC-090, FR-308, BR-112, TC-CH-01–TC-CH-03
+
+---
+
+---
+
+## v4.1 — Advanced Theme Customization Scenario (2026-06-08)
+
+### SCN-047 — Engineering Manager Personalises the App to Match Her Team's Brand Colour
+
+**Persona:** Sofia, Engineering Manager, whose team uses purple as their internal brand accent across Slack, Confluence, and dashboards  
+**Context:** Sofia spends hours a day in Delivery Clarity and wants the interface to feel like "her" workspace, with her team's colour and a font size comfortable for her external monitor.
+
+**Scenario:**
+1. Sofia clicks the 🎨 palette icon beside the dark-mode toggle in the app header; the Theme Customizer panel opens showing 7 accent-colour swatches, 3 corner-radius options, and 3 text-size options.
+2. She clicks the "Purple" swatch; every primary button, active nav indicator, and accent highlight across the app switches to purple instantly — no page reload.
+3. She selects the "Rounded" radius preset; cards and buttons throughout the dashboard pick up softer corners in the same instant.
+4. She picks "Large" text size for her external monitor; body and label text scale up app-wide.
+5. She clicks outside the panel to close it, refreshes the page, and confirms her purple/rounded/large combination is still applied — the settings persisted to local storage and survived the reload.
+6. The next day she opens the panel again and clicks "Reset"; the app instantly returns to the blue/default/medium baseline.
+
+**Outcome:** Sofia makes Delivery Clarity feel like her team's own tool — in under a minute, with zero admin involvement, and the choice sticks across sessions until she decides to change it again.
+
+**Related:** UC-081, FR-304, BR-108, TC-TC-01–TC-TC-08
+
+---
+
+---
+
+## v4.1 — Advanced Chart Customization Scenario (2026-06-08)
+
+### SCN-048 — Director Reshapes the Charts Page Around the Two Metrics That Matter to the Board
+
+**Persona:** Raj, Director of Engineering, who presents the `/charts` page live in monthly board reviews and only ever references two of the eleven charts  
+**Context:** The default `/charts` layout shows all 11 charts at their registry spans — useful for a generalist, but cluttered for a board presentation that should spotlight Sprint Velocity and the Release Timeline.
+
+**Scenario:**
+1. Raj opens `/charts` ahead of the board meeting and clicks the Chart Customizer control; the panel lists all 11 charts with visibility toggles, span controls (1/3, 2/3, Full width), and ▲▼ reorder arrows.
+2. He toggles off the eight charts he never references — Label Distribution, Capacity, Quarters, and the rest vanish from the page instantly.
+3. He sets "Sprint Velocity" to "Full width" and moves it to position 1 with the ▲ control; he sets "Release Timeline" to "2/3" and leaves it second.
+4. He closes the panel — `/charts` now shows exactly two charts, full-width-then-two-thirds, in presentation order.
+5. He refreshes the page right before walking into the meeting room; the layout is exactly as he left it, persisted from `dc_chart_prefs` in local storage.
+6. After the board meeting, he opens the panel and clicks "Reset" to restore the full 11-chart view for his own day-to-day analysis.
+
+**Outcome:** Raj walks into the board meeting with a `/charts` page that shows only the two metrics he's presenting, in the order and emphasis he wants — and switches back to his full working view with one click afterward.
+
+**Related:** UC-091, FR-306, BR-110, TC-CC-01–TC-CC-08
+
+---
+
+---
+
+## v4.5 — USERREQ UI: Member Add Request and Notification Scenarios (2026-06-09, P1)
+
+### SCN-049 — Scrum Master Spots the Notification Banner, Reviews the Temp Password, and Onboards the New Developer
+
+**Persona:** Priya (Scrum Master) submitted an add-member request for a new hire yesterday. Today she logs in and the admin (Omar) has already acted on it.
+
+**Scenario:**
+1. Priya logs in; the `NotificationBell` polls `/api/notifications` within 30 seconds and finds one unread notification from when Omar accepted the request. The bell badge shows "1" with a pulsing red ring; the bell emoji wiggles once.
+2. Priya clicks the bell. The dropdown opens showing "✅ User request approved" with Alex Chen's email, role (Scrum Master), and the temporary password `OmarP4ss7` embedded in the message body (`whitespace-pre-line` preserves the multi-line layout).
+3. Priya copies the password, marks the notification read (badge clears), then sends the password to Alex via a secure internal channel.
+4. Alex logs in with the temporary password. The login page detects `mustChangePassword: true` and redirects to `/change-password`. Alex sets a new password and completes onboarding.
+
+Meanwhile, Omar's flow (earlier, on the same day):
+1. Omar logs in; the amber strip banner fixed below the nav header reads "1 pending member request — click to review". The pulsing white dot on the banner is hard to miss.
+2. Omar clicks the banner; navigates directly to Admin Settings → Member Requests tab. `UserAddRequestsPanel` loads the pending card for Alex Chen.
+3. Omar expands the card; reviews the business reason and requester details. The Accept button is disabled — the amber password field shows "Temporary password * — required before accepting".
+4. Omar types `OmarP4ss7` into the field; the field validates client-side (length ✓, uppercase ✓, digit ✓); Accept button activates.
+5. Omar clicks Accept. The panel calls `PATCH /api/admin/user-add-requests/[id]/accept` with `{ tempPassword: "OmarP4ss7" }`. Server creates Alex's account, marks request accepted, sends Priya a notification.
+6. The card flips to accepted state; a green "Temporary password — share with user" box appears with the password and a Copy button. The amber notification banner disappears (no more pending requests).
+
+**Outcome:** The whole workflow — request, review, mandatory password entry, accept, notification — ran through the app with zero back-channel ambiguity and a full audit trail.
+
+**Related:** UC-097, UC-098, UC-099, UJ-034, FR-319, FR-320, FR-321, FR-322, FR-323
+
+---
+
+### SCN-050 — Admin Accepts Request, Welcome Email Sent, New User Logs In and Changes Password
+
+**Persona:** Omar (Admin) accepts Alex Chen's add-member request; Alex receives the welcome email and onboards.
+
+**Scenario:**
+
+Omar's flow (Admin Panel):
+1. Omar expands Alex's pending request card in Admin Settings → Member Requests. The Accept button is disabled — the password field shows the amber "required" state.
+2. Omar clicks "Generate" next to the temp password field. The field auto-fills with a 14-character password (e.g., `K9!mRqZ#nTpL2w`) meeting all complexity rules; the Accept button activates.
+3. Omar clicks Accept. The panel calls `PATCH /api/admin/user-add-requests/[id]/accept` with the temp password. The API:
+   - Creates Alex's user record (bcrypt-hashed password, `mustChangePassword: true`)
+   - Sends an in-app notification to the requester (Priya)
+   - Calls `sendEmail()` → dispatches the welcome HTML email to Alex's inbox
+   - Returns `{ ok: true, emailSent: true }` — password is NOT in the response
+4. The panel shows a green ✅ "Welcome email sent to alex.chen@company.com" badge confirming delivery.
+5. The card flips to accepted state. The amber banner disappears (no more pending requests).
+
+Alex's flow (New User — First Login):
+1. Alex receives the welcome email in their inbox within seconds. Subject: "Welcome to JiraDashboard — Your Account is Ready". The HTML email shows their name, login email, temporary password, and a "Log In Now" button.
+2. Alex clicks "Log In Now". The app opens at the login page.
+3. Alex enters their email and the temporary password. The server authenticates and detects `mustChangePassword: true`.
+4. Alex is redirected to `/change-password`. They set a new password and submit.
+5. Alex lands on the dashboard — fully onboarded, no admin back-channel required.
+
+**Alternate — SMTP not configured:**
+- Step 4 (Omar's flow) instead shows ⚠️ "Email not sent — SMTP not configured"
+- Omar must share the temp password via in-app notification message (which Priya already received) or a secure external channel
+
+**Outcome:** Password generation, welcome email delivery, and forced first-login password change all ran end-to-end with zero manual handoffs and a full audit trail in the database.
+
+**Related:** UC-097, UC-098, UC-099, UC-100, UJ-034, UJ-035, FR-319, FR-320, FR-321, FR-322, FR-323, FR-325, TC-EMAIL-01–TC-EMAIL-03, TC-REQ-17
+
+---
+
+## v4.6 Scenarios — Roadmap, Forecast, Retro (2026-06-10)
+
+---
+
+### SCN-051 — Delivery Manager Uses Roadmap to Identify At-Risk Epics
+
+**Context:** Ali is a delivery manager. The team has just finished upload week and he wants to know which epics are behind and when they'll realistically complete.
+
+**Flow:**
+1. Ali clicks Planning → Roadmap in the header
+2. The roadmap loads and shows 8 epics. 2 are marked critical (red dot), 4 are in progress (amber/green)
+3. Ali sets the filter to "Critical" — 2 epics shown
+4. Epic "Checkout Flow Redesign" shows: 12 remaining issues, ~4 months, low confidence
+5. Ali clicks the card → detail panel: 12 remaining, 8 sprints est., 3 critical issues
+6. He switches filter to "All" and sort to "Forecast" — epics ordered by weeks remaining
+7. He screenshots the sorted list and brings it to the stakeholder meeting
+
+**Outcome:** Ali identified the two critical epics in under 90 seconds and has concrete remaining-issue counts to discuss.
+
+**Related:** UC-101, UJ-036, FR-326, FR-327, BR-115
+
+---
+
+### SCN-052 — Scrum Master Checks Forecast Before Quarterly Planning
+
+**Context:** Sara is a Scrum Master. The quarter is ending and leadership wants to know if the team will hit the release target.
+
+**Flow:**
+1. Sara navigates to Planning → Forecast
+2. Status banner shows "⚠️ At Risk" in amber — `sprintsRemaining = 9`
+3. KPI row: 120 total, 74 done, 46 remaining, 5.1 items/sprint average throughput
+4. Burn-up chart shows actual line diverging slightly below the target line from sprint 6 onwards
+5. Next Quarter Plan: "At 6 sprints × 5 items you can complete 30 items; you have 46 remaining" → not achievable this quarter
+6. Recommendations: "Consider reducing scope by ~16 items to hit the target within the next 6 sprints." "Address 3 blocked items — each blocker typically delays multiple dependent stories."
+7. Sara copies the recommendations into her planning doc and presents the options to the team
+
+**Outcome:** Leadership sees a data-backed forecast, not a gut feeling. Scope trade-off is clearly quantified.
+
+**Related:** UC-102, UJ-037, FR-328, FR-329, BR-116
+
+---
+
+### SCN-053 — Team Runs Post-Sprint Retrospective and Gets Improvement Suggestions
+
+**Context:** The Backend Team has just completed Sprint 42. Goal was to ship the login redesign. Goal was partially met — one story carried over.
+
+**Flow:**
+1. Ana (Scrum Master) opens Planning → Retro
+2. Clicks "Fill in App → Start"
+3. Fills: Sprint Name "Sprint 42", Team "Backend Team", Goal Met "Partially", Goal "Ship login redesign"
+4. Adds What Went Well: "Good team collaboration", "Automated tests caught regressions"
+5. Adds What Did Not Go Well: "Sprint planning was too long", "Story points underestimated"
+6. Adds Blocker: "Dependency on infra team blocked 3 stories"
+7. Adds Action Items: "Schedule shorter planning sessions" (owner: Ana, due: next sprint, High), "Add complexity review to refinement" (owner: Tech Lead, Medium)
+8. Clicks "Submit & Get Suggestions"
+9. Insights view: ⚠️ goal-partially-achieved banner; suggestions include "Sprint goal was partially achieved. Identify which stories caused slippage and prioritise them first next sprint." and "1 blocker recorded. Escalate unresolved blockers to the next planning session."
+10. Action summary: 2 items listed — 1 red (high), 1 amber (medium) — both have owners and due dates
+
+**Outcome:** Retrospective completed in 5 minutes; team leaves with 2 owned action items and data-backed improvement advice.
+
+**Related:** UC-103, UC-104, UJ-038, FR-330, FR-331, FR-332, FR-333, BR-117

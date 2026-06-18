@@ -3,6 +3,7 @@
 'use client';
 import { useState } from 'react';
 import type { DashboardMetrics } from '@/types/metrics';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 interface Props {
   metrics: DashboardMetrics;
@@ -59,9 +60,7 @@ export default function SaveSnapshotButton({ metrics }: Props) {
           transition: 'background 180ms ease',
         }}
       >
-        <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 12, height: 12, fill: 'none', stroke: '#64748b', strokeWidth: 2.5, flexShrink: 0 }}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-        </svg>
+        <SvgIcon name="save" size={12} style={{ color: '#64748b' }} />
         Save snapshot
       </button>
 
@@ -79,7 +78,7 @@ export default function SaveSnapshotButton({ metrics }: Props) {
             <div>
               <p className="text-xs font-black text-slate-800 mb-1">Save dashboard snapshot</p>
               <p className="text-xs text-slate-400 mb-3">
-                Saves current metrics as a named point-in-time report (e.g. "End of Sprint 14").
+                Saves current metrics as a named point-in-time report (e.g. &quot;End of Sprint 14&quot;).
               </p>
               <input
                 autoFocus

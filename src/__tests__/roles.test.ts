@@ -56,13 +56,21 @@ test('role route matrix blocks routes outside assigned role scope', () => {
   expect(canAccessRoute('scrum_master', '/teams')).toBe(true);
   expect(canAccessRoute('scrum_master', '/admin/settings')).toBe(false);
   expect(canAccessRoute('scrum_master', '/portfolio')).toBe(false);
+  expect(canAccessRoute('scrum_master', '/members')).toBe(true);
 
   expect(canAccessRoute('product_owner', '/portfolio')).toBe(true);
   expect(canAccessRoute('product_owner', '/teams')).toBe(false);
+  expect(canAccessRoute('product_owner', '/members')).toBe(true);
 
   expect(canAccessRoute('c_level', '/summary')).toBe(true);
   expect(canAccessRoute('c_level', '/explore')).toBe(false);
+  expect(canAccessRoute('c_level', '/members')).toBe(true);
   expect(canAccessRoute('admin', '/developer')).toBe(true);
+  expect(canAccessRoute('admin', '/members')).toBe(true);
+  expect(canAccessRoute('scrum_master', '/change-password')).toBe(true);
+  expect(canAccessRoute('product_owner', '/change-password')).toBe(true);
+  expect(canAccessRoute('manager', '/change-password')).toBe(true);
+  expect(canAccessRoute('c_level', '/change-password')).toBe(true);
 });
 
 test('role fallback route sends c-level to summary and delivery roles to dashboard', () => {

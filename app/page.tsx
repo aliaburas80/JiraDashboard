@@ -5,6 +5,7 @@ import AppShell from '@/components/layout/AppShell';
 import { saveMetrics, clearMetrics } from '@/lib/storage';
 import { hasLocalData, clearLocalData } from '@/lib/clearLocalData';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import DataQualitySummary from '@/components/upload/DataQualitySummary';
 import MissingFieldImpactPanel from '@/components/upload/MissingFieldImpactPanel';
 import ColumnMappingPreview from '@/components/upload/ColumnMappingPreview';
@@ -131,14 +132,14 @@ export default function HomePage() {
         {/* Stored data detection banner */}
         {clearSuccess && (
           <div className="w-full max-w-md flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-800 font-semibold animate-fade-in">
-            <span className="text-lg">✅</span>
+            <SvgIcon name="checkCircle" size={18} />
             Local data cleared. Upload a new file to start fresh.
           </div>
         )}
         {storedDataFound && !clearSuccess && (
           <div className="w-full max-w-md flex items-start justify-between gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 animate-fade-in">
             <div className="flex items-start gap-2 text-sm text-amber-800">
-              <span className="text-base shrink-0">⚠️</span>
+              <SvgIcon name="warning" size={16} className="shrink-0" />
               <p className="leading-snug">
                 <strong>Stored Delivery Clarity data was found in this browser.</strong>
                 <br />You can upload a new file or clear the existing data.
@@ -157,7 +158,8 @@ export default function HomePage() {
         {/* Hero */}
         <div className="text-center max-w-2xl animate-fade-in">
           <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-full px-3 py-1 text-xs font-bold text-blue-700 mb-4">
-            🚀 Jira Delivery Intelligence
+            <SvgIcon name="release" size={14} />
+            Jira Delivery Intelligence
           </div>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-tight mb-3">
             Turn your Jira export into<br/>instant delivery insight
@@ -187,7 +189,7 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">
-              <span className="text-4xl">📥</span>
+              <SvgIcon name="download" size={40} className="text-blue-600" />
               <p className="font-bold text-slate-700">Drop your Jira export here</p>
               <p className="text-sm text-slate-500">or click to browse — CSV, XLSX, XLS · Max 20 MB</p>
               <span className="btn-primary px-6 py-2">
@@ -205,7 +207,7 @@ export default function HomePage() {
             className="w-full flex items-center justify-between px-4 py-2.5 border border-slate-200 rounded-xl bg-white text-sm font-semibold text-slate-600 hover:border-purple-400 hover:text-purple-700 transition-colors shadow-sm"
           >
             <span className="flex items-center gap-2">
-              <span className="text-base">🗂️</span>
+              <SvgIcon name="folder" size={16} />
               Merge multiple Jira exports
               {mergeFiles.length > 0 && (
                 <span className="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-0.5 rounded-full">
@@ -227,7 +229,7 @@ export default function HomePage() {
                 <ul className="space-y-1.5">
                   {mergeFiles.map(f => (
                     <li key={f.name} className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-                      <span className="text-sm">📄</span>
+                      <SvgIcon name="file" size={14} />
                       <span className="text-xs font-semibold text-slate-700 flex-1 truncate" title={f.name}>{f.name}</span>
                       <span className="text-xs text-slate-400 shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
                       <button type="button" onClick={() => removeMergeFile(f.name)}
@@ -255,7 +257,10 @@ export default function HomePage() {
               {/* Merge stats summary */}
               {mergeStats && (
                 <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-xs text-green-800">
-                  <p className="font-black mb-1">✅ Merge complete — redirecting…</p>
+                  <p className="flex items-center gap-1.5 font-black mb-1">
+                    <SvgIcon name="checkCircle" size={13} />
+                    Merge complete — redirecting…
+                  </p>
                   <p>{mergeStats.fileCount} files · {mergeStats.totalBeforeMerge} total rows · {mergeStats.duplicatesRemoved} duplicates removed · <strong>{mergeStats.uniqueIssues} unique issues</strong></p>
                 </div>
               )}
@@ -325,7 +330,7 @@ export default function HomePage() {
                 </>
               ) : (
                 <>
-                  <span className="text-base">🎯</span>
+                  <SvgIcon name="target" size={16} />
                   Try with 35-issue sample Jira export
                 </>
               )}

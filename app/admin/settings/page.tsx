@@ -1,18 +1,29 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import AppShell from '@/components/layout/AppShell';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import clsx from 'clsx';
 import DataRetentionSettings from '@/components/admin/DataRetentionSettings';
 import HealthThresholdSettings from '@/components/admin/HealthThresholdSettings';
 import OrphanRulesSettings from '@/components/admin/OrphanRulesSettings';
 import BackupRestoreSettings from '@/components/admin/BackupRestoreSettings';
 import ClearLocalDataPanel from '@/components/admin/ClearLocalDataPanel';
+import UserAddRequestsPanel from '@/components/admin/UserAddRequestsPanel';
+import AppConfigPanel from '@/components/admin/AppConfigPanel';
+import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import { ASSIGNABLE_ROLES, roleLabel, type AppRole } from '@/lib/roles';
+import {
+  type Tab, type ManagedUser,
+  ADMIN_TABS, activeTabMeta, buildSettingsStats,
+  roleOptionsFor, matchesUserFilter,
+} from '@/lib/adminConsole';
 import type { RetentionSettings, RetentionStats } from '@/types/settings';
 import type { HealthThresholds } from '@/types/thresholds';
 import type { OrphanRules } from '@/types/orphanRules';
 import type { StorageProviderType } from '@/types/storage';
+import styles from './page.module.scss';
 
 // ── Connection guide — step-by-step per provider ─────────────────────────────
 
@@ -114,12 +125,10 @@ function ConnectionGuide({ provider, installCmd }: { provider: string; installCm
         className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <span className="text-base">📋</span>
+          <SvgIcon name="clipboard" size={16} />
           <span className="text-xs font-black text-blue-800">{guide.title}</span>
         </div>
-        <svg viewBox="0 0 24 24" className={`w-4 h-4 fill-current text-blue-600 transition-transform ${open ? 'rotate-180' : ''}`}>
-          <path d="m7 9 5 5 5-5 1.4 1.4L12 16.8 5.6 10.4 7 9Z"/>
-        </svg>
+        <SvgIcon name="chevronDown" size={16} className={`text-blue-600 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
@@ -168,7 +177,7 @@ function DbHealthBadge() {
     <div className={`flex items-center gap-2 text-[10px] font-bold px-3 py-1.5 rounded-full border ${
       health.healthy ? 'bg-green-50 border-green-200 text-green-700' : 'bg-amber-50 border-amber-200 text-amber-700'
     }`}>
-      <span>{health.healthy ? '✓' : '⚠'}</span>
+      <SvgIcon name={health.healthy ? 'check' : 'warning'} size={11} />
       <span>
         {health.dbExists
           ? `Local DB: ${health.users} user${health.users !== 1 ? 's' : ''} · ${health.imports} import${health.imports !== 1 ? 's' : ''} · ${health.dbSizeKb}KB`
@@ -205,13 +214,13 @@ function AutoRestoreSection({ setMsg }: {
       const d   = await r.json();
 
       if (d.ok || d.action === 'restored') {
-        setMsg({ text: `✓ Restored from cloud: ${d.key ?? ''}. Files: ${d.restored?.join(', ') ?? ''}`, ok: true });
+        setMsg({ text: `Restored from cloud: ${d.key ?? ''}. Files: ${d.restored?.join(', ') ?? ''}`, ok: true });
         // Refresh health badge
         fetch('/api/admin/storage/auto-restore').then(r => r.json()).then(setHealth).catch(() => {});
       } else if (d.action === 'skipped') {
-        setMsg({ text: `ℹ ${d.reason}`, ok: true });
+        setMsg({ text: d.reason, ok: true });
       } else {
-        setMsg({ text: `✗ Auto-restore: ${d.reason ?? d.error}`, ok: false });
+        setMsg({ text: `Auto-restore: ${d.reason ?? d.error}`, ok: false });
       }
     } catch {
       setMsg({ text: 'Auto-restore failed. Check server logs.', ok: false });
@@ -227,7 +236,10 @@ function AutoRestoreSection({ setMsg }: {
       <div className="flex items-start gap-3 flex-wrap">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-black text-slate-800 mb-1">
-            {dbMissing ? '⚠ Local database missing or empty — restore from cloud' : '↺ Disaster Recovery / Auto-restore'}
+            <span className="inline-flex items-center gap-1.5">
+              <SvgIcon name={dbMissing ? 'warning' : 'refresh'} size={12} />
+              {dbMissing ? 'Local database missing or empty — restore from cloud' : 'Disaster Recovery / Auto-restore'}
+            </span>
           </p>
           <p className="text-[10px] text-slate-600 leading-relaxed">
             {dbMissing
@@ -243,17 +255,17 @@ function AutoRestoreSection({ setMsg }: {
           {dbMissing ? (
             <button type="button" onClick={() => handleAutoRestore(true)} disabled={restoring}
               className="btn-warning px-4 py-2 text-xs font-bold">
-              {restoring ? 'Restoring…' : '↺ Restore from cloud'}
+              {restoring ? 'Restoring…' : <><SvgIcon name="refresh" size={12} /> Restore from cloud</>}
             </button>
           ) : (
             <>
               <button type="button" onClick={() => handleAutoRestore(false)} disabled={restoring}
                 className="btn-secondary px-4 py-2 text-xs">
-                {restoring ? 'Checking…' : '↺ Auto-restore (if empty DB)'}
+                {restoring ? 'Checking…' : <><SvgIcon name="refresh" size={12} /> Auto-restore (if empty DB)</>}
               </button>
               <button type="button" onClick={() => handleAutoRestore(true)} disabled={restoring}
                 className="btn-outline-danger px-4 py-2 text-xs">
-                {restoring ? 'Restoring…' : '↺ Force restore (overwrite)'}
+                {restoring ? 'Restoring…' : <><SvgIcon name="refresh" size={12} /> Force restore (overwrite)</>}
               </button>
             </>
           )}
@@ -304,7 +316,7 @@ function CloudBackupList({ savedProvider, setMsg }: {
       a.download = key.split('/').pop() ?? 'backup.json';
       a.click();
       URL.revokeObjectURL(url);
-      setMsg({ text: `✓ Downloaded: ${a.download}`, ok: true });
+      setMsg({ text: `Downloaded: ${a.download}`, ok: true });
     } catch {
       setMsg({ text: 'Download failed. Check server logs.', ok: false });
     }
@@ -318,9 +330,9 @@ function CloudBackupList({ savedProvider, setMsg }: {
       const r = await fetch(`/api/admin/storage/download?key=${encodeURIComponent(key)}&restore=true`);
       const d = await r.json();
       if (d.ok) {
-        setMsg({ text: `✓ Restored from cloud: ${d.restored?.join(', ')}`, ok: true });
+        setMsg({ text: `Restored from cloud: ${d.restored?.join(', ')}`, ok: true });
       } else {
-        setMsg({ text: `✗ Restore failed: ${d.error ?? 'Unknown error'}`, ok: false });
+        setMsg({ text: `Restore failed: ${d.error ?? 'Unknown error'}`, ok: false });
       }
     } catch {
       setMsg({ text: 'Restore failed. Check server logs.', ok: false });
@@ -349,7 +361,7 @@ function CloudBackupList({ savedProvider, setMsg }: {
 
       {!loading && !fetchErr && backups.length === 0 && (
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-500 text-center">
-          No backups found in the {label} bucket yet. Click "Upload backup now" to create the first one.
+          No backups found in the {label} bucket yet. Click &quot;Upload backup now&quot; to create the first one.
         </div>
       )}
 
@@ -387,7 +399,7 @@ function CloudBackupList({ savedProvider, setMsg }: {
                         <span className="text-slate-200">|</span>
                         <button type="button" onClick={() => handleRestore(b.key)} disabled={isRestoring}
                           className="text-[10px] font-bold text-amber-600 hover:underline disabled:opacity-40 whitespace-nowrap">
-                          {isRestoring ? 'Restoring…' : '↺ Restore'}
+                          {isRestoring ? 'Restoring…' : <><SvgIcon name="refresh" size={12} /> Restore</>}
                         </button>
                       </div>
                     </td>
@@ -484,7 +496,7 @@ function CloudStorageSettings() {
 
   async function handleSave(): Promise<boolean> {
     const validErr = validateFields(active, s3Form, azForm, gcpForm);
-    if (validErr) { setMsg({ text: `⚠ ${validErr}`, ok: false }); return false; }
+    if (validErr) { setMsg({ text: validErr, ok: false }); return false; }
 
     setSaving(true); setMsg(null);
     const body: any = { active };
@@ -504,7 +516,7 @@ function CloudStorageSettings() {
       const r = await fetch('/api/admin/storage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const d = await r.json();
       if (d.ok) {
-        setMsg({ text: '✓ Settings saved.', ok: true });
+        setMsg({ text: 'Settings saved.', ok: true });
         const s3HasTypedCredentials = active === 's3' && !!(s3Form.accessKeyId.trim() && s3Form.secretAccessKey.trim());
         setData((prev: any) => ({
           ...prev,
@@ -546,8 +558,8 @@ function CloudStorageSettings() {
       const r = await fetch('/api/admin/storage?action=test', { method: 'POST' });
       const d = await r.json();
       setMsg(d.ok
-        ? { text: '✓ Connection successful!', ok: true }
-        : { text: `✗ Connection failed: ${d.error}`, ok: false, cause: d.cause, fix: d.fix, credDiag: d.credDiag });
+        ? { text: 'Connection successful!', ok: true }
+        : { text: `Connection failed: ${d.error}`, ok: false, cause: d.cause, fix: d.fix, credDiag: d.credDiag });
       if (!d.ok && d.credDiag && !d.credDiag.hasFormCredentials && !d.credDiag.hasEnvCredentials && !d.credDiag.hasAwsProfile && !d.credDiag.hasSharedCredentialsFile) {
         setEditMode(true);
       }
@@ -564,7 +576,7 @@ function CloudStorageSettings() {
       if (!saved) { setUploading(false); return; }
       const r = await fetch('/api/admin/storage?action=upload', { method: 'POST' });
       const d = await r.json();
-      setMsg(d.ok ? { text: `✓ Backup uploaded to ${active}: ${d.key}`, ok: true } : { text: `✗ Upload failed: ${d.error}`, ok: false });
+      setMsg(d.ok ? { text: `Backup uploaded to ${active}: ${d.key}`, ok: true } : { text: `Upload failed: ${d.error}`, ok: false });
     } catch { setMsg({ text: 'Upload failed. Check server logs.', ok: false }); }
     finally { setUploading(false); }
   }
@@ -594,10 +606,10 @@ function CloudStorageSettings() {
       {/* Active provider badge when locked */}
       {isLocked && (
         <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-          <span className="text-lg">{providers[savedProvider]?.icon ?? '☁️'}</span>
+          <SvgIcon name={providers[savedProvider]?.icon ?? 'cloud'} size={18} />
           <div>
             <p className="text-xs font-black text-green-800">Active: {providers[savedProvider]?.label ?? savedProvider}</p>
-            <p className="text-[10px] text-green-600 font-semibold">Click "Change provider" above to switch to a different provider.</p>
+            <p className="text-[10px] text-green-600 font-semibold">Click &quot;Change provider&quot; above to switch to a different provider.</p>
           </div>
         </div>
       )}
@@ -606,11 +618,11 @@ function CloudStorageSettings() {
       {(!isLocked) && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {TABS.map(p => {
-            const info = providers[p] ?? { label: p, icon: '💾', description: '' };
+            const info = providers[p] ?? { label: p, icon: 'database', description: '' };
             return (
               <button key={p} type="button" onClick={() => { setActive(p); setMsg(null); }}
                 className={`p-3 rounded-xl border text-left transition-colors ${active === p ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-blue-300'}`}>
-                <div className="text-xl mb-1">{info.icon}</div>
+                <SvgIcon name={info.icon} size={20} className="mb-1 text-slate-600" />
                 <div className="text-xs font-black text-slate-800">{info.label}</div>
                 <div className="text-[10px] text-slate-500 mt-0.5 leading-snug">{info.description?.slice(0, 60)}</div>
               </button>
@@ -741,13 +753,13 @@ function CloudStorageSettings() {
         <div className={`rounded-xl border text-sm ${msg.ok ? 'bg-green-50 border-green-200 text-green-700 px-4 py-3' : 'bg-red-50 border-red-200 text-red-800'}`}>
           {msg.ok ? (
             <div className="flex items-center gap-2 font-semibold">
-              <span>✓</span><span>{msg.text}</span>
+              <SvgIcon name="checkCircle" size={14} /><span>{msg.text}</span>
             </div>
           ) : (
             <div className="divide-y divide-red-200">
               {/* Error headline */}
               <div className="flex items-start gap-2 px-4 py-3 font-bold">
-                <span className="shrink-0 text-red-600">✗</span>
+                <SvgIcon name="cross" size={14} className="shrink-0 text-red-600" />
                 <span className="text-red-700">{msg.text}</span>
               </div>
               {/* Cause + Fix explanation */}
@@ -778,7 +790,7 @@ function CloudStorageSettings() {
                         ].map(row => (
                           <div key={row.label} className="flex items-center gap-2">
                             <span className={`text-sm font-black shrink-0 ${row.ok ? 'text-green-600' : 'text-red-500'}`}>
-                              {row.ok ? '✓' : '✗'}
+                              <SvgIcon name={row.ok ? 'check' : 'cross'} size={13} />
                             </span>
                             <span className={`text-[10px] font-mono ${row.ok ? 'text-green-700' : 'text-red-500'}`}>{row.label}</span>
                           </div>
@@ -812,25 +824,24 @@ function CloudStorageSettings() {
   );
 }
 
-interface ManagedUser {
-  id: string;
-  name: string;
-  email: string;
-  role: AppRole;
-  roleLabel: string;
-  isActive: boolean;
-  createdAt: string;
-  lastLoginAt: string | null;
-  importCount: number;
-  snapshotCount: number;
-}
-
-function UserManagementSettings() {
+function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: ManagedUser[]) => void }) {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [query, setQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
+  const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'scrum_master' as AppRole });
+
+  // ── Multi-select state ──────────────────────────────────────────────────────
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkRole, setBulkRole] = useState<AppRole>('scrum_master');
+  const [bulkApplying, setBulkApplying] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const selectAllRef = useRef<HTMLInputElement>(null);
 
   async function loadUsers() {
     setLoading(true);
@@ -847,6 +858,7 @@ function UserManagementSettings() {
   }
 
   useEffect(() => { loadUsers(); }, []);
+  useEffect(() => { onUsersChange(users); }, [onUsersChange, users]); // keep parent stat cards in sync
 
   async function createUser() {
     setSaving(true); setMsg(null);
@@ -885,98 +897,374 @@ function UserManagementSettings() {
     }
   }
 
-  function roleOptionsFor(user?: ManagedUser): AppRole[] {
-    return user?.role === 'user' ? ['user', ...ASSIGNABLE_ROLES] : ASSIGNABLE_ROLES;
+  async function deleteUser() {
+    if (!deleteTarget) return;
+    setDeleting(true); setMsg(null);
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: deleteTarget.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Could not delete user.');
+      setUsers(prev => prev.filter(user => user.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      setMsg({ ok: true, text: 'User deleted.' });
+    } catch (error) {
+      setMsg({ ok: false, text: error instanceof Error ? error.message : 'Could not delete user.' });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  const filteredUsers = users.filter(user => matchesUserFilter(user, query, roleFilter));
+
+  // Clear selection when filters change
+  useEffect(() => { setSelected(new Set()); }, [query, roleFilter]);
+
+  // Drive the select-all checkbox indeterminate state
+  useEffect(() => {
+    if (!selectAllRef.current || filteredUsers.length === 0) return;
+    const anySelected = filteredUsers.some(u => selected.has(u.id));
+    const allSelected = filteredUsers.every(u => selected.has(u.id));
+    selectAllRef.current.indeterminate = anySelected && !allSelected;
+  }, [selected, filteredUsers]);
+
+  function toggleSelect(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    const allSelected = filteredUsers.every(u => selected.has(u.id));
+    setSelected(allSelected ? new Set() : new Set(filteredUsers.map(u => u.id)));
+  }
+
+  async function bulkUpdateRole() {
+    const ids = filteredUsers.filter(u => selected.has(u.id)).map(u => u.id);
+    if (ids.length === 0) return;
+    setBulkApplying(true); setMsg(null);
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch('/api/admin/users', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, role: bulkRole }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setUsers(prev => prev.map(u => u.id === id ? data.user : u));
+        } else {
+          failed++;
+        }
+      } catch { failed++; }
+    }
+    setBulkApplying(false);
+    setSelected(new Set());
+    setMsg(failed === 0
+      ? { ok: true,  text: `Role updated for ${ids.length} user${ids.length !== 1 ? 's' : ''}.` }
+      : { ok: false, text: `${failed} update${failed !== 1 ? 's' : ''} failed.` });
+  }
+
+  async function bulkDeleteUsers() {
+    const ids = filteredUsers.filter(u => selected.has(u.id)).map(u => u.id);
+    if (ids.length === 0) return;
+    setBulkDeleting(true); setMsg(null);
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch('/api/admin/users', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
+        });
+        if (res.ok) {
+          setUsers(prev => prev.filter(u => u.id !== id));
+        } else {
+          failed++;
+        }
+      } catch { failed++; }
+    }
+    setBulkDeleting(false);
+    setShowBulkDeleteConfirm(false);
+    setSelected(new Set());
+    setMsg(failed === 0
+      ? { ok: true,  text: `${ids.length} user${ids.length !== 1 ? 's' : ''} deleted.` }
+      : { ok: false, text: `${failed} deletion${failed !== 1 ? 's' : ''} failed.` });
   }
 
   return (
-    <div className="space-y-5">
-      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-        <div>
-          <h3 className="text-sm font-black text-slate-800">Add User</h3>
-          <p className="text-xs text-slate-500 mt-1">Admins create accounts and assign the role that controls default views and data scope.</p>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-3">
-          <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Name"
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
-          <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Email"
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
-          <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Temporary password"
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
-          <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-blue-400">
-            {ASSIGNABLE_ROLES.map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
-          </select>
-        </div>
-        <button type="button" onClick={createUser} disabled={saving}
-          className="btn-primary px-5 py-2 text-sm">{saving ? 'Creating...' : 'Create user'}</button>
-      </div>
+    <div className="space-y-6">
+      {deleteTarget && (
+        <ConfirmDeleteDialog
+          title="Delete user?"
+          message={`This removes ${deleteTarget.name} from the account and their access will stop immediately.`}
+          confirmLabel="Delete user"
+          onConfirm={deleteUser}
+          onCancel={() => setDeleteTarget(null)}
+          loading={deleting}
+        />
+      )}
 
+      {showBulkDeleteConfirm && (
+        <ConfirmDeleteDialog
+          title={`Delete ${selected.size} user${selected.size !== 1 ? 's' : ''}?`}
+          message={`This permanently removes ${selected.size} user${selected.size !== 1 ? 's' : ''} from the account. All their access will stop immediately. This cannot be undone.`}
+          confirmLabel={`Delete ${selected.size} user${selected.size !== 1 ? 's' : ''}`}
+          onConfirm={bulkDeleteUsers}
+          onCancel={() => setShowBulkDeleteConfirm(false)}
+          loading={bulkDeleting}
+        />
+      )}
+
+      {/* ── Add User form ── */}
+      <section className={styles.formSection}>
+        <div className={styles.formSectionHeader}>
+          <span className={styles.formIconWrap}><SvgIcon name="person" size={16} /></span>
+          <div>
+            <h3 className={styles.formTitle}>Add User</h3>
+            <p className={styles.formSubtitle}>Create a new user account and assign a role.</p>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <label className={styles.fieldLabel}>
+            Full Name
+            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Enter full name"
+              className={styles.formInput} />
+          </label>
+          <label className={styles.fieldLabel}>
+            Email Address
+            <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Enter email address"
+              className={styles.formInput} />
+          </label>
+          <label className={styles.fieldLabel}>
+            Temporary Password
+            <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Enter temporary password"
+              className={styles.formInput} />
+          </label>
+          <label className={styles.fieldLabel}>
+            Role
+            <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
+              className={styles.formInput}>
+              {ASSIGNABLE_ROLES.map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
+            </select>
+          </label>
+        </div>
+
+        <div className={styles.formFooter}>
+          <button type="button" onClick={createUser} disabled={saving} className={styles.createBtn}>
+            {saving ? 'Creating...' : 'Create User'}
+          </button>
+        </div>
+      </section>
+
+      {/* ── Status message ── */}
       {msg && (
-        <div className={`rounded-xl border px-4 py-3 text-sm font-semibold ${msg.ok ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+        <div className={clsx(styles.statusMsg, msg.ok ? styles['statusMsg--ok'] : styles['statusMsg--err'])}>
           {msg.text}
         </div>
       )}
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-sm font-black text-slate-800">Manage Users</h3>
-          <button type="button" onClick={loadUsers} disabled={loading}
-            className="text-xs font-bold text-blue-600 hover:underline disabled:text-slate-400">{loading ? 'Loading...' : 'Refresh'}</button>
+      {/* ── User table ── */}
+      <section className={styles.tableSection}>
+        <div className={styles.tableSectionHeader}>
+          <div>
+            <h3 className={styles.tableTitle}>User Management</h3>
+            <p className={styles.tableSubtitle}>View and manage all users in your account.</p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label className="relative block">
+              <span className={styles.searchIconWrap}>⌕</span>
+              <input value={query} onChange={e => setQuery(e.target.value)} type="search" placeholder="Search users"
+                className={styles.searchInput} />
+            </label>
+            <select value={roleFilter} onChange={e => setRoleFilter(e.target.value as AppRole | 'all')}
+              className={styles.roleSelect}>
+              <option value="all">All roles</option>
+              {roleOptionsFor().map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
+            </select>
+            <button type="button" onClick={loadUsers} disabled={loading} className={styles.refreshBtn}>
+              {loading ? 'Loading...' : '↻ Refresh'}
+            </button>
+          </div>
         </div>
-        {loading ? (
-          <div className="p-5 text-sm text-slate-400 animate-pulse">Loading users...</div>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {users.map(user => (
-              <div key={user.id} className="p-4 grid gap-3 md:grid-cols-[1.2fr_0.9fr_0.8fr_auto] md:items-center">
-                <div className="min-w-0">
-                  <input value={user.name} onChange={e => setUsers(prev => prev.map(u => u.id === user.id ? { ...u, name: e.target.value } : u))}
-                    onBlur={e => updateUser(user.id, { name: e.target.value })}
-                    className="w-full text-sm font-black text-slate-800 border border-transparent rounded px-2 py-1 focus:border-blue-300 focus:outline-none" />
-                  <p className="text-xs text-slate-500 truncate px-2">{user.email}</p>
-                </div>
-                <select value={user.role} onChange={e => updateUser(user.id, { role: e.target.value as AppRole })}
-                  className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-blue-400">
-                  {roleOptionsFor(user).map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
-                </select>
-                <div className="text-xs text-slate-500">
-                  <p>{user.importCount} imports</p>
-                  <p>{user.snapshotCount} snapshots</p>
-                </div>
-                <button type="button" onClick={() => updateUser(user.id, { isActive: !user.isActive })}
-                  className={`btn-sm px-3 py-1.5 text-xs font-bold rounded-full border ${user.isActive ? 'bg-green-50 border-green-200 text-green-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
-                  {user.isActive ? 'Active' : 'Disabled'}
-                </button>
-              </div>
-            ))}
-            {users.length === 0 && <div className="p-5 text-sm text-slate-400">No users found.</div>}
+
+        {/* Bulk action bar — visible only when rows are selected */}
+        {selected.size > 0 && (
+          <div className={styles.bulkBar}>
+            <span className={styles.bulkCount}>
+              {selected.size} user{selected.size !== 1 ? 's' : ''} selected
+            </span>
+            <div className={styles.bulkActions}>
+              <select
+                value={bulkRole}
+                onChange={e => setBulkRole(e.target.value as AppRole)}
+                className={styles.bulkRoleSelect}
+              >
+                {ASSIGNABLE_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
+              </select>
+              <button
+                type="button"
+                onClick={bulkUpdateRole}
+                disabled={bulkApplying}
+                className={styles.bulkRoleBtn}
+              >
+                {bulkApplying ? '...' : '✎'} Change role
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBulkDeleteConfirm(true)}
+                disabled={bulkDeleting}
+                className={styles.bulkDeleteBtn}
+              >
+                <SvgIcon name="delete" size={14} /> Delete {selected.size}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelected(new Set())}
+                className={styles.bulkClearBtn}
+              >
+                ✕ Clear
+              </button>
+            </div>
           </div>
         )}
-      </div>
+
+        {loading ? (
+          <div className={clsx(styles.loadingRow, 'animate-pulse')}>Loading users...</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className={styles.tableHead}>
+                  <th className="w-10 px-4 py-3">
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      checked={filteredUsers.length > 0 && filteredUsers.every(u => selected.has(u.id))}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 rounded cursor-pointer accent-[#E85D12]"
+                      aria-label="Select all users"
+                    />
+                  </th>
+                  <th className={clsx(styles.th, 'px-5 py-3 text-left')}>User</th>
+                  <th className={clsx(styles.th, 'w-44 px-5 py-3 text-left')}>Role</th>
+                  <th className={clsx(styles.th, 'w-20 px-5 py-3 text-left')}>Imports</th>
+                  <th className={clsx(styles.th, 'w-24 px-5 py-3 text-left')}>Snapshots</th>
+                  <th className={clsx(styles.th, 'w-48 px-5 py-3 text-left')}>Status &amp; Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user) => {
+                  const initials = user.name
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map(part => part[0]?.toUpperCase())
+                    .join('') || user.email.slice(0, 2).toUpperCase();
+
+                  return (
+                    <tr
+                      key={user.id}
+                      className={styles.tableRow}
+                      data-selected={selected.has(user.id) ? 'true' : 'false'}
+                    >
+                      <td className="px-4 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(user.id)}
+                          onChange={() => toggleSelect(user.id)}
+                          className="h-4 w-4 rounded cursor-pointer accent-[#E85D12]"
+                          aria-label={`Select ${user.name}`}
+                        />
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span className={styles.avatar}>{initials}</span>
+                          <div className="min-w-0">
+                            <input value={user.name} onChange={e => setUsers(prev => prev.map(u => u.id === user.id ? { ...u, name: e.target.value } : u))}
+                              onBlur={e => updateUser(user.id, { name: e.target.value })}
+                              className={styles.nameInput}
+                              aria-label={`Edit name for ${user.name}`}
+                            />
+                            <p className={styles.userEmail}>{user.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <select value={user.role} onChange={e => updateUser(user.id, { role: e.target.value as AppRole })}
+                          className={styles.inlineSelect}
+                          aria-label={`Change role for ${user.name}`}>
+                          {roleOptionsFor(user).map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
+                        </select>
+                      </td>
+                      <td className={clsx(styles.cellText, 'px-5 py-4')}>{user.importCount}</td>
+                      <td className={clsx(styles.cellText, 'px-5 py-4')}>{user.snapshotCount}</td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className={clsx(user.isActive ? 'chip c-gr' : 'chip c-nt', styles.chipPill)}>
+                            <span className={styles.statusDot} data-active={String(user.isActive)} />
+                            {user.isActive ? 'Active' : 'Disabled'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateUser(user.id, { isActive: !user.isActive })}
+                            title={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}
+                            className={styles.toggleBtn}
+                            aria-label={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}
+                          >
+                            <SvgIcon name={user.isActive ? 'videoPause' : 'videoPlay'} size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget(user)}
+                            title={`Delete ${user.name}`}
+                            className={styles.deleteBtn}
+                            aria-label={`Delete ${user.name}`}
+                          >
+                            <SvgIcon name="delete" size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {filteredUsers.length === 0 && <div className={styles.emptyMsg}>No users match the current filters.</div>}
+            <div className={styles.tableFooter}>
+              <span>Showing {filteredUsers.length} of {users.length} users</span>
+              <span className={styles.pageBadge}>1</span>
+            </div>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
 
-type Tab = 'users' | 'retention' | 'thresholds' | 'orphan' | 'backup' | 'cloud' | 'browser';
-
-const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; description: string }> = [
-  { id: 'users',      label: 'User Management',     icon: '👥', description: 'Accounts, roles, access state' },
-  { id: 'retention',  label: 'Privacy & Retention', icon: '🔒', description: 'Data windows and cleanup' },
-  { id: 'thresholds', label: 'Health Thresholds',   icon: '⚡', description: 'Delivery health rules' },
-  { id: 'orphan',     label: 'Orphan Rules',        icon: '👻', description: 'Hierarchy detection rules' },
-  { id: 'backup',     label: 'Backup & Restore',    icon: '🗄️', description: 'Local backup bundles' },
-  { id: 'cloud',      label: 'Cloud Storage',       icon: '☁️', description: 'S3, Azure, GCP, restore' },
-  { id: 'browser',    label: 'Browser Data',        icon: '🗑️', description: 'Client-side cached data' },
-];
-
-function activeTabMeta(tab: Tab) {
-  return ADMIN_TABS.find(item => item.id === tab) ?? ADMIN_TABS[0];
-}
+const VALID_TABS: Tab[] = ['users','requests','config','retention','thresholds','orphan','backup','cloud','browser'];
 
 export default function AdminSettingsPage() {
   const router = useRouter();
-  const [tab, setTab]                 = useState<Tab>('users');
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get('tab') as Tab | null);
+  const [tab, setTab] = useState<Tab>(
+    initialTab && VALID_TABS.includes(initialTab) ? initialTab : 'users'
+  );
+
+  // Sync tab state when the URL ?tab= param changes (e.g. sidebar link clicks).
+  useEffect(() => {
+    const urlTab = searchParams.get('tab') as Tab | null;
+    const resolved = urlTab && VALID_TABS.includes(urlTab) ? urlTab : 'users';
+    setTab(resolved);
+  }, [searchParams]);
   const [settings, setSettings]       = useState<RetentionSettings | null>(null);
   const [stats, setStats]             = useState<RetentionStats | null>(null);
   const [thresholds, setThresholds]   = useState<HealthThresholds | null>(null);
@@ -1053,123 +1341,61 @@ export default function AdminSettingsPage() {
     return data;
   }
 
-  if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading settings…</div></AppShell>;
+  const handleUsersChange = useCallback((users: ManagedUser[]) => {
+    setUserSummary({
+      total:  users.length,
+      active: users.filter(u => u.isActive).length,
+      admins: users.filter(u => u.role === 'admin').length,
+    });
+  }, []);
 
-  const activeUsers = userSummary.active;
-  const totalUsers = userSummary.total;
-  const latestBackup = backupFiles?.some(file => file.included) ? 'Available' : 'Not yet';
+  if (loading) return <div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading settings…</div>;
+
   const selectedTab = activeTabMeta(tab);
+  const statsCards = buildSettingsStats({ tab, userSummary, settings, stats, thresholds, orphanRules, backupFiles });
+  const settingsNavItems = ADMIN_TABS.map(item => ({
+    id: item.id,
+    label: item.label,
+    icon: item.icon,
+    selected: tab === item.id,
+    onClick: () => setTab(item.id),
+  }));
 
   return (
-    <AppShell showNav>
-      <div className="mx-auto max-w-7xl">
-        <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
-          <aside className="lg:sticky lg:top-20 self-start rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
-            <div className="px-2 py-3">
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Settings</p>
-            </div>
-            <nav className="grid gap-2" aria-label="Admin settings navigation">
-              {ADMIN_TABS.map(item => {
-                const selected = tab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setTab(item.id)}
-                    className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors ${
-                      selected ? 'bg-blue-50 text-blue-700 shadow-[inset_4px_0_0_#2563eb]' : 'text-slate-700 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-lg shadow-sm">{item.icon}</span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-black">{item.label}</span>
-                      <span className="block truncate text-[11px] font-semibold text-slate-400">{item.description}</span>
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
-            <div className="mt-6 grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-green-50 text-sm font-black text-green-600">✓</span>
-              <span>
-                <strong className="block text-xs text-slate-800">System secure</strong>
-                <span className="text-[11px] font-bold text-green-600">Operational</span>
-              </span>
-              <span className="text-xl text-slate-400">›</span>
-            </div>
-          </aside>
+    <AdminConsoleLayout
+        title={selectedTab.label}
+        description={selectedTab.description}
+        navItems={settingsNavItems}
+        stats={statsCards}
+        statusLabel="Operational"
+      >
+        {error && <div className="mb-6 rounded-[14px] border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div>}
 
-          <div className="min-w-0">
-            <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-blue-700 via-indigo-700 to-violet-700 px-6 py-8 text-white shadow-[0_16px_40px_rgba(15,23,42,0.14)] sm:px-10 sm:py-10">
-              <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="mb-3 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold text-blue-50">Admin Console</p>
-                  <h1 className="text-3xl font-black tracking-tight sm:text-5xl">Admin Settings</h1>
-                  <p className="mt-3 max-w-2xl text-sm text-blue-50/85 sm:text-base">Manage users, security, data retention, storage, and system behaviour.</p>
-                </div>
-                <div className="flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold backdrop-blur">
-                  <span className="h-2.5 w-2.5 rounded-full bg-green-400 shadow-[0_0_0_7px_rgba(34,197,94,0.16)]" />
-                  All systems operational
-                </div>
-              </div>
-              <div className="pointer-events-none absolute -right-20 -top-16 h-64 w-64 rounded-full bg-cyan-300/20" />
-              <div className="pointer-events-none absolute -bottom-24 right-24 h-72 w-72 rounded-full bg-pink-300/20" />
-            </section>
-
-            <section className="relative z-10 mt-[-34px] grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Admin summary">
-              {[
-                { icon: '👥', label: 'Total Users', value: String(totalUsers), note: 'All accounts', color: 'bg-blue-50 text-blue-700' },
-                { icon: '🟢', label: 'Active Users', value: String(activeUsers), note: totalUsers ? `${Math.round((activeUsers / totalUsers) * 100)}% of total` : 'No users yet', color: 'bg-green-50 text-green-700' },
-                { icon: '🛡️', label: 'Admins', value: String(userSummary.admins), note: totalUsers ? `${Math.round((userSummary.admins / totalUsers) * 100)}% of total` : 'No users yet', color: 'bg-violet-50 text-violet-700' },
-                { icon: '☁️', label: 'Last Backup', value: latestBackup, note: backupFiles?.length ? 'Backup available' : 'No backup found', color: 'bg-orange-50 text-orange-700' },
-              ].map(card => (
-                <article key={card.label} className="min-h-[132px] rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
-                  <div className="flex items-center gap-4">
-                    <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-full text-xl ${card.color}`}>{card.icon}</span>
-                    <span className="min-w-0">
-                      <span className="block text-xs font-black uppercase tracking-wide text-slate-400">{card.label}</span>
-                      <strong className="mt-1 block truncate text-xl font-black text-slate-900">{card.value}</strong>
-                      <span className="mt-1 block truncate text-xs font-bold text-slate-500">{card.note}</span>
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </section>
-
-            {error && <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div>}
-
-            <section className="mt-6 rounded-[22px] border border-slate-200 bg-white/90 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur sm:p-6">
-              <div className="mb-5 flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="grid h-12 w-12 place-items-center rounded-2xl border border-blue-100 bg-blue-50 text-xl text-blue-700">{selectedTab.icon}</span>
-                  <div>
-                    <h2 className="text-xl font-black tracking-tight text-slate-900">{selectedTab.label}</h2>
-                    <p className="mt-1 text-sm text-slate-500">{selectedTab.description}</p>
-                  </div>
-                </div>
-              </div>
-
-              {tab === 'users' && <UserManagementSettings />}
-              {tab === 'retention' && settings && (
-                <DataRetentionSettings settings={settings} stats={stats} onSave={handleSaveRetention} onCleanup={handleCleanup} onClearAll={handleClearAll} />
-              )}
-              {tab === 'thresholds' && thresholds && (
-                <HealthThresholdSettings thresholds={thresholds} onSave={handleSaveThresholds} />
-              )}
-              {tab === 'orphan' && orphanRules && (
-                <OrphanRulesSettings rules={orphanRules} onSave={handleSaveOrphanRules} />
-              )}
-              {tab === 'backup' && (
-                <BackupRestoreSettings files={backupFiles} />
-              )}
-              {tab === 'cloud' && <CloudStorageSettings />}
-              {tab === 'browser' && (
-                <ClearLocalDataPanel />
-              )}
-            </section>
-          </div>
-        </div>
-      </div>
-    </AppShell>
+        <section>
+          {tab === 'users' && (
+            <UserManagementSettings
+              onUsersChange={handleUsersChange}
+            />
+          )}
+          {tab === 'requests' && <UserAddRequestsPanel />}
+          {tab === 'config'   && <AppConfigPanel />}
+          {tab === 'retention' && settings && (
+            <DataRetentionSettings settings={settings} stats={stats} onSave={handleSaveRetention} onCleanup={handleCleanup} onClearAll={handleClearAll} />
+          )}
+          {tab === 'thresholds' && thresholds && (
+            <HealthThresholdSettings thresholds={thresholds} onSave={handleSaveThresholds} />
+          )}
+          {tab === 'orphan' && orphanRules && (
+            <OrphanRulesSettings rules={orphanRules} onSave={handleSaveOrphanRules} />
+          )}
+          {tab === 'backup' && (
+            <BackupRestoreSettings files={backupFiles} />
+          )}
+          {tab === 'cloud' && <CloudStorageSettings />}
+          {tab === 'browser' && (
+            <ClearLocalDataPanel />
+          )}
+        </section>
+    </AdminConsoleLayout>
   );
 }

@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { computeTeamHealth, teamBandColor, teamBandBg, type TeamHealthEntry } from '@/lib/teamHealth';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
@@ -168,7 +169,7 @@ export default function TeamsPage() {
     return (
       <AppShell showNav>
         <div className="max-w-5xl mx-auto py-20 text-center">
-          <span className="text-5xl mb-4 block">👥</span>
+          <SvgIcon name="people" size={48} className="mx-auto mb-4 text-slate-400" />
           <p className="text-base font-black text-slate-700 mb-2">No team data available</p>
           <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
             Upload a Jira export with assignee data from the <a href="/" className="underline font-bold">home page</a>.

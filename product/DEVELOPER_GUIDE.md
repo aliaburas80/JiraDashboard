@@ -56,6 +56,7 @@ npm run dev
 
 # Production build
 npm run build
+# Local production server
 npm start
 
 # Lint
@@ -74,8 +75,8 @@ For production deployment, set these environment variables:
 | Variable | Default | Purpose |
 |---|---|---|
 | `SESSION_SECRET` | `dev-secret-change-me` | iron-session cookie signing key — **change in production** |
-| `ALLOW_OPEN_REGISTRATION` | `false` | Set `true` to allow public registration |
-| `DATABASE_URL` | `file:./data/delivery_clarity.db` | SQLite DB path (Prisma) |
+| `ALLOW_OPEN_REGISTRATION` | `false` | Kept false; public registration is inactive and users are admin-created |
+| `DATABASE_URL` | `file:./data/delivery_clarity.db` | SQLite DB path (Prisma). Relative `file:./data/...` or `file:../data/...` values are normalized to the app `data/` directory at runtime. |
 
 Run `npx prisma generate && npx prisma migrate deploy` after first install to create the database.
 
@@ -103,27 +104,62 @@ JiraDashboard/
 ├── app/                          # Next.js App Router root
 │   ├── layout.tsx                # Root layout — sets <html>, <body>, favicon metadata
 │   ├── icon.png                  # App favicon (auto-detected by Next.js)
-│   ├── globals.scss              # Global styles (Tailwind base + custom)
+│   ├── globals.scss              # Global styles (Tailwind base + custom + .dc-card/.dc-kpi-* utilities)
 │   ├── page.tsx                  # / — Upload page (home)
-│   ├── summary/page.tsx          # /summary — Health overview
+│   ├── summary/page.tsx          # /summary — Health overview (AppShell, standalone)
 │   ├── charts/page.tsx           # /charts — Visual analytics
-│   ├── dashboard/page.tsx        # /dashboard — Full delivery report
+│   ├── column-mapping/page.tsx   # /column-mapping — Column mapping preview
+│   ├── dashboard/                # /dashboard/* — 15 independent routed pages
+│   │   ├── layout.tsx            # /dashboard/* layout — DashboardTopbar + DashboardSidebarNav
+│   │   ├── page.tsx              # /dashboard — redirect to summary section
+│   │   ├── summary/page.tsx      # Delivery Summary (KPI overview + alert strip)
+│   │   ├── priority-attention/   # Priority Attention (critical/blocked items)
+│   │   ├── sprint-status/        # Sprint Status (velocity, goals, commitment vs completion)
+│   │   ├── epic-readiness/       # Epic Readiness (completion, forecast, blockers)
+│   │   ├── labels/               # Labels (label distribution + health)
+│   │   ├── flow-health/          # Flow Health Table (11 filters, column reorder)
+│   │   ├── key-metrics/          # Key Metrics (KPI summary cards)
+│   │   ├── kanban-health/        # Kanban Health (WIP, cycle time, blocked lanes)
+│   │   ├── visual-analytics/     # Visual Analytics (charts, donuts, distributions)
+│   │   ├── ownership/            # Ownership & Capacity (assignee distribution)
+│   │   ├── quarter-statistics/   # Quarter Statistics (quarterly throughput tables)
+│   │   ├── actions/              # Smart Actions (AI-style suggested actions by severity)
+│   │   ├── delivery-composition/ # Delivery Composition (work breakdown by type/status/epic)
+│   │   ├── delivery-controls/    # Delivery Controls (risk + orphan panels)
+│   │   └── data-quality/         # Data Quality Score (10-field check, impact report)
+│   ├── data-quality/page.tsx     # /data-quality — standalone Data Quality page (AppShell)
+│   ├── delivery-mix/page.tsx     # /delivery-mix — standalone Delivery Mix (type/status breakdown)
+│   ├── flow-health/page.tsx      # /flow-health — standalone Flow Health table
+│   ├── release-readiness/page.tsx # /release-readiness — standalone Release Readiness
+│   ├── sprint-kanban/page.tsx    # /sprint-kanban — standalone Sprint + Kanban overview
+│   ├── work-explorer/page.tsx    # /work-explorer — standalone Work Explorer (table view)
 │   ├── trends/page.tsx           # /trends — Upload-to-upload trend analysis
-│   ├── explore/page.tsx          # /explore — Work Item Explorer (React Flow)
-│   ├── readiness/page.tsx        # /readiness — Release readiness checklist
+│   ├── explore/page.tsx          # /explore — Work Item Explorer (React Flow graph)
+│   ├── readiness/page.tsx        # /readiness — Release readiness checklist (legacy route)
 │   ├── customer/page.tsx         # /customer — Customer-facing summary
 │   ├── snapshots/page.tsx        # /snapshots — Saved metric snapshots
 │   ├── backend/page.tsx          # /backend — Import logs & backend status
 │   ├── glossary/page.tsx         # /glossary — Abbreviations & metric guide
-│   ├── developer/page.tsx        # /developer — Developer wiki UI
+│   ├── developer/
+│   │   ├── layout.tsx            # /developer/* layout — DashboardTopbar only
+│   │   ├── layout.module.scss
+│   │   ├── page.tsx              # /developer — Developer wiki (light wiki theme)
+│   │   └── page.module.scss      # .wiki class remaps all --dc-* tokens to light values
 │   ├── help/page.tsx             # /help — FAQ / help guide
 │   ├── login/page.tsx            # /login — Authentication
-│   ├── register/page.tsx         # /register — New account
-│   ├── profile/page.tsx          # /profile — User settings
+│   ├── register/page.tsx         # /register — Reserved; redirects to login
+│   ├── change-password/page.tsx  # /change-password — First-login password change
+│   ├── profile/page.tsx          # /profile — Editable member profile
+│   ├── members/page.tsx          # /members — Team member directory
 │   ├── admin/
+│   │   ├── layout.tsx            # /admin/* layout — DashboardTopbar + AdminNavSidebar
+│   │   ├── layout.module.scss
 │   │   ├── logs/page.tsx         # /admin/logs — Import log management
-│   │   ├── settings/page.tsx     # /admin/settings — Users, backup, restore, thresholds
-│   │   └── security/page.tsx     # /admin/security — Production security checklist
+│   │   ├── settings/page.tsx     # /admin/settings — Backup, restore, thresholds
+│   │   ├── security/page.tsx     # /admin/security — Production security checklist
+│   │   ├── users/page.tsx        # /admin/users — User management
+│   │   ├── diagnostics/page.tsx  # /admin/diagnostics — System diagnostics
+│   │   └── theme/page.tsx        # /admin/theme — Brand & theme settings
 │   └── api/
 │       ├── upload/route.ts       # POST /api/upload — parse + metrics + save log
 │       ├── imports/route.ts      # GET  /api/imports — logs (role-scoped; all for admin/manager/c_level)
@@ -131,9 +167,13 @@ JiraDashboard/
 │       ├── snapshots/[id]/route.ts # DELETE /api/snapshots/:id
 │       ├── auth/login/route.ts   # POST /api/auth/login
 │       ├── auth/logout/route.ts  # POST /api/auth/logout
-│       ├── auth/register/route.ts # POST /api/auth/register
+│       ├── auth/register/route.ts # POST /api/auth/register (inactive / 403)
+│       ├── auth/change-password/route.ts
 │       ├── auth/me/route.ts      # GET  /api/auth/me
-│       ├── admin/users/route.ts  # GET/POST/PATCH /api/admin/users
+│       ├── profile/route.ts      # GET/PATCH /api/profile
+│       ├── profile/image/route.ts # GET/POST /api/profile/image — S3 profile image upload/proxy
+│       ├── members/route.ts      # GET /api/members
+│       ├── admin/users/route.ts  # GET/POST/PATCH/DELETE /api/admin/users
 │       ├── admin/backup/route.ts # GET  /api/admin/backup
 │       ├── admin/restore/route.ts # POST /api/admin/restore
 │       └── settings/*/route.ts   # GET/POST various admin settings
@@ -141,11 +181,27 @@ JiraDashboard/
 ├── src/
 │   ├── components/
 │   │   ├── layout/
-│   │   │   └── AppShell.tsx      # Sticky header with 4-group dropdown nav + mobile hamburger
+│   │   │   └── AppShell.tsx      # Sticky header — nav driven by DC_NAV_GROUPS single source of truth
+│   │   ├── dashboard/
+│   │   │   ├── DashboardTopbar.tsx      # Fixed 52px topbar for /dashboard/* + /admin/* + /developer
+│   │   │   ├── DashboardTopbar.module.scss
+│   │   │   ├── DashboardSidebarNav.tsx  # Fixed 228px sidebar for /dashboard/*
+│   │   │   └── DashboardSidebarNav.module.scss
+│   │   ├── admin/
+│   │   │   ├── AdminNavSidebar.tsx      # Fixed 228px sidebar for /admin/* (injected by layout.tsx)
+│   │   │   ├── AdminNavSidebar.module.scss
+│   │   │   └── BackupRestoreSettings.tsx
+│   │   ├── dc-shell/
+│   │   │   ├── navigation.ts            # DC_NAV_GROUPS — single source of truth for all nav items
+│   │   │   ├── DCTopbar.tsx             # Generic topbar shell component
+│   │   │   ├── DCPageSidebar.tsx        # Generic page sidebar shell component
+│   │   │   ├── DCKpiCard.tsx            # KPI metric card
+│   │   │   ├── DCStatusChip.tsx         # Status chip (uses .chip + variant classes)
+│   │   │   ├── DCActionBoard.tsx        # Action board panel
+│   │   │   └── DeliveryClarityShell.tsx # Composite shell (topbar + sidebar + main)
 │   │   ├── auth/
 │   │   │   └── UserMenu.tsx      # Avatar dropdown (name, role badge, sign out)
 │   │   ├── admin/
-│   │   │   └── BackupRestoreSettings.tsx
 │   │   ├── onboarding/
 │   │   │   └── OnboardingChecklist.tsx
 │   │   ├── readiness/
@@ -178,7 +234,7 @@ JiraDashboard/
 │   │   ├── relations.ts          # RelationNode (isOnRiskPath, isLargestBranch), RelationEdge, RelationStats
 │   │   ├── releaseReadiness.ts   # ReleaseReadinessResult, ReleaseReadinessSummary
 │   │   └── throughput.ts         # ThroughputMetrics, SprintEntry, etc.
-│   └── __tests__/                # Jest test suites (280+ tests across 22 files)
+│   └── __tests__/                # Jest test suites (469 tests across 48 suites — verified 2026-06-07)
 │
 ├── data/
 │   └── delivery_clarity.db       # SQLite database (users, sessions, import logs, snapshots)
@@ -206,20 +262,78 @@ JiraDashboard/
 
 ---
 
+## 3a. Frontend Architecture Standards (v4.9.0+)
+
+These rules apply to every component, page, and style file. They are enforced by ESLint, Stylelint, and TypeScript.
+
+### Styling hierarchy
+```
+Tailwind  →  utility layout only (flex, grid, gap, p-*, m-*, responsive breakpoints)
+SCSS      →  all component appearance (color, border, shadow, animation, typography, interaction)
+```
+
+### Rules
+- **Zero inline `style` props** — ESLint `react/forbid-dom-props` enforces this. Exception: CSS custom properties only (`--prefixed-keys`) for data-driven values (e.g. `style={{ '--bar-width': `${pct}%` } as CSSProperties}`).
+- **SCSS modules** — one `ComponentName.module.scss` per component with custom styling.
+- **Design tokens** — all values from `src/styles/_tokens.scss`. Never hardcode hex, px dimensions, or z-indices.
+- **`clsx`** — for conditional class composition.
+- **`DC_NAV_GROUPS`** (`src/components/dc-shell/navigation.ts`) — single source of truth for all nav items. Both `AppShell` and `DashboardTopbar` consume this config.
+
+### Layout injection patterns
+
+**Dashboard pages** (`/dashboard/*`): `DashboardTopbar` (fixed top) + `DashboardSidebarNav` (fixed left) via `app/dashboard/layout.tsx`.
+
+**Admin pages** (`/admin/*`): `DashboardTopbar` + `AdminNavSidebar` injected by `app/admin/layout.tsx`. Individual admin page files render content only — no shell logic.
+
+**Developer page** (`/developer`): `DashboardTopbar` only, via `app/developer/layout.tsx`. The page has its own internal section sidebar. The `.wiki` class in `page.module.scss` remaps all `--dc-*` dark tokens to light semantic equivalents so inline-style token references resolve to light values without editing individual lines.
+
+**AppShell pages** (all other routes): `AppShell` from `src/components/layout/AppShell.tsx` with `showNav` prop.
+
+---
+
 ## 4. Routing Architecture — Pages
 
 All analytics pages are React Client Components (`'use client'`). They call `loadMetricsWithSource()`, which first fetches `/api/metrics/latest` to restore metrics from the bucket-backed server copy, then falls back to browser `localStorage` (`dc_metrics_v2`) if no server/bucket payload is available. If both are missing the router redirects to `/` (upload).
 
 ### Navigation structure
 
-The `AppShell` header renders 4 dropdown groups:
+Navigation items are defined in `DC_NAV_GROUPS` (`src/components/dc-shell/navigation.ts`) — the single source of truth consumed by both `AppShell` and `DashboardTopbar`. Groups:
 - **Analytics**: `/summary`, `/dashboard`, `/charts`, `/trends`, `/teams`, `/portfolio`
-- **Reference**: `/landing` (About), `/glossary`, `/developer`, `/help`
-- **Delivery**: `/readiness`, `/explore`, `/customer`
-- **Data**: `/snapshots`, `/backend`
 - **Reference**: `/glossary`, `/developer`, `/help`
+- **Delivery**: `/readiness`, `/explore`, `/customer`, `/column-mapping`, `/data-quality`, `/delivery-mix`, `/flow-health`, `/release-readiness`, `/sprint-kanban`, `/work-explorer`
+- **Planning**: `/roadmap`, `/forecast`, `/retro`
+- **Data**: `/snapshots`, `/backend`
 
 Mobile: hamburger button opens a 2-column grid panel below the header.
+
+### Dashboard sub-pages (`/dashboard/*`)
+
+All dashboard sub-pages share the 3-zone layout injected by `app/dashboard/layout.tsx` (DashboardTopbar + DashboardSidebarNav). Each page calls `loadMetricsWithSource()` and renders its section:
+- `/dashboard/summary` — Delivery Summary (KPI cards + alert strip + top smart actions)
+- `/dashboard/priority-attention` — Priority Attention (critical + blocked items)
+- `/dashboard/sprint-status` — Sprint Status (velocity, goals, commitment vs completion, blockers)
+- `/dashboard/epic-readiness` — Epic Readiness (completion %, forecast, blockers)
+- `/dashboard/labels` — Labels (distribution + health bands)
+- `/dashboard/flow-health` — Flow Health Table (11 filters, column reorder, saved presets)
+- `/dashboard/key-metrics` — Key Metrics (KPI summary cards with trend indicators)
+- `/dashboard/kanban-health` — Kanban Health (WIP limits, cycle time, blocked lanes)
+- `/dashboard/visual-analytics` — Visual Analytics (donuts, bars, heatmaps)
+- `/dashboard/ownership` — Ownership & Capacity (assignee distribution, capacity balance)
+- `/dashboard/quarter-statistics` — Quarter Statistics (quarterly throughput tables)
+- `/dashboard/actions` — Smart Actions (AI-style suggested actions by severity: critical/warning/info)
+- `/dashboard/delivery-composition` — Delivery Composition (work breakdown by type/status/epic)
+- `/dashboard/delivery-controls` — Delivery Controls (risk panels + orphan panels)
+- `/dashboard/data-quality` — Data Quality Score (10-field check, impact report)
+
+### Standalone analytics pages
+
+6 standalone routes use AppShell and present full-page analytics views (not nested under /dashboard):
+- `/data-quality` — Data Quality report (score ring, 10-field check, field impact table)
+- `/delivery-mix` — Delivery Mix (issue-type breakdown, status distribution, sprint composition)
+- `/flow-health` — Flow Health table (lead time, cycle time, age bracket histogram)
+- `/release-readiness` — Release Readiness (Go/Conditional-Go/No-Go per Fix Version)
+- `/sprint-kanban` — Sprint + Kanban overview (velocity, WIP, cycle time KPIs)
+- `/work-explorer` — Work Explorer table view (list of all items with risk/orphan status)
 
 ### `app/page.tsx` — Upload (`/`)
 
@@ -327,15 +441,21 @@ Admin-only live health dashboard. Fetches `GET /api/admin/diagnostics` — aggre
 
 Admin-only settings console. Tabs include Users, Privacy & Retention, Health Thresholds, Orphan Rules, Backup & Restore, Cloud Storage, and Browser Data.
 
-The Users tab calls `GET/POST/PATCH /api/admin/users` and lets admins create users, assign roles (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`), edit display names, and enable/disable accounts. Password hashes are never returned to the browser.
+The Users tab calls `GET/POST/PATCH/DELETE /api/admin/users` and lets admins create users, assign roles (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`), edit display names, enable/disable accounts, and delete users with confirmation. Password hashes are never returned to the browser, and admins cannot delete or disable their own account.
+
+Each authenticated user edits their shared profile through `/profile`, backed by `GET/PATCH /api/profile`. Shared profile fields include name, position, profile image, telephone, contact email, address, certificates, and any team-facing notes. Profile images are uploaded through `POST /api/profile/image`, stored in the active S3 bucket under `images/profile/`, and rendered back through authenticated `GET /api/profile/image?key=...` URLs so the bucket can remain private. `/members` calls `GET /api/members` and shows all active users to logged-in users as a searchable directory with a detail/contact popup.
 
 Role helpers live in `src/lib/roles.ts`. Admin, Manager, and C-level can request all import logs with `/api/imports?all=true`, while Scrum Master/Product Owner/user remain scoped to their own uploads. Assigned delivery roles are locked to their dashboard view, so saved browser preferences cannot switch a Scrum Master/Product Owner/Manager/C-level user into another role's dashboard view.
 
-When cloud storage is active, auth/admin user flows use cloud-backed SQLite authority rather than browser storage: login/register/admin user reads call `syncFromCloud()` before user lookup or mutation, and registration/admin user create/update calls `pushToCloud()` after the local DB change succeeds.
+When cloud storage is active, auth/admin user flows use cloud-backed SQLite authority rather than browser storage: login/admin user reads call `syncFromCloud()` before user lookup or mutation, and admin user create/update or password-change flows call `pushToCloud()` after the local DB change succeeds.
+
+Public registration is inactive by product policy. `/register` remains as a future adjustment route but redirects to `/login`, `POST /api/auth/register` returns 403, and users can only be created through `/admin/settings → User Management`. Admin-created users are saved with `mustChangePassword=true`; after their first successful login, middleware forces them to `/change-password` until they replace the temporary password.
 
 Route visibility is role-scoped through the same helper module: `allowedRoutePrefixesForRole()`, `canAccessRoute()`, and `fallbackRouteForRole()`. `AppShell` fetches `/api/auth/me` and filters nav items before rendering; `middleware.ts` enforces the same matrix for protected page routes and redirects disallowed direct URL access to the role fallback route.
 
-The page layout follows the Admin Console mockup: a left settings sidebar, blue gradient hero, operational status pill, summary cards, and one large content card for the active tab.
+The admin area uses a shared flat Admin Console shell (`src/components/admin/AdminConsoleLayout.tsx`) across Settings, Diagnostics, Security, and Import Logs. The AppShell exposes these pages in a dedicated Administration navigation group.
+
+The settings layout follows the flat mockup: sticky left settings sidebar, white top context bar, page-level operational status, contextual summary cards for the active tab, and table-first user management. User-count cards only appear on User Management; other tabs show retention, threshold, orphan, backup, cloud, or browser-data summaries. The layout intentionally avoids a marketing-style hero so settings remain dense, scannable, and operational.
 
 Tabs: Health Thresholds, Orphan Rules, Privacy & Retention, Backup & Restore.
 
@@ -376,6 +496,24 @@ Accepts a `multipart/form-data` body with a field named `file`.
 File: `app/api/imports/route.ts`
 
 Returns `{ logs: ImportLog[] }` — all entries from `data/import-logs.json`, newest first.
+
+### `GET/PATCH /api/profile`
+
+File: `app/api/profile/route.ts`
+
+Authenticated profile endpoint. `GET` returns the signed-in user's public member profile. `PATCH` updates editable team-facing fields: `name`, `avatarUrl`, `position`, `phone`, `contactEmail`, `address`, `certificates`, and `bio`, writes a `profile_update` audit event, updates the session display name, and pushes the DB backup to cloud when configured.
+
+### `GET/POST /api/profile/image`
+
+File: `app/api/profile/image/route.ts`
+
+Authenticated S3-backed profile image endpoint. `POST` accepts multipart field `image` with JPG, PNG, WebP, or GIF up to 5 MB, stores it in the active S3 bucket under `images/profile/`, updates the user's `avatarUrl`, writes a `profile_image_upload` audit event, and pushes the DB backup to cloud. `GET` streams profile images back through the app for logged-in users, avoiding public S3 object access.
+
+### `GET /api/members`
+
+File: `app/api/members/route.ts`
+
+Authenticated member-directory endpoint. Returns active users only with safe public profile fields: name, account email, role label, position, avatar URL, contact email, phone, address, certificates, and shared team info.
 
 ### `GET /api/metrics`
 
@@ -955,59 +1093,164 @@ Last verified: 2026-06-02
 | `@types/bcryptjs` | ^2.4.6 | TypeScript types for bcryptjs | F3 Authentication & Database | Dev-only | Installed | TypeScript errors in auth code |
 | `lucide-react` | ^0.427.0 | SVG icon components | UI/Icons | Client | Installed | Icons disappear (minor) |
 | `clsx` + `tailwind-merge` | ^2.1.1 / ^2.3.0 | Conditional className, conflict resolution | UI/Styling | Client | Installed | className logic errors |
-| `jest` + `ts-jest` | ^29.7.0 / ^29.2.2 | 253 automated tests across 21 test suites | Testing | Dev-only | Installed | No automated testing |
+| `jest` + `ts-jest` | ^29.7.0 / ^29.2.2 | 469 automated tests across 48 test suites (verified 2026-06-07 via `npm test`) | Testing | Dev-only | Installed | No automated testing |
+
+### Cloud Storage SDK Packages (Installed, Dynamically Loaded)
+
+| Package | Purpose | Feature | Status |
+|---------|---------|---------|--------|
+| `@aws-sdk/client-s3` | Amazon S3 / S3-compatible cloud storage | Cloud Storage | Installed — dynamic import |
+| `@azure/storage-blob` | Azure Blob Storage | Cloud Storage | Installed — dynamic import |
+| `@google-cloud/storage` | Google Cloud Storage | Cloud Storage | Installed — dynamic import |
 
 ### Planned Future Packages (Not Yet Installed)
 
 | Package | Purpose | Feature | Priority |
 |---------|---------|---------|---------|
-| `@aws-sdk/client-s3` | Amazon S3 cloud storage | P3 Cloud Storage | P3 |
-| `@azure/storage-blob` | Azure Blob Storage | P3 Cloud Storage | P3 |
-| `@google-cloud/storage` | Google Cloud Storage | P3 Cloud Storage | P3 |
 | Jira API client (TBD) | Jira REST API integration | P3 Jira Integration | P3 |
-| `nodemailer` (TBD) | Email notification channel | P4 Notifications | P4 |
+| `nodemailer` ✅ **Installed** | Welcome email on member-request accept | FR-325 | P1 — Done 2026-06-09 |
 
 ---
 
-## P2 — Admin Storage & Backup (Architecture Design Only)
+## Cloud Storage & Backup (Implemented — v4.2.x)
 
-**Status:** Design and backlog planning only. Do NOT implement full cloud storage until explicitly instructed.
+**Status:** Implemented and verified. Shipped in PR #3 (P3-01) and hardened in v4.2.1 (cloud restore hardening, credential persistence).
 
 ### Goal
-Save uploaded Jira files, parsed data, import logs, dashboard snapshots, Excel exports, and processing metadata to local or cloud storage.
+Back up the local SQLite database (users, import logs, snapshots, latest-metrics cache, config files) to a self-hosted or cloud storage destination so admins can restore after data loss, and serve user-uploaded profile images through cloud storage when configured.
 
-### Storage Provider Interface (Planned)
+### Storage Provider Interface (Implemented — `src/types/storage.ts`)
 ```typescript
-interface StorageProvider {
-  name: string;
-  type: 'local' | 's3' | 'azure' | 'gcp' | 's3-compatible';
-  save(key: string, data: Buffer, metadata?: object): Promise<string>;
-  get(key: string): Promise<Buffer>;
+export type StorageProviderType = 'local' | 's3' | 'azure' | 'gcp';
+
+export interface StorageProvider {
+  readonly type: StorageProviderType;
+  upload(key: string, content: Buffer | string, contentType?: string): Promise<string>;
+  download(key: string): Promise<string>;
+  list(prefix?: string): Promise<CloudObject[]>;
   delete(key: string): Promise<void>;
-  exists(key: string): Promise<boolean>;
-  list(prefix: string): Promise<string[]>;
+  test(): Promise<{ ok: true } | { ok: false; error: string; cause?: string; fix?: string }>;
 }
 ```
 
-### Storage Object Types (Planned)
-- `Original Upload` — raw Jira CSV/XLSX file
-- `Normalised Data` — parsed JiraIssue[] JSON
-- `Dashboard Snapshot` — full DashboardMetrics JSON
-- `Excel Export` — generated .xlsx workbook
-- `Import Log` — processing metadata
-- `Error Report` — failed upload diagnostics
+### Implemented Providers (`src/services/storage/providers/`)
+- `LocalProvider` — writes to `data/cloud-backups/` on the host filesystem (default; no credentials needed)
+- `S3Provider` — Amazon S3 and S3-compatible endpoints via `@aws-sdk/client-s3` (dynamic import)
+- `AzureProvider` — Azure Blob Storage via `@azure/storage-blob` (dynamic import)
+- `GcpProvider` — Google Cloud Storage via `@google-cloud/storage` (dynamic import)
 
-### Storage Status Values (Planned)
-`Pending | Saving | Success | Failed | Retrying | Synced | Permanent Failure | Skipped`
+Each cloud SDK is loaded dynamically (`storageProvider.ts` factory) so the app starts and runs without any cloud SDK installed — `LocalProvider` is always available as the fallback.
 
-### Future Database Tables (Planned)
-- `storage_settings` — provider config, credentials (encrypted), enabled flag
-- `storage_objects` — each stored object with key, type, status, size
-- `storage_events` — audit log of all storage operations
-- `storage_retry_queue` — failed saves queued for retry
+### Supported Operations
+- **Provider selection & credentials** — `/admin/settings → Cloud Storage` tab: provider picker (4 cards), per-provider credential forms, redacted display of saved secrets, Test Connection, Upload Backup Now
+- **Bucket-first metrics startup** — `/api/metrics/latest` reads `data/latest-metrics.json` from the active cloud provider before falling back to the local cache, so a fresh deployment can boot directly from a cloud backup
+- **Cloud-backed user authority** — `syncFromCloud()` runs before login/admin user reads or mutations when cloud storage is active; `pushToCloud()` runs after admin create/update and password-change operations so the user database stays in sync with the cloud backup
+- **Backup bundle** — one-click JSON backup of the SQLite DB plus config files (`storage-settings.json`, `latest-metrics.json`, thresholds, orphan rules); restore creates a `.bak` safety copy before overwriting
+- **Restore hardening** — security allow-list on restorable file paths, `.bak` rollback on failed restore, auto-restore-on-boot guard (`autoRestore.ts`)
+- **Profile images** — when Amazon S3 is the active provider, `/profile` uploads (JPG/PNG/WebP/GIF) are stored under `images/profile/` and served through the authenticated `/api/profile/image` route
 
-### Future Storage Events (Planned)
-`STORAGE_SETTINGS_UPDATED | STORAGE_CONNECTION_TEST_STARTED | STORAGE_CONNECTION_TEST_SUCCESS | STORAGE_CONNECTION_TEST_FAILED | STORAGE_SAVE_STARTED | STORAGE_SAVE_SUCCESS | STORAGE_SAVE_FAILED | STORAGE_LOCAL_FALLBACK_USED | STORAGE_RETRY_QUEUED | STORAGE_RETRY_STARTED | STORAGE_RETRY_SUCCESS | STORAGE_RETRY_FAILED | STORAGE_RETRY_LIMIT_REACHED | STORAGE_SYNC_COMPLETED`
+### Current Limitations
+- Only one provider can be active at a time (no multi-provider replication)
+- Profile image upload to cloud storage is implemented for Amazon S3 only; other providers fall back to local storage for images
+- No automatic scheduled backups — backups are triggered manually ("Upload Backup Now") or on data-changing admin actions (push-on-change)
+
+### Credential Security
+- Credentials are persisted server-side in `data/storage-settings.json` and are never returned to the browser in plaintext — API responses redact secret fields
+- Saved credentials survive login, logout, session expiry, refresh, and locked Test Connection / Upload Backup actions; redacted browser-side settings can never overwrite saved server-side secrets with blank values
+
+### Fallback Behaviour
+- If no cloud provider is configured, or a cloud operation fails, the system falls back to `LocalProvider` (`data/cloud-backups/`) and surfaces a "local fallback" indicator in the admin UI
+- `/api/metrics/latest` falls back from bucket → local cache → live recomputation if all cloud reads fail
+
+### Tests
+Covered by `cloudStorage.test.ts`, `cloudRestoreHardening.test.ts`, `storageSettingsPersistence.test.ts`, and `backup.test.ts` (see `product/TEST_CASES.md`, TC-CS-01 to TC-CS-08 and related backup/restore cases).
+
+---
+
+## Backend Integration Gateway (Implemented — Foundation, v4.3)
+
+**Status:** Foundation implemented and tested. **This is not full Jira integration and not full cloud integration** — it is the controlled routing/security/retry/audit layer that *all future* external HTTP calls (Jira API, cloud providers, email, Slack, Teams, push notifications) must be routed through once they're built. No live providers are registered yet; the gateway ships with zero enabled providers and is exercised entirely through its test suite today.
+
+### Goal
+Today the app makes **zero live external HTTP calls** — Jira import is file-upload/parse only (`src/services/jira/parser.ts`), and cloud storage talks to provider SDKs directly (`src/services/storage/providers/`), not raw HTTP. Before any future feature (Jira live sync, write-back, notifications, coaching evidence fetches, etc.) is allowed to make outbound calls, it must go through one disciplined chokepoint that enforces endpoint allowlisting/SSRF protection, timeout and retry policy, secret redaction, and structured observability — so a single security review covers every future integration instead of one per feature.
+
+### Gateway Interface (`src/server/gateway/`)
+```typescript
+// types.ts
+export type GatewayProviderType =
+  | 'jira' | 'aws_s3' | 'azure_blob' | 'gcp_storage'
+  | 'email' | 'slack' | 'teams' | 'push_notification' | 'custom';
+
+export type GatewayErrorCategory =
+  | 'validation' | 'policy_rejected' | 'timeout' | 'network'
+  | 'retryable_http' | 'non_retryable_http' | 'unknown';
+
+export type GatewayRoutingStrategy =
+  | 'single' | 'round_robin' | 'weighted_round_robin' | 'failover' | 'least_error_rate';
+
+export interface GatewayRequestOptions {
+  provider: GatewayProviderType;
+  operation: string;            // e.g. "jira.fetchIssues" — human-readable label, logged
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  path?: string;                // appended to the provider's allowlisted base URL — never a raw attacker-controlled URL
+  query?: Record<string, string>;
+  headers?: Record<string, string>;
+  body?: unknown;
+  userId?: string | null;
+  correlationId?: string;
+  idempotencyKey?: string;
+  routingStrategy?: GatewayRoutingStrategy;
+  timeoutMs?: number;
+  maxRetries?: number;
+}
+
+export interface GatewayResult<T> {
+  ok: boolean;
+  data?: T;
+  status?: number;
+  errorCategory?: GatewayErrorCategory;
+  error?: string;               // redacted, safe-to-log message
+  requestId: string;
+  correlationId?: string;
+  durationMs: number;
+  retryCount: number;
+  provider: GatewayProviderType;
+  operation: string;
+}
+```
+`callExternal<T>(options): Promise<GatewayResult<T>>` (`externalGateway.ts`) is the **single entry point** — it resolves the provider, policy-validates the endpoint, picks a routing target, executes with timeout/retry, logs every attempt, and returns a typed, redacted result. It never throws; failures come back as `{ ok: false, errorCategory, error }`.
+
+### Implemented Modules (`src/server/gateway/`)
+- **`types.ts`** — the shared contract above (`GatewayRequestOptions`, `GatewayResult<T>`, `GatewayLogRecord`, provider/error/routing-strategy unions)
+- **`endpointPolicy.ts`** — `validateEndpoint()`: SSRF protection. Enforces `https`-only outside local dev, validates the host against the provider's allowlist, blocks private/internal IP ranges (`10.x`, `172.16-31.x`, `192.168.x`, link-local, etc.) and `localhost` in production, and sanitizes the request path. Returns a structured `{ allowed, reason }` — never throws, never performs a network call when rejected
+- **`retryPolicy.ts`** — `DEFAULT_RETRY_POLICY` (10000ms timeout, 2 max retries, exponential backoff), `isRetryable()` (retries `408/429/500/502/503/504`, never retries `400/401/403/404/409/422`), `computeBackoffDelay()`
+- **`gatewayLogger.ts`** — `redact()` masks secret-shaped values (tokens, API keys, passwords, cookies, connection strings, service-account JSON) with `[REDACTED]` before anything is logged; `logGatewayCall()` appends a structured `GatewayLogRecord` as a JSON-Lines entry to `data/gateway-audit.jsonl` and silently swallows write errors (mirrors the `.catch(() => {})` convention used for `prisma.auditEvent.create` in `app/api/auth/logout/route.ts`)
+- **`providerRegistry.ts`** — `getProviderConfig(type)` / `listRegisteredProviders()` resolve each provider's *blueprint* (which env vars hold its base URL/credentials, extra allowlist hosts, and an `enabled` kill-switch) from **`data/gateway-providers.json`** — falling back to built-in defaults when that file doesn't exist, so the gateway works out of the box. **Nothing about the provider set is static or hard-coded for change purposes**: an operator can repoint a provider to different env-var names, extend its host allowlist, or kill-switch it entirely by editing that JSON file — zero code changes, zero redeploy (`writeProviderConfigFile()` is provided for a future admin UI to manage it). Credential and base-URL *values* are still read from `process.env` **at call time only** — mirroring the `process.env.X ?? default` convention in `src/lib/session.ts` / `src/services/settings/securityCheck.service.ts` — and are never persisted to the config file or returned to the browser. A provider with no configured env vars (or an explicit `"enabled": false` in the config file) reports `enabled: false`, and `callExternal` rejects calls to it before any policy/network step
+- **`externalGateway.ts`** — `callExternal<T>()`: looks up the provider → policy-validates the resolved endpoint (SSRF/protocol/host/path) → `resolveRoutingTarget()` picks a candidate (routing strategy) → executes via `fetch` + `AbortController` with timeout and exponential-backoff retry → logs every attempt (redacted) → returns the typed `GatewayResult<T>`
+
+### Why Gateway Records Don't Use the `AuditEvent` Table
+Gateway calls are high-volume *operational* telemetry (every outbound HTTP attempt, including retries), not human-readable *user-audit* events like login/logout/upload that the admin UI's audit trail surfaces. Writing every gateway attempt into `AuditEvent` would both pollute that admin-facing trail and require a Prisma migration. Instead, `gatewayLogger.ts` appends redacted JSON-Lines records to `data/gateway-audit.jsonl`, mirroring the existing local-file convention for operational/cache data (`storage-settings.json`, `.cloud-cache-meta.json`) — reversible, schema-free, and keeps the user audit trail clean.
+
+### Security Model (SSRF & Secret Protection)
+- **Protocol allowlist** — `https` required outside local development; `http`/`file`/`ftp`/`javascript`/`data` always rejected
+- **Host allowlist** — only hosts explicitly registered for a provider may be called; arbitrary hostnames are rejected with `errorCategory: 'policy_rejected'`
+- **SSRF protection** — private/internal IP ranges and `localhost` are blocked in production (the registry's allowlisted hosts are the only exception, and only when explicitly configured for local dev)
+- **Path/query sanitization** — request paths are validated against the provider's expected pattern before being appended to the allowlisted base URL; raw user-supplied URLs are never dereferenced
+- **Secrets never reach the frontend** — the gateway lives entirely under `src/server/`, is imported only from server-side code (API routes / services), reads credentials from `process.env` per call, and `redact()` masks every secret-shaped field before it can be logged or returned in an error message
+
+### Retry, Timeout & Observability
+- Defaults: **10000ms timeout**, **2 retries** with exponential backoff; only `408/429/500/502/503/504` are retried, `400/401/403/404/409/422` fail immediately
+- Every attempt is logged with: `requestId`, `correlationId`, `userId`, `provider`, `operation`, resolved endpoint, method, start/end timestamps, `durationMs`, HTTP `status`, `retryCount`, `errorCategory`, and a redacted `error` message
+- `requestId`/`correlationId`/`idempotencyKey` are present on every request and result — laying the groundwork for future load-balanced/multi-instance deployment (stateless handling, shared config, idempotent retries) without committing to a specific load-balancer architecture today
+- `routingStrategy` currently supports only `'single'` (the first registered candidate is used); the type contract already includes `round_robin | weighted_round_robin | failover | least_error_rate` so future routing strategies are additive, not breaking changes
+
+### Current Limitations (Foundation Scope)
+- **No live providers are registered.** `listRegisteredProviders()` returns an empty/disabled set until a future feature configures the relevant `process.env` variables — by design, so this closure doesn't over-claim a working Jira/Slack/cloud integration that doesn't exist
+- **Existing cloud-storage SDK calls are not yet migrated onto the gateway** — `s3Provider.ts`/`azureProvider.ts`/`gcpProvider.ts` continue to use their native SDKs directly; migrating them is a future hardening task, not part of this foundation
+- Only the `single` routing strategy is implemented; `round_robin`/`weighted_round_robin`/`failover`/`least_error_rate` are typed but not yet implemented
+
+### Tests
+Covered by `gateway.test.ts` (see `product/TEST_CASES.md`, `TC-GW-01` onward) — endpoint-policy allow/reject decisions (including SSRF cases), retry/backoff behavior, redaction, and an end-to-end `callExternal` happy path against a mocked `fetch`.
 
 ---
 
@@ -1048,6 +1291,33 @@ Jira API response → Jira API adapter → Normalised JiraIssue[] → Existing m
 
 ### Future Jira Events (Planned)
 `JIRA_CONNECTION_TEST_STARTED | JIRA_CONNECTION_TEST_SUCCESS | JIRA_CONNECTION_TEST_FAILED | JIRA_SYNC_STARTED | JIRA_SYNC_SUCCESS | JIRA_SYNC_FAILED | JIRA_FIELD_MAPPING_UPDATED | JIRA_TICKET_SUGGESTION_CREATED | JIRA_TICKET_SUGGESTION_APPROVED | JIRA_TICKET_SUGGESTION_REJECTED | JIRA_TICKET_CREATE_STARTED | JIRA_TICKET_CREATE_SUCCESS | JIRA_TICKET_CREATE_FAILED | JIRA_PERMISSION_DENIED`
+
+---
+
+## Email — Welcome Email on Member-Request Accept (Implemented — v4.5.1)
+
+**Status:** Implemented (FR-325). Sends a welcome email to the newly created user when an admin accepts a `UserAddRequest`.
+
+### Configuration
+
+Five env vars in `.env` / `.env.local`. All are optional — if `SMTP_HOST`, `SMTP_USER`, or `SMTP_PASS` is absent, `sendEmail()` logs a `console.warn` and returns without attempting a connection. The accept request still succeeds.
+
+| Env var | Default | Notes |
+|---------|---------|-------|
+| `SMTP_HOST` | _(empty — email skipped)_ | SMTP server hostname, e.g. `smtp.sendgrid.net` |
+| `SMTP_PORT` | `587` | Use `465` for TLS (sets `secure: true` automatically) |
+| `SMTP_USER` | _(empty — email skipped)_ | SMTP auth username |
+| `SMTP_PASS` | _(empty — email skipped)_ | SMTP auth password |
+| `SMTP_FROM` | `JiraDashboard <noreply@jiradashboard.local>` | Sender display name + address |
+
+### Key Files
+
+- `src/lib/email.ts` — `sendEmail(opts)` (nodemailer wrapper) + `buildWelcomeEmail(name, email, tempPassword)` (returns `{ subject, text, html }`)
+- `app/api/admin/user-add-requests/[id]/accept/route.ts` — calls `buildWelcomeEmail` + `sendEmail` after account creation (lines ~116–121), wrapped in `try/catch`
+
+### Testing Locally
+
+Point `SMTP_HOST` at a local SMTP sink such as [Mailpit](https://github.com/axllent/mailpit) (`smtp://localhost:1025`, web UI at `http://localhost:8025`) or [MailHog](https://github.com/mailhog/MailHog). No real emails will be sent.
 
 ---
 
@@ -1234,3 +1504,31 @@ Set `client_max_body_size 25M;` in the nginx site config. Without this, Jira CSV
 - `ProductTour` listens for `dc:start-tour` and sets `active = true`
 
 **Reset for development:** Run `resetTour()` from the browser console, or clear `dc_tour_dismissed` and `dc_tour_completed` from localStorage.
+
+---
+
+### In-App Notification Bell and APIs (Implemented — v4.5)
+
+**API routes:**
+- `GET /api/notifications` (`app/api/notifications/route.ts`) — authenticated; returns current user's `Notification` records, max 50, newest first. Uses `getIronSession` + `prisma.notification.findMany({ where: { recipientUserId: session.userId } })`.
+- `PATCH /api/notifications/[id]/read` (`app/api/notifications/[id]/read/route.ts`) — authenticated; validates `notification.recipientUserId === session.userId` before update; returns 404 on mismatch or missing record.
+
+**Component:** `src/components/auth/NotificationBell.tsx`
+- Rendered in `src/components/layout/AppShell.tsx` next to `UserMenu` when `showNav` is true
+- Uses `useCallback` + `setInterval` for 30-second polling; cleans up on unmount
+- Admin role also polls `GET /api/admin/user-add-requests?status=pending` for the pending request count
+- Persistent amber strip: `position: fixed`, `top: 56px` (header height), `z-index: 30`; only shown when `isAdmin && pendingRequests > 0`
+- Bell wiggle keyframe defined in `tailwind.config.ts` under `theme.extend.keyframes.wiggle` and `theme.extend.animation.wiggle`
+
+**Testing:** `src/__tests__/notifications.test.ts` — 5 tests (TC-NOTIF-01–05)
+
+---
+
+### User Management — Multi-Select Bulk Operations (Implemented — v4.5)
+
+The User Management table (`UserManagementSettings` in `app/admin/settings/page.tsx`) supports per-row checkbox selection and bulk operations:
+- `selected: Set<string>` state tracks selected user IDs
+- `useRef<HTMLInputElement>` drives the `indeterminate` property on the select-all checkbox via a `useEffect` watching `selected` and `filteredUsers`
+- Bulk action bar renders above the table when `selected.size > 0`; bulk role change calls `PATCH /api/admin/users` per user; bulk delete calls `DELETE /api/admin/users` per user with a shared `ConfirmDeleteDialog`
+- Selection clears via `useEffect([query, roleFilter])` on filter changes
+- Delete (🗑) and pause (⏸/▶) buttons are co-located with the status badge in the final "Status & Actions" column — no horizontal scroll required

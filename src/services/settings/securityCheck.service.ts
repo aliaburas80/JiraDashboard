@@ -74,7 +74,7 @@ function checkRegistrationLocked(): SecurityCheck {
     open
       ? 'ALLOW_OPEN_REGISTRATION=true — anyone can create an account.'
       : 'ALLOW_OPEN_REGISTRATION=false — registration is locked.',
-    'Set ALLOW_OPEN_REGISTRATION=false in .env when not onboarding new users.',
+    'Keep ALLOW_OPEN_REGISTRATION=false. Users are created through Admin Settings.',
   );
 }
 

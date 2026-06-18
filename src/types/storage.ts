@@ -67,7 +67,7 @@ export interface StorageProvider {
   readonly type: StorageProviderType;
 
   /** Upload a file. Returns the remote key on success. */
-  upload(key: string, content: Buffer | string): Promise<string>;
+  upload(key: string, content: Buffer | string, contentType?: string): Promise<string>;
 
   /** Download a file by key. Returns content as string. */
   download(key: string): Promise<string>;

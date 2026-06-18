@@ -603,3 +603,84 @@ Where `weightedAvg` weights each entry by its `issues` count. Falls back to `met
 ## Current Code Alignment — 2026-06-06
 
 Metric algorithms still compute from normalised Jira export rows, but the latest computed `DashboardMetrics` payload is now persisted server-side to `data/latest-metrics.json` after upload/merge. Analytics pages load through `loadMetricsWithSource()`, which attempts bucket-backed `/api/metrics/latest` first and then browser `localStorage` fallback. Algorithm output shape remains unchanged.
+
+---
+
+## v4.6 — Delivery Forecast and Roadmap Algorithms (2026-06-10)
+
+### Epic Delivery Forecast (`forecastEpic`)
+
+**Input:** `EpicSummary` (from `computePortfolioSummary()`), `avgThroughputPerSprint: number`
+
+**Steps:**
+1. If `epic.progress >= 100` → return `forecastLabel: 'Complete'`, `confidence: 'high'`, `weeksRemaining: 0`
+2. If `avgThroughputPerSprint <= 0` or `remaining <= 0` → return `forecastLabel: 'Insufficient data'`, `confidence: 'low'`, `sprintsRemaining: null`
+3. `remaining = epic.issues - epic.completedIssues`
+4. `sprintsRemaining = remaining / avgThroughputPerSprint` (float)
+5. `weeksRemaining = ceil(sprintsRemaining × 2)` — assumes 2-week sprint cadence
+6. `confidence`: `'high'` if `sprintsRemaining < 2`, `'medium'` if `< 5`, `'low'` if `>= 5`
+7. `forecastLabel`: `'Within 2 weeks'` if `weeksRemaining <= 2`; `'~N weeks'` if `<= 6`; `'~N months'` if `> 6` (N = `round(weeksRemaining / 4)`)
+
+**Output:** `EpicForecast` extends `EpicSummary` with `remainingIssues`, `sprintsRemaining`, `weeksRemaining`, `forecastLabel`, `confidence`
+
+**Implementation:** `app/roadmap/page.tsx` → `forecastEpic()`
+
+---
+
+### Portfolio Average Throughput
+
+**Input:** `metrics.sprint.sprints: SprintData[]`
+
+**Steps:**
+1. Filter to sprints where `typeof s.completedCount === 'number' && s.completedCount > 0`
+2. `avgThroughput = sum(completedCount) / count(validSprints)`
+3. If `validSprints.length === 0` → `avgThroughput = 0`
+
+**Output:** `number` — average items completed per sprint
+
+---
+
+### Delivery Forecast Status (`computeForecast`)
+
+**Input:** `DashboardMetrics`
+
+**Steps:**
+1. Compute `avgThroughput` (see above)
+2. `total = metrics.summary?.totalIssues ?? 0`
+3. `done = metrics.summary?.completedIssues ?? 0`
+4. `remaining = max(0, total - done)`
+5. `sprintsRemaining = avgThroughput > 0 ? remaining / avgThroughput : null`
+6. **Status determination:**
+   - `done >= total` → `complete`
+   - `avgThroughput === 0` → `insufficient_data`
+   - `sprintsRemaining <= 6` → `on_track`
+   - `sprintsRemaining <= 12` → `at_risk`
+   - else → `off_track`
+7. **Confidence:** `'high'` if `sprintsRemaining < 3`; `'medium'` if `< 6`; `'low'` if `>= 6`; `'none'` if null
+8. **Adjustments:** generated conditionally — scope reduction advice if `off_track`; blocker escalation if `blockedCount > 0`; capacity increase advice if `at_risk`; throughput note if confidence is low
+
+**Output:** `ForecastResult` with `status`, `avgThroughput`, `sprintsRemaining`, `weeksRemaining`, `confidence`, `adjustments`, `sprintPoints`, `blockedCount`, `criticalCount`
+
+**Implementation:** `app/forecast/page.tsx` → `computeForecast()`
+
+---
+
+### Retro Insights Engine (`generateInsights`)
+
+**Input:** `RetroForm`
+
+**Rules (evaluated independently; all matching rules produce a suggestion):**
+| Condition | Suggestion |
+|---|---|
+| `goalMet === 'no'` | Review capacity planning and scope commitment |
+| `goalMet === 'partial'` | Identify slippage stories; prioritise them first next sprint |
+| `blockers.filter(b => b.text.trim()).length > 0` | Escalate unresolved blockers to next planning session |
+| `actions with priority === 'high' and text` | N high-priority action items need immediate follow-up |
+| `actions with text and no owner` | Assign owners to ensure accountability |
+| `actions with text and no dueDate` | Set deadlines to track completion |
+| `actions.filter(a => a.text.trim()).length === 0` | Consider whether improvement opportunities were missed |
+| `wentWell.filter(w => w.text.trim()).length > 0` | Reinforce what went well in the next sprint |
+
+**Output:** `string[]` — zero or more actionable suggestion strings
+
+**Implementation:** `app/retro/page.tsx` → `generateInsights()`

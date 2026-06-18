@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { hasLocalData, clearLocalData, DC_FIXED_KEYS } from '@/lib/clearLocalData';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 
 export default function ClearLocalDataPanel() {
   const router = useRouter();
@@ -34,13 +35,13 @@ export default function ClearLocalDataPanel() {
 
         {cleared ? (
           <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-800 font-semibold">
-            <span className="text-lg">✅</span>
+            <SvgIcon name="checkCircle" size={18} />
             Local data cleared. Redirecting to upload page…
           </div>
         ) : detected ? (
           <div className="space-y-3">
             <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-              <span className="text-lg shrink-0">⚠️</span>
+              <SvgIcon name="warning" size={18} className="shrink-0" />
               <p className="leading-snug">
                 <strong>Stored Delivery Clarity data was found in this browser.</strong><br />
                 This includes uploaded metrics, saved filters, preferences, and session data.
@@ -51,12 +52,12 @@ export default function ClearLocalDataPanel() {
               onClick={() => setConfirming(true)}
               className="btn-danger"
             >
-              <span>🗑️</span> Clear Local Data
+              <SvgIcon name="delete" size={14} /> Clear Local Data
             </button>
           </div>
         ) : (
           <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-500">
-            <span className="text-lg">✓</span>
+            <SvgIcon name="check" size={18} />
             No Delivery Clarity data found in this browser.
           </div>
         )}

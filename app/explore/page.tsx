@@ -6,6 +6,7 @@ import { markStepDone } from '@/lib/onboarding';
 import dynamic from 'next/dynamic';
 import AppShell from '@/components/layout/AppShell';
 import LoadingState from '@/components/ui/LoadingState';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import RelationStatsCards from '@/components/explore/RelationStatsCards';
 import RelationInsightPanel from '@/components/explore/RelationInsightPanel';
 import RelationDetailsTable from '@/components/explore/RelationDetailsTable';
@@ -303,7 +304,7 @@ export default function ExplorePage() {
         {/* ── Empty state ── */}
         {!graph && !loading && !error && metrics && (
           <div className="flex flex-col items-center justify-center py-20 text-center text-slate-400">
-            <span className="text-5xl mb-4">🔍</span>
+            <SvgIcon name="search" size={48} className="mb-4 text-slate-400" />
             <p className="text-base font-bold text-slate-600 mb-2">Enter an issue key to begin</p>
             <p className="text-sm max-w-sm">Type any Epic, Story, Task, Bug, or Sub-task key from your Jira export. The visual map will show you its complete delivery structure.</p>
           </div>

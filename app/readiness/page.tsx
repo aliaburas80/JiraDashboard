@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import ReleaseReadinessCard from '@/components/readiness/ReleaseReadinessCard';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { calculateReleaseReadiness } from '@/services/metrics/releaseReadiness.service';
 import type { ReleaseReadinessSummary } from '@/types/releaseReadiness';
@@ -44,11 +45,11 @@ export default function ReadinessPage() {
 
         {!summary?.hasVersionData ? (
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
-            <span className="text-5xl mb-4 block">🚀</span>
+            <SvgIcon name="release" size={48} className="mx-auto mb-4 text-green-700" />
             <p className="text-base font-black text-slate-700 mb-2">No Fix Version data found</p>
             <p className="text-sm text-slate-500 mb-6 max-w-md mx-auto">
               Release readiness requires the <strong>Fix Version/s</strong> column in your Jira export.
-              In Jira: Columns → add "Fix Version" then re-export.
+              In Jira: Columns → add &quot;Fix Version&quot; then re-export.
             </p>
             <button type="button" onClick={() => router.push('/')}
               className="btn-primary px-5 py-2.5">
@@ -64,15 +65,15 @@ export default function ReadinessPage() {
                 <p className="text-xl font-black text-slate-900">{summary.totalVersions}</p>
               </div>
               <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-2.5 shadow-sm text-center">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-green-600">✅ Go</p>
+                <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-green-600"><SvgIcon name="checkCircle" size={11} /> Go</p>
                 <p className="text-xl font-black text-green-700">{summary.goCount}</p>
               </div>
               <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 shadow-sm text-center">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">⚠️ Conditional</p>
+                <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-600"><SvgIcon name="warning" size={11} /> Conditional</p>
                 <p className="text-xl font-black text-amber-700">{summary.conditionalCount}</p>
               </div>
               <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-2.5 shadow-sm text-center">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-red-600">🚫 No-Go</p>
+                <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-red-600"><SvgIcon name="priorityBlocker" size={11} /> No-Go</p>
                 <p className="text-xl font-black text-red-700">{summary.noGoCount}</p>
               </div>
             </div>
@@ -88,9 +89,9 @@ export default function ReadinessPage() {
             <div className="mt-6 bg-white border border-slate-200 rounded-xl p-4 text-xs text-slate-500">
               <p className="font-bold text-slate-700 mb-2">Verdict Criteria</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <div><span className="font-bold text-green-700">✅ Go:</span> ≥90% complete, no blockers, no open bugs</div>
-                <div><span className="font-bold text-amber-700">⚠️ Conditional Go:</span> ≥70% complete, no blockers, some open bugs or critical items</div>
-                <div><span className="font-bold text-red-700">🚫 No-Go:</span> Blockers present, or completion &lt;70%</div>
+                <div><span className="inline-flex items-center gap-1 font-bold text-green-700"><SvgIcon name="checkCircle" size={12} /> Go:</span> ≥90% complete, no blockers, no open bugs</div>
+                <div><span className="inline-flex items-center gap-1 font-bold text-amber-700"><SvgIcon name="warning" size={12} /> Conditional Go:</span> ≥70% complete, no blockers, some open bugs or critical items</div>
+                <div><span className="inline-flex items-center gap-1 font-bold text-red-700"><SvgIcon name="priorityBlocker" size={12} /> No-Go:</span> Blockers present, or completion &lt;70%</div>
               </div>
             </div>
           </>

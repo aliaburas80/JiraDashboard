@@ -97,25 +97,25 @@ export async function listCloudBackups() {
 export const PROVIDER_INFO: Record<StorageProviderType, { label: string; icon: string; description: string; installCmd: string }> = {
   local: {
     label:       'Local Storage',
-    icon:        '💾',
+    icon:        'database',
     description: 'Saves backups to the data/cloud-backups/ directory on the server. No cloud credentials required.',
     installCmd:  '',
   },
   s3: {
     label:       'Amazon S3',
-    icon:        '☁️',
+    icon:        'cloud',
     description: 'AWS S3 or any S3-compatible storage (MinIO, Backblaze B2, Cloudflare R2).',
     installCmd:  'npm install @aws-sdk/client-s3',
   },
   azure: {
     label:       'Azure Blob Storage',
-    icon:        '🔷',
+    icon:        'cloudUpload',
     description: 'Microsoft Azure Blob Storage container.',
     installCmd:  'npm install @azure/storage-blob',
   },
   gcp: {
     label:       'Google Cloud Storage',
-    icon:        '🌐',
+    icon:        'globe',
     description: 'Google Cloud Storage bucket.',
     installCmd:  'npm install @google-cloud/storage',
   },

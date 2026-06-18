@@ -37,14 +37,14 @@ export class S3StorageProvider implements StorageProvider {
     return this.config.prefix ? `${this.config.prefix.replace(/\/$/, '')}/${key}` : key;
   }
 
-  async upload(key: string, content: Buffer | string): Promise<string> {
+  async upload(key: string, content: Buffer | string, contentType = 'application/json'): Promise<string> {
     const { client, PutObjectCommand } = await this.getClient();
     const remoteKey = this.prefixed(key);
     await client.send(new PutObjectCommand({
       Bucket: this.config.bucket,
       Key:    remoteKey,
       Body:   typeof content === 'string' ? Buffer.from(content, 'utf-8') : content,
-      ContentType: 'application/json',
+      ContentType: contentType,
     }));
     return remoteKey;
   }

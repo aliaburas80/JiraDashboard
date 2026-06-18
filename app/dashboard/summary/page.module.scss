@@ -1,0 +1,139 @@
+// ─── Dashboard Summary page styles ────────────────────────────────────────────
+// ── Page wrapper ───────────────────────────────────────────────────────────────
+.pageBody {
+  padding: 0 var(--space-7, 28px) var(--space-12, 48px);
+}
+
+// ── KPI card grid ──────────────────────────────────────────────────────────────
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: var(--space-5, 20px);
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ── Alert strip ────────────────────────────────────────────────────────────────
+.alertStrip {
+  display: flex;
+  gap: var(--space-2, 8px);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5, 20px);
+}
+
+.alertChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm, 7px);
+  font-size: var(--text-sm, 11px);
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.alertChipBlocked {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger-strong);
+}
+
+.alertChipOverdue {
+  background: var(--color-warning-soft);
+  border-color: var(--color-warning-border);
+  color: var(--color-warning);
+}
+
+.alertChipOrphan {
+  background: var(--color-info-soft);
+  border-color: rgb(186 230 253 / 100%);
+  color: #0369a1;
+}
+
+// ── Smart Actions list ─────────────────────────────────────────────────────────
+.actionList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.actionRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-top: var(--space-3, 12px);
+  border-top: 1px solid var(--color-subtle);
+  margin-top: var(--space-3, 12px);
+
+  &:first-child {
+    padding-top: 0;
+    border-top: none;
+    margin-top: 0;
+  }
+}
+
+.actionIcon {
+  font-size: var(--text-xl, 16px);
+  flex-shrink: 0;
+}
+
+.actionBody {
+  flex: 1;
+  min-width: 0;
+}
+
+// --action-color is set via CSS custom property; value is data-driven (action type).
+.actionTitle {
+  font-size: var(--text-base, 12px);
+  font-weight: 600;
+  margin: 0 0 2px;
+  color: var(--action-color, var(--color-text-primary));
+}
+
+.actionDetail {
+  font-size: var(--text-xs, 10px);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+// --owner-bg and --owner-color are data-driven (action type).
+.actionOwner {
+  font-size: var(--text-2xs, 9px);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs, 3px);
+  flex-shrink: 0;
+  background: var(--owner-bg, var(--color-subtle));
+  color: var(--owner-color, var(--color-text-secondary));
+}
+
+// ── Completion snapshot grid ───────────────────────────────────────────────────
+.snapshotGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4, 16px);
+}
+
+.snapshotLabel {
+  font-size: var(--text-2xs, 9px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.snapshotValue {
+  font-size: var(--text-2xl, 20px);
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+  margin: 0;
+}

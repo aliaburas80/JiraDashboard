@@ -4,7 +4,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AppShell from '@/components/layout/AppShell';
+import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import styles from './page.module.scss';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -42,11 +43,17 @@ function uptime(s: number): string {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function KpiCard({ label, value, sub, color = '#2563eb' }: { label: string; value: string | number; sub?: string; color?: string }) {
+type Tone = 'blue' | 'green' | 'violet' | 'cyan' | 'amber' | 'red' | 'slate';
+
+function toneClass(tone: Tone): string {
+  return styles[`tone${tone[0].toUpperCase()}${tone.slice(1)}`];
+}
+
+function KpiCard({ label, value, sub, tone = 'blue' }: { label: string; value: string | number; sub?: string; tone?: Tone }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
+    <div className={`bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm ${toneClass(tone)}`}>
       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
-      <p className="text-2xl font-black leading-none" style={{ color }}>{value}</p>
+      <p className={`${styles.kpiValue} text-2xl font-black leading-none`}>{value}</p>
       {sub && <p className="text-[10px] text-slate-400 mt-1 font-semibold">{sub}</p>}
     </div>
   );
@@ -107,56 +114,55 @@ export default function DiagnosticsPage() {
   }, [router, refresh]);
 
   if (loading) return (
-    <AppShell showNav>
-      <div className="flex items-center justify-center h-64 text-slate-400 animate-pulse text-sm">Loading diagnostics…</div>
-    </AppShell>
+    <div className="flex items-center justify-center h-64 text-slate-400 animate-pulse text-sm">Loading diagnostics…</div>
   );
 
   if (error || !data) return (
-    <AppShell showNav>
-      <div className="max-w-4xl mx-auto py-8">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-700">{error || 'No data available.'}</div>
-      </div>
-    </AppShell>
+    <div className="max-w-4xl mx-auto py-8">
+      <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-700">{error || 'No data available.'}</div>
+    </div>
   );
 
-  const opsColor = data.opsScore >= 80 ? '#16a34a' : data.opsScore >= 60 ? '#f59e0b' : '#dc2626';
+  const opsTone: Tone = data.opsScore >= 80 ? 'green' : data.opsScore >= 60 ? 'amber' : 'red';
   const opsBand  = data.opsScore >= 80 ? 'Healthy'  : data.opsScore >= 60 ? 'Degraded' : 'At Risk';
   const envOkCount = Object.values(data.env).filter(Boolean).length;
   const envTotal   = Object.keys(data.env).length;
+  const diagnosticsStats = [
+    { icon: 'statusInfo', label: 'Ops Score', value: String(data.opsScore), note: opsBand, tone: data.opsScore >= 80 ? 'bg-green-50 text-green-700' : data.opsScore >= 60 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700' },
+    { icon: 'checkCircle', label: 'Env Checks', value: `${envOkCount}/${envTotal}`, note: 'Configuration checks' },
+    { icon: 'upload', label: 'Imports', value: String(data.imports.total), note: `${data.imports.successRate}% success` },
+    { icon: 'clipboard', label: 'Audit Events', value: String(data.auditEvents.total), note: 'Recorded actions' },
+  ];
 
   return (
-    <AppShell showNav>
-      <div className="max-w-5xl mx-auto">
-
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">System Diagnostics</h1>
-            <p className="text-sm text-slate-500 mt-1">Live system health snapshot — admin only. Generated {ago(data.generatedAt)}.</p>
-          </div>
-          <div className="flex items-center gap-3">
+    <AdminConsoleLayout
+      title="System Diagnostics"
+        description={`Live system health snapshot. Generated ${ago(data.generatedAt)}.`}
+        stats={diagnosticsStats}
+        statusLabel={opsBand}
+        actions={
+          <>
             <button type="button" onClick={() => setRefresh(r => r + 1)}
-              className="btn-secondary px-4 py-2 text-xs gap-1.5">
+              className="inline-flex h-[38px] items-center justify-center gap-1.5 rounded-[9px] border border-slate-300 bg-white px-4 text-xs font-extrabold text-slate-700 transition hover:bg-slate-50">
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current"><path d="M17.6 6.4A8 8 0 0 0 4 12H2a10 10 0 0 1 17-7.1V3h2v6h-6V7h2.6ZM20 12h2a10 10 0 0 1-17 7.1V21H3v-6h6v2H6.4A8 8 0 0 0 20 12Z" /></svg>
               Refresh
             </button>
-            <a href="/admin/security" className="btn-primary px-4 py-2 text-xs gap-1.5">
+            <a href="/admin/security" className="inline-flex h-[38px] items-center justify-center rounded-[9px] bg-blue-600 px-4 text-xs font-extrabold text-white transition hover:bg-blue-700">
               Security Report →
             </a>
-          </div>
-        </div>
+          </>
+        }
+      >
 
         {/* Ops score banner */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-6 flex items-center gap-5 flex-wrap">
+        <div className={`${styles.opsBanner} ${toneClass(opsTone)}`}>
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full border-4 flex flex-col items-center justify-center shrink-0"
-              style={{ borderColor: opsColor }}>
-              <span className="text-xl font-black leading-none" style={{ color: opsColor }}>{data.opsScore}</span>
+            <div className={styles.opsCircle}>
+              <span className={`${styles.opsCircleValue} text-xl font-black leading-none`}>{data.opsScore}</span>
               <span className="text-[9px] text-slate-400 font-semibold">/100</span>
             </div>
             <div>
-              <p className="text-lg font-black" style={{ color: opsColor }}>{opsBand}</p>
+              <p className={styles.opsStatus + ' text-lg font-black'}>{opsBand}</p>
               <p className="text-xs text-slate-500">Operational health · {envOkCount}/{envTotal} env checks passed</p>
             </div>
           </div>
@@ -187,9 +193,9 @@ export default function DiagnosticsPage() {
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Database Overview</h2>
             <div className="grid grid-cols-2 gap-3">
               <KpiCard label="Total Users"    value={data.users.total}    sub={`${data.users.admins} admin${data.users.admins !== 1 ? 's' : ''}`} />
-              <KpiCard label="Active Users"   value={data.users.active}   sub="isActive = true"    color="#16a34a" />
-              <KpiCard label="Sessions"       value={data.sessions.total} sub={`${data.sessions.active} active`}   color="#7c3aed" />
-              <KpiCard label="Snapshots"      value={data.snapshots.total} sub="saved reports"     color="#0891b2" />
+              <KpiCard label="Active Users"   value={data.users.active}   sub="isActive = true"    tone="green" />
+              <KpiCard label="Sessions"       value={data.sessions.total} sub={`${data.sessions.active} active`}   tone="violet" />
+              <KpiCard label="Snapshots"      value={data.snapshots.total} sub="saved reports"     tone="cyan" />
             </div>
             <div className="mt-4 border-t border-slate-100 pt-3 space-y-1.5">
               <div className="flex justify-between text-xs">
@@ -207,10 +213,10 @@ export default function DiagnosticsPage() {
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Import Health</h2>
             <div className="grid grid-cols-2 gap-3">
-              <KpiCard label="Success Rate"    value={`${data.imports.successRate}%`}   sub={`${data.imports.successful} of ${data.imports.total}`} color={data.imports.successRate >= 90 ? '#16a34a' : data.imports.successRate >= 70 ? '#f59e0b' : '#dc2626'} />
-              <KpiCard label="Failed Imports"  value={data.imports.failed}               sub="errors + validation" color={data.imports.failed > 0 ? '#dc2626' : '#94a3b8'} />
-              <KpiCard label="Avg Health Score" value={`${data.imports.avgHealthScore}`} sub="on successful imports" color="#2563eb" />
-              <KpiCard label="Avg Processing"  value={`${data.imports.avgProcessingMs}ms`} sub="per upload" color="#f59e0b" />
+              <KpiCard label="Success Rate"    value={`${data.imports.successRate}%`}   sub={`${data.imports.successful} of ${data.imports.total}`} tone={data.imports.successRate >= 90 ? 'green' : data.imports.successRate >= 70 ? 'amber' : 'red'} />
+              <KpiCard label="Failed Imports"  value={data.imports.failed}               sub="errors + validation" tone={data.imports.failed > 0 ? 'red' : 'slate'} />
+              <KpiCard label="Avg Health Score" value={`${data.imports.avgHealthScore}`} sub="on successful imports" tone="blue" />
+              <KpiCard label="Avg Processing"  value={`${data.imports.avgProcessingMs}ms`} sub="per upload" tone="amber" />
             </div>
             {data.imports.lastAt && (
               <div className="mt-4 border-t border-slate-100 pt-3 space-y-1.5">
@@ -299,7 +305,6 @@ export default function DiagnosticsPage() {
           ))}
         </div>
 
-      </div>
-    </AppShell>
+    </AdminConsoleLayout>
   );
 }

@@ -4,27 +4,40 @@ import type { SprintThroughputSummary, SprintThroughput, SprintGoalOutcome, Tren
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function goalColor(outcome: SprintGoalOutcome): string {
+function goalChip(outcome: SprintGoalOutcome): string {
   switch (outcome) {
-    case 'Met':           return 'bg-green-100 text-green-800 border-green-200';
-    case 'Partially Met': return 'bg-amber-100 text-amber-800 border-amber-200';
-    case 'Missed':        return 'bg-red-100 text-red-800 border-red-200';
-    case 'At Risk':       return 'bg-orange-100 text-orange-800 border-orange-200';
-    default:              return 'bg-slate-100 text-slate-600 border-slate-200';
+    case 'Met':           return 'chip c-gr';
+    case 'Partially Met': return 'chip c-am';
+    case 'Missed':        return 'chip c-rd';
+    case 'At Risk':       return 'chip c-am';
+    default:              return 'chip c-nt';
   }
 }
 
-function completionColor(pct: number): string {
-  if (pct >= 90) return 'bg-green-500';
-  if (pct >= 60) return 'bg-amber-400';
-  return 'bg-red-500';
+function completionBarColor(pct: number): string {
+  if (pct >= 100) return 'var(--dc-green, #22C55E)';
+  if (pct >= 60)  return 'var(--dc-amber, #F59E0B)';
+  if (pct > 0)    return 'var(--dc-acc, #E85D12)';
+  return 'var(--dc-s4, #323232)';
 }
 
-function trendIcon(dir: TrendDirection): { icon: string; color: string } {
+function completionTextColor(pct: number): string {
+  if (pct === 0)   return 'var(--dc-red, #F87171)';
+  if (pct >= 100)  return 'var(--dc-green, #22C55E)';
+  return 'var(--dc-p1, #F2F2F2)';
+}
+
+function midSprintColor(pct: number): string {
+  if (pct === 0)   return 'var(--dc-red, #F87171)';
+  if (pct >= 50)   return 'var(--dc-green, #22C55E)';
+  return 'var(--dc-amber, #F59E0B)';
+}
+
+function trendChip(dir: TrendDirection): { label: string; cls: string } {
   switch (dir) {
-    case 'Improving': return { icon: '↑', color: 'text-green-600' };
-    case 'Declining': return { icon: '↓', color: 'text-red-600' };
-    default:          return { icon: '→', color: 'text-slate-500' };
+    case 'Improving': return { label: '↑ Improving', cls: 'chip c-gr' };
+    case 'Declining': return { label: '↓ Declining', cls: 'chip c-am' };
+    default:          return { label: '→ Stable',    cls: 'chip c-nt' };
   }
 }
 
@@ -32,10 +45,11 @@ function trendIcon(dir: TrendDirection): { icon: string; color: string } {
 
 function HeadlineCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl px-5 py-4 shadow-sm flex-1 min-w-[140px]">
-      <p className="text-[10px] font-700 uppercase tracking-widest text-slate-400 mb-1">{label}</p>
-      <p className="text-2xl font-black leading-none" style={{ color }}>{value}</p>
-      {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
+    <div className="rounded-xl px-5 py-4 shadow-sm flex-1 min-w-[140px]"
+      style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+      <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--dc-p3, #505050)' }}>{label}</p>
+      <p className="text-2xl font-black leading-none" style={{ color, fontFamily: 'var(--font-mono, monospace)' }}>{value}</p>
+      {sub && <p className="text-xs mt-1" style={{ color: 'var(--dc-p2, #909090)' }}>{sub}</p>}
     </div>
   );
 }
@@ -43,36 +57,38 @@ function HeadlineCard({ label, value, sub, color }: { label: string; value: stri
 // ── Sprint row ────────────────────────────────────────────────────────────────
 
 function SprintRow({ sprint }: { sprint: SprintThroughput }) {
-  const barColor = completionColor(sprint.completionPct);
+  const met = sprint.completionPct >= 100 || sprint.goalOutcome === 'Met';
+  const nameColor = met ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p2, #909090)';
   return (
-    <tr className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+    <tr style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
+      className="transition-colors hover:[&>td]:bg-[rgba(255,255,255,0.025)]">
       {/* Sprint name */}
-      <td className="py-2.5 pl-4 pr-2 text-xs font-semibold text-slate-800 max-w-[180px]">
+      <td className="py-2.5 pl-4 pr-2 text-xs font-semibold max-w-[180px]" style={{ color: nameColor }}>
         <span className="block truncate" title={sprint.sprintName}>{sprint.sprintName}</span>
         {sprint.team && sprint.team !== 'Unknown' && (
-          <span className="text-[10px] text-slate-400">{sprint.team}</span>
+          <span className="text-[10px]" style={{ color: 'var(--dc-p3, #505050)' }}>{sprint.team}</span>
         )}
       </td>
 
       {/* Committed / Done */}
-      <td className="py-2.5 px-2 text-center text-xs text-slate-700">
-        <span className="font-bold text-slate-900">{sprint.completedCount}</span>
-        <span className="text-slate-400"> / {sprint.committedCount}</span>
+      <td className="py-2.5 px-2 text-center text-xs">
+        <span className="font-bold" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{sprint.completedCount}</span>
+        <span style={{ color: 'var(--dc-p3, #505050)' }}> / {sprint.committedCount}</span>
       </td>
 
       {/* Points */}
-      <td className="py-2.5 px-2 text-center text-xs text-slate-700">
-        <span className="font-bold text-slate-900">{sprint.completedPoints}</span>
-        <span className="text-slate-400"> / {sprint.committedPoints}</span>
+      <td className="py-2.5 px-2 text-center text-xs">
+        <span className="font-bold" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{sprint.completedPoints}</span>
+        <span style={{ color: 'var(--dc-p3, #505050)' }}> / {sprint.committedPoints}</span>
       </td>
 
       {/* Completion bar */}
       <td className="py-2.5 px-2 min-w-[110px]">
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-            <div className={`h-full rounded-full ${barColor}`} style={{ width: `${sprint.completionPct}%` }} />
+          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--dc-s3, #282828)' }}>
+            <div className="h-full rounded-full" style={{ width: `${sprint.completionPct}%`, background: completionBarColor(sprint.completionPct) }} />
           </div>
-          <span className="text-[11px] font-bold text-slate-700 w-8 text-right shrink-0">
+          <span className="text-[11px] font-bold w-8 text-right shrink-0" style={{ color: completionTextColor(sprint.completionPct) }}>
             {sprint.completionPct}%
           </span>
         </div>
@@ -80,14 +96,14 @@ function SprintRow({ sprint }: { sprint: SprintThroughput }) {
 
       {/* Mid-sprint % */}
       <td className="py-2.5 px-2 text-center">
-        <span className={`text-xs font-bold ${sprint.midSprintPct >= 50 ? 'text-green-700' : sprint.midSprintPct >= 30 ? 'text-amber-700' : 'text-red-600'}`}>
+        <span className="text-xs font-bold" style={{ color: midSprintColor(sprint.midSprintPct) }}>
           {sprint.sprintMidpoint ? `${sprint.midSprintPct}%` : '—'}
         </span>
       </td>
 
       {/* Goal outcome */}
       <td className="py-2.5 px-2">
-        <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border ${goalColor(sprint.goalOutcome)}`}>
+        <span className={goalChip(sprint.goalOutcome)} style={{ fontSize: 10 }}>
           {sprint.goalOutcome}
         </span>
       </td>
@@ -95,17 +111,17 @@ function SprintRow({ sprint }: { sprint: SprintThroughput }) {
       {/* Blocked / Carryover */}
       <td className="py-2.5 px-2 text-center text-xs">
         {sprint.blockedCount > 0 && (
-          <span className="inline-block bg-red-50 text-red-700 font-bold px-1.5 rounded text-[10px] mr-1">
+          <span className="chip c-rd font-bold mr-1" style={{ fontSize: 10 }}>
             {sprint.blockedCount}B
           </span>
         )}
         {sprint.carryoverCount > 0 && (
-          <span className="inline-block bg-amber-50 text-amber-700 font-bold px-1.5 rounded text-[10px]">
+          <span className="chip c-am font-bold" style={{ fontSize: 10 }}>
             {sprint.carryoverCount}C
           </span>
         )}
         {sprint.blockedCount === 0 && sprint.carryoverCount === 0 && (
-          <span className="text-slate-300">—</span>
+          <span style={{ color: 'var(--dc-p3, #505050)' }}>—</span>
         )}
       </td>
     </tr>
@@ -119,27 +135,34 @@ interface Props { summary: SprintThroughputSummary }
 export default function SprintThroughputPanel({ summary }: Props) {
   if (!summary.totalSprints) {
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 text-sm text-slate-400 italic shadow-sm">
+      <div className="rounded-2xl p-6 text-sm italic shadow-sm"
+        style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p3, #505050)' }}>
         No sprint data detected. Add a <strong>Sprint</strong>, <strong>Sprint Start</strong>, and <strong>Sprint End</strong> column to your Jira export to enable sprint throughput analytics.
       </div>
     );
   }
 
-  const trend = trendIcon(summary.trendDirection);
+  const trend = trendChip(summary.trendDirection);
+
+  const completionColor = summary.averageCompletionPct === 0 ? 'var(--dc-red, #F87171)'
+    : summary.averageCompletionPct >= 75 ? 'var(--dc-amber, #F59E0B)'
+    : 'var(--dc-acc2, #FF8A4C)';
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+    <div className="rounded-2xl shadow-sm overflow-hidden"
+      style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
+        style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', background: 'var(--dc-s1, #141414)' }}>
         <div>
-          <h3 className="text-sm font-black uppercase tracking-wider text-slate-700">Sprint Throughput</h3>
-          <p className="text-xs text-slate-500 mt-0.5">{summary.totalSprints} sprint{summary.totalSprints !== 1 ? 's' : ''} analysed</p>
+          <h3 className="text-sm font-black uppercase tracking-wider" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Sprint Throughput</h3>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--dc-p3, #505050)' }}>{summary.totalSprints} sprint{summary.totalSprints !== 1 ? 's' : ''} analysed</p>
         </div>
-        <div className="flex items-center gap-1.5 text-xs font-bold">
-          <span className={trend.color}>{trend.icon}</span>
-          <span className={trend.color}>{summary.trendDirection}</span>
+        <div className="flex items-center gap-2">
+          <span className={trend.cls} style={{ borderRadius: 100, fontSize: 10 }}>{trend.label}</span>
           {summary.deliveryTrendValue !== 0 && (
-            <span className="text-slate-400 font-normal">
+            <span className="text-xs" style={{ color: 'var(--dc-p3, #505050)' }}>
               ({summary.deliveryTrendValue > 0 ? '+' : ''}{summary.deliveryTrendValue} issues vs prev 3 sprints)
             </span>
           )}
@@ -147,26 +170,23 @@ export default function SprintThroughputPanel({ summary }: Props) {
       </div>
 
       {/* Headline metrics */}
-      <div className="flex flex-wrap gap-3 p-4 border-b border-slate-100">
-        <HeadlineCard label="Avg Throughput" value={summary.averageThroughputCount} sub="issues / sprint" color="#2563eb" />
-        <HeadlineCard label="Avg Story Points" value={summary.averageThroughputPoints} sub="points / sprint" color="#7c3aed" />
-        <HeadlineCard label="Avg Completion" value={`${summary.averageCompletionPct}%`} sub="committed → done" color={summary.averageCompletionPct >= 80 ? '#16a34a' : summary.averageCompletionPct >= 60 ? '#d97706' : '#dc2626'} />
-        <HeadlineCard label="Avg Mid-Sprint" value={`${summary.averageMidSprintPct}%`} sub="done by midpoint" color={summary.averageMidSprintPct >= 50 ? '#16a34a' : '#d97706'} />
-        <HeadlineCard label="Delivery Confidence" value={`${summary.overallDeliveryConfidence}%`} sub="overall" color={summary.overallDeliveryConfidence >= 70 ? '#16a34a' : '#d97706'} />
+      <div className="flex flex-wrap gap-3 p-4" style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+        <HeadlineCard label="Avg Throughput"      value={summary.averageThroughputCount}         sub="issues / sprint"    color="var(--dc-acc2, #FF8A4C)" />
+        <HeadlineCard label="Avg Story Points"     value={summary.averageThroughputPoints}        sub="points / sprint"    color="var(--dc-acc2, #FF8A4C)" />
+        <HeadlineCard label="Avg Completion"       value={`${summary.averageCompletionPct}%`}     sub="committed → done"   color={completionColor} />
+        <HeadlineCard label="Avg Mid-Sprint"       value={`${summary.averageMidSprintPct}%`}      sub="done by midpoint"   color={midSprintColor(summary.averageMidSprintPct)} />
+        <HeadlineCard label="Delivery Confidence"  value={`${summary.overallDeliveryConfidence}%`} sub="overall"           color="var(--dc-acc2, #FF8A4C)" />
       </div>
 
       {/* Sprint table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-left">
-              <th className="py-2 pl-4 pr-2 text-[10px] font-800 uppercase tracking-wider text-slate-500">Sprint</th>
-              <th className="py-2 px-2 text-[10px] font-800 uppercase tracking-wider text-slate-500 text-center">Done / Committed</th>
-              <th className="py-2 px-2 text-[10px] font-800 uppercase tracking-wider text-slate-500 text-center">Points</th>
-              <th className="py-2 px-2 text-[10px] font-800 uppercase tracking-wider text-slate-500">Completion</th>
-              <th className="py-2 px-2 text-[10px] font-800 uppercase tracking-wider text-slate-500 text-center">Mid-Sprint</th>
-              <th className="py-2 px-2 text-[10px] font-800 uppercase tracking-wider text-slate-500">Goal</th>
-              <th className="py-2 px-2 text-[10px] font-800 uppercase tracking-wider text-slate-500 text-center">Risk</th>
+            <tr style={{ borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))', background: 'var(--dc-s1, #141414)' }}>
+              {['Sprint', 'Done / Committed', 'Points', 'Completion', 'Mid-Sprint', 'Goal', 'Risk'].map(h => (
+                <th key={h} className="py-2 px-2 text-left text-[10px] font-bold uppercase tracking-wider first:pl-4"
+                  style={{ color: 'var(--dc-p3, #505050)' }}>{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -179,18 +199,19 @@ export default function SprintThroughputPanel({ summary }: Props) {
 
       {/* Footer notes */}
       {(summary.endLoadedSprintCount > 0 || summary.blockedSprintCount > 0) && (
-        <div className="flex flex-wrap gap-3 px-4 py-3 border-t border-slate-100 bg-slate-50">
+        <div className="flex flex-wrap gap-3 px-4 py-3"
+          style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', background: 'var(--dc-s1, #141414)' }}>
           {summary.endLoadedSprintCount > 0 && (
-            <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 font-semibold">
+            <span className="chip c-am" style={{ borderRadius: 100, fontSize: 10 }}>
               ⚠ {summary.endLoadedSprintCount} end-loaded sprint{summary.endLoadedSprintCount !== 1 ? 's' : ''}
             </span>
           )}
           {summary.blockedSprintCount > 0 && (
-            <span className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-full px-3 py-1 font-semibold">
+            <span className="chip c-rd" style={{ borderRadius: 100, fontSize: 10 }}>
               🚫 {summary.blockedSprintCount} blocked sprint{summary.blockedSprintCount !== 1 ? 's' : ''}
             </span>
           )}
-          <span className="text-xs text-slate-400 ml-auto">B = Blocked items · C = Carryover items</span>
+          <span className="text-xs ml-auto" style={{ color: 'var(--dc-p3, #505050)' }}>B = Blocked items · C = Carryover items</span>
         </div>
       )}
     </div>

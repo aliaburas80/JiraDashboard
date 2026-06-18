@@ -1,0 +1,383 @@
+// ─── AppShell styles ───────────────────────────────────────────────────────────
+// Covers: root shell, sticky header, logo, nav groups, dropdown panel,
+//         mobile nav, footer. All values reference design tokens.
+
+// ── Root shell ─────────────────────────────────────────────────────────────────
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-page, var(--dc-bg, #f8fafc));
+  color: var(--color-text-primary, var(--dc-p1, #0f172a));
+}
+
+// ── Fixed header — matches DashboardTopbar exactly ────────────────────────────
+.header {
+  height: var(--header-height, 52px);
+  background: var(--color-surface, #fff);
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-5, 20px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-header, 500);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 4%);
+  font-family: var(--font-jakarta, 'Inter', sans-serif);
+}
+
+// headerInner is now the header itself — keep for any nested layout needs
+.headerInner {
+  display: contents;
+}
+
+// ── Logo area ──────────────────────────────────────────────────────────────────
+.logoArea {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  text-decoration: none;
+}
+
+.logoIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm, 7px);
+  background: var(--color-primary, #2563eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logoName {
+  font-size: var(--text-md, 13px);
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  letter-spacing: -0.01em;
+}
+
+.logoVersion {
+  font-size: 9px;
+  color: var(--color-text-muted, #94a3b8);
+  font-family: var(--font-mono, monospace);
+  margin-left: 2px;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.uploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5, 6px);
+  padding: 6px var(--space-3, 12px);
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--text-xs, 10px);
+  font-weight: 700;
+  border: none;
+  background: var(--color-primary, #2563eb);
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+  align-self: center;
+  transition: background var(--transition-fast);
+
+  &:hover { background: var(--color-primary-hover, #1d4ed8); }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+// ── Spacer between brand and nav ─────────────────────────────────────────────
+.spacer { flex: 1; }
+
+// ── Right rail ─────────────────────────────────────────────────────────────────
+.rightRail {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-left: var(--space-3, 12px);
+  flex-shrink: 0;
+}
+
+// ── Desktop grouped nav ────────────────────────────────────────────────────────
+// align-self: stretch lets nav fill the header height so .navGroupActiveBar anchors to the bottom edge.
+.desktopNav {
+  display: none;
+  align-items: center;
+  align-self: stretch;
+  gap: 0;
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+}
+
+// Wrapper stretches full header height so the absolute activeBar anchors to
+// the physical bottom of the header (matching DashboardTopbar pattern).
+.navGroupWrapper {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.navGroupBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  padding: 0 var(--space-3, 12px);
+  height: 100%;
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: var(--color-text-secondary, var(--dc-p2, #64748b));
+  white-space: nowrap;
+  font-size: var(--text-md, 13px);
+  font-weight: 500;
+  transition: color var(--transition-fast);
+  font-family: inherit;
+
+  &:hover { color: var(--color-text-primary, #0f172a); }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: -2px;
+  }
+
+  // Active: primary blue text + blue underline via .navGroupActiveBar sibling.
+  &.active {
+    background: none;
+    color: var(--color-primary, #2563eb);
+    font-weight: 600;
+  }
+}
+
+// Blue underline bar at bottom of header for the active nav group.
+.navGroupActiveBar {
+  position: absolute;
+  bottom: 0;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--color-primary, #2563eb);
+  pointer-events: none;
+}
+
+.navGroupChevron {
+  width: 0.875rem;
+  height: 0.875rem;
+  transition: transform var(--transition-fast);
+
+  &.open {
+    transform: rotate(180deg);
+  }
+}
+
+// ── Desktop dropdown ───────────────────────────────────────────────────────────
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  border-radius: var(--radius-xl, 12px);
+  padding: var(--space-1-5, 6px);
+  z-index: var(--z-dropdown, 600);
+  min-width: 200px;
+  background: var(--color-surface, var(--dc-s2, #fff));
+  border: 1px solid var(--color-border, var(--dc-bdr));
+  box-shadow: var(--shadow-dropdown, 0 8px 28px rgb(0 0 0 / 18%));
+}
+
+// Dropdown items match DashboardTopbar: title + desc on left, status dot on right
+.dropdownLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm, 6px);
+  text-decoration: none;
+  transition: background var(--transition-fast);
+
+  &:hover { background: var(--color-subtle, #f8fafc); }
+
+  &.active { background: var(--color-primary-soft, #eff6ff); }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: -2px;
+  }
+}
+
+.dropdownLinkText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.dropdownTitle {
+  font-size: var(--text-md, 13px);
+  font-weight: 600;
+  color: var(--color-text-primary, #0f172a);
+
+  .active & { color: var(--color-primary, #2563eb); }
+}
+
+.dropdownDesc {
+  font-size: var(--text-sm, 11px);
+  color: var(--color-text-muted, #94a3b8);
+}
+
+// EXCEPTION (CLAUDE.md Rule 1): dot color is data-driven from item.status
+.dropdownDot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full, 9999px);
+  flex-shrink: 0;
+}
+
+// ── Mobile hamburger ───────────────────────────────────────────────────────────
+.mobileMenuBtn {
+  display: flex;
+  padding: var(--space-2, 8px);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-text-secondary, #64748b);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-subtle, #f1f5f9);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+// ── Mobile nav panel ───────────────────────────────────────────────────────────
+.mobileNav {
+  border-top: 1px solid var(--color-border, var(--dc-bdr));
+  background: var(--color-surface, var(--dc-s1, #fff));
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+.mobileGroupLabel {
+  font-size: 0.625rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted, #94a3b8);
+  margin-bottom: var(--space-1, 4px);
+  padding: 0 var(--space-1, 4px);
+}
+
+.mobileGroupGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-1, 4px);
+  margin-bottom: var(--space-3, 12px);
+}
+
+.mobileLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-xl, 12px);
+  font-size: var(--text-md, 13px);
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--color-text-primary, #334155);
+  transition: background var(--transition-fast);
+
+  &.active {
+    background: var(--color-primary-soft, #eff6ff);
+    color: var(--color-primary, #2563eb);
+  }
+
+  &:hover:not(.active) {
+    background: var(--color-subtle, #f1f5f9);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+// ── Theme toggle ───────────────────────────────────────────────────────────────
+.themeToggle {
+  margin-left: var(--space-1, 4px);
+  padding: var(--space-2, 8px);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-text-muted, #94a3b8);
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-subtle, #f1f5f9);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+// ── Main content ───────────────────────────────────────────────────────────────
+// padding-top offsets the fixed header so content starts below it
+.main {
+  flex: 1;
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: calc(var(--header-height, 52px) + var(--space-6, 24px)) var(--space-4, 16px) var(--space-6, 24px);
+
+  @media (min-width: 640px) {
+    padding: calc(var(--header-height, 52px) + var(--space-6, 24px)) var(--space-6, 24px) var(--space-6, 24px);
+  }
+}
+
+// ── Footer ─────────────────────────────────────────────────────────────────────
+.footer {
+  border-top: 1px solid var(--color-border, var(--dc-bdr));
+  background: var(--color-surface, var(--dc-s1, #fff));
+}
+
+.footerInner {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  font-size: var(--text-xs, 10px);
+  text-align: center;
+  color: var(--color-text-muted, var(--dc-p3, #94a3b8));
+
+  @media (min-width: 640px) {
+    padding: var(--space-3, 12px) var(--space-6, 24px);
+  }
+}

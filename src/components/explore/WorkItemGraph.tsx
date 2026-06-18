@@ -14,6 +14,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import type { RelationGraph, RelationNode, RelationEdge } from '@/types/relations';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import { NODE_TYPE_CONFIG, EDGE_TYPE_CONFIG, ORPHAN_STYLE } from './nodeStyles';
 import RelationLegend from './RelationLegend';
 
@@ -74,7 +75,7 @@ function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number
     }}>
       {/* Type + badges */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 13 }}>{cfg.icon}</span>
+        <SvgIcon name={cfg.icon} size={13} style={{ color: cfg.color }} />
         <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em', color: cfg.color, flex: 1 }}>
           {data.type}
         </span>
@@ -82,10 +83,16 @@ function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number
           <span style={{ fontSize: 9, background: cfg.color, color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>FOCUS</span>
         )}
         {isRiskPath && !data.isDone && !data.isFocusNode && (
-          <span style={{ fontSize: 9, background: '#dc2626', color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>⚠ RISK PATH</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, background: '#dc2626', color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>
+            <SvgIcon name="warning" size={9} />
+            RISK PATH
+          </span>
         )}
         {isBranchRoot && (
-          <span style={{ fontSize: 9, background: '#7c3aed', color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>📊 MOST WORK</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, background: '#7c3aed', color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>
+            <SvgIcon name="chartBar" size={9} />
+            MOST WORK
+          </span>
         )}
         {isOrphan && (
           <span style={{ fontSize: 9, background: ORPHAN_STYLE.badgeColor, color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>ORPHAN</span>
@@ -115,7 +122,8 @@ function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number
         }}>{data.status}</span>
         {data.isBlocked && (
           <span style={{ fontSize: 9, background: '#fef2f2', color: '#b91c1c', borderRadius: 999, padding: '1px 6px', fontWeight: 700, border: '1px solid #fecaca' }}>
-            🚫 Blocked
+            <SvgIcon name="priorityBlocker" size={9} style={{ display: 'inline-block', verticalAlign: '-1px', marginRight: 3 }} />
+            Blocked
           </span>
         )}
         {(data.storyPoints ?? 0) > 0 && (
@@ -127,7 +135,10 @@ function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number
 
       {/* Assignee */}
       {data.assignee && data.assignee !== 'Unassigned' && (
-        <p style={{ fontSize: 10, color: '#94a3b8', margin: '4px 0 0' }}>👤 {data.assignee}</p>
+        <p style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: '#94a3b8', margin: '4px 0 0' }}>
+          <SvgIcon name="person" size={10} />
+          {data.assignee}
+        </p>
       )}
 
       {/* Expand badge */}

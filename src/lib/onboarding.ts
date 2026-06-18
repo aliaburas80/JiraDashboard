@@ -30,10 +30,10 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     id:          'create_account',
-    title:       'Create your account',
-    description: 'Sign in so your import history is saved and private to you.',
-    href:        '/register',
-    ctaLabel:    'Create account',
+    title:       'Sign in with your assigned account',
+    description: 'Ask an administrator to create your account, then sign in so your import history is saved and private to you.',
+    href:        '/login',
+    ctaLabel:    'Sign in',
   },
   {
     id:          'view_dashboard',

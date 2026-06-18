@@ -1,0 +1,633 @@
+// © 2026 Ali Abu Ras — admin/users page styles
+
+// ── Role-color tokens on the row ──────────────────────────────────────────────
+// CLAUDE.md Rule 12: role colours live in SCSS, not JS
+.row[data-role="admin"]         { --role-color: #F87171; }
+.row[data-role="scrum_master"]  { --role-color: #60A5FA; }
+.row[data-role="product_owner"] { --role-color: #34D399; }
+.row[data-role="manager"]       { --role-color: #FBBF24; }
+.row[data-role="c_level"]       { --role-color: #A78BFA; }
+.row[data-role="user"]          { --role-color: #94A3B8; }
+
+// ── Loading state ─────────────────────────────────────────────────────────────
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 240px;
+  color: var(--dc-p3, #505050);
+}
+
+// ── Add-user action button ────────────────────────────────────────────────────
+.addUserBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: none;
+  background: var(--dc-acc, #E85D12);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.88;
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-acc) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+// ── Banners ───────────────────────────────────────────────────────────────────
+.successBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(34, 197, 94, 0.10);
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  border-radius: 8px;
+  color: #4ade80;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.dismissBtn {
+  background: none;
+  border: none;
+  color: #4ade80;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 0 0 10px;
+  opacity: 0.7;
+
+  &:hover { opacity: 1; }
+
+  &:focus-visible {
+    outline: 2px solid rgba(74, 222, 128, 0.6);
+    outline-offset: 2px;
+  }
+}
+
+.errorBanner {
+  padding: 10px 14px;
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.30);
+  border-radius: 8px;
+  color: #F87171;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+// ── Create user form ──────────────────────────────────────────────────────────
+.createForm {
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.formTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dc-p1, #F2F2F2);
+  margin-bottom: 14px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.fieldLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--dc-p3, #505050);
+  display: block;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.formInput {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: var(--dc-s3, #282828);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.08));
+  color: var(--dc-p1, #F2F2F2);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-acc) 60%, transparent);
+    outline-offset: -1px;
+  }
+}
+
+.formSelect {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: var(--dc-s3, #282828);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.08));
+  color: var(--dc-p1, #F2F2F2);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-acc) 60%, transparent);
+    outline-offset: -1px;
+  }
+}
+
+.formError {
+  font-size: 11px;
+  color: #F87171;
+  margin-bottom: 8px;
+}
+
+.formActions {
+  display: flex;
+  gap: 8px;
+}
+
+.submitBtn {
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: none;
+  background: var(--dc-acc, #E85D12);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.6; cursor: default; }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-acc) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.cancelBtn {
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.08));
+  background: transparent;
+  color: var(--dc-p2, #909090);
+  font-size: 12px;
+  cursor: pointer;
+
+  &:hover { background: rgba(255, 255, 255, 0.04); }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-acc) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+// ── Filter row ────────────────────────────────────────────────────────────────
+.filterRow {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 200px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.08));
+  color: var(--dc-p1, #F2F2F2);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-acc) 60%, transparent);
+    outline-offset: -1px;
+  }
+}
+
+.roleSelect {
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.08));
+  color: var(--dc-p1, #F2F2F2);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-acc) 60%, transparent);
+    outline-offset: -1px;
+  }
+}
+
+.countLabel {
+  font-size: 11px;
+  color: var(--dc-p3, #505050);
+  white-space: nowrap;
+}
+
+// ── Bulk action bar ───────────────────────────────────────────────────────────
+.bulkBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+  background: rgba(232, 93, 18, 0.08);
+  border: 1px solid rgba(232, 93, 18, 0.25);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.bulkCount {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--dc-acc, #E85D12);
+}
+
+.bulkActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.bulkRoleSelect {
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--dc-s3, #282828);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.08));
+  color: var(--dc-p1, #F2F2F2);
+  font-size: 11px;
+  font-family: inherit;
+  outline: none;
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-acc) 60%, transparent);
+    outline-offset: -1px;
+  }
+}
+
+.applyRoleBtn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(96, 165, 250, 0.15);
+  color: #60A5FA;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover { background: rgba(96, 165, 250, 0.25); }
+  &:disabled { opacity: 0.6; cursor: default; }
+
+  &:focus-visible {
+    outline: 2px solid rgba(96, 165, 250, 0.6);
+    outline-offset: 2px;
+  }
+}
+
+.deleteSelectedBtn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(248, 113, 113, 0.15);
+  color: #F87171;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover { background: rgba(248, 113, 113, 0.25); }
+  &:disabled { opacity: 0.6; cursor: default; }
+
+  &:focus-visible {
+    outline: 2px solid rgba(248, 113, 113, 0.6);
+    outline-offset: 2px;
+  }
+}
+
+.clearBtn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.08));
+  background: transparent;
+  color: var(--dc-p3, #505050);
+  font-size: 11px;
+  cursor: pointer;
+
+  &:hover { background: rgba(255, 255, 255, 0.04); }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-acc) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+// ── User table ────────────────────────────────────────────────────────────────
+.tableCard {
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.theadRow {
+  border-bottom: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.08));
+}
+
+.checkboxTh {
+  padding: 10px 14px;
+  width: 36px;
+}
+
+.checkboxCell {
+  padding: 10px 14px;
+  width: 36px;
+}
+
+.checkboxInput {
+  cursor: pointer;
+  accent-color: var(--dc-acc, #E85D12);
+  width: 14px;
+  height: 14px;
+}
+
+.th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--dc-p3, #505050);
+  white-space: nowrap;
+}
+
+// CLAUDE.md Rule 8: hover via SCSS, not onMouseEnter/onMouseLeave JS handlers
+.row {
+  border-bottom: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.06));
+  transition: background 120ms;
+
+  &:last-child { border-bottom: none; }
+
+  &:hover { background: var(--dc-s3, rgba(255, 255, 255, 0.03)); }
+}
+
+.td {
+  padding: 10px 14px;
+}
+
+// ── User cell ─────────────────────────────────────────────────────────────────
+.userCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+// Avatar circle: background/border/text driven by --role-color (set on .row[data-role=...])
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--role-color, #94A3B8) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--role-color, #94A3B8) 27%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--role-color, #94A3B8);
+}
+
+.userName {
+  font-weight: 600;
+  color: var(--dc-p1, #F2F2F2);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.selfBadge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(232, 93, 18, 0.20);
+  color: var(--dc-acc, #E85D12);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.userEmail {
+  color: var(--dc-p3, #505050);
+  margin-top: 1px;
+}
+
+// ── Role dropdown ─────────────────────────────────────────────────────────────
+// Inherits --role-color from .row[data-role=...] ancestor
+.roleDropdown {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--role-color, #94A3B8) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--role-color, #94A3B8) 27%, transparent);
+  color: var(--role-color, #94A3B8);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+
+  &:disabled { cursor: default; }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--role-color, #94A3B8) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+// ── Active toggle chip ────────────────────────────────────────────────────────
+.activeToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: none;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+
+  &[data-active="true"]  {
+    background: rgba(34, 197, 94, 0.14);
+    color: #22C55E;
+  }
+
+  &[data-active="false"] {
+    background: rgba(248, 113, 113, 0.12);
+    color: #F87171;
+  }
+
+  &:disabled { cursor: default; }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-acc) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+// ── Import count / last-login cells ──────────────────────────────────────────
+.importCount {
+  font-family: monospace;
+  color: var(--dc-p2, #909090);
+}
+
+.loginDate {
+  color: var(--dc-p3, #505050);
+  white-space: nowrap;
+}
+
+// ── Per-row delete button ─────────────────────────────────────────────────────
+.deleteBtn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  background: transparent;
+  color: #F87171;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+
+  // CLAUDE.md Rule 1: hover via SCSS, not onMouseEnter/onMouseLeave
+  &:hover { background: rgba(248, 113, 113, 0.10); }
+
+  &:focus-visible {
+    outline: 2px solid rgba(248, 113, 113, 0.6);
+    outline-offset: 2px;
+  }
+}
+
+// ── No-results row ────────────────────────────────────────────────────────────
+.noResults {
+  padding: 32px 14px;
+  text-align: center;
+  color: var(--dc-p3, #505050);
+  font-style: italic;
+}
+
+// ── Confirm modals ────────────────────────────────────────────────────────────
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.60);
+  z-index: var(--z-modal, 9999);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.confirmModal {
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid rgba(248, 113, 113, 0.30);
+  border-radius: 14px;
+  padding: 28px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.50);
+}
+
+.confirmTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--dc-p1, #F2F2F2);
+  margin-bottom: 8px;
+}
+
+.confirmText {
+  font-size: 13px;
+  color: var(--dc-p3, #505050);
+  margin-bottom: 20px;
+
+  strong { color: #F87171; }
+}
+
+.confirmActions {
+  display: flex;
+  gap: 10px;
+}
+
+.confirmDelete {
+  flex: 1;
+  padding: 9px;
+  border-radius: 8px;
+  border: none;
+  background: #DC2626;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.6; cursor: default; }
+
+  &:focus-visible {
+    outline: 2px solid rgba(220, 38, 38, 0.6);
+    outline-offset: 2px;
+  }
+}
+
+.confirmCancel {
+  flex: 1;
+  padding: 9px;
+  border-radius: 8px;
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.08));
+  background: transparent;
+  color: var(--dc-p2, #909090);
+  font-size: 12px;
+  cursor: pointer;
+
+  &:hover { background: rgba(255, 255, 255, 0.04); }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-acc) 60%, transparent);
+    outline-offset: 2px;
+  }
+}

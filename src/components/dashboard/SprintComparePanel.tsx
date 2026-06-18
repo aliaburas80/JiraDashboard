@@ -4,8 +4,6 @@
 import { useState } from 'react';
 import type { SprintThroughputSummary, SprintThroughput } from '@/types/throughput';
 
-// ── Delta indicator ───────────────────────────────────────────────────────────
-
 type Direction = 'better' | 'worse' | 'same';
 
 function delta(a: number, b: number, higherIsBetter = true): Direction {
@@ -14,72 +12,65 @@ function delta(a: number, b: number, higherIsBetter = true): Direction {
 }
 
 function DeltaIcon({ dir }: { dir: Direction }) {
-  if (dir === 'better') return <span className="text-green-600 font-black">↑</span>;
-  if (dir === 'worse')  return <span className="text-red-500 font-black">↓</span>;
-  return <span className="text-slate-300">→</span>;
+  if (dir === 'better') return <span className="font-black" style={{ color: 'var(--dc-green, #22C55E)' }}>↑</span>;
+  if (dir === 'worse')  return <span className="font-black" style={{ color: 'var(--dc-red, #F87171)' }}>↓</span>;
+  return <span style={{ color: 'var(--dc-p3, #505050)' }}>→</span>;
 }
-
-// ── Comparison row ────────────────────────────────────────────────────────────
 
 function Row({
   label, a, b, dir, format = v => String(v), highlight = false,
 }: {
-  label: string;
-  a: number | string;
-  b: number | string;
-  dir?: Direction;
-  format?: (v: number | string) => string;
-  highlight?: boolean;
+  label: string; a: number | string; b: number | string;
+  dir?: Direction; format?: (v: number | string) => string; highlight?: boolean;
 }) {
-  const bg = highlight ? 'bg-slate-50' : '';
-  const aWins = dir === 'worse';  // b is worse means a is the winner
+  const aWins = dir === 'worse';
   const bWins = dir === 'better';
-
   return (
-    <tr className={`border-b border-slate-100 ${bg}`}>
-      <td className="py-2 px-3 text-xs text-slate-500 font-semibold whitespace-nowrap">{label}</td>
-      <td className={`py-2 px-3 text-sm text-center font-bold ${aWins ? 'text-green-700' : 'text-slate-800'}`}>
+    <tr style={{
+      borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
+      background: highlight ? 'var(--dc-s1, #141414)' : 'transparent',
+    }}>
+      <td className="py-2 px-3 text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--dc-p2, #909090)' }}>{label}</td>
+      <td className="py-2 px-3 text-sm text-center font-bold"
+        style={{ color: aWins ? 'var(--dc-green, #22C55E)' : 'var(--dc-p1, #F2F2F2)' }}>
         {format(a)}
       </td>
-      <td className="py-2 px-3 text-center text-slate-300 text-xs">
+      <td className="py-2 px-3 text-center text-xs">
         {dir && <DeltaIcon dir={dir} />}
       </td>
-      <td className={`py-2 px-3 text-sm text-center font-bold ${bWins ? 'text-green-700' : 'text-slate-800'}`}>
+      <td className="py-2 px-3 text-sm text-center font-bold"
+        style={{ color: bWins ? 'var(--dc-green, #22C55E)' : 'var(--dc-p1, #F2F2F2)' }}>
         {format(b)}
       </td>
     </tr>
   );
 }
 
-// ── Badge rows (non-numeric) ──────────────────────────────────────────────────
-
 function BadgeRow({ label, a, b }: { label: string; a: string; b: string }) {
   return (
-    <tr className="border-b border-slate-100">
-      <td className="py-2 px-3 text-xs text-slate-500 font-semibold">{label}</td>
+    <tr style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+      <td className="py-2 px-3 text-xs font-semibold" style={{ color: 'var(--dc-p2, #909090)' }}>{label}</td>
       <td className="py-2 px-3 text-center">
-        <span className="text-xs font-bold text-slate-700 bg-slate-100 rounded-full px-2.5 py-0.5">{a || '—'}</span>
+        <span className="chip c-nt" style={{ fontSize: 10 }}>{a || '—'}</span>
       </td>
-      <td className="py-2 px-3 text-center text-slate-200 text-xs">vs</td>
+      <td className="py-2 px-3 text-center text-xs" style={{ color: 'var(--dc-p3, #505050)' }}>vs</td>
       <td className="py-2 px-3 text-center">
-        <span className="text-xs font-bold text-slate-700 bg-slate-100 rounded-full px-2.5 py-0.5">{b || '—'}</span>
+        <span className="chip c-nt" style={{ fontSize: 10 }}>{b || '—'}</span>
       </td>
     </tr>
   );
 }
 
-// ── Win counter ───────────────────────────────────────────────────────────────
-
 function countWins(a: SprintThroughput, b: SprintThroughput): { aWins: number; bWins: number } {
   const metrics: [number, number, boolean][] = [
-    [a.completionPct,       b.completionPct,       true],
-    [a.pointCompletionPct,  b.pointCompletionPct,  true],
-    [a.throughputByCount,   b.throughputByCount,   true],
-    [a.throughputByPoints,  b.throughputByPoints,  true],
-    [a.midSprintPct,        b.midSprintPct,        true],
-    [a.deliveryConfidence,  b.deliveryConfidence,  true],
-    [a.blockedCount,        b.blockedCount,        false],
-    [a.carryoverCount,      b.carryoverCount,      false],
+    [a.completionPct,      b.completionPct,      true],
+    [a.pointCompletionPct, b.pointCompletionPct, true],
+    [a.throughputByCount,  b.throughputByCount,  true],
+    [a.throughputByPoints, b.throughputByPoints, true],
+    [a.midSprintPct,       b.midSprintPct,       true],
+    [a.deliveryConfidence, b.deliveryConfidence, true],
+    [a.blockedCount,       b.blockedCount,       false],
+    [a.carryoverCount,     b.carryoverCount,     false],
   ];
   let aWins = 0; let bWins = 0;
   metrics.forEach(([av, bv, hib]) => {
@@ -88,8 +79,6 @@ function countWins(a: SprintThroughput, b: SprintThroughput): { aWins: number; b
   });
   return { aWins, bWins };
 }
-
-// ── Main component ────────────────────────────────────────────────────────────
 
 interface Props { summary: SprintThroughputSummary }
 
@@ -100,8 +89,9 @@ export default function SprintComparePanel({ summary }: Props) {
 
   if (sprints.length < 2) {
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm text-sm text-slate-400 italic">
-        At least 2 sprints are needed for comparison. Upload a Jira export with multiple sprint groups.
+      <div className="rounded-2xl p-6 shadow-sm text-sm italic"
+        style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr)', color: 'var(--dc-p3, #505050)' }}>
+        At least 2 sprints are needed for comparison.
       </div>
     );
   }
@@ -111,37 +101,47 @@ export default function SprintComparePanel({ summary }: Props) {
   const canCompare = sprintA && sprintB && sprintAName !== sprintBName;
   const wins = canCompare ? countWins(sprintA, sprintB) : null;
 
+  const inputStyle = {
+    background: 'var(--dc-s3, #282828)',
+    border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
+    borderRadius: 10,
+    color: 'var(--dc-p1, #F2F2F2)',
+    width: '100%',
+    padding: '8px 12px',
+    fontSize: 14,
+    fontWeight: 600,
+    outline: 'none',
+  } as React.CSSProperties;
+
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+    <div className="rounded-2xl shadow-sm overflow-hidden"
+      style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+
       {/* Header */}
-      <div className="flex flex-wrap items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50">
+      <div className="flex flex-wrap items-center gap-3 px-6 py-4"
+        style={{ borderBottom: '1px solid var(--dc-bdr)', background: 'var(--dc-s1, #141414)' }}>
         <div>
-          <h3 className="text-sm font-black uppercase tracking-wider text-slate-700">Sprint Comparison</h3>
-          <p className="text-xs text-slate-500 mt-0.5">Select two sprints to compare side-by-side</p>
+          <h3 className="text-sm font-black uppercase tracking-wider" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Sprint Comparison</h3>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--dc-p3, #505050)' }}>Select two sprints to compare side-by-side</p>
         </div>
       </div>
 
       {/* Sprint selectors */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-5 border-b border-slate-100">
-        {/* Sprint A */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-5"
+        style={{ borderBottom: '1px solid var(--dc-bdr)' }}>
         <div>
-          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Sprint A</label>
-          <select value={sprintAName} onChange={e => setSprintAName(e.target.value)}
-            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-300">
+          <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--dc-p3, #505050)' }}>Sprint A</label>
+          <select value={sprintAName} onChange={e => setSprintAName(e.target.value)} style={inputStyle}>
             {sprints.map(s => <option key={s.sprintName} value={s.sprintName}>{s.sprintName}</option>)}
           </select>
         </div>
-
-        {/* vs badge */}
         <div className="flex items-end justify-center pb-2">
-          <span className="text-xs font-black text-slate-400 bg-slate-100 rounded-full px-3 py-1.5">VS</span>
+          <span className="text-xs font-black rounded-full px-3 py-1.5"
+            style={{ background: 'var(--dc-s3, #282828)', color: 'var(--dc-p2, #909090)' }}>VS</span>
         </div>
-
-        {/* Sprint B */}
         <div>
-          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Sprint B</label>
-          <select value={sprintBName} onChange={e => setSprintBName(e.target.value)}
-            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-300">
+          <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--dc-p3, #505050)' }}>Sprint B</label>
+          <select value={sprintBName} onChange={e => setSprintBName(e.target.value)} style={inputStyle}>
             {sprints.map(s => <option key={s.sprintName} value={s.sprintName}>{s.sprintName}</option>)}
           </select>
         </div>
@@ -149,47 +149,55 @@ export default function SprintComparePanel({ summary }: Props) {
 
       {/* Same sprint warning */}
       {sprintAName === sprintBName && (
-        <div className="px-6 py-4 text-sm text-amber-700 bg-amber-50 border-b border-amber-200">
+        <div className="px-6 py-4 text-sm" style={{ color: 'var(--dc-amber, #F59E0B)', background: 'rgba(245,158,11,0.07)', borderBottom: '1px solid rgba(245,158,11,0.18)' }}>
           Select two different sprints to compare.
         </div>
       )}
 
-      {/* Comparison table */}
-      {canCompare && (
+      {canCompare && wins && (
         <>
           {/* Win summary */}
-          {wins && (
-            <div className="grid grid-cols-3 gap-0 border-b border-slate-100">
-              <div className={`p-3 text-center border-r border-slate-100 ${wins.aWins > wins.bWins ? 'bg-green-50' : ''}`}>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 truncate" title={sprintAName}>{sprintAName}</p>
-                <p className={`text-2xl font-black ${wins.aWins > wins.bWins ? 'text-green-700' : 'text-slate-500'}`}>{wins.aWins}</p>
-                <p className="text-[10px] text-slate-400">metrics won</p>
-              </div>
-              <div className="p-3 text-center flex flex-col items-center justify-center">
-                {wins.aWins === wins.bWins
-                  ? <><p className="text-lg font-black text-slate-400">Tie</p><p className="text-[10px] text-slate-400">Even match</p></>
-                  : <><p className="text-xs font-black text-green-700">{wins.aWins > wins.bWins ? sprintAName : sprintBName}</p><p className="text-[10px] text-slate-400">wins overall</p></>
-                }
-              </div>
-              <div className={`p-3 text-center border-l border-slate-100 ${wins.bWins > wins.aWins ? 'bg-green-50' : ''}`}>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 truncate" title={sprintBName}>{sprintBName}</p>
-                <p className={`text-2xl font-black ${wins.bWins > wins.aWins ? 'text-green-700' : 'text-slate-500'}`}>{wins.bWins}</p>
-                <p className="text-[10px] text-slate-400">metrics won</p>
-              </div>
+          <div className="grid grid-cols-3 gap-0" style={{ borderBottom: '1px solid var(--dc-bdr)' }}>
+            {/* Sprint A score */}
+            <div className="p-3 text-center" style={{
+              borderRight: '1px solid var(--dc-bdr)',
+              background: wins.aWins > wins.bWins ? 'rgba(34,197,94,0.08)' : 'var(--dc-s1, #141414)',
+              ...(wins.aWins > wins.bWins ? { border: '1px solid rgba(34,197,94,0.15)' } : {}),
+            }}>
+              <p className="text-[10px] font-black uppercase tracking-wider truncate" style={{ color: 'var(--dc-p3, #505050)' }} title={sprintAName}>{sprintAName}</p>
+              <p className="text-2xl font-black" style={{ color: wins.aWins > wins.bWins ? 'var(--dc-green, #22C55E)' : 'var(--dc-p2, #909090)', fontFamily: 'var(--font-mono, monospace)' }}>{wins.aWins}</p>
+              <p className="text-[10px]" style={{ color: 'var(--dc-p3, #505050)' }}>metrics won</p>
             </div>
-          )}
+            {/* Center label */}
+            <div className="p-3 text-center flex flex-col items-center justify-center">
+              {wins.aWins === wins.bWins
+                ? <><p className="text-lg font-black" style={{ color: 'var(--dc-p2, #909090)' }}>Tie</p><p className="text-[10px]" style={{ color: 'var(--dc-p3, #505050)' }}>Even match</p></>
+                : <><p className="text-xs font-black" style={{ color: 'var(--dc-green, #22C55E)' }}>{wins.aWins > wins.bWins ? sprintAName : sprintBName}</p><p className="text-[10px] font-bold" style={{ color: 'var(--dc-green, #22C55E)' }}>wins overall</p></>
+              }
+            </div>
+            {/* Sprint B score */}
+            <div className="p-3 text-center" style={{
+              borderLeft: '1px solid var(--dc-bdr)',
+              background: wins.bWins > wins.aWins ? 'rgba(34,197,94,0.08)' : 'var(--dc-s1, #141414)',
+              ...(wins.bWins > wins.aWins ? { border: '1px solid rgba(34,197,94,0.15)' } : {}),
+            }}>
+              <p className="text-[10px] font-black uppercase tracking-wider truncate" style={{ color: 'var(--dc-p3, #505050)' }} title={sprintBName}>{sprintBName}</p>
+              <p className="text-2xl font-black" style={{ color: wins.bWins > wins.aWins ? 'var(--dc-green, #22C55E)' : 'var(--dc-p2, #909090)', fontFamily: 'var(--font-mono, monospace)' }}>{wins.bWins}</p>
+              <p className="text-[10px]" style={{ color: 'var(--dc-p3, #505050)' }}>metrics won</p>
+            </div>
+          </div>
 
           {/* Metric rows */}
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="py-2 px-3 text-[10px] font-black uppercase tracking-wider text-slate-500 text-left w-36">Metric</th>
-                  <th className="py-2 px-3 text-[10px] font-black uppercase tracking-wider text-slate-500 text-center truncate max-w-[140px]" title={sprintAName}>
+                <tr style={{ borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))', background: 'var(--dc-s1, #141414)' }}>
+                  <th className="py-2 px-3 text-[10px] font-black uppercase tracking-wider text-left w-36" style={{ color: 'var(--dc-p3, #505050)' }}>Metric</th>
+                  <th className="py-2 px-3 text-[10px] font-black uppercase tracking-wider text-center truncate max-w-[140px]" style={{ color: 'var(--dc-p3, #505050)' }} title={sprintAName}>
                     {sprintAName.length > 16 ? sprintAName.slice(0, 16) + '…' : sprintAName}
                   </th>
                   <th className="py-2 px-3 w-8" />
-                  <th className="py-2 px-3 text-[10px] font-black uppercase tracking-wider text-slate-500 text-center truncate max-w-[140px]" title={sprintBName}>
+                  <th className="py-2 px-3 text-[10px] font-black uppercase tracking-wider text-center truncate max-w-[140px]" style={{ color: 'var(--dc-p3, #505050)' }} title={sprintBName}>
                     {sprintBName.length > 16 ? sprintBName.slice(0, 16) + '…' : sprintBName}
                   </th>
                 </tr>
@@ -207,7 +215,7 @@ export default function SprintComparePanel({ summary }: Props) {
                 <Row label="Added Scope"         a={sprintA.addedScopeCount}    b={sprintB.addedScopeCount}    dir={delta(sprintA.addedScopeCount,    sprintB.addedScopeCount, false)} />
                 <Row label="Bugs Completed"      a={sprintA.bugsCompleted}      b={sprintB.bugsCompleted}      dir={delta(sprintA.bugsCompleted,      sprintB.bugsCompleted)}      highlight />
                 <Row label="Bugs Open"           a={sprintA.bugsOpen}           b={sprintB.bugsOpen}           dir={delta(sprintA.bugsOpen,           sprintB.bugsOpen, false)} />
-                <Row label="Delivery Confidence" a={sprintA.deliveryConfidence}  b={sprintB.deliveryConfidence}  dir={delta(sprintA.deliveryConfidence,  sprintB.deliveryConfidence)}  format={v => `${v}%`} highlight />
+                <Row label="Delivery Confidence" a={sprintA.deliveryConfidence} b={sprintB.deliveryConfidence} dir={delta(sprintA.deliveryConfidence,  sprintB.deliveryConfidence)} format={v => `${v}%`} highlight />
                 <BadgeRow label="Goal Outcome"   a={sprintA.goalOutcome}        b={sprintB.goalOutcome} />
                 <BadgeRow label="Pattern"        a={sprintA.deliveryPattern}    b={sprintB.deliveryPattern} />
               </tbody>
@@ -215,11 +223,12 @@ export default function SprintComparePanel({ summary }: Props) {
           </div>
 
           {/* Legend */}
-          <div className="px-4 py-3 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-4 text-xs text-slate-400">
-            <span><span className="text-green-600 font-black">↑</span> Better</span>
-            <span><span className="text-red-500 font-black">↓</span> Worse</span>
-            <span><span className="text-slate-300">→</span> Same</span>
-            <span className="text-green-700 font-bold ml-2">Green value = winner</span>
+          <div className="px-4 py-3 flex flex-wrap gap-4 text-xs"
+            style={{ borderTop: '1px solid var(--dc-bdr)', background: 'var(--dc-s1, #141414)', color: 'var(--dc-p3, #505050)' }}>
+            <span><span className="font-black" style={{ color: 'var(--dc-green, #22C55E)' }}>↑</span> Better</span>
+            <span><span className="font-black" style={{ color: 'var(--dc-red, #F87171)' }}>↓</span> Worse</span>
+            <span><span style={{ color: 'var(--dc-p3, #505050)' }}>→</span> Same</span>
+            <span className="font-bold ml-2" style={{ color: 'var(--dc-green, #22C55E)' }}>Green value = winner</span>
           </div>
         </>
       )}

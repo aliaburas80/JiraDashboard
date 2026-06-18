@@ -1,0 +1,195 @@
+// ─── Developer portal — wiki light theme ──────────────────────────────────────
+// Remaps the dark --dc-* tokens used throughout the page to light equivalents.
+// Every inline style that references a var(--dc-xxx) gets the light value
+// automatically without touching individual lines.
+
+.wiki {
+  // Text
+  --dc-p1: var(--color-text-primary, #0f172a);
+  --dc-p2: var(--color-text-secondary, #64748b);
+  --dc-p3: var(--color-text-muted, #94a3b8);
+
+  // Surfaces
+  --dc-bg:  var(--color-page, #f8fafc);
+  --dc-s1:  var(--color-subtle, #f1f5f9);
+  --dc-s2:  var(--color-surface, #fff);
+  --dc-s3:  #f1f5f9;
+
+  // Borders
+  --dc-bdr:  var(--color-border, #e2e8f0);
+  --dc-bdr2: #cbd5e1;
+
+  // Accent → blue (matches rest of design system)
+  --dc-acc:  var(--color-primary, #2563eb);
+  --dc-acc2: var(--color-primary, #2563eb);
+
+  // Status colours — slightly richer for light backgrounds
+  --dc-green: #16a34a;
+  --dc-red:   #dc2626;
+  --dc-amber: #d97706;
+
+  background: var(--color-page, #f8fafc);
+
+  // ── Sidebar ─────────────────────────────────────────────────────────────────
+  .sidebar {
+    background: var(--color-surface, #fff);
+    border-right: 1px solid var(--color-border, #e2e8f0);
+  }
+
+  .sidebarDivider {
+    border-color: var(--color-border, #e2e8f0);
+  }
+
+  // ── Nav items ───────────────────────────────────────────────────────────────
+  .navItem {
+    color: var(--color-text-secondary, #64748b);
+
+    &:hover { color: var(--color-text-primary, #0f172a); background: var(--color-subtle, #f1f5f9); }
+    &:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 50%, transparent); outline-offset: -2px; }
+  }
+
+  .navItemActive {
+    color: var(--color-primary, #2563eb) !important;
+    background: color-mix(in srgb, var(--color-primary, #2563eb) 8%, transparent) !important;
+    border-left-color: var(--color-primary, #2563eb) !important;
+  }
+
+  // ── Search input ─────────────────────────────────────────────────────────────
+  .searchInput {
+    background: var(--color-subtle, #f1f5f9);
+    border: 1px solid var(--color-border, #e2e8f0);
+    color: var(--color-text-primary, #0f172a);
+    border-radius: 8px;
+    outline: none;
+
+    &:focus { ring-color: color-mix(in srgb, var(--color-primary) 30%, transparent); border-color: var(--color-primary, #2563eb); }
+
+    &::placeholder { color: var(--color-text-muted, #94a3b8); }
+  }
+
+  // ── Wiki article (markdown content) ──────────────────────────────────────────
+  article {
+    color: var(--color-text-primary, #0f172a);
+    font-size: 14px;
+    line-height: 1.75;
+    max-width: 72ch;
+
+    h1, h2, h3, h4, h5, h6 {
+      color: var(--color-text-primary, #0f172a);
+      font-weight: 700;
+      margin-top: 2em;
+      margin-bottom: 0.5em;
+      line-height: 1.3;
+    }
+
+    h1 {
+      font-size: 1.625rem;
+      border-bottom: 1px solid var(--color-border, #e2e8f0);
+      padding-bottom: 0.5em;
+      margin-top: 0;
+    }
+
+    h2 { font-size: 1.25rem; }
+    h3 { font-size: 1.05rem; }
+
+    p {
+      color: var(--color-text-secondary, #475569);
+      margin-bottom: 1em;
+    }
+
+    a {
+      color: var(--color-primary, #2563eb);
+      text-decoration: none;
+
+      &:hover { text-decoration: underline; }
+    }
+
+    code {
+      font-family: var(--font-mono, 'JetBrains Mono', monospace);
+      font-size: 0.84em;
+      background: var(--color-subtle, #f1f5f9);
+      color: var(--color-primary, #2563eb);
+      border: 1px solid var(--color-border, #e2e8f0);
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+
+    pre {
+      background: var(--color-subtle, #f1f5f9);
+      border: 1px solid var(--color-border, #e2e8f0);
+      border-radius: 10px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      margin-bottom: 1.25em;
+      font-size: 12px;
+      line-height: 1.6;
+
+      code {
+        background: none;
+        border: none;
+        padding: 0;
+        color: var(--color-text-primary, #0f172a);
+        font-size: inherit;
+      }
+    }
+
+    ul, ol {
+      padding-left: 1.5em;
+      margin-bottom: 1em;
+      color: var(--color-text-secondary, #475569);
+
+      li { margin-bottom: 0.3em; }
+    }
+
+    blockquote {
+      border-left: 3px solid var(--color-primary, #2563eb);
+      margin: 1.25em 0;
+      padding: 0.5em 1em;
+      background: color-mix(in srgb, var(--color-primary, #2563eb) 5%, transparent);
+      border-radius: 0 8px 8px 0;
+      color: var(--color-text-secondary, #475569);
+      font-style: italic;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.25em;
+      font-size: 13px;
+
+      th {
+        background: var(--color-subtle, #f1f5f9);
+        color: var(--color-text-muted, #94a3b8);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--color-border, #e2e8f0);
+      }
+
+      td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--color-border, #e2e8f0);
+        color: var(--color-text-secondary, #475569);
+      }
+
+      tr:hover td { background: var(--color-subtle, #f8fafc); }
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--color-border, #e2e8f0);
+      margin: 2em 0;
+    }
+
+    strong { color: var(--color-text-primary, #0f172a); font-weight: 600; }
+  }
+
+  // ── Mobile toggle ─────────────────────────────────────────────────────────────
+  .mobileToggle {
+    background: var(--color-primary, #2563eb);
+    color: #fff;
+  }
+}

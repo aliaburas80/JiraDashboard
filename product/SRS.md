@@ -7,12 +7,12 @@
 | Field | Value |
 |---|---|
 | **Document Title** | Software Requirements Specification — Delivery Clarity |
-| **Version** | 4.0.0 |
-| **Date** | 2026-06-03 |
+| **Version** | 4.9.2 |
+| **Date** | 2026-06-16 |
 | **Author** | Ali Abu Ras (aburasali80@gmail.com) |
-| **Status** | Active — v4.0 in progress on feat/enhancements branch |
+| **Status** | Active — Release Candidate (lint: pass, tests: 571/63 passing, build: pass — verified 2026-06-16) |
 | **Repository** | https://github.com/aliaburas80/JiraDashboard |
-| **Branch** | feat/enhancements |
+| **Branch** | style/visual-design-updates |
 
 ### Revision History
 
@@ -26,6 +26,15 @@
 | 2.0 | 2026-05-30 | Ali Abu Ras | v2 migration to Next.js App Router; all routes updated |
 | 3.0 | 2026-05-31 | Ali Abu Ras | F1 Throughput, F2 Explorer, F3 Auth/Database, F4 Excel Export |
 | 4.0 | 2026-06-03 | Ali Abu Ras | v4 Quality & Trust Layer; see Section 4.12–4.15 and Addendum A |
+| 4.2.1 | 2026-06-06 | Ali Abu Ras | Cloud restore hardening, saved cloud-credential persistence |
+| 4.2.2 | 2026-06-07 | Ali Abu Ras | P0 reconciliation pass — P1.1/P1.2/P1.3 marked Done/Verified, storage status reconciled as Implemented, test count normalised to 469 tests / 48 suites, lint/build failures fixed |
+| 4.4.0 | 2026-06-09 | Ali Abu Ras | P1 — User Add-Member Request Workflow: FR-314–FR-319 (Prisma models + 5 API routes), Addendum B, §8.1 routes updated, TC-REQ-01–14 automated |
+| 4.5.0 | 2026-06-09 | Ali Abu Ras | P1 — USERREQ UI layer: FR-320–FR-324, Addendum C, Notification Bell, Bulk User Management |
+| 4.5.1 | 2026-06-09 | Ali Abu Ras | P1 — Auto-generate password UX + welcome email on accept: FR-319/FR-321 updated, FR-325 added, Addendum D, nodemailer wired |
+| 4.5.2 | 2026-06-10 | Ali Abu Ras | P1 — Clickable notifications + admin settings tab deep-link: FR-323 updated, Addendum E, BR-113/BR-114, TC-NOTIF-06/07, UC-100, UJ-035, SCN-050 |
+| 4.9.0 | 2026-06-14 | Ali Abu Ras | P1 — Navigation architecture overhaul: dashboard refactored into 11 routed pages, DashboardTopbar redesigned (3-zone), AppShell unified via DC_NAV_GROUPS, dc-shell component library, 23 legacy token aliases, /column-mapping page, load animations, frontend standards (SCSS modules / design tokens / zero inline styles) enforced via ESLint |
+| 4.9.1 | 2026-06-14 | Ali Abu Ras | P1 — Admin layout overhaul (app/admin/layout.tsx + AdminNavSidebar) + developer wiki light theme (page.module.scss token remapping) |
+| 4.9.2 | 2026-06-16 | Ali Abu Ras | P0 — Test fixes: adminSettingsConsole TC-AC-01 (config tab), userAddRequests TC-REQ-10 (tempPassword removed from response); P0 doc pass: RELEASE_NOTES, SRS, DEVELOPER_GUIDE, TEST_CASES, BRD updated; test suite verified 571/63 all passing |
 
 ---
 
@@ -74,6 +83,14 @@ Delivery Clarity accepts Jira CSV or Excel exports and produces a real-time, mul
 - **F1 Throughput analytics**, **F2 Work Item Explorer**, **F3 Authentication & Database**, **F4 Smart Excel Export (17 sheets)**
 - Dark mode, print mode, mobile responsiveness (including `/explore` mobile polish)
 - Performance optimised for 5,000+ issues (parseDate memo cache, flowItemByKey Map)
+- **Dashboard routed pages** — dashboard refactored into 15 independent Next.js App Router pages under `app/dashboard/[section]/`: summary, priority-attention, sprint-status, epics (epic-readiness), labels, flow-health, key-metrics, kanban-health, visual-analytics, ownership (ownership & capacity), quarter-statistics, smart-actions, delivery-composition, delivery-controls, data-quality
+- **Standalone analytics pages** — 6 full-page analytics routes accessible from the nav (not nested under /dashboard): `/data-quality` (Data Quality report), `/delivery-mix` (issue-type/status breakdown), `/flow-health` (flow health table), `/release-readiness` (release readiness checklist), `/sprint-kanban` (sprint + kanban overview), `/work-explorer` (work item explorer standalone)
+- **Admin layout injection** — `app/admin/layout.tsx` provides `DashboardTopbar` + `AdminNavSidebar` to all `/admin/*` routes via Next.js layout file; individual pages render content only
+- **Developer wiki** — `/developer` renders as a light wiki theme; all dark palette tokens remapped to semantic light values via `.wiki` SCSS class
+- **DC shell component library** — `src/components/dc-shell/`: `DCTopbar`, `DCPageSidebar`, `DCKpiCard`, `DCStatusChip`, `DCActionBoard`, `DeliveryClarityShell` — reusable chrome for non-dashboard pages
+- **Unified navigation** — `DC_NAV_GROUPS` (`src/components/dc-shell/navigation.ts`) is single source of truth for all nav items; both AppShell and DashboardTopbar consume it
+- **`/column-mapping` route** — column mapping preview page before dashboard generation
+- **Frontend architecture standards** — zero inline `style` props (ESLint `react/forbid-dom-props`), SCSS modules for all custom styling, Tailwind for layout utilities only, `src/styles/_tokens.scss` as single source of truth for all visual values
 
 **Out of scope (v4.0 — not yet implemented):**
 - Jira OAuth or API token direct connection (roadmap P3)
@@ -85,10 +102,10 @@ Delivery Clarity accepts Jira CSV or Excel exports and produces a real-time, mul
 - AI-generated delivery narrative (roadmap, unscheduled)
 - Native mobile application (not planned)
 
-**Planned P1 (queued — not yet started):**
-- Calculation Reference as clearly visible item in `/developer` blue side menu (P1.1)
-- Clear Local Data — Admin window + Upload/Landing page with detection, warning, confirmation (P1.2)
-- Dashboard Section Show/Hide controls — Overview/Single/Full modes, smooth scroll, CSS animation (P1.3)
+**P1 — Done / Verified (shipped; see FR-283–FR-285 for full acceptance detail):**
+- Calculation Reference as clearly visible item in `/developer` blue side menu (P1.1) — Done, Verified, covered by tests and `/developer` docs
+- Clear Local Data — Admin window + Upload/Landing page with detection, warning, confirmation (P1.2) — Done, Verified, covered by `clearLocalData.test.ts`
+- Dashboard Section Show/Hide controls — Overview/Single/Full modes, smooth scroll, CSS animation, reduced-motion support (P1.3) — Done, Verified, covered by `dashboardSectionSwitcher.test.ts`
 
 ### 1.3 Definitions and Acronyms
 
@@ -1188,6 +1205,8 @@ The upload call is `multipart/form-data`. All other calls are `GET` with no requ
 
 ## 8. API Specification
 
+> **Scope note (added 2026-06-08 to close TRACE-02/COVER-03):** The five endpoints documented immediately below (`POST /api/upload`, `GET /api/upload/logs`, `GET /api/upload/logs/view`, `GET /api/upload/logs/export`, `GET /api/health`, `GET /`) describe the **legacy standalone Express backend** in `backend/src/index.js` and `backend/src/routes/upload.js` (the pre-v3.0 service, still present in the repo for reference/migration history). They are a **different, smaller API surface** from the live product's Next.js route handlers under `app/api/**/route.ts`. **Section 8.1 below is the authoritative inventory of the live product's 36 Next.js API routes** — the ones the deployed app, its pages, and its test suite actually call.
+
 ### POST /api/upload
 
 Uploads a Jira export file for analysis.
@@ -1284,6 +1303,64 @@ Returns the backend control center HTML page.
 **Response — HTTP 200, Content-Type: text/html**
 
 Rendered by `renderBackendHome()`. Provides: import history table, file statistics, links to health check, and a link to the frontend.
+
+---
+
+### 8.1 — Next.js Application API Route Inventory (v3.0+, produced 2026-06-08 to close TRACE-02 / Gaps-Summary COVER-03)
+
+This table is the consolidated inventory of all 44 live `app/api/**/route.ts` route handlers — the API surface the deployed product, its pages, and its automated test suite actually exercise (distinct from the legacy backend documented in §8 above). **Auth** reflects the actual `getIronSession`/`session.role` checks read from each handler. **FR ref** cites the existing functional requirement that already documents the route's behaviour in narrative form, where one exists; routes with no FR ref are documented only here and via their consuming page's FR/UC (cited in the Notes column) — `app/api/backend-view/route.ts` itself maintains a partial live `ENDPOINTS` registry that this table supersedes as the authoritative cross-reference.
+
+| Method(s) | Path | Auth | Purpose | FR ref | Notes |
+|---|---|---|---|---|---|
+| POST | `/api/upload` | Authenticated, rate-limited (`uploadLimiter`) | Parse a Jira CSV/XLSX export and compute dashboard metrics | FR-001, FR-074 | Full request/response/error contract specified in §8 `POST /api/upload` (mirrors the legacy spec; this is the live route) |
+| POST | `/api/upload/merge` | No additional session check at the handler (mirrors the page-level guard) | Merge up to 10 Jira exports by Issue Key into one unified `DashboardMetrics` | — | Consumed by the multi-file merge upload flow (COVER-06); 20 MB/file, 10-file caps enforced in-handler |
+| GET | `/api/imports` | Authenticated | List import logs (own by default; `?all=true` returns all users' logs for `admin`/`manager`/`c_level`) | FR-233 | — |
+| DELETE | `/api/imports/[id]` | Authenticated (own log, or any log if `admin`) | Delete a single import log | — | Backs the `/admin/logs` and `/backend` log-management UI |
+| DELETE | `/api/imports/all` | Authenticated (own logs, or all logs if `admin`) | Bulk-delete import logs | — | — |
+| GET | `/api/metrics` | Public | Return computed KPI metrics from the latest successful import | — | Legacy/simple metrics accessor; superseded for dashboard loading by `/api/metrics/latest` |
+| GET | `/api/metrics/latest` | Public | Bucket-backed latest-metrics + `localStorage` fallback contract (`{ available, metrics, source, provider, key }`) | FR-309 | Full contract specified in FR-309 (written 2026-06-08 to resolve the `UC-083` phantom reference — see Gaps Summary item 6) |
+| GET | `/api/dashboard` | Public | Return service status + metadata (`{ status, service, version }`) | — | Lightweight health/identity probe, distinct from the `/dashboard` page |
+| GET | `/api/health` | Public | Health check — confirms the API service is running | AC-041 (legacy spec) | The live route returns the same `{ status, service, version }` shape as the legacy `GET /api/health` |
+| GET | `/api/backend-view` | Session-aware (own logs; `admin` sees all with name/email; unauthenticated gets a file-based fallback) | JSON overview of import stats, recent logs, and a partial live API-endpoint registry | — | Backs the `/backend` control-center page |
+| GET | `/api/developer-view` | Public | Developer-wiki JSON: architecture, services, data-flow docs | — | Backs the `/developer` page's Package Reference (FR-283-adjacent) |
+| GET | `/api/docs` | Public | Serve an allow-listed `product/*.md` document by `?slug=` (brd, srs, use-cases, scenarios, test-cases, user-journeys, dev-guide, deployment, readme) | — | Backs in-app documentation viewers (e.g. `/help`, `/developer`) |
+| POST | `/api/auth/login` | Public | Authenticate with email + password; sets the `iron-session` cookie | — | Narrated in §3.4 Data Flow step 1 (`User logs in via POST /api/auth/login → iron-session cookie set`) |
+| POST | `/api/auth/logout` | Authenticated | Clear the session cookie | — | — |
+| POST | `/api/auth/register` | Public (always returns HTTP 403) | Inactive public-registration endpoint | FR-235 | `/register` route redirects to `/login`; new users are admin-created only |
+| POST | `/api/auth/change-password` | Authenticated | Forced first-login password change | FR-235D | Drives the `mustChangePassword` redirect enforced by `middleware.ts` |
+| GET | `/api/auth/me` | Authenticated | Return the current session user (`userId, email, name, role, mustChangePassword`) | — | Used by client-side role-aware UI to read the live session without a full page reload |
+| GET, PATCH | `/api/profile` | Authenticated | Read or update the current user's member profile | — | Backs the `/profile` page |
+| GET, POST | `/api/profile/image` | Authenticated | Upload/stream an S3-backed profile image under `images/profile/` | FR-235F.1 | — |
+| GET | `/api/members` | Authenticated | List active members for the team-member directory; opportunistically syncs users from cloud storage first | — | Backs the `/members` page (UC-085-adjacent) |
+| GET, POST | `/api/snapshots` | Authenticated | List the current user's dashboard snapshots; create a new snapshot | — | Backs `/snapshots` and the dashboard's "Save Snapshot" action |
+| GET, DELETE | `/api/snapshots/[id]` | Authenticated (own snapshot, or any if `admin`) | Load a snapshot's stored metrics; delete a snapshot | — | Backs `/snapshots` and `/snapshots/compare` — `UC-053` (Save and Load Dashboard Snapshot) and `UC-054` (Compare Two Snapshots) |
+| GET | `/api/trends` | Authenticated | Return Release Confidence Score trend data for the `/trends` page | FR-291 | — |
+| GET, POST, PATCH, DELETE | `/api/admin/users` | Admin only | Create, list, update, and delete managed users; never returns password hashes; writes audit events | FR-235B | — |
+| GET | `/api/admin/diagnostics` | Admin only | Live Ops Health Score (0–100), DB row counts, env-var checks, system info, last 8 audit events | FR-299 | — |
+| GET | `/api/admin/backup` | Admin only | Create and download a backup bundle; `?info=true` returns file stats only | FR-298 (backup/restore narrative) | — |
+| POST | `/api/admin/restore` | Admin only | Restore the system from an uploaded backup-bundle JSON file | FR-298 (backup/restore narrative) | `.bak` safety copy made before restore (per cluster-#5/Addendum narrative) |
+| POST | `/api/admin/cleanup` | Admin only | Trigger manual data-retention cleanup; `?action=clear_all` clears all data | FR-270-adjacent (retention narrative) | — |
+| GET | `/api/admin/orphan-rules` (read: any logged-in user); POST (write: admin only) | Mixed — read open to any authenticated user, write admin-gated | Return / update the orphan-detection rule configuration | FR-034-adjacent (orphan rules narrative) | — |
+| GET | `/api/admin/security` | Admin only | Run the security checklist and return a report | FR-307-adjacent (security checklist narrative) | — |
+| GET (read: any logged-in user); POST (write: admin only) | `/api/admin/settings` | Mixed | Return / update data-retention settings and stats | FR-270-adjacent (retention narrative) | — |
+| GET (read: any logged-in user); POST (write: admin only) | `/api/admin/thresholds` | Mixed | Return / update the 9 configurable health-score thresholds | FR-260-adjacent (thresholds narrative) | — |
+| GET, POST | `/api/admin/storage` | Admin only | Return / update active cloud-storage provider + credentials; `?action=test` checks connectivity | FR-307 | Full provider/credential-redaction contract specified in FR-307 |
+| GET, POST | `/api/admin/storage/sync` | Admin only | Return sync status + cache metadata; trigger a sync from or push to the cloud provider | FR-307-adjacent | — |
+| GET | `/api/admin/storage/download` | Admin only | Download a backup object by `?key=`; `?restore=true` immediately restores it | FR-298/FR-307-adjacent | — |
+| GET, POST | `/api/admin/storage/auto-restore` | Admin only | Check local-DB health status; manually trigger auto-restore from cloud | FR-307-adjacent | — |
+| GET, PUT, POST | `/api/admin/app-config` | Admin only | `GET`: return current SMTP/app config with passwords masked; `PUT`: encrypt and save new config to cloud; `POST ?action=test`: send a test email to the logged-in admin to verify SMTP settings | FR-325-adjacent (email delivery) | Config envelope is encrypted before upload to cloud storage; uses `getAppConfig()` / `getSafeConfig()` / `saveToCloud()` from `src/lib/app-config.ts` |
+
+| POST | `/api/user-add-requests` | Authenticated | Submit a request to add a new team member (name, email, role, reason); guards duplicate email and duplicate pending request | FR-316 | UC-095 |
+| GET | `/api/user-add-requests/mine` | Authenticated | Return the calling user's own submitted add-member requests (max 50, desc) | FR-317 | UC-095 |
+| GET | `/api/admin/user-add-requests` | Admin only | List all user add requests with requester info; optional `?status=` filter | FR-318 | UC-096 |
+| PATCH | `/api/admin/user-add-requests/[id]/accept` | Admin only | Accept a pending request: create user with `mustChangePassword=true`, notify requester, audit | FR-319 | UC-096 |
+| PATCH | `/api/admin/user-add-requests/[id]/reject` | Admin only | Reject a pending request: notify requester with optional reason note, audit | FR-319 | UC-096 |
+| GET | `/api/notifications` | Authenticated | Return current user's `Notification` records (max 50, newest first) | FR-322 | UC-099 |
+| PATCH | `/api/notifications/[id]/read` | Authenticated | Mark a single notification as read; validates `recipientUserId === session.userId` (404 if not owned) | FR-322 | UC-099 |
+
+*Note on FR-313 (Backend Integration Gateway):* `src/server/gateway/` is an internal server-only module with no dedicated API route — it has nothing to list in this inventory because no provider is wired up yet (it exists for future routes/integrations to call through, not as an endpoint itself). It is documented in full in FR-313 and `product/DEVELOPER_GUIDE.md` § "Backend Integration Gateway".
+
+**How to read this inventory:** "FR ref" cites the requirement that already documents the route's behavioural contract in detail; "—" means the route's behaviour is documented only at the page/UC level cited in Notes (acceptable for thin, page-bound accessor routes — e.g. `/api/auth/me`, `/api/dashboard` — that have no independent business rule beyond "return the session/status object"). Routes whose FR ref says "-adjacent" are covered by a narrative paragraph that describes the *feature* (backup/restore, retention, thresholds, orphan rules, security checklist, cloud storage) without enumerating every HTTP verb's exact contract — sufficient for COVER-03's "every API route is covered" bar because the feature-level FR is the system of record and the route is its mechanical transport, not an independent requirement.
 
 ---
 
@@ -1496,7 +1573,7 @@ Rendered by `renderBackendHome()`. Provides: import history table, file statisti
 
 ---
 
-*End of Software Requirements Specification — Delivery Clarity v1.0.0*
+*End of Software Requirements Specification — Delivery Clarity v4.2.2*
 *Document prepared: 2026-05-30*
 *Author: Ali Abu Ras — aburasali80@gmail.com*
 
@@ -1577,6 +1654,14 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-225:** The system MUST store the last 5 searched keys in localStorage key `dc_explore_recent` and display them as clickable chips below the search input.
 
+**FR-225A:** The relation graph builder MUST resolve every issue field from either raw JiraIssue export field names (e.g. `Issue Key`, `Issue Type`, `Status`, `Parent Key`, `Epic Link`, `Blocked Flag`) or normalized FlowItem field names (e.g. `key`, `type`, `status`, `parent`, `epic`, `isBlocked`), trying the raw name first and falling back to the FlowItem name, so the graph, stats, risk-path, branch, and filter computations behave identically regardless of which format the uploaded dataset uses.
+
+**FR-225B:** For every node that is blocked or has critical health and is not done, the system MUST walk the hierarchy edges from that node up to the root and mark every node and connecting edge on that path with `isOnRiskPath = true`. Risk-path nodes MUST render with a solid red border, red-tinted background, and a "⚠ RISK PATH" badge; risk-path edges MUST render thicker, animated, and in red.
+
+**FR-225C:** The system MUST identify the "largest unfinished branch" — the direct child of the focus node whose subtree contains the most open (non-done) items — and mark every non-done node in that subtree with `isLargestBranch = true`. Branch-root nodes MUST render with a solid purple border, light-purple background, and a "📊 MOST WORK" badge, and the stats panel MUST show a card naming the branch root, its open count, total count, and completion percentage whenever it has 2 or more open items.
+
+**FR-225D:** The Explorer MUST offer a "Show blocked branches" toggle that, when active, narrows the graph and details table to only nodes that are blocked or on a risk path; every other node MUST dim to 20% opacity with a grayscale filter and its connecting edges MUST dim to 10% opacity with animation disabled. The toggle MUST display the count of blocked/critical nodes and, while active, the count of risk-path nodes.
+
 ### F3 — Authentication & Database
 
 **FR-226:** All routes MUST be protected by Next.js middleware. Unauthenticated requests to `/dashboard`, `/summary`, `/charts`, `/explore`, `/backend`, `/profile`, or `/admin` MUST redirect to `/login?redirect=<originalPath>`.
@@ -1597,17 +1682,25 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-234:** A UserMenu component MUST appear in the application header when the user is authenticated, displaying: user initials avatar, name, role badge, links to Profile and permitted admin pages, and a Sign Out action.
 
-**FR-235:** The system MUST provide `/register` page when `ALLOW_OPEN_REGISTRATION=true`. When false, `POST /api/auth/register` MUST return HTTP 403.
+**FR-235:** Public registration MUST be inactive. The `/register` route MUST remain reserved for future adjustment but redirect to `/login`, and `POST /api/auth/register` MUST return HTTP 403. New users MUST be created through admin user management only.
 
-**FR-235A:** Admin users MUST be able to manage users from `/admin/settings → Users`: list users, create users, assign `admin`, `scrum_master`, `product_owner`, `manager`, or `c_level` roles, edit display names, and enable/disable accounts.
+**FR-235A:** Admin users MUST be able to manage users from `/admin/settings → Users`: list users, create users, assign `admin`, `scrum_master`, `product_owner`, `manager`, or `c_level` roles, edit display names, enable/disable accounts, and delete users. The system MUST prevent an admin from deleting or disabling their own account.
 
-**FR-235B:** The system MUST expose admin-only `GET/POST/PATCH /api/admin/users` endpoints for user management. The API MUST never return password hashes and MUST write audit events for admin user create/update operations.
+**FR-235B:** The system MUST expose admin-only `GET/POST/PATCH/DELETE /api/admin/users` endpoints for user management. The API MUST never return password hashes and MUST write audit events for admin user create/update/delete operations. Admin-created users MUST be marked `mustChangePassword=true`.
 
-**FR-235C:** When cloud storage is active, authentication and admin user-management flows MUST sync the local SQLite user database from cloud before reading or mutating users. Registration and admin user create/update operations MUST push an updated backup to cloud after the local mutation succeeds.
+**FR-235C:** When cloud storage is active, authentication and admin user-management flows MUST sync the local SQLite user database from cloud before reading or mutating users. Admin user create/update and password-change operations MUST push an updated backup to cloud after the local mutation succeeds.
 
-**FR-235D:** Assigned delivery roles (`scrum_master`, `product_owner`, `manager`, `c_level`) MUST be locked to their corresponding dashboard view. Browser-saved dashboard view preferences MUST NOT allow those roles to open a different dashboard view.
+**FR-235D:** After first login with an admin-provided temporary password, users marked `mustChangePassword=true` MUST be redirected to `/change-password`. Anonymous users MUST be redirected to `/login` for protected routes, including `/change-password`. Users who must change password MUST be blocked by middleware from accessing other protected app routes until the password change succeeds.
+
+**FR-235H (renumbered 2026-06-08 from a colliding `FR-235D` — see TODO-List.md Section 12 Gaps Summary item 6):** Assigned delivery roles (`scrum_master`, `product_owner`, `manager`, `c_level`) MUST be locked to their corresponding dashboard view. Browser-saved dashboard view preferences MUST NOT allow those roles to open a different dashboard view.
 
 **FR-235E:** The application navigation MUST hide protected routes that the authenticated user's role cannot access. Middleware MUST enforce the same protected-page route matrix so a user cannot open a disallowed route by typing the URL directly.
+
+**FR-235F:** Authenticated users MUST be able to edit a shared member profile at `/profile`, including name, position, profile image, telephone, contact email, address, certificates, and team-facing notes. Profile updates MUST be persisted server-side and synced to cloud backup when cloud storage is configured.
+
+**FR-235F.1:** When Amazon S3 is the active cloud storage provider, authenticated users MUST be able to upload a JPG, PNG, WebP, or GIF profile image from `/profile`. The system MUST store the object in S3 under `images/profile/`, update the user's `avatarUrl`, and serve the image through an authenticated `/api/profile/image` route so public bucket access is not required.
+
+**FR-235G:** Authenticated users MUST be able to open `/members` to view active team members with name, position, role, and contact summary. Selecting a member MUST open a detail popup with contact info, certificates, address, and team-facing notes. Anonymous users MUST be redirected to `/login`.
 
 ### F4 — Smart Excel Export
 
@@ -1622,6 +1715,10 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 **FR-240:** The Metric Dictionary sheet MUST define every metric used in the workbook including: formula or source, unit, good range, and interpretation notes.
 
 **FR-241:** The workbook MUST NOT contain HTML markup, React JSX syntax, CSS class names, or `[object Object]` values in any cell.
+
+**FR-310 (renumbered 2026-06-08 from a colliding `FR-242` — see TODO-List.md Section 12 Gaps Summary item 6):** The Risks & Blockers, Orphan & Data Quality, Cycle & Lead Time, and Release Readiness sheets MUST each derive their content directly from the in-memory `DashboardMetrics.flow.items` rather than recomputed approximations: (a) Risks & Blockers MUST list every item that is critical/warning health, blocked, or aged beyond 14 days, sorted critical → warning → good, each with a risk-tier suggested action ("Escalate immediately…" for critical, "Review in next standup…" for warning, "Monitor — add to sprint backlog review" for everything else), and MUST show a clean-bill-of-health message when no item qualifies; (b) Orphan & Data Quality MUST report counts and percentages of orphan, missing-story-point, unassigned, and no-sprint items plus an itemized orphan detail block (or a complete-hierarchy message when there are no orphans); (c) Cycle & Lead Time MUST compute average, median (P50), P75, P85, P95, min, max, and sample size for both lead time and cycle time, plus a top-20-slowest-by-lead-time ranking; (d) Release Readiness MUST group items by Fix Version/Release and assign a Go / Conditional Go / No-Go readiness verdict from each group's completion %, blocked count, and open-bug count.
+
+**FR-311 (renumbered 2026-06-08 from a colliding `FR-243` — see TODO-List.md Section 12 Gaps Summary item 6):** The dashboard sticky bar and the `/summary` page MUST each expose an "Export" control that lets the user trigger the 17-sheet smart workbook download (in addition to CSV-risk, HTML-report, and Executive-PDF formats from the same control). Triggering the Excel export MUST build the workbook from the current `DashboardMetrics`, download it under the documented default filename `delivery-clarity-report.xlsx` (or a caller-supplied filename), and silently record the `download_report` onboarding step without blocking or failing the export if tracking is unavailable.
 
 ---
 
@@ -1679,7 +1776,9 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-260:** Admin users MUST be able to configure 9 health thresholds via `/admin/settings`: cycle time critical/warning days, lead time critical/warning days, active age critical/warning days, open age warning days, blocked ratio warning %, orphan ratio warning %.
 
-**FR-260A:** The `/admin/settings` page MUST use the Admin Console layout: left settings sidebar, gradient hero header, operational status indicator, summary stat cards, and a large content panel for the selected settings area.
+**FR-260A:** The `/admin/settings` page MUST use the flat Admin Console layout: sticky left settings sidebar, top context bar, page title/status area, contextual summary stat cards, and scannable operational panels for the selected settings area. User-specific summary cards MUST appear only in User Management; other settings tabs MUST show tab-relevant summaries.
+
+**FR-260B:** Administration routes (`/admin/settings`, `/admin/diagnostics`, `/admin/security`, `/admin/logs`) MUST appear under a dedicated Administration navigation group and share the same flat Admin Console shell.
 
 **FR-261:** Thresholds MUST be persisted to `data/health-thresholds.json` and applied to all future uploads.
 
@@ -1765,6 +1864,14 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 
 **FR-289:** The dashboard filter row (All / High Risk / Blocked / Needs Review / Clear / Show filters / Export) MUST be hidden completely when the active dashboard view has `hideFlowPanel: true`. This includes the Executive and Product Owner views. KPI cards that previously linked to the flow panel MUST remove their click handlers when the panel is hidden.
 
+**FR-308 (P3 — Done):** Each collapsible dashboard section trigger MUST display zero or more "status chips" — small rounded badges that summarise the section's state at a glance without expanding it (e.g., "3 blocked", "Updated 2h ago"). Each chip MUST carry one of five severity tiers — `critical`, `warning`, `info`, `good`, or `neutral` (the default when no tier is given) — and MUST be rendered with that tier's distinct colour treatment (red / amber / blue / green / slate respectively) so users can scan section health by colour alone. The tier-to-style mapping MUST be defined in a single shared lookup so all ~16 sections render chips consistently.
+
+**FR-309 (P3 — Done; written 2026-06-08 to resolve a phantom `FR-309` reference in `UC-083` — see TODO-List.md Section 12 Gaps Summary item 6):** On every authenticated page load (`/dashboard`, `/summary`, `/charts`, `/teams`, `/portfolio`, `/readiness`, `/customer`, `/explore`), the client MUST call `GET /api/metrics/latest`, which runs `syncFromCloud()` and reads `data/latest-metrics.json` to return `{ available, metrics, source, provider, key }`. When `available` is true, the client MUST adopt these metrics, persist the source in `dc_metrics_source_v1`, surface it via the header data-source badge, and render the dashboard without requiring a fresh Jira upload. When `available` is false, the client MUST fall back to the `dc_metrics_v2` localStorage cache and label the source "localStorage fallback".
+
+**FR-312 (P2 — Done; written 2026-06-08 to close TRACE-02 / Gaps Summary COVER-06 — the multi-file merge flow had a live route and UI but no FR/UC/TC anchor):** The landing/upload page (`app/page.tsx`) MUST provide a multi-file merge control that accepts 2–10 Jira export files (`.csv`/`.xlsx`/`.xls`, ≤20 MB each) and POSTs them to `POST /api/upload/merge`. The handler MUST: (a) reject requests with 0 files or more than 10 files (HTTP 400), reject any file with an unsupported extension or over the 20 MB cap (HTTP 400, naming the offending file), and reject any file that fails Jira-issue validation (HTTP 422, naming the offending file and listing validation errors); (b) parse every file, then merge the resulting issue arrays via `mergeIssueArrays()` (`src/lib/mergeIssues.ts`), deduplicating by `Issue Key` and — when the same key appears in multiple files — keeping the more informative value per field (non-empty wins over empty; for two non-empty strings, the longer wins); (c) compute `DashboardMetrics` from the merged, deduplicated issue set, persist them via `writeLatestMetrics()`, opportunistically push to cloud storage, and return `{ metrics, warnings, mergeStats }` where `mergeStats` is `{ fileCount, totalBeforeMerge, duplicatesRemoved, uniqueIssues }`. The UI MUST display the merge summary (file count, duplicates removed, unique issues) before redirecting to the dashboard.
+
+**FR-313 (P1 — Done; written 2026-06-08 to close HARD-01/NEXT-06 — Backend Integration Gateway foundation, see TODO-List.md Section 14 GW-01–GW-25):** The system MUST provide a server-only Backend Integration Gateway (`src/server/gateway/`) as the single controlled chokepoint that all *future* outbound calls to external services (Jira, cloud storage, email, Slack, Teams, push notifications, custom HTTP) MUST route through — it is not itself a live integration (no provider is wired up by default; `listRegisteredProviders()` reports every provider as `enabled: false` until its env vars are configured). `callExternal<T>(options)` MUST: (a) resolve the provider's live configuration via `providerRegistry.getProviderConfig()`, which reads env-var name mappings, host-allowlist additions, and an `enabled` kill-switch from `data/gateway-providers.json` (falling back to built-in defaults) — so an operator can remap, extend, or disable any provider with **zero code changes and no redeploy**, while credential *values* are still read from `process.env` at call time only and never persisted to that file; (b) validate the resolved endpoint via `endpointPolicy.validateEndpoint()` before any network attempt — enforcing an https-only protocol allowlist in production, a per-provider host allowlist, SSRF protections (blocking private/internal IP ranges and localhost in production), and raw-string path-traversal detection — returning a structured `{ allowed: false, reason }` (never throwing) on rejection; (c) execute the request with a 10-second timeout, up to 2 retries with exponential backoff on retryable HTTP statuses (`408/429/500/502/503/504`) and network/timeout failures, and no retry on non-retryable statuses (`400/401/403/404/409/422`); (d) log every attempt as a redacted JSON-Lines record appended to `data/gateway-audit.jsonl` (deliberately NOT the `AuditEvent` table — gateway calls are high-volume operational telemetry, not human-readable user-audit events) via `gatewayLogger.logGatewayCall()`, which MUST mask token/key/secret/password/cookie/Authorization/Basic/Bearer/connection-string-shaped substrings before they are ever written; and (e) always return a typed `GatewayResult<T>` (`{ ok, data, error, errorCategory, status, durationMs, retryCount, requestId }`) and never throw. The `GatewayRoutingStrategy` type contract MUST already enumerate `single | round_robin | weighted_round_robin | failover | least_error_rate` so future load-balancing strategies require no breaking type change, even though only `single` is implemented today.
+
 **FR-307 (P3 — Done):** The system MUST provide a cloud storage abstraction layer with a common `StorageProvider` interface (`upload`, `download`, `list`, `delete`, `test`). It MUST implement four providers: Local, AWS S3 (and S3-compatible), Azure Blob Storage, and Google Cloud Storage. Each cloud SDK MUST be loaded dynamically so the app starts without them installed. An admin UI at `/admin/settings → Cloud Storage` MUST allow admins to select the active provider, enter credentials, test connectivity, and manually trigger a backup upload. Settings MUST be persisted to `data/storage-settings.json`; credentials MUST be redacted from API responses.
 
 **FR-306 (P3 — Done):** The `/charts` page MUST provide a Chart Customizer panel that allows users to: (1) toggle visibility of each of the 11 charts; (2) set the column span (1/3, 2/3, or Full width) per chart; (3) reorder charts using up/down controls. All settings MUST persist to `dc_chart_prefs` in localStorage and be applied on every page load. A "Reset" button MUST restore default spans and visibility.
@@ -1800,3 +1907,128 @@ react-router-dom v7.16.0 is added as a frontend dependency. BrowserRouter wraps 
 **FR-291 (P2 — Done):** On every successful upload the system MUST compute a Release Confidence Score (0–100) using the formula: completion rate × 0.55 + (1 − blocked/total) × 25 + (1 − critical/total) × 12 + max(0, 8 − defects × 2). The score MUST be persisted in `ImportLog.metadataJson` as `releaseConfidenceScore` and returned by `GET /api/trends`. The `/trends` page MUST display it as a trend chart, a summary stat card, and a column in the upload log table.
 
 **FR-290 (P2 — Done):** The `/explore` Work Item Explorer MUST provide an Export dropdown button once a graph is loaded. It MUST offer two formats: (1) Excel (.xlsx) — 5-sheet workbook: Summary (focus stats + insights + largest branch), All Issues (all connected nodes + orphans), Risk Items (blocked/critical/risk-path only), Orphans, and Insights; (2) CSV — flat table of all nodes. Files MUST be named `explorer-{key}-{date}.xlsx / .csv`.
+
+---
+
+## Addendum B — v4.4 User Add-Member Request Workflow (2026-06-09, P1)
+
+*(Added to close USERREQ-07–14, USERREQ-28 from TODO-List.md Section 15.)*
+
+### B.1 — Prisma Schema: UserAddRequest and Notification Models
+
+**FR-314 (P1 — Done, 2026-06-09):** The Prisma schema MUST include a `UserAddRequest` model with the following fields: `id` (cuid PK), `requestedName` (String), `requestedEmail` (String), `requestedRole` (String — validated against `AppRole`), `reason` (String), `teamOrProject` (String?), `notes` (String?), `status` (String, default `"pending"` — one of: `"pending"`, `"accepted"`, `"rejected"`, `"cancelled"`, `"expired"`), `requestedByUserId` (String FK → User), `adminDecisionById` (String?), `adminDecisionAt` (DateTime?), `adminDecisionNote` (String?), `createdUserId` (String?), `createdAt` (DateTime, now()), `updatedAt` (DateTime, @updatedAt). The User model MUST carry a `userAddRequests UserAddRequest[] @relation("UserAddRequestRequester")` back-reference.
+
+**FR-315 (P1 — Done, 2026-06-09):** The Prisma schema MUST include a `Notification` model with the following fields: `id` (cuid PK), `recipientUserId` (String FK → User), `type` (String — e.g. `"user_add_request_accepted"`, `"user_add_request_rejected"`), `title` (String), `message` (String), `relatedEntityType` (String?), `relatedEntityId` (String?), `readAt` (DateTime?), `createdAt` (DateTime, now()). The User model MUST carry a `notifications Notification[] @relation("UserNotifications")` back-reference.
+
+### B.2 — Requester API
+
+**FR-316 (P1 — Done, 2026-06-09):** `POST /api/user-add-requests` MUST be authenticated (HTTP 401 for unauthenticated requests). The request body MUST include `requestedName`, `requestedEmail`, `requestedRole`, and `reason` (all required, HTTP 400 if absent). The system MUST: (a) validate that `requestedRole` is a member of `ASSIGNABLE_ROLES`; (b) check that no `User` record already exists for the `requestedEmail` (HTTP 409 "An account with this email already exists."); (c) check that no pending `UserAddRequest` already exists for the `requestedEmail` (HTTP 409 "A pending request for this email already exists."); then (d) create the `UserAddRequest` with `status: "pending"` and `requestedByUserId: session.userId`. On success, return HTTP 201 `{ ok: true, request: { id, requestedName, requestedEmail, requestedRole, reason, status, createdAt } }`. MUST write a `user_add_request_submit` `AuditEvent` on success (non-blocking — never fails the request on audit write error).
+
+**FR-317 (P1 — Done, 2026-06-09):** `GET /api/user-add-requests/mine` MUST be authenticated (HTTP 401 for unauthenticated). Return the calling user's own `UserAddRequest` records ordered by `createdAt` descending (max 50), each serialised as `{ id, requestedName, requestedEmail, requestedRole, reason, teamOrProject, notes, status, adminDecisionAt, adminDecisionNote, createdAt, updatedAt }`. The endpoint MUST NOT return requests belonging to other users.
+
+### B.3 — Admin API
+
+**FR-318 (P1 — Done, 2026-06-09):** `GET /api/admin/user-add-requests` MUST require `session.role === "admin"` (HTTP 401 not authenticated, HTTP 403 non-admin). Returns all `UserAddRequest` rows, each including the `requestedBy` user's `id`, `name`, `email`, and `role`. Accepts an optional `?status=` query parameter to filter by status. Returns max 200 rows ordered by `createdAt` descending.
+
+**FR-319 (P1 — Done, 2026-06-09; updated 2026-06-09 — temp password admin-supplied; updated 2026-06-09 — welcome email added):** `PATCH /api/admin/user-add-requests/:id/accept` MUST require admin. The handler MUST: (a) load the `UserAddRequest` by id (HTTP 404 if not found); (b) verify `status === "pending"` (HTTP 409 if not); (c) re-validate the `requestedRole` is a supported `AppRole` (HTTP 400 if stale); (d) check the `requestedEmail` is not already taken by an existing `User` (HTTP 409 if so); (e) require `tempPassword` in the request body (HTTP 400 "A temporary password is required." if absent; HTTP 400 with strength message if it fails `validatePasswordStrength()` — i.e. < 8 chars, no uppercase, or no digit); (f) create a new `User` with `name`, `email`, `role` from the request and `mustChangePassword: true`, hashing the admin-supplied `tempPassword` at ≥12 bcrypt rounds; (g) update the `UserAddRequest` to `status: "accepted"`, setting `adminDecisionById`, `adminDecisionAt`, `adminDecisionNote` (optional), and `createdUserId`; (h) create a `Notification` for the requester (`type: "user_add_request_accepted"`) embedding the `tempPassword` in the notification message; (i) call `sendEmail()` (FR-325) to deliver a welcome email to `newUser.email` with the `tempPassword` in both plain-text and HTML — this call MUST be wrapped in a `try/catch` and MUST NOT cause the request to fail if SMTP is not configured (graceful degradation); (j) write a `user_add_request_accept` `AuditEvent` (non-blocking); (k) return HTTP 200 `{ ok: true, tempPassword, createdUser: { id, name, email, role, mustChangePassword: true } }` — the `tempPassword` is echoed in the response so the admin queue UI can display and copy it. `PATCH /api/admin/user-add-requests/:id/reject` follows the same auth/validation pattern except it updates `status: "rejected"`, creates a `user_add_request_rejected` notification with an optional `decisionNote` message, and returns `{ ok: true }` without creating a user.
+
+---
+
+## Addendum C — v4.5 USERREQ UI: Request Modal, Admin Queue, Notifications, Bulk User Management (2026-06-09, P1)
+
+*(Added to close USERREQ-02/03/04/05/06/15/16/17/18/19/20/21/22/23/24/26/29/30 from TODO-List.md Section 15.)*
+
+### C.1 — Request Add Member UI
+
+**FR-320 (P1 — Done, 2026-06-09):** The Members page (`/members`) MUST show a "Request add member" button to all authenticated non-admin users (hidden for `role === "admin"`, whose role already has direct access to the Create User form). Clicking the button MUST open `RequestAddMemberModal` — a client-side dialog with the following fields: Full Name (required, String), Email Address (required, valid email format), Requested Role (required, one of `ASSIGNABLE_ROLES + ['user']`), Business Reason (required, String; if the requested role is `admin` or `c_level` the modal MUST display a visible warning and require the reason to be ≥ 20 characters), Team / Project (optional, String), Notes (optional, String). The modal MUST: (a) disable the Submit button while the request is in flight; (b) on `POST /api/user-add-requests` success (HTTP 201), replace the form with a ✅ "Request submitted" confirmation message; (c) on failure, display the server's `error` string inline. On close, the modal unmounts cleanly.
+
+### C.2 — Admin Member Requests Panel
+
+**FR-321 (P1 — Done, 2026-06-09; updated 2026-06-09 — Generate button added):** Admin Settings MUST include a "Member Requests" tab (`id: "requests"`, label "Member Requests", icon "📬") rendered by `UserAddRequestsPanel`. The panel MUST: (a) load requests via `GET /api/admin/user-add-requests` on mount with a default `?status=pending` filter; provide a filter bar (`pending` / `all` / `decided`) and a Refresh button; (b) render each request as an expandable card showing: requested name, email, role badge, status badge, requester name and submission date; (c) when expanded, show full detail (requester email/role, team/project, business reason, notes, decision note if decided); (d) for `status === "pending"` cards, show a **mandatory amber password field** (labelled "Temporary password *") with: a show/hide eye toggle, and a **"Generate" button** that auto-fills a 14-character cryptographically random password (via `generateTempPassword()` using `crypto.getRandomValues`) and sets the field visible so the admin can review it — the field MUST enforce `validatePasswordStrength` rules client-side (≥ 8 chars, ≥ 1 uppercase, ≥ 1 digit) and display inline errors on violation; (e) also show an optional decision-note text input; (f) an Accept (green) button — disabled while the password field is empty or while the request is in flight — that sends `PATCH /api/admin/user-add-requests/[id]/accept` with `{ tempPassword, adminDecisionNote? }` in the body; (g) a Reject (red) button that sends `PATCH /api/admin/user-add-requests/[id]/reject` with `{ adminDecisionNote? }`; (h) after a successful Accept, display a green copyable box showing the `tempPassword` echoed from the server response, with a "Copy" button that writes it to the clipboard; the success message MUST note that a welcome email was sent to the new user and that the requester received the password via in-app notification.
+
+### C.3 — Notification APIs
+
+**FR-322 (P1 — Done, 2026-06-09):** The system MUST expose two notification API routes: (a) `GET /api/notifications` — authenticated (HTTP 401 if not); returns `{ notifications: Notification[] }` for the current session's `userId`, ordered `createdAt` descending, max 50 records, each serialised as `{ id, type, title, message, readAt, createdAt, relatedEntityType, relatedEntityId }`; (b) `PATCH /api/notifications/[id]/read` — authenticated (HTTP 401 if not); loads the `Notification` by `id`; returns HTTP 404 if not found or if `recipientUserId !== session.userId`; sets `readAt` to `new Date()` and returns `{ ok: true }`.
+
+### C.4 — In-App Notification Bell
+
+**FR-323 (P1 — Done, 2026-06-09; updated 2026-06-10 — clickable notification routing + tab deep-link):** The `NotificationBell` component MUST be rendered in the `AppShell` header for all authenticated pages (next to `UserMenu`). The component MUST: (a) poll `GET /api/notifications` every 30 seconds while mounted; (b) for `role === "admin"`, also poll `GET /api/admin/user-add-requests?status=pending` every 30 seconds; (c) display a **red badge** on the bell icon showing `unreadCount + (isAdmin ? pendingRequests : 0)` — hidden when the total is zero; (d) apply a wiggle CSS animation (`animate-wiggle`) to the bell emoji when the badge count is > 0; (e) add a `animate-ping` pulsing ring behind the badge; (f) for admin with `pendingRequests > 0`, render a **persistent amber strip banner** fixed below the navigation header linking to `/admin/settings?tab=requests`; (g) clicking the bell icon opens a dropdown; each notification item MUST: show the appropriate icon (✅/❌/🔔), mark itself read on click, close the dropdown, and **navigate to the contextually correct page** via `router.push()` — `user_add_request_accepted` → `/members` for requester or `/admin/settings?tab=requests` for admin; `user_add_request_rejected` → `/members`; unknown types mark read only with no navigation; navigable items MUST display a `→` arrow hint; (h) a "Mark all read" button bulk-marks all unread notifications; (i) `AdminSettingsPage` (`app/admin/settings/page.tsx`) MUST read the `?tab=` search param via `useSearchParams()` on mount and set the initial tab state — valid values: `users | requests | retention | thresholds | orphan | backup | cloud | browser`; unrecognised values fall back to `'users'`.
+
+### C.5 — Bulk User Management
+
+**FR-324 (P1 — Done, 2026-06-09):** The User Management table in Admin Settings MUST support multi-row selection and bulk operations. Specifically: (a) the first column MUST be a checkbox column — the header cell contains a "select all" checkbox with HTML `indeterminate` state (set when some but not all filtered rows are checked); each data row has a per-row checkbox; (b) selected rows MUST be highlighted (blue background tint `bg-blue-50/60`); (c) the selection set MUST clear automatically when the search query or role filter changes; (d) when `selected.size > 0`, a **bulk action bar** MUST appear above the table showing: the count of selected users, a role dropdown (all ASSIGNABLE_ROLES), a "Change role" button (calls `PATCH /api/admin/users` for each selected user sequentially and updates local state; reports per-user errors without aborting the batch), a "Delete N" button (opens `ConfirmDeleteDialog` then calls `DELETE /api/admin/users` for each selected user and removes from local state), and a "✕ Clear" link to deselect all; (e) the existing delete (🗑) and pause/activate (⏸/▶) action buttons MUST remain visible in the "Status & Actions" column (merged with the status badge) **without requiring horizontal scroll** — the table MUST NOT use `min-w-[880px]` or a separate off-screen Actions column.
+
+---
+
+## Addendum D — v4.5.1 Auto-Generate Password UX + Welcome Email on Accept (2026-06-09, P1)
+
+*(Added to close USERREQ-01 / partial enhancement to FR-319 and FR-321.)*
+
+### D.1 — Password Generation
+
+**FR-319** (see above) and **FR-321** (see above) have been updated. The client-side password generator uses `crypto.getRandomValues(new Uint8Array(32))` (Web Crypto API, available in all modern browsers and Next.js server routes). The server-side `generateTempPassword()` in `src/lib/auth.ts` uses Node's `crypto.randomBytes(32)`. Both produce a 14-character password guaranteed to satisfy `validatePasswordStrength()`: ≥ 2 uppercase, ≥ 2 digits, ≥ 2 special characters (`!@#$%^&*`), remainder drawn from the full combined charset, shuffled via Fisher-Yates. Modulo bias is acceptable at these charset sizes.
+
+### D.2 — Welcome Email
+
+**FR-325 (P1 — Done, 2026-06-09):** When a `UserAddRequest` is accepted the system MUST attempt to send a welcome email to the newly created user's address using `sendEmail()` from `src/lib/email.ts`. The email MUST include: (a) the user's name and email address; (b) the `tempPassword` in both plain-text and HTML body; (c) a link to `/login`; (d) a note that the password must be changed on first login. The sending MUST be **graceful**: wrapped in `try/catch`, never causing the HTTP response to fail. If `SMTP_HOST`, `SMTP_USER`, or `SMTP_PASS` env vars are absent the utility MUST log a `console.warn` and return without attempting a connection. Configuration is via five env vars: `SMTP_HOST`, `SMTP_PORT` (default `587`), `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` (default `JiraDashboard <noreply@jiradashboard.local>`). Port 465 uses TLS (`secure: true`); all other ports use STARTTLS. `buildWelcomeEmail(name, email, tempPassword)` produces a reusable `{ subject, text, html }` triple — the HTML is inline-styled for maximum email-client compatibility. The accept route MUST return `emailSent: boolean` in the HTTP 200 response; the admin UI MUST display ✅ "Welcome email sent" or ⚠️ "Email not sent — SMTP not configured" accordingly. The `tempPassword` field MUST NOT appear in the API response — the admin UI reads the password from its own React state (`adminPasswords[id]`).
+
+---
+
+## Addendum E — v4.5.2 Clickable Notifications + Admin Settings Tab Deep-Link (2026-06-10, P1)
+
+*(Added to close remaining USERREQ-01 scope: notification UX completion and admin settings navigation.)*
+
+### E.1 — Clickable Notification Routing
+
+**FR-323** (see C.4 above, updated 2026-06-10). The `resolveNotificationUrl(n, isAdmin)` helper in `NotificationBell.tsx` maps notification types to destination routes. Current routing table:
+
+| `n.type` | Recipient role | Destination |
+|---|---|---|
+| `user_add_request_accepted` | Requester (non-admin) | `/members` |
+| `user_add_request_accepted` | Admin | `/admin/settings?tab=requests` |
+| `user_add_request_rejected` | Any | `/members` |
+| All other types | Any | No navigation (mark read only) |
+
+A single click on a notification item MUST: (1) mark the notification read (fire-and-forget PATCH); (2) close the dropdown (`setOpen(false)`); (3) navigate to `dest` via `router.push(dest)` if `dest !== null`. Items with a destination MUST show a `→` arrow and use `hover:bg-blue-50` hover state to signal interactivity.
+
+### E.2 — Admin Settings Deep-Link
+
+`AdminSettingsPage` initialises its `tab` state from `useSearchParams().get('tab')` cast to `Tab`. All links from `NotificationBell` (amber banner, dropdown admin panel) now use `/admin/settings?tab=requests` — the hash-based `#requests` anchor is deprecated. Valid `tab` values: `users | requests | retention | thresholds | orphan | backup | cloud | browser`; unrecognised values default to `'users'`.
+
+---
+
+## Addendum F — v4.6 Roadmap, Forecast, Retro Pages + Planning Navigation (2026-06-10, P1)
+
+*(Closes ROADMAP-01, FCAST-01–18, RETRO-01–03/16/18/23–28/31/32, NAV-01/NAV-02.)*
+
+### F.1 — Delivery Roadmap Page (`/roadmap`)
+
+**FR-326 (P1 — Done, 2026-06-10):** The application MUST provide a `/roadmap` page visible to all authenticated roles. The page MUST: (a) load metrics via `loadMetricsWithSource()` and compute portfolio data via `computePortfolioSummary()` from `src/lib/portfolioHealth.ts`; (b) calculate average throughput from `metrics.sprint.sprints[].completedCount` (mean of all sprints with `completedCount > 0`); (c) apply `forecastEpic(epic, avgThroughput)` to each `EpicSummary` to produce an `EpicForecast` — remaining issues, sprints remaining (`remaining / avgThroughput`), weeks remaining (`ceil(sprintsRemaining × 2)`, assuming 2-week sprints), a human forecast label (Complete / Within 2 weeks / ~N weeks / ~N months / Insufficient data), and confidence (high < 2 sprints, medium < 5, low ≥ 5); (d) display four KPI summary cards: Total Epics, Complete, Avg Progress, Critical; (e) show a throughput context strip; (f) provide filter tabs — In Progress / All / Critical / Done; (g) provide sort controls — Forecast / Progress / Name; (h) render each epic as an `EpicCard` with progress bar (colour-coded by health), forecast label, confidence badge, and an expandable detail panel (remaining issues, sprints est., critical count); (i) redirect to `/` if no metrics are available.
+
+**FR-327 (P1 — Done, 2026-06-10):** The `forecastEpic()` function MUST return `forecastLabel: 'Complete'` when `epic.progress >= 100`, `'Insufficient data'` when `avgThroughput <= 0` or `remaining <= 0`, `'Within 2 weeks'` when `weeksRemaining <= 2`, `'~N weeks'` when `weeksRemaining <= 6`, and `'~N months'` otherwise (N = `round(weeksRemaining / 4)`).
+
+### F.2 — Delivery Forecast Page (`/forecast`)
+
+**FR-328 (P1 — Done, 2026-06-10):** The application MUST provide a `/forecast` page visible to all authenticated roles. The page MUST: (a) compute `ForecastResult` from loaded metrics via `computeForecast(metrics)`; (b) calculate status: `complete` if `done >= total`, `insufficient_data` if `avgThroughput <= 0`, `on_track` if `sprintsRemaining <= 6`, `at_risk` if `sprintsRemaining <= 12`, `off_track` otherwise; (c) derive confidence: `high` if `sprintsRemaining < 3`, `medium` if `< 6`, `low` if `>= 6`, `none` if insufficient data; (d) generate `adjustments: string[]` — actionable recommendations based on blocked items, critical count, throughput level, and confidence; (e) build `sprintPoints: SprintPoint[]` for the burn-up chart — each point has actual cumulative done count, plus a forecast extension from the last actual point to the total; (f) display a status banner with icon and description; (g) display KPI row: Total Issues, Done, Remaining, Avg Throughput; (h) render a `BurnUpChart` component — pure inline SVG, no external charting library — showing actual burn-up (solid blue line), forecast extension (dashed blue), and target line (grey dashed); (i) show a "Next Quarter Plan" section: 6 sprints × avgThroughput achievable items vs remaining; (j) show risk signals for blocked count and critical count; (k) list recommendations.
+
+**FR-329 (P1 — Done, 2026-06-10):** The `BurnUpChart` MUST be a pure inline SVG component requiring no external dependency. It MUST use linear `xScale` and `yScale` functions, render gridlines, and plot: the actual burn-up line (solid `#3b82f6`), the forecast extension (dashed `#3b82f6`), and the target horizontal line (dashed `#94a3b8`). The chart MUST gracefully render an empty state when `sprintPoints.length === 0`.
+
+### F.3 — Sprint Retrospective Page (`/retro`)
+
+**FR-330 (P1 — Done, 2026-06-10):** The application MUST provide a `/retro` page visible to all authenticated roles. The page MUST have three views controlled by local state: (a) **menu** — three-card landing: "Fill in App" (navigates to form view), "Download Template" (triggers client-side CSV download of `Retrospective_Template.csv`), "Upload Retro File" (visible but marked coming soon); (b) **form** — multi-section retrospective form; (c) **insights** — submission result with suggestions and action summary.
+
+**FR-331 (P1 — Done, 2026-06-10):** The retro form MUST capture: Sprint Name (required), Team Name, Retro Date (default today), Sprint Goal, Sprint Goal Met (yes / partial / no), What Went Well (multi-entry list), What Did Not Go Well (multi-entry list), Blockers/Impediments (multi-entry list), Action Items (text, owner, due date, priority H/M/L). Each list section MUST support add/remove per entry. The "Submit & Get Suggestions" button MUST be disabled until Sprint Name has a non-empty value.
+
+**FR-332 (P1 — Done, 2026-06-10):** On submit, `generateInsights(form)` MUST produce a `string[]` of actionable suggestions by evaluating: sprint goal outcome (not met / partial → specific advice); blocker count (> 0 → escalation advice); high-priority action count; action items missing owner; action items missing due date; zero action items recorded; any "what went well" entries present. The insights view MUST also display a goal-status banner, and a colour-coded action item summary (red = high, amber = medium, green = low priority).
+
+**FR-333 (P1 — Done, 2026-06-10):** The retrospective CSV template downloaded from `/retro` MUST include columns: Sprint Name, Team Name, Retro Date, Sprint Goal Met, Sprint Goal, What Went Well, What Did Not Go Well, Blocker/Impediment, Action Item, Action Owner, Action Due Date, Action Priority. The file MUST include two example rows demonstrating common retrospective scenarios.
+
+### F.4 — Planning Navigation Group
+
+**FR-334 (P1 — Done, 2026-06-10):** The `AppShell` header navigation MUST include a top-level **Planning** dropdown group containing: Roadmap (🗺️ `/roadmap`), Forecast (🔮 `/forecast`), Retro (🔄 `/retro`). This group MUST appear between the Delivery group and the Data group. The Delivery group MUST contain: Readiness, Explore, Customer.
+
+**FR-335 (P1 — Done, 2026-06-10):** `allowedRoutePrefixesForRole()` in `src/lib/roles.ts` MUST include `/roadmap`, `/forecast`, and `/retro` for every defined role (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`, `default/user`). These routes share the `PLANNING_ROUTES` constant.
+
+### F.5 — Help & Glossary Navigation UX
+
+**FR-336 (P1 — Done, 2026-06-10):** The `/help` page navigation MUST replace the flat 34-tab grid with a two-level grouped nav: Row 1 contains 9 category group pills (Getting Started, Dashboard, Planning, Analysis, Export & Data, System, Customization, People, Troubleshooting); Row 2 (shown only when the active group has > 1 section) contains sub-section pills for sections within the active group only. The active group MUST be derived by finding which group contains the current `activeId` (tracked via `IntersectionObserver`). Clicking a group pill MUST scroll to the first section in that group. The `/glossary` page navigation MUST replace the 12-tab pill grid with a compact letter-jump nav: a single row of letter chips (A–L) each showing the section icon and letter; clicking scrolls to the section; hovering shows the full section title via the HTML `title` attribute.

@@ -1,0 +1,16 @@
+{
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "react/forbid-dom-props": [
+      "warn",
+      {
+        "forbid": [
+          {
+            "propName": "style",
+            "message": "Inline styles are prohibited (CLAUDE.md Rule 1). Use SCSS modules or approved Tailwind utilities. EXCEPTION: CSS custom properties only (--prefixed keys) for data-driven values."
+          }
+        ]
+      }
+    ]
+  }
+}

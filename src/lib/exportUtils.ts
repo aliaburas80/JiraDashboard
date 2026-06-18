@@ -215,11 +215,8 @@ function ganttBars(title: string, rows: { label: string; pct: number; done: numb
   return card(`${cardTitle(title)}${bars || '<p style="font-size:13px;color:#94a3b8;font-style:italic;">No data.</p>'}`);
 }
 
-export function exportToHtml(
-  metrics: DashboardMetrics,
-  _filteredItems?: FlowItem[],
-  filename = 'jira-report.html',
-) {
+/** Pure HTML-string builder behind `exportToHtml` — kept separate from the Blob/download trigger so the branded report markup is independently testable. */
+export function buildReportHtml(metrics: DashboardMetrics): string {
   const band  = getHealthBand(metrics.healthScore ?? 0);
   const color = HEALTH_COLORS[band];
   const now   = new Date().toLocaleString();
@@ -502,6 +499,15 @@ ${section('Flow Metrics', '⚡', card(`
 </body>
 </html>`;
 
+  return html;
+}
+
+export function exportToHtml(
+  metrics: DashboardMetrics,
+  _filteredItems?: FlowItem[],
+  filename = 'jira-report.html',
+) {
+  const html = buildReportHtml(metrics);
   const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');

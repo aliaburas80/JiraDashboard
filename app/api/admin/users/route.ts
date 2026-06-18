@@ -1,11 +1,14 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
-// GET/POST/PATCH /api/admin/users — admin-only user management.
+// GET/POST/PATCH/DELETE /api/admin/users — admin-only user management.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, validatePasswordStrength } from '@/lib/auth';
+import { sendEmail, buildWelcomeEmail } from '@/lib/email';
+import { getAppConfig, invalidateConfig } from '@/lib/app-config';
+import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { ASSIGNABLE_ROLES, isAppRole, roleLabel, type AppRole } from '@/lib/roles';
 
@@ -18,6 +21,7 @@ async function requireAdmin(): Promise<SessionData | NextResponse> {
 
 function safeUser(user: {
   id: string; name: string; email: string; role: string; isActive: boolean;
+  mustChangePassword?: boolean;
   createdAt: Date; updatedAt: Date; lastLoginAt: Date | null;
   _count?: { importLogs: number; snapshots: number };
 }) {
@@ -28,6 +32,7 @@ function safeUser(user: {
     role: isAppRole(user.role) ? user.role : 'user',
     roleLabel: roleLabel(user.role),
     isActive: user.isActive,
+    mustChangePassword: Boolean(user.mustChangePassword),
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
     lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
@@ -97,18 +102,40 @@ export async function POST(req: NextRequest) {
   if (existing) return NextResponse.json({ error: 'An account with this email already exists.' }, { status: 409 });
 
   const user = await prisma.user.create({
-    data: { name, email, passwordHash: await hashPassword(body.password), role },
+    data: { name, email, passwordHash: await hashPassword(body.password), role, mustChangePassword: true },
     include: { _count: { select: { importLogs: true, snapshots: true } } },
   });
 
-  await prisma.auditEvent.create({ data: {
+  await safeAuditEvent({
     userId: session.userId,
     eventType: 'admin_user_create',
     eventDescription: `${session.email} created user ${email} with role ${roleLabel(role)}.`,
-  }});
+  });
   await pushUsersToCloudIfConfigured();
 
-  return NextResponse.json({ ok: true, user: safeUser(user) }, { status: 201 });
+  // Send welcome email to the new user.
+  let emailSent = false;
+  try {
+    invalidateConfig();          // always read fresh env/cloud merge, not stale cache
+    const { appUrl } = await getAppConfig();
+    const welcome = buildWelcomeEmail(user.name, user.email, body.password!, appUrl);
+    emailSent = await sendEmail({ to: user.email, toName: user.name, ...welcome });
+  } catch (err) {
+    console.warn('[email] Failed to send welcome email:', err);
+  }
+
+  await safeNotifications([{
+    recipientUserId: session.userId,
+    type: 'user_created',
+    title: '✅ User account created',
+    message: emailSent
+      ? `${name} (${email}) was created as ${roleLabel(role)}. A welcome email with their temporary password has been sent.`
+      : `${name} (${email}) was created as ${roleLabel(role)}. Welcome email could not be sent — configure SMTP in Admin → Settings.`,
+    relatedEntityType: 'User',
+    relatedEntityId: user.id,
+  }], 'admin_user_create notification');
+
+  return NextResponse.json({ ok: true, emailSent, user: safeUser(user) }, { status: 201 });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -140,14 +167,53 @@ export async function PATCH(req: NextRequest) {
     include: { _count: { select: { importLogs: true, snapshots: true } } },
   });
 
-  await prisma.auditEvent.create({ data: {
+  await safeAuditEvent({
     userId: session.userId,
     eventType: 'admin_user_update',
     eventDescription: `${session.email} updated user ${user.email}.`,
-  }});
+  });
   await pushUsersToCloudIfConfigured();
 
   return NextResponse.json({ ok: true, user: safeUser(user) });
+}
+
+export async function DELETE(req: NextRequest) {
+  const session = await requireAdmin();
+  if (session instanceof NextResponse) return session;
+  await syncUsersFromCloudIfConfigured();
+
+  let body: { id?: string };
+  try { body = await req.json(); } catch {
+    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
+  }
+
+  if (!body.id) return NextResponse.json({ error: 'User id is required.' }, { status: 400 });
+  if (body.id === session.userId) {
+    return NextResponse.json({ error: 'You cannot delete your own account.' }, { status: 400 });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: body.id },
+    select: { id: true, name: true, email: true },
+  });
+  if (!user) return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+
+  // Cancel any pending add-requests for the deleted user's email so the email
+  // can be re-used and the requests list stays clean.
+  await prisma.userAddRequest.updateMany({
+    where: { requestedEmail: user.email, status: 'pending' },
+    data:  { status: 'cancelled', adminDecisionNote: 'User account deleted.' },
+  });
+
+  await prisma.user.delete({ where: { id: user.id } });
+  await safeAuditEvent({
+    userId: session.userId,
+    eventType: 'admin_user_delete',
+    eventDescription: `${session.email} deleted user ${user.email}.`,
+  });
+  await pushUsersToCloudIfConfigured();
+
+  return NextResponse.json({ ok: true, deletedUserId: user.id });
 }
 
 export const dynamic = 'force-dynamic';

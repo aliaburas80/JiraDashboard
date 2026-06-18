@@ -14,7 +14,7 @@ export class LocalStorageProvider implements StorageProvider {
     if (!fs.existsSync(CLOUD_DIR)) fs.mkdirSync(CLOUD_DIR, { recursive: true });
   }
 
-  async upload(key: string, content: Buffer | string): Promise<string> {
+  async upload(key: string, content: Buffer | string, _contentType?: string): Promise<string> {
     this.ensureDir();
     const filePath = path.join(CLOUD_DIR, path.basename(key));
     fs.writeFileSync(filePath, content);

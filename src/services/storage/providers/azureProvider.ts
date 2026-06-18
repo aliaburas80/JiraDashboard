@@ -50,12 +50,12 @@ export class AzureStorageProvider implements StorageProvider {
     return this.config.prefix ? `${this.config.prefix.replace(/\/$/, '')}/${key}` : key;
   }
 
-  async upload(key: string, content: Buffer | string): Promise<string> {
+  async upload(key: string, content: Buffer | string, contentType = 'application/json'): Promise<string> {
     const { container } = await this.getClient();
     const blobName = this.prefixed(key);
     const buf = typeof content === 'string' ? Buffer.from(content, 'utf-8') : content;
     await container.getBlockBlobClient(blobName).uploadData(buf, {
-      blobHTTPHeaders: { blobContentType: 'application/json' },
+      blobHTTPHeaders: { blobContentType: contentType },
     });
     return blobName;
   }

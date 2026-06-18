@@ -1,8 +1,16 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AppShell from '@/components/layout/AppShell';
+import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import styles from './page.module.scss';
+
+function healthChipClass(score: number): string {
+  if (score > 80) return 'chip c-gr';
+  if (score >= 60) return 'chip c-acc';
+  if (score >= 40) return 'chip c-am';
+  return 'chip c-or';
+}
 
 interface Log {
   id: string; fileName: string; fileType: string; totalIssues: number;
@@ -28,59 +36,74 @@ export default function AdminLogsPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading logs…</div></AppShell>;
+  if (loading) return <div className="flex items-center justify-center h-64 animate-pulse text-slate-400">Loading logs…</div>;
+  const successfulLogs = logs.filter(log => log.status === 'success').length;
+  const failedLogs = logs.length - successfulLogs;
+  const uniqueUsers = new Set(logs.map(log => log.user?.email).filter(Boolean)).size;
+  const averageHealth = logs.length
+    ? Math.round(logs.reduce((sum, log) => sum + (log.healthScore || 0), 0) / logs.length)
+    : 0;
+  const logStats = [
+    { icon: 'clipboard', label: 'Import Logs',  value: String(logs.length),   note: 'Across all users',   color: 'var(--dc-p1, #F2F2F2)',    toneStyle: { background: 'rgba(232,93,18,0.1)',   color: 'var(--dc-acc, #E85D12)' } },
+    { icon: 'checkCircle',  label: 'Successful',   value: String(successfulLogs), note: logs.length ? `${Math.round((successfulLogs / logs.length) * 100)}% success` : 'No imports yet', color: 'var(--dc-green, #22C55E)',  toneStyle: { background: 'rgba(34,197,94,0.1)',   color: 'var(--dc-green, #22C55E)' } },
+    { icon: 'warning',  label: 'Failed',       value: String(failedLogs),     note: 'Needs review',       color: failedLogs > 0 ? 'var(--dc-red, #F87171)' : 'var(--dc-p3, #505050)', toneStyle: { background: failedLogs > 0 ? 'rgba(248,113,113,0.1)' : 'var(--dc-s3, #282828)', color: failedLogs > 0 ? '#fca5a5' : 'var(--dc-p3, #505050)' } },
+    { icon: 'statusInfo',  label: 'Avg Health',   value: logs.length ? `${averageHealth}/100` : '—', note: `${uniqueUsers} user${uniqueUsers !== 1 ? 's' : ''}`, color: 'var(--dc-acc2, #FF8A4C)', toneStyle: { background: 'rgba(232,93,18,0.1)', color: 'var(--dc-acc2, #FF8A4C)' } },
+  ];
 
   return (
-    <AppShell showNav>
-      <div className="mb-6">
-        <h1 className="text-2xl font-black text-slate-900">Admin — All Import Logs</h1>
-        <p className="text-sm text-slate-500 mt-1">{logs.length} total import log{logs.length !== 1 ? 's' : ''} across all users</p>
-      </div>
+    <AdminConsoleLayout
+      title="Import Logs"
+        description={`${logs.length} total import log${logs.length !== 1 ? 's' : ''} across all users.`}
+        stats={logStats}
+        statusLabel="Operational"
+      >
 
-      {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-4">{error}</div>}
+      {error && (
+        <div className={styles.errorBanner}>{error}</div>
+      )}
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+      <div className={styles.tableCard}>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-left">
+              <tr className={styles.headerRow}>
                 {['User', 'File', 'Type', 'Issues', 'Health', 'Status', 'Uploaded'].map(h => (
-                  <th key={h} className="py-2.5 px-4 text-[10px] font-black uppercase tracking-wider text-slate-500">{h}</th>
+                  <th key={h} className={styles.headerCell}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {logs.map(log => (
-                <tr key={log.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="py-2.5 px-4">
-                    <p className="font-semibold text-slate-800">{log.user?.name ?? '—'}</p>
-                    <p className="text-xs text-slate-400">{log.user?.email ?? ''}</p>
+                <tr key={log.id} className={styles.row}>
+                  <td className={styles.userCell}>
+                    <div className={styles.userName}>{log.user?.name ?? '—'}</div>
+                    <div className={styles.userEmail}>{log.user?.email ?? ''}</div>
                   </td>
-                  <td className="py-2.5 px-4 text-xs text-slate-700 max-w-[200px] truncate">{log.fileName}</td>
-                  <td className="py-2.5 px-4 text-xs text-slate-500 uppercase">{log.fileType}</td>
-                  <td className="py-2.5 px-4 font-bold text-slate-800">{log.totalIssues}</td>
-                  <td className="py-2.5 px-4">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${log.healthScore >= 75 ? 'bg-green-100 text-green-800' : log.healthScore >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}`}>
+                  <td className={styles.fileCell}>{log.fileName}</td>
+                  <td className={styles.typeCell}>
+                    <span className={`chip c-nt ${styles.typeBadge}`}>{log.fileType?.toUpperCase()}</span>
+                  </td>
+                  <td className={styles.numericCell}>{log.totalIssues}</td>
+                  <td className={styles.userCell}>
+                    <span className={`${healthChipClass(log.healthScore ?? 0)} ${styles.smallBadge}`}>
                       {log.healthScore}/100
                     </span>
                   </td>
-                  <td className="py-2.5 px-4">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${log.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {log.status}
+                  <td className={styles.userCell}>
+                    <span className={`${log.status === 'success' ? 'chip c-gr' : 'chip c-rd'} ${styles.smallBadge}`}>
+                      {log.status === 'success' ? 'Success' : log.status}
                     </span>
                   </td>
-                  <td className="py-2.5 px-4 text-xs text-slate-500 whitespace-nowrap">
-                    {new Date(log.uploadedAt).toLocaleString()}
-                  </td>
+                  <td className={styles.uploadedCell}>{new Date(log.uploadedAt).toLocaleString()}</td>
                 </tr>
               ))}
               {!logs.length && (
-                <tr><td colSpan={7} className="py-12 text-center text-sm text-slate-400 italic">No import logs yet.</td></tr>
+                <tr><td colSpan={7} className={styles.noLogsCell}>No import logs yet.</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
-    </AppShell>
+    </AdminConsoleLayout>
   );
 }
