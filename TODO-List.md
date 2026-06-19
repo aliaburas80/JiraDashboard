@@ -484,7 +484,7 @@ Claude must output the following after each pass.
 | REC-11 | Add/verify use cases for route visibility | P0 | ✅ Done | COVER-02 verified — middleware.ts anchored to FR-226/227/235E + roles.test.ts. |
 | REC-12 | Add/verify use cases for User Add-Member Request Workflow | P0/P1 | ❌ Not started | Request, admin accept/reject, requester result, first-login password change. |
 | REC-13 | Add/verify use cases for Backend Gateway | P0/P1 | ❌ Not started | Gateway validation before external calls. |
-| REC-14 | Add/verify use cases for Role-Based Coaching | P0/P1 | ❌ Not started | Role-specific suggestions and evidence. |
+| REC-14 | Add/verify use cases for Role-Based Coaching | P0/P1 | ✅ Done 2026-06-19 | Verified not implemented — no pages/routes/code exist (COVER-21). Correctly scoped as P1 roadmap item; no speculative UC/SCN/UJ/TC authored. See TRACE-11 and COVER-21 for the confirmed roadmap-only status. |
 | REC-15 | Add/verify use cases for Retrospective Template/Form | P0/P2 | ❌ Not started | Template download, upload preview, in-app form, insights. |
 | REC-16 | Add/verify use cases for Forecasting | P0/P2 | ❌ Not started | Delivery forecast and adjustment report. |
 | REC-17 | Reconcile storage status across SRS/BRD/Developer Guide/Release Notes/README/Test Cases/TODO | P0 | ✅ Done (2026-06-16) | All docs confirmed — storage is Implemented. SRS/BRD/DEVELOPER_GUIDE/RELEASE_NOTES updated to v4.9.2. |
@@ -612,6 +612,7 @@ Cross-reference of every shipped Feature 1–4 / UX item against SRS FR IDs, Use
 | UX-12 Custom dashboard layout builder | FR-305 | UC-082 | GAP — not found | GAP — not found | TC-LB2-01–TC-LB2-09 | v4.1 — "P3 — Custom Dashboard Layout Builder: 9 tests (TC-LB2-01–08)" | ✅ Done |
 | UX-13 Advanced chart customization | FR-306 | UC-091 | SCN-048 | UJ-033 | TC-CC-01–TC-CC-08 | v4.1 — "P3 — Advanced Chart Customization: 9 tests (TC-CC-01–08)"; v4.2.2 — TRACE-01 cluster #5 closure (2026-06-08) | ✅ Done — traceability closed 2026-06-08 (FR/TC entries were already anchored — `UC-091`/`SCN-048`/`UJ-033` were genuinely missing and have now been written) |
 | UX-14 Flat admin-settings UI redesign | FR-260A | UC-087 | SCN-043 | UJ-027 | TC-AC-01–TC-AC-03 | v4.2.2 — "Redesigned `/admin/settings` to match the flat admin settings mockup..." | ✅ Done |
+| Delivery Roadmap: epic cards + forecast labels + filter/sort | FR-326, FR-327 | UC-101 | SCN-051 | UJ-036 | TC-ROAD-01–TC-ROAD-05 (on feat/roadmap-forecast-extraction) | v4.3.6 — "REC-14 closed; UC-101 Related UJ/TC added; Section 12 roadmap row added" | ✅ Done — REC-14 closed 2026-06-19; ROADMAP-02 done on feat/roadmap-forecast-extraction |
 
 ### Gaps Summary — Punch List to Close TRACE-01 (prioritized)
 

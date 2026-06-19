@@ -3011,7 +3011,9 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 **Postcondition:** User has visibility into epic progress, health, and estimated completion dates  
 **Related FR:** FR-326, FR-327  
-**Related:** UC-102, BR-115, SCN-051
+**Related:** UC-102, BR-115, SCN-051  
+**Related UJ:** UJ-036  
+**Related TC:** TC-ROAD-01–TC-ROAD-05
 
 ---
 

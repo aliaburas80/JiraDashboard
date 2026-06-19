@@ -5,6 +5,19 @@
 
 ---
 
+## v4.3.6 — REC-14 Closure + UC-101 Traceability + Roadmap Section 12 Row (2026-06-19, P0 — documentation)
+
+**Scope:** REC-14 verification (Role-Based Coaching), UC-101 back-link additions, and Section 12 matrix row for the Delivery Roadmap feature.
+
+### Documentation
+- **REC-14 closed**: Role-Based Coaching feature verified not implemented (COVER-21 — no pages/routes/code exist). Correctly marked as P1 roadmap item; no speculative UC/SCN/UJ/TC authored. Status updated to ✅ Done in TODO-List.md.
+- **UC-101** (View Delivery Roadmap): Added `Related UJ: UJ-036`, `Related TC: TC-ROAD-01–TC-ROAD-05`.
+- **Section 12 matrix**: New row added for FR-326/327 (Delivery Roadmap — epic cards, forecast labels, filter/sort), anchoring UC-101 / SCN-051 / UJ-036 / TC-ROAD-01–05.
+
+### No code changes. No new tests.
+
+---
+
 ## v4.3.0 — System Error Observability, Bulk Admin Operations & Ghost Session Protection (2026-06-18)
 
 ### Admin — System Error Log
