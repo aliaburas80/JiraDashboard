@@ -3037,7 +3037,9 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 **Postcondition:** User understands current delivery trajectory, confidence level, and next actions  
 **Related FR:** FR-328, FR-329  
-**Related:** UC-101, BR-116, SCN-052
+**Related:** UC-101, BR-116, SCN-052  
+**Related UJ:** UJ-037  
+**Related TC:** TC-FCAST-01–TC-FCAST-05
 
 ---
 
@@ -3067,7 +3069,9 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 **Postcondition:** Team has a recorded retrospective with actionable improvement suggestions  
 **Related FR:** FR-330, FR-331, FR-332  
-**Related:** UC-104, UC-105, BR-117, SCN-053
+**Related:** UC-104, UC-105, BR-117, SCN-053  
+**Related UJ:** UJ-038  
+**Related TC:** TC-RETRO-01–TC-RETRO-07
 
 ---
 
@@ -3087,7 +3091,9 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 **Postcondition:** User has a template they can fill offline and share with their team  
 **Related FR:** FR-333  
-**Related:** UC-103
+**Related:** UC-103  
+**Related SCN:** SCN-056  
+**Related TC:** TC-RETRO-05
 
 ---
 

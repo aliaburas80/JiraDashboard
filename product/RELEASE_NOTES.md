@@ -5,6 +5,23 @@
 
 ---
 
+## v4.3.5 — REC-15/REC-16 Closure: Retro + Forecast Use Case Traceability (2026-06-19, P0 — documentation)
+
+**Scope:** UC-102/103/104 existed but lacked `Related UJ` / `Related TC` back-links and had no Section 12 matrix rows. This pass closes REC-15 (Retro) and REC-16 (Forecast).
+
+### Documentation
+- **UC-102** (View Delivery Forecast): Added `Related UJ: UJ-037`, `Related TC: TC-FCAST-01–TC-FCAST-05`.
+- **UC-103** (Run a Sprint Retrospective in App): Added `Related UJ: UJ-038`, `Related TC: TC-RETRO-01–TC-RETRO-07`.
+- **UC-104** (Download Retrospective Template): Added `Related SCN: SCN-056`, `Related TC: TC-RETRO-05`.
+- **SCN-056** — "Team Member Downloads the Retrospective CSV Template for Offline Use": narrates the `downloadTemplate()` client-side Blob flow. Written in `product/SCENARIOS.md`.
+- **UJ-038 Alternate B** — Template Download: 4-step alternate flow for the CSV download path added to UJ-038's table. Written in `product/USER_JOURNEYS.md`.
+- **Section 12 matrix**: 3 new rows added for FR-328/329 (Forecast), FR-330/331/332 (Retro form), FR-333 (Template download).
+- **REC-15 and REC-16** marked ✅ Done in TODO-List.md.
+
+### No code changes. No new tests (TC-FCAST-01–05 and TC-RETRO-01–07 already exist or are on active branches).
+
+---
+
 ## v4.3.0 — System Error Observability, Bulk Admin Operations & Ghost Session Protection (2026-06-18)
 
 ### Admin — System Error Log

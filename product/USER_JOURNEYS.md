@@ -1767,4 +1767,15 @@ Returning-user journeys now include bucket-first metrics restoration. After logi
 | 11 | Scrum Master | Clicks "New Retrospective" | Form resets; menu view shown | |
 
 **Outcome:** Team has a structured retrospective with automated improvement suggestions and no spreadsheet required.  
-**Related:** UC-103, FR-330, FR-331, FR-332, SCN-053
+**Related:** UC-103, UC-104, FR-330, FR-331, FR-332, FR-333, SCN-053, SCN-056
+
+**Alternate B — Template Download (UC-104):**
+
+| Step | Actor | Action | System Response | Notes |
+|------|-------|--------|-----------------|-------|
+| 1 | Any user | Navigates to `/retro` via Planning menu | Three-card menu shown | |
+| 2 | User | Clicks "Download CSV →" on the Download Template card | `downloadTemplate()` executes | No server call; pure client-side |
+| 3 | System | Builds CSV string and creates a `Blob` | Browser download dialog opens | |
+| 4 | User | Saves `Retrospective_Template.csv` | File saved to downloads folder with header + 2 example rows | |
+
+**Outcome (Alt B):** User has the template for offline use in under 5 seconds.

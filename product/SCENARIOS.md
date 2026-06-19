@@ -1390,3 +1390,21 @@ Alex's flow (New User — First Login):
 **Outcome:** Retrospective completed in 5 minutes; team leaves with 2 owned action items and data-backed improvement advice.
 
 **Related:** UC-103, UC-104, UJ-038, FR-330, FR-331, FR-332, FR-333, BR-117
+
+---
+
+### SCN-056 — Team Member Downloads the Retrospective CSV Template for Offline Use
+
+**Context:** David (Product Owner) wants to run a retro with a remote team over a shared spreadsheet. He needs the official template to share in Slack before the meeting.
+
+**Flow:**
+1. David logs in and navigates to `/retro` via Planning menu
+2. The three-card menu is shown: "Download Template", "Fill in App", "Upload Completed"
+3. David clicks "Download CSV →" on the Download Template card
+4. `downloadTemplate()` executes client-side: builds CSV string, creates a `Blob`, triggers browser download
+5. File `Retrospective_Template.csv` saves with: header row (Sprint Name, Team, What Went Well, What Did Not Go Well, Blockers, Action Item, Owner, Due Date, Priority) + 2 example rows
+6. David opens the file in Google Sheets and shares it with his team
+
+**Outcome:** David has the template in under 10 seconds with no server round-trip; the CSV is ready to share immediately.
+
+**Related:** UC-104, FR-333
