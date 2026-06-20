@@ -484,7 +484,7 @@ Claude must output the following after each pass.
 | REC-11 | Add/verify use cases for route visibility | P0 | ✅ Done | COVER-02 verified — middleware.ts anchored to FR-226/227/235E + roles.test.ts. |
 | REC-12 | Add/verify use cases for User Add-Member Request Workflow | P0/P1 | ❌ Not started | Request, admin accept/reject, requester result, first-login password change. |
 | REC-13 | Add/verify use cases for Backend Gateway | P0/P1 | ❌ Not started | Gateway validation before external calls. |
-| REC-14 | Add/verify use cases for Role-Based Coaching | P0/P1 | ❌ Not started | Role-specific suggestions and evidence. |
+| REC-14 | Add/verify use cases for Role-Based Coaching | P0/P1 | ✅ Done 2026-06-19 | Verified not implemented — no pages/routes/code exist (COVER-21). Correctly scoped as P1 roadmap item; no speculative UC/SCN/UJ/TC authored. See TRACE-11 and COVER-21 for the confirmed roadmap-only status. |
 | REC-15 | Add/verify use cases for Retrospective Template/Form | P0/P2 | ✅ Done 2026-06-19 | UC-103 (in-app form) + UC-104 (template download) verified. Added `Related UJ: UJ-038`, `Related TC: TC-RETRO-01–07` to UC-103; added `Related SCN: SCN-056`, `Related TC: TC-RETRO-05` to UC-104; wrote SCN-056 and UJ-038 Alt B. Section 12 rows added. |
 | REC-16 | Add/verify use cases for Forecasting | P0/P2 | ✅ Done 2026-06-19 | UC-102 verified. Added `Related UJ: UJ-037`, `Related TC: TC-FCAST-01–05`. Section 12 row added. |
 | REC-17 | Reconcile storage status across SRS/BRD/Developer Guide/Release Notes/README/Test Cases/TODO | P0 | ✅ Done (2026-06-16) | All docs confirmed — storage is Implemented. SRS/BRD/DEVELOPER_GUIDE/RELEASE_NOTES updated to v4.9.2. |
@@ -615,6 +615,7 @@ Cross-reference of every shipped Feature 1–4 / UX item against SRS FR IDs, Use
 | Delivery Forecast: velocity-based projection + burn-up chart | FR-328, FR-329 | UC-102 | SCN-052 | UJ-037 | TC-FCAST-01–TC-FCAST-05 | v4.3.5 — "REC-16: UC-102 verified; Related UJ/TC cross-references added" | ✅ Done — REC-16 closed 2026-06-19 |
 | Sprint Retrospective: in-app form + generateInsights() | FR-330, FR-331, FR-332 | UC-103 | SCN-053 | UJ-038 | TC-RETRO-01–TC-RETRO-07 | v4.3.5 — "REC-15: UC-103 verified; Related UJ/TC cross-references added" | ✅ Done — REC-15 closed 2026-06-19 |
 | Retrospective template download: CSV Blob download | FR-333 | UC-104 | SCN-056 | UJ-038 (Alt B) | TC-RETRO-05 (⬜ Manual) | v4.3.5 — "REC-15: UC-104 verified; SCN-056 + UJ-038 Alt B written" | ✅ Done — REC-15 closed 2026-06-19 |
+| Delivery Roadmap: epic cards + forecast labels + filter/sort | FR-326, FR-327 | UC-101 | SCN-051 | UJ-036 | TC-ROAD-01–TC-ROAD-05 (on feat/roadmap-forecast-extraction) | v4.3.6 — "REC-14 closed; UC-101 Related UJ/TC added; Section 12 roadmap row added" | ✅ Done — REC-14 closed 2026-06-19; ROADMAP-02 done on feat/roadmap-forecast-extraction |
 
 ### Gaps Summary — Punch List to Close TRACE-01 (prioritized)
 
