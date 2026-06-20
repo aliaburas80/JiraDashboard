@@ -49,6 +49,14 @@ export interface GatewayRequestOptions {
   userId?: string | null;
   correlationId?: string;
   idempotencyKey?: string;
+  /**
+   * ARCH-05: override the provider's base URL for this call (e.g. a
+   * per-connection JiraConnection.baseUrl) instead of the provider's global
+   * env var. Credential values are never overridden — they always come
+   * from the provider's env vars.
+   */
+  baseUrlOverride?: string;
+  extraAllowedHosts?: string[];
   routingStrategy?: GatewayRoutingStrategy;
   timeoutMs?: number;
   maxRetries?: number;

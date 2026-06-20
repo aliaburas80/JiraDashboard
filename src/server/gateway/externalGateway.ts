@@ -135,7 +135,10 @@ export async function callExternal<T = unknown>(options: GatewayRequestOptions):
     };
   };
 
-  const config = getProviderConfig(options.provider);
+  const config = getProviderConfig(options.provider, {
+    baseUrlOverride: options.baseUrlOverride,
+    extraAllowedHosts: options.extraAllowedHosts,
+  });
   const endpointAlias = `${options.provider}:${options.operation}`;
 
   if (!config.enabled || !config.baseUrl) {

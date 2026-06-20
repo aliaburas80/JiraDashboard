@@ -84,6 +84,17 @@ function hostnameOf(url: string | undefined): string | undefined {
   }
 }
 
+export interface ProviderConfigOverrides {
+  /**
+   * ARCH-05: per-connection base URL (e.g. a JiraConnection row's baseUrl)
+   * for providers that support multiple admin-configured instances rather
+   * than a single global env-var URL. Credential *values* still always
+   * come from env — never from this override.
+   */
+  baseUrlOverride?: string;
+  extraAllowedHosts?: string[];
+}
+
 /**
  * Resolves a provider's live configuration. The blueprint (env-var names,
  * allowlist additions, kill-switch) comes from data/gateway-providers.json
@@ -92,16 +103,16 @@ function hostnameOf(url: string | undefined): string | undefined {
  * when its blueprint isn't kill-switched AND its base URL plus every
  * required credential env var resolve to a non-empty value.
  */
-export function getProviderConfig(type: GatewayProviderType): ProviderConfig {
+export function getProviderConfig(type: GatewayProviderType, overrides?: ProviderConfigOverrides): ProviderConfig {
   const blueprint = blueprintFor(type);
-  const baseUrl = readEnv(blueprint.baseUrlEnvVar);
+  const baseUrl = overrides?.baseUrlOverride ?? readEnv(blueprint.baseUrlEnvVar);
   const credentialsPresent = blueprint.credentialEnvVars.every((name) => readEnv(name) !== undefined);
   const host = hostnameOf(baseUrl);
   const killSwitched = blueprint.enabled === false;
   const enabled = !killSwitched && Boolean(baseUrl && host && credentialsPresent);
 
   const allowedHosts = enabled && host
-    ? Array.from(new Set([host, ...(blueprint.allowedHosts ?? [])]))
+    ? Array.from(new Set([host, ...(blueprint.allowedHosts ?? []), ...(overrides?.extraAllowedHosts ?? [])]))
     : [];
 
   return {
@@ -115,5 +126,5 @@ export function getProviderConfig(type: GatewayProviderType): ProviderConfig {
 }
 
 export function listRegisteredProviders(): ProviderConfig[] {
-  return (Object.keys(DEFAULT_BLUEPRINTS) as GatewayProviderType[]).map(getProviderConfig);
+  return (Object.keys(DEFAULT_BLUEPRINTS) as GatewayProviderType[]).map((type) => getProviderConfig(type));
 }

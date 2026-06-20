@@ -233,6 +233,25 @@ describe('providerRegistry — env-driven and config-file-overridable', () => {
     const config = getProviderConfig('custom');
     expect(config.enabled).toBe(false);
   });
+
+  test('TC-GW-22 (ARCH-05): baseUrlOverride lets a per-connection URL stand in for the global env var, while credentials still come from env only', async () => {
+    process.env.GATEWAY_JIRA_API_TOKEN = 'token-value';
+    // Deliberately no GATEWAY_JIRA_BASE_URL — the override must be sufficient on its own.
+    const { getProviderConfig } = await import('../server/gateway/providerRegistry');
+    const config = getProviderConfig('jira', {
+      baseUrlOverride: 'https://my-team.atlassian.net',
+      extraAllowedHosts: ['extra.example.com'],
+    });
+    expect(config.enabled).toBe(true);
+    expect(config.baseUrl).toBe('https://my-team.atlassian.net');
+    expect(config.allowedHosts).toEqual(expect.arrayContaining(['my-team.atlassian.net', 'extra.example.com']));
+  });
+
+  test('TC-GW-22b: baseUrlOverride alone (no credential env vars) still reports enabled: false', async () => {
+    const { getProviderConfig } = await import('../server/gateway/providerRegistry');
+    const config = getProviderConfig('jira', { baseUrlOverride: 'https://my-team.atlassian.net' });
+    expect(config.enabled).toBe(false);
+  });
 });
 
 // ── callExternal() — the single entry point, end to end ───────────────────────

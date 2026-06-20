@@ -5,6 +5,19 @@
 
 ---
 
+## v4.5.1 — ARCH-05 Phase 1 Continues: Connection Admin Routes (2026-06-20, P1 — in progress, unmerged)
+
+**Scope:** Second slice of `product/JIRA_INTEGRATION_DESIGN.md` Phase 1 — API routes to create, list, and test a Jira connection. **Still no admin UI** (JIRA-04) — these routes are reachable today only via direct API calls or tests.
+
+- `POST /api/admin/jira-connections` / `GET /api/admin/jira-connections` — admin-only, validates deployment type/base URL/Cloud email, audits creation. Token never accepted in the body, never returned in responses — only a `hasGatewayToken` presence flag (mirrors the existing `app/api/admin/storage` pattern).
+- `POST /api/admin/jira-connections/[id]/test` — calls `GET /rest/api/{2|3}/myself` through the existing Backend Integration Gateway (`callExternal()`), with Basic auth for Cloud (email + token) or Bearer auth for Server/DC (PAT). Records `lastSyncStatus`/`lastSyncError` on the connection either way.
+- **Gateway enhancement (unplanned, discovered mid-build, `JIRA-05b`):** `callExternal()`/`getProviderConfig()` only ever supported one global base URL per provider type (one env var) — but `JiraConnection` allows multiple admin-configured connections. Added optional `baseUrlOverride`/`extraAllowedHosts` to `GatewayRequestOptions` — additive, backward-compatible, all existing Gateway tests and call sites unaffected. Credential *values* still always come from env only, per the design doc's auth model — never overridden per-connection.
+- `GATEWAY_JIRA_API_TOKEN` documented in `.env.example`.
+- New tests: `src/__tests__/jiraConnections.test.ts` (13 tests, `TC-JIRA-01–13`) + 2 new Gateway tests (`TC-GW-22`/`22b`). `product/TEST_CASES.md` §9.57 added.
+- Suite: **587/64, all passing.** Lint and build clean.
+
+---
+
 ## v4.5.0 — ARCH-05 Phase 1 Begins: Jira Connection Schema (2026-06-20, P1 — in progress, unmerged)
 
 **Scope:** User approved implementation of `product/JIRA_INTEGRATION_DESIGN.md`. This entry covers the first slice only — Prisma schema, not yet user-facing. Branch `feature/arch-05-jira-integration`, intentionally **not merged to main** until the full feature (admin UI, sync, tests, docs) is delivered.
