@@ -32,9 +32,13 @@ jest.mock('@/lib/system-error-logger', () => ({
 jest.mock('@/server/gateway/externalGateway', () => ({
   callExternal: jest.fn(),
 }));
+jest.mock('@/lib/app-config', () => ({
+  getJiraApiToken: jest.fn(async () => ''),
+}));
 
 import { prisma } from '@/lib/prisma';
 import { callExternal } from '@/server/gateway/externalGateway';
+import { getJiraApiToken } from '@/lib/app-config';
 
 function makeReq(body: unknown) {
   return {
@@ -68,7 +72,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockSession.isLoggedIn = true;
   mockSession.role = 'admin';
-  delete process.env.GATEWAY_JIRA_API_TOKEN;
+  (getJiraApiToken as jest.Mock).mockResolvedValue('');
 });
 
 // ── GET /api/admin/jira-connections ───────────────────────────────────────────
@@ -171,7 +175,7 @@ test('TC-JIRA-10: test connection — returns 409 when GATEWAY_JIRA_API_TOKEN is
 });
 
 test('TC-JIRA-11: test connection — success calls the gateway with Basic auth for Cloud and records lastSyncStatus', async () => {
-  process.env.GATEWAY_JIRA_API_TOKEN = 'secret-token';
+  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
   (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
   (callExternal as jest.Mock).mockResolvedValue({
     ok: true,
@@ -195,6 +199,7 @@ test('TC-JIRA-11: test connection — success calls the gateway with Basic auth 
       provider: 'jira',
       path: '/rest/api/3/myself',
       baseUrlOverride: 'https://example.atlassian.net',
+      credentialsPresentOverride: true,
       headers: expect.objectContaining({
         Authorization: `Basic ${Buffer.from('svc@example.com:secret-token').toString('base64')}`,
       }),
@@ -206,7 +211,7 @@ test('TC-JIRA-11: test connection — success calls the gateway with Basic auth 
 });
 
 test('TC-JIRA-12: test connection — uses Bearer auth and the v2 endpoint for Server/DC', async () => {
-  process.env.GATEWAY_JIRA_API_TOKEN = 'secret-token';
+  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
   (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(
     connection({ deploymentType: 'server', authEmail: null }),
   );
@@ -233,7 +238,7 @@ test('TC-JIRA-12: test connection — uses Bearer auth and the v2 endpoint for S
 });
 
 test('TC-JIRA-13: test connection — gateway failure records lastSyncStatus failed and returns 502', async () => {
-  process.env.GATEWAY_JIRA_API_TOKEN = 'secret-token';
+  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
   (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
   (callExternal as jest.Mock).mockResolvedValue({
     ok: false,

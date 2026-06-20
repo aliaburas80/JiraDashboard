@@ -3241,24 +3241,25 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 - **ID:** UC-110
 - **Title:** Admin Creates a Jira Connection and Verifies Its Credentials
 - **Actor:** Admin
-- **Precondition:** Admin is logged in; `GATEWAY_JIRA_API_TOKEN` is set in the server environment (the connection can still be created without it, but the test step will fail with a clear error)
+- **Precondition:** Admin is logged in; a Jira API token/PAT has been saved in Admin Settings → App Config → "Jira API Token" (or `GATEWAY_JIRA_API_TOKEN` is set as a fallback) — the connection can still be created without it, but the test step will fail with a clear error
 - **Trigger:** Admin navigates to `/admin/settings` and selects the "Jira Integration" tab
 
 **Main Flow:**
-1. Admin selects the Jira Integration tab in AdminNavSidebar or admin settings (`?tab=jira`)
-2. Page loads existing connections via `GET /api/admin/jira-connections` — no token is ever present in the response, only a `hasGatewayToken` flag
-3. Admin clicks "+ Add connection", fills in name, deployment type (Cloud or Server/Data Center), base URL, service-account email (Cloud only), and optional comma-separated project keys
-4. Admin clicks "Create connection" → `POST /api/admin/jira-connections` validates the input and creates the `JiraConnection` row
-5. Admin clicks "Test connection" on the new row → `POST /api/admin/jira-connections/:id/test` calls `GET /rest/api/{2|3}/myself` through the Backend Integration Gateway
-6. On success, the panel shows the connected account's display name and the connection's status badge updates to "success"
-7. On failure (e.g. missing token, invalid credentials, unreachable host), the panel shows the exact error message inline and the status badge updates to "failed"
+1. Admin selects the App Config tab and enters the Jira API token (or PAT) once — it's encrypted into the same `app-config.json` blob as SMTP credentials and saved to cloud storage
+2. Admin selects the Jira Integration tab in AdminNavSidebar or admin settings (`?tab=jira`)
+3. Page loads existing connections via `GET /api/admin/jira-connections` — no token is ever present in the response, only a `hasGatewayToken` flag
+4. Admin clicks "+ Add connection", fills in name, deployment type (Cloud or Server/Data Center), base URL, service-account email (Cloud only), and optional comma-separated project keys — a built-in guide explains where to find each value
+5. Admin clicks "Create connection" → `POST /api/admin/jira-connections` validates the input and creates the `JiraConnection` row
+6. Admin clicks "Test connection" on the new row → `POST /api/admin/jira-connections/:id/test` resolves the token via `getJiraApiToken()` and calls `GET /rest/api/{2|3}/myself` through the Backend Integration Gateway
+7. On success, the panel shows the connected account's display name and the connection's status badge updates to "success"
+8. On failure (e.g. missing token, invalid credentials, unreachable host), the panel shows the exact error message inline and the status badge updates to "failed"
 
 **Alternate Flow — Token not configured:**
-5a. `GATEWAY_JIRA_API_TOKEN` is unset → HTTP 409, panel shows "GATEWAY_JIRA_API_TOKEN is not set. Add it to your environment before testing a connection."
+6a. No token resolves from either App Config or the env fallback → HTTP 409, panel shows "No Jira API token is configured. Set it in Admin Settings → App Config..."
 
 **Alternate Flow — Cloud connection missing email:**
-4a. Deployment type is Cloud and no email was entered → form shows "Email is required for Jira Cloud connections." and the request is not sent
+5a. Deployment type is Cloud and no email was entered → form shows "Email is required for Jira Cloud connections." and the request is not sent
 
 **Postcondition:** A `JiraConnection` row exists with up-to-date `lastSyncStatus`/`lastSyncError`; no Jira data has been imported yet (manual "Sync now" and the field-mapping step are separate, not-yet-built slices — `JIRA-06`/`JIRA-07`)
-**Related FR:** FR-337, FR-338, FR-339, FR-340, FR-313 (Backend Integration Gateway)
-**Related:** TC-JIRA-01–13, TC-GW-22/22b
+**Related FR:** FR-337, FR-338, FR-339, FR-340, FR-341, FR-313 (Backend Integration Gateway)
+**Related:** TC-JIRA-01–13, TC-GW-22/22b/23/23b

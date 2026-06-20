@@ -88,25 +88,36 @@ export interface ProviderConfigOverrides {
   /**
    * ARCH-05: per-connection base URL (e.g. a JiraConnection row's baseUrl)
    * for providers that support multiple admin-configured instances rather
-   * than a single global env-var URL. Credential *values* still always
-   * come from env — never from this override.
+   * than a single global env-var URL.
    */
   baseUrlOverride?: string;
   extraAllowedHosts?: string[];
+  /**
+   * ARCH-05: lets a caller that has already resolved credentials through a
+   * non-env source (e.g. the encrypted app-config store, src/lib/app-config.ts)
+   * tell the gateway credentials are present, instead of the default
+   * env-var-presence check. The credential *value* itself is still never
+   * read by the gateway from this override — it only affects the `enabled`
+   * gate; the caller supplies the actual value via request headers.
+   */
+  credentialsPresentOverride?: boolean;
 }
 
 /**
  * Resolves a provider's live configuration. The blueprint (env-var names,
  * allowlist additions, kill-switch) comes from data/gateway-providers.json
- * (falling back to DEFAULT_BLUEPRINTS); the actual base URL and credential
- * *values* come from process.env at call time. A provider is enabled only
- * when its blueprint isn't kill-switched AND its base URL plus every
- * required credential env var resolve to a non-empty value.
+ * (falling back to DEFAULT_BLUEPRINTS); the base URL and credential
+ * *presence* check default to process.env at call time, but either can be
+ * overridden per-call (see ProviderConfigOverrides) for providers like Jira
+ * whose credentials live in the encrypted app-config store instead of env.
+ * A provider is enabled only when its blueprint isn't kill-switched AND its
+ * base URL resolves AND credentials are present.
  */
 export function getProviderConfig(type: GatewayProviderType, overrides?: ProviderConfigOverrides): ProviderConfig {
   const blueprint = blueprintFor(type);
   const baseUrl = overrides?.baseUrlOverride ?? readEnv(blueprint.baseUrlEnvVar);
-  const credentialsPresent = blueprint.credentialEnvVars.every((name) => readEnv(name) !== undefined);
+  const credentialsPresent = overrides?.credentialsPresentOverride
+    ?? blueprint.credentialEnvVars.every((name) => readEnv(name) !== undefined);
   const host = hostnameOf(baseUrl);
   const killSwitched = blueprint.enabled === false;
   const enabled = !killSwitched && Boolean(baseUrl && host && credentialsPresent);

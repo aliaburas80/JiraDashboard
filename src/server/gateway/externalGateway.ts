@@ -138,6 +138,7 @@ export async function callExternal<T = unknown>(options: GatewayRequestOptions):
   const config = getProviderConfig(options.provider, {
     baseUrlOverride: options.baseUrlOverride,
     extraAllowedHosts: options.extraAllowedHosts,
+    credentialsPresentOverride: options.credentialsPresentOverride,
   });
   const endpointAlias = `${options.provider}:${options.operation}`;
 

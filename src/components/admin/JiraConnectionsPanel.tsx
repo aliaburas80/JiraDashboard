@@ -313,7 +313,7 @@ function ConnectionInfoGuide({ deploymentType }: { deploymentType: 'cloud' | 'se
             <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank" rel="noopener noreferrer" className="font-bold underline">
               id.atlassian.com → Security → API tokens
             </a>{' '}
-            and click &quot;Create API token&quot;. Set the value as <code className="font-mono bg-white/60 px-1 rounded">GATEWAY_JIRA_API_TOKEN</code> in this app&apos;s server environment — never enter it in this form.
+            and click &quot;Create API token&quot;. Paste it under <strong>Admin Settings → App Config → Jira API Token</strong> (it&apos;s encrypted before being stored, the same as your SMTP password) — never enter it in this form.
           </li>
           <li>
             <strong>Project keys</strong> (optional) — the short prefix on any issue in that project, e.g. issue <code className="font-mono bg-white/60 px-1 rounded">PROJ-123</code> belongs to project key <code className="font-mono bg-white/60 px-1 rounded">PROJ</code>. Leave blank to allow all projects this token can see.
@@ -325,7 +325,7 @@ function ConnectionInfoGuide({ deploymentType }: { deploymentType: 'cloud' | 'se
             <strong>Base URL</strong> — your organization&apos;s Jira Server/Data Center address (e.g. <code className="font-mono bg-white/60 px-1 rounded">https://jira.yourcompany.com</code>). Ask your Jira administrator if you&apos;re not sure.
           </li>
           <li>
-            <strong>Personal Access Token (PAT)</strong> — in Jira, click your profile avatar (top right) → Personal Access Tokens → Create token. Set the value as <code className="font-mono bg-white/60 px-1 rounded">GATEWAY_JIRA_API_TOKEN</code> in this app&apos;s server environment — never enter it in this form.
+            <strong>Personal Access Token (PAT)</strong> — in Jira, click your profile avatar (top right) → Personal Access Tokens → Create token. Paste it under <strong>Admin Settings → App Config → Jira API Token</strong> (it&apos;s encrypted before being stored, the same as your SMTP password) — never enter it in this form.
           </li>
           <li>
             <strong>Project keys</strong> (optional) — the short prefix on any issue in that project, e.g. issue <code className="font-mono bg-white/60 px-1 rounded">PROJ-123</code> belongs to project key <code className="font-mono bg-white/60 px-1 rounded">PROJ</code>. Leave blank to allow all projects this token can see.

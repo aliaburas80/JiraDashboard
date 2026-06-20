@@ -252,6 +252,24 @@ describe('providerRegistry — env-driven and config-file-overridable', () => {
     const config = getProviderConfig('jira', { baseUrlOverride: 'https://my-team.atlassian.net' });
     expect(config.enabled).toBe(false);
   });
+
+  test('TC-GW-23 (ARCH-05): credentialsPresentOverride lets a caller with non-env credentials (e.g. encrypted app-config) enable the provider', async () => {
+    const { getProviderConfig } = await import('../server/gateway/providerRegistry');
+    // No GATEWAY_JIRA_API_TOKEN env var set at all — the override alone must be sufficient.
+    const config = getProviderConfig('jira', {
+      baseUrlOverride: 'https://my-team.atlassian.net',
+      credentialsPresentOverride: true,
+    });
+    expect(config.enabled).toBe(true);
+  });
+
+  test('TC-GW-23b: credentialsPresentOverride: false blocks enablement even with valid env credentials', async () => {
+    process.env.GATEWAY_JIRA_BASE_URL = 'https://api.atlassian.com';
+    process.env.GATEWAY_JIRA_API_TOKEN = 'token-value';
+    const { getProviderConfig } = await import('../server/gateway/providerRegistry');
+    const config = getProviderConfig('jira', { credentialsPresentOverride: false });
+    expect(config.enabled).toBe(false);
+  });
 });
 
 // ── callExternal() — the single entry point, end to end ───────────────────────

@@ -20,13 +20,19 @@ export interface AppSmtpConfig {
   from: string;
 }
 
+export interface AppJiraConfig {
+  apiToken: string;
+}
+
 export interface AppConfig {
   smtp:   AppSmtpConfig;
+  jira:   AppJiraConfig;
   appUrl: string;
 }
 
 export type SafeAppConfig = Omit<AppSmtpConfig, 'pass'> & {
   hasPass: boolean;
+  hasJiraToken: boolean;
   appUrl:  string;
   source:  'cloud' | 'env';
 };
@@ -113,6 +119,9 @@ function buildFromEnv(): AppConfig {
       pass: process.env.SMTP_PASS ?? '',
       from: process.env.SMTP_FROM ?? 'JiraDashboard <noreply@deliveryclarity.local>',
     },
+    jira: {
+      apiToken: process.env.GATEWAY_JIRA_API_TOKEN ?? '',
+    },
     appUrl: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
   };
 }
@@ -123,11 +132,18 @@ export async function getAppConfig(): Promise<AppConfig> {
   if (_cached) return _cached;
   const cloud = await loadFromCloud();
   if (cloud) {
-    // If SMTP env vars are explicitly set, they override the cloud SMTP config.
+    // Configs saved before the `jira` field existed won't have it — default it
+    // so callers can always read cfg.jira.apiToken safely.
+    cloud.jira ??= { apiToken: '' };
+
+    // If SMTP/Jira env vars are explicitly set, they override the cloud config.
     // This lets operators fix credentials via .env without needing a cloud update.
-    const envSmtp = buildFromEnv().smtp;
-    if (envSmtp.user && envSmtp.pass) {
-      cloud.smtp = envSmtp;
+    const env = buildFromEnv();
+    if (env.smtp.user && env.smtp.pass) {
+      cloud.smtp = env.smtp;
+    }
+    if (env.jira.apiToken) {
+      cloud.jira = env.jira;
     }
     _cached = cloud;
     _source = 'cloud';
@@ -150,8 +166,15 @@ export async function getSafeConfig(): Promise<SafeAppConfig> {
     port:    cfg.smtp.port,
     user:    cfg.smtp.user,
     hasPass: !!cfg.smtp.pass,
+    hasJiraToken: !!cfg.jira.apiToken,
     from:    cfg.smtp.from,
     appUrl:  cfg.appUrl,
     source:  _source,
   };
+}
+
+/** Server-side helper for routes that need the raw Jira API token/PAT. */
+export async function getJiraApiToken(): Promise<string> {
+  const cfg = await getAppConfig();
+  return cfg.jira.apiToken;
 }

@@ -4,8 +4,10 @@
 //
 // ARCH-05 Phase 1 (JIRA-05) — see product/JIRA_INTEGRATION_DESIGN.md.
 // The Jira API token is never accepted in this route's body and never
-// stored on JiraConnection — it lives only in GATEWAY_JIRA_API_TOKEN (env),
-// per the design doc's auth model (§2).
+// stored on JiraConnection — it lives in the same encrypted app-config
+// store as SMTP credentials (src/lib/app-config.ts), managed via
+// Admin Settings → App Config, with GATEWAY_JIRA_API_TOKEN (env) as a
+// fallback/override, per the design doc's auth model (§2).
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
@@ -13,6 +15,7 @@ import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getJiraApiToken } from '@/lib/app-config';
 
 const DEPLOYMENT_TYPES = ['cloud', 'server'];
 
@@ -23,15 +26,11 @@ async function requireAdmin(): Promise<SessionData | NextResponse> {
   return session;
 }
 
-function hasGatewayToken(): boolean {
-  return !!process.env.GATEWAY_JIRA_API_TOKEN?.trim();
-}
-
 function serializeConnection(c: {
   id: string; name: string; deploymentType: string; baseUrl: string; authEmail: string | null;
   projectFilters: string; fieldMapping: string; refreshMode: string; refreshIntervalMinutes: number;
   lastSyncAt: Date | null; lastSyncStatus: string | null; lastSyncError: string | null; createdAt: Date;
-}) {
+}, hasGatewayToken: boolean) {
   return {
     id: c.id,
     name: c.name,
@@ -46,8 +45,8 @@ function serializeConnection(c: {
     lastSyncStatus: c.lastSyncStatus,
     lastSyncError: c.lastSyncError,
     createdAt: c.createdAt.toISOString(),
-    // Never a real secret — just tells the UI whether the gateway token is configured.
-    hasGatewayToken: hasGatewayToken(),
+    // Never a real secret — just tells the UI whether a token is configured.
+    hasGatewayToken,
   };
 }
 
@@ -55,8 +54,12 @@ export async function GET() {
   const session = await requireAdmin();
   if (session instanceof NextResponse) return session;
 
-  const connections = await prisma.jiraConnection.findMany({ orderBy: { createdAt: 'desc' } });
-  return NextResponse.json({ connections: connections.map(serializeConnection) });
+  const [connections, token] = await Promise.all([
+    prisma.jiraConnection.findMany({ orderBy: { createdAt: 'desc' } }),
+    getJiraApiToken(),
+  ]);
+  const hasGatewayToken = !!token;
+  return NextResponse.json({ connections: connections.map(c => serializeConnection(c, hasGatewayToken)) });
 }
 
 export async function POST(req: NextRequest) {
@@ -120,7 +123,8 @@ export async function POST(req: NextRequest) {
     userAgent: req.headers.get('user-agent') ?? undefined,
   });
 
-  return NextResponse.json({ ok: true, connection: serializeConnection(connection) }, { status: 201 });
+  const hasGatewayToken = !!(await getJiraApiToken());
+  return NextResponse.json({ ok: true, connection: serializeConnection(connection, hasGatewayToken) }, { status: 201 });
 }
 
 export const dynamic = 'force-dynamic';

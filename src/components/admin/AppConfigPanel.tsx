@@ -10,6 +10,7 @@ interface SafeConfig {
   port:    number;
   user:    string;
   hasPass: boolean;
+  hasJiraToken: boolean;
   from:    string;
   appUrl:  string;
   source:  'cloud' | 'env';
@@ -55,6 +56,8 @@ export default function AppConfigPanel() {
   const [pass,    setPass]    = useState('');
   const [from,    setFrom]    = useState('');
   const [appUrl,  setAppUrl]  = useState('');
+  const [jiraToken, setJiraToken] = useState('');
+  const [hasJiraToken, setHasJiraToken] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/app-config')
@@ -69,6 +72,7 @@ export default function AppConfigPanel() {
         setAppUrl(c.appUrl);
         setSource(c.source);
         setHasEncKey(data.hasEncKey);
+        setHasJiraToken(c.hasJiraToken);
       })
       .catch(() => setStatus({ type: 'error', msg: 'Failed to load config.' }))
       .finally(() => setLoading(false));
@@ -84,6 +88,7 @@ export default function AppConfigPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           smtp: { host, port: parseInt(port, 10), user, pass: pass || undefined, from },
+          jira: { apiToken: jiraToken || undefined },
           appUrl,
         }),
       });
@@ -97,7 +102,9 @@ export default function AppConfigPanel() {
         });
         return;
       }
+      if (jiraToken) setHasJiraToken(true);
       setPass('');
+      setJiraToken('');
       setSource('cloud');
       setStatus({ type: 'success', msg: 'Config encrypted and saved to cloud storage.' });
     } catch {
@@ -204,6 +211,27 @@ export default function AppConfigPanel() {
             : 'For Gmail: use a fresh 16-character Google App Password, not your normal Google password.'}
         />
         <Field label="From address" value={from} onChange={setFrom} placeholder="Delivery Clarity <you@gmail.com>" />
+      </div>
+
+      {/* Jira API Token section (ARCH-05) */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <SvgIcon name="link" size={18} />
+          <div>
+            <h3 className="text-sm font-black text-slate-900">Jira API Token</h3>
+            <p className="text-[11px] text-slate-400">Used by every connection on the Jira Integration tab to authenticate with Jira (read-only).</p>
+          </div>
+        </div>
+        <Field
+          label="API Token / Personal Access Token"
+          value={jiraToken}
+          type="password"
+          onChange={setJiraToken}
+          placeholder={hasJiraToken ? '••••••••  (unchanged)' : 'Paste your Jira API token or PAT'}
+          hint={hasJiraToken
+            ? 'Leave blank to keep the existing stored token. Generate a fresh one from id.atlassian.com (Cloud) or your Jira profile (Server/DC) if it stops working.'
+            : 'Cloud: create at id.atlassian.com → Security → API tokens. Server/DC: your profile avatar → Personal Access Tokens. See the guide on the Jira Integration tab for details.'}
+        />
       </div>
 
       {/* App URL section */}

@@ -5,6 +5,21 @@
 
 ---
 
+## v4.5.3 — ARCH-05: Jira Token Moved to Encrypted App Config (2026-06-20, P1 — in progress, unmerged)
+
+**Scope:** User feedback on the previous slice — explicitly rejected the env-var-only token design ("no need for hard code... this should be in the config"). Moved the Jira API token/PAT into the same encrypted App Config system already used for SMTP credentials, instead of requiring a `.env` edit + server restart.
+
+- `src/lib/app-config.ts`: new `AppJiraConfig`/`AppConfig.jira`, `SafeAppConfig.hasJiraToken`, `getJiraApiToken()` — `GATEWAY_JIRA_API_TOKEN` is now a fallback/override (same precedence as `SMTP_USER`/`SMTP_PASS`), not the primary path.
+- New "Jira API Token" field in Admin Settings → App Config (`AppConfigPanel.tsx`), same masked/"leave blank to keep existing" UX as the SMTP password field.
+- Both Jira connection routes now resolve the token via `getJiraApiToken()` instead of reading `process.env` directly.
+- **Caught via real end-to-end browser testing, not unit tests:** saving the token to encrypted config alone didn't actually work — the Backend Gateway's `getProviderConfig()` independently re-checked `process.env` credential presence regardless of the route's resolved token, so every test-connection call silently failed with "Provider not configured." Fixed by adding `credentialsPresentOverride` to `GatewayRequestOptions`/`ProviderConfigOverrides`, letting a caller with non-env-sourced credentials tell the gateway they're present. Re-verified live: saved a token via App Config, created a connection, clicked Test — got a real outbound HTTP call (a legitimate 401 from the fake test token, not a config-wiring error).
+- Updated the connection form's "where to get this info" guide and `.env.example` to describe App Config as the primary path.
+- New tests: `TC-GW-23`/`23b` (gateway.test.ts, now 27 tests); `jiraConnections.test.ts` updated to mock `getJiraApiToken()` instead of `process.env`.
+- `product/JIRA_INTEGRATION_DESIGN.md` §2 and `product/SRS.md` Addendum G (new FR-341) updated to match.
+- Suite: **589/64, all passing.** Lint and build clean.
+
+---
+
 ## v4.5.2 — ARCH-05 Phase 1 Continues: Connection Admin UI (2026-06-20, P1 — in progress, unmerged)
 
 **Scope:** Third slice of `product/JIRA_INTEGRATION_DESIGN.md` Phase 1 — the actual admin-facing UI for the routes built in the previous slice. This is the first ARCH-05 slice a user can actually see and click through.

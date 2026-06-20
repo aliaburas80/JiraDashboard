@@ -27,11 +27,13 @@ Two Jira deployment types need two different credential shapes. Both are **read-
 | Jira Cloud | Email + API token (Atlassian account, scoped to a service account, not a personal login) | `Authorization: Basic base64(email:token)` |
 | Jira Server / Data Center | Personal Access Token (PAT) | `Authorization: Bearer <PAT>` |
 
-**Storage:** follows the exact pattern already used for cloud storage credentials (`app/api/admin/storage/route.ts`, `src/types/storage.ts`):
-- Credentials are submitted once via an admin-only form, written to environment variables (`GATEWAY_JIRA_API_TOKEN`, matching the existing blueprint in `providerRegistry.ts`) or to the non-secret config file (`data/gateway-providers.json`) for the base URL / deployment-type fields only.
-- **Never** returned in any GET response — only a `hasCredentials: boolean` flag, identical to `S3StorageConfig`'s `hasCredentials` pattern.
-- A "Test connection" action (mirroring `POST /api/admin/storage?action=test`) calls `GET /rest/api/{2|3}/myself` to confirm the token is valid and report the authenticated account name, without exposing the token itself.
-- Submitting an empty token field on update preserves the existing secret (`preserveSecret()` pattern already implemented for storage credentials).
+**Storage (revised 2026-06-20 — implemented):** the token is managed through the same encrypted app-config system already used for SMTP credentials (`src/lib/app-config.ts`, `app/api/admin/app-config/route.ts`), not a raw `.env` entry:
+- An admin enters the token once in **Admin Settings → App Config → Jira API Token**. On save it's AES-256-GCM encrypted (via `CONFIG_ENCRYPTION_KEY`) into the same `app-config.json` blob uploaded to the active cloud storage provider — never written to Prisma/SQLite.
+- `GATEWAY_JIRA_API_TOKEN` (env) remains supported as a fallback/override — useful before any cloud provider is configured, or to force-rotate a token without touching the cloud copy. If both are set, the env var wins (same precedence as `SMTP_USER`/`SMTP_PASS`).
+- Server-side routes read the resolved token via `getJiraApiToken()` (`src/lib/app-config.ts`), never `process.env` directly.
+- **Never** returned in any GET response — only a `hasJiraToken: boolean` flag, identical to the SMTP `hasPass` pattern (and `S3StorageConfig`'s `hasCredentials`).
+- A "Test connection" action (mirroring `POST /api/admin/storage?action=test`) calls `GET /rest/api/{2|3}/myself` to confirm the token is valid and report the authenticated account name, without exposing the token itself. Because credential presence is no longer env-var-only, the Backend Gateway's `getProviderConfig()` was extended with a `credentialsPresentOverride` so a caller that already resolved a token via `getJiraApiToken()` can tell the gateway credentials are present (see `JIRA-05c` in `TODO-List.md`).
+- Submitting an empty token field on update preserves the existing stored token (same `preserveSecret()`-style pattern already implemented for SMTP/storage credentials).
 
 **Who can configure it:** admin-only, same `ADMIN_ONLY` guard as `/admin/settings`. No non-admin role ever sees or touches the token.
 

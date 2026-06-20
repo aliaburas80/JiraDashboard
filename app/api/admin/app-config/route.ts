@@ -35,14 +35,14 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
   const auth = await requireAdmin();
   if (auth instanceof NextResponse) return auth;
 
-  let body: Partial<AppConfig> & { smtp?: Partial<AppConfig['smtp']> } = {};
+  let body: Partial<AppConfig> & { smtp?: Partial<AppConfig['smtp']>; jira?: Partial<AppConfig['jira']> } = {};
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 }); }
 
   if (!process.env.CONFIG_ENCRYPTION_KEY) {
     return NextResponse.json({ error: 'CONFIG_ENCRYPTION_KEY is not set. Add it to your .env file before saving config to cloud.' }, { status: 400 });
   }
 
-  // Merge with existing config so a missing password field doesn't wipe the stored one
+  // Merge with existing config so a missing password/token field doesn't wipe the stored one
   const existing = await getAppConfig();
   const updated: AppConfig = {
     smtp: {
@@ -51,6 +51,9 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
       user: body.smtp?.user?.trim() ?? existing.smtp.user,
       pass: body.smtp?.pass?.trim() || existing.smtp.pass,   // keep existing if blank
       from: body.smtp?.from?.trim() ?? existing.smtp.from,
+    },
+    jira: {
+      apiToken: body.jira?.apiToken?.trim() || existing.jira.apiToken,   // keep existing if blank
     },
     appUrl: body.appUrl?.trim() ?? existing.appUrl,
   };

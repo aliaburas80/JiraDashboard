@@ -52,11 +52,17 @@ export interface GatewayRequestOptions {
   /**
    * ARCH-05: override the provider's base URL for this call (e.g. a
    * per-connection JiraConnection.baseUrl) instead of the provider's global
-   * env var. Credential values are never overridden — they always come
-   * from the provider's env vars.
+   * env var.
    */
   baseUrlOverride?: string;
   extraAllowedHosts?: string[];
+  /**
+   * ARCH-05: set when the caller already resolved credentials from a
+   * non-env source (e.g. the encrypted app-config store) and is supplying
+   * them directly via `headers` — tells the gateway's enablement check to
+   * trust that instead of checking the provider's credential env vars.
+   */
+  credentialsPresentOverride?: boolean;
   routingStrategy?: GatewayRoutingStrategy;
   timeoutMs?: number;
   maxRetries?: number;
