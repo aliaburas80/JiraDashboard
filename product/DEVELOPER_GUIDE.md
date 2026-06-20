@@ -283,7 +283,7 @@ SCSS      →  all component appearance (color, border, shadow, animation, typog
 
 **Dashboard pages** (`/dashboard/*`): `DashboardTopbar` (fixed top) + `DashboardSidebarNav` (fixed left) via `app/dashboard/layout.tsx`.
 
-**Admin pages** (`/admin/*`): `DashboardTopbar` + `AdminNavSidebar` injected by `app/admin/layout.tsx`. Individual admin page files render content only — no shell logic.
+**Admin pages** (`/admin/*`): `DashboardTopbar` + `AdminNavSidebar` injected by `app/admin/layout.tsx`. Individual admin page files render content only — no shell logic. Under 768px, `AdminNavSidebar`'s fixed 228px rail hides and is replaced by a fixed top bar + dropdown nav panel (same component, internal `mobileOpen` state) — `app/admin/layout.module.scss`'s `.main` drops its `margin-left` and adds top padding to clear the bar at that breakpoint (added 2026-06-20, USERREQ-27).
 
 **Developer page** (`/developer`): `DashboardTopbar` only, via `app/developer/layout.tsx`. The page has its own internal section sidebar. The `.wiki` class in `page.module.scss` remaps all `--dc-*` dark tokens to light semantic equivalents so inline-style token references resolve to light values without editing individual lines.
 

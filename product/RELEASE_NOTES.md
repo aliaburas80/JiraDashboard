@@ -5,6 +5,35 @@
 
 ---
 
+## v4.4.2 — Add robots.txt (2026-06-20, P3 — hardening)
+
+**Scope:** No `robots.txt` existed; crawlers were free to index every route, including `/admin/*` and `/api/*`. Per `middleware.ts`'s `PROTECTED` list, every route except `/login` requires authentication — there is no public content to index, so the policy is a blanket disallow.
+
+- Added `public/robots.txt` (`User-agent: *` / `Disallow: /`).
+- **Note:** the idiomatic Next.js 14 approach is a native `app/robots.ts` metadata route, which was tried first — but this repo's absolute path contains an apostrophe (`Ali's MacBook Pro`), which trips a real bug in `next/dist/build/webpack/loaders/next-metadata-route-loader.js` (its generated error-handling code wraps a `JSON.stringify()`'d path — which uses double quotes — inside a single-quoted string; the apostrophe in the path terminates that string early, breaking the build with a misleading "Default export is missing" error). Confirmed via an isolated repro in a path with an apostrophe. Used a static `public/robots.txt` instead, which bypasses the loader entirely. Revisit `app/robots.ts` if this directory is ever moved to an apostrophe-free path.
+
+---
+
+## v4.4.1 — USERREQ-25/27 Closure: Rate Limiting + Mobile Layout, Plus Test Suite Repair (2026-06-20, P1)
+
+**Scope:** Closed the two remaining open items from the Add-Member Request Workflow (Section 15): rate limiting and mobile layout. Also fixed pre-existing test/mock drift discovered along the way.
+
+### USERREQ-25 — Rate limiting
+- `POST /api/user-add-requests` now rejects a requester's 11th submission within a 10-minute window with HTTP 429 (`SUBMIT_RATE` in-process map, same pattern as the existing login/upload limiters — keyed by `session.userId` since the route is authenticated).
+- New test `TC-REQ-18` in `userAddRequests.test.ts`.
+
+### USERREQ-27 — Mobile layout
+- `RequestAddMemberModal` was already mobile-correct; verified at 375px in a real browser.
+- Found and fixed the actual blocker: `AdminNavSidebar` was a fixed 228px rail with zero responsive breakpoint, squeezing every `/admin/*` page — including the Member Requests queue (`UserAddRequestsPanel`) — off-screen under 768px. Added a collapsible mobile top bar + dropdown nav panel mirroring the existing `AppShell` mobile-nav convention, gated at the same `767px` breakpoint used elsewhere (`AdminNavSidebar.module.scss`, `app/admin/layout.module.scss`). Desktop (≥768px) is visually unchanged.
+- Verified end-to-end at 375px: opened the admin menu, navigated to Member Requests, expanded a real pending request, and confirmed the temp-password field, Generate/show-password buttons, decision note, and Accept/Reject buttons all render without overflow.
+
+### Test suite repair (discovered while verifying the above)
+- `userAddRequests.test.ts` had 4 silently-broken tests (`TC-REQ-01`, `TC-REQ-04`, `TC-REQ-10`, `TC-REQ-13`) caused by mock drift: the ghost-session requester guard (added in a later commit) made every test's blanket `prisma.user.findUnique` mock resolve `null` for the requester lookup too, and the `safeNotifications`/`safeAuditEvent` refactor switched `notification.create` to `notification.createMany`, which the mocks never picked up. Fixed both — the production code was correct throughout; only the test mocks were stale.
+- Flagged (not fixed — different files, out of this change's scope) the same class of bug in `adminUsers.test.ts`/`roles.test.ts`: `DELETE /api/admin/users` calls `prisma.userAddRequest.updateMany(...)` which isn't mocked there. Logged as `USERREQ-31`.
+- Suite: 572 tests / 63 suites (570 passing — the 2 `USERREQ-31` failures are pre-existing and unrelated to this change). Lint and build both pass.
+
+---
+
 ## v4.3.7 — REC-12/REC-13 Closure: Add-Member Request + Backend Gateway Status Reconciliation (2026-06-20, P0 — documentation)
 
 **Scope:** `TODO-List.md` Section 10 still listed REC-12 and REC-13 as "❌ Not started" even though both underlying features had already been fully implemented and documented in earlier passes (USERREQ-07–24 and GW-01–25). This pass closes the stale status, not new work.

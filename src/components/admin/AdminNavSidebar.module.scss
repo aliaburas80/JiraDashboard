@@ -15,6 +15,75 @@
   z-index: var(--z-toolbar, 40);
   padding: var(--space-4, 16px) 0 var(--space-6, 24px);
   font-family: var(--font-jakarta, 'Inter', sans-serif);
+
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+
+// ── Mobile top bar — replaces the fixed sidebar under 768px. Fixed (not an
+// in-flow flex child of .body) so it doesn't get squeezed beside .main. ──────
+.mobileBar {
+  display: none;
+  position: fixed;
+  top: var(--header-height, 52px);
+  left: 0;
+  right: 0;
+  height: 44px;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  background: var(--color-surface, #fff);
+  z-index: var(--z-toolbar, 40);
+
+  @media (max-width: 767px) {
+    display: block;
+  }
+}
+
+.mobileMenuBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  width: 100%;
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: var(--text-md, 13px);
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  font-family: var(--font-jakarta, 'Inter', sans-serif);
+
+  &:hover { background: var(--color-subtle, #f1f5f9); }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: -2px;
+  }
+}
+
+.mobileMenuIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+// ── Mobile dropdown panel — reuses the same nav markup as the desktop sidebar ─
+.mobilePanel {
+  display: none;
+  position: fixed;
+  top: calc(var(--header-height, 52px) + 44px);
+  left: 0;
+  right: 0;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  background: var(--color-surface, #fff);
+  max-height: calc(100vh - var(--header-height, 52px) - 44px);
+  overflow-y: auto;
+  padding: var(--space-2, 8px) 0;
+  z-index: var(--z-toolbar, 40);
+
+  @media (max-width: 767px) {
+    display: block;
+  }
 }
 
 .sectionLabel {

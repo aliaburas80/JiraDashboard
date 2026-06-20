@@ -9,10 +9,30 @@ import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { isAppRole } from '@/lib/roles';
 import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
 
+// Simple in-process rate limiter — 10 submissions per 10 minutes per requester.
+const RATE_WINDOW_MS = 10 * 60_000;
+const RATE_MAX = 10;
+const SUBMIT_RATE = new Map<string, number[]>();
+
+function isRateLimited(userId: string): boolean {
+  const now = Date.now();
+  const hits = (SUBMIT_RATE.get(userId) ?? []).filter(t => t > now - RATE_WINDOW_MS);
+  if (hits.length >= RATE_MAX) return true;
+  SUBMIT_RATE.set(userId, [...hits, now]);
+  return false;
+}
+
 export async function POST(req: NextRequest) {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+  }
+
+  if (isRateLimited(session.userId)) {
+    return NextResponse.json(
+      { error: 'Too many requests submitted. Wait 10 minutes before submitting another add-member request.' },
+      { status: 429 },
+    );
   }
 
   let body: {
