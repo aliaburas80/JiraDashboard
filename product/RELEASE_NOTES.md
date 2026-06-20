@@ -5,6 +5,16 @@
 
 ---
 
+## v4.4.3 — USERREQ-31 Closure: Full Green Test Suite (2026-06-20, P1)
+
+**Scope:** Closed the last open item from the Add-Member Request follow-up work — the 2 pre-existing, unrelated test failures flagged in USERREQ-31.
+
+- **`adminUsers.test.ts`**: `DELETE /api/admin/users` calls `prisma.userAddRequest.updateMany(...)` to cancel the deleted user's pending add-requests; the mock never defined that method. Added `userAddRequest: { updateMany: jest.fn() }`.
+- **`roles.test.ts`**: the 2026-06-16 "Update roles and UI layout/styles" commit intentionally made `/portfolio` and `/teams` universal Analytics routes (visible to every role, per the comment on `ANALYTICS_ROUTES` in `src/lib/roles.ts`), but this test's assertions were never updated to match. Fixed the two stale `toBe(false)` expectations to `toBe(true)`. No production code changed — `allowedRoutePrefixesForRole()` already behaved correctly.
+- Suite: **572/63, all passing.** Lint and build clean.
+
+---
+
 ## v4.4.2 — Add robots.txt (2026-06-20, P3 — hardening)
 
 **Scope:** No `robots.txt` existed; crawlers were free to index every route, including `/admin/*` and `/api/*`. Per `middleware.ts`'s `PROTECTED` list, every route except `/login` requires authentication — there is no public content to index, so the policy is a blanket disallow.

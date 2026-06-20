@@ -28,6 +28,7 @@ jest.mock('@/lib/prisma', () => ({
       update: jest.fn(),
       delete: jest.fn(),
     },
+    userAddRequest: { updateMany: jest.fn() },
     auditEvent: { create: jest.fn() },
   },
 }));

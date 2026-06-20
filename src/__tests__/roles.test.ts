@@ -55,11 +55,11 @@ test('assigned delivery roles are locked to their dashboard view', () => {
 test('role route matrix blocks routes outside assigned role scope', () => {
   expect(canAccessRoute('scrum_master', '/teams')).toBe(true);
   expect(canAccessRoute('scrum_master', '/admin/settings')).toBe(false);
-  expect(canAccessRoute('scrum_master', '/portfolio')).toBe(false);
+  expect(canAccessRoute('scrum_master', '/portfolio')).toBe(true);
   expect(canAccessRoute('scrum_master', '/members')).toBe(true);
 
   expect(canAccessRoute('product_owner', '/portfolio')).toBe(true);
-  expect(canAccessRoute('product_owner', '/teams')).toBe(false);
+  expect(canAccessRoute('product_owner', '/teams')).toBe(true);
   expect(canAccessRoute('product_owner', '/members')).toBe(true);
 
   expect(canAccessRoute('c_level', '/summary')).toBe(true);
