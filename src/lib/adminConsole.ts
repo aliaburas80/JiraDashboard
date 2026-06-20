@@ -98,7 +98,7 @@ export function buildSettingsStats({
       return [
         { icon: 'link', label: 'Connections', value: 'Manage', note: 'Cloud or Server/DC', tone: 'bg-blue-50 text-blue-700' },
         { icon: 'checkCircle', label: 'Access', value: 'Read-only', note: 'No write-back (ARCH-05)' },
-        { icon: 'lock', label: 'Credentials', value: 'Env only', note: 'Token never stored in DB' },
+        { icon: 'lock', label: 'Credentials', value: 'App Config', note: 'Token encrypted, never stored in DB' },
         { icon: 'retry', label: 'Sync', value: 'Manual', note: 'Scheduled sync not yet built' },
       ];
     case 'requests':

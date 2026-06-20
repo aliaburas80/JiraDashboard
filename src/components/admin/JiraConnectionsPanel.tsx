@@ -146,6 +146,13 @@ export default function JiraConnectionsPanel() {
               {formError}
             </div>
           )}
+          <a
+            href="/admin/settings?tab=config"
+            className="flex items-center gap-2 rounded-[10px] border border-blue-200 bg-blue-50 px-4 py-3 text-xs font-semibold text-blue-800 hover:bg-blue-100 transition-colors"
+          >
+            <SvgIcon name="lock" size={14} />
+            Looking for the API token field? It&apos;s set once on the App Config tab →
+          </a>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-black uppercase text-slate-500 mb-1.5">
