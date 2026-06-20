@@ -5,6 +5,18 @@
 
 ---
 
+## v4.4.4 — ARCH-05 Design Doc: Jira API Read-Only Integration (2026-06-20, P2 — planning only)
+
+**Scope:** Closed `ARCH-05` in `TODO-List.md` Section 19 with a design document for a future live Jira REST API read integration — **design only, no code implemented**, per this section's "do not implement without explicit approval" rule.
+
+- New `product/JIRA_INTEGRATION_DESIGN.md`: auth model (API token/PAT, routed through the existing `FR-313` Gateway `jira` provider blueprint), API scope (JQL search via guided filters, not raw JQL entry), field mapping (extends the existing CSV column-mapping pattern one layer earlier — Jira field IDs → the same canonical `JiraIssue` shape the file-upload pipeline already produces, so every downstream metric/dashboard needs zero changes), three-tier refresh strategy (manual ships first; scheduled and webhook deferred), a new `JiraConnection` Prisma model plus two new nullable `ImportLog` columns, a failure-mode table (expired token, rate limiting, partial field permissions, partial pagination), and a fallback contract mirroring the existing `loadMetricsWithSource()` dual-source pattern.
+- Three-phase rollout plan; non-goals explicitly listed (write-back, OAuth, multi-tenant, raw JQL, incremental sync, webhooks — each deferred to its own future design pass).
+- `TODO-List.md` ARCH-05 marked "Design Done — awaiting approval to implement."
+
+### No code changes. No new tests.
+
+---
+
 ## v4.4.3 — USERREQ-31 Closure: Full Green Test Suite (2026-06-20, P1)
 
 **Scope:** Closed the last open item from the Add-Member Request follow-up work — the 2 pre-existing, unrelated test failures flagged in USERREQ-31.

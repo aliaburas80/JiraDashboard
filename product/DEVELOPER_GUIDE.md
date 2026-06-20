@@ -1171,6 +1171,8 @@ Covered by `cloudStorage.test.ts`, `cloudRestoreHardening.test.ts`, `storageSett
 
 **Status:** Foundation implemented and tested. **This is not full Jira integration and not full cloud integration** — it is the controlled routing/security/retry/audit layer that *all future* external HTTP calls (Jira API, cloud providers, email, Slack, Teams, push notifications) must be routed through once they're built. No live providers are registered yet; the gateway ships with zero enabled providers and is exercised entirely through its test suite today.
 
+A read-only live Jira integration is now designed (not implemented) on top of this `jira` provider blueprint — see `product/JIRA_INTEGRATION_DESIGN.md` (ARCH-05, 2026-06-20).
+
 ### Goal
 Today the app makes **zero live external HTTP calls** — Jira import is file-upload/parse only (`src/services/jira/parser.ts`), and cloud storage talks to provider SDKs directly (`src/services/storage/providers/`), not raw HTTP. Before any future feature (Jira live sync, write-back, notifications, coaching evidence fetches, etc.) is allowed to make outbound calls, it must go through one disciplined chokepoint that enforces endpoint allowlisting/SSRF protection, timeout and retry policy, secret redaction, and structured observability — so a single security review covers every future integration instead of one per feature.
 
