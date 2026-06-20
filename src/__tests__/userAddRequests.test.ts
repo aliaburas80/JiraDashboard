@@ -35,10 +35,12 @@ jest.mock('@/lib/prisma', () => ({
     },
     user: {
       findUnique: jest.fn(),
+      findMany: jest.fn(async () => []),
       create: jest.fn(),
     },
     notification: {
       create: jest.fn(),
+      createMany: jest.fn(),
     },
     auditEvent: {
       create: jest.fn(),
@@ -47,6 +49,14 @@ jest.mock('@/lib/prisma', () => ({
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+import { prisma } from '@/lib/prisma';
+
+// POST /api/user-add-requests looks up prisma.user.findUnique twice: once by
+// `where.id` (the ghost-session requester guard) and once by `where.email`
+// (existing-account check). Tests configure the email-lookup result via this
+// variable; the id-lookup always resolves to a live requester by default.
+let mockExistingUserByEmail: { id: string; email: string } | null = null;
 
 function makeReq(body: unknown, searchParams: Record<string, string> = {}) {
   const url = new URL('http://localhost/api/test');
@@ -96,13 +106,16 @@ beforeEach(() => {
   mockSession.isLoggedIn = true;
   mockSession.role = 'scrum_master';
   mockSession.userId = 'user-sm-1';
+  mockExistingUserByEmail = null;
+  (prisma.user.findUnique as jest.Mock).mockImplementation(async ({ where }: { where: { id?: string; email?: string } }) =>
+    where?.id ? { id: where.id } : mockExistingUserByEmail,
+  );
 });
 
 // ── TC-REQ-01: POST /api/user-add-requests — success ─────────────────────────
 
 test('TC-REQ-01: POST /api/user-add-requests — authenticated user submits a valid request', async () => {
   const { prisma } = await import('@/lib/prisma');
-  (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
   (prisma.userAddRequest.findFirst as jest.Mock).mockResolvedValue(null);
   (prisma.userAddRequest.create as jest.Mock).mockResolvedValue(
     pendingRequest({ requestedByUserId: 'user-sm-1' }),
@@ -153,7 +166,7 @@ test('TC-REQ-02: POST /api/user-add-requests — unauthenticated request returns
 
 test('TC-REQ-03: POST /api/user-add-requests — returns 409 when email already has an account', async () => {
   const { prisma } = await import('@/lib/prisma');
-  (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'existing-1', email: 'jane@example.com' });
+  mockExistingUserByEmail = { id: 'existing-1', email: 'jane@example.com' };
   (prisma.userAddRequest.findFirst as jest.Mock).mockResolvedValue(null);
   const { POST } = await import('../../app/api/user-add-requests/route');
 
@@ -174,7 +187,6 @@ test('TC-REQ-03: POST /api/user-add-requests — returns 409 when email already 
 
 test('TC-REQ-04: POST /api/user-add-requests — returns 409 when a pending request for same email exists', async () => {
   const { prisma } = await import('@/lib/prisma');
-  (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
   (prisma.userAddRequest.findFirst as jest.Mock).mockResolvedValue(pendingRequest());
   const { POST } = await import('../../app/api/user-add-requests/route');
 
@@ -279,7 +291,7 @@ test('TC-REQ-10: PATCH accept — creates user, marks request accepted, creates 
   (prisma.userAddRequest.update as jest.Mock).mockResolvedValue({
     ...pendingRequest(), status: 'accepted', createdUserId: 'user-new-1',
   });
-  (prisma.notification.create as jest.Mock).mockResolvedValue({ id: 'notif-1' });
+  (prisma.notification.createMany as jest.Mock).mockResolvedValue({ count: 1 });
   (prisma.auditEvent.create as jest.Mock).mockResolvedValue({ id: 'audit-1' });
 
   const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
@@ -302,7 +314,7 @@ test('TC-REQ-10: PATCH accept — creates user, marks request accepted, creates 
       data: expect.objectContaining({ status: 'accepted' }),
     }),
   );
-  expect(prisma.notification.create).toHaveBeenCalled();
+  expect(prisma.notification.createMany).toHaveBeenCalled();
   expect(prisma.auditEvent.create).toHaveBeenCalled();
 });
 
@@ -347,7 +359,7 @@ test('TC-REQ-13: PATCH reject — marks request rejected and creates notificatio
   (prisma.userAddRequest.update as jest.Mock).mockResolvedValue({
     ...pendingRequest(), status: 'rejected',
   });
-  (prisma.notification.create as jest.Mock).mockResolvedValue({ id: 'notif-2' });
+  (prisma.notification.createMany as jest.Mock).mockResolvedValue({ count: 1 });
   (prisma.auditEvent.create as jest.Mock).mockResolvedValue({ id: 'audit-2' });
 
   const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/reject/route');
@@ -363,7 +375,7 @@ test('TC-REQ-13: PATCH reject — marks request rejected and creates notificatio
       data: expect.objectContaining({ status: 'rejected' }),
     }),
   );
-  expect(prisma.notification.create).toHaveBeenCalled();
+  expect(prisma.notification.createMany).toHaveBeenCalled();
   expect(prisma.auditEvent.create).toHaveBeenCalled();
 });
 
@@ -413,4 +425,35 @@ test('TC-REQ-16: PATCH accept — returns 400 when tempPassword fails strength v
 
   expect(res.status).toBe(400);
   expect(body.error).toMatch(/8 characters/i);
+});
+
+// ── TC-REQ-18: POST /api/user-add-requests — rate limiting ────────────────────
+
+test('TC-REQ-18: POST /api/user-add-requests — 11th submission from the same user in 10 minutes returns 429', async () => {
+  // Fresh module registry so this test's submission count isn't polluted by
+  // the rate limiter's module-level Map being shared with earlier tests.
+  jest.resetModules();
+  const { prisma } = await import('@/lib/prisma');
+  (prisma.user.findUnique as jest.Mock).mockImplementation(async ({ where }: { where: { id?: string; email?: string } }) =>
+    where?.id ? { id: where.id } : null,
+  );
+  (prisma.userAddRequest.findFirst as jest.Mock).mockResolvedValue(null);
+  (prisma.userAddRequest.create as jest.Mock).mockResolvedValue(pendingRequest());
+  const { POST } = await import('../../app/api/user-add-requests/route');
+
+  const body = {
+    requestedName: 'Jane Doe',
+    requestedEmail: 'jane@example.com',
+    requestedRole: 'scrum_master',
+    reason: 'New sprint team member',
+  };
+
+  for (let i = 0; i < 10; i++) {
+    const res = await POST(makeReq(body));
+    expect(res.status).toBe(201);
+  }
+  const blocked = await POST(makeReq(body));
+  expect(blocked.status).toBe(429);
+  const blockedBody = await blocked.json();
+  expect(blockedBody.error).toMatch(/too many requests/i);
 });

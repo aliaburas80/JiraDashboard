@@ -21,4 +21,11 @@
   flex: 1;
   min-height: 0;
   padding: var(--space-6, 24px);
+
+  // Under 768px the sidebar collapses into a fixed top bar (AdminNavSidebar)
+  // instead of a left rail — drop the offset and clear the bar's height.
+  @media (max-width: 767px) {
+    margin-left: 0;
+    padding-top: calc(var(--space-6, 24px) + 44px);
+  }
 }
