@@ -9,6 +9,7 @@ import OrphanRulesSettings from '@/components/admin/OrphanRulesSettings';
 import BackupRestoreSettings from '@/components/admin/BackupRestoreSettings';
 import ClearLocalDataPanel from '@/components/admin/ClearLocalDataPanel';
 import UserAddRequestsPanel from '@/components/admin/UserAddRequestsPanel';
+import JiraConnectionsPanel from '@/components/admin/JiraConnectionsPanel';
 import AppConfigPanel from '@/components/admin/AppConfigPanel';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
@@ -1249,7 +1250,7 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
   );
 }
 
-const VALID_TABS: Tab[] = ['users','requests','config','retention','thresholds','orphan','backup','cloud','browser'];
+const VALID_TABS: Tab[] = ['users','requests','config','retention','thresholds','orphan','backup','cloud','jira','browser'];
 
 export default function AdminSettingsPage() {
   const router = useRouter();
@@ -1378,6 +1379,7 @@ export default function AdminSettingsPage() {
             />
           )}
           {tab === 'requests' && <UserAddRequestsPanel />}
+          {tab === 'jira'     && <JiraConnectionsPanel />}
           {tab === 'config'   && <AppConfigPanel />}
           {tab === 'retention' && settings && (
             <DataRetentionSettings settings={settings} stats={stats} onSave={handleSaveRetention} onCleanup={handleCleanup} onClearAll={handleClearAll} />

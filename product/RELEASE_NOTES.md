@@ -5,6 +5,19 @@
 
 ---
 
+## v4.5.2 — ARCH-05 Phase 1 Continues: Connection Admin UI (2026-06-20, P1 — in progress, unmerged)
+
+**Scope:** Third slice of `product/JIRA_INTEGRATION_DESIGN.md` Phase 1 — the actual admin-facing UI for the routes built in the previous slice. This is the first ARCH-05 slice a user can actually see and click through.
+
+- New "Jira Integration" tab in Admin Settings (`?tab=jira`): `src/components/admin/JiraConnectionsPanel.tsx`, wired into `src/lib/adminConsole.ts` (`ADMIN_TABS`/`Tab`), `AdminNavSidebar.tsx` (`SETTINGS_SUB_ITEMS`), and `app/admin/settings/page.tsx`.
+- Form to create a connection (name, deployment type, base URL, Cloud email, project keys) and a "Test connection" button per row showing the live result inline — connected account name on success, the exact error on failure (e.g. the token-not-configured message).
+- **Caught via real browser testing, not just unit tests:** `app/admin/settings/page.tsx` has a second, separate `VALID_TABS` array (distinct from `ADMIN_TABS`) gating which `?tab=` values are honored — missed it on the first pass, the tab silently fell back to "User Management" with no error. Fixed.
+- Verified end-to-end in a real Chromium browser: empty state, form, connection creation, and the test-connection failure path (token not set) all render correctly; desktop layout unaffected for every other tab.
+- Now that an admin can actually reach this feature, added the FR/UC layer that schema-only and API-only slices correctly skipped: `product/SRS.md` Addendum G (FR-337–FR-340), `product/USE_CASES.md` UC-110, `product/TEST_CASES.md` §9.57 cross-referenced.
+- Suite: **587/64, all passing** (no new tests this slice — UI verified via manual browser testing per CLAUDE.md, not new automated coverage). Lint and build clean.
+
+---
+
 ## v4.5.1 — ARCH-05 Phase 1 Continues: Connection Admin Routes (2026-06-20, P1 — in progress, unmerged)
 
 **Scope:** Second slice of `product/JIRA_INTEGRATION_DESIGN.md` Phase 1 — API routes to create, list, and test a Jira connection. **Still no admin UI** (JIRA-04) — these routes are reachable today only via direct API calls or tests.

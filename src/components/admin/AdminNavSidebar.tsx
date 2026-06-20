@@ -15,6 +15,7 @@ const SETTINGS_SUB_ITEMS = [
   { id: 'orphan',     label: 'Orphan Rules',        icon: 'link', tab: 'orphan' },
   { id: 'backup',     label: 'Backup & Restore',    icon: 'archive', tab: 'backup' },
   { id: 'cloud',      label: 'Cloud Storage',       icon: 'cloud', tab: 'cloud' },
+  { id: 'jira',       label: 'Jira Integration',    icon: 'link', tab: 'jira' },
   { id: 'browser',    label: 'Browser Data',        icon: 'delete', tab: 'browser' },
 ];
 

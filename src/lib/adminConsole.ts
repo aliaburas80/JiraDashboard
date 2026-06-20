@@ -7,7 +7,7 @@ import type { HealthThresholds } from '@/types/thresholds';
 import type { OrphanRules } from '@/types/orphanRules';
 import type { AdminConsoleStat } from '@/components/admin/AdminConsoleLayout';
 
-export type Tab = 'users' | 'requests' | 'retention' | 'thresholds' | 'orphan' | 'backup' | 'cloud' | 'browser' | 'config';
+export type Tab = 'users' | 'requests' | 'retention' | 'thresholds' | 'orphan' | 'backup' | 'cloud' | 'browser' | 'config' | 'jira';
 
 export const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; description: string }> = [
   { id: 'users',      label: 'User Management',     icon: 'people', description: 'Accounts, roles, access state' },
@@ -18,6 +18,7 @@ export const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; descripti
   { id: 'orphan',     label: 'Orphan Rules',        icon: 'link', description: 'Hierarchy detection rules' },
   { id: 'backup',     label: 'Backup & Restore',    icon: 'archive', description: 'Local backup bundles' },
   { id: 'cloud',      label: 'Cloud Storage',       icon: 'cloud', description: 'S3, Azure, GCP, restore' },
+  { id: 'jira',       label: 'Jira Integration',    icon: 'link', description: 'Live Jira API connections (read-only, ARCH-05)' },
   { id: 'browser',    label: 'Browser Data',        icon: 'delete', description: 'Client-side cached data' },
 ];
 
@@ -92,6 +93,13 @@ export function buildSettingsStats({
         { icon: 'checkCircle', label: 'Backup State', value: latestBackup, note: backupFiles?.length ? 'Backup available' : 'No backup found' },
         { icon: 'archive', label: 'Local Bundles', value: String(backupFiles?.length ?? 0), note: 'Known backup files' },
         { icon: 'retry', label: 'Recovery', value: 'Ready', note: 'Test provider first' },
+      ];
+    case 'jira':
+      return [
+        { icon: 'link', label: 'Connections', value: 'Manage', note: 'Cloud or Server/DC', tone: 'bg-blue-50 text-blue-700' },
+        { icon: 'checkCircle', label: 'Access', value: 'Read-only', note: 'No write-back (ARCH-05)' },
+        { icon: 'lock', label: 'Credentials', value: 'Env only', note: 'Token never stored in DB' },
+        { icon: 'retry', label: 'Sync', value: 'Manual', note: 'Scheduled sync not yet built' },
       ];
     case 'requests':
       return [
