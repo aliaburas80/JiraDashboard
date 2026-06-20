@@ -5,6 +5,18 @@
 
 ---
 
+## v4.3.7 — REC-12/REC-13 Closure: Add-Member Request + Backend Gateway Status Reconciliation (2026-06-20, P0 — documentation)
+
+**Scope:** `TODO-List.md` Section 10 still listed REC-12 and REC-13 as "❌ Not started" even though both underlying features had already been fully implemented and documented in earlier passes (USERREQ-07–24 and GW-01–25). This pass closes the stale status, not new work.
+
+### Documentation
+- **REC-12** (User Add-Member Request Workflow): Verified implemented end-to-end — UC-095–UC-099, SCN-050, UJ-035, FR-314–FR-319, `TC-REQ-01` onward. Marked ✅ Done in `TODO-List.md`.
+- **REC-13** (Backend Gateway): Verified implemented as a server-only infrastructure foundation (`src/server/gateway/`) with zero live providers and no end-user UI — correctly has no UC authored, consistent with the "no UC for vaporware" principle already documented in `USE_CASES.md`. Anchored to FR-313, `DEVELOPER_GUIDE.md`, `TC-GW-01`–`TC-GW-21` (+05b/15b). Marked ✅ Done in `TODO-List.md`.
+
+### No code changes. No new tests (all referenced TC-REQ-* and TC-GW-* cases already exist).
+
+---
+
 ## v4.3.5 — REC-15/REC-16 Closure: Retro + Forecast Use Case Traceability (2026-06-19, P0 — documentation)
 
 **Scope:** UC-102/103/104 existed but lacked `Related UJ` / `Related TC` back-links and had no Section 12 matrix rows. This pass closes REC-15 (Retro) and REC-16 (Forecast).
