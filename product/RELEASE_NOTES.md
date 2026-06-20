@@ -5,6 +5,15 @@
 
 ---
 
+## v4.4.2 — Add robots.txt (2026-06-20, P3 — hardening)
+
+**Scope:** No `robots.txt` existed; crawlers were free to index every route, including `/admin/*` and `/api/*`. Per `middleware.ts`'s `PROTECTED` list, every route except `/login` requires authentication — there is no public content to index, so the policy is a blanket disallow.
+
+- Added `public/robots.txt` (`User-agent: *` / `Disallow: /`).
+- **Note:** the idiomatic Next.js 14 approach is a native `app/robots.ts` metadata route, which was tried first — but this repo's absolute path contains an apostrophe (`Ali's MacBook Pro`), which trips a real bug in `next/dist/build/webpack/loaders/next-metadata-route-loader.js` (its generated error-handling code wraps a `JSON.stringify()`'d path — which uses double quotes — inside a single-quoted string; the apostrophe in the path terminates that string early, breaking the build with a misleading "Default export is missing" error). Confirmed via an isolated repro in a path with an apostrophe. Used a static `public/robots.txt` instead, which bypasses the loader entirely. Revisit `app/robots.ts` if this directory is ever moved to an apostrophe-free path.
+
+---
+
 ## v4.4.1 — USERREQ-25/27 Closure: Rate Limiting + Mobile Layout, Plus Test Suite Repair (2026-06-20, P1)
 
 **Scope:** Closed the two remaining open items from the Add-Member Request Workflow (Section 15): rate limiting and mobile layout. Also fixed pre-existing test/mock drift discovered along the way.
