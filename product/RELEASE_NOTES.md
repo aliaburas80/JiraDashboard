@@ -5,6 +5,20 @@
 
 ---
 
+## v4.5.0 — ARCH-05 Phase 1 Begins: Jira Connection Schema (2026-06-20, P1 — in progress, unmerged)
+
+**Scope:** User approved implementation of `product/JIRA_INTEGRATION_DESIGN.md`. This entry covers the first slice only — Prisma schema, not yet user-facing. Branch `feature/arch-05-jira-integration`, intentionally **not merged to main** until the full feature (admin UI, sync, tests, docs) is delivered.
+
+- New `JiraConnection` Prisma model (id, name, deploymentType, baseUrl, authEmail, projectFilters, fieldMapping, refresh settings, last-sync status fields, createdByUserId). The Jira API token itself is never stored in this table — only in `GATEWAY_JIRA_API_TOKEN` env, per the design doc's auth model.
+- `ImportLog` extended with `sourceType` (`"file" | "api"`) and a nullable `jiraConnectionId` FK; `fileName`/`fileSize`/`fileType` made nullable since they don't apply to API-sourced rows.
+- Migration `20260620132026_add_jira_connection` created and applied to the dev DB. Had to baseline 5 pre-existing migrations first (the dev DB was never initialized with migration tracking — only `db push`), via `prisma migrate resolve --applied`.
+- **Found and flagged (not fixed, tracked as `DRIFT-01`):** `SystemErrorLog` exists in the dev DB but has no tracked migration at all — a fresh-environment `prisma migrate deploy` would never create it. Pre-existing, unrelated to this change; scoped this migration to exclude it so it didn't error on "table already exists."
+- Verified no data loss: all 48 existing `ImportLog` rows and 3 `User` rows intact post-migration. Full suite (572/63), lint, and build all still pass.
+
+### No user-facing changes yet. No new tests yet (schema-only slice; tests land with JIRA-06/07/09).
+
+---
+
 ## v4.4.4 — ARCH-05 Design Doc: Jira API Read-Only Integration (2026-06-20, P2 — planning only)
 
 **Scope:** Closed `ARCH-05` in `TODO-List.md` Section 19 with a design document for a future live Jira REST API read integration — **design only, no code implemented**, per this section's "do not implement without explicit approval" rule.

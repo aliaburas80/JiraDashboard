@@ -34,6 +34,7 @@ model User {
   auditEvents     AuditEvent[]
   userAddRequests UserAddRequest[]     @relation("UserAddRequestRequester")
   notifications   Notification[]       @relation("UserNotifications")
+  jiraConnections JiraConnection[]
 }
 
 model Session {
@@ -54,9 +55,13 @@ model Session {
 model ImportLog {
   id               String   @id @default(cuid())
   userId           String
-  fileName         String
-  fileSize         Int
-  fileType         String
+  // ARCH-05: file-sourced imports populate fileName/fileSize/fileType; API-sourced
+  // imports (sourceType: "api") leave them null and populate jiraConnectionId instead.
+  sourceType       String   @default("file") // "file" | "api"
+  fileName         String?
+  fileSize         Int?
+  fileType         String?
+  jiraConnectionId String?
   rowCount         Int      @default(0)
   status           String   // "success" | "partial" | "failed" | "validation_failed"
   warningsCount    Int      @default(0)
@@ -68,10 +73,12 @@ model ImportLog {
   processingTimeMs Int      @default(0)
   metadataJson     String?
 
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  snapshots DashboardSnapshot[]
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jiraConnection JiraConnection? @relation(fields: [jiraConnectionId], references: [id], onDelete: SetNull)
+  snapshots      DashboardSnapshot[]
 
   @@index([userId])
+  @@index([jiraConnectionId])
 }
 
 model DashboardSnapshot {
@@ -144,6 +151,31 @@ model Notification {
 
   @@index([recipientUserId])
   @@index([readAt])
+}
+
+// ── Jira API Read-Only Integration (ARCH-05 — see product/JIRA_INTEGRATION_DESIGN.md) ─
+
+model JiraConnection {
+  id                     String    @id @default(cuid())
+  name                   String                      // admin-facing label, e.g. "Production Jira"
+  deploymentType         String                      // "cloud" | "server"
+  baseUrl                String
+  authEmail              String?                     // Cloud only — paired with GATEWAY_JIRA_API_TOKEN (token never stored here)
+  projectFilters         String                      // JSON array of project keys
+  fieldMapping           String                      // JSON: { canonicalField: jiraFieldId }
+  refreshMode            String    @default("manual") // "manual" | "scheduled"
+  refreshIntervalMinutes Int       @default(30)
+  lastSyncAt             DateTime?
+  lastSyncStatus         String?                     // "success" | "partial" | "failed"
+  lastSyncError          String?
+  createdByUserId        String
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  createdBy  User        @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+  importLogs ImportLog[]
+
+  @@index([createdByUserId])
 }
 
 // ── System Error Log (P-SYSERR) ───────────────────────────────────────────────
