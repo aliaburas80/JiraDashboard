@@ -180,7 +180,7 @@ export default function JiraConnectionsPanel() {
                 type="text"
                 value={baseUrl}
                 onChange={e => setBaseUrl(e.target.value)}
-                placeholder="https://yourcompany.atlassian.net"
+                placeholder={deploymentType === 'cloud' ? 'https://yourcompany.atlassian.net' : 'https://jira.yourcompany.com'}
                 className="w-full rounded-[10px] border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition"
               />
             </div>
@@ -211,9 +211,8 @@ export default function JiraConnectionsPanel() {
               />
             </div>
           </div>
-          <div className="rounded-[10px] border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
-            The API token (or PAT for Server/DC) is set once via the <code className="font-mono">GATEWAY_JIRA_API_TOKEN</code> environment variable — it is never entered here and never stored in the database.
-          </div>
+          <ConnectionInfoGuide deploymentType={deploymentType} />
+
           <div className="flex justify-end">
             <button
               type="submit"
@@ -287,6 +286,56 @@ export default function JiraConnectionsPanel() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Where to find each piece of connection info ───────────────────────────────
+
+function ConnectionInfoGuide({ deploymentType }: { deploymentType: 'cloud' | 'server' }) {
+  return (
+    <div className="rounded-[10px] border border-blue-200 bg-blue-50 px-4 py-4 space-y-3">
+      <p className="text-[11px] font-black text-blue-800 uppercase tracking-wider flex items-center gap-1.5">
+        <SvgIcon name="clipboard" size={13} />
+        Where to get this information
+      </p>
+
+      {deploymentType === 'cloud' ? (
+        <ol className="space-y-2.5 text-xs text-blue-800">
+          <li>
+            <strong>Base URL</strong> — your Jira Cloud workspace address, e.g. <code className="font-mono bg-white/60 px-1 rounded">https://yourcompany.atlassian.net</code>. Visible in the browser address bar whenever you&apos;re logged into Jira.
+          </li>
+          <li>
+            <strong>Service account email</strong> — the Atlassian account that will own the API token. Use a dedicated read-only service account rather than a personal login if your Jira admin can create one.
+          </li>
+          <li>
+            <strong>API token</strong> — sign in as that account at{' '}
+            <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank" rel="noopener noreferrer" className="font-bold underline">
+              id.atlassian.com → Security → API tokens
+            </a>{' '}
+            and click &quot;Create API token&quot;. Set the value as <code className="font-mono bg-white/60 px-1 rounded">GATEWAY_JIRA_API_TOKEN</code> in this app&apos;s server environment — never enter it in this form.
+          </li>
+          <li>
+            <strong>Project keys</strong> (optional) — the short prefix on any issue in that project, e.g. issue <code className="font-mono bg-white/60 px-1 rounded">PROJ-123</code> belongs to project key <code className="font-mono bg-white/60 px-1 rounded">PROJ</code>. Leave blank to allow all projects this token can see.
+          </li>
+        </ol>
+      ) : (
+        <ol className="space-y-2.5 text-xs text-blue-800">
+          <li>
+            <strong>Base URL</strong> — your organization&apos;s Jira Server/Data Center address (e.g. <code className="font-mono bg-white/60 px-1 rounded">https://jira.yourcompany.com</code>). Ask your Jira administrator if you&apos;re not sure.
+          </li>
+          <li>
+            <strong>Personal Access Token (PAT)</strong> — in Jira, click your profile avatar (top right) → Personal Access Tokens → Create token. Set the value as <code className="font-mono bg-white/60 px-1 rounded">GATEWAY_JIRA_API_TOKEN</code> in this app&apos;s server environment — never enter it in this form.
+          </li>
+          <li>
+            <strong>Project keys</strong> (optional) — the short prefix on any issue in that project, e.g. issue <code className="font-mono bg-white/60 px-1 rounded">PROJ-123</code> belongs to project key <code className="font-mono bg-white/60 px-1 rounded">PROJ</code>. Leave blank to allow all projects this token can see.
+          </li>
+        </ol>
+      )}
+
+      <p className="text-[11px] text-blue-700 border-t border-blue-200 pt-2.5">
+        This connection is read-only — Delivery Clarity never writes back to Jira. The token grants exactly the access that Jira account already has, so a read-only service account is strongly recommended.
+      </p>
     </div>
   );
 }
