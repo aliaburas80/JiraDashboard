@@ -9,7 +9,7 @@ import { SvgIcon } from '@/components/ui/SvgIcon';
 const SETTINGS_SUB_ITEMS = [
   { id: 'users',      label: 'User Management',     icon: 'people', tab: '' },
   { id: 'requests',   label: 'Member Requests',     icon: 'email', tab: 'requests' },
-  { id: 'config',     label: 'App Config / SMTP',   icon: 'settings', tab: 'config' },
+  { id: 'config',     label: 'App Config',   icon: 'settings', tab: 'config' },
   { id: 'retention',  label: 'Privacy & Retention', icon: 'lock', tab: 'retention' },
   { id: 'thresholds', label: 'Health Thresholds',   icon: 'priorityHigh', tab: 'thresholds' },
   { id: 'orphan',     label: 'Orphan Rules',        icon: 'link', tab: 'orphan' },
