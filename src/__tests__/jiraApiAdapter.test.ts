@@ -112,3 +112,15 @@ test('TC-JIRA-24: normalizeJiraIssues maps an array and preserves issue order', 
   const out = normalizeJiraIssues(issues, {});
   expect(out.map(i => i['Issue Key'])).toEqual(['PROJ-1', 'PROJ-2', 'PROJ-3']);
 });
+
+test('TC-JIRA-51: Parent Key is extracted from the standard fields.parent path (e.g. Sub-task -> Story, or Epic -> Initiative)', () => {
+  const issue = rawIssue({ parent: { key: 'PROJ-27' } });
+  const out = normalizeJiraIssue(issue, {});
+  expect(out['Parent Key']).toBe('PROJ-27');
+});
+
+test('TC-JIRA-52: Parent Key is omitted (not set to null/undefined) when the issue has no parent', () => {
+  const issue = rawIssue({});
+  const out = normalizeJiraIssue(issue, {});
+  expect('Parent Key' in out).toBe(false);
+});

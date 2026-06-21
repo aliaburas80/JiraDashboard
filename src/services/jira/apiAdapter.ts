@@ -22,6 +22,10 @@ const STANDARD_FIELD_EXTRACTORS: Record<string, (fields: Record<string, unknown>
   Summary:        f => f.summary,
   Status:         f => (f.status as { name?: string } | undefined)?.name,
   Project:        f => (f.project as { key?: string } | undefined)?.key,
+  // The "parent" link (Sub-task → Story, or Epic → Initiative under team-managed
+  // hierarchy levels) lives at a fixed path on every issue, just like status/project —
+  // it is NOT a per-instance custom field, so it needs no fieldMapping entry.
+  'Parent Key':   f => (f.parent as { key?: string } | undefined)?.key,
   Assignee:       f => (f.assignee as { displayName?: string } | undefined)?.displayName,
   Reporter:       f => (f.reporter as { displayName?: string } | undefined)?.displayName,
   Priority:       f => (f.priority as { name?: string } | undefined)?.name,

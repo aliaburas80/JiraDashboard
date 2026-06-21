@@ -5,7 +5,7 @@
 // ready to render as an interactive visual map.
 
 import type { RelationGraph, RelationNode, RelationEdge, IssueNodeType, NodeHealthStatus, RelationStats } from '@/types/relations';
-import { reconstructHierarchy, getDescendants, getAncestorChain } from './hierarchy.service';
+import { reconstructHierarchy, getAncestorChain } from './hierarchy.service';
 import { detectOrphans } from './orphanRelation.service';
 
 type JiraIssue = Record<string, unknown>;
@@ -305,24 +305,26 @@ export function buildRelationGraph(focusKey: string, allIssues: JiraIssue[]): Re
 
   const focusType = resolveType(f(focusIssue, 'Issue Type', 'type'));
 
-  // Graph scope: focus node + its immediate parent (one level up) + its direct children only.
-  // No siblings, no full ancestor chain, no unrelated orphans.
-  const directParentKey  = hierarchy.parent.get(focusKey) ?? hierarchy.epic.get(focusKey) ?? null;
+  // Graph scope: focus node + its full ancestor chain (parent, grandparent, ... up to
+  // the root) + its direct children. No siblings, no unrelated orphans — but the full
+  // "up" path is shown so a deeply nested Epic/Initiative chain is never truncated to
+  // just one level.
+  const ancestorChain    = getAncestorChain(focusKey, hierarchy); // [closest parent, ..., root]
   const directChildKeys  = hierarchy.children.get(focusKey) ?? [];
 
   const allRelevantKeys = new Set([
     focusKey,
-    ...(directParentKey ? [directParentKey] : []),
+    ...ancestorChain,
     ...directChildKeys,
   ]);
 
   const nodes: RelationNode[] = [];
   const edges: RelationEdge[] = [];
 
-  // Depth: parent = -1, focus = 0, children = 1
+  // Depth: focus = 0, children = 1, ancestors count down from -1 (closest) to -N (root)
   const depthMap = new Map<string, number>();
   depthMap.set(focusKey, 0);
-  if (directParentKey) depthMap.set(directParentKey, -1);
+  ancestorChain.forEach((key, index) => depthMap.set(key, -(index + 1)));
   for (const k of directChildKeys) depthMap.set(k, 1);
 
   // Build nodes

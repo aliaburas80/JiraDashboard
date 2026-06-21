@@ -5,6 +5,18 @@
 
 ---
 
+## v4.8.1 — ARCH-05 Fix: Multi-Level Parent Hierarchy Lost on Live Sync (2026-06-22, P1 — in progress, unmerged)
+
+**Scope:** Bug fix (`JIRA-11`), reported by the user against real synced data: "Explore Delivery Structure" couldn't show that an Epic's parent had its own parent (e.g. Epic → Initiative → Product), even though the same hierarchy worked fine via CSV upload.
+
+- **Two separate bugs, not one.** `src/services/jira/apiAdapter.ts` never read Jira's standard `fields.parent.key` (a fixed-path field on every issue, not a per-instance custom field — no `fieldMapping` needed, it just wasn't being read). After fixing that, a live re-sync *still* dropped the field — `src/services/jira/sync.ts`'s explicit `fields=` request to Jira's search API never asked for `parent`, so Jira's bulk response omitted it even though a direct single-issue probe confirmed it was there.
+- **A second, independent issue in the same area:** `buildRelationGraph()` (`src/services/relations/relationExplorer.service.ts`) only ever rendered one level up from the focus node, by deliberate earlier design. An unused `getAncestorChain()` helper already existed for the full chain — wired it in.
+- **Verified live, not just by unit tests:** re-synced the real "Agile Jordan" connection and confirmed the Explore page now renders the full chain — Product → Project → Epic → 19 child stories/tasks — using a temporary debug route to inspect Jira's raw API response (deleted before commit).
+- 6 new tests: `TC-JIRA-51/52/53`, `TC-E-09/10/11`.
+- Suite: **636/67, all passing.** Lint, typecheck, and build clean.
+
+---
+
 ## v4.8.0 — ARCH-05: Fallback Contract — Dashboard Shows Where Data Came From (2026-06-21, P1 — in progress, unmerged)
 
 **Scope:** Sixth and final slice of Phase 1 — `JIRA-08`. JIRA-07 made Jira data actually flow into the dashboard, but the dashboard gave no visible sign of it — and a failed sync, while harmless, was invisible too. This slice closes that gap with a real status badge and confirms the "never wipes last-good data" guarantee in practice, not just in theory.

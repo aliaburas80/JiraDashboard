@@ -89,6 +89,22 @@ test('TC-JIRA-35: fetchAllJiraIssues makes a single call when the first page has
   );
 });
 
+test('TC-JIRA-53: fetchAllJiraIssues requests the "parent" field so Sub-task/Epic-under-Initiative hierarchy links survive a sync', async () => {
+  (callExternal as jest.Mock).mockResolvedValue({
+    ok: true,
+    data: { issues: [{ key: 'PROJ-1', fields: {} }] },
+  });
+
+  await fetchAllJiraIssues(cloudConnection());
+  expect(callExternal).toHaveBeenCalledWith(
+    expect.objectContaining({
+      query: expect.objectContaining({
+        fields: expect.stringContaining('parent'),
+      }),
+    }),
+  );
+});
+
 test('TC-JIRA-36: fetchAllJiraIssues paginates through multiple Cloud pages via nextPageToken', async () => {
   (callExternal as jest.Mock)
     .mockResolvedValueOnce({ ok: true, data: { issues: [{ key: 'PROJ-1', fields: {} }], nextPageToken: 'page2' } })

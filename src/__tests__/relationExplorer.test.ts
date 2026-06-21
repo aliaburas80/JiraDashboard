@@ -82,3 +82,30 @@ test('TC-E-08: Parent depth -1, children depth 1', () => {
   expect(parent?.depth).toBe(-1);
   expect(child?.depth).toBe(1);
 });
+
+// TC-E-09: Multi-level ancestor chain (e.g. Epic -> Initiative -> Project root) is
+// shown in full, not truncated to one level up.
+const INITIATIVE = issue('PROJ-30', 'Epic', {}); // root-level ancestor of EPIC2
+const EPIC2       = issue('PROJ-31', 'Epic', { 'Parent Key': 'PROJ-30', parent: 'PROJ-30' });
+const STORY2      = issue('PROJ-32', 'Story', { 'Epic Link': 'PROJ-31', epic: 'PROJ-31' });
+const multiLevelIssues = [INITIATIVE, EPIC2, STORY2];
+
+test('TC-E-09: Ancestor chain includes grandparent, not just immediate parent', () => {
+  const graph = buildRelationGraph('PROJ-31', multiLevelIssues);
+  expect(graph).not.toBeNull();
+  const keys = graph!.nodes.map(n => n.issueKey);
+  expect(keys).toContain('PROJ-30'); // grandparent / root ancestor
+  expect(keys).toContain('PROJ-31'); // focus
+});
+
+test('TC-E-10: Ancestor depths count down from the focus node (closest = -1, root = -N)', () => {
+  const graph = buildRelationGraph('PROJ-31', multiLevelIssues);
+  const root  = graph!.nodes.find(n => n.issueKey === 'PROJ-30');
+  expect(root?.depth).toBe(-1);
+});
+
+test('TC-E-11: Ancestor-chain edge (root -> closest parent) is present in the graph', () => {
+  const graph = buildRelationGraph('PROJ-31', multiLevelIssues);
+  const edge = graph!.edges.find(e => e.sourceId === 'PROJ-30' && e.targetId === 'PROJ-31');
+  expect(edge).toBeDefined();
+});

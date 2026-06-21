@@ -18,7 +18,7 @@ const PAGE_SIZE = 100;
 
 const STANDARD_FIELD_IDS = [
   'issuetype', 'summary', 'status', 'project', 'assignee', 'reporter',
-  'priority', 'resolution', 'labels', 'fixVersions',
+  'priority', 'resolution', 'labels', 'fixVersions', 'parent',
   'created', 'updated', 'resolutiondate', 'duedate',
 ];
 
