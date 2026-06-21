@@ -10,15 +10,22 @@ import path from 'path';
 const DATA_DIR = path.join(process.cwd(), 'data');
 const LATEST_METRICS_FILE = path.join(DATA_DIR, 'latest-metrics.json');
 
-export function writeLatestMetrics(metrics: unknown): void {
+export interface LatestMetricsOrigin {
+  source: 'file' | 'jira-api';
+  connectionName?: string;
+  connectionId?: string;
+}
+
+export function writeLatestMetrics(metrics: unknown, origin?: LatestMetricsOrigin): void {
   fs.mkdirSync(DATA_DIR, { recursive: true });
   fs.writeFileSync(LATEST_METRICS_FILE, JSON.stringify({
     savedAt: new Date().toISOString(),
     metrics,
+    origin: origin ?? null,
   }, null, 2), 'utf8');
 }
 
-export function readLatestMetrics(): { savedAt: string; metrics: unknown } | null {
+export function readLatestMetrics(): { savedAt: string; metrics: unknown; origin: LatestMetricsOrigin | null } | null {
   try {
     if (!fs.existsSync(LATEST_METRICS_FILE)) return null;
     const parsed = JSON.parse(fs.readFileSync(LATEST_METRICS_FILE, 'utf8'));
@@ -26,6 +33,7 @@ export function readLatestMetrics(): { savedAt: string; metrics: unknown } | nul
     return {
       savedAt: typeof parsed.savedAt === 'string' ? parsed.savedAt : '',
       metrics: parsed.metrics,
+      origin: parsed.origin && typeof parsed.origin === 'object' ? parsed.origin : null,
     };
   } catch {
     return null;

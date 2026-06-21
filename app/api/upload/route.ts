@@ -138,7 +138,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const startTime = Date.now();
     const metrics   = calculateDashboardMetrics(issues);
-    writeLatestMetrics(metrics);
+    writeLatestMetrics(metrics, { source: 'file' });
     const importLog = appendImportLog(
       buildImportLog({ file: fileArg, parseResult, validation, metrics, status: 'success' }),
     );

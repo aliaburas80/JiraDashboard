@@ -3260,6 +3260,38 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 **Alternate Flow — Cloud connection missing email:**
 5a. Deployment type is Cloud and no email was entered → form shows "Email is required for Jira Cloud connections." and the request is not sent
 
-**Postcondition:** A `JiraConnection` row exists with up-to-date `lastSyncStatus`/`lastSyncError`; no Jira data has been imported yet (manual "Sync now" and the field-mapping step are separate, not-yet-built slices — `JIRA-06`/`JIRA-07`)
+**Postcondition:** A `JiraConnection` row exists with up-to-date `lastSyncStatus`/`lastSyncError`; no Jira data has been imported yet (manual "Sync now" is UC-111, a separate use case)
 **Related FR:** FR-337, FR-338, FR-339, FR-340, FR-341, FR-313 (Backend Integration Gateway)
 **Related:** TC-JIRA-01–13, TC-GW-22/22b/23/23b
+
+---
+
+### UC-111 — Admin Syncs Jira Data Manually; Dashboard Shows Where the Data Came From
+
+*(Added 2026-06-21 to close JIRA-07/JIRA-08 from TODO-List.md Section 19a. ARCH-05 Phase 1 — see `product/JIRA_INTEGRATION_DESIGN.md` §5/§7/§8. In progress on `feature/arch-05-jira-integration`, unmerged.)*
+
+- **ID:** UC-111
+- **Title:** Admin Triggers a Manual Jira Sync and Confirms the Dashboard Reflects the Live Connection
+- **Actor:** Admin
+- **Precondition:** A `JiraConnection` exists with at least one valid project key in `projectFilters` and a working Jira API token (UC-110)
+- **Trigger:** Admin (or an automated caller) sends `POST /api/admin/jira-connections/:id/sync`
+
+**Main Flow:**
+1. The route resolves the token and builds a bounded JQL query from the connection's stored project keys — never from free-text input
+2. It paginates through the Backend Integration Gateway (Cloud `nextPageToken` or Server/DC `startAt`, capped at 1000 issues), normalizes the results to the canonical issue shape, and validates them
+3. On success, it computes dashboard metrics, calls `writeLatestMetrics(metrics, { source: 'jira-api', connectionName, connectionId })`, writes an `ImportLog` row (`sourceType: "api"`), and updates the connection's `lastSyncAt`/`lastSyncStatus`
+4. Any user viewing a `/dashboard/*` page sees `DataSourceBadge` in the top-right rail update to "Jira (ConnectionName) — last synced Xm ago" (hover for the full text in compact mode)
+5. The relative "last synced" time keeps advancing on every subsequent page load without requiring another sync
+
+**Alternate Flow — Setup problem (no project keys / Cloud connection missing email):**
+1a. The request never reaches Jira → HTTP 409 with a specific message; the dashboard's existing snapshot and badge are completely unchanged
+
+**Alternate Flow — Real upstream/Gateway failure:**
+2a. Jira or the Gateway returns an error mid-sync → HTTP 502; the connection's `lastSyncStatus` becomes `"failed"` with the error recorded in `lastSyncError`, but the dashboard's existing snapshot and badge are completely unchanged — the last-good data is never overwritten by a failed sync
+
+**Alternate Flow — Validation failure:**
+2b. Normalized issues fail `validateIssueData()` → HTTP 422; no `ImportLog` is written and no snapshot is touched
+
+**Postcondition:** Either the dashboard now reflects fresh Jira data with a visible, accurate source badge, or — on any failure — the dashboard is provably unchanged from its last good state
+**Related FR:** FR-342, FR-343, FR-313 (Backend Integration Gateway)
+**Related:** TC-JIRA-29–50, TC-CS-13/14/15

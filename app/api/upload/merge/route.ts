@@ -68,7 +68,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const { merged, stats } = mergeIssueArrays(allIssueArrays);
     const metrics = calculateDashboardMetrics(merged);
-    writeLatestMetrics(metrics);
+    writeLatestMetrics(metrics, { source: 'file' });
     import('@/services/storage/cloudSync')
       .then(({ pushToCloud }) => pushToCloud())
       .catch(() => {});

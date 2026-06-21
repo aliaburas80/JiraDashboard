@@ -126,14 +126,14 @@ All failures are logged via the gateway's existing JSONL audit log (`data/gatewa
 
 ---
 
-## 8. Fallback behavior
+## 8. Fallback behavior — ✅ Implemented (JIRA-08, 2026-06-21)
 
-Mirrors the existing dual-source contract in `src/lib/storage.ts` (`loadMetricsWithSource()` / `MetricsDataSource`) exactly:
+Mirrors the existing dual-source contract in `src/lib/storage.ts` (`loadMetricsWithSource()` / `MetricsDataSource`):
 
-- A failed live sync **never** wipes existing data. The dashboard continues serving the last successful `DashboardSnapshot` for that connection.
-- Add `'jira-api'` as a new `MetricsDataSource` value alongside the existing `'bucket' | 'cache' | 'server-local' | 'localstorage' | 'upload' | 'snapshot' | 'none'`.
-- The existing source-status badge UI (already shown after login, per `dataSource` in `app/api/auth/login/route.ts`) extends to show e.g. "Jira (Production) — last synced 14 minutes ago" vs. today's "S3 — cache hit."
-- File upload remains fully available even when a Jira connection exists — a user can always override with a fresh manual upload, which simply creates a new `file`-sourced `ImportLog`/snapshot alongside the API-sourced ones. The two sources are not merged; the dashboard always reflects whichever snapshot is most recent, file or API.
+- A failed live sync **never** wipes existing data. **Deviated from this section's original wording:** the actual mechanism is `writeLatestMetrics()` (`src/services/metrics/latestMetricsStorage.ts`), not `DashboardSnapshot` — `DashboardSnapshot` is a deliberate user-named, 20-per-user-capped milestone feature; auto-creating one on every sync would silently eat that budget. `writeLatestMetrics()` is the same mechanism the file-upload route already uses, and it's structurally all-or-nothing: the sync route only calls it after validation succeeds, so a 409/422/502 failure leaves the previous snapshot completely untouched. Confirmed live: forced a sync failure and verified `/api/metrics/latest`'s `savedAt`/`metrics` were unchanged.
+- `'jira-api'` added to `MetricsDataSource` in `src/lib/storage.ts`, alongside the existing `'bucket' | 'cache' | 'server-local' | 'localstorage' | 'upload' | 'snapshot' | 'none'`. `writeLatestMetrics()` now takes an optional `origin: { source: 'file' | 'jira-api', connectionName?, connectionId? }`, persisted in `latest-metrics.json` and surfaced by `GET /api/metrics/latest` (taking priority over bucket/cache transport detection).
+- **Correction to this section's original assumption:** there was no existing source-status badge shown after login — `DataSourceBadge` (`src/components/ui/DataSourceBadge.tsx`) existed but had never been mounted anywhere in the app; only its `DataSourceProvider`/`CloudLoadingBanner` were wired into `app/layout.tsx`. JIRA-08 mounted `<DataSourceBadge compact />` for the first time, in `DashboardTopbar`'s top-right rail (visible on every `/dashboard/*` route), now rendering "Jira (Production) — last synced 14 minutes ago" (full) / "Jira · 14m ago" (compact, with the full text in the `title` tooltip).
+- File upload remains fully available even when a Jira connection exists — a user can always override with a fresh manual upload, which simply creates a new `file`-sourced `ImportLog`/snapshot alongside the API-sourced ones (both upload routes now tag `writeLatestMetrics(metrics, { source: 'file' })`). The two sources are not merged; the dashboard always reflects whichever snapshot is most recent, file or API.
 
 ---
 

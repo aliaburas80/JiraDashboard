@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { DC_NAV_GROUPS } from '@/components/dc-shell/navigation';
 import UserMenu from '@/components/auth/UserMenu';
 import NotificationBell from '@/components/auth/NotificationBell';
+import { DataSourceBadge } from '@/components/ui/DataSourceBadge';
 import styles from './DashboardTopbar.module.scss';
 
 // Status → dot colour mapping (data-driven, not hardcoded per-item)
@@ -130,6 +131,9 @@ export default function DashboardTopbar({ onNewUpload }: Props) {
             </svg>
             New Upload
           </button>
+
+          {/* Data source badge — shows live Jira sync status or upload origin */}
+          <DataSourceBadge compact />
 
           {/* Notification bell */}
           <NotificationBell />

@@ -5,6 +5,20 @@
 
 ---
 
+## v4.8.0 — ARCH-05: Fallback Contract — Dashboard Shows Where Data Came From (2026-06-21, P1 — in progress, unmerged)
+
+**Scope:** Sixth and final slice of Phase 1 — `JIRA-08`. JIRA-07 made Jira data actually flow into the dashboard, but the dashboard gave no visible sign of it — and a failed sync, while harmless, was invisible too. This slice closes that gap with a real status badge and confirms the "never wipes last-good data" guarantee in practice, not just in theory.
+
+- **`writeLatestMetrics(metrics, origin?)`** (`src/services/metrics/latestMetricsStorage.ts`) now records where a snapshot came from — `{ source: 'file' | 'jira-api', connectionName?, connectionId? }` — alongside `savedAt`/`metrics`. Backward compatible: old snapshot files with no `origin` field still load fine.
+- **`GET /api/metrics/latest`** surfaces that origin: when a snapshot came from a Jira sync, the response reports `source: 'jira-api'` and `connectionName`, taking priority over the existing bucket/cache cloud-transport detection — what matters to a viewer is where the *data* came from, not which storage hop served the file.
+- **`DataSourceBadge`** (`src/components/ui/DataSourceBadge.tsx`) gained a `'jira-api'` source and now renders "Jira (ConnectionName) — last synced Xm ago." **Discovered while wiring this up: the badge component existed but had never actually been mounted anywhere in the app** — only its `Provider` was. Mounted it for the first time, in `DashboardTopbar`'s top-right rail, visible across every `/dashboard/*` route.
+- **Fallback contract confirmed live, not just by code reading:** synced a real project (7 issues) and saw the badge update; then forced a sync failure (cleared the connection's project filters → `409`) and confirmed `/api/metrics/latest` returned the exact same `savedAt`/`metrics` as before — the last-good Jira snapshot was untouched.
+- **Caught via live testing:** `/dashboard/summary` actually redirects to a separate, older `/summary` page that doesn't use `DashboardTopbar` — verification had to use a real `/dashboard/*` route to see the badge.
+- New tests: `latestMetricsStorage.test.ts` (4 tests, `TC-JIRA-47–50`) + `TC-CS-13/14/15` in `cloudRestoreHardening.test.ts`.
+- Suite: **630/67, all passing.** Lint, typecheck, and build clean.
+
+---
+
 ## v4.7.0 — ARCH-05: Manual "Sync Now" — Jira Data Actually Flows In (2026-06-21, P1 — in progress, unmerged)
 
 **Scope:** Fifth slice of Phase 1 — `JIRA-07`. Until now, a connection could be created and tested, but no Jira issue ever reached a dashboard; the only working data path was still the manual CSV/Excel upload. This slice closes that gap.

@@ -11,6 +11,7 @@ export type MetricsDataSource =
   | 'localstorage'
   | 'upload'
   | 'snapshot'
+  | 'jira-api'
   | 'none';
 
 export interface MetricsSourceInfo {
@@ -21,6 +22,7 @@ export interface MetricsSourceInfo {
   message?: string;
   error?: string;
   savedAt?: string;
+  connectionName?: string;
 }
 
 export interface LoadMetricsResult extends MetricsSourceInfo {
@@ -106,6 +108,7 @@ export async function loadMetricsWithSource(): Promise<LoadMetricsResult> {
         status: data.sync?.status,
         message: data.message,
         savedAt: data.savedAt,
+        connectionName: data.connectionName,
       };
       saveSource(info);
       return { ...info, metrics: data.metrics, fallbackUsed: false };

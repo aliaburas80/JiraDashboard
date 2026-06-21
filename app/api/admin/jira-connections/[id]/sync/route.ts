@@ -90,7 +90,11 @@ export async function POST(
 
     // All-or-nothing: only overwrite the live dashboard once everything above
     // has succeeded — a failed sync never clobbers the last-good data.
-    writeLatestMetrics(metrics);
+    writeLatestMetrics(metrics, {
+      source: 'jira-api',
+      connectionName: connection.name,
+      connectionId: connection.id,
+    });
 
     const importLog = await prisma.importLog.create({ data: {
       userId: connection.createdByUserId,

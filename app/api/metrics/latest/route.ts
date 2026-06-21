@@ -42,12 +42,23 @@ export async function GET() {
     });
   }
 
-  const source = sourceFromSync(sync);
+  // The snapshot's own origin (set at write time by the Jira sync route or
+  // upload routes) takes priority over cloud-transport detection — a dashboard
+  // viewer cares whether the *data* came from Jira, not how the file reached
+  // this server.
+  let source: 'bucket' | 'cache' | 'server-local' | 'none' | 'jira-api' = sourceFromSync(sync);
+  let connectionName: string | undefined;
+  if (latest.origin?.source === 'jira-api') {
+    source = 'jira-api';
+    connectionName = latest.origin.connectionName;
+  }
+
   return NextResponse.json({
     available: true,
     metrics: latest.metrics,
     savedAt: latest.savedAt,
     source,
+    connectionName,
     sync,
     provider: sync?.provider,
     key: sync?.key,

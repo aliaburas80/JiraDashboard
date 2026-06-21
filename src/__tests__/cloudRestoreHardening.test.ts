@@ -136,3 +136,66 @@ test('TC-CS-12: loadMetricsWithSource falls back to localStorage when bucket/ser
   expect(JSON.parse(store.dc_metrics_source_v1).source).toBe('localstorage');
   expect(getMetricsSource()?.source).toBe('localstorage');
 });
+
+test('TC-CS-13: /api/metrics/latest reports jira-api source + connection name when the snapshot originated from a Jira sync (JIRA-08)', async () => {
+  jest.doMock('@/services/storage/cloudSync', () => ({
+    syncFromCloud: jest.fn(async () => ({ status: 'offline', source: 'local', reason: 'Local storage mode.' })),
+  }));
+  jest.doMock('@/services/metrics/latestMetricsStorage', () => ({
+    readLatestMetrics: jest.fn(() => ({
+      savedAt: '2026-06-21T12:00:00.000Z',
+      metrics: { totalIssues: 7 },
+      origin: { source: 'jira-api', connectionName: 'Production', connectionId: 'conn-1' },
+    })),
+  }));
+
+  const { GET } = await import('../../app/api/metrics/latest/route');
+  const response = await GET();
+  const body = await response.json();
+
+  expect(response.status).toBe(200);
+  expect(body.available).toBe(true);
+  expect(body.source).toBe('jira-api');
+  expect(body.connectionName).toBe('Production');
+});
+
+test('TC-CS-14: /api/metrics/latest falls back to bucket/cache detection when the snapshot has no Jira origin', async () => {
+  jest.doMock('@/services/storage/cloudSync', () => ({
+    syncFromCloud: jest.fn(async () => ({ status: 'restored', source: 'bucket', provider: 's3', key: 'latest.json' })),
+  }));
+  jest.doMock('@/services/metrics/latestMetricsStorage', () => ({
+    readLatestMetrics: jest.fn(() => ({
+      savedAt: '2026-06-21T12:00:00.000Z',
+      metrics: { totalIssues: 3 },
+      origin: { source: 'file' },
+    })),
+  }));
+
+  const { GET } = await import('../../app/api/metrics/latest/route');
+  const response = await GET();
+  const body = await response.json();
+
+  expect(body.source).toBe('bucket');
+  expect(body.connectionName).toBeUndefined();
+});
+
+test('TC-CS-15: loadMetricsWithSource threads connectionName through for jira-api snapshots', async () => {
+  installBrowserStorage();
+  (global as any).fetch = jest.fn(async () => ({
+    ok: true,
+    json: async () => ({
+      available: true,
+      metrics: { totalIssues: 7 },
+      savedAt: '2026-06-21T12:00:00.000Z',
+      source: 'jira-api',
+      connectionName: 'Production',
+    }),
+  }));
+
+  const { loadMetricsWithSource } = await import('../lib/storage');
+  const result = await loadMetricsWithSource();
+
+  expect(result.source).toBe('jira-api');
+  expect(result.connectionName).toBe('Production');
+  expect(result.fallbackUsed).toBe(false);
+});

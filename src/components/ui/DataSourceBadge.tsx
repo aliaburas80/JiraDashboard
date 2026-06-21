@@ -19,35 +19,42 @@ export type DataSource =
   | 'loading'      // actively loading from cloud
   | 'fallback'     // cloud failed, using local backup
   | 'localstorage' // browser localStorage fallback
+  | 'jira-api'     // live Jira connection sync (ARCH-05 JIRA-08)
   | 'unknown';
 
 interface DataSourceCtx {
-  source:    DataSource;
-  provider:  string;
-  key:       string;
-  loading:   boolean;
-  setSource: (s: DataSource, provider?: string, key?: string) => void;
+  source:         DataSource;
+  provider:       string;
+  key:            string;
+  connectionName: string;
+  lastSyncAt:     string;
+  loading:        boolean;
+  setSource: (s: DataSource, provider?: string, key?: string, connectionName?: string, lastSyncAt?: string) => void;
   setLoading:(loading: boolean, provider?: string) => void;
 }
 
 // ── Context ───────────────────────────────────────────────────────────────────
 
 const Ctx = createContext<DataSourceCtx>({
-  source: 'unknown', provider: '', key: '', loading: false,
+  source: 'unknown', provider: '', key: '', connectionName: '', lastSyncAt: '', loading: false,
   setSource:  () => {},
   setLoading: () => {},
 });
 
 export function DataSourceProvider({ children }: { children: ReactNode }) {
-  const [source,   setSourceState] = useState<DataSource>('unknown');
-  const [provider, setProvider]    = useState('');
-  const [key,      setKey]         = useState('');
-  const [loading,  setLoadingState]= useState(false);
+  const [source,         setSourceState]     = useState<DataSource>('unknown');
+  const [provider,       setProvider]        = useState('');
+  const [key,            setKey]             = useState('');
+  const [connectionName, setConnectionName]  = useState('');
+  const [lastSyncAt,     setLastSyncAt]      = useState('');
+  const [loading,        setLoadingState]    = useState(false);
 
-  function setSource(s: DataSource, prov?: string, k?: string) {
+  function setSource(s: DataSource, prov?: string, k?: string, connName?: string, syncedAt?: string) {
     setSourceState(s);
-    if (prov !== undefined) setProvider(prov);
-    if (k    !== undefined) setKey(k);
+    if (prov     !== undefined) setProvider(prov);
+    if (k        !== undefined) setKey(k);
+    if (connName !== undefined) setConnectionName(connName);
+    if (syncedAt !== undefined) setLastSyncAt(syncedAt);
   }
 
   function setLoading(l: boolean, prov?: string) {
@@ -61,6 +68,11 @@ export function DataSourceProvider({ children }: { children: ReactNode }) {
     function applyStoredSource() {
       const info = getMetricsSource();
       if (!info) return;
+
+      if (info.source === 'jira-api') {
+        setSource('jira-api', info.provider, info.key, info.connectionName, info.savedAt);
+        return;
+      }
 
       if (info.source === 'bucket') {
         const cloudSource: DataSource = info.provider === 's3' ? 'cloud-s3'
@@ -96,13 +108,27 @@ export function DataSourceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <Ctx.Provider value={{ source, provider, key, loading, setSource, setLoading }}>
+    <Ctx.Provider value={{ source, provider, key, connectionName, lastSyncAt, loading, setSource, setLoading }}>
       {children}
     </Ctx.Provider>
   );
 }
 
 export function useDataSource() { return useContext(Ctx); }
+
+// ── Relative time ─────────────────────────────────────────────────────────────
+
+function formatRelativeTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return 'recently';
+  const minutes = Math.max(0, Math.round((Date.now() - then) / 60_000));
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  return `${days}d ago`;
+}
 
 // ── Badge component ───────────────────────────────────────────────────────────
 
@@ -116,6 +142,7 @@ const SOURCE_CONFIG: Record<DataSource, { icon: string; label: string; color: st
   'loading':     { icon: '⟳',   label: 'Loading…',   color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
   'fallback':    { icon: '⚠️',  label: 'No data source', color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
   'localstorage':{ icon: '⚠️',  label: 'localStorage fallback', color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
+  'jira-api':    { icon: '🔄',  label: 'Jira',        color: '#0ea5e9', bg: '#f0f9ff', border: '#bae6fd' },
   'unknown':     { icon: '?',   label: 'Unknown',     color: '#94a3b8', bg: '#f8fafc', border: '#e2e8f0' },
 };
 
@@ -129,18 +156,30 @@ const SOURCE_SHORT_LABEL: Record<DataSource, string> = {
   'loading': 'Loading',
   'fallback': 'No data',
   'localstorage': 'localStorage',
+  'jira-api': 'Jira',
   'unknown': 'Unknown',
 };
 
 export function DataSourceBadge({ className = '', compact = false }: { className?: string; compact?: boolean }) {
-  const { source, provider, key, loading } = useDataSource();
+  const { source, provider, key, connectionName, lastSyncAt, loading } = useDataSource();
   if (source === 'unknown') return null;
 
   const cfg = SOURCE_CONFIG[source] ?? SOURCE_CONFIG.unknown;
   const providerLabel = provider && provider !== 'local'
     ? provider.toUpperCase()
     : cfg.label;
-  const displayLabel = compact ? SOURCE_SHORT_LABEL[source] : `Data: ${providerLabel}`;
+
+  const syncedAgo = lastSyncAt ? formatRelativeTime(lastSyncAt) : 'recently';
+  const jiraLabel = `Jira${connectionName ? ` (${connectionName})` : ''} — last synced ${syncedAgo}`;
+  const jiraCompactLabel = `Jira · ${syncedAgo}`;
+
+  const displayLabel = source === 'jira-api'
+    ? (compact ? jiraCompactLabel : jiraLabel)
+    : (compact ? SOURCE_SHORT_LABEL[source] : `Data: ${providerLabel}`);
+
+  const titleText = source === 'jira-api'
+    ? jiraLabel
+    : (key ? `Data source: ${providerLabel} · Key: ${key}` : `Data source: ${providerLabel}`);
 
   return (
     <div
@@ -148,7 +187,7 @@ export function DataSourceBadge({ className = '', compact = false }: { className
         compact ? 'h-9 shrink-0 px-2.5 text-xs' : 'px-2.5 py-1 text-[10px]'
       } ${className}`}
       style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border }}
-      title={key ? `Data source: ${providerLabel} · Key: ${key}` : `Data source: ${providerLabel}`}
+      title={titleText}
     >
       {loading ? (
         <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
