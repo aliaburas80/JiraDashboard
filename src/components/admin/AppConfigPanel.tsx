@@ -17,7 +17,7 @@ interface SafeConfig {
 }
 
 function Field({
-  label, value, type = 'text', placeholder, onChange, hint,
+  label, value, type = 'text', placeholder, onChange, hint, disabled = false,
 }: {
   label:       string;
   value:       string;
@@ -25,6 +25,7 @@ function Field({
   placeholder?: string;
   onChange:    (v: string) => void;
   hint?:       string;
+  disabled?:   boolean;
 }) {
   return (
     <div>
@@ -34,9 +35,44 @@ function Field({
         value={value}
         placeholder={placeholder}
         onChange={e => onChange(e.target.value)}
-        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+        disabled={disabled}
+        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 transition disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
       />
       {hint && <p className="mt-1 text-[11px] text-slate-400">{hint}</p>}
+    </div>
+  );
+}
+
+function SectionHeader({
+  icon, title, description, editing, onToggleEdit,
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  editing: boolean;
+  onToggleEdit: () => void;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3 mb-1">
+      <div className="flex items-center gap-2">
+        <SvgIcon name={icon} size={18} />
+        <div>
+          <h3 className="text-sm font-black text-slate-900">{title}</h3>
+          <p className="text-[11px] text-slate-400">{description}</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onToggleEdit}
+        className={`shrink-0 inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+          editing
+            ? 'bg-slate-900 text-white hover:bg-slate-800'
+            : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
+        }`}
+      >
+        <SvgIcon name={editing ? 'lock' : 'edit'} size={12} />
+        {editing ? 'Lock' : 'Edit'}
+      </button>
     </div>
   );
 }
@@ -58,6 +94,10 @@ export default function AppConfigPanel() {
   const [appUrl,  setAppUrl]  = useState('');
   const [jiraToken, setJiraToken] = useState('');
   const [hasJiraToken, setHasJiraToken] = useState(false);
+
+  const [editingSmtp,   setEditingSmtp]   = useState(false);
+  const [editingJira,   setEditingJira]   = useState(false);
+  const [editingAppUrl, setEditingAppUrl] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/app-config')
@@ -106,6 +146,9 @@ export default function AppConfigPanel() {
       setPass('');
       setJiraToken('');
       setSource('cloud');
+      setEditingSmtp(false);
+      setEditingJira(false);
+      setEditingAppUrl(false);
       setStatus({ type: 'success', msg: 'Config encrypted and saved to cloud storage.' });
     } catch {
       setStatus({ type: 'error', msg: 'Network error — save failed.' });
@@ -188,45 +231,47 @@ export default function AppConfigPanel() {
 
       {/* SMTP section */}
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
-        <div className="flex items-center gap-2 mb-1">
-          <SvgIcon name="email" size={18} />
-          <div>
-            <h3 className="text-sm font-black text-slate-900">SMTP / Email</h3>
-            <p className="text-[11px] text-slate-400">Used for welcome emails when an add-member request is accepted.</p>
-          </div>
-        </div>
+        <SectionHeader
+          icon="email"
+          title="SMTP / Email"
+          description="Used for welcome emails when an add-member request is accepted."
+          editing={editingSmtp}
+          onToggleEdit={() => setEditingSmtp(v => !v)}
+        />
         <div className="grid grid-cols-2 gap-4">
-          <Field label="SMTP Host"    value={host}   onChange={setHost}   placeholder="smtp.gmail.com" />
-          <Field label="SMTP Port"    value={port}   onChange={setPort}   placeholder="587" />
+          <Field label="SMTP Host"    value={host}   onChange={setHost}   placeholder="smtp.gmail.com" disabled={!editingSmtp} />
+          <Field label="SMTP Port"    value={port}   onChange={setPort}   placeholder="587" disabled={!editingSmtp} />
         </div>
-        <Field label="Username / Email" value={user} onChange={setUser}  placeholder="you@gmail.com" />
+        <Field label="Username / Email" value={user} onChange={setUser}  placeholder="you@gmail.com" disabled={!editingSmtp} />
         <Field
           label="Password"
           value={pass}
           type="password"
           onChange={setPass}
+          disabled={!editingSmtp}
           placeholder={source === 'cloud' ? '••••••••  (unchanged)' : 'Enter App Password'}
           hint={source === 'cloud'
             ? 'Leave blank to keep the existing stored password. For Gmail 535 errors, paste a fresh 16-character Google App Password here and test before saving.'
             : 'For Gmail: use a fresh 16-character Google App Password, not your normal Google password.'}
         />
-        <Field label="From address" value={from} onChange={setFrom} placeholder="Delivery Clarity <you@gmail.com>" />
+        <Field label="From address" value={from} onChange={setFrom} placeholder="Delivery Clarity <you@gmail.com>" disabled={!editingSmtp} />
       </div>
 
       {/* Jira API Token section (ARCH-05) */}
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
-        <div className="flex items-center gap-2 mb-1">
-          <SvgIcon name="link" size={18} />
-          <div>
-            <h3 className="text-sm font-black text-slate-900">Jira API Token</h3>
-            <p className="text-[11px] text-slate-400">Used by every connection on the Jira Integration tab to authenticate with Jira (read-only).</p>
-          </div>
-        </div>
+        <SectionHeader
+          icon="link"
+          title="Jira API Token"
+          description="Used by every connection on the Jira Integration tab to authenticate with Jira (read-only)."
+          editing={editingJira}
+          onToggleEdit={() => setEditingJira(v => !v)}
+        />
         <Field
           label="API Token / Personal Access Token"
           value={jiraToken}
           type="password"
           onChange={setJiraToken}
+          disabled={!editingJira}
           placeholder={hasJiraToken ? '••••••••  (unchanged)' : 'Paste your Jira API token or PAT'}
           hint={hasJiraToken
             ? 'Leave blank to keep the existing stored token. Generate a fresh one from id.atlassian.com (Cloud) or your Jira profile (Server/DC) if it stops working.'
@@ -236,17 +281,18 @@ export default function AppConfigPanel() {
 
       {/* App URL section */}
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
-        <div className="flex items-center gap-2 mb-1">
-          <SvgIcon name="link" size={18} />
-          <div>
-            <h3 className="text-sm font-black text-slate-900">App URL</h3>
-            <p className="text-[11px] text-slate-400">Used in email templates as the login link base URL.</p>
-          </div>
-        </div>
+        <SectionHeader
+          icon="link"
+          title="App URL"
+          description="Used in email templates as the login link base URL."
+          editing={editingAppUrl}
+          onToggleEdit={() => setEditingAppUrl(v => !v)}
+        />
         <Field
           label="App URL"
           value={appUrl}
           onChange={setAppUrl}
+          disabled={!editingAppUrl}
           placeholder="https://yourdomain.com"
           hint='e.g. "https://yourdomain.com" — no trailing slash. Used in "Log In Now" button in welcome emails.'
         />

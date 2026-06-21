@@ -5,6 +5,18 @@
 
 ---
 
+## v4.5.4 — App Config: Tab Naming + Per-Section Edit Lock (2026-06-21, P3 — UX polish)
+
+**Scope:** Two small fixes per user feedback after using the new Jira Integration tab.
+
+- **Naming coherence:** the page header/breadcrumb said "App Config" while the left-nav sub-item already said "App Config / SMTP" — inconsistent. `ADMIN_TABS` in `src/lib/adminConsole.ts` now matches the sidebar label.
+- **Per-section edit lock:** all fields in `AppConfigPanel.tsx` (SMTP, Jira API Token, App URL) used to be directly editable at all times. Added an independent "Edit" / "Lock" toggle button to each section header — fields render disabled (grayed out) until that section's Edit button is clicked, reducing the chance of an accidental change to live SMTP/Jira credentials. All three sections auto re-lock after a successful save.
+- Verified in a real browser: locked state shows all fields grayed out with "Edit" buttons; clicking one unlocks only that section's inputs (others stay locked); no console errors.
+
+### No new tests (pure UI interaction change, manually verified per CLAUDE.md).
+
+---
+
 ## v4.5.3 — ARCH-05: Jira Token Moved to Encrypted App Config (2026-06-20, P1 — in progress, unmerged)
 
 **Scope:** User feedback on the previous slice — explicitly rejected the env-var-only token design ("no need for hard code... this should be in the config"). Moved the Jira API token/PAT into the same encrypted App Config system already used for SMTP credentials, instead of requiring a `.env` edit + server restart.

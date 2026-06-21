@@ -12,7 +12,7 @@ export type Tab = 'users' | 'requests' | 'retention' | 'thresholds' | 'orphan' |
 export const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; description: string }> = [
   { id: 'users',      label: 'User Management',     icon: 'people', description: 'Accounts, roles, access state' },
   { id: 'requests',   label: 'Member Requests',     icon: 'email', description: 'Pending add-member requests' },
-  { id: 'config',     label: 'App Config',          icon: 'settings', description: 'SMTP, email, and app-level settings' },
+  { id: 'config',     label: 'App Config / SMTP',   icon: 'settings', description: 'SMTP, email, and app-level settings' },
   { id: 'retention',  label: 'Privacy & Retention', icon: 'lock', description: 'Data windows and cleanup' },
   { id: 'thresholds', label: 'Health Thresholds',   icon: 'priorityHigh', description: 'Delivery health rules' },
   { id: 'orphan',     label: 'Orphan Rules',        icon: 'link', description: 'Hierarchy detection rules' },
