@@ -24,6 +24,9 @@ jest.mock('@/lib/prisma', () => ({
       create: jest.fn(),
       update: jest.fn(),
     },
+    importLog: {
+      create: jest.fn(),
+    },
   },
 }));
 jest.mock('@/lib/system-error-logger', () => ({
@@ -35,10 +38,20 @@ jest.mock('@/server/gateway/externalGateway', () => ({
 jest.mock('@/lib/app-config', () => ({
   getJiraApiToken: jest.fn(async () => ''),
 }));
+jest.mock('@/services/jira/sync', () => ({
+  fetchAllJiraIssues: jest.fn(),
+}));
+jest.mock('@/services/metrics/latestMetricsStorage', () => ({
+  writeLatestMetrics: jest.fn(),
+}));
+jest.mock('@/services/storage/cloudSync', () => ({
+  pushToCloud: jest.fn(async () => ({ status: 'pushed' })),
+}));
 
 import { prisma } from '@/lib/prisma';
 import { callExternal } from '@/server/gateway/externalGateway';
 import { getJiraApiToken } from '@/lib/app-config';
+import { fetchAllJiraIssues } from '@/services/jira/sync';
 
 function makeReq(body: unknown) {
   return {
@@ -324,4 +337,120 @@ test('TC-JIRA-28: field discovery — gateway failure returns 502', async () => 
   const { GET } = await import('../../app/api/admin/jira-connections/[id]/fields/route');
   const res = await GET(makeReq({}), { params: { id: 'conn-1' } });
   expect(res.status).toBe(502);
+});
+
+// ── POST /api/admin/jira-connections/[id]/sync (JIRA-07) ─────────────────────
+
+function rawJiraIssue(key: string) {
+  return {
+    key,
+    fields: {
+      issuetype: { name: 'Story' },
+      summary: `Issue ${key}`,
+      status: { name: 'Done' },
+      project: { key: 'PROJ' },
+    },
+  };
+}
+
+test('TC-JIRA-40: sync — unauthenticated returns 401', async () => {
+  mockSession.isLoggedIn = false;
+  const { POST } = await import('../../app/api/admin/jira-connections/[id]/sync/route');
+  const res = await POST(makeReq({}), { params: { id: 'conn-1' } });
+  expect(res.status).toBe(401);
+});
+
+test('TC-JIRA-41: sync — non-admin returns 403', async () => {
+  mockSession.role = 'scrum_master';
+  const { POST } = await import('../../app/api/admin/jira-connections/[id]/sync/route');
+  const res = await POST(makeReq({}), { params: { id: 'conn-1' } });
+  expect(res.status).toBe(403);
+});
+
+test('TC-JIRA-42: sync — returns 404 when the connection does not exist', async () => {
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(null);
+  const { POST } = await import('../../app/api/admin/jira-connections/[id]/sync/route');
+  const res = await POST(makeReq({}), { params: { id: 'missing' } });
+  expect(res.status).toBe(404);
+});
+
+test('TC-JIRA-43: sync — returns 409 when no Jira token is configured', async () => {
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  const { POST } = await import('../../app/api/admin/jira-connections/[id]/sync/route');
+  const res = await POST(makeReq({}), { params: { id: 'conn-1' } });
+  expect(res.status).toBe(409);
+});
+
+test('TC-JIRA-44: sync — fetch failure returns 502 and records lastSyncStatus failed', async () => {
+  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (fetchAllJiraIssues as jest.Mock).mockResolvedValue({ ok: false, error: 'HTTP 401: Unauthorized' });
+
+  const { POST } = await import('../../app/api/admin/jira-connections/[id]/sync/route');
+  const res = await POST(makeReq({}), { params: { id: 'conn-1' } });
+
+  expect(res.status).toBe(502);
+  expect(prisma.jiraConnection.update).toHaveBeenCalledWith(
+    expect.objectContaining({ data: expect.objectContaining({ lastSyncStatus: 'failed' }) }),
+  );
+});
+
+test('TC-JIRA-44b: sync — a config error (e.g. no project keys) returns 409, not 502', async () => {
+  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (fetchAllJiraIssues as jest.Mock).mockResolvedValue({
+    ok: false,
+    error: 'This connection has no valid project keys configured.',
+    configError: true,
+  });
+
+  const { POST } = await import('../../app/api/admin/jira-connections/[id]/sync/route');
+  const res = await POST(makeReq({}), { params: { id: 'conn-1' } });
+
+  expect(res.status).toBe(409);
+});
+
+test('TC-JIRA-45: sync — validation failure (no issues) returns 422 without writing metrics', async () => {
+  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (fetchAllJiraIssues as jest.Mock).mockResolvedValue({ ok: true, issues: [], truncated: false });
+
+  const { POST } = await import('../../app/api/admin/jira-connections/[id]/sync/route');
+  const res = await POST(makeReq({}), { params: { id: 'conn-1' } });
+  const body = await res.json();
+
+  expect(res.status).toBe(422);
+  expect(body.error).toMatch(/validation/i);
+  expect(prisma.importLog.create).not.toHaveBeenCalled();
+});
+
+test('TC-JIRA-46: sync — success writes latest metrics, an ImportLog (sourceType: "api"), and marks the connection successful', async () => {
+  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (fetchAllJiraIssues as jest.Mock).mockResolvedValue({
+    ok: true,
+    issues: [rawJiraIssue('PROJ-1'), rawJiraIssue('PROJ-2')],
+    truncated: false,
+  });
+  (prisma.importLog.create as jest.Mock).mockResolvedValue({ id: 'log-1' });
+
+  const { POST } = await import('../../app/api/admin/jira-connections/[id]/sync/route');
+  const res = await POST(makeReq({}), { params: { id: 'conn-1' } });
+  const body = await res.json();
+
+  expect(res.status).toBe(200);
+  expect(body.ok).toBe(true);
+  expect(body.totalIssues).toBeGreaterThanOrEqual(0);
+
+  const { writeLatestMetrics } = await import('@/services/metrics/latestMetricsStorage');
+  expect(writeLatestMetrics).toHaveBeenCalled();
+
+  expect(prisma.importLog.create).toHaveBeenCalledWith(
+    expect.objectContaining({
+      data: expect.objectContaining({ sourceType: 'api', jiraConnectionId: 'conn-1', status: 'success' }),
+    }),
+  );
+  expect(prisma.jiraConnection.update).toHaveBeenCalledWith(
+    expect.objectContaining({ data: expect.objectContaining({ lastSyncStatus: 'success', lastSyncError: null }) }),
+  );
 });

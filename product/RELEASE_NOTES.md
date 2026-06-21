@@ -5,6 +5,22 @@
 
 ---
 
+## v4.7.0 — ARCH-05: Manual "Sync Now" — Jira Data Actually Flows In (2026-06-21, P1 — in progress, unmerged)
+
+**Scope:** Fifth slice of Phase 1 — `JIRA-07`. Until now, a connection could be created and tested, but no Jira issue ever reached a dashboard; the only working data path was still the manual CSV/Excel upload. This slice closes that gap.
+
+- **`POST /api/admin/jira-connections/[id]/sync`** + **`src/services/jira/sync.ts`**: builds a safe, bounded JQL from the connection's project keys (never raw JQL text entry — a free-text box could leak an entire backlog via a typo), paginates through the Gateway (Cloud `nextPageToken` / Server-DC `startAt`, capped at 1000 issues per sync as a safety limit), normalizes via `JIRA-06`'s adapter, validates, computes metrics with the existing `calculateDashboardMetrics()`, then updates the live dashboard via `writeLatestMetrics()` — the same mechanism the file-upload route already uses — plus writes an `ImportLog` row (`sourceType: "api"`).
+- **All-or-nothing**: a validation or Gateway failure never touches the live dashboard; the last-good data stays in place.
+- **Deviated from the original design note** ("+ DashboardSnapshot"): `DashboardSnapshot` is a deliberate user-named milestone capped at 20 per user — auto-creating one on every sync would silently eat that budget for no benefit. `writeLatestMetrics()` is the actual mechanism that updates what the dashboard shows.
+- **Two real bugs caught, neither by unit tests alone:**
+  1. A unit test (`TC-JIRA-36`) caught that the pagination query object was built but never passed to `callExternal()` — every request would have silently ignored the JQL filter and pagination cursor entirely.
+  2. Live testing against the real Jira instance caught that config errors (e.g. no project keys configured) were reported as HTTP 502 — implying an upstream Jira failure — when the request never even reached Jira. Added a `configError` flag distinguishing "never reached Jira" (409) from "Jira/Gateway actually failed" (502).
+- **Verified fully end-to-end against the user's real Jira Cloud instance** (not mocks): discovered real project keys via a read-only direct API probe, pointed the connection at a project with real issues (`SAMPLEPROJ`, 7 issues), ran an actual sync, and confirmed the response (`{ totalIssues: 7, doneIssues: 1, healthScore: 48 }`), the `ImportLog` row, and `data/latest-metrics.json` were all correct — then cleaned up the test data and reverted the connection to its original state.
+- New tests: `jiraSync.test.ts` (11 tests, `TC-JIRA-29–39`) + 7 new route tests (`TC-JIRA-40–46`, `44b`) in `jiraConnections.test.ts`.
+- Suite: **623/66, all passing.** Lint and build clean.
+
+---
+
 ## v4.6.0 — ARCH-05: API Adapter + Field Discovery (2026-06-21, P1 — in progress, unmerged)
 
 **Scope:** Fourth slice of Phase 1 — `JIRA-06`, the data-normalization layer that makes the previously-built connect/test plumbing actually useful: converting raw Jira REST issues into the same shape the file-upload pipeline already produces. No UI changes — this is server-only infrastructure, same "no UC for vaporware" treatment as the original Gateway foundation.
