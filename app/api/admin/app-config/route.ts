@@ -14,6 +14,7 @@ import { prisma } from '@/lib/prisma';
 import { getAppConfig, getSafeConfig, saveToCloud, invalidateConfig, type AppConfig } from '@/lib/app-config';
 import { describeSmtpErrorDetails, sendEmailWith } from '@/lib/email';
 import { callExternal } from '@/server/gateway/externalGateway';
+import { buildJiraAuthHeader, jiraMyselfPath } from '@/services/jira/auth';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -90,19 +91,16 @@ async function testJiraToken(auth: SessionData, apiToken?: string): Promise<Next
     return NextResponse.json({ ok: false, skipped: true, error: 'Enter a token above (or save one) before testing.' });
   }
 
-  const isCloud = connection.deploymentType === 'cloud';
-  if (isCloud && !connection.authEmail) {
+  if (connection.deploymentType === 'cloud' && !connection.authEmail) {
     return NextResponse.json({ ok: false, error: `Connection "${connection.name}" is missing its email address.` }, { status: 409 });
   }
-  const authHeader = isCloud
-    ? `Basic ${Buffer.from(`${connection.authEmail}:${token}`).toString('base64')}`
-    : `Bearer ${token}`;
+  const authHeader = buildJiraAuthHeader(connection.deploymentType, connection.authEmail, token);
 
   const result = await callExternal<JiraMyselfResponse>({
     provider: 'jira',
     operation: 'jira.testTokenFromAppConfig',
     method: 'GET',
-    path: isCloud ? '/rest/api/3/myself' : '/rest/api/2/myself',
+    path: jiraMyselfPath(connection.deploymentType),
     headers: { Authorization: authHeader, Accept: 'application/json' },
     baseUrlOverride: connection.baseUrl,
     credentialsPresentOverride: true,

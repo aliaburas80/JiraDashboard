@@ -5,6 +5,20 @@
 
 ---
 
+## v4.6.0 — ARCH-05: API Adapter + Field Discovery (2026-06-21, P1 — in progress, unmerged)
+
+**Scope:** Fourth slice of Phase 1 — `JIRA-06`, the data-normalization layer that makes the previously-built connect/test plumbing actually useful: converting raw Jira REST issues into the same shape the file-upload pipeline already produces. No UI changes — this is server-only infrastructure, same "no UC for vaporware" treatment as the original Gateway foundation.
+
+- **`src/services/jira/apiAdapter.ts`** (`normalizeJiraIssue()`/`normalizeJiraIssues()`): standard fields (Issue Type, Summary, Status, Project, Assignee, Reporter, Priority, Resolution, Labels, Fix Version/s, Created/Updated/Resolution/Due Date) read from their fixed Jira REST path; custom fields (Story Points, Sprint, Epic Link, Business Value, Risk Score) resolved via the connection's `fieldMapping`, with shape-specific normalization (Sprint handles both the modern array-of-objects format and the legacy greenhopper string; Epic Link handles both a plain key string and an object). Verified the output passes `validateIssueData()` unchanged — `calculateDashboardMetrics()` needs zero changes regardless of data source.
+- **`src/services/jira/fieldDiscovery.ts` + `GET /api/admin/jira-connections/[id]/fields`** (unplanned, discovered mid-build, `JIRA-06b`): the adapter's `fieldMapping` can't be populated without knowing an instance's actual `customfield_NNNNN` → name mapping, so built the discovery half too — calls `GET /rest/api/{2|3}/field` through the Gateway.
+- Extracted `buildJiraAuthHeader()`/`jiraMyselfPath()`/`jiraFieldPath()` into `src/services/jira/auth.ts`, removing the same auth-header-building logic that had been duplicated across the test-connection, field-discovery, and App Config test-token routes.
+- **Verified live against the user's real Jira Cloud instance** (not a mock): field discovery returned all 117 real fields, correctly surfacing both "Story Points" (`customfield_10033`) and "Story point estimate" (`customfield_10016`) by name.
+- New tests: `jiraApiAdapter.test.ts` (11 tests, `TC-JIRA-14–24`) + 4 new route tests (`TC-JIRA-25–28`) in `jiraConnections.test.ts`.
+- Suite: **604/65, all passing.** Lint and build clean.
+- Field-mapping *UI* (picking which discovered field maps to which canonical name) is still deferred — this ships the data plumbing only, not yet wired to any admin screen.
+
+---
+
 ## v4.5.5 — App Config: Visible Edit-Mode Styling + Per-Section Save/Test (2026-06-21, P3 — UX polish)
 
 **Scope:** Follow-up to v4.5.4's edit-lock — user reported two remaining gaps: unlocking a section looked visually identical to locked (no clear "you're editing now" cue), and there was no way to save or verify a section's change without scrolling to the single global button at the bottom of the page.

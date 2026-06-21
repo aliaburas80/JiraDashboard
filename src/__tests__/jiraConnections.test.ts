@@ -1,6 +1,6 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
-// TC-JIRA-01 to TC-JIRA-10 — ARCH-05 Phase 1: Jira connection admin routes.
-// JIRA-05 — see product/JIRA_INTEGRATION_DESIGN.md.
+// TC-JIRA-01 to TC-JIRA-28 — ARCH-05 Phase 1: Jira connection admin routes.
+// JIRA-05/05c/06b — see product/JIRA_INTEGRATION_DESIGN.md.
 
 export {};
 
@@ -260,4 +260,68 @@ test('TC-JIRA-13: test connection — gateway failure records lastSyncStatus fai
   expect(prisma.jiraConnection.update).toHaveBeenCalledWith(
     expect.objectContaining({ data: expect.objectContaining({ lastSyncStatus: 'failed' }) }),
   );
+});
+
+// ── GET /api/admin/jira-connections/[id]/fields (JIRA-06b) ───────────────────
+
+test('TC-JIRA-25: field discovery — returns 404 when the connection does not exist', async () => {
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(null);
+  const { GET } = await import('../../app/api/admin/jira-connections/[id]/fields/route');
+  const res = await GET(makeReq({}), { params: { id: 'missing' } });
+  expect(res.status).toBe(404);
+});
+
+test('TC-JIRA-26: field discovery — returns 409 when no Jira token is configured', async () => {
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  const { GET } = await import('../../app/api/admin/jira-connections/[id]/fields/route');
+  const res = await GET(makeReq({}), { params: { id: 'conn-1' } });
+  const body = await res.json();
+  expect(res.status).toBe(409);
+  expect(body.error).toMatch(/App Config/);
+});
+
+test('TC-JIRA-27: field discovery — success returns the field list from the gateway', async () => {
+  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (callExternal as jest.Mock).mockResolvedValue({
+    ok: true,
+    data: [{ id: 'customfield_10016', name: 'Story Points' }, { id: 'summary', name: 'Summary' }],
+    requestId: 'req-4',
+    durationMs: 10,
+    retryCount: 0,
+    provider: 'jira',
+    operation: 'jira.discoverFields',
+  });
+
+  const { GET } = await import('../../app/api/admin/jira-connections/[id]/fields/route');
+  const res = await GET(makeReq({}), { params: { id: 'conn-1' } });
+  const body = await res.json();
+
+  expect(res.status).toBe(200);
+  expect(body.ok).toBe(true);
+  expect(body.fields).toEqual([
+    { id: 'customfield_10016', name: 'Story Points' },
+    { id: 'summary', name: 'Summary' },
+  ]);
+  expect(callExternal).toHaveBeenCalledWith(
+    expect.objectContaining({ path: '/rest/api/3/field', baseUrlOverride: 'https://example.atlassian.net' }),
+  );
+});
+
+test('TC-JIRA-28: field discovery — gateway failure returns 502', async () => {
+  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (callExternal as jest.Mock).mockResolvedValue({
+    ok: false,
+    error: 'HTTP 401: Unauthorized',
+    requestId: 'req-5',
+    durationMs: 10,
+    retryCount: 0,
+    provider: 'jira',
+    operation: 'jira.discoverFields',
+  });
+
+  const { GET } = await import('../../app/api/admin/jira-connections/[id]/fields/route');
+  const res = await GET(makeReq({}), { params: { id: 'conn-1' } });
+  expect(res.status).toBe(502);
 });

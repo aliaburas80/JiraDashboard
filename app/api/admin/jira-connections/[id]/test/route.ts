@@ -12,6 +12,7 @@ import { prisma } from '@/lib/prisma';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { callExternal } from '@/server/gateway/externalGateway';
 import { getJiraApiToken } from '@/lib/app-config';
+import { buildJiraAuthHeader, jiraMyselfPath } from '@/services/jira/auth';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -47,20 +48,17 @@ export async function POST(
     );
   }
 
-  const isCloud = connection.deploymentType === 'cloud';
-  if (isCloud && !connection.authEmail) {
+  if (connection.deploymentType === 'cloud' && !connection.authEmail) {
     return NextResponse.json({ error: 'This Cloud connection is missing its email address.' }, { status: 409 });
   }
 
-  const authHeader = isCloud
-    ? `Basic ${Buffer.from(`${connection.authEmail}:${token}`).toString('base64')}`
-    : `Bearer ${token}`;
+  const authHeader = buildJiraAuthHeader(connection.deploymentType, connection.authEmail, token);
 
   const result = await callExternal<JiraMyselfResponse>({
     provider: 'jira',
     operation: 'jira.testConnection',
     method: 'GET',
-    path: isCloud ? '/rest/api/3/myself' : '/rest/api/2/myself',
+    path: jiraMyselfPath(connection.deploymentType),
     headers: { Authorization: authHeader, Accept: 'application/json' },
     baseUrlOverride: connection.baseUrl,
     // We already resolved `token` above via getJiraApiToken() (encrypted
