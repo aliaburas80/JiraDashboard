@@ -2,13 +2,18 @@
 // GET  /api/admin/app-config — return current config (passwords masked)
 // PUT  /api/admin/app-config — save new config (encrypt + upload to cloud)
 // POST /api/admin/app-config?action=test — send a test email to the logged-in admin
+// POST /api/admin/app-config?action=test-jira — verify an in-progress (unsaved) Jira
+//   token against the most recently created JiraConnection, mirroring the SMTP test's
+//   "test before saving" UX (ARCH-05, JIRA-05c follow-up).
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
+import { prisma } from '@/lib/prisma';
 import { getAppConfig, getSafeConfig, saveToCloud, invalidateConfig, type AppConfig } from '@/lib/app-config';
 import { describeSmtpErrorDetails, sendEmailWith } from '@/lib/email';
+import { callExternal } from '@/server/gateway/externalGateway';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -67,10 +72,62 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
   }
 }
 
+interface JiraMyselfResponse {
+  accountId?: string;
+  displayName?: string;
+  emailAddress?: string;
+  name?: string; // Server/DC uses "name" instead of "accountId"/"emailAddress"
+}
+
+async function testJiraToken(auth: SessionData, apiToken?: string): Promise<NextResponse> {
+  const connection = await prisma.jiraConnection.findFirst({ orderBy: { createdAt: 'desc' } });
+  if (!connection) {
+    return NextResponse.json({ ok: false, skipped: true, error: 'No Jira connection exists yet — create one on the Jira Integration tab, then come back to test the token.' });
+  }
+
+  const token = apiToken?.trim() || (await getAppConfig()).jira.apiToken;
+  if (!token) {
+    return NextResponse.json({ ok: false, skipped: true, error: 'Enter a token above (or save one) before testing.' });
+  }
+
+  const isCloud = connection.deploymentType === 'cloud';
+  if (isCloud && !connection.authEmail) {
+    return NextResponse.json({ ok: false, error: `Connection "${connection.name}" is missing its email address.` }, { status: 409 });
+  }
+  const authHeader = isCloud
+    ? `Basic ${Buffer.from(`${connection.authEmail}:${token}`).toString('base64')}`
+    : `Bearer ${token}`;
+
+  const result = await callExternal<JiraMyselfResponse>({
+    provider: 'jira',
+    operation: 'jira.testTokenFromAppConfig',
+    method: 'GET',
+    path: isCloud ? '/rest/api/3/myself' : '/rest/api/2/myself',
+    headers: { Authorization: authHeader, Accept: 'application/json' },
+    baseUrlOverride: connection.baseUrl,
+    credentialsPresentOverride: true,
+    userId: auth.userId,
+    timeoutMs: 15000,
+  });
+
+  if (!result.ok) {
+    return NextResponse.json({ ok: false, error: result.error ?? 'Connection test failed.' }, { status: 502 });
+  }
+  const account = result.data?.displayName ?? result.data?.name ?? result.data?.emailAddress ?? 'unknown account';
+  return NextResponse.json({ ok: true, account, connectionName: connection.name });
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const auth = await requireAdmin();
   if (auth instanceof NextResponse) return auth;
   const action = new URL(req.url).searchParams.get('action');
+
+  if (action === 'test-jira') {
+    let body: { jira?: { apiToken?: string } } = {};
+    try { body = await req.json(); } catch { /* body is optional */ }
+    return testJiraToken(auth as SessionData, body.jira?.apiToken);
+  }
+
   if (action !== 'test') return NextResponse.json({ error: 'Unknown action.' }, { status: 400 });
 
   // Always bust the module-level cache so env changes take effect.

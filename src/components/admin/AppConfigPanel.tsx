@@ -66,7 +66,7 @@ function SectionHeader({
         onClick={onToggleEdit}
         className={`shrink-0 inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
           editing
-            ? 'bg-slate-900 text-white hover:bg-slate-800'
+            ? 'bg-amber-500 text-white hover:bg-amber-600'
             : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
         }`}
       >
@@ -77,10 +77,48 @@ function SectionHeader({
   );
 }
 
+function SectionActions({
+  editing, saving, onSave, testing, onTest, testLabel,
+}: {
+  editing:    boolean;
+  saving:     boolean;
+  onSave:     () => void;
+  testing?:   boolean;
+  onTest?:    () => void;
+  testLabel?: string;
+}) {
+  if (!editing) return null;
+  return (
+    <div className="flex items-center gap-2 pt-1">
+      <button
+        type="button"
+        onClick={onSave}
+        disabled={saving}
+        className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+      >
+        <SvgIcon name="lock" size={12} />
+        {saving ? 'Saving…' : 'Save this section'}
+      </button>
+      {onTest && (
+        <button
+          type="button"
+          onClick={onTest}
+          disabled={testing}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+        >
+          <SvgIcon name="send" size={12} />
+          {testing ? 'Testing…' : testLabel}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function AppConfigPanel() {
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
   const [testing,  setTesting]  = useState(false);
+  const [testingJira, setTestingJira] = useState(false);
   const [hasEncKey, setHasEncKey] = useState(false);
   const [source,   setSource]   = useState<'cloud' | 'env'>('env');
   const [status,   setStatus]   = useState<{ type: 'success' | 'error' | 'info'; msg: string; solution?: string; details?: string } | null>(null);
@@ -191,6 +229,35 @@ export default function AppConfigPanel() {
     }
   }
 
+  async function handleTestJira() {
+    setTestingJira(true);
+    setStatus(null);
+    setShowStatusSolution(false);
+    try {
+      // Pass the current (possibly unsaved) token so the test reflects what's
+      // on screen, same "test before saving" UX as SMTP's handleTest above.
+      const res = await fetch('/api/admin/app-config?action=test-jira', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jira: { apiToken: jiraToken || undefined } }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setStatus({
+          type: data.skipped ? 'info' : 'error',
+          msg: data.error ?? 'Jira token test failed.',
+          solution: data.skipped ? undefined : 'Check the token value, then try again.',
+        });
+        return;
+      }
+      setStatus({ type: 'success', msg: `Connected to "${data.connectionName}" as ${data.account}.` });
+    } catch {
+      setStatus({ type: 'error', msg: 'Network error — test failed.' });
+    } finally {
+      setTestingJira(false);
+    }
+  }
+
   if (loading) return <div className="py-12 text-center text-sm text-slate-400 animate-pulse">Loading config…</div>;
 
   return (
@@ -230,7 +297,7 @@ export default function AppConfigPanel() {
       )}
 
       {/* SMTP section */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+      <div className={`bg-white border rounded-2xl p-5 shadow-sm space-y-4 transition-colors ${editingSmtp ? 'border-amber-300 ring-2 ring-amber-100' : 'border-slate-200'}`}>
         <SectionHeader
           icon="email"
           title="SMTP / Email"
@@ -255,10 +322,18 @@ export default function AppConfigPanel() {
             : 'For Gmail: use a fresh 16-character Google App Password, not your normal Google password.'}
         />
         <Field label="From address" value={from} onChange={setFrom} placeholder="Delivery Clarity <you@gmail.com>" disabled={!editingSmtp} />
+        <SectionActions
+          editing={editingSmtp}
+          saving={saving}
+          onSave={handleSave}
+          testing={testing}
+          onTest={handleTest}
+          testLabel="Send test email"
+        />
       </div>
 
       {/* Jira API Token section (ARCH-05) */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+      <div className={`bg-white border rounded-2xl p-5 shadow-sm space-y-4 transition-colors ${editingJira ? 'border-amber-300 ring-2 ring-amber-100' : 'border-slate-200'}`}>
         <SectionHeader
           icon="link"
           title="Jira API Token"
@@ -277,10 +352,18 @@ export default function AppConfigPanel() {
             ? 'Leave blank to keep the existing stored token. Generate a fresh one from id.atlassian.com (Cloud) or your Jira profile (Server/DC) if it stops working.'
             : 'Cloud: create at id.atlassian.com → Security → API tokens. Server/DC: your profile avatar → Personal Access Tokens. See the guide on the Jira Integration tab for details.'}
         />
+        <SectionActions
+          editing={editingJira}
+          saving={saving}
+          onSave={handleSave}
+          testing={testingJira}
+          onTest={handleTestJira}
+          testLabel="Test token"
+        />
       </div>
 
       {/* App URL section */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+      <div className={`bg-white border rounded-2xl p-5 shadow-sm space-y-4 transition-colors ${editingAppUrl ? 'border-amber-300 ring-2 ring-amber-100' : 'border-slate-200'}`}>
         <SectionHeader
           icon="link"
           title="App URL"
@@ -296,6 +379,7 @@ export default function AppConfigPanel() {
           placeholder="https://yourdomain.com"
           hint='e.g. "https://yourdomain.com" — no trailing slash. Used in "Log In Now" button in welcome emails.'
         />
+        <SectionActions editing={editingAppUrl} saving={saving} onSave={handleSave} />
       </div>
 
       {/* Status */}
@@ -331,7 +415,7 @@ export default function AppConfigPanel() {
         </div>
       )}
 
-      {/* Actions */}
+      {/* Actions — saves all three sections at once, regardless of which are unlocked */}
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -340,14 +424,6 @@ export default function AppConfigPanel() {
           className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? 'Saving…' : <><SvgIcon name="lock" size={14} /> Encrypt & Save to Cloud</>}
-        </button>
-        <button
-          type="button"
-          onClick={handleTest}
-          disabled={testing}
-          className="btn-secondary disabled:opacity-50"
-        >
-          {testing ? 'Sending…' : <><SvgIcon name="send" size={14} /> Send Test Email</>}
         </button>
       </div>
 

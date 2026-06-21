@@ -5,6 +5,20 @@
 
 ---
 
+## v4.5.5 — App Config: Visible Edit-Mode Styling + Per-Section Save/Test (2026-06-21, P3 — UX polish)
+
+**Scope:** Follow-up to v4.5.4's edit-lock — user reported two remaining gaps: unlocking a section looked visually identical to locked (no clear "you're editing now" cue), and there was no way to save or verify a section's change without scrolling to the single global button at the bottom of the page.
+
+- **Edit-mode styling:** an unlocked section now gets an amber border + ring around the whole card, and its "Lock" button turns amber — clearly distinct from the neutral slate "locked" state.
+- **Per-section actions:** each unlocked section now shows its own "Save this section" button (calls the same save endpoint — safe regardless of which sections are locked, since locked fields still hold their loaded values).
+- **New: "Test token" for the Jira section** — previously only SMTP had an inline test ("Send Test Email"); Jira had none. Added `POST /api/admin/app-config?action=test-jira`, which verifies the in-progress (possibly unsaved) token against the most recently created `JiraConnection`'s base URL/deployment type through the same Gateway path as the per-connection test, and reports the connected account name or a clear error inline. If no `JiraConnection` exists yet, it says so instead of failing silently.
+- Moved "Send Test Email" from the disconnected global action row into the SMTP section itself, next to its new "Save this section" button.
+- Verified live in a real browser against the user's actual configured Jira connection: clicked "Test token" and got a genuine successful response (`"Connected to "Test" as Ali Abu Ras"`), confirming the full save → resolve-token → Gateway-call path works end to end, not just in isolation.
+
+### No new automated tests (UI interaction + a thin route wrapper around already-tested Gateway/app-config primitives; manually verified per CLAUDE.md).
+
+---
+
 ## v4.5.4 — App Config: Per-Section Edit Lock (2026-06-21, P3 — UX polish)
 
 **Scope:** Fixes per user feedback after using the new Jira Integration tab.
