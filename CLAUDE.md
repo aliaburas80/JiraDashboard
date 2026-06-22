@@ -1,337 +1,3544 @@
-# Delivery Clarity — Permanent Engineering Standards
+# Delivery Clarity — Permanent Engineering, Product, Design and Delivery Standards
 
-> These rules apply to **every** frontend change, refactor, review, or new feature.
-> They are enforced by ESLint, Stylelint, TypeScript, and CI — not just convention.
-
----
-
-## Design System & Styling Architecture Guardian
-
-Every developer and AI agent working on this codebase acts simultaneously as:
-- Senior Frontend Engineer
-- SCSS Architect
-- Design-System Governance Lead
-- Accessibility Engineer
-- Performance Engineer
-
-The guardian role ensures every change:
-- Contains **no inline styles**
-- Uses **SCSS modules** for all custom component styling
-- Uses **Tailwind** only for approved utility-level layout
-- Uses **design tokens** (CSS custom properties) — never hardcoded hex values
-- Produces **dynamic, configurable** components — never static, page-specific ones
-- Eliminates **duplicated CSS and JSX**
-- Remains **responsive, accessible, and theme-ready**
+> **Status:** Canonical project engineering constitution
+> **Scope:** Every feature, bug fix, refactor, migration, configuration change, UI change, dependency update, test, document, pull request, and AI-generated modification
+> **Enforcement:** TypeScript, ESLint, Stylelint, automated tests, architecture checks, CI, code review, design review, and release governance, tailwindcss
+> **Replacement policy:** This document replaces all previous Delivery Clarity engineering-standard documents
 
 ---
 
-## Rule 1 — Inline Styles Are Prohibited
+# 1. Purpose
 
-The `style` prop on any JSX element is **forbidden** except for one documented exception.
+Delivery Clarity must remain:
 
-### Forbidden
+* simple to understand;
+* easy to extend;
+* easy to configure;
+* easy to test;
+* easy to maintain;
+* secure by default;
+* accessible;
+* responsive;
+* theme-ready;
+* localization-ready;
+* observable;
+* reversible;
+* safe for AI-assisted development.
+
+The project must not become dependent on:
+
+* hardcoded page behavior;
+* repeated JSX;
+* duplicated CSS;
+* inline styles;
+* hidden business logic;
+* deeply coupled features;
+* undocumented configuration;
+* unexplained abstractions;
+* uncontrolled dependencies;
+* client-side authorization;
+* one developer’s tribal knowledge.
+
+The codebase must be easier for the next engineer to understand than it was for the previous engineer to write.
+
+---
+
+# 2. Core Engineering Principles
+
+Every implementation must optimize for the following priorities, in order:
+
+1. Correctness
+2. Security
+3. Clarity
+4. Maintainability
+5. Accessibility
+6. Testability
+7. Extensibility
+8. Performance
+9. Reusability
+10. Visual refinement
+
+Cleverness, abstraction count, file count, and reduced line count are not engineering goals.
+
+The preferred solution is the simplest solution that:
+
+* meets the business requirement;
+* preserves architectural boundaries;
+* handles realistic edge cases;
+* can be safely extended;
+* can be tested;
+* can be monitored;
+* can be rolled back.
+
+---
+
+# 3. Senior Multidisciplinary Ownership
+
+Every developer and AI agent must evaluate work as a coordinated senior team.
+
+The required perspectives are:
+
+* Product Manager
+* Product Owner
+* Program and Delivery Manager
+* Agile Coach
+* Principal Software Engineer
+* Senior Next.js Architect
+* Senior Frontend Engineer
+* Senior Backend Engineer
+* Solution Architect
+* Domain Architect
+* Data and Analytics Architect
+* SCSS and Design-System Architect
+* Senior UI/UX Designer
+* Accessibility Engineer
+* Quality Engineering Lead
+* Application Security Engineer
+* Performance Engineer
+* DevOps and Site Reliability Engineer
+* Technical Writer
+* Change and Release Manager
+
+These are active responsibilities, not decorative titles.
+
+## 3.1 Product Manager responsibilities
+
+The Product Manager ensures that every feature:
+
+* solves a defined user or business problem;
+* supports the Delivery Clarity product vision;
+* has measurable success criteria;
+* has a clear target user;
+* does not introduce unnecessary product complexity;
+* has a rollout and adoption strategy;
+* has a retirement or replacement strategy when temporary;
+* is prioritized according to value, risk, urgency, and effort.
+
+## 3.2 Product Owner responsibilities
+
+The Product Owner ensures that:
+
+* acceptance criteria are explicit and testable;
+* normal, empty, loading, error, permission, and exceptional states are covered;
+* user roles and capabilities are defined;
+* terminology is consistent;
+* configuration opportunities are identified;
+* scope boundaries are clear;
+* data and calculation assumptions are documented;
+* dependencies are understood before implementation.
+
+## 3.3 Program and Delivery Manager responsibilities
+
+The Delivery Manager ensures that:
+
+* ownership is visible;
+* dependencies are managed;
+* risks are tracked;
+* delivery is incremental;
+* documentation and testing are part of scope;
+* release and rollback work are planned;
+* deadlines do not justify permanent architectural damage;
+* high-risk changes receive the required review.
+
+## 3.4 Principal Engineer responsibilities
+
+The Principal Engineer ensures that:
+
+* the simplest maintainable design is selected;
+* architecture boundaries are respected;
+* unnecessary abstractions are rejected;
+* technical debt is not silently introduced;
+* reusable contracts remain stable;
+* implementation is understandable without hidden context;
+* business logic does not leak into rendering;
+* configuration does not become an unsafe programming language.
+
+## 3.5 UI/UX Lead responsibilities
+
+The UI/UX Lead ensures that:
+
+* each page has a clear purpose;
+* the primary action is identifiable;
+* information hierarchy is consistent;
+* interactions are predictable;
+* dashboards avoid excessive density;
+* configuration cannot generate unusable layouts;
+* responsive, RTL, loading, empty, error, disabled, and success states are designed;
+* accessibility is part of the design rather than an afterthought;
+* visual decisions are represented through the design system.
+
+## 3.6 Quality Engineering responsibilities
+
+The Quality Engineering Lead ensures that:
+
+* domain calculations have unit tests;
+* components have behavior tests;
+* feature workflows have integration tests;
+* critical journeys have end-to-end tests;
+* design-system components have accessibility and visual regression tests;
+* configuration schemas and migrations are tested;
+* failures introduced by a change are separated from existing failures.
+
+---
+
+# 4. Approved Technology Baseline
+
+## 4.1 Current framework baseline
+
+The approved framework baseline is:
+
+```text
+Next.js: 16.2.9
+Router: App Router
+Language: TypeScript
+Rendering model: React Server Components by default
+Development bundler: Turbopack
+Minimum Node.js supported by Next.js: 20.9
+Package manager: npm unless the repository explicitly standardizes another manager
+```
+
+The exact Next.js version must be pinned in `package.json`.
+
+```json
+{
+  "dependencies": {
+    "next": "16.2.9"
+  }
+}
+```
+
+Do not use:
+
+```json
+{
+  "dependencies": {
+    "next": "latest"
+  }
+}
+```
+
+`latest` may be used only during an approved upgrade investigation. The resolved version must then be pinned and the lockfile committed.
+
+## 4.2 Runtime version policy
+
+The project must pin its approved Node.js runtime in:
+
+* `.nvmrc`;
+* `package.json` under `engines`;
+* CI configuration;
+* deployment configuration;
+* local developer documentation.
+
+The project must not use a Node.js version below the minimum required by the approved Next.js version.
+
+## 4.3 App Router policy
+
+All new routes must use the App Router.
+
+Do not introduce new Pages Router routes.
+
+Existing Pages Router code must be migrated incrementally when touched, provided the migration does not create unrelated risk.
+
+## 4.4 Server Component policy
+
+Components are Server Components by default.
+
+Add `"use client"` only when the component requires:
+
+* event handlers;
+* browser APIs;
+* client-side state;
+* effects;
+* client-only third-party libraries;
+* interactive chart behavior that cannot run on the server.
+
+Client boundaries must be as small as practical.
+
+Do not mark an entire page or layout as a Client Component because one child is interactive.
+
+Preferred:
+
+```text
+Server page
+├── Server data loader
+├── Server-rendered summary
+├── Server-rendered content
+└── Small interactive Client Component
+```
+
+Avoid:
+
+```text
+Full client page
+└── Browser fetches all page data after rendering
+```
+
+## 4.5 Next.js request API policy
+
+Use the current asynchronous Next.js request APIs.
+
+Do not use removed synchronous access patterns for:
+
+* `cookies`;
+* `headers`;
+* `draftMode`;
+* route `params`;
+* page `searchParams`.
+
+## 4.6 Lint command policy
+
+`next lint` is prohibited.
+
+Use the ESLint CLI directly:
+
+```bash
+eslint . --max-warnings=0
+```
+
+`next build` must not be treated as a replacement for linting.
+
+Linting must run as a separate CI step.
+
+## 4.7 Dependency policy
+
+Before adding a dependency, confirm that:
+
+1. The requirement cannot be reasonably satisfied by Next.js, React, the browser platform, or an existing project dependency.
+2. The dependency is actively maintained.
+3. Its license is acceptable.
+4. Its bundle and runtime impact are acceptable.
+5. Its security history is acceptable.
+6. It supports the approved Next.js and React versions.
+7. It does not duplicate an existing capability.
+8. It has an exit or replacement strategy.
+9. It provides more value than the maintenance cost it introduces.
+
+A dependency must not be added only because it saves a few lines of code.
+
+## 4.8 Dependency updates
+
+### Security updates
+
+Apply promptly in a dedicated branch and run the full verification suite.
+
+### Patch updates
+
+Group and verify regularly.
+
+### Minor updates
+
+Review for:
+
+* behavior changes;
+* bundle changes;
+* deprecations;
+* configuration changes;
+* compatibility impact.
+
+### Major updates
+
+Require:
+
+* a dedicated upgrade branch;
+* review of official migration instructions;
+* codemods where available;
+* architecture review;
+* full regression testing;
+* dependency compatibility testing;
+* release notes;
+* rollback instructions;
+* an Architecture Decision Record when the change is material.
+
+Canary, beta, alpha, experimental, and release-candidate packages are prohibited in production unless approved through an Architecture Decision Record.
+
+---
+
+# 5. Simplicity and Anti-Spaghetti Architecture
+
+Delivery Clarity must contain no:
+
+* spaghetti code;
+* “galaxy code”;
+* hidden execution paths;
+* circular dependencies;
+* deeply nested conditional behavior;
+* god components;
+* god services;
+* unowned shared utilities;
+* duplicated business logic;
+* page-specific copies of reusable behavior;
+* abstraction layers without a demonstrated need.
+
+A developer unfamiliar with a feature must be able to identify:
+
+* where the feature starts;
+* where its configuration lives;
+* where its domain logic lives;
+* where validation occurs;
+* where permissions are enforced;
+* where its UI components live;
+* how it is tested;
+* how it is enabled or disabled;
+* how it can be extended;
+* how it can be removed.
+
+## 5.1 Single responsibility
+
+Each function, component, module, and service must have one clear reason to change.
+
+A React component must not simultaneously:
+
+* fetch data;
+* validate data;
+* calculate business metrics;
+* resolve permissions;
+* transform domain models;
+* control feature flags;
+* and render complex presentation.
+
+Separate those responsibilities through explicit layers.
+
+## 5.2 Complexity controls
+
+Avoid:
+
+* deeply nested `if` statements;
+* deeply nested ternary expressions;
+* long conditional class expressions;
+* large `switch` statements duplicated across files;
+* large functions with multiple responsibilities;
+* files containing unrelated helpers;
+* generic `manager`, `common`, `misc`, or `helper` modules;
+* booleans that create ambiguous state combinations.
+
+Prefer:
+
+* early returns;
+* guard clauses;
+* named functions;
+* discriminated unions;
+* typed variants;
+* small modules;
+* composition;
+* explicit state machines when workflow complexity requires them.
+
+## 5.3 Soft review thresholds
+
+These are review triggers, not automatic reasons to split code:
+
+* component file exceeds approximately 300 lines;
+* function exceeds approximately 60 lines;
+* function nesting exceeds three meaningful levels;
+* component accepts more than approximately eight unrelated props;
+* file owns more than one business responsibility;
+* conditional complexity becomes difficult to explain;
+* a change requires editing the same concept in more than two locations.
+
+When a threshold is exceeded, the author must assess whether responsibilities should be separated.
+
+Do not split files merely to satisfy a line count.
+
+## 5.4 Rule of Three
+
+Do not create a shared abstraction after the first similar implementation.
+
+A shared abstraction should normally be introduced when:
+
+* at least three genuine reuse cases exist;
+* common behavior is stable;
+* differences are understood;
+* the abstraction makes usage simpler;
+* the abstraction has a clear owner;
+* the abstraction has a documented public contract.
+
+Two similar implementations may remain separate when their future behavior is likely to diverge.
+
+## 5.5 No speculative architecture
+
+Do not build:
+
+* plug-in systems without a confirmed requirement;
+* generic workflow engines for one workflow;
+* universal form builders for one form;
+* configuration languages for one page;
+* event buses for direct parent-child communication;
+* repositories or service wrappers that add no meaningful boundary;
+* factories that only call constructors;
+* unnecessary adapter layers.
+
+Build for known extension points, not imagined possibilities.
+
+---
+
+# 6. Project Architecture
+
+## 6.1 Recommended structure
+
+```text
+app/
+  (public)/
+  dashboard/
+  admin/
+  api/
+  layout.tsx
+  error.tsx
+  not-found.tsx
+
+src/
+  core/
+    auth/
+    authorization/
+    configuration/
+    data/
+    observability/
+    security/
+    storage/
+
+  features/
+    flow-health/
+      api/
+      components/
+      config/
+      domain/
+      hooks/
+      mappers/
+      schemas/
+      services/
+      tests/
+      types/
+      index.ts
+
+    ownership/
+    labels/
+    epic-readiness/
+    relation-map/
+    release-readiness/
+
+  shared/
+    components/
+    config/
+    domain/
+    hooks/
+    lib/
+    schemas/
+    types/
+
+  styles/
+    _tokens.scss
+    _mixins.scss
+    _animations.scss
+    globals.scss
+
+  config/
+    schemas/
+    defaults/
+    migrations/
+    loaders/
+    validators/
+    app.config.ts
+    navigation.config.ts
+    routes.config.ts
+    dashboards.config.ts
+    widgets.config.ts
+    filters.config.ts
+    permissions.config.ts
+    features.config.ts
+    metrics.config.ts
+    themes.config.ts
+
+product/
+  architecture/
+  configuration/
+  features/
+  calculations/
+  decisions/
+  releases/
+
+tests/
+  accessibility/
+  e2e/
+  integration/
+  visual/
+```
+
+The structure may be adapted to the repository, but the architectural separation must remain.
+
+## 6.2 Dependency direction
+
+Approved dependency direction:
+
+```text
+App composition
+→ Features
+→ Shared modules
+→ Core infrastructure
+```
+
+Rules:
+
+* `shared` must not import from `features`;
+* `core` must not import from feature UI;
+* one feature must not import another feature’s private files;
+* domain code must not import React;
+* domain code must not import SCSS;
+* UI components must not access the database;
+* configuration loaders must not render components;
+* server-only modules must not enter the client bundle;
+* Client Components must not import secrets or privileged infrastructure;
+* circular dependencies are prohibited.
+
+## 6.3 Feature public APIs
+
+Each feature must expose an intentional public API through its root `index.ts`.
+
+Forbidden:
+
+```ts
+import { privateMapper } from '@/features/flow-health/internal/mappers/privateMapper';
+```
+
+Required:
+
+```ts
+import { createFlowHealthViewModel } from '@/features/flow-health';
+```
+
+Feature internals must remain private unless intentionally promoted to the public API.
+
+Avoid uncontrolled barrel files that re-export entire directories and increase bundle or dependency complexity.
+
+## 6.4 Domain pipeline
+
+Required processing direction:
+
+```text
+External data
+→ Runtime validation
+→ Normalization
+→ Domain calculation
+→ Authorization filtering
+→ Presentation view model
+→ Rendering
+```
+
+Business calculations must not occur in JSX, SCSS, chart callbacks, or page markup.
+
+---
+
+# 7. Configuration-First Architecture
+
+Delivery Clarity must be configurable without source-code changes wherever behavior can safely be represented as validated data.
+
+Configuration must be preferred over hardcoded JSX for:
+
+* navigation;
+* menu groups;
+* menu order;
+* dashboard composition;
+* supported filters;
+* default filters;
+* widget visibility;
+* page metadata;
+* role visibility;
+* feature availability;
+* status thresholds;
+* metric presentation;
+* content keys;
+* theme selection;
+* help links;
+* configurable product limits.
+
+Configuration must never contain arbitrary executable code.
+
+## 7.1 Configuration levels
+
+### Level 1 — Build and environment configuration
+
+Used for technical deployment settings:
+
+* service endpoints;
+* storage provider;
+* telemetry provider;
+* runtime mode;
+* environment identifiers;
+* server-only integration settings.
+
+These must be validated through an environment schema.
+
+Secrets must never be exposed through `NEXT_PUBLIC_*`.
+
+### Level 2 — Application configuration
+
+Used for product structure:
+
+* modules;
+* routes;
+* navigation;
+* dashboards;
+* widgets;
+* filters;
+* issue types;
+* semantic statuses;
+* calculation selections;
+* capabilities;
+* role mappings.
+
+Application configuration must be typed and schema validated.
+
+### Level 3 — Runtime product configuration
+
+Used for administrator-controlled behavior that can change without rebuilding:
+
+* feature activation;
+* dashboard composition;
+* widget order;
+* widget visibility;
+* display labels;
+* descriptions;
+* status thresholds;
+* default filters;
+* readiness rules;
+* notification settings;
+* supported locales;
+* branding;
+* theme selection;
+* role-based module availability;
+* help and documentation links.
+
+### Level 4 — User preferences
+
+Used for individual preferences:
+
+* dashboard layout;
+* visible widgets;
+* theme;
+* locale;
+* saved filters;
+* table density;
+* default team or project;
+* collapsed navigation groups.
+
+User preferences must not modify global product configuration.
+
+---
+
+# 8. Zero-Code-Change Capability
+
+The following must normally be changeable without editing TSX, SCSS, or domain logic:
+
+* menu title;
+* menu order;
+* menu grouping;
+* navigation icon from the approved icon registry;
+* route visibility;
+* feature availability;
+* role visibility;
+* dashboard section order;
+* widget order;
+* widget visibility;
+* widget title;
+* widget description;
+* widget size from approved options;
+* default filter values;
+* enabled filter options;
+* semantic threshold values;
+* glossary references;
+* empty-state text keys;
+* help links;
+* documentation links;
+* theme token values;
+* supported locales;
+* rollout percentages;
+* safe product limits;
+* non-sensitive approved integration endpoints.
+
+The following require code changes and engineering review:
+
+* a new business calculation;
+* a new security behavior;
+* a new authorization capability;
+* a new integration protocol;
+* a new persistence model;
+* a new data structure;
+* a new interactive component type;
+* a new widget implementation;
+* a new domain capability;
+* a configuration schema change;
+* a configuration migration;
+* a new external system contract.
+
+“Zero code change” must never mean placing executable logic inside JSON or database configuration.
+
+---
+
+# 9. Typed Configuration Contract
+
+Every configuration source must have:
+
+* a TypeScript type;
+* a runtime schema;
+* defaults;
+* a schema version;
+* validation behavior;
+* migration behavior;
+* documentation;
+* tests;
+* safe fallback behavior.
+
+Example:
+
+```ts
+import { z } from 'zod';
+
+export const dashboardWidgetSchema = z.object({
+  id: z.string().min(1),
+  type: z.enum([
+    'metric',
+    'trend',
+    'table',
+    'distribution',
+    'progress',
+  ]),
+  titleKey: z.string().min(1),
+  descriptionKey: z.string().min(1).optional(),
+  enabled: z.boolean().default(true),
+  order: z.number().int().nonnegative(),
+  roles: z.array(z.string()).default([]),
+  capability: z.string().optional(),
+  size: z.enum(['small', 'medium', 'large', 'full']),
+  dataSource: z.string().min(1),
+  options: z.record(z.string(), z.unknown()).default({}),
+});
+
+export type DashboardWidgetConfig = z.infer<
+  typeof dashboardWidgetSchema
+>;
+```
+
+Forbidden:
+
+```ts
+const config = JSON.parse(rawConfig);
+
+return <Dashboard config={config} />;
+```
+
+Required:
+
+```ts
+const result = dashboardConfigSchema.safeParse(rawConfig);
+
+if (!result.success) {
+  return createConfigurationFailure(result.error);
+}
+
+return <Dashboard config={result.data} />;
+```
+
+TypeScript types alone are not runtime validation.
+
+---
+
+# 10. Configuration Registries
+
+Navigation, routes, widgets, filters, metrics, capabilities, icons, features, and themes must use centralized typed registries.
+
+Recommended configuration files:
+
+```text
+src/config/
+  schemas/
+  defaults/
+  migrations/
+  loaders/
+  validators/
+  app.config.ts
+  navigation.config.ts
+  routes.config.ts
+  dashboards.config.ts
+  widgets.config.ts
+  filters.config.ts
+  permissions.config.ts
+  features.config.ts
+  metrics.config.ts
+  themes.config.ts
+```
+
+## 10.1 Route registry
+
+```ts
+export type RouteDefinition = {
+  id: string;
+  path: string;
+  titleKey: string;
+  descriptionKey?: string;
+  navigation: {
+    visible: boolean;
+    groupId: string;
+    order: number;
+    icon: IconName;
+  };
+  access: {
+    capability: Capability;
+  };
+  featureFlag?: FeatureFlag;
+  helpKey?: string;
+};
+```
+
+The route registry should drive:
+
+* navigation;
+* breadcrumbs;
+* route labels;
+* permissions;
+* page metadata;
+* help links;
+* developer documentation references.
+
+Do not maintain separate hardcoded lists for each concern.
+
+## 10.2 Widget registry
+
+```ts
+export const widgetRegistry = {
+  metric: MetricWidget,
+  trend: TrendWidget,
+  table: TableWidget,
+  distribution: DistributionWidget,
+  progress: ProgressWidget,
+} satisfies WidgetRegistry;
+```
+
+Configuration chooses an approved widget type.
+
+Configuration must not:
+
+* import component paths;
+* execute JavaScript;
+* contain JSX;
+* contain arbitrary CSS;
+* contain arbitrary class names;
+* contain raw SQL;
+* contain unrestricted URLs;
+* dynamically load unapproved modules.
+
+Unknown widget types must produce a safe configuration error rather than crashing the route.
+
+## 10.3 Icon registry
+
+Configuration must reference semantic icon names from an approved icon registry.
+
+```ts
+export const iconRegistry = {
+  dashboard: DashboardIcon,
+  flowHealth: ActivityIcon,
+  ownership: UsersIcon,
+  release: RocketIcon,
+} satisfies IconRegistry;
+```
+
+Do not store component imports or arbitrary SVG markup in runtime configuration.
+
+---
+
+# 11. Runtime Configuration Lifecycle
+
+Runtime configuration must support:
+
+* draft;
+* validation;
+* preview;
+* review;
+* approval;
+* publishing;
+* monitoring;
+* rollback;
+* version history;
+* comparison;
+* audit logging;
+* environment targeting;
+* safe defaults;
+* last known valid recovery.
+
+Required lifecycle:
+
+```text
+Draft
+→ Validate
+→ Preview
+→ Review
+→ Approve
+→ Publish
+→ Monitor
+→ Roll back when required
+```
+
+Configuration metadata must include:
+
+```ts
+type ConfigurationMetadata = {
+  schemaVersion: string;
+  configurationVersion: number;
+  environment: 'development' | 'staging' | 'production';
+  createdAt: string;
+  createdBy: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  changeReason: string;
+};
+```
+
+A new configuration must not immediately destroy or overwrite the last known valid configuration.
+
+## 11.1 Fallback order
+
+```text
+Validated published configuration
+→ Last known valid configuration
+→ Bundled validated defaults
+→ Feature-safe failure state
+```
+
+Security-sensitive configuration must fail closed.
+
+Presentation configuration may fall back to safe defaults.
+
+---
+
+# 12. Configuration Safety
+
+Configuration may select only approved:
+
+* component types;
+* widget types;
+* icons;
+* semantic variants;
+* layout spans;
+* data sources;
+* message keys;
+* filters;
+* capabilities;
+* routes;
+* feature flags;
+* theme tokens.
+
+Configuration may not contain:
+
+* executable JavaScript;
+* raw HTML;
+* inline CSS;
+* arbitrary class names;
+* dynamic imports;
+* unrestricted file paths;
+* raw SQL;
+* shell commands;
+* hardcoded secrets;
+* arbitrary regular expressions from untrusted users;
+* unvalidated external URLs;
+* component source code;
+* business formulas expressed as unrestricted executable strings.
+
+Configuration must not become a hidden programming language.
+
+---
+
+# 13. Design System and Styling Architecture
+
+Every frontend contributor acts as:
+
+* Senior Frontend Engineer
+* SCSS Architect
+* Design-System Governance Lead
+* Accessibility Engineer
+* Performance Engineer
+
+Every frontend change must:
+
+* contain no prohibited inline styles;
+* use SCSS Modules for custom component appearance;
+* use Tailwind only for approved layout utilities;
+* consume design tokens;
+* remain responsive;
+* remain accessible;
+* remain theme-ready;
+* remain RTL-ready;
+* avoid duplicated CSS and JSX;
+* produce reusable and configurable components.
+
+---
+
+# 14. Inline Styles Are Prohibited
+
+The JSX `style` prop is forbidden except for one controlled exception.
+
+## 14.1 Forbidden
+
 ```tsx
 <div style={{ background: '#fff', padding: 16 }} />
+
 <div style={computedStyleObject} />
-<style jsx>{`.card { padding: 16px; }`}</style>
+
+<style jsx>{`
+  .card {
+    padding: 16px;
+  }
+`}</style>
+
 element.style.color = 'red';
 ```
 
-### Permitted exception — CSS custom properties only
-When a value is genuinely dynamic (comes from data, not design), pass it via CSS custom properties:
+## 14.2 Permitted exception — dynamic CSS custom properties only
+
+When a value genuinely comes from runtime data and cannot be represented using a class or data attribute, it may be passed through a CSS custom property.
+
 ```tsx
-// ONLY --prefixed keys are permitted in the style prop
+import type { CSSProperties } from 'react';
+
+type CSSVariableProperties = CSSProperties &
+  Record<`--${string}`, string | number>;
+
+const percentage = clampPercentage(value);
+
+// DYNAMIC CSS VARIABLE:
+// Width is calculated from runtime delivery data and cannot be predefined.
+const variables: CSSVariableProperties = {
+  '--bar-width': `${percentage}%`,
+};
+
 <div
   className={styles.barFill}
-  style={{ '--bar-width': `${pct}%`, '--bar-color': color } as CSSProperties}
-/>
+  style={variables}
+/>;
 ```
-The SCSS rule consumes these:
+
+SCSS consumes the custom property:
+
 ```scss
 .barFill {
   width: var(--bar-width, 0%);
-  background: var(--bar-color, var(--color-primary));
-  // all other visual properties in SCSS
+  background: var(--color-primary);
 }
 ```
-SVG presentation attributes (`stroke`, `strokeDasharray`, `fill`) are SVG attributes — not CSS style props — and remain as JSX attributes.
 
-**Document every use of the CSS custom property exception with a comment explaining why JS must supply the value.**
+## 14.3 Exception restrictions
+
+The exception must:
+
+* contain only keys starting with `--`;
+* contain no object spread;
+* contain no normal CSS properties;
+* contain no raw hardcoded colors;
+* contain no business-generated class names;
+* include a comment explaining why JavaScript must provide the value;
+* use validated and clamped values;
+* be enforced by ESLint.
+
+Forbidden:
+
+```tsx
+<div style={{ width: `${percentage}%` }} />
+
+<div style={{ '--bar-color': '#ff0000' } as CSSProperties} />
+
+<div style={{ ...variables }} />
+
+<div style={externalStyleObject} />
+```
+
+SVG presentation attributes such as `stroke`, `strokeDasharray`, and `fill` may remain JSX attributes when required by the SVG API. Semantic colors must still come from approved tokens or mappings.
 
 ---
 
-## Rule 2 — Tailwind for Layout Utilities Only
+# 15. Tailwind Is for Layout Utilities Only
 
-Tailwind is for layout, not design identity.
+Tailwind may be used for:
 
-### Use Tailwind for
-- Flexbox/Grid (`flex`, `grid`, `items-center`, `gap-4`)
-- Simple responsive arrangement (`lg:grid-cols-4`)
-- Basic spacing utilities (`p-4`, `mb-2`)
-- Visibility (`hidden`, `sr-only`)
-- Basic display (`block`, `inline-flex`)
+* flexbox;
+* grid;
+* simple responsive arrangement;
+* basic spacing;
+* display;
+* alignment;
+* visibility;
+* screen-reader-only content.
 
-### Do NOT use Tailwind for
-- Hardcoded hex colors: `bg-[#F23A18]`
-- Arbitrary widths: `w-[437px]`
-- Long class strings copied across components (extract to SCSS instead)
-- Complex animations, sticky positioning, z-index layering
-- Component visual identity (colors, borders, shadows, typography hierarchy)
+Examples:
+
+```tsx
+<div className="grid gap-4 lg:grid-cols-4">
+
+<div className="flex items-center">
+
+<span className="sr-only">
+```
+
+Tailwind must not define component identity.
+
+Do not use Tailwind for:
+
+* hardcoded colors;
+* arbitrary colors;
+* shadows;
+* border identity;
+* typography hierarchy;
+* complex animations;
+* sticky positioning;
+* z-index layering;
+* page-specific appearance;
+* long repeated class strings;
+* arbitrary widths;
+* arbitrary spacing;
+* arbitrary durations;
+* arbitrary font sizes.
+
+Forbidden:
+
+```tsx
+<div className="bg-[#F23A18]">
+
+<div className="w-[437px]">
+
+<div className="z-[999]">
+
+<div className="text-[15px]">
+
+<div className="duration-[275ms]">
+```
+
+## 15.1 Token-aligned Tailwind
+
+Tailwind utilities may be used only when the Tailwind theme maps to Delivery Clarity design tokens.
+
+Tailwind must not create a second independent system for:
+
+* spacing;
+* breakpoints;
+* colors;
+* typography;
+* radius;
+* shadows;
+* animation duration;
+* z-index.
+
+Repeated or visually meaningful utility combinations must be extracted into an SCSS Module.
 
 ---
 
-## Rule 3 — Hybrid Architecture (Tailwind layout + SCSS identity)
+# 16. Hybrid Styling Architecture
 
+```text
+Tailwind
+→ simple layout and responsive arrangement
+
+SCSS Modules
+→ component identity, interaction, animation, states, themes
+
+Design tokens
+→ all approved visual values
 ```
-Tailwind  →  utility layout (flex, grid, spacing, responsive)
-SCSS      →  component appearance, tokens, animations, interactions
-```
+
+Global stylesheets are allowed only for:
+
+* resets;
+* root design tokens;
+* base typography;
+* shared animation registration;
+* globally required accessibility behavior.
+
+Page-specific and component-specific styles must not be placed in global files.
 
 ---
 
-## Rule 4 — SCSS File Structure
+# 17. SCSS File Structure
 
-```
+```text
 src/
   styles/
-    _tokens.scss        ← CSS custom properties (single source of truth)
-    _mixins.scss        ← respond-to(), focus-visible(), status-variant()
-    _animations.scss    ← shared keyframes (referenced by globals.scss)
+    _tokens.scss
+    _mixins.scss
+    _animations.scss
+    globals.scss
 
   components/
     ComponentName/
       ComponentName.tsx
-      ComponentName.module.scss   ← required when custom styling exists
+      ComponentName.module.scss
+      ComponentName.test.tsx
 ```
 
-One SCSS module per component. Global stylesheets only for resets, root tokens,
-and typography. Never put page-specific styles in global files.
+When using feature folders:
+
+```text
+src/features/flow-health/components/FlowHealthCard/
+  FlowHealthCard.tsx
+  FlowHealthCard.module.scss
+  FlowHealthCard.test.tsx
+```
+
+One SCSS Module is required per component when custom styling exists.
+
+Page styles must use a page module:
+
+```text
+app/dashboard/flow-health/page.module.scss
+```
 
 ---
 
-## Rule 5 — Design Tokens
+# 18. Design Tokens
 
-All visual values come from `src/styles/_tokens.scss` CSS custom properties.
+All reusable visual values must come from `src/styles/_tokens.scss`.
 
-**Never hardcode** colors, radii, shadows, z-indices, header height, sidebar width,
-spacing, or typography sizes directly in SCSS or JSX.
+Do not hardcode in component SCSS or JSX:
 
-Key tokens (see `src/styles/_tokens.scss` for full list):
+* colors;
+* spacing;
+* dimensions;
+* radii;
+* shadows;
+* z-index values;
+* header height;
+* sidebar width;
+* toolbar height;
+* typography sizes;
+* line heights;
+* animation durations;
+* border widths;
+* focus-ring widths;
+* icon sizes.
+
+Example tokens:
+
 ```scss
---color-primary: var(--dc-accent)
---color-surface: var(--dc-s1)
---color-border: var(--dc-bdr)
---header-height: 52px
---sidebar-width: 228px
---toolbar-height: 52px
---z-header: 500
---z-toolbar: 40
---z-dropdown: 600
---z-modal: 9999
+:root {
+  --color-primary: var(--dc-accent);
+  --color-surface: var(--dc-s1);
+  --color-border: var(--dc-bdr);
+
+  --header-height: 52px;
+  --sidebar-width: 228px;
+  --toolbar-height: 52px;
+
+  --z-header: 500;
+  --z-toolbar: 40;
+  --z-dropdown: 600;
+  --z-modal: 9999;
+
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-opacity: 60%;
+}
 ```
+
+Raw foundational values may exist in the token layer.
+
+Component modules must consume semantic tokens.
+
+## 18.1 Semantic token policy
+
+Components must consume semantic names:
+
+```scss
+.card {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+```
+
+Components must not depend directly on tenant-specific or brand-specific raw values.
+
+## 18.2 Theme support
+
+Themes may replace token values but must preserve semantic token contracts.
+
+Theme configuration must pass automated contrast validation before publishing.
 
 ---
 
-## Rule 6 — Dynamic Components
+# 19. Dynamic Numeric Visualizations
 
-Every reusable component must accept typed props — never hardcode content.
+Runtime dimensions such as:
+
+* progress widths;
+* bar heights;
+* chart positions;
+* completion percentages;
+* timeline offsets;
+
+must use the controlled CSS-custom-property exception.
 
 ```tsx
-// ✅ Correct
-<MetricCard label="Completion" value="36%" status="warning" />
+const variables: CSSVariableProperties = {
+  '--bar-width': `${clampPercentage(percentage)}%`,
+};
 
-// ❌ Forbidden
+// DYNAMIC CSS VARIABLE:
+// Bar width is based on normalized delivery data.
+<div
+  className={styles.barFill}
+  data-status={status}
+  style={variables}
+/>
+```
+
+Status appearance must use semantic attributes or typed variants:
+
+```scss
+.barFill[data-status='healthy'] {
+  background: var(--color-success);
+}
+
+.barFill[data-status='warning'] {
+  background: var(--color-warning);
+}
+
+.barFill[data-status='critical'] {
+  background: var(--color-danger);
+}
+```
+
+Business logic must not return colors.
+
+Forbidden:
+
+```ts
+const color =
+  score > 75
+    ? '#059669'
+    : score > 40
+      ? '#D97706'
+      : '#DC2626';
+```
+
+Required:
+
+```ts
+const status = getHealthStatus(score);
+```
+
+---
+
+# 20. No Hardcoded Layout Assumptions
+
+Use tokens for dimensional layout values.
+
+Correct:
+
+```scss
+.toolbar {
+  inset-block-start: var(--header-height);
+}
+
+.sidebar {
+  inline-size: var(--sidebar-width);
+}
+```
+
+Forbidden:
+
+```scss
+.toolbar {
+  top: 52px;
+}
+
+.sidebar {
+  width: 228px;
+}
+```
+
+Use logical properties:
+
+* `margin-inline-start`;
+* `padding-inline-end`;
+* `border-inline-start`;
+* `inset-inline-end`;
+* `inline-size`;
+* `block-size`.
+
+Avoid directional assumptions such as `left`, `right`, `margin-left`, and `border-right` unless the behavior is genuinely physical rather than language-directional.
+
+---
+
+# 21. Class Composition
+
+Use `clsx` for conditional class composition.
+
+Correct:
+
+```tsx
+className={clsx(
+  styles.chip,
+  styles[`chip--${variant}`],
+  {
+    [styles['chip--active']]: active,
+    [styles['chip--disabled']]: disabled,
+  },
+)}
+```
+
+Forbidden:
+
+```tsx
+className={
+  active
+    ? 'a b c d e f'
+    : disabled
+      ? 'x y z'
+      : 'p q r'
+}
+```
+
+Do not pass arbitrary visual class names from business logic or configuration.
+
+---
+
+# 22. Dynamic Components
+
+Reusable components must accept typed semantic props.
+
+Correct:
+
+```tsx
+<MetricCard
+  label="Completion"
+  value="36%"
+  status="warning"
+/>
+```
+
+Forbidden:
+
+```tsx
 function CompletionCard() {
-  return <div style={{ color: '#D97706' }}>36% Completion</div>;
+  return (
+    <div style={{ color: '#D97706' }}>
+      36% Completion
+    </div>
+  );
 }
 ```
 
 Typed variant pattern:
-```tsx
-type Status = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
-<Badge variant="warning">{label}</Badge>
+
+```ts
+export const statusVariants = [
+  'success',
+  'warning',
+  'danger',
+  'info',
+  'neutral',
+] as const;
+
+export type StatusVariant =
+  (typeof statusVariants)[number];
 ```
 
-SCSS:
+```tsx
+<Badge variant="warning">
+  {label}
+</Badge>
+```
+
+Feature components should not require structural rewrites when a centrally supported variant is added.
+
+---
+
+# 23. Stable Component Contracts
+
+Component props must communicate meaning rather than styling implementation.
+
+Preferred:
+
+```tsx
+<MetricCard
+  label={label}
+  value={value}
+  status="warning"
+  trend={trend}
+  supportingText={supportingText}
+/>
+```
+
+Avoid:
+
+```tsx
+<MetricCard
+  red
+  bold
+  big
+  leftIcon
+  customClass="special-card"
+  valueColor="#d97706"
+/>
+```
+
+Avoid exposing unrestricted:
+
+* `style`;
+* raw color values;
+* internal class names;
+* DOM implementation details;
+* arbitrary visual flags.
+
+Use:
+
+* semantic variants;
+* named slots;
+* structured composition;
+* typed options;
+* approved extension points.
+
+---
+
+# 24. Data-Driven Rendering
+
+Menus, sidebar sections, filters, cards, widgets, actions, tabs, and route metadata must be rendered from typed configuration.
+
+Correct:
+
+```tsx
+const sidebarSections: SidebarSectionConfig[] = [
+  // Validated configuration.
+];
+
+sidebarSections.map((section) => (
+  <SidebarSection
+    key={section.id}
+    {...section}
+  />
+));
+```
+
+Forbidden:
+
+```tsx
+<NavItem href="/dashboard/summary" />
+
+<NavItem href="/dashboard/priority-attention" />
+
+<NavItem href="/dashboard/flow-health" />
+
+<NavItem href="/dashboard/ownership" />
+```
+
+Repeated JSX must not be maintained manually when the variation is data.
+
+---
+
+# 25. Component State Contracts
+
+Do not model asynchronous state using unrelated booleans.
+
+Avoid:
+
+```ts
+type Props = {
+  loading: boolean;
+  error: boolean;
+  empty: boolean;
+  data?: Data;
+};
+```
+
+Use discriminated unions:
+
+```ts
+type DataState<T> =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'empty' }
+  | { status: 'error'; message: string }
+  | { status: 'success'; data: T };
+```
+
+This prevents impossible combinations such as loading, error, and success at the same time.
+
+Every data-driven component must intentionally support applicable:
+
+* idle;
+* loading;
+* empty;
+* error;
+* success;
+* partial-data;
+* permission-denied states.
+
+---
+
+# 26. Accessibility
+
+Accessibility is a release requirement.
+
+## 26.1 Semantic HTML
+
+Use native semantic elements:
+
+* `<button>`;
+* `<a>`;
+* `<nav>`;
+* `<aside>`;
+* `<main>`;
+* `<header>`;
+* `<section>`;
+* `<table>`;
+* `<progress>`;
+* `<dialog>` where appropriate.
+
+Do not use clickable `<div>` elements when a button or link is correct.
+
+## 26.2 Focus visibility
+
+Every interactive component must have a visible `:focus-visible` state.
+
 ```scss
-.badge { /* base */ }
-.badge--warning { color: var(--color-warning); background: var(--color-warning-soft); }
-```
-
----
-
-## Rule 7 — Data-Driven Rendering
-
-Menus, sidebar sections, filters, cards, and actions are rendered from
-configuration arrays — never repeated manually in JSX.
-
-```tsx
-// ✅ Correct
-const SIDEBAR_SECTIONS = [ ... ];
-SIDEBAR_SECTIONS.map(section => <SidebarSection key={section.id} {...section} />)
-
-// ❌ Forbidden
-<NavItem href="/dashboard/summary" ... />
-<NavItem href="/dashboard/priority-attention" ... />
-// (15 more hardcoded items)
-```
-
----
-
-## Rule 8 — Dynamic Numeric Visualizations
-
-Progress widths, bar heights, and chart dimensions that come from data
-must use the CSS custom property exception (Rule 1), not direct style props.
-
-```tsx
-// ✅ Correct
-<div className={styles.barFill} style={{ '--bar-width': `${pct}%` } as CSSProperties} />
-
-// ❌ Forbidden
-<div style={{ width: `${pct}%`, background: '#2563eb', height: '8px' }} />
-```
-
-For status-driven appearance, use data attributes:
-```tsx
-<div className={styles.healthDot} data-status={status} />
-```
-```scss
-.healthDot[data-status="critical"] { background: var(--color-danger); }
-```
-
----
-
-## Rule 9 — No Hardcoded Layout Assumptions
-
-Use tokens for all dimensional values:
-```scss
-// ✅ Correct
-top: var(--header-height);
-width: var(--sidebar-width);
-
-// ❌ Forbidden
-top: 52px;
-width: 228px;
-```
-
----
-
-## Rule 10 — Class Composition with clsx
-
-`clsx` is installed. Use it for conditional class composition.
-
-```tsx
-// ✅ Correct
-className={clsx(styles.chip, styles[`chip--${variant}`], { [styles['chip--active']]: active })}
-
-// ❌ Forbidden
-className={active ? 'a b c d e f' : disabled ? 'x y z' : 'p q r'}
-```
-
----
-
-## Rule 11 — Accessibility
-
-Every styled element must:
-- Have a visible `:focus-visible` outline (use `var(--color-primary)`)
-- Not communicate state through color alone
-- Use semantic HTML (`<button>`, `<a>`, `<nav>`, `<aside>`, etc.)
-- Have `aria-label` for icon-only actions
-- Respect `prefers-reduced-motion`
-
-```scss
-// Required in every interactive component module
 .interactive:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--dc-accent) 60%, transparent);
-  outline-offset: 2px;
+  outline:
+    var(--focus-ring-width)
+    solid
+    color-mix(
+      in srgb,
+      var(--color-primary) var(--focus-ring-opacity),
+      transparent
+    );
+  outline-offset: var(--focus-ring-offset);
 }
 ```
 
----
+## 26.3 Accessible naming
 
-## Rule 12 — Business Logic ≠ CSS
-
-Business logic produces semantic results — never hex codes or class strings.
-
-```ts
-// ✅ Correct
-const status: 'healthy' | 'warning' | 'critical' = getHealthStatus(score);
-
-// ❌ Forbidden
-const color = score > 75 ? '#059669' : score > 40 ? '#D97706' : '#DC2626';
-```
-
----
-
-## Rule 13 — Future-Proofing
-
-Every component must support without rewriting:
-- Additional status values
-- New menu items (from config, not hardcoded JSX)
-- Light + dark themes (tokens abstract the color)
-- Role-specific visibility
-- Mobile + desktop layouts
-- Empty, loading, error, and success states
-
----
-
-## Rule 14 — Exceptions (Third-Party Libraries)
-
-When a library absolutely requires a JS style object:
-1. Confirm no class API exists
-2. Isolate inside one adapter component
-3. Declare the object outside render
-4. Use design tokens inside the object
-5. Comment the technical reason
+Icon-only controls require an accessible name:
 
 ```tsx
-// EXCEPTION: react-beautiful-dnd requires style object for drag transforms
-const draggableStyle = { transform: provided.draggableProps.style?.transform };
+<button
+  type="button"
+  aria-label={t('actions.close')}
+>
+  <CloseIcon aria-hidden="true" />
+</button>
+```
+
+Decorative icons must be hidden from assistive technologies.
+
+## 26.4 State communication
+
+State must not be communicated through color alone.
+
+Use combinations of:
+
+* text;
+* icon;
+* label;
+* pattern;
+* accessible description;
+* semantic markup.
+
+## 26.5 Keyboard support
+
+Critical workflows must be completable using the keyboard only.
+
+Interactive components must support expected keyboard behavior.
+
+Focus must:
+
+* move predictably;
+* remain visible;
+* return to the trigger after a modal closes;
+* not become trapped unintentionally;
+* not move unexpectedly after data refresh.
+
+## 26.6 Motion
+
+All motion must respect `prefers-reduced-motion`.
+
+```scss
+@media (prefers-reduced-motion: reduce) {
+  .animated {
+    animation: none;
+    transition: none;
+  }
+}
+```
+
+## 26.7 Zoom and contrast
+
+Critical workflows must remain usable at 200% zoom.
+
+Text and interactive states must meet approved contrast requirements.
+
+Automated contrast testing does not replace manual review.
+
+## 26.8 ARIA policy
+
+Use native HTML before ARIA.
+
+ARIA must not replace semantic elements.
+
+Do not add ARIA attributes unless their behavior is understood and tested.
+
+---
+
+# 27. Localization and RTL
+
+Delivery Clarity must be ready for English and Arabic.
+
+## 27.1 User-facing text
+
+Reusable components must not hardcode user-facing text.
+
+Use translation keys:
+
+```tsx
+<EmptyState
+  title={t('dashboard.empty.title')}
+  description={t('dashboard.empty.description')}
+/>
+```
+
+Configuration should reference translation keys rather than duplicate translated content.
+
+## 27.2 Formatting
+
+Use locale-aware formatting for:
+
+* dates;
+* times;
+* numbers;
+* percentages;
+* currencies;
+* durations;
+* pluralization.
+
+Do not concatenate translated sentence fragments.
+
+## 27.3 RTL behavior
+
+Use CSS logical properties.
+
+Test:
+
+* English LTR;
+* Arabic RTL;
+* mixed Arabic and English;
+* long labels;
+* numbers inside RTL content;
+* charts with RTL labels;
+* table alignment;
+* navigation expansion;
+* icon direction.
+
+User-facing text must not be embedded inside images.
+
+---
+
+# 28. Business Logic Must Not Be CSS
+
+Business logic produces semantic domain results.
+
+Correct:
+
+```ts
+const status:
+  | 'healthy'
+  | 'warning'
+  | 'critical' =
+  getHealthStatus(score);
+```
+
+Forbidden:
+
+```ts
+const className =
+  score > 75
+    ? 'green'
+    : score > 40
+      ? 'orange'
+      : 'red';
+```
+
+Forbidden:
+
+```ts
+const color =
+  score > 75
+    ? '#059669'
+    : '#DC2626';
+```
+
+SCSS and the design system decide how semantic states appear.
+
+---
+
+# 29. Domain-Driven Business Logic
+
+Use Delivery Clarity domain language.
+
+Preferred:
+
+* `SprintCommitment`;
+* `DeliveryPredictability`;
+* `FlowHealth`;
+* `ReleaseReadiness`;
+* `OwnershipRisk`;
+* `OrphanIssue`;
+* `ScopeChange`;
+* `BlockedWork`;
+* `WorkItemAge`;
+* `ThroughputTrend`.
+
+Avoid:
+
+* `dataProcessor`;
+* `calculateThing`;
+* `manager`;
+* `helper`;
+* `misc`;
+* `common`;
+* `resultData`.
+
+Domain logic must remain independent from:
+
+* React;
+* Next.js routing;
+* SCSS;
+* chart libraries;
+* browser APIs;
+* database implementation;
+* presentation component structure.
+
+---
+
+# 30. Calculation Single Source of Truth
+
+All metrics must be calculated in domain modules.
+
+Required pipeline:
+
+```text
+Raw Jira data
+→ Validation
+→ Normalization
+→ Domain calculation
+→ Calculation result
+→ Presentation view model
+→ UI
+```
+
+Forbidden inside a component:
+
+```tsx
+const predictability =
+  completedStoryPoints /
+  committedStoryPoints *
+  100;
+```
+
+Required:
+
+```ts
+const result =
+  calculateSprintPredictability(sprint);
+
+const viewModel =
+  toPredictabilityViewModel(result);
+```
+
+Every metric must define:
+
+```ts
+type MetricDefinition = {
+  id: string;
+  labelKey: string;
+  descriptionKey: string;
+  formulaDescription: string;
+  unit:
+    | 'count'
+    | 'percentage'
+    | 'days'
+    | 'points'
+    | 'ratio';
+  direction:
+    | 'higher-is-better'
+    | 'lower-is-better'
+    | 'neutral';
+  version: string;
+};
+```
+
+Every metric must document:
+
+* definition;
+* formula;
+* assumptions;
+* inclusions;
+* exclusions;
+* handling of missing values;
+* zero-denominator behavior;
+* rounding;
+* unit;
+* calculation version;
+* test examples.
+
+---
+
+# 31. Metric Versioning
+
+Metric definitions may evolve.
+
+Every calculated result must be traceable to:
+
+```ts
+type CalculationMetadata = {
+  metricVersion: string;
+  calculatedAt: string;
+  dataVersion: string;
+};
+```
+
+Reports should expose the calculation version where relevant.
+
+Do not silently change formulas and present historical reports as directly comparable without documenting the change.
+
+---
+
+# 32. External Data Validation
+
+All external data is untrusted.
+
+Validate at runtime:
+
+* API responses;
+* uploaded Jira files;
+* CSV files;
+* Excel files;
+* persisted settings;
+* URL parameters;
+* search parameters;
+* local storage;
+* runtime configuration;
+* imported JSON;
+* server-action inputs.
+
+Use schema validation before data reaches domain logic.
+
+---
+
+# 33. Invalid Data, Corrections and Quarantine
+
+Imported records must be classified as:
+
+* valid;
+* valid after documented normalization;
+* recoverable with warning;
+* invalid and quarantined.
+
+Every automatic correction must be recorded:
+
+```ts
+type DataCorrection = {
+  issueKey?: string;
+  field: string;
+  originalValue: unknown;
+  correctedValue?: unknown;
+  reason: string;
+  severity:
+    | 'info'
+    | 'warning'
+    | 'error';
+};
+```
+
+Do not silently discard or modify imported records.
+
+Users must be able to understand why Delivery Clarity totals differ from the original Jira export.
+
+---
+
+# 34. Data Visualization Governance
+
+Charts receive presentation-ready data.
+
+Charts must not calculate business metrics.
+
+Every visualization must:
+
+* support loading, empty, error, and success states;
+* expose an accessible text summary or equivalent table;
+* remain understandable without color;
+* use approved chart-series tokens;
+* support reduced motion;
+* handle long labels;
+* handle zero and missing values;
+* remain readable at supported breakpoints;
+* provide keyboard-accessible interaction when interactive;
+* make truncated information discoverable;
+* avoid misleading axes or scales.
+
+Use native `<progress>` where appropriate.
+
+```tsx
+<progress
+  className={styles.progress}
+  value={completed}
+  max={total}
+  aria-label={label}
+/>
+```
+
+When native semantics are insufficient:
+
+```tsx
+<div
+  className={styles.progress}
+  role="progressbar"
+  aria-label={label}
+  aria-valuemin={0}
+  aria-valuemax={100}
+  aria-valuenow={percentage}
+>
+  ...
+</div>
 ```
 
 ---
 
-## Rule 15 — Definition of Done
+# 35. Dynamic Value Validation
 
-A frontend task is **not complete** unless:
-- [ ] Zero inline `style` props (except CSS custom property exception)
-- [ ] All custom styling in SCSS modules
-- [ ] Tailwind used only for layout utilities
-- [ ] All values from design tokens
-- [ ] Components accept typed props (no hardcoded content)
-- [ ] Responsive behaviour implemented
-- [ ] Accessibility requirements met
-- [ ] `npx next build` passes
-- [ ] `npx next lint` passes (no new errors)
-- [ ] `npx stylelint 'src/**/*.scss'` passes
+Runtime values used for presentation must be validated.
+
+```ts
+export function clampPercentage(
+  value: number,
+): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.min(100, Math.max(0, value));
+}
+```
+
+Do not send:
+
+* `NaN`;
+* infinite values;
+* negative percentages;
+* uncontrolled dimensions;
+* raw imported strings;
+
+into CSS or chart dimensions.
 
 ---
 
-## Known Tech Debt (Inline Styles)
+# 36. Capability-Based Authorization
 
-The following files contain inline styles from before these rules were adopted.
-They must be progressively migrated — **do not add new inline styles to them**.
+Role names must not be scattered through components.
 
-### Pages (high volume)
-- `app/dashboard/*/page.tsx` — all 15 pages use inline styles for bar charts and layout
-- `app/admin/users/page.tsx` — full page written with inline styles
-- `app/admin/settings/page.tsx` — uses AppShell + inline styles
+Avoid:
 
-### Priority refactor order
-1. `app/dashboard/flow-health/page.tsx` (most complex)
+```ts
+if (user.role === 'admin') {
+  // ...
+}
+```
+
+Use capabilities:
+
+```ts
+if (can(user, 'configuration.publish')) {
+  // ...
+}
+```
+
+Configuration may assign capabilities to roles.
+
+Code enforces the capability.
+
+Client-side visibility is not authorization.
+
+Every protected operation must be validated on the server, route handler, server action, or data-access layer.
+
+Hidden navigation does not secure an operation.
+
+---
+
+# 37. Feature Flags
+
+Experimental, incomplete, or gradually released features must use typed feature flags.
+
+```ts
+export const featureFlags = [
+  'relation-map',
+  'advanced-flow-health',
+  'ai-recommendations',
+] as const;
+
+export type FeatureFlag =
+  (typeof featureFlags)[number];
+```
+
+Every feature flag must define:
+
+* owner;
+* description;
+* default;
+* environment;
+* rollout plan;
+* creation date;
+* review or expiry date;
+* removal plan.
+
+Do not hide unfinished work using:
+
+* commented JSX;
+* temporary hardcoded booleans;
+* user-name checks;
+* arbitrary environment checks.
+
+Expired flags must be removed from:
+
+* code;
+* configuration;
+* tests;
+* documentation.
+
+---
+
+# 38. Security
+
+## 38.1 Authorization
+
+Authorization must be enforced on the server.
+
+## 38.2 Secrets
+
+Never expose:
+
+* API keys;
+* database credentials;
+* private storage keys;
+* signing keys;
+* server tokens;
+
+through `NEXT_PUBLIC_*`, client bundles, logs, or configuration returned to the browser.
+
+## 38.3 HTML safety
+
+Do not render unsanitized HTML.
+
+`dangerouslySetInnerHTML` requires:
+
+* an approved sanitizer;
+* documented justification;
+* security review;
+* tests.
+
+## 38.4 File uploads
+
+Validate uploaded files independently by:
+
+* declared type;
+* actual content;
+* extension;
+* size;
+* record count;
+* schema;
+* supported encoding;
+* malicious-content risk.
+
+Do not trust the browser-provided MIME type alone.
+
+## 38.5 Spreadsheet and CSV injection
+
+When exporting spreadsheet-compatible content, values beginning with:
+
+```text
+=
++
+-
+@
+```
+
+must be handled safely to prevent formula execution.
+
+## 38.6 External links
+
+External links opened in a new tab must use safe attributes where required.
+
+URLs loaded from configuration must be validated or allow-listed.
+
+## 38.7 Security logging
+
+Security logs must contain enough context for investigation without recording secrets or unnecessary personal data.
+
+---
+
+# 39. Privacy and Data Retention
+
+For uploaded Jira data, define:
+
+* where data is stored;
+* encryption requirements;
+* retention period;
+* deletion behavior;
+* backup behavior;
+* audit behavior;
+* authorized access;
+* export behavior.
+
+Users must be able to delete datasets where product requirements permit.
+
+Do not send uploaded Jira data to unrelated analytics systems.
+
+Do not log raw:
+
+* issue descriptions;
+* comments;
+* email addresses;
+* attachments;
+* sensitive project content;
+
+unless explicitly required, secured, and documented.
+
+Use anonymized or internal identifiers in telemetry where possible.
+
+---
+
+# 40. Performance Standards
+
+Performance is a merge requirement.
+
+The project must define measurable budgets for:
+
+* route JavaScript;
+* shared JavaScript;
+* initial page response;
+* Largest Contentful Paint;
+* Interaction to Next Paint;
+* Cumulative Layout Shift;
+* chart rendering;
+* import processing;
+* table rendering;
+* image weight.
+
+Initial recommended web-performance targets:
+
+```text
+Largest Contentful Paint: ≤ 2.5 seconds
+Interaction to Next Paint: ≤ 200 milliseconds
+Cumulative Layout Shift: ≤ 0.1
+```
+
+Final project budgets must be documented and measured in representative environments.
+
+## 40.1 React performance rules
+
+Do not:
+
+* use `useMemo` or `useCallback` by habit;
+* duplicate server data in client state;
+* use effects to derive renderable values;
+* fetch the same resource independently in sibling components;
+* run expensive transformations during every render;
+* render unbounded lists;
+* hydrate entire pages unnecessarily.
+
+Avoid:
+
+```tsx
+useEffect(() => {
+  setFilteredData(
+    filterData(data, filters),
+  );
+}, [data, filters]);
+```
+
+Prefer:
+
+```tsx
+const filteredData =
+  filterData(data, filters);
+```
+
+Use memoization only when profiling or referential stability demonstrates the need.
+
+## 40.2 Large datasets
+
+Large datasets must use appropriate:
+
+* pagination;
+* aggregation;
+* streaming;
+* virtualization;
+* web workers;
+* server-side processing;
+* incremental rendering.
+
+The selected technique must match the actual bottleneck.
+
+## 40.3 Configuration performance
+
+Configuration must be:
+
+* loaded at the correct boundary;
+* validated once;
+* normalized once;
+* cached safely;
+* transformed before rendering;
+* passed through typed models.
+
+Do not repeatedly fetch or parse the same configuration during component rendering.
+
+---
+
+# 41. Error Isolation
+
+Use error boundaries at appropriate levels:
+
+```text
+Application boundary
+Dashboard boundary
+Feature boundary
+Widget boundary
+Import boundary
+Relation-map boundary
+```
+
+A failure in one chart or widget must not unnecessarily crash an entire dashboard.
+
+User-facing errors must provide:
+
+* clear message;
+* safe retry action;
+* fallback where possible;
+* technical reference identifier;
+* no raw stack trace.
+
+Error boundaries must not hide persistent failures without telemetry.
+
+---
+
+# 42. Observability
+
+Critical workflows must define:
+
+* what success means;
+* what validation failure means;
+* what unexpected failure means;
+* what performance failure means;
+* what is logged;
+* what triggers an alert.
+
+Safe operational context may include:
+
+* application version;
+* configuration version;
+* schema version;
+* metric version;
+* route ID;
+* feature ID;
+* widget ID;
+* dataset ID;
+* import session ID;
+* safe role context;
+* error-boundary identifier.
+
+Telemetry must not include secrets or unnecessary imported business data.
+
+Configuration errors must make it possible to identify:
+
+* which version caused the issue;
+* who published it;
+* which environment was affected;
+* which feature or widget failed;
+* whether rollback resolved the issue.
+
+---
+
+# 43. Component Maturity Levels
+
+Components are classified as:
+
+## Level 1 — Local
+
+* used by one feature;
+* owned by that feature;
+* not presented as a general solution.
+
+## Level 2 — Shared
+
+* used by multiple features;
+* has a stable typed contract;
+* has tests;
+* has documented behavior.
+
+## Level 3 — Design System
+
+* reusable across the product;
+* has documented variants;
+* has accessibility tests;
+* has visual regression coverage;
+* supports themes;
+* supports RTL;
+* has a compatibility and deprecation policy.
+
+Do not promote a component to shared or design-system status without a genuine reuse case.
+
+---
+
+# 44. Deprecation Policy
+
+Reusable APIs must not change silently.
+
+Breaking prop or configuration changes require:
+
+* a migration plan;
+* documentation;
+* tests;
+* a deprecation period when practical;
+* a removal target;
+* a codemod for high-volume migrations where reasonable.
+
+Example:
+
+```ts
+type MetricCardProps = {
+  /**
+   * @deprecated Use `status`.
+   * Planned removal: v3.
+   */
+  severity?: LegacySeverity;
+
+  status?: StatusVariant;
+};
+```
+
+Deprecated configuration must be migrated before removal.
+
+---
+
+# 45. Testing Strategy
+
+Tests must validate behavior rather than implementation details.
+
+Prefer:
+
+```ts
+expect(
+  screen.getByRole('heading', {
+    name: /flow health/i,
+  }),
+).toBeVisible();
+```
+
+Avoid:
+
+```ts
+expect(
+  component.state.isOpen,
+).toBe(true);
+```
+
+Required testing layers:
+
+```text
+Domain calculation tests
+Configuration validation tests
+Schema migration tests
+Component behavior tests
+Feature integration tests
+Critical workflow E2E tests
+Accessibility tests
+Visual regression tests
+Performance tests where applicable
+```
+
+## 45.1 Domain tests
+
+Every calculation must test:
+
+* normal data;
+* no data;
+* zero values;
+* missing fields;
+* invalid data;
+* boundary values;
+* rounding;
+* negative values;
+* values exceeding expected limits;
+* changed scope;
+* orphan records;
+* calculation version behavior.
+
+## 45.2 Configuration tests
+
+Test:
+
+* valid configuration;
+* invalid configuration;
+* defaults;
+* missing fields;
+* unsupported schema versions;
+* migration from older versions;
+* duplicate IDs;
+* duplicate ordering;
+* unknown widget types;
+* unknown icons;
+* invalid routes;
+* cyclic navigation;
+* unsafe URLs;
+* capability enforcement;
+* fallback configuration;
+* rollback;
+* last known valid recovery.
+
+## 45.3 Test-data builders
+
+Do not repeat large hardcoded test objects.
+
+Use builders:
+
+```ts
+const issue = buildJiraIssue({
+  status: 'Done',
+  storyPoints: 8,
+});
+
+const sprint = buildSprint({
+  issues: [issue],
+});
+```
+
+Builders must support valid, invalid, missing, and edge-case data.
+
+## 45.4 UI stress testing
+
+Test components using:
+
+* long project names;
+* Arabic labels;
+* mixed Arabic and English;
+* zero values;
+* 100% values;
+* values above 100%;
+* negative imported values;
+* thousands of records;
+* missing labels;
+* unknown statuses;
+* large numbers;
+* missing assignees;
+* missing sprints;
+* missing releases;
+* long descriptions.
+
+Do not test only perfect demonstration data.
+
+---
+
+# 46. Visual Regression Testing
+
+Critical routes and design-system components require visual regression coverage for applicable states:
+
+* desktop;
+* tablet;
+* mobile;
+* light theme;
+* dark theme;
+* LTR;
+* RTL;
+* empty;
+* loading;
+* error;
+* disabled;
+* long content;
+* reduced motion.
+
+A baseline must not be updated merely to make CI pass.
+
+A baseline update requires intentional review of the visual change.
+
+---
+
+# 47. Storybook or Equivalent Component Documentation
+
+Shared and design-system components should have documented examples for:
+
+* default;
+* all variants;
+* all sizes;
+* interactive;
+* disabled;
+* loading;
+* empty;
+* error;
+* long text;
+* mobile;
+* dark theme;
+* RTL;
+* reduced motion.
+
+The component documentation should support:
+
+* design review;
+* accessibility review;
+* visual regression;
+* implementation guidance;
+* API discovery.
+
+---
+
+# 48. Architecture Enforcement
+
+Architectural boundaries must be checked automatically using an approved dependency-analysis tool or ESLint boundary rules.
+
+CI must reject:
+
+* circular dependencies;
+* forbidden feature imports;
+* server-only imports in Client Components;
+* deep imports into private feature files;
+* domain imports from presentation layers where direction is invalid;
+* shared modules importing feature modules.
+
+Written architecture without automated enforcement is guidance, not governance.
+
+---
+
+# 49. ESLint Enforcement
+
+ESLint must enforce, where technically possible:
+
+* no prohibited inline style props;
+* only `--*` CSS custom properties in the permitted exception;
+* no object spread in style exceptions;
+* no undocumented style exceptions;
+* no raw color values passed through style variables;
+* no unused code;
+* no floating promises;
+* no unsafe `any`;
+* no unhandled async behavior;
+* import boundaries;
+* React and hooks correctness;
+* accessibility rules;
+* no direct server imports into client code;
+* no prohibited suppression comments.
+
+The project should use a custom local rule for the controlled `style` exception when standard rules cannot express it.
+
+---
+
+# 50. Stylelint Enforcement
+
+Stylelint must cover SCSS and CSS in:
+
+```text
+app/
+src/
+components/
+```
+
+It must reject:
+
+* hardcoded colors outside approved token files;
+* invalid custom properties;
+* duplicate selectors;
+* invalid nesting;
+* unknown properties;
+* unsupported syntax;
+* prohibited raw values in component modules;
+* excessive specificity;
+* invalid token usage.
+
+The token file may have a controlled override allowing foundational raw values.
+
+Component modules must consume tokens.
+
+Warnings must fail CI.
+
+---
+
+# 51. TypeScript Standards
+
+TypeScript strict mode is required.
+
+Do not add:
+
+* `any`;
+* `@ts-ignore`;
+* `@ts-nocheck`;
+* unsafe type assertions;
+* broad `Record<string, any>`;
+* unvalidated casts from external data;
+
+without a documented technical reason and review.
+
+Prefer:
+
+* `unknown` before validation;
+* discriminated unions;
+* branded identifiers where confusion is possible;
+* `satisfies`;
+* `as const`;
+* generated route types;
+* inferred schema types;
+* exhaustive checks.
+
+Example:
+
+```ts
+function assertNever(
+  value: never,
+): never {
+  throw new Error(
+    `Unexpected value: ${String(value)}`,
+  );
+}
+```
+
+Type errors must not be ignored during production builds.
+
+---
+
+# 52. Required Package Scripts
+
+The repository must provide reliable scripts that match actually installed tools.
+
+Do not add placeholder scripts that cannot run.
+
+Recommended canonical scripts:
+
+```json
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+
+    "typegen": "next typegen",
+    "typecheck": "npm run typegen && tsc --noEmit",
+
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+
+    "lint:styles": "stylelint \"{app,src,components}/**/*.{css,scss}\" --max-warnings=0",
+    "lint:styles:fix": "stylelint \"{app,src,components}/**/*.{css,scss}\" --fix",
+
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write .",
+
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:a11y": "playwright test tests/accessibility",
+    "test:visual": "playwright test tests/visual",
+
+    "config:validate": "tsx scripts/validate-config.ts",
+    "architecture:check": "dependency-cruiser src",
+
+    "check:fast": "npm run typecheck && npm run lint && npm run lint:styles && npm run config:validate",
+
+    "check:ci": "npm run format:check && npm run typecheck && npm run lint && npm run lint:styles && npm run config:validate && npm run architecture:check && npm run test:coverage && npm run test:a11y && npm run test:e2e && npm run build"
+  }
+}
+```
+
+If the project structure does not include one of the listed directories, adjust the Stylelint glob without reducing actual coverage.
+
+## 52.1 Required command behavior
+
+* `npm run lint` must fail on warnings.
+* `npm run lint:styles` must fail on warnings.
+* `npm run typecheck` must run independently of build.
+* `npm run config:validate` must validate all bundled configuration.
+* `npm run architecture:check` must enforce dependency direction.
+* `npm run build` must run after the faster static checks.
+* `npm run check:ci` must represent the merge-level quality gate.
+
+## 52.2 Recommended CI order
+
+```text
+Install locked dependencies
+→ Configuration validation
+→ Formatting check
+→ Type generation and typecheck
+→ ESLint
+→ Stylelint
+→ Architecture check
+→ Unit and domain tests
+→ Accessibility tests
+→ End-to-end tests
+→ Production build
+```
+
+Fast failures should occur before expensive tests.
+
+---
+
+# 53. Change-Risk Classification
+
+Every change must be classified.
+
+## Low risk
+
+Examples:
+
+* isolated text correction;
+* approved icon replacement;
+* token-only visual adjustment;
+* documentation correction.
+
+Required checks:
+
+* typecheck;
+* ESLint;
+* Stylelint;
+* affected tests.
+
+## Medium risk
+
+Examples:
+
+* reusable component;
+* navigation;
+* filter logic;
+* dashboard composition;
+* route behavior;
+* state management.
+
+Required checks:
+
+* all low-risk checks;
+* feature integration tests;
+* accessibility review;
+* visual regression;
+* affected E2E tests.
+
+## High risk
+
+Examples:
+
+* authentication;
+* authorization;
+* database changes;
+* persistence;
+* import/export;
+* calculations;
+* configuration schema;
+* migrations;
+* critical workflow;
+* security behavior.
+
+Required checks:
+
+* full CI;
+* security review;
+* domain tests;
+* migration validation;
+* rollback validation;
+* critical E2E workflows;
+* performance assessment;
+* documentation review;
+* architecture review.
+
+Risk may be increased by CI or reviewers.
+
+Risk must not be reduced without a documented reason.
+
+---
+
+# 54. Senior Review Gates
+
+## Product gate
+
+Confirms:
+
+* user problem;
+* business value;
+* expected outcome;
+* target user;
+* scope;
+* success metric;
+* configuration opportunities.
+
+## Architecture gate
+
+Confirms:
+
+* module ownership;
+* dependency direction;
+* domain boundaries;
+* configuration boundary;
+* security boundary;
+* extension model;
+* migration;
+* rollback.
+
+## UI/UX gate
+
+Confirms:
+
+* information hierarchy;
+* primary action;
+* accessibility;
+* responsive behavior;
+* RTL;
+* themes;
+* loading, empty, error, and success states;
+* design-system compliance.
+
+## Engineering gate
+
+Confirms:
+
+* simple implementation;
+* no duplication;
+* no unnecessary abstraction;
+* typed contracts;
+* testability;
+* performance;
+* observability;
+* maintainability.
+
+## Release gate
+
+Confirms:
+
+* required checks passed;
+* documentation impact declared;
+* configuration migration documented;
+* release notes completed;
+* monitoring available;
+* rollback possible.
+
+High-risk work must pass every applicable gate.
+
+---
+
+# 55. Documentation Governance
+
+Documentation is part of the product.
+
+Required documentation structure:
+
+```text
+product/
+  architecture/
+  configuration/
+  features/
+  calculations/
+  decisions/
+  releases/
+```
+
+Every configurable property must document:
+
+* purpose;
+* type;
+* default;
+* allowed values;
+* example;
+* validation;
+* security implications;
+* whether rebuild is required;
+* whether restart is required;
+* whether it can be changed in the admin interface.
+
+## 55.1 Documentation-impact assessment
+
+Do not update every document mechanically.
+
+Every task must state:
+
+```text
+Documentation impact
+
+Updated:
+- List affected documents and routes
+
+Not affected:
+- List relevant areas that do not require changes
+
+Reason:
+- Explain why
+```
+
+Update:
+
+* `product/` for product behavior, architecture, calculations, and requirements;
+* `/help` for end-user workflow changes;
+* `/developer` for APIs, configuration, setup, architecture, and extension behavior;
+* `/glossary` when terms are added, changed, or removed;
+* release notes for user-facing or operational impact.
+
+## 55.2 Architecture Decision Records
+
+Create an ADR for material architectural decisions.
+
+ADR structure:
+
+```text
+Title
+Status
+Date
+Context
+Decision
+Alternatives considered
+Consequences
+Migration impact
+Review date
+```
+
+Examples:
+
+* why SCSS Modules are used;
+* why Tailwind is layout-only;
+* why metrics are versioned;
+* why configuration is schema validated;
+* why Jira credentials are not stored;
+* why calculations are separate from charts.
+
+---
+
+# 56. Branch and Source-Control Rules
+
+## 56.1 Branch names
+
+Use:
+
+```text
+feature/<ticket>-<description>
+fix/<ticket>-<description>
+refactor/<ticket>-<description>
+docs/<ticket>-<description>
+chore/<ticket>-<description>
+upgrade/<ticket>-<description>
+```
+
+## 56.2 Feature branches
+
+Every new feature must use its own branch.
+
+## 56.3 Bug fixes
+
+A bug fix may use the current branch only when it is directly related to that branch’s scope.
+
+Unrelated fixes require a separate branch.
+
+## 56.4 Push requirements
+
+Push code only after applicable local quality gates pass.
+
+Never push:
+
+* secrets;
+* temporary debug code;
+* failing generated files;
+* unresolved lint errors;
+* disabled tests;
+* undocumented suppressions;
+* unrelated changes.
+
+## 56.5 Commit quality
+
+Commits should be:
+
+* focused;
+* understandable;
+* reversible;
+* free of unrelated formatting noise.
+
+Do not combine unrelated refactors with functional changes unless required for the implementation.
+
+---
+
+# 57. Release and Change Management
+
+Every release-impacting change must define:
+
+* user impact;
+* configuration impact;
+* migration impact;
+* database impact;
+* monitoring;
+* rollout;
+* rollback;
+* documentation;
+* support considerations.
+
+High-risk features should use controlled rollout where appropriate.
+
+A release must not depend on undocumented manual production edits.
+
+Configuration changes must be versioned and auditable.
+
+---
+
+# 58. AI Agent Operating Rules
+
+Every AI agent must behave as a senior contributor, not an uncontrolled code generator.
+
+## 58.1 Before editing
+
+The AI agent must:
+
+1. Inspect the existing repository structure.
+2. Read the relevant standards.
+3. Inspect the current package versions.
+4. Locate existing configuration and registries.
+5. Locate existing reusable components.
+6. Identify domain modules and schemas.
+7. identify affected routes.
+8. Identify affected tests.
+9. Identify documentation impact.
+10. Select the smallest safe change.
+
+## 58.2 AI agents must not
+
+* invent files or directories;
+* assume a package is installed;
+* invent successful test results;
+* claim a command passed without running it;
+* disable tests to finish a task;
+* weaken ESLint;
+* weaken Stylelint;
+* weaken TypeScript;
+* add `any` without justification;
+* add `ts-ignore`;
+* add `ts-nocheck`;
+* add unexplained lint suppression;
+* bypass runtime validation;
+* duplicate an existing component;
+* hardcode behavior that belongs in configuration;
+* introduce unrelated refactors;
+* create arbitrary execution through configuration;
+* change package versions without reviewing compatibility;
+* add dependencies without review;
+* overwrite valid user work;
+* silently change a business formula;
+* silently change a public component API.
+
+## 58.3 After editing
+
+The AI agent must report:
+
+* task summary;
+* branch;
+* files changed;
+* configuration changed;
+* schemas changed;
+* migrations added;
+* tests added or updated;
+* documentation updated;
+* commands actually executed;
+* commands that passed;
+* commands that failed;
+* existing failures;
+* newly introduced risks;
+* manual validation still required;
+* rollback considerations.
+
+The AI agent must clearly distinguish:
+
+* completed work;
+* partially completed work;
+* unverified assumptions;
+* work that could not be completed.
+
+---
+
+# 59. Third-Party Library Exceptions
+
+When a third-party library requires a JavaScript style object:
+
+1. Confirm the library has no class-based API.
+2. Isolate the requirement in one adapter component.
+3. Keep the style object outside the main render where possible.
+4. Use design-token references.
+5. Add a technical comment.
+6. Add tests.
+7. Prevent the exception from spreading into feature code.
+
+Example:
+
+```tsx
+// THIRD-PARTY EXCEPTION:
+// The drag library requires transform styles
+// supplied through its runtime API.
+const draggableStyle = {
+  transform:
+    provided.draggableProps.style?.transform,
+};
+```
+
+An exception for one library is not permission to use inline styles elsewhere.
+
+---
+
+# 60. Known Technical Debt — Inline Styles
+
+The following legacy areas contain inline styling from before these standards.
+
+Do not add new inline styling to them.
+
+## Pages with high inline-style volume
+
+* `app/dashboard/*/page.tsx`
+* `app/admin/users/page.tsx`
+* `app/admin/settings/page.tsx`
+
+## Refactor priority
+
+1. `app/dashboard/flow-health/page.tsx`
 2. `app/dashboard/ownership/page.tsx`
 3. `app/dashboard/labels/page.tsx`
 4. `app/dashboard/epic-readiness/page.tsx`
-5. Remaining dashboard pages (1 page per session)
+5. Remaining dashboard pages, one focused page at a time
+6. `app/admin/users/page.tsx`
+7. `app/admin/settings/page.tsx`
 
-When refactoring a page, create `app/dashboard/[page]/page.module.scss` and
-move all inline styles into it, using CSS custom properties for dynamic values.
+When refactoring a page:
+
+* create `page.module.scss`;
+* move custom presentation into the module;
+* use design tokens;
+* use CSS custom properties only for validated runtime dimensions;
+* move repeated JSX into typed components;
+* move repeated data into configuration;
+* preserve behavior;
+* add regression tests;
+* avoid unrelated page redesign unless approved.
 
 ---
 
-## After-Execution Memory Rules (from previous sessions)
+# 61. Progressive Technical-Debt Rule
 
-- After every task: push code to branch + update product/docs
-- Every feature must update ALL product/ files AND /help, /developer, /glossary routes
-- Each new feature gets its own branch; bug fixes push immediately to current branch
-- P0 has highest weight but no longer blocks P1-P4 work
+Technical debt must be reduced when related code is changed.
+
+Do not use a small task as justification for rewriting an unrelated subsystem.
+
+When touching legacy code:
+
+* do not make it worse;
+* do not add new violations;
+* improve directly affected code when safe;
+* document deferred issues;
+* avoid expanding scope without approval.
+
+---
+
+# 62. Priority Rules
+
+* P0 work has the highest weight.
+* P0 work does not permanently block all P1–P4 work.
+* Delivery decisions must consider urgency, risk, dependency, value, and available capacity.
+* Priority must not be used to bypass security, data integrity, or critical quality gates.
+* Emergency exceptions must be documented and followed by corrective work.
+
+---
+
+# 63. Full Definition of Done
+
+A task is not complete until all applicable items pass.
+
+## 63.1 Product
+
+* [ ] The user or operational problem is defined.
+* [ ] The target user is identified.
+* [ ] Acceptance criteria are satisfied.
+* [ ] Scope boundaries are clear.
+* [ ] Success can be measured.
+* [ ] Configuration opportunities were evaluated.
+* [ ] No unrelated product behavior was added.
+
+## 63.2 Architecture
+
+* [ ] The feature has a clear module and owner.
+* [ ] Dependencies follow approved direction.
+* [ ] No circular dependencies exist.
+* [ ] Domain logic is separated from rendering.
+* [ ] Runtime data is schema validated.
+* [ ] Server and client boundaries are appropriate.
+* [ ] Configuration is used where appropriate.
+* [ ] Configuration does not allow arbitrary execution.
+* [ ] Existing extension points are reused.
+* [ ] No unnecessary abstraction was introduced.
+* [ ] No duplicated business logic was introduced.
+
+## 63.3 Configuration
+
+* [ ] Configuration is typed.
+* [ ] Configuration is runtime validated.
+* [ ] Defaults are defined.
+* [ ] Schema version is defined.
+* [ ] Migration exists when required.
+* [ ] Invalid configuration fails safely.
+* [ ] Last known valid recovery is supported where applicable.
+* [ ] Configuration changes are auditable.
+* [ ] Zero-code-change opportunities were used appropriately.
+
+## 63.4 Code quality
+
+* [ ] Code is readable and intentionally named.
+* [ ] No spaghetti or galaxy code was introduced.
+* [ ] Functions and components have focused responsibilities.
+* [ ] No unrelated files were modified.
+* [ ] No uncontrolled shared utilities were introduced.
+* [ ] No `any` was introduced without approval.
+* [ ] No `ts-ignore` or `ts-nocheck` was added.
+* [ ] No unexplained lint suppression was added.
+* [ ] No tests were disabled.
+* [ ] Public APIs are typed and stable.
+* [ ] Complex logic has focused tests.
+
+## 63.5 Styling
+
+* [ ] No prohibited inline styles exist.
+* [ ] Permitted style objects contain only documented `--*` custom properties.
+* [ ] Custom appearance is in SCSS Modules.
+* [ ] Tailwind is used only for approved layout utilities.
+* [ ] No arbitrary Tailwind values were introduced.
+* [ ] Design tokens are used.
+* [ ] No hardcoded colors exist outside the token layer.
+* [ ] No duplicated component CSS was introduced.
+* [ ] Dynamic values are validated and clamped.
+* [ ] Theme compatibility is preserved.
+
+## 63.6 UI/UX
+
+* [ ] The page has a clear purpose.
+* [ ] The primary action is identifiable.
+* [ ] Information hierarchy is consistent.
+* [ ] Responsive behavior is implemented.
+* [ ] Mobile, tablet, and desktop layouts are checked.
+* [ ] English LTR behavior is checked.
+* [ ] Arabic RTL behavior is checked where applicable.
+* [ ] Long-content behavior is checked.
+* [ ] Loading state exists.
+* [ ] Empty state exists.
+* [ ] Error state exists.
+* [ ] Disabled state exists where applicable.
+* [ ] Success feedback exists where applicable.
+* [ ] Configuration cannot generate an unsupported layout.
+
+## 63.7 Accessibility
+
+* [ ] Semantic HTML is used.
+* [ ] Keyboard operation is verified.
+* [ ] Focus visibility is present.
+* [ ] Focus behavior is predictable.
+* [ ] Icon-only controls have accessible names.
+* [ ] State is not communicated by color alone.
+* [ ] Dynamic visualizations expose accessible values.
+* [ ] Motion respects reduced-motion preferences.
+* [ ] 200% zoom remains usable.
+* [ ] Automated accessibility tests pass.
+* [ ] No new critical or serious accessibility issue exists.
+
+## 63.8 Security and privacy
+
+* [ ] Authorization is enforced on the server.
+* [ ] External data is validated.
+* [ ] Upload type, content, and size are validated.
+* [ ] CSV and spreadsheet export is safe.
+* [ ] No secret is exposed to the client.
+* [ ] Configuration URLs are validated.
+* [ ] Sensitive content is not unnecessarily logged.
+* [ ] Data-retention impact is understood.
+* [ ] Audit requirements are satisfied.
+
+## 63.9 Performance
+
+* [ ] Client boundaries are minimized.
+* [ ] No unnecessary client-side fetching exists.
+* [ ] No unnecessary state duplication exists.
+* [ ] No expensive transformation runs repeatedly without reason.
+* [ ] Large lists are paginated or virtualized where required.
+* [ ] Configuration is not repeatedly parsed.
+* [ ] Bundle impact is acceptable.
+* [ ] Rendering impact is acceptable.
+* [ ] Performance budgets remain satisfied.
+
+## 63.10 Testing
+
+* [ ] Domain tests pass.
+* [ ] Configuration tests pass.
+* [ ] Component tests pass.
+* [ ] Integration tests pass where applicable.
+* [ ] Critical E2E tests pass.
+* [ ] Accessibility tests pass.
+* [ ] Visual tests pass where applicable.
+* [ ] Edge cases and invalid inputs are tested.
+* [ ] Existing failures are distinguished from introduced failures.
+
+## 63.11 Commands
+
+* [ ] `npm run config:validate` passes.
+* [ ] `npm run architecture:check` passes.
+* [ ] `npm run format:check` passes.
+* [ ] `npm run typecheck` passes.
+* [ ] `npm run lint` passes with zero warnings.
+* [ ] `npm run lint:styles` passes with zero warnings.
+* [ ] Required automated tests pass.
+* [ ] `npm run build` passes.
+* [ ] No command is reported as successful unless it was actually executed successfully.
+
+## 63.12 Documentation and delivery
+
+* [ ] Documentation impact is declared.
+* [ ] Relevant `product/` documents are updated.
+* [ ] Relevant `/help` content is updated.
+* [ ] Relevant `/developer` content is updated.
+* [ ] Relevant `/glossary` content is updated.
+* [ ] Calculation documentation is updated where applicable.
+* [ ] Release notes describe user impact.
+* [ ] Configuration migration is documented.
+* [ ] Monitoring is defined.
+* [ ] Rollback is possible.
+* [ ] Changed files are listed.
+* [ ] Code is pushed only after applicable checks pass.
+
+---
+
+# 64. Final Engineering Principle
+
+Delivery Clarity must be easy to understand before it is easy to extend.
+
+It must be easy to configure before it is easy to customize.
+
+It must be easy to maintain before it is made technically impressive.
+
+The following should normally require configuration rather than component rewrites:
+
+* content;
+* navigation;
+* dashboard composition;
+* labels;
+* thresholds;
+* role visibility;
+* theme values;
+* filters;
+* feature rollout;
+* help references.
+
+New business capabilities require explicit, typed, tested, reviewed code.
+
+Configuration selects approved capabilities.
+
+Configuration does not create arbitrary capabilities.
+
+Every change must leave Delivery Clarity:
+
+* simpler or no more complex than necessary;
+* modular;
+* typed;
+* validated;
+* accessible;
+* secure;
+* observable;
+* testable;
+* configurable;
+* expandable;
+* reversible;
+* understandable by the next engineer.
