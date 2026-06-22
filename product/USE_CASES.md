@@ -3324,3 +3324,30 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 **Postcondition:** The issue type registry reflects the admin's changes; all consumers (Explore graph, details table, charts, hierarchy reconstruction) use the updated configuration without a code change or redeploy
 **Related FR:** FR-344
 **Related:** TC-IT-01–17
+
+---
+
+### UC-113 — Any User Pulls Fresh Jira Data from the Dashboard
+
+*(Added 2026-06-22 to close `JIRA-14` from TODO-List.md Section 19a, requested directly by the user: "I need a new button that allow to pull data from jira some where all users type can click." Two product decisions — connection-resolution strategy and removing the admin-only restriction — were confirmed with the user before implementation. In progress on `feature/arch-05-jira-integration`, unmerged.)*
+
+- **ID:** UC-113
+- **Title:** A Logged-In User of Any Role Triggers a Manual Jira Sync from the Dashboard
+- **Actor:** Any logged-in user (no role restriction)
+- **Precondition:** At least one `JiraConnection` exists with a working Jira API token (UC-110); user is on any `/dashboard/*` route
+- **Trigger:** User clicks "Sync Jira" in the dashboard topbar
+
+**Main Flow:**
+1. `POST /api/jira/sync` resolves the connection to sync automatically — the one with the most recent `lastSyncAt`, or the most recently created connection if none has ever synced
+2. The route runs the same all-or-nothing sync used by the admin-only per-connection route (UC-111): builds a bounded JQL query, paginates through the Gateway, normalizes, validates, computes metrics, and updates the live dashboard snapshot only on full success
+3. On success, the dashboard page reloads so every component re-fetches the fresh data; the topbar shows a brief "Synced N issues from <ConnectionName>" confirmation before reloading
+
+**Alternate Flow — No Jira connection configured yet:**
+1a. `resolveActiveJiraConnection()` finds no connections at all → HTTP 404 with a message directing the user to ask an admin to set one up; an inline error banner shows under the button (auto-dismisses after 6 seconds)
+
+**Alternate Flow — Sync fails (token missing, Gateway/Jira error, or validation failure):**
+2a. The route returns the same error categorization as the admin route (409 setup problem / 502 upstream failure / 422 validation failure); the dashboard's last-good snapshot is provably unchanged, and the inline error banner shows the specific reason
+
+**Postcondition:** Either the dashboard now reflects fresh Jira data and every user sees it on their next page load, or — on any failure — the dashboard is unchanged and the user sees a clear reason why
+**Related FR:** FR-345, FR-342 (shared sync implementation)
+**Related:** TC-JIRA-54–60

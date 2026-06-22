@@ -42,6 +42,32 @@ export default function DashboardTopbar({ onNewUpload }: Props) {
   const groupButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const dropMenuRef = useRef<HTMLDivElement>(null);
 
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState('');
+
+  const handleSyncJira = useCallback(async () => {
+    if (syncing) return;
+    setSyncing(true);
+    setSyncMessage('');
+    try {
+      const res = await fetch('/api/jira/sync', { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        setSyncMessage(data.error ?? 'Sync failed.');
+        setTimeout(() => setSyncMessage(''), 6000);
+        return;
+      }
+      setSyncMessage(`Synced ${data.totalIssues ?? 0} issues from ${data.connectionName ?? 'Jira'}.`);
+      // Reload so every page/component re-fetches the now-fresh dashboard data.
+      window.location.reload();
+    } catch {
+      setSyncMessage('Sync failed — check your connection and try again.');
+      setTimeout(() => setSyncMessage(''), 6000);
+    } finally {
+      setSyncing(false);
+    }
+  }, [syncing]);
+
   const toggleGroup = useCallback((groupId: string) => {
     if (openGroup === groupId) { setOpenGroup(null); return; }
     const btn = groupButtonRefs.current[groupId];
@@ -131,6 +157,31 @@ export default function DashboardTopbar({ onNewUpload }: Props) {
             </svg>
             New Upload
           </button>
+
+          {/* Sync Jira — any logged-in user can pull fresh data from the live Jira connection */}
+          <div className={styles.syncWrap}>
+            <button
+              type="button"
+              onClick={handleSyncJira}
+              disabled={syncing}
+              className={styles.syncBtn}
+              aria-label="Sync new data from Jira"
+              title="Pull the latest data from the connected Jira project"
+            >
+              <svg
+                width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                aria-hidden="true" className={syncing ? styles.syncSpin : undefined}
+              >
+                <path d="M21 12a9 9 0 11-2.64-6.36M21 4v6h-6" />
+              </svg>
+              {syncing ? 'Syncing…' : 'Sync Jira'}
+            </button>
+            {syncMessage && (
+              <div className={styles.syncMessage} role="status" aria-live="polite">
+                {syncMessage}
+              </div>
+            )}
+          </div>
 
           {/* Data source badge — shows live Jira sync status or upload origin */}
           <DataSourceBadge compact />

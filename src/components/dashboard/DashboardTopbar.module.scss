@@ -200,6 +200,77 @@
   }
 }
 
+// ── Sync Jira button — outline style, distinct from the solid primary upload button ──
+.syncWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.syncMessage {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: var(--z-dropdown, 600);
+  width: 240px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  box-shadow: var(--shadow-dropdown, 0 8px 24px rgb(0 0 0 / 10%));
+  font-size: var(--text-xs, 11px);
+  color: var(--color-text-secondary, #475569);
+  line-height: 1.4;
+}
+
+.syncBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px var(--space-3, 12px);
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--text-xs, 10px);
+  font-weight: 700;
+  border: 1px solid var(--color-border, #e2e8f0);
+  background: var(--color-surface, #fff);
+  color: var(--color-text-secondary, #475569);
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background var(--transition-fast, 120ms ease), border-color var(--transition-fast, 120ms ease);
+
+  &:hover:not(:disabled) {
+    background: var(--color-surface-hover, #f8fafc);
+    border-color: var(--color-primary, #2563eb);
+    color: var(--color-primary, #2563eb);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.syncSpin {
+  animation: dc-sync-spin 0.8s linear infinite;
+}
+
+@keyframes dc-sync-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .syncSpin {
+    animation: none;
+  }
+}
+
 // ── Nav dropdown panel ────────────────────────────────────────────────────────
 // EXCEPTION (CLAUDE.md Rule 1): top/left are computed from getBoundingClientRect()
 // at runtime and passed as CSS custom properties --drop-top and --drop-left.

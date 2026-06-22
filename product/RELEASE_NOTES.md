@@ -5,6 +5,19 @@
 
 ---
 
+## v4.9.1 — "Sync Jira" Button on the Dashboard for Every User (2026-06-22, P1 — in progress, unmerged)
+
+**Scope:** `JIRA-14`, requested directly by the user: a way to pull fresh Jira data without going through Admin Settings, available to every logged-in user — not just admins.
+
+- New **"Sync Jira"** button in the dashboard topbar, next to "New Upload," with a spinning-icon loading state.
+- Any logged-in user can trigger it — confirmed with the user as an explicit product decision, since the token itself is still never exposed to the client.
+- When multiple Jira connections exist, it syncs whichever one most recently fed the live dashboard (falling back to the most recently created if none has synced yet) — also confirmed with the user before building, rather than guessing.
+- The all-or-nothing sync logic was extracted into a shared service (`connectionSyncRunner.ts`) so the existing admin-only per-connection route and this new any-user route can't drift apart — the existing admin route's full test suite passes unmodified after the refactor.
+- **Verified live as a real non-admin user**: created a temporary `scrum_master` test account, confirmed the button is visible and clickable, and got a real successful sync of 27 issues — then deleted the test account.
+- 7 new tests. Suite: **667/70, all passing.**
+
+---
+
 ## v4.9.0 — Admin-Configurable Issue Type Hierarchy (2026-06-22, P1 — in progress, unmerged)
 
 **Scope:** `ISSUETYPE-01`, requested directly by the user after the `JIRA-11`/`JIRA-12` fixes: a real settings screen to define issue types and their hierarchy order (Product → Project → Epic → Story → Sub-task), instead of being restricted to the types hardcoded during those fixes.
