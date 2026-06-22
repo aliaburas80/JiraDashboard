@@ -6,6 +6,8 @@ import ReactFlow, {
   Background,
   Controls,
   MiniMap,
+  Handle,
+  Position,
   useNodesState,
   useEdgesState,
   type Node,
@@ -75,6 +77,10 @@ function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number
         ? '0 0 0 3px rgba(220,38,38,0.15), 0 2px 8px rgba(220,38,38,0.10)'
         : '0 1px 4px rgba(0,0,0,.08)',
     }}>
+      {/* Connection points — required for React Flow to anchor edge paths to this node */}
+      <Handle type="target" position={Position.Top} isConnectable={false} style={{ opacity: 0, width: 1, height: 1 }} />
+      <Handle type="source" position={Position.Bottom} isConnectable={false} style={{ opacity: 0, width: 1, height: 1 }} />
+
       {/* Type + badges */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5, flexWrap: 'wrap' }}>
         <SvgIcon name={cfg.icon} size={13} style={{ color: cfg.color }} />

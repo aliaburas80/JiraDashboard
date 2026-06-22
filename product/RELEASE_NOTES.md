@@ -5,6 +5,17 @@
 
 ---
 
+## v4.9.2 — Bug Fix: Relation Graph Connecting Edges Never Rendered (2026-06-23, P2 — in progress, unmerged)
+
+**Scope:** `JIRA-13`, a defect flagged (but explicitly not fixed) during `JIRA-12`'s live verification: the Explore Delivery Structure graph's connecting lines never rendered, even when the underlying node/edge data was correct.
+
+- Root cause: the custom React Flow node card (`WorkItemGraph.tsx`'s `IssueNodeCard`) never rendered any `<Handle>` element, so React Flow had no anchor point to compute an edge's SVG path from — the edge data was always correct, only the rendering was broken.
+- Fix: added a target handle (top) and source handle (bottom) to match the existing top-to-bottom dagre layout, visually hidden and non-interactive since the graph is read-only.
+- Verified live: re-ran the real `AJ-28` Product→Project→Epic→19-children graph; edge count went from 0 visible connector lines to 20, all rendering correctly.
+- No data, layout direction, or other component behavior changed — this was purely a missing-markup rendering fix.
+
+---
+
 ## v4.9.1 — "Sync Jira" Button on the Dashboard for Every User (2026-06-22, P1 — in progress, unmerged)
 
 **Scope:** `JIRA-14`, requested directly by the user: a way to pull fresh Jira data without going through Admin Settings, available to every logged-in user — not just admins.
