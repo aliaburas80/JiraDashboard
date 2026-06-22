@@ -2,6 +2,9 @@
 import type { IssueNodeType, NodeTypeConfig, RelationEdgeType, EdgeConfig } from '@/types/relations';
 
 export const NODE_TYPE_CONFIG: Record<IssueNodeType, NodeTypeConfig> = {
+  Product:          { color: '#0e7490', bg: '#ecfeff', border: '#67e8f9', icon: 'package', size: 'lg' },
+  Project:          { color: '#1d4ed8', bg: '#eff6ff', border: '#93c5fd', icon: 'briefcase', size: 'lg' },
+  Initiative:       { color: '#0369a1', bg: '#f0f9ff', border: '#7dd3fc', icon: 'target', size: 'lg' },
   Epic:             { color: '#7c3aed', bg: '#faf5ff', border: '#a78bfa', icon: 'roadmap', size: 'lg' },
   Story:            { color: '#2563eb', bg: '#eff6ff', border: '#93c5fd', icon: 'story', size: 'md' },
   Task:             { color: '#475569', bg: '#f8fafc', border: '#cbd5e1', icon: 'checkCircle', size: 'md' },

@@ -1,7 +1,7 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 
-export type IssueNodeType =
-  | 'Epic' | 'Story' | 'Task' | 'Sub-task' | 'Bug'
+export type IssueNodeType = 
+  | 'Initiative' |'Product'| 'Project' | 'Epic' | 'Story' | 'Task' | 'Sub-task' | 'Bug'
   | 'Spike' | 'Technical Debt' | 'Risk' | 'Change Request' | 'Unknown';
 
 export type RelationEdgeType =

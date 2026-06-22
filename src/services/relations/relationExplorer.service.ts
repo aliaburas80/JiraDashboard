@@ -19,6 +19,12 @@ const TYPE_MAP: Record<string, IssueNodeType> = {
   bug: 'Bug', defect: 'Bug', error: 'Bug',
   spike: 'Spike', 'technical debt': 'Technical Debt',
   risk: 'Risk', 'change request': 'Change Request',
+  // Hierarchy levels above Epic under Advanced Roadmaps — admin-configurable
+  // per Jira instance, so these are common names rather than an exhaustive list.
+  // 'Product'/'Project' get their own distinct type; anything else above Epic
+  // (initiative/theme/portfolio) falls back to the generic 'Initiative' type.
+  product: 'Product', project: 'Project',
+  initiative: 'Initiative', theme: 'Initiative', portfolio: 'Initiative',
 };
 
 function resolveType(raw: unknown): IssueNodeType {

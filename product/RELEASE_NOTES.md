@@ -5,6 +5,20 @@
 
 ---
 
+## v4.8.2 — ARCH-05 Fix: Phantom Hierarchy Cycle + "Unknown" Type for Product/Project (2026-06-22, P1 — in progress, unmerged)
+
+**Scope:** Follow-up to `v4.8.1` (`JIRA-12`), found from the user's own screenshots of the just-fixed Explore page.
+
+- Focusing on the middle node of a 3-level chain showed **zero connecting edges**, the root ancestor wrongly tagged both "Orphan" and "Most work," and both ancestors labeled "Unknown" type.
+- Root cause: `hierarchy.service.ts`'s prefix-based inference (designed to link a Story with no Epic Link to an Epic sharing its project prefix) fired on the root ancestor too — every issue in a project shares the same key prefix — creating a phantom link that formed a 3-node cycle, which broke ancestor-chain walking and fed a bogus node into the "largest unfinished branch" calculation.
+- Fixed with a type-name-independent guard: an issue that's already established as someone else's explicit parent can never also be treated as a leaf needing phantom inference, regardless of its type name (hierarchy level names are admin-configurable per Jira instance, so a guard that doesn't depend on exact type names is more robust).
+- Added proper `Initiative`/`Product`/`Project` node types (icon + color) instead of falling back to "Unknown."
+- **Verified live**: re-synced the real connection and confirmed the root ancestor now shows its correct type with no stray badges, and "Orphans: 0" in Key Metrics.
+- **Found but not fixed, flagged separately (`JIRA-13`):** the relation graph's connecting lines never render at all — reproduced on an unrelated, already-correct graph too, so it predates this fix and isn't something introduced today.
+- 5 new tests (`TC-HIER-01–05`) + `TC-E-12/13`. Suite: **643/68, all passing.**
+
+---
+
 ## v4.8.1 — ARCH-05 Fix: Multi-Level Parent Hierarchy Lost on Live Sync (2026-06-22, P1 — in progress, unmerged)
 
 **Scope:** Bug fix (`JIRA-11`), reported by the user against real synced data: "Explore Delivery Structure" couldn't show that an Epic's parent had its own parent (e.g. Epic → Initiative → Product), even though the same hierarchy worked fine via CSV upload.

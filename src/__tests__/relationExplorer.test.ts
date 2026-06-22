@@ -109,3 +109,25 @@ test('TC-E-11: Ancestor-chain edge (root -> closest parent) is present in the gr
   const edge = graph!.edges.find(e => e.sourceId === 'PROJ-30' && e.targetId === 'PROJ-31');
   expect(edge).toBeDefined();
 });
+
+// TC-E-12/13: a root container above Epic (Initiative/Project/Product) resolves to
+// its own distinct node type instead of 'Unknown', and never gets the isOrphan or
+// isLargestBranch flags it would get if mistaken for a leaf needing inference.
+const PRODUCT2 = issue('PROJ-40', 'Product');
+const PROJECT2 = issue('PROJ-41', 'Project', { 'Parent Key': 'PROJ-40', parent: 'PROJ-40' });
+const EPIC2B   = issue('PROJ-42', 'Epic',    { 'Parent Key': 'PROJ-41', parent: 'PROJ-41' });
+const rootHierarchyIssues = [PRODUCT2, PROJECT2, EPIC2B];
+
+test('TC-E-12: "Product" and "Project" issue types resolve to their own node type, not Unknown', () => {
+  const graph = buildRelationGraph('PROJ-41', rootHierarchyIssues);
+  const focus  = graph!.nodes.find(n => n.issueKey === 'PROJ-41');
+  const parent = graph!.nodes.find(n => n.issueKey === 'PROJ-40');
+  expect(focus?.type).toBe('Project');
+  expect(parent?.type).toBe('Product');
+});
+
+test('TC-E-13: a root container is never flagged isOrphan even though it has no parent of its own', () => {
+  const graph = buildRelationGraph('PROJ-41', rootHierarchyIssues);
+  const root = graph!.nodes.find(n => n.issueKey === 'PROJ-40');
+  expect(root?.isOrphan).toBe(false);
+});

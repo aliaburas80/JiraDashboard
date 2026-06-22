@@ -59,6 +59,18 @@ function keyPrefix(key: string): string {
   return key.split('-')[0] ?? '';
 }
 
+// Issue types expected to roll up under an Epic. Prefix-inference and orphan
+// detection only apply to these — every issue in a project shares the same key
+// prefix, so applying either rule to higher-level types (Epic's own parent:
+// Initiative/Project/Product under Advanced Roadmaps hierarchy) would create a
+// phantom link to an unrelated Epic, or wrongly flag a legitimate root as an
+// orphan just because it has no parent (which is correct for a root).
+const LEAF_TYPES = new Set([
+  'story', 'user story', 'task', 'improvement', 'feature',
+  'sub-task', 'subtask', 'bug', 'defect', 'error',
+  'spike', 'technical debt', 'risk', 'change request','product','project'
+]);
+
 function addChild(map: HierarchyMap, parentKey: string, childKey: string): void {
   if (!map.children.has(parentKey)) map.children.set(parentKey, []);
   if (!map.children.get(parentKey)!.includes(childKey)) {
@@ -100,11 +112,20 @@ export function reconstructHierarchy(issues: JiraIssue[]): HierarchyMap {
   }
 
   // ── Step 2: Prefix-based inference ───────────────────────────────────────
-  // If a Story has no epic but shares key prefix with a known Epic, infer the link
+  // If a Story has no epic but shares key prefix with a known Epic, infer the link.
+  // Two independent guards, both required: LEAF_TYPES restricts this to types
+  // expected to roll up under an Epic, AND `map.children.has(key)` skips any
+  // issue that Step 1 already established as a parent/container — a node that
+  // is already someone else's explicit parent can never also be a leaf needing
+  // a phantom epic link, regardless of its type name. The second guard matters
+  // because hierarchy level names (Initiative/Project/Product/Theme) are
+  // admin-configurable per Jira instance and not reliably enumerable by name.
   for (const issue of issues) {
     const key = getKey(issue);
     if (!key || map.parent.has(key) || map.epic.has(key)) continue;
     if (epicKeys.has(key)) continue; // skip epics themselves
+    if (map.children.has(key)) continue; // already a parent/container — not a leaf
+    if (!LEAF_TYPES.has(getType(issue))) continue; // skip non-leaf/unrecognized types
 
     const prefix = keyPrefix(key);
 
@@ -118,10 +139,15 @@ export function reconstructHierarchy(issues: JiraIssue[]): HierarchyMap {
   }
 
   // ── Step 3: Identify orphans ──────────────────────────────────────────────
+  // A node that already has children is a known container/root (e.g. an Epic's
+  // own parent under Advanced Roadmaps hierarchy) — it legitimately has no
+  // parent of its own, so it is never an orphan regardless of its type name.
   for (const issue of issues) {
     const key = getKey(issue);
     if (!key) continue;
     if (epicKeys.has(key)) continue; // epics are roots, not orphans
+    if (map.children.has(key)) continue; // a container/root, not an orphan
+    if (!LEAF_TYPES.has(getType(issue))) continue; // higher-level roots are not orphans either
     // Respect pre-computed isOrphan from FlowItem (if available)
     const preComputed = issue['isOrphan'];
     const isOrphanComputed = preComputed === true || preComputed === 'true';
