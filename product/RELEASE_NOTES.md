@@ -5,6 +5,19 @@
 
 ---
 
+## v4.9.0 — Admin-Configurable Issue Type Hierarchy (2026-06-22, P1 — in progress, unmerged)
+
+**Scope:** `ISSUETYPE-01`, requested directly by the user after the `JIRA-11`/`JIRA-12` fixes: a real settings screen to define issue types and their hierarchy order (Product → Project → Epic → Story → Sub-task), instead of being restricted to the types hardcoded during those fixes.
+
+- New **"Issue Type Hierarchy"** admin screen (Admin Settings → Issue Type Hierarchy): every configured type — built-in or custom — listed with its hierarchy level, icon, color, and the raw Jira "Issue Type" name(s) it matches. Reorder levels with up/down arrows, add a custom type, or delete any non-built-in type.
+- The hierarchy is no longer hardcoded TypeScript literals. `IssueNodeType` changed from a closed union to `string` — a genuinely open, admin-defined set of types can't be a compile-time-closed union.
+- **Real behavior improvement, not just configurability:** the "does this need a parent inferred" logic generalized from "must specifically be an Epic" to "must be exactly one configured level up." Previously a Sub-task with no parent could get phantom-linked straight to an Epic, skipping its real Story/Task parent — now it correctly looks one level up first.
+- Every part of the Explore page (graph, details table, charts) now reads the live configured types instead of a fixed list.
+- **Verified live**: added a custom "Strategic Theme" type through the real admin screen, confirmed it persisted, confirmed the real Jira data still resolved correctly through the now-dynamic config, then cleaned up the test type.
+- 17 new tests (`TC-IT-01–17`). Suite: **660/69, all passing.**
+
+---
+
 ## v4.8.2 — ARCH-05 Fix: Phantom Hierarchy Cycle + "Unknown" Type for Product/Project (2026-06-22, P1 — in progress, unmerged)
 
 **Scope:** Follow-up to `v4.8.1` (`JIRA-12`), found from the user's own screenshots of the just-fixed Explore page.

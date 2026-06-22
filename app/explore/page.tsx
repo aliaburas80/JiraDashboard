@@ -16,6 +16,8 @@ import { buildRelationGraph } from '@/services/relations/relationExplorer.servic
 import { exportExplorerToExcel, exportExplorerToCsv } from '@/services/export/explorerExport.service';
 import type { RelationGraph } from '@/types/relations';
 import type { DashboardMetrics } from '@/types/metrics';
+import type { IssueTypeDefinition } from '@/types/issueTypeHierarchy';
+import { DEFAULT_ISSUE_TYPES } from '@/types/issueTypeHierarchy';
 
 // React Flow must be client-side only — no SSR
 const WorkItemGraph = dynamic(() => import('@/components/explore/WorkItemGraph'), { ssr: false, loading: () => <div className="h-[520px] flex items-center justify-center text-slate-400 text-sm animate-pulse bg-slate-50 rounded-2xl border border-slate-200">Rendering graph…</div> });
@@ -43,6 +45,7 @@ export default function ExplorePage() {
   const [recent, setRecent]         = useState<string[]>([]);
   const [blockedOnly, setBlockedOnly] = useState(false);
   const [exportOpen, setExportOpen]   = useState(false);
+  const [issueTypes, setIssueTypes]   = useState<IssueTypeDefinition[]>(DEFAULT_ISSUE_TYPES);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -60,6 +63,18 @@ export default function ExplorePage() {
     return () => { cancelled = true; };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/admin/issue-type-hierarchy')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (cancelled || !data?.config?.types?.length) return;
+        setIssueTypes(data.config.types);
+      })
+      .catch(() => {}); // fall back to DEFAULT_ISSUE_TYPES silently
+    return () => { cancelled = true; };
+  }, []);
+
   const explore = useCallback((key: string) => {
     const trimmed = key.trim().toUpperCase();
     if (!trimmed) { setError('Please enter an issue key.'); return; }
@@ -73,7 +88,7 @@ export default function ExplorePage() {
 
     // Use requestAnimationFrame to allow the UI to update before the computation
     requestAnimationFrame(() => {
-      const result = buildRelationGraph(trimmed, issues);
+      const result = buildRelationGraph(trimmed, issues, issueTypes);
       setLoading(false);
       if (!result) {
         setError(`Issue key "${trimmed}" was not found in the current dataset. Check the key and try again.`);
@@ -84,7 +99,7 @@ export default function ExplorePage() {
       saveRecent(trimmed);
       setRecent(loadRecent());
     });
-  }, [metrics]);
+  }, [metrics, issueTypes]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -247,6 +262,7 @@ export default function ExplorePage() {
                 focusNodeId={focusedKey}
                 onNodeFocus={handleNodeFocus}
                 dimNonRiskPath={blockedOnly}
+                issueTypes={issueTypes}
               />
             </section>
 
@@ -256,7 +272,7 @@ export default function ExplorePage() {
             )}
 
             {/* 3. Charts */}
-            <RelationCharts nodes={graph.nodes} orphanNodes={graph.orphanNodes} />
+            <RelationCharts nodes={graph.nodes} orphanNodes={graph.orphanNodes} issueTypes={issueTypes} />
 
             {/* 4. KPI Stats */}
             <section aria-label="Relation statistics">
@@ -293,6 +309,7 @@ export default function ExplorePage() {
                     nodes={filteredNodes}
                     orphanNodes={filteredOrphans}
                     onFocusNode={handleNodeFocus}
+                    issueTypes={issueTypes}
                   />
                 </section>
               );

@@ -1,21 +1,23 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
-import type { IssueNodeType, NodeTypeConfig, RelationEdgeType, EdgeConfig } from '@/types/relations';
+import type { NodeTypeConfig, RelationEdgeType, EdgeConfig } from '@/types/relations';
+import type { IssueTypeDefinition } from '@/types/issueTypeHierarchy';
+import { DEFAULT_ISSUE_TYPES, UNKNOWN_ISSUE_TYPE } from '@/types/issueTypeHierarchy';
 
-export const NODE_TYPE_CONFIG: Record<IssueNodeType, NodeTypeConfig> = {
-  Product:          { color: '#0e7490', bg: '#ecfeff', border: '#67e8f9', icon: 'package', size: 'lg' },
-  Project:          { color: '#1d4ed8', bg: '#eff6ff', border: '#93c5fd', icon: 'briefcase', size: 'lg' },
-  Initiative:       { color: '#0369a1', bg: '#f0f9ff', border: '#7dd3fc', icon: 'target', size: 'lg' },
-  Epic:             { color: '#7c3aed', bg: '#faf5ff', border: '#a78bfa', icon: 'roadmap', size: 'lg' },
-  Story:            { color: '#2563eb', bg: '#eff6ff', border: '#93c5fd', icon: 'story', size: 'md' },
-  Task:             { color: '#475569', bg: '#f8fafc', border: '#cbd5e1', icon: 'checkCircle', size: 'md' },
-  'Sub-task':       { color: '#64748b', bg: '#f1f5f9', border: '#e2e8f0', icon: 'subtasks',  size: 'sm' },
-  Bug:              { color: '#dc2626', bg: '#fef2f2', border: '#fca5a5', icon: 'bug', size: 'md' },
-  Spike:            { color: '#d97706', bg: '#fffbeb', border: '#fcd34d', icon: 'flask', size: 'md' },
-  'Technical Debt': { color: '#ea580c', bg: '#fff7ed', border: '#fdba74', icon: 'warning', size: 'md' },
-  Risk:             { color: '#9f1239', bg: '#fff1f2', border: '#fda4af', icon: 'alert', size: 'md' },
-  'Change Request': { color: '#0f766e', bg: '#f0fdfa', border: '#5eead4', icon: 'refresh', size: 'md' },
-  Unknown:          { color: '#94a3b8', bg: '#f8fafc', border: '#e2e8f0', icon: 'question', size: 'sm' },
-};
+const UNKNOWN_NODE_CONFIG: NodeTypeConfig = { ...UNKNOWN_ISSUE_TYPE };
+
+// Builds the node-type → visual-style lookup from the admin-configured issue
+// types (including any custom types). 'Unknown' is always present as a safe
+// fallback for a raw Jira type that matches no configured definition.
+export function buildNodeTypeConfig(issueTypes: IssueTypeDefinition[]): Record<string, NodeTypeConfig> {
+  const config: Record<string, NodeTypeConfig> = { Unknown: UNKNOWN_NODE_CONFIG };
+  for (const t of issueTypes) {
+    config[t.label] = { color: t.color, bg: t.bg, border: t.border, icon: t.icon, size: t.size };
+  }
+  return config;
+}
+
+// Default-config fallback for callers that haven't loaded the live config yet.
+export const NODE_TYPE_CONFIG: Record<string, NodeTypeConfig> = buildNodeTypeConfig(DEFAULT_ISSUE_TYPES);
 
 export const EDGE_TYPE_CONFIG: Record<RelationEdgeType, EdgeConfig> = {
   'parent-child':   { strokeColor: '#64748b', strokeWidth: 2,   animated: false },

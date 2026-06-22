@@ -1,7 +1,7 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -13,9 +13,11 @@ import ReactFlow, {
   MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import type { RelationGraph, RelationNode, RelationEdge } from '@/types/relations';
+import type { RelationGraph, RelationNode, RelationEdge, NodeTypeConfig } from '@/types/relations';
+import type { IssueTypeDefinition } from '@/types/issueTypeHierarchy';
+import { DEFAULT_ISSUE_TYPES } from '@/types/issueTypeHierarchy';
 import { SvgIcon } from '@/components/ui/SvgIcon';
-import { NODE_TYPE_CONFIG, EDGE_TYPE_CONFIG, ORPHAN_STYLE } from './nodeStyles';
+import { buildNodeTypeConfig, EDGE_TYPE_CONFIG, ORPHAN_STYLE } from './nodeStyles';
 import RelationLegend from './RelationLegend';
 
 // ── Dagre layout (async to avoid SSR) ────────────────────────────────────────
@@ -45,8 +47,8 @@ async function applyDagreLayout(
 
 // ── Custom node card ───────────────────────────────────────────────────────────
 
-function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number; onToggle?: (id: string) => void } }) {
-  const cfg      = NODE_TYPE_CONFIG[data.type] ?? NODE_TYPE_CONFIG['Unknown'];
+function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number; _cfg: NodeTypeConfig; onToggle?: (id: string) => void } }) {
+  const cfg      = data._cfg;
   const isOrphan = data.isOrphan;
   const isRiskPath    = data.isOnRiskPath && !data.isFocusNode;
   const isBranchRoot  = data.isLargestBranch && !data.isOnRiskPath && !data.isFocusNode && !data.isDone;
@@ -162,15 +164,20 @@ const nodeTypes = { issueNode: IssueNodeCard };
 
 // ── Conversion helpers ────────────────────────────────────────────────────────
 
-function toRFNode(node: RelationNode, onToggle: (id: string) => void, dimNonRisk = false): Node {
-  const cfg = NODE_TYPE_CONFIG[node.type] ?? NODE_TYPE_CONFIG['Unknown'];
+function toRFNode(
+  node: RelationNode,
+  onToggle: (id: string) => void,
+  nodeTypeConfig: Record<string, NodeTypeConfig>,
+  dimNonRisk = false,
+): Node {
+  const cfg = nodeTypeConfig[node.type] ?? nodeTypeConfig['Unknown'];
   const w   = cfg.size === 'lg' ? 240 : cfg.size === 'sm' ? 180 : 210;
   const h   = 110;
   const shouldDim = dimNonRisk && !node.isOnRiskPath && !node.isFocusNode;
   return {
     id:       node.id,
     type:     'issueNode',
-    data:     { ...node, _w: w, _h: h, onToggle },
+    data:     { ...node, _w: w, _h: h, _cfg: cfg, onToggle },
     position: { x: 0, y: 0 },
     style:    shouldDim ? { opacity: 0.2, filter: 'grayscale(1)' } : undefined,
   };
@@ -200,9 +207,11 @@ interface Props {
   focusNodeId?: string;
   onNodeFocus?: (key: string) => void;
   dimNonRiskPath?: boolean;  // when true, non-risk-path nodes appear faded
+  issueTypes?: IssueTypeDefinition[]; // admin-configured types; falls back to defaults
 }
 
-export default function WorkItemGraph({ graph, onNodeFocus, dimNonRiskPath = false }: Props) {
+export default function WorkItemGraph({ graph, onNodeFocus, dimNonRiskPath = false, issueTypes = DEFAULT_ISSUE_TYPES }: Props) {
+  const nodeTypeConfig = useMemo(() => buildNodeTypeConfig(issueTypes), [issueTypes]);
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState([]);
   const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState([]);
   const prevFocusKey = useRef('');
@@ -225,8 +234,8 @@ export default function WorkItemGraph({ graph, onNodeFocus, dimNonRiskPath = fal
     prevFocusKey.current = graph.focusKey;
 
     const nodes = [
-      ...graph.nodes.map(n  => toRFNode(n, handleToggle, dimNonRiskPath)),
-      ...graph.orphanNodes.map(n => toRFNode(n, handleToggle, dimNonRiskPath)),
+      ...graph.nodes.map(n  => toRFNode(n, handleToggle, nodeTypeConfig, dimNonRiskPath)),
+      ...graph.orphanNodes.map(n => toRFNode(n, handleToggle, nodeTypeConfig, dimNonRiskPath)),
     ];
     const edges = graph.edges.map(e => {
       const rf = toRFEdge(e);
@@ -240,7 +249,7 @@ export default function WorkItemGraph({ graph, onNodeFocus, dimNonRiskPath = fal
       setRfNodes(ln);
       setRfEdges(le);
     });
-  }, [graph, dimNonRiskPath, handleToggle, setRfNodes, setRfEdges]);
+  }, [graph, dimNonRiskPath, handleToggle, setRfNodes, setRfEdges, nodeTypeConfig]);
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     onNodeFocus?.(node.data.issueKey);
@@ -266,7 +275,7 @@ export default function WorkItemGraph({ graph, onNodeFocus, dimNonRiskPath = fal
         {!isMobile && (
           <MiniMap
             nodeColor={n => {
-              const cfg = NODE_TYPE_CONFIG[n.data?.type as keyof typeof NODE_TYPE_CONFIG];
+              const cfg = nodeTypeConfig[n.data?.type as string];
               return cfg?.color ?? '#94a3b8';
             }}
             maskColor="rgba(248,250,252,0.7)"

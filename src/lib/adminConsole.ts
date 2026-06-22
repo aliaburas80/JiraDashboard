@@ -5,9 +5,10 @@ import { ASSIGNABLE_ROLES, type AppRole } from '@/lib/roles';
 import type { RetentionSettings, RetentionStats } from '@/types/settings';
 import type { HealthThresholds } from '@/types/thresholds';
 import type { OrphanRules } from '@/types/orphanRules';
+import type { IssueTypeHierarchyConfig } from '@/types/issueTypeHierarchy';
 import type { AdminConsoleStat } from '@/components/admin/AdminConsoleLayout';
 
-export type Tab = 'users' | 'requests' | 'retention' | 'thresholds' | 'orphan' | 'backup' | 'cloud' | 'browser' | 'config' | 'jira';
+export type Tab = 'users' | 'requests' | 'retention' | 'thresholds' | 'orphan' | 'issueTypes' | 'backup' | 'cloud' | 'browser' | 'config' | 'jira';
 
 export const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; description: string }> = [
   { id: 'users',      label: 'User Management',     icon: 'people', description: 'Accounts, roles, access state' },
@@ -16,6 +17,7 @@ export const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; descripti
   { id: 'retention',  label: 'Privacy & Retention', icon: 'lock', description: 'Data windows and cleanup' },
   { id: 'thresholds', label: 'Health Thresholds',   icon: 'priorityHigh', description: 'Delivery health rules' },
   { id: 'orphan',     label: 'Orphan Rules',        icon: 'link', description: 'Hierarchy detection rules' },
+  { id: 'issueTypes', label: 'Issue Type Hierarchy', icon: 'workItems', description: 'Custom issue types and hierarchy levels for Explore' },
   { id: 'backup',     label: 'Backup & Restore',    icon: 'archive', description: 'Local backup bundles' },
   { id: 'cloud',      label: 'Cloud Storage',       icon: 'cloud', description: 'S3, Azure, GCP, restore' },
   { id: 'jira',       label: 'Jira Integration',    icon: 'link', description: 'Live Jira API connections (read-only, ARCH-05)' },
@@ -38,6 +40,7 @@ export function buildSettingsStats({
   stats,
   thresholds,
   orphanRules,
+  issueTypeHierarchy,
   backupFiles,
 }: {
   tab: Tab;
@@ -46,6 +49,7 @@ export function buildSettingsStats({
   stats: RetentionStats | null;
   thresholds: HealthThresholds | null;
   orphanRules: OrphanRules | null;
+  issueTypeHierarchy?: IssueTypeHierarchyConfig | null;
   backupFiles: any[];
 }): AdminConsoleStat[] {
   const latestBackup = backupFiles?.some(file => file.included) ? 'Available' : 'Not yet';
@@ -80,6 +84,17 @@ export function buildSettingsStats({
         { icon: 'subtasks', label: 'Sub-task Rule', value: orphanRules?.flagSubTasksWithoutParent ? 'On' : 'Off', note: 'Parent validation' },
         { icon: 'priorityHigh', label: 'Risk Threshold', value: `${orphanRules?.riskThresholdPct ?? '—'}%`, note: 'Warning threshold' },
       ];
+    case 'issueTypes': {
+      const types = issueTypeHierarchy?.types ?? [];
+      const levels = new Set(types.map(t => t.level)).size;
+      const custom = types.filter(t => !t.builtIn).length;
+      return [
+        { icon: 'workItems', label: 'Issue Types', value: String(types.length), note: 'Configured types', tone: 'bg-blue-50 text-blue-700' },
+        { icon: 'roadmap', label: 'Hierarchy Levels', value: String(levels), note: 'Root to deepest' },
+        { icon: 'customize', label: 'Custom Types', value: String(custom), note: 'Admin-added' },
+        { icon: 'link', label: 'Used By', value: 'Explore', note: 'Relation graph + hierarchy' },
+      ];
+    }
     case 'backup':
       return [
         { icon: 'archive', label: 'Backup Files', value: String(backupFiles?.length ?? 0), note: 'Local bundles', tone: 'bg-blue-50 text-blue-700' },

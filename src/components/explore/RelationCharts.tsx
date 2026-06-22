@@ -1,7 +1,9 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 'use client';
 import type { RelationNode } from '@/types/relations';
-import { NODE_TYPE_CONFIG } from './nodeStyles';
+import type { IssueTypeDefinition } from '@/types/issueTypeHierarchy';
+import { DEFAULT_ISSUE_TYPES } from '@/types/issueTypeHierarchy';
+import { buildNodeTypeConfig } from './nodeStyles';
 
 const PALETTE = ['#2563eb','#16a34a','#dc2626','#f59e0b','#7c3aed','#0891b2','#f97316','#14b8a6'];
 
@@ -79,9 +81,14 @@ function Legend({ segs, total }: { segs: { label: string; value: number; color: 
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-interface Props { nodes: RelationNode[]; orphanNodes: RelationNode[] }
+interface Props {
+  nodes: RelationNode[];
+  orphanNodes: RelationNode[];
+  issueTypes?: IssueTypeDefinition[]; // admin-configured types; falls back to defaults
+}
 
-export default function RelationCharts({ nodes, orphanNodes }: Props) {
+export default function RelationCharts({ nodes, orphanNodes, issueTypes = DEFAULT_ISSUE_TYPES }: Props) {
+  const nodeTypeConfig = buildNodeTypeConfig(issueTypes);
   const all   = [...nodes, ...orphanNodes];
   const total = Math.max(all.length, 1);
 
@@ -110,7 +117,7 @@ export default function RelationCharts({ nodes, orphanNodes }: Props) {
   const typeSegs = [...typeMap.entries()]
     .sort((a, b) => b[1] - a[1])
     .map(([label, value], i) => ({
-      label, value, color: NODE_TYPE_CONFIG[label as keyof typeof NODE_TYPE_CONFIG]?.color ?? PALETTE[i % PALETTE.length],
+      label, value, color: nodeTypeConfig[label]?.color ?? PALETTE[i % PALETTE.length],
     }));
 
   // 4. Assignee workload

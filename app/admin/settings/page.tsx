@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import DataRetentionSettings from '@/components/admin/DataRetentionSettings';
 import HealthThresholdSettings from '@/components/admin/HealthThresholdSettings';
 import OrphanRulesSettings from '@/components/admin/OrphanRulesSettings';
+import IssueTypeHierarchySettings from '@/components/admin/IssueTypeHierarchySettings';
 import BackupRestoreSettings from '@/components/admin/BackupRestoreSettings';
 import ClearLocalDataPanel from '@/components/admin/ClearLocalDataPanel';
 import UserAddRequestsPanel from '@/components/admin/UserAddRequestsPanel';
@@ -23,6 +24,7 @@ import {
 import type { RetentionSettings, RetentionStats } from '@/types/settings';
 import type { HealthThresholds } from '@/types/thresholds';
 import type { OrphanRules } from '@/types/orphanRules';
+import type { IssueTypeDefinition, IssueTypeHierarchyConfig } from '@/types/issueTypeHierarchy';
 import type { StorageProviderType } from '@/types/storage';
 import styles from './page.module.scss';
 
@@ -1250,7 +1252,7 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
   );
 }
 
-const VALID_TABS: Tab[] = ['users','requests','config','retention','thresholds','orphan','backup','cloud','jira','browser'];
+const VALID_TABS: Tab[] = ['users','requests','config','retention','thresholds','orphan','issueTypes','backup','cloud','jira','browser'];
 
 export default function AdminSettingsPage() {
   const router = useRouter();
@@ -1270,6 +1272,7 @@ export default function AdminSettingsPage() {
   const [stats, setStats]             = useState<RetentionStats | null>(null);
   const [thresholds, setThresholds]   = useState<HealthThresholds | null>(null);
   const [orphanRules, setOrphanRules]  = useState<OrphanRules | null>(null);
+  const [issueTypeHierarchy, setIssueTypeHierarchy] = useState<IssueTypeHierarchyConfig | null>(null);
   const [backupFiles, setBackupFiles]  = useState<any[]>([]);
   const [userSummary, setUserSummary]  = useState({ total: 0, active: 0, admins: 0 });
   const [loading, setLoading]         = useState(true);
@@ -1284,17 +1287,19 @@ export default function AdminSettingsPage() {
           fetch('/api/admin/settings').then(r => r.json()),
           fetch('/api/admin/thresholds').then(r => r.json()),
           fetch('/api/admin/orphan-rules').then(r => r.json()),
+          fetch('/api/admin/issue-type-hierarchy').then(r => r.json()),
           fetch('/api/admin/backup?info=true').then(r => r.json()),
           fetch('/api/admin/users').then(r => r.json()),
         ]);
       })
       .then(results => {
         if (!results) return;
-        const [retData, thrData, orphData, backData, userData] = results;
+        const [retData, thrData, orphData, issueTypeData, backData, userData] = results;
         if (retData?.settings)  setSettings(retData.settings);
         if (retData?.stats)     setStats(retData.stats);
         if (thrData?.thresholds) setThresholds(thrData.thresholds);
         if (orphData?.rules) setOrphanRules(orphData.rules);
+        if (issueTypeData?.config) setIssueTypeHierarchy(issueTypeData.config);
         if (backData?.files) setBackupFiles(backData.files);
         if (Array.isArray(userData?.users)) {
           setUserSummary({
@@ -1319,6 +1324,13 @@ export default function AdminSettingsPage() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
     if (data.rules) setOrphanRules(data.rules);
+  }
+
+  async function handleSaveIssueTypeHierarchy(types: IssueTypeDefinition[]) {
+    const res  = await fetch('/api/admin/issue-type-hierarchy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ types }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    if (data.config) setIssueTypeHierarchy(data.config);
   }
 
   async function handleSaveThresholds(updated: HealthThresholds) {
@@ -1353,7 +1365,7 @@ export default function AdminSettingsPage() {
   if (loading) return <div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading settings…</div>;
 
   const selectedTab = activeTabMeta(tab);
-  const statsCards = buildSettingsStats({ tab, userSummary, settings, stats, thresholds, orphanRules, backupFiles });
+  const statsCards = buildSettingsStats({ tab, userSummary, settings, stats, thresholds, orphanRules, issueTypeHierarchy, backupFiles });
   const settingsNavItems = ADMIN_TABS.map(item => ({
     id: item.id,
     label: item.label,
@@ -1389,6 +1401,9 @@ export default function AdminSettingsPage() {
           )}
           {tab === 'orphan' && orphanRules && (
             <OrphanRulesSettings rules={orphanRules} onSave={handleSaveOrphanRules} />
+          )}
+          {tab === 'issueTypes' && issueTypeHierarchy && (
+            <IssueTypeHierarchySettings config={issueTypeHierarchy} onSave={handleSaveIssueTypeHierarchy} />
           )}
           {tab === 'backup' && (
             <BackupRestoreSettings files={backupFiles} />

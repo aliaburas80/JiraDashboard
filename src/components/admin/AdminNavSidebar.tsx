@@ -13,6 +13,7 @@ const SETTINGS_SUB_ITEMS = [
   { id: 'retention',  label: 'Privacy & Retention', icon: 'lock', tab: 'retention' },
   { id: 'thresholds', label: 'Health Thresholds',   icon: 'priorityHigh', tab: 'thresholds' },
   { id: 'orphan',     label: 'Orphan Rules',        icon: 'link', tab: 'orphan' },
+  { id: 'issueTypes', label: 'Issue Type Hierarchy', icon: 'workItems', tab: 'issueTypes' },
   { id: 'backup',     label: 'Backup & Restore',    icon: 'archive', tab: 'backup' },
   { id: 'cloud',      label: 'Cloud Storage',       icon: 'cloud', tab: 'cloud' },
   { id: 'jira',       label: 'Jira Integration',    icon: 'link', tab: 'jira' },

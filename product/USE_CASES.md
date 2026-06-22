@@ -3295,3 +3295,32 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 **Postcondition:** Either the dashboard now reflects fresh Jira data with a visible, accurate source badge, or — on any failure — the dashboard is provably unchanged from its last good state
 **Related FR:** FR-342, FR-343, FR-313 (Backend Integration Gateway)
 **Related:** TC-JIRA-29–50, TC-CS-13/14/15
+
+---
+
+### UC-112 — Admin Configures Custom Issue Types and Hierarchy Levels
+
+*(Added 2026-06-22 to close `ISSUETYPE-01` from TODO-List.md Section 19a, requested directly by the user after `JIRA-11`/`JIRA-12` exposed that the issue-type hierarchy was hardcoded. In progress on `feature/arch-05-jira-integration`, unmerged.)*
+
+- **ID:** UC-112
+- **Title:** Admin Adds a Custom Issue Type and Reorders the Hierarchy
+- **Actor:** Admin
+- **Precondition:** Admin is logged in and has navigated to Admin Settings → Issue Type Hierarchy
+- **Trigger:** Admin clicks "+ Add custom type", or edits an existing type's match names, icon, color, or level
+
+**Main Flow:**
+1. The page loads the current configuration via `GET /api/admin/issue-type-hierarchy` and lists every type grouped and ordered by hierarchy level, each showing its display label, the raw Jira "Issue Type" name(s) it matches, an icon, a color, and up/down level-reorder controls
+2. Admin clicks "+ Add custom type" — a new editable row appears with an auto-generated unique id
+3. Admin sets the display label, the raw Jira type name(s) to match (comma-separated), an icon, a color preset, and uses the level arrows to place it correctly in the hierarchy relative to existing types
+4. Admin clicks "Save changes" → `POST /api/admin/issue-type-hierarchy` validates the full type list and persists it
+5. The Explore page (and any other consumer) picks up the new configuration on its next load — issues of the new type now display with the configured label/icon/color, and parent-inference/orphan-detection for that type now follows its configured hierarchy level
+
+**Alternate Flow — Validation failure:**
+4a. Two types share a raw match name, a level is missing/negative, or the type list is empty → HTTP 400 with a specific error message shown inline; nothing is saved
+
+**Alternate Flow — Attempted deletion of a built-in type:**
+4b. Admin removes a built-in type's row entirely (rather than just re-mapping its fields) → HTTP 400; built-in types can be re-mapped (label, match names, icon, color, level) but not deleted
+
+**Postcondition:** The issue type registry reflects the admin's changes; all consumers (Explore graph, details table, charts, hierarchy reconstruction) use the updated configuration without a code change or redeploy
+**Related FR:** FR-344
+**Related:** TC-IT-01–17

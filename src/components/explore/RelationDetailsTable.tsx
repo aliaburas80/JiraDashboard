@@ -3,12 +3,15 @@
 import { useState, useMemo } from 'react';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { RelationNode } from '@/types/relations';
-import { NODE_TYPE_CONFIG } from './nodeStyles';
+import type { IssueTypeDefinition } from '@/types/issueTypeHierarchy';
+import { DEFAULT_ISSUE_TYPES } from '@/types/issueTypeHierarchy';
+import { buildNodeTypeConfig } from './nodeStyles';
 
 interface Props {
   nodes: RelationNode[];
   orphanNodes: RelationNode[];
   onFocusNode?: (key: string) => void;
+  issueTypes?: IssueTypeDefinition[]; // admin-configured types; falls back to defaults
 }
 
 function HealthBadge({ health }: { health: RelationNode['health'] }) {
@@ -26,11 +29,12 @@ function HealthBadge({ health }: { health: RelationNode['health'] }) {
   );
 }
 
-export default function RelationDetailsTable({ nodes, orphanNodes, onFocusNode }: Props) {
+export default function RelationDetailsTable({ nodes, orphanNodes, onFocusNode, issueTypes = DEFAULT_ISSUE_TYPES }: Props) {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [healthFilter, setHealthFilter] = useState('all');
 
+  const nodeTypeConfig = useMemo(() => buildNodeTypeConfig(issueTypes), [issueTypes]);
   const allNodes = useMemo(() => [...nodes, ...orphanNodes], [nodes, orphanNodes]);
 
   const types = useMemo(() =>
@@ -74,7 +78,7 @@ export default function RelationDetailsTable({ nodes, orphanNodes, onFocusNode }
       {/* Mobile card list */}
       <div className="md:hidden divide-y divide-slate-100">
         {filtered.map(node => {
-          const cfg = NODE_TYPE_CONFIG[node.type] ?? NODE_TYPE_CONFIG['Unknown'];
+          const cfg = nodeTypeConfig[node.type] ?? nodeTypeConfig['Unknown'];
           return (
             <div key={node.id}
               className={`p-4 cursor-pointer active:bg-slate-50 ${node.isFocusNode ? 'bg-blue-50' : ''}`}
@@ -129,7 +133,7 @@ export default function RelationDetailsTable({ nodes, orphanNodes, onFocusNode }
           </thead>
           <tbody>
             {filtered.map(node => {
-              const cfg = NODE_TYPE_CONFIG[node.type] ?? NODE_TYPE_CONFIG['Unknown'];
+              const cfg = nodeTypeConfig[node.type] ?? nodeTypeConfig['Unknown'];
               return (
                 <tr key={node.id}
                   className={`border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer ${node.isFocusNode ? 'bg-blue-50' : ''}`}

@@ -5,30 +5,29 @@
 // ready to render as an interactive visual map.
 
 import type { RelationGraph, RelationNode, RelationEdge, IssueNodeType, NodeHealthStatus, RelationStats } from '@/types/relations';
+import type { IssueTypeDefinition } from '@/types/issueTypeHierarchy';
+import { DEFAULT_ISSUE_TYPES } from '@/types/issueTypeHierarchy';
 import { reconstructHierarchy, getAncestorChain } from './hierarchy.service';
 import { detectOrphans } from './orphanRelation.service';
 
 type JiraIssue = Record<string, unknown>;
 
 // ── Issue type normalisation ──────────────────────────────────────────────────
+// Resolves a raw Jira "Issue Type" name to its configured display label (or
+// 'Unknown' if unrecognized). The configured types — including any custom
+// types an admin has added — are the single source of truth; see
+// src/types/issueTypeHierarchy.ts and the "Issue Type Hierarchy" admin screen.
 
-const TYPE_MAP: Record<string, IssueNodeType> = {
-  epic: 'Epic', story: 'Story', 'user story': 'Story',
-  task: 'Task', improvement: 'Task', feature: 'Story',
-  'sub-task': 'Sub-task', subtask: 'Sub-task',
-  bug: 'Bug', defect: 'Bug', error: 'Bug',
-  spike: 'Spike', 'technical debt': 'Technical Debt',
-  risk: 'Risk', 'change request': 'Change Request',
-  // Hierarchy levels above Epic under Advanced Roadmaps — admin-configurable
-  // per Jira instance, so these are common names rather than an exhaustive list.
-  // 'Product'/'Project' get their own distinct type; anything else above Epic
-  // (initiative/theme/portfolio) falls back to the generic 'Initiative' type.
-  product: 'Product', project: 'Project',
-  initiative: 'Initiative', theme: 'Initiative', portfolio: 'Initiative',
-};
+function buildTypeLookup(issueTypes: IssueTypeDefinition[]): Map<string, string> {
+  const lookup = new Map<string, string>();
+  for (const t of issueTypes) {
+    for (const name of t.matchNames) lookup.set(name.trim().toLowerCase(), t.label);
+  }
+  return lookup;
+}
 
-function resolveType(raw: unknown): IssueNodeType {
-  return TYPE_MAP[String(raw ?? '').trim().toLowerCase()] ?? 'Unknown';
+function resolveType(raw: unknown, issueTypes: IssueTypeDefinition[]): IssueNodeType {
+  return buildTypeLookup(issueTypes).get(String(raw ?? '').trim().toLowerCase()) ?? 'Unknown';
 }
 
 function norm(v: unknown): string { return String(v ?? '').trim().toLowerCase(); }
@@ -77,6 +76,7 @@ function buildNode(
   isFocus: boolean,
   isOrphan: boolean,
   childCount: number,
+  issueTypes: IssueTypeDefinition[],
 ): RelationNode {
   const key     = getIssueKey(issue);
   const typeRaw = f(issue, 'Issue Type', 'type');
@@ -84,7 +84,7 @@ function buildNode(
     id:             key,
     issueKey:       key,
     summary:        f(issue, 'Summary',     'summary'),
-    type:           resolveType(typeRaw),
+    type:           resolveType(typeRaw, issueTypes),
     status:         f(issue, 'Status',      'status',   'Unknown'),
     assignee:       f(issue, 'Assignee',    'assignee', 'Unassigned'),
     priority:       f(issue, 'Priority',    'priority'),
@@ -300,16 +300,20 @@ function generateInsights(nodes: RelationNode[], stats: RelationStats, focusKey:
 
 // ── Main graph builder ────────────────────────────────────────────────────────
 
-export function buildRelationGraph(focusKey: string, allIssues: JiraIssue[]): RelationGraph | null {
+export function buildRelationGraph(
+  focusKey: string,
+  allIssues: JiraIssue[],
+  issueTypes: IssueTypeDefinition[] = DEFAULT_ISSUE_TYPES,
+): RelationGraph | null {
   edgeCounter = 0;
 
   const focusIssue = allIssues.find(i => getIssueKey(i) === focusKey);
   if (!focusIssue) return null;
 
-  const hierarchy = reconstructHierarchy(allIssues);
+  const hierarchy = reconstructHierarchy(allIssues, issueTypes);
   const issueMap  = new Map(allIssues.map(i => [getIssueKey(i), i]));
 
-  const focusType = resolveType(f(focusIssue, 'Issue Type', 'type'));
+  const focusType = resolveType(f(focusIssue, 'Issue Type', 'type'), issueTypes);
 
   // Graph scope: focus node + its full ancestor chain (parent, grandparent, ... up to
   // the root) + its direct children. No siblings, no unrelated orphans — but the full
@@ -340,7 +344,7 @@ export function buildRelationGraph(focusKey: string, allIssues: JiraIssue[]): Re
     const isOrphan   = hierarchy.orphanKeys.has(key) && key !== focusKey;
     const childCount = (hierarchy.children.get(key) ?? []).length;
     const depth      = depthMap.get(key) ?? 0;
-    nodes.push(buildNode(issue, depth, key === focusKey, isOrphan, childCount));
+    nodes.push(buildNode(issue, depth, key === focusKey, isOrphan, childCount, issueTypes));
   }
 
   // Build edges from hierarchy links

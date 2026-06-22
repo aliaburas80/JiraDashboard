@@ -1,8 +1,10 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 
-export type IssueNodeType = 
-  | 'Initiative' |'Product'| 'Project' | 'Epic' | 'Story' | 'Task' | 'Sub-task' | 'Bug'
-  | 'Spike' | 'Technical Debt' | 'Risk' | 'Change Request' | 'Unknown';
+// Issue type labels are admin-configurable (custom types allowed — see
+// src/types/issueTypeHierarchy.ts and the "Issue Type Hierarchy" admin
+// screen), so this can no longer be a closed union. 'Unknown' is the only
+// guaranteed value, used when a raw Jira type matches no configured definition.
+export type IssueNodeType = string;
 
 export type RelationEdgeType =
   | 'parent-child'
