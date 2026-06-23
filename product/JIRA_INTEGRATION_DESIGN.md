@@ -1,6 +1,6 @@
 # ARCH-05 — Jira API Read-Only Integration: Design Document
 
-**Status:** Design only — not approved for implementation. No code in this repo implements any part of this document.
+**Status:** Phase 1 implemented (2026-06-20–2026-06-23, see `TODO-List.md` Section 19a, `JIRA-01`–`JIRA-14` + `ISSUETYPE-01`) on `feature/arch-05-jira-integration`, held unmerged until the full feature ships. Phase 2 (§5 tier 2 — scheduled polling) not started; Phase 2's fallback/source-badge half (§8) is already implemented as part of Phase 1. Phase 3 not started.
 **Owner:** Ali Abu Ras
 **Created:** 2026-06-20
 **Closes:** `ARCH-05` in `TODO-List.md` Section 19 (P2 — Architecture / Planning Track)
