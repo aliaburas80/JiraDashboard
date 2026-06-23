@@ -6,6 +6,9 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
+import { readLatestMetrics } from '@/services/metrics/latestMetricsStorage';
+import { readStorageSettings, listCloudBackups } from '@/services/storage/storageProvider';
+import { getCacheMeta } from '@/services/storage/cloudSync';
 
 export async function GET() {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -74,6 +77,51 @@ export async function GET() {
   if (activeSessions === 0 && totalUsers > 0) opsScore -= 5;
   opsScore = Math.max(0, opsScore);
 
+  // ── Latest metrics + cloud copy freshness (STORAGE-DEC-10) ─────────────────
+  const latest = readLatestMetrics();
+  const latestAgeMinutes = latest?.savedAt
+    ? Math.round((now.getTime() - new Date(latest.savedAt).getTime()) / 60_000)
+    : null;
+
+  const storageSettings = readStorageSettings();
+  let cloudBackupCount = 0;
+  let latestCloudBackupAt: string | null = null;
+  let latestCloudBackupKey: string | null = null;
+  let cloudListError: string | null = null;
+
+  if (storageSettings.active !== 'local') {
+    try {
+      const backups = await listCloudBackups();
+      cloudBackupCount = backups.length;
+      if (backups.length > 0) {
+        const sorted = [...backups].sort((a, b) =>
+          (b.lastModified ?? '').localeCompare(a.lastModified ?? ''));
+        latestCloudBackupAt  = sorted[0].lastModified ?? null;
+        latestCloudBackupKey = sorted[0].key ?? null;
+      }
+    } catch (e: unknown) {
+      cloudListError = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  const cacheMeta = getCacheMeta();
+
+  const metricsSync = {
+    available:    !!latest,
+    savedAt:       latest?.savedAt ?? null,
+    ageMinutes:    latestAgeMinutes,
+    source:        latest?.origin?.source ?? null,
+    connectionName: latest?.origin?.connectionName ?? null,
+    cloudProvider: storageSettings.active,
+    cloudBackupCount,
+    latestCloudBackupAt,
+    latestCloudBackupKey,
+    cloudListError,
+    lastFetchedAt: cacheMeta?.fetchedAt ?? null,
+    lastPushedAt:  cacheMeta?.pushedAt ?? null,
+    pendingPush:   cacheMeta?.pendingPush ?? false,
+  };
+
   return NextResponse.json({
     generatedAt: now.toISOString(),
     opsScore,
@@ -103,6 +151,7 @@ export async function GET() {
     snapshots: {
       total: totalSnapshots,
     },
+    metricsSync,
     auditEvents: {
       total:  totalAuditEvents,
       recent: recentEvents.map(e => ({

@@ -28,15 +28,16 @@ interface DataSourceCtx {
   key:            string;
   connectionName: string;
   lastSyncAt:     string;
+  fallbackReason: string;
   loading:        boolean;
-  setSource: (s: DataSource, provider?: string, key?: string, connectionName?: string, lastSyncAt?: string) => void;
+  setSource: (s: DataSource, provider?: string, key?: string, connectionName?: string, lastSyncAt?: string, fallbackReason?: string) => void;
   setLoading:(loading: boolean, provider?: string) => void;
 }
 
 // ── Context ───────────────────────────────────────────────────────────────────
 
 const Ctx = createContext<DataSourceCtx>({
-  source: 'unknown', provider: '', key: '', connectionName: '', lastSyncAt: '', loading: false,
+  source: 'unknown', provider: '', key: '', connectionName: '', lastSyncAt: '', fallbackReason: '', loading: false,
   setSource:  () => {},
   setLoading: () => {},
 });
@@ -47,14 +48,16 @@ export function DataSourceProvider({ children }: { children: ReactNode }) {
   const [key,            setKey]             = useState('');
   const [connectionName, setConnectionName]  = useState('');
   const [lastSyncAt,     setLastSyncAt]      = useState('');
+  const [fallbackReason, setFallbackReason]  = useState('');
   const [loading,        setLoadingState]    = useState(false);
 
-  function setSource(s: DataSource, prov?: string, k?: string, connName?: string, syncedAt?: string) {
+  function setSource(s: DataSource, prov?: string, k?: string, connName?: string, syncedAt?: string, reason?: string) {
     setSourceState(s);
     if (prov     !== undefined) setProvider(prov);
     if (k        !== undefined) setKey(k);
     if (connName !== undefined) setConnectionName(connName);
     if (syncedAt !== undefined) setLastSyncAt(syncedAt);
+    if (reason   !== undefined) setFallbackReason(reason);
   }
 
   function setLoading(l: boolean, prov?: string) {
@@ -79,22 +82,22 @@ export function DataSourceProvider({ children }: { children: ReactNode }) {
           : info.provider === 'azure' ? 'cloud-azure'
           : info.provider === 'gcp' ? 'cloud-gcp'
           : 'cache';
-        setSource(cloudSource, info.provider, info.key);
+        setSource(cloudSource, info.provider, info.key, undefined, info.savedAt);
         return;
       }
 
       if (info.source === 'localstorage') {
-        setSource('localstorage', info.provider, info.key);
+        setSource('localstorage', info.provider, info.key, undefined, info.savedAt, info.error || info.message);
       } else if (info.source === 'server-local') {
-        setSource('local', info.provider, info.key);
+        setSource('local', info.provider, info.key, undefined, info.savedAt);
       } else if (info.source === 'snapshot') {
-        setSource('cache', info.provider, info.key);
+        setSource('cache', info.provider, info.key, undefined, info.savedAt);
       } else if (info.source === 'cache') {
-        setSource('cache', info.provider, info.key);
+        setSource('cache', info.provider, info.key, undefined, info.savedAt);
       } else if (info.source === 'upload') {
-        setSource('upload', info.provider, info.key);
+        setSource('upload', info.provider, info.key, undefined, info.savedAt);
       } else if (info.source === 'none') {
-        setSource('fallback', info.provider, info.key);
+        setSource('fallback', info.provider, info.key, undefined, info.savedAt, info.error || info.message);
       }
     }
 
@@ -108,7 +111,7 @@ export function DataSourceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <Ctx.Provider value={{ source, provider, key, connectionName, lastSyncAt, loading, setSource, setLoading }}>
+    <Ctx.Provider value={{ source, provider, key, connectionName, lastSyncAt, fallbackReason, loading, setSource, setLoading }}>
       {children}
     </Ctx.Provider>
   );
@@ -161,7 +164,7 @@ const SOURCE_SHORT_LABEL: Record<DataSource, string> = {
 };
 
 export function DataSourceBadge({ className = '', compact = false }: { className?: string; compact?: boolean }) {
-  const { source, provider, key, connectionName, lastSyncAt, loading } = useDataSource();
+  const { source, provider, key, connectionName, lastSyncAt, fallbackReason, loading } = useDataSource();
   if (source === 'unknown') return null;
 
   const cfg = SOURCE_CONFIG[source] ?? SOURCE_CONFIG.unknown;
@@ -177,9 +180,12 @@ export function DataSourceBadge({ className = '', compact = false }: { className
     ? (compact ? jiraCompactLabel : jiraLabel)
     : (compact ? SOURCE_SHORT_LABEL[source] : `Data: ${providerLabel}`);
 
+  const fetchedSuffix = lastSyncAt ? ` · Last fetched ${syncedAgo}` : '';
+  const reasonSuffix  = (source === 'localstorage' || source === 'fallback') && fallbackReason ? ` · ${fallbackReason}` : '';
+
   const titleText = source === 'jira-api'
     ? jiraLabel
-    : (key ? `Data source: ${providerLabel} · Key: ${key}` : `Data source: ${providerLabel}`);
+    : `Data source: ${providerLabel}${key ? ` · Key: ${key}` : ''}${fetchedSuffix}${reasonSuffix}`;
 
   return (
     <div

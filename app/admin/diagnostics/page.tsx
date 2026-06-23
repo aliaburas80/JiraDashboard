@@ -16,6 +16,14 @@ interface DiagnosticsData {
   sessions:      { total: number; active: number };
   imports:       { total: number; successful: number; failed: number; successRate: number; avgHealthScore: number; avgProcessingMs: number; lastAt: string | null; lastFileName: string | null; lastHealthScore: number | null; lastStatus: string | null };
   snapshots:     { total: number };
+  metricsSync:   {
+    available: boolean; savedAt: string | null; ageMinutes: number | null;
+    source: 'file' | 'jira-api' | null; connectionName: string | null;
+    cloudProvider: 'local' | 's3' | 'azure' | 'gcp';
+    cloudBackupCount: number; latestCloudBackupAt: string | null;
+    latestCloudBackupKey: string | null; cloudListError: string | null;
+    lastFetchedAt: string | null; lastPushedAt: string | null; pendingPush: boolean;
+  };
   auditEvents:   { total: number; recent: { id: string; type: string; description: string; at: string; ip: string | null }[] };
   env:           { sessionSecretSet: boolean; nodeEnvProduction: boolean; dbUrlSet: boolean; registrationLocked: boolean; publicUrlSet: boolean };
   system:        { nodeVersion: string; platform: string; uptimeSeconds: number };
@@ -236,6 +244,47 @@ export default function DiagnosticsPage() {
             )}
           </div>
 
+        </div>
+
+        {/* Latest metrics + cloud sync health (STORAGE-DEC-10) */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-6">
+          <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Latest Metrics &amp; Cloud Sync</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <KpiCard
+              label="Live Dashboard Data"
+              value={data.metricsSync.available ? 'Available' : 'Missing'}
+              sub={data.metricsSync.available
+                ? `${data.metricsSync.source === 'jira-api' ? `Jira (${data.metricsSync.connectionName ?? 'connection'})` : data.metricsSync.source === 'file' ? 'File upload' : 'Unknown source'} · ${ago(data.metricsSync.savedAt)}`
+                : 'No latest-metrics snapshot on the server yet'}
+              tone={data.metricsSync.available ? (data.metricsSync.ageMinutes !== null && data.metricsSync.ageMinutes > 1440 ? 'amber' : 'green') : 'red'}
+            />
+            <KpiCard
+              label="Cloud Copy Freshness"
+              value={data.metricsSync.cloudProvider === 'local' ? 'Local only' : data.metricsSync.cloudListError ? 'Error' : `${data.metricsSync.cloudBackupCount} backup${data.metricsSync.cloudBackupCount !== 1 ? 's' : ''}`}
+              sub={data.metricsSync.cloudProvider === 'local'
+                ? 'No cloud provider configured'
+                : data.metricsSync.cloudListError
+                ? data.metricsSync.cloudListError
+                : data.metricsSync.latestCloudBackupAt
+                ? `Newest: ${ago(data.metricsSync.latestCloudBackupAt)}`
+                : 'No backups uploaded yet'}
+              tone={data.metricsSync.cloudProvider === 'local' ? 'slate' : data.metricsSync.cloudListError ? 'red' : data.metricsSync.cloudBackupCount > 0 ? 'green' : 'amber'}
+            />
+          </div>
+          {data.metricsSync.latestCloudBackupKey && (
+            <p className="mt-3 text-[10px] text-slate-400 font-mono truncate" title={data.metricsSync.latestCloudBackupKey}>
+              Latest key: {data.metricsSync.latestCloudBackupKey}
+            </p>
+          )}
+          {data.metricsSync.cloudProvider !== 'local' && (
+            <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-500 font-semibold">
+              <span>Last fetched from cloud: <span className="text-slate-700 font-bold">{ago(data.metricsSync.lastFetchedAt)}</span></span>
+              <span>Last pushed to cloud: <span className="text-slate-700 font-bold">{ago(data.metricsSync.lastPushedAt)}</span></span>
+              {data.metricsSync.pendingPush && (
+                <span className="text-amber-600 font-bold">Pending push not yet uploaded</span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

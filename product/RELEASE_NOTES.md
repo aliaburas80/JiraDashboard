@@ -5,6 +5,18 @@
 
 ---
 
+## v4.9.3 — Storage Gates Closed: Cloud Sync Visibility & Diagnostics (2026-06-23, P0 — in progress, unmerged)
+
+**Scope:** `NEXT-04`/`STORAGE-DEC-01–11`, the last open P0 item: verify the true status of the cloud storage feature and close the three real gaps found.
+
+- Audited the existing storage implementation directly against the code (not assumed from prior notes): confirmed 4 real providers (Local, S3/S3-compatible, Azure Blob, GCP) behind a typed `StorageProvider` interface, with credentials never exposed to the browser.
+- New **"Latest Metrics & Cloud Sync"** section on the admin Diagnostics page: shows whether the live dashboard snapshot is available and how old it is, how many cloud backups exist and how fresh the newest one is, and when data was last fetched from / pushed to the cloud provider.
+- The Data Source badge (shown across `/dashboard/*`) now also surfaces **last-fetched time** and a **fallback reason** when serving from `localStorage` or no source at all — previously only the provider/key were shown.
+- The Cloud Storage admin panel (Admin Settings → Cloud Storage) no longer briefly flashes the "Local" provider as selected while the real saved settings are still loading — it now waits for the real settings before rendering anything interactive.
+- 2 new tests; full suite 669/70 passing.
+
+---
+
 ## v4.9.2 — Bug Fix: Relation Graph Connecting Edges Never Rendered (2026-06-23, P2 — in progress, unmerged)
 
 **Scope:** `JIRA-13`, a defect flagged (but explicitly not fixed) during `JIRA-12`'s live verification: the Explore Delivery Structure graph's connecting lines never rendered, even when the underlying node/edge data was correct.

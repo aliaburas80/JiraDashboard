@@ -437,6 +437,8 @@ Runs `runSecurityChecks()` — 8 automated checks (SESSION_SECRET, HTTPS, DB per
 
 Admin-only live health dashboard. Fetches `GET /api/admin/diagnostics` — aggregates DB row counts, import success rates, env var presence, system info, recent audit events, and computes an Ops Health Score (0–100). Refresh button for live re-fetch; quick links to all other admin pages.
 
+Also includes a **"Latest Metrics & Cloud Sync"** section (`STORAGE-DEC-10`, added 2026-06-23): whether a live-dashboard snapshot exists on the server and its age (`readLatestMetrics()`), and cloud backup freshness — backup count, newest backup timestamp/key, plus last-fetched/last-pushed/pending-push state (`readStorageSettings()` + `listCloudBackups()` + `getCacheMeta()` from `src/services/storage/`). Surfaces the same underlying data the `DataSourceBadge` reads from, but from an admin/ops angle rather than a per-page glance.
+
 ### `app/admin/settings/page.tsx` — Admin Settings (`/admin/settings`)
 
 Admin-only settings console. Tabs include Users, Privacy & Retention, Health Thresholds, Orphan Rules, Backup & Restore, Cloud Storage, and Browser Data.

@@ -587,6 +587,17 @@ function CloudStorageSettings() {
   const providers = data?.providers ?? {};
   const TABS: StorageProviderType[] = ['local', 's3', 'azure', 'gcp'];
 
+  // STORAGE-DEC-11: block provider cards/forms/actions until settings have
+  // loaded — otherwise the form briefly renders with the 'local' default
+  // before the real saved provider arrives.
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center h-40 text-slate-400 animate-pulse text-sm">
+        Loading storage settings…
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Step header + DB health + Change provider */}

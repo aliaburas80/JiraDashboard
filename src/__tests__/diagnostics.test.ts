@@ -1,5 +1,5 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
-// System diagnostics tests — TC-SD-01 to TC-SD-08
+// System diagnostics tests — TC-SD-01 to TC-SD-10
 
 // Tests cover the ops score computation and helper functions used by diagnostics.
 
@@ -105,4 +105,34 @@ test('TC-SD-08: uptime helper formats seconds correctly', () => {
   expect(uptime(90)).toBe('1m');
   expect(uptime(3661)).toBe('1h 1m');
   expect(uptime(90000)).toBe('1d 1h');
+});
+
+// ── STORAGE-DEC-10: Latest metrics + cloud copy freshness (mirrors route.ts) ──
+
+function computeAgeMinutes(savedAt: string | null, now: number): number | null {
+  if (!savedAt) return null;
+  return Math.round((now - new Date(savedAt).getTime()) / 60_000);
+}
+
+function pickLatestBackup<T extends { lastModified?: string; key: string }>(backups: T[]): T | null {
+  if (backups.length === 0) return null;
+  const sorted = [...backups].sort((a, b) => (b.lastModified ?? '').localeCompare(a.lastModified ?? ''));
+  return sorted[0];
+}
+
+test('TC-SD-09: latest-metrics age is null when no snapshot exists, else minutes since savedAt', () => {
+  const now = new Date('2026-06-23T12:00:00.000Z').getTime();
+  expect(computeAgeMinutes(null, now)).toBeNull();
+  expect(computeAgeMinutes('2026-06-23T11:30:00.000Z', now)).toBe(30);
+  expect(computeAgeMinutes('2026-06-22T12:00:00.000Z', now)).toBe(1440); // 1 day
+});
+
+test('TC-SD-10: cloud backup freshness picks the newest by lastModified, not list order', () => {
+  const backups = [
+    { key: 'backup-old.json',   lastModified: '2026-06-20T00:00:00.000Z' },
+    { key: 'backup-newest.json', lastModified: '2026-06-23T00:00:00.000Z' },
+    { key: 'backup-mid.json',   lastModified: '2026-06-21T00:00:00.000Z' },
+  ];
+  expect(pickLatestBackup(backups)?.key).toBe('backup-newest.json');
+  expect(pickLatestBackup([])).toBeNull();
 });
