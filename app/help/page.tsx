@@ -117,6 +117,14 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    id: 'coaching', icon: 'lightbulb', title: 'Coaching Insights',
+    items: [
+      { q: 'What is Role-Based Coaching?', a: 'The Coaching Insights page (/dashboard/coaching) turns the metrics already computed for your dashboard into role-specific advice — for Scrum Masters, Product Owners, Managers, C-level, and Admins. Every recommendation cites a real number from your data (e.g. "5 items are explicitly blocked"); the page never shows generic Agile advice with no evidence behind it.' },
+      { q: "Why don't I see all 7 coaching categories?", a: 'Coaching content is grouped into 7 categories, but most roles only see the one that matches them: Scrum Master, Product Owner, and C-level each see exactly one. The Manager role sees three related categories as tabs (Engineering Manager, Delivery Manager, Team Lead). Admins see all 7 as tabs, since they need full visibility.' },
+      { q: 'What does "Confidence: Not available" mean?', a: "Each coaching category shows a confidence score based on how complete your uploaded data is for the metrics behind that category's advice. When there isn't enough data yet (for example, right after your first upload), the page shows \"Not available\" instead of a misleading number — it never invents a percentage." },
+    ],
+  },
+  {
     id: 'readiness', icon: 'flag', title: 'Readiness',
     items: [
       { q: 'At-risk epics', a: 'The Readiness page scores each epic on a 0–100 readiness scale based on: percentage of child issues completed (40%), absence of critical-health child issues (30%), absence of open blockers (20%), and presence of a due date (10%). Epics scoring below 50 are flagged as At Risk.' },

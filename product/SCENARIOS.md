@@ -1408,3 +1408,36 @@ Alex's flow (New User — First Login):
 **Outcome:** David has the template in under 10 seconds with no server round-trip; the CSV is ready to share immediately.
 
 **Related:** UC-104, FR-333
+
+---
+
+### SCN-057 — Scrum Master Sees Evidence-Cited Blocker Coaching
+
+**Context:** Priya (Scrum Master) suspects the team's flow has degraded but wants concrete evidence before raising it, not a vague feeling.
+
+**Flow:**
+1. Priya logs in and clicks "Coaching Insights" in the dashboard sidebar
+2. `/dashboard/coaching` resolves her role as `scrum_master`, so exactly one category renders — no tabs
+3. The card's Evidence panel cites real numbers: "5 item(s) are explicitly blocked, e.g. AJ-12 blocked by AJ-9" and "Average flow efficiency is 32% — most lead time is spent waiting, not in active work"
+4. The Ceremony Advice section recommends a blocker-focused daily standup, citing the same 5 blocked items
+5. The confidence chip shows "High (88%)" — Priya trusts the recommendation because the underlying data is complete
+
+**Outcome:** Priya has concrete, citable evidence to raise at the next standup instead of an unsupported impression.
+
+**Related:** UC-114, FR-346, FR-347, FR-349
+
+---
+
+### SCN-058 — Coaching Confidence Falls Back Safely on Thin Data
+
+**Context:** A newly onboarded team has only just started uploading Jira data; most optional fields (Sprint dates, Story Points) are still empty.
+
+**Flow:**
+1. A team member opens `/dashboard/coaching`
+2. Data Quality is `Critical` and most `MetricConfidenceMap` entries have `sampleSize: 0`
+3. `aggregateCategoryConfidence()` finds no relevant metric with a non-zero sample size for the visible category
+4. The confidence chip shows "Not available" instead of a fabricated percentage, with the reason: "not enough underlying data has been uploaded yet for this category"
+
+**Outcome:** The user is told honestly that the system cannot yet vouch for this category's recommendations, rather than being shown a misleadingly precise number.
+
+**Related:** UC-114, FR-350, TC-RBC-09

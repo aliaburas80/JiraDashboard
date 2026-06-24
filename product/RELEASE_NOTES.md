@@ -5,6 +5,20 @@
 
 ---
 
+## v4.10.0 — Role-Based Delivery Coaching Insights (2026-06-23, P1 — in progress, unmerged)
+
+**Scope:** `RBC-01`–`RBC-20` — turns the metrics already computed for every dashboard into role-specific, evidence-cited coaching advice. No new metric calculations were introduced; this is a pure interpretation layer.
+
+- New **"Coaching Insights"** dashboard page (`/dashboard/coaching`), visible to every role, surfacing 7 content categories: Scrum Master, Product Owner, Engineering Manager, Delivery Manager, Team Lead, C-level, and Admin. Each category's content is generated from the same `DashboardMetrics` already powering the rest of the dashboard — blocked items, aging WIP, flow efficiency, sprint goal outcomes, scope change, carryover, orphan ratio, release/timeline risk, overall delivery confidence, and Data Quality.
+- **Role mapping decision:** the app's 6 real `AppRole` values don't map 1:1 onto the 7 coaching personas, since `manager` already has a single dashboard view. Resolved by bundling Engineering Manager, Delivery Manager, and Team Lead as switchable tabs under the `manager` role (EM shown first); Admin sees all 7 categories as tabs; Scrum Master/Product Owner/C-level each see exactly one category; the generic `user` role defaults to Team Lead.
+- **No generic advice, ever:** every recommendation cites a real number from the currently loaded data (e.g. "5 item(s) are explicitly blocked, e.g. AJ-12 blocked by AJ-9") — when a signal doesn't exist in the data, that line is simply omitted rather than shown as a placeholder.
+- **Honest confidence, not false precision:** each category's confidence score downgrades when the underlying Data Quality is Weak (×0.75) or Critical (×0.5), and shows a plain-English "Not available" fallback — never a fabricated percentage — when there isn't enough data yet.
+- Admin's category additionally surfaces unresolved System Error Log entries and storage/cloud-sync freshness, reusing existing admin infrastructure rather than building new plumbing.
+- Ships complete in one pass — no feature flag, matching how the "Sync Jira" dashboard button (v4.9.6) shipped.
+- 20 new tests (`TC-RBC-01`–`09` plus edge cases); full suite 689/71 passing; lint/typecheck/build all clean.
+
+---
+
 ## v4.9.3 — Storage Gates Closed: Cloud Sync Visibility & Diagnostics (2026-06-23, P0 — in progress, unmerged)
 
 **Scope:** `NEXT-04`/`STORAGE-DEC-01–11`, the last open P0 item: verify the true status of the cloud storage feature and close the three real gaps found.

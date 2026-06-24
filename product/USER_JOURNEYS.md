@@ -1779,3 +1779,19 @@ Returning-user journeys now include bucket-first metrics restoration. After logi
 | 4 | User | Saves `Retrospective_Template.csv` | File saved to downloads folder with header + 2 example rows | |
 
 **Outcome (Alt B):** User has the template for offline use in under 5 seconds.
+
+---
+
+### UJ-039 — User Reviews Role-Based Coaching Insights
+
+| Step | Actor | Action | System Response | Notes |
+|------|-------|--------|-----------------|-------|
+| 1 | Any user | Clicks "Coaching Insights" in the dashboard sidebar | `/dashboard/coaching` loads | Visible to every role |
+| 2 | System | Resolves the user's role via `/api/auth/me` and loads `DashboardMetrics` | Page shows a loading skeleton briefly | |
+| 3 | System | Computes `visibleCategoriesForRole(role)` | One category renders directly, or a tab row appears (Manager: 3 tabs; Admin: 7 tabs) | |
+| 4 | User (e.g. Scrum Master) | Reviews the card | Health summary, weak points, evidence (real numbers), recommended actions, ceremony advice, confidence chip all shown | No generic Agile advice — every line cites real data |
+| 5 | User (Manager role) | Clicks the "Delivery Manager" tab | Card switches instantly, no reload | Same metrics, different lens |
+| 6 | User (Admin role) | Reviews the Admin category | Sees Data Quality plus unresolved system errors and storage/cloud-sync status | Admin-only operational signals |
+
+**Outcome:** The user gets evidence-cited, role-specific delivery coaching instead of generic Agile advice, with an honest confidence signal when data is thin.
+**Related:** UC-114, FR-346–FR-352, TC-RBC-01–09

@@ -683,4 +683,74 @@ Metric algorithms still compute from normalised Jira export rows, but the latest
 
 **Output:** `string[]` — zero or more actionable suggestion strings
 
+---
+
+## v4.10.0 — Role-Based Coaching Confidence & Severity Algorithms (2026-06-23)
+
+### Role-Based Coaching Confidence Score
+
+**Input:** `DashboardMetrics`, `relevantKeys: (keyof MetricConfidenceMap)[]` (a category-specific subset, e.g. Scrum Master uses `['kanbanFlow', 'cycleTime', 'midSprint']`)
+
+```
+INPUT: metrics, relevantKeys
+
+entries    = relevantKeys.map(key => metrics.confidence[key])
+withSample = entries.filter(e => e.sampleSize > 0)
+
+IF relevantKeys.length === 0 OR withSample.length === 0:
+  RETURN { score: 0, band: 'N/A', reason: <safe fallback, no fabricated number> }
+
+rawAverage = mean(entries.map(e => e.confidence))
+
+multiplier = dataQuality.band === 'Critical' ? 0.5
+           : dataQuality.band === 'Weak'     ? 0.75
+           : 1
+
+score      = round(rawAverage × multiplier)
+sampleSize = sum(withSample.map(e => e.sampleSize))
+band       = score >= 80 ? 'High' : score >= 60 ? 'Medium' : score >= 40 ? 'Low' : 'Unreliable'
+            (sampleSize === 0 → 'N/A', overriding the above)
+
+worst  = entries with the lowest individual confidence
+reason = multiplier < 1
+       ? "Confidence reduced — Data Quality is {band} ({score}) and {worst.metricLabel} confidence is {worst.band} ({worst.confidence}%)."
+       : "Based on {worst.metricLabel} ({worst.band}, {worst.confidence}%) and related metrics, all backed by {sampleSize} sampled item(s)."
+
+OUTPUT: { score, band, reason }
+```
+
+**Downgrade multipliers (×0.75 Weak / ×0.5 Critical):** a deliberate business decision — confidence in a coaching recommendation must fall faster than the underlying Data Quality score itself, since a recommendation built on critically incomplete data should never read as comparably trustworthy to one built on excellent data. Re-evaluate these constants if user feedback indicates coaching confidence is being over- or under-trusted in practice.
+
+**Implementation:** `src/services/coaching/coachingConfidence.service.ts — aggregateCategoryConfidence()`
+
+---
+
+### Role-Based Coaching Severity
+
+**Input:** `weakPointCount: number`, `confidenceScore: number`, `criticalSignalPresent: boolean` (category-defined, e.g. simultaneous blockers + aging WIP for Scrum Master; `dataQuality.band === 'Critical'` for Admin)
+
+```
+IF criticalSignalPresent:        RETURN 'critical'
+IF weakPointCount >= 3:          RETURN 'high'
+IF weakPointCount >= 1
+   OR confidenceScore < 60:      RETURN 'medium'
+ELSE:                            RETURN 'low'
+```
+
+**Output:** reuses the existing `CheckSeverity` union (`'critical' | 'high' | 'medium' | 'low'`) from the Data Quality algorithm — no new severity scale was introduced. Maps to the shared `Badge` component via `severityToBadgeVariant()` (`critical→danger, high→warning, medium→info, low→success`); business logic never returns a raw color.
+
+**Implementation:** `src/lib/coachingBadge.ts — deriveSeverity()`, `severityToBadgeVariant()`
+
+---
+
+### Ceremony Advice Rule Engine
+
+**Input:** `DashboardMetrics`
+
+Five independent rule groups (daily standup, refinement, sprint planning, sprint review, retrospective), each a small set of trigger functions returning `string | null`. Unlike the Retro Insights Engine (above), every returned string embeds the real triggering number (e.g. "5 item(s) are explicitly blocked") rather than a static suggestion — a rule that does not fire contributes nothing, by design, so the system never emits placeholder advice.
+
+**Output:** `CeremonyAdvice` — `{ dailyStandup, refinement, sprintPlanning, sprintReview, retrospective }`, each `string[]`. Computed once per page load and embedded identically into every coaching category visible to the requesting role (these are team-wide cadence rules, not role-specific).
+
+**Implementation:** `src/services/coaching/ceremonyAdvice.service.ts — buildCeremonyAdvice()`
+
 **Implementation:** `app/retro/page.tsx` → `generateInsights()`

@@ -1,0 +1,24 @@
+.tabRow {
+  @apply flex flex-wrap gap-2 mb-4;
+}
+
+.tab {
+  @apply px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-white text-slate-600 transition-colors;
+
+  &:hover {
+    @apply bg-slate-50;
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+}
+
+.tabActive {
+  @apply bg-slate-900 text-white border-slate-900;
+
+  &:hover {
+    @apply bg-slate-800;
+  }
+}

@@ -1643,3 +1643,27 @@ The User Management table (`UserManagementSettings` in `app/admin/settings/page.
 - Bulk action bar renders above the table when `selected.size > 0`; bulk role change calls `PATCH /api/admin/users` per user; bulk delete calls `DELETE /api/admin/users` per user with a shared `ConfirmDeleteDialog`
 - Selection clears via `useEffect([query, roleFilter])` on filter changes
 - Delete (🗑) and pause (⏸/▶) buttons are co-located with the status badge in the final "Status & Actions" column — no horizontal scroll required
+
+---
+
+## Role-Based Delivery Coaching Insights (Implemented — v4.10.0)
+
+Pure interpretation layer over the already-computed `DashboardMetrics` — closes `RBC-01`–`RBC-20` (TODO-List.md Section 16). No new metric calculations were introduced.
+
+**Module layout:** `src/services/coaching/`
+- `ceremonyAdvice.service.ts` — `buildCeremonyAdvice(metrics)`, computed once and embedded identically into every visible category (RBC-10–14)
+- `coachingConfidence.service.ts` — `aggregateCategoryConfidence(metrics, relevantKeys)` (RBC-17; formula in `product/ALGORITHM_SPEC.md`)
+- `coachingMetricsAccess.ts` — `getRelations()`/`getEpics()`, small typed accessors for the `DashboardMetrics` fields (`relations`, `epics`) that `src/types/metrics.ts` declares as `unknown` even though the runtime shape (built in `metrics.service.ts`) is concrete; scoped to this feature, does not touch the existing exported type
+- `adminSignals.service.ts` — `getAdminCoachingSignals()` (server-only); reuses `prisma.systemErrorLog.count()`, `readStorageSettings()`, and `getCacheMeta()` (read-only — never `syncFromCloud()`)
+- `generators/*.generator.ts` — one pure function per category: `generateScrumMasterInsight()`, `generateProductOwnerInsight()`, `generateEngineeringManagerInsight()`, `generateDeliveryManagerInsight()`, `generateTeamLeadInsight()`, `generateCLevelInsight()`, `generateAdminInsight()` — each `(metrics, ceremonyAdvice) => RoleBasedCoachingInsight`
+- `coachingOrchestrator.service.ts` — `visibleCategoriesForRole(role)` (RBC-16 role→category mapping) and `generateAllCoachingInsights(metrics, role, adminSignals?)`
+
+**Types:** `src/types/roleBasedCoaching.ts` — `CoachingCategory` (7 values), `RoleBasedCoachingInsight`, `CeremonyAdvice`, `CoachingEvidence`, `CoachingConfidence`, `CoachingInsightsBundle`. Severity reuses the existing `CheckSeverity` union; confidence band reuses the existing `ConfidenceBand` union — no new severity/confidence scales were introduced.
+
+**Known data-shape constraint:** `calculateReleaseReadiness()` (`releaseReadiness.service.ts`) groups by the raw `Fix Version/s` field, which exists only on originally-uploaded issue records — not on the normalized `FlowItem` shape inside `DashboardMetrics.flow.items` (no Fix Version is captured there). The existing `/release-readiness` and `/readiness` pages already call it with `flow.items` and therefore always get `hasVersionData: false` in practice — a pre-existing gap, not introduced by this feature. The Engineering Manager, Delivery Manager, and C-level coaching generators deliberately avoid calling `calculateReleaseReadiness()` for this reason and instead use `prediction`, `overallDeliveryConfidence`, and `risk` — fields that are reliably populated on `DashboardMetrics`.
+
+**Route:** `app/dashboard/coaching/page.tsx` (Client Component) — fetches `DashboardMetrics` via the existing `loadMetricsWithSource()` and the current role via the existing `GET /api/auth/me`, identical to every other `/dashboard/*` page; additionally fetches `GET /api/coaching/admin-signals` (new, admin-only) only when the resolved role is `admin`. Registered in `DashboardNavSidebar.tsx`'s `ROUTE_ACCESS` map for all 6 roles — category filtering happens inside the page (via `visibleCategoriesForRole()`), not by hiding the nav entry.
+
+**Components:** `src/components/dashboard/CoachingInsightCard.tsx`, `CoachingCategoryTabs.tsx` (tabs render only when a role has >1 visible category — `manager` and `admin`). Severity renders via the existing `Badge` component (`severityToBadgeVariant()` in `src/lib/coachingBadge.ts`), never a raw color.
+
+**Testing:** `src/__tests__/roleBasedCoaching.test.ts` — 20 tests (`TC-RBC-01`–`09` + edge cases per CLAUDE.md §45.1: zero issues, empty `sprint.sprints`, confidence threshold boundaries, undefined `relations`). Suite: 689/71 passing.

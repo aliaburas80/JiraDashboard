@@ -212,6 +212,7 @@ The following capabilities are implemented and in scope as of v4.0:
 - **P2/P3** Optional Jira API Integration — read-only; export-first model remains default
 - **P4** Admin & System Notification Center — in-app notifications, admin-to-user messaging
 - **P4** Maintenance Mode — admin-controlled maintenance screen with audit log
+- **Done** Role-Based Delivery Coaching Insights (v4.10.0) — `/dashboard/coaching`, evidence-cited per-role advice generated entirely from existing metrics, no new calculations
 
 ---
 

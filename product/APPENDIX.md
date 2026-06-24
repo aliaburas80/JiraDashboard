@@ -319,3 +319,12 @@
 | **App Config** | The encrypted SMTP and application-level configuration managed by `src/lib/app-config.ts`. Stored as an encrypted envelope in cloud storage. Exposed via `GET/PUT/POST /api/admin/app-config`. The `/admin/settings` Config tab (added v4.9.0) provides the admin UI. |
 | **Admin Layout Injection** | The pattern where `app/admin/layout.tsx` provides `DashboardTopbar` + `AdminNavSidebar` to all `/admin/*` routes via Next.js layout inheritance. Individual admin page files render content only, with no shell logic. |
 | **Wiki Theme** | The light-mode styling applied to `/developer` via the `.wiki` CSS class in `app/developer/page.module.scss`. The `.wiki` root class remaps all `--dc-*` dark palette tokens to semantic light equivalents so every `var(--dc-xxx)` reference in the page resolves to a light value without per-line edits. |
+
+## Q — v4.10.0 Role-Based Coaching Terms (2026-06-23)
+
+| Term | Definition |
+|---|---|
+| **Role-Based Coaching Insights** | The `/dashboard/coaching` feature that turns the already-computed `DashboardMetrics` into role-specific, evidence-cited advice. No new metric calculations — a pure interpretation layer over existing flow/throughput/data-quality signals. |
+| **Coaching Category** | One of 7 content groupings (Scrum Master, Product Owner, Engineering Manager, Delivery Manager, Team Lead, C-level, Admin). Distinct from `AppRole` — the `manager` role sees 3 categories as tabs (Engineering Manager, Delivery Manager, Team Lead). |
+| **Ceremony Advice** | Team-wide cadence recommendations (daily standup, refinement, sprint planning, sprint review, retrospective) computed once per page load and embedded identically into every visible coaching category. Each line only appears when its trigger condition is met in the real data — never a generic placeholder. |
+| **Coaching Confidence Score** | A 0–100 score per coaching category, averaged from the relevant `MetricConfidenceMap` entries and downgraded ×0.75 (Weak) or ×0.5 (Critical) when Data Quality is poor. Shows "Not available" instead of a number when there isn't enough data yet. |

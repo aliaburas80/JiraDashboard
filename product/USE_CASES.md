@@ -3351,3 +3351,31 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 **Postcondition:** Either the dashboard now reflects fresh Jira data and every user sees it on their next page load, or — on any failure — the dashboard is unchanged and the user sees a clear reason why
 **Related FR:** FR-345, FR-342 (shared sync implementation)
 **Related:** TC-JIRA-54–60
+
+---
+
+### UC-114 — User Views Role-Based Coaching Insights
+
+*(Added 2026-06-23 to close `RBC-01`–`RBC-20` from TODO-List.md Section 16. Pure interpretation of already-computed `DashboardMetrics` — no new calculations are introduced.)*
+
+- **ID:** UC-114
+- **Title:** A Logged-In User Views Coaching Insights for Their Role
+- **Actor:** Any logged-in user (all 6 `AppRole` values; content differs by role)
+- **Precondition:** Delivery data has been uploaded or synced at least once (a `DashboardMetrics` snapshot exists)
+- **Trigger:** User navigates to `/dashboard/coaching` from the sidebar
+
+**Main Flow:**
+1. The page loads the current `DashboardMetrics` (via the existing `loadMetricsWithSource()`) and the user's role (via the existing `GET /api/auth/me`)
+2. `visibleCategoriesForRole(role)` resolves which of the 7 coaching categories the user sees: Scrum Master, Product Owner, and C-level roles see exactly one category each; the Manager role sees three (Engineering Manager, Delivery Manager, Team Lead) as tabs; Admin sees all 7 as tabs; the generic User role sees Team Lead
+3. For each visible category, a dedicated generator (`src/services/coaching/generators/`) produces a `RoleBasedCoachingInsight`: health summary, weak points, focus areas, evidence (each citing a real metric value), recommended actions, prevention advice, ceremony advice, next-sprint suggestions, a severity badge, and a confidence score
+4. The user reviews the active category's card; if more than one category is visible, they can switch tabs without reloading the page
+
+**Alternate Flow — Admin role:**
+3a. The page additionally fetches `GET /api/coaching/admin-signals` (unresolved system errors, storage provider, cloud-sync freshness) before generating the Admin category's insight, so it can cite real operational signals in addition to Data Quality
+
+**Alternate Flow — Insufficient data for confidence:**
+3b. When the underlying metrics' sample sizes are all zero for a category's relevant signals, the confidence chip shows "Not available" with a plain-English explanation instead of a fabricated percentage
+
+**Postcondition:** The user sees evidence-based coaching specific to their role, never generic Agile advice, with an honest confidence signal about how much the recommendations can be trusted
+**Related FR:** FR-346, FR-347, FR-348, FR-349, FR-350, FR-351, FR-352
+**Related:** TC-RBC-01–09 (`src/__tests__/roleBasedCoaching.test.ts`)

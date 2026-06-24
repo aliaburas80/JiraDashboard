@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import styles from './DashboardSidebarNav.module.scss';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import { visibleCategoriesForRole } from '@/services/coaching/coachingOrchestrator.service';
 
 // Which roles can see each dashboard sub-route
 const ROUTE_ACCESS: Record<string, string[]> = {
@@ -24,6 +25,7 @@ const ROUTE_ACCESS: Record<string, string[]> = {
   '/dashboard/labels':              ['admin','product_owner','user'],
   '/dashboard/epic-readiness':      ['admin','product_owner','user'],
   '/dashboard/flow-health':         ['admin','scrum_master','manager','user'],
+  '/dashboard/coaching':            ['admin','scrum_master','product_owner','manager','c_level','user'],
 };
 
 function canSee(href: string, role: string): boolean {
@@ -224,6 +226,7 @@ export default function DashboardNavSidebar({ metrics }: Props) {
         {see('/dashboard/labels')         && <NavItem href="/dashboard/labels"          icon="tag"    title="Labels & Types"        meta={`${(metrics?.labels as any)?.uniqueLabels ?? 0} labels`}  chip="—"  chipType="cn" />}
         {see('/dashboard/epic-readiness') && <NavItem href="/dashboard/epic-readiness"  icon="layers" title="Epic Readiness"        meta={`${(metrics?.epics as any[])?.length ?? 0} epics · ${epicChipType === 'cc' ? criticalEpics + ' critical' : 'on track'}`}  chip={criticalEpics > 0 ? 'Critical' : 'Good'}  chipType={epicChipType} />}
         {see('/dashboard/flow-health')    && <NavItem href="/dashboard/flow-health"     icon="list"   title="Flow Health Table"     meta={`${flowItems.length.toLocaleString()} items · filters`}  chip="All"  chipType="cn" />}
+        {see('/dashboard/coaching')       && <NavItem href="/dashboard/coaching"        icon="lightbulb" title="Coaching Insights"  meta={`${visibleCategoriesForRole(userRole).length} categor${visibleCategoriesForRole(userRole).length === 1 ? 'y' : 'ies'}`}  chip="New"  chipType="cn" />}
       </nav>
     </aside>
   );
