@@ -4,14 +4,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics } from '@/types/metrics';
-import { PageHeader, SectionCard, PageLoading, EmptyPage } from '@/components/dashboard/DashboardPageShell';
+import { PageHeader, PageLoading, EmptyPage, shellStyles } from '@/components/dashboard/DashboardPageShell';
 import CoachingCategoryTabs from '@/components/dashboard/CoachingCategoryTabs';
 import CoachingInsightCard from '@/components/dashboard/CoachingInsightCard';
 import { generateAllCoachingInsights } from '@/services/coaching/coachingOrchestrator.service';
 import type { AdminCoachingSignals } from '@/services/coaching/adminSignals.service';
+import { computeSeverityTrend, type SeverityTrend } from '@/services/coaching/coachingTrend.service';
+import { SEVERITY_RANK } from '@/lib/coachingBadge';
 import type { CoachingCategory } from '@/types/roleBasedCoaching';
 import { CATEGORY_LABELS } from '@/types/roleBasedCoaching';
-import styles from './page.module.scss';
+import type { CheckSeverity } from '@/types/dataQuality';
 
 export default function CoachingPage() {
   const router = useRouter();
@@ -20,6 +22,7 @@ export default function CoachingPage() {
   const [adminSignals, setAdminSignals] = useState<AdminCoachingSignals | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<CoachingCategory | null>(null);
+  const [previousSeverityByCategory, setPreviousSeverityByCategory] = useState<Partial<Record<CoachingCategory, CheckSeverity>>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -32,11 +35,13 @@ export default function CoachingPage() {
         if (cancelled) return;
         setRole(resolvedRole);
 
+        let resolvedAdminSignals: AdminCoachingSignals | undefined;
         if (resolvedRole === 'admin') {
           try {
             const signalsResponse = await fetch('/api/coaching/admin-signals');
-            if (signalsResponse.ok && !cancelled) {
-              setAdminSignals(await signalsResponse.json());
+            if (signalsResponse.ok) {
+              resolvedAdminSignals = await signalsResponse.json();
+              if (!cancelled) setAdminSignals(resolvedAdminSignals);
             }
           } catch {
             // Admin signals are supplementary — coaching still works without them.
@@ -48,6 +53,25 @@ export default function CoachingPage() {
         const data = result.metrics as DashboardMetrics | null;
         if (!data) { router.replace('/'); return; }
         setMetrics(data);
+
+        // Trend is a nice-to-have: diff against the most recently saved snapshot,
+        // if the user has saved at least one. Silently skipped otherwise.
+        try {
+          const snapshotsResponse = await fetch('/api/snapshots');
+          if (!snapshotsResponse.ok) return;
+          const { snapshots } = await snapshotsResponse.json();
+          if (!Array.isArray(snapshots) || snapshots.length < 2) return;
+          const previousResponse = await fetch(`/api/snapshots/${snapshots[1].id}`);
+          if (!previousResponse.ok || cancelled) return;
+          const previousSnapshot = await previousResponse.json();
+          const previousMetrics = JSON.parse(previousSnapshot.metricsJson) as DashboardMetrics;
+          const previousBundle = generateAllCoachingInsights(previousMetrics, resolvedRole, resolvedAdminSignals);
+          const map: Partial<Record<CoachingCategory, CheckSeverity>> = {};
+          for (const insight of previousBundle.categories) map[insight.category] = insight.severity;
+          if (!cancelled) setPreviousSeverityByCategory(map);
+        } catch {
+          // Trend is a nice-to-have — coaching still works without it.
+        }
       } catch {
         if (!cancelled) router.replace('/');
       } finally {
@@ -64,33 +88,55 @@ export default function CoachingPage() {
     return generateAllCoachingInsights(metrics, role, adminSignals);
   }, [metrics, role, adminSignals]);
 
-  useEffect(() => {
-    if (bundle && bundle.categories.length > 0 && !activeCategory) {
-      setActiveCategory(bundle.categories[0].category);
+  // Most urgent category first, so the page leads with what needs attention.
+  const sortedCategories = useMemo(() => {
+    if (!bundle) return [];
+    return [...bundle.categories].sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]);
+  }, [bundle]);
+
+  const trendByCategory = useMemo(() => {
+    const map: Partial<Record<CoachingCategory, SeverityTrend>> = {};
+    for (const insight of sortedCategories) {
+      const previous = previousSeverityByCategory[insight.category];
+      if (previous) map[insight.category] = computeSeverityTrend(insight.severity, previous);
     }
-  }, [bundle, activeCategory]);
+    return map;
+  }, [sortedCategories, previousSeverityByCategory]);
+
+  useEffect(() => {
+    if (sortedCategories.length > 0 && !activeCategory) {
+      setActiveCategory(sortedCategories[0].category);
+    }
+  }, [sortedCategories, activeCategory]);
 
   if (loading) return <PageLoading />;
-  if (!metrics || !bundle || bundle.categories.length === 0) {
+  if (!metrics || !bundle || sortedCategories.length === 0) {
     return <EmptyPage message="No coaching insights available — upload delivery data to get role-based guidance." />;
   }
 
-  const categories = bundle.categories.map((c) => c.category);
+  const categories = sortedCategories.map((c) => c.category);
   const active = activeCategory ?? categories[0];
-  const activeInsight = bundle.categories.find((c) => c.category === active) ?? bundle.categories[0];
+  const activeInsight = sortedCategories.find((c) => c.category === active) ?? sortedCategories[0];
+  const severityByCategory: Partial<Record<CoachingCategory, CheckSeverity>> = {};
+  for (const c of sortedCategories) severityByCategory[c.category] = c.severity;
 
   return (
-    <div className={styles.page}>
+    <>
       <PageHeader
         title="Role-Based Coaching Insights"
         subtitle={`Evidence-based delivery coaching for the ${CATEGORY_LABELS[active]} view.`}
       />
-      <SectionCard>
+      <div className={shellStyles.pageBody}>
         {categories.length > 1 && (
-          <CoachingCategoryTabs categories={categories} active={active} onChange={setActiveCategory} />
+          <CoachingCategoryTabs
+            categories={categories}
+            active={active}
+            onChange={setActiveCategory}
+            severityByCategory={severityByCategory}
+          />
         )}
-        <CoachingInsightCard insight={activeInsight} />
-      </SectionCard>
-    </div>
+        <CoachingInsightCard insight={activeInsight} trend={trendByCategory[active]} />
+      </div>
+    </>
   );
 }
