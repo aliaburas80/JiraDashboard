@@ -754,3 +754,25 @@ Five independent rule groups (daily standup, refinement, sprint planning, sprint
 **Implementation:** `src/services/coaching/ceremonyAdvice.service.ts — buildCeremonyAdvice()`
 
 **Implementation:** `app/retro/page.tsx` → `generateInsights()`
+
+---
+
+## v4.10.1 — Coaching Severity Trend Comparison (2026-06-26)
+
+**Input:** `current: CheckSeverity`, `previous: CheckSeverity`
+
+```
+SEVERITY_RANK = { critical: 0, high: 1, medium: 2, low: 3 }   // lower rank = more urgent
+
+delta = SEVERITY_RANK[current] - SEVERITY_RANK[previous]
+
+IF delta > 0:  RETURN 'improved'   // current is less urgent than before
+IF delta < 0:  RETURN 'worsened'   // current is more urgent than before
+ELSE:          RETURN 'same'
+```
+
+**`previous` source:** the requesting category's severity when `generateAllCoachingInsights()` is re-run against the metrics of the user's second-most-recent saved `DashboardSnapshot` (existing Snapshots feature; no new persistence). When fewer than 2 snapshots exist, this algorithm is never invoked for that page load — the UI omits the trend badge entirely rather than defaulting to `'same'`.
+
+**Output:** `SeverityTrend = 'improved' | 'worsened' | 'same'` — rendered as a small badge next to the hero banner's mood label; never a raw color (`'improved'`→success token, `'worsened'`→danger token, `'same'`→muted token).
+
+**Implementation:** `src/services/coaching/coachingTrend.service.ts — computeSeverityTrend()`

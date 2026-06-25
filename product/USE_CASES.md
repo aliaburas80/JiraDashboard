@@ -3368,14 +3368,26 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 1. The page loads the current `DashboardMetrics` (via the existing `loadMetricsWithSource()`) and the user's role (via the existing `GET /api/auth/me`)
 2. `visibleCategoriesForRole(role)` resolves which of the 7 coaching categories the user sees: Scrum Master, Product Owner, and C-level roles see exactly one category each; the Manager role sees three (Engineering Manager, Delivery Manager, Team Lead) as tabs; Admin sees all 7 as tabs; the generic User role sees Team Lead
 3. For each visible category, a dedicated generator (`src/services/coaching/generators/`) produces a `RoleBasedCoachingInsight`: health summary, weak points, focus areas, evidence (each citing a real metric value), recommended actions, prevention advice, ceremony advice, next-sprint suggestions, a severity badge, and a confidence score
-4. The user reviews the active category's card; if more than one category is visible, they can switch tabs without reloading the page
+4. The user reviews the active category's card, sorted so the most urgent category is shown first (and is the default-active tab); if more than one category is visible, they can switch tabs without reloading the page
 
 **Alternate Flow — Admin role:**
 3a. The page additionally fetches `GET /api/coaching/admin-signals` (unresolved system errors, storage provider, cloud-sync freshness) before generating the Admin category's insight, so it can cite real operational signals in addition to Data Quality
 
 **Alternate Flow — Insufficient data for confidence:**
-3b. When the underlying metrics' sample sizes are all zero for a category's relevant signals, the confidence chip shows "Not available" with a plain-English explanation instead of a fabricated percentage
+3b. When the underlying metrics' sample sizes are all zero for a category's relevant signals, the confidence chip shows "Not available" with a plain-English explanation instead of a fabricated percentage, and the hero headline is prefixed "Early signal:" (added v4.10.1, FR-353)
 
-**Postcondition:** The user sees evidence-based coaching specific to their role, never generic Agile advice, with an honest confidence signal about how much the recommendations can be trusted
-**Related FR:** FR-346, FR-347, FR-348, FR-349, FR-350, FR-351, FR-352
-**Related:** TC-RBC-01–09 (`src/__tests__/roleBasedCoaching.test.ts`)
+**Alternate Flow — Trend available (added v4.10.1, FR-353):**
+3c. When the user has at least 2 saved snapshots, the page additionally fetches `GET /api/snapshots` and the second-most-recent snapshot's metrics, re-generates that category's insight against them, and shows an improved/worsened/unchanged badge next to the mood label; with fewer than 2 snapshots the badge is silently omitted
+
+**Alternate Flow — Low-severity category (added v4.10.1, FR-353):**
+3d. When a category's severity is `low`, the hero headline cites the category's first evidence value directly (e.g. "92% completion rate — keep it up.") instead of the generic health summary
+
+**Alternate Flow — Nothing to flag (added v4.10.1, FR-353):**
+3e. When a category has no weak points/focus areas, or no ceremony advice fired, the page shows an explicit positive message instead of omitting the section silently
+
+**Alternate Flow — Evidence chip navigation (added v4.10.1, FR-354):**
+4a. The user clicks an evidence chip whose underlying metric maps to a known dashboard route (e.g. a cycle-time chip → `/dashboard/flow-health`) and is navigated there; chips with no known mapping remain non-interactive (tooltip-only)
+
+**Postcondition:** The user sees evidence-based coaching specific to their role, never generic Agile advice, with an honest confidence signal about how much the recommendations can be trusted, presented in a scannable, encouraging layout that surfaces the most urgent category first
+**Related FR:** FR-346, FR-347, FR-348, FR-349, FR-350, FR-351, FR-352, FR-353, FR-354
+**Related:** TC-RBC-01–09 (`src/__tests__/roleBasedCoaching.test.ts`), TC-RBC-10–13 (`src/__tests__/coachingTrend.test.ts`, `src/__tests__/coachingEvidenceLink.test.ts`)

@@ -5,6 +5,22 @@
 
 ---
 
+## v4.10.1 — Coaching Insights Redesign & Encouragement Enhancements (2026-06-26, P1 — in progress, unmerged)
+
+**Scope:** `RBC-21`–`RBC-26` — presentation redesign of the v4.10.0 Coaching Insights page plus six small enhancements. No coaching generator, confidence formula, or severity rule changed.
+
+- **Redesigned `/dashboard/coaching` layout** — replaced the flat, fully-expanded bulleted-list layout with a mood-led hero banner, glanceable evidence stat chips, a merged "What to Watch" list (weak points + focus areas), a merged "Do This Next" checklist (recommended actions + prevention advice), a collapsed-by-default Ceremony Advice accordion, and a distinct "Try This Next Sprint" highlight strip. Replaced raw Tailwind `slate-*` utility classes with real design tokens (`--color-*`, `--space-*`, `--radius-*`), matching the rest of `/dashboard/*`.
+- **Tabs auto-sort by urgency** — category tabs (and the default-active tab) now order by severity (critical → high → medium → low) instead of a fixed per-role order, so the most urgent category is what the user sees first.
+- **Quick-win celebration** — when a category's severity is `low`, the hero headline cites a specific evidence number (e.g. "92% completion rate — keep it up.") instead of a generic message.
+- **Severity trend indicator** — the hero banner shows a small improved/worsened/unchanged badge, diffed against the user's most recently *saved* snapshot (reuses the existing Snapshots feature; no new persistence). Silently omitted when fewer than 2 snapshots exist.
+- **Confidence-aware framing** — when `confidence.band` is `Low`, `Unreliable`, or `N/A`, the hero headline is prefixed with "Early signal:" so thin data isn't presented with false certainty.
+- **Empty-section encouragement** — "What to Watch" and "Ceremony Advice" now show an explicit "all clear" message when there's nothing to flag, instead of silently disappearing.
+- **Cross-category urgency nudge** — a small colored dot appears on any non-active tab whose severity is `high` or `critical`, so switching categories surfaces urgency without clicking through every tab.
+- **Evidence chips link to source** — evidence chips whose `metricKey` maps to a known dashboard route (e.g. `flow.*` → Flow Health, `throughput.kanban.*` → Kanban Health) render as a link with a small arrow hint; unmapped chips remain tooltip-only as before.
+- 4 new tests (`coachingTrend.test.ts`, `coachingEvidenceLink.test.ts`); full suite 694/73 passing; lint/typecheck/stylelint/build all clean.
+
+---
+
 ## v4.10.0 — Role-Based Delivery Coaching Insights (2026-06-23, P1 — in progress, unmerged)
 
 **Scope:** `RBC-01`–`RBC-20` — turns the metrics already computed for every dashboard into role-specific, evidence-cited coaching advice. No new metric calculations were introduced; this is a pure interpretation layer.

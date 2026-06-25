@@ -910,6 +910,32 @@ The following items are in the uploaded TODO as Done. Keep them, but verify trac
 | RBC-18 | Add tests | P1 | ✅ Done (2026-06-23) | `src/__tests__/roleBasedCoaching.test.ts` — 20 tests: `TC-RBC-01a–h` (one per generator + role-mapping table), `TC-RBC-02`–`09` (one per `TEST-RBC-01`–`09` acceptance row in Section 22), plus 4 edge cases (zero issues, empty `sprint.sprints`, confidence threshold boundaries at 80/60/40, undefined `relations`). Full suite: 689/71 passing (was 669/70 — 0 regressions). |
 | RBC-19 | Update all related product docs | P1 | ✅ Done (2026-06-23) | `SRS.md` Addendum H (FR-346–FR-352) + revision history v4.10.0; `USE_CASES.md` UC-114; `USER_JOURNEYS.md` UJ-039; `SCENARIOS.md` SCN-057/058; `TEST_CASES.md` §9.60; `DEVELOPER_GUIDE.md` new "Role-Based Delivery Coaching Insights" section (the live `/developer` "Developer Guide" topic fetches this file directly via `GET /api/docs?slug=dev-guide`, so no separate edit to `app/developer/page.tsx`'s inline topics was needed); `ALGORITHM_SPEC.md` new "Role-Based Coaching Confidence & Severity Algorithms" section (v4.10.0); `RELEASE_NOTES.md` new v4.10.0 entry; `APPENDIX.md` Section Q (3 new glossary terms); `app/help/page.tsx` new "Coaching Insights" FAQ section (3 entries); `BRD.md` Future Scope line. |
 | RBC-20 | Produce product documentation impact matrix before push | P0/P1 | ✅ Done (2026-06-23) | See the filled matrix immediately below this table. |
+| RBC-21 | Redesign Coaching Insights layout to be scannable and encouraging | P1 | ✅ Done (2026-06-26) | `src/components/dashboard/CoachingInsightCard.tsx`/`.module.scss` fully rewritten: mood-led hero banner, evidence stat chips, merged "What to Watch" (weak points + focus areas) and "Do This Next" (recommended actions + prevention advice) lists, collapsed-by-default Ceremony Advice accordion, distinct "Try This Next Sprint" highlight strip. `CoachingCategoryTabs.tsx`/`.module.scss` restyled with per-category icons. Replaced raw Tailwind `slate-*` utilities with real design tokens. `app/dashboard/coaching/page.tsx` dropped its non-standard `.page` wrapper for the shared `shellStyles.pageBody` convention. |
+| RBC-22 | Auto-sort coaching tabs by urgency | P1 | ✅ Done (2026-06-26) | `SEVERITY_RANK` exported from `src/lib/coachingBadge.ts` (critical=0…low=3); `app/dashboard/coaching/page.tsx` sorts `bundle.categories` by this rank before rendering tabs and choosing the default-active category. |
+| RBC-23 | Quick-win celebration headline for low-severity categories | P1 | ✅ Done (2026-06-26) | `heroHeadline()` in `CoachingInsightCard.tsx` — when severity is `low` and evidence exists, cites the first evidence value/label directly instead of the generic health summary. |
+| RBC-24 | Severity trend vs. last saved snapshot | P1 | ✅ Done (2026-06-26) | New `src/services/coaching/coachingTrend.service.ts` `computeSeverityTrend()`. `page.tsx` fetches `GET /api/snapshots` + `GET /api/snapshots/:id` (existing Snapshots feature, no new persistence) for the second-most-recent snapshot, re-runs `generateAllCoachingInsights()` against it, and diffs severity per category. Silently omitted when fewer than 2 snapshots exist. Rendered as a small badge next to the hero mood label. |
+| RBC-25 | Confidence-aware framing, empty-section encouragement, cross-category nudge, evidence-chip linking | P1 | ✅ Done (2026-06-26) | `heroHeadline()` prefixes "Early signal:" when `confidence.band` is Low/Unreliable/N/A; new `EmptyRow` component shows an explicit "all clear" message for empty "What to Watch"/"Ceremony Advice" sections instead of omitting them silently; `CoachingCategoryTabs.tsx` renders a small urgency dot on non-active tabs with `high`/`critical` severity; new `src/lib/coachingEvidenceLink.ts` `resolveEvidenceRoute()` maps evidence `metricKey` prefixes to their source `/dashboard/*` route, rendering matched chips as `next/link`s. |
+| RBC-26 | Add tests + update all related product docs | P1 | ✅ Done (2026-06-26) | `src/__tests__/coachingTrend.test.ts` (3 tests, `TC-RBC-10`–`12`) + `src/__tests__/coachingEvidenceLink.test.ts` (2 tests, `TC-RBC-13`); full suite 694/73 passing. Docs: `SRS.md` Addendum H.6 (FR-353–FR-354) + revision history v4.10.1; `USE_CASES.md` UC-114 updated; `USER_JOURNEYS.md` UJ-039 updated; `SCENARIOS.md` SCN-059; `TEST_CASES.md` §9.61; `DEVELOPER_GUIDE.md` new "Coaching Insights Redesign & Encouragement Enhancements" section; `ALGORITHM_SPEC.md` new "Coaching Severity Trend Comparison" section (v4.10.1); `RELEASE_NOTES.md` new v4.10.1 entry; `APPENDIX.md` Section R (4 new glossary terms); `app/help/page.tsx` 3 new FAQ entries; `BRD.md` Future Scope line. See the filled matrix immediately below. |
+
+**Documentation impact matrix — v4.10.1 (RBC-21–26):**
+
+| Doc/Route | Updated? | Note |
+|---|---|---|
+| RELEASE_NOTES.md | ✅ | New v4.10.1 entry |
+| SRS.md | ✅ | Addendum H.6, FR-353–FR-354, revision history row |
+| BRD.md | ✅ | Future Scope line added |
+| TEST_CASES.md | ✅ | §9.61, TC-RBC-10–13 |
+| USE_CASES.md | ✅ | UC-114 updated with 5 new alternate flows |
+| USER_JOURNEYS.md | ✅ | UJ-039 updated, 4 new rows |
+| SCENARIOS.md | ✅ | SCN-059 added |
+| DEVELOPER_GUIDE.md | ✅ | New v4.10.1 section |
+| ALGORITHM_SPEC.md | ✅ | New "Coaching Severity Trend Comparison" section |
+| APPENDIX.md | ✅ | Section R, 4 terms |
+| TODO-List.md | ✅ | This table + matrix |
+| app/help/page.tsx | ✅ | 3 new FAQ entries in existing "Coaching Insights" section |
+| app/developer/page.tsx | — | Not affected — Developer Guide topic fetches `DEVELOPER_GUIDE.md` directly |
+| app/glossary/page.tsx | — | Not affected — coaching terms live in APPENDIX.md, matching the v4.10.0 precedent |
+| TECHNICAL_METHOD.md | — | Not affected — no new patentable technical method, presentation/derived-data only |
 
 ---
 
