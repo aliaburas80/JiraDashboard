@@ -1030,8 +1030,8 @@ The following items are in the uploaded TODO as Done. Keep them, but verify trac
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
 | ROADMAP-01 | Create `/roadmap` page — epic progress + delivery forecast | P1 | ✅ Done 2026-06-10 | Epic cards with progress bar, health indicator, forecast label (complete/weeks/months/insufficient data), confidence badge; filter tabs (In Progress/All/Critical/Done); sort (Forecast/Progress/Name); summary KPI cards; throughput context strip; click to expand shows remaining issues, sprints est., critical count. Uses `computePortfolioHealth()` + `loadMetricsWithSource()`. |
-| ROADMAP-02 | P0 doc pass for /roadmap | P0 | ❌ Not started | SRS, USE_CASES, USER_JOURNEYS, SCENARIOS, TEST_CASES, ALGORITHM_SPEC, help page, developer page, glossary, RELEASE_NOTES, BRD, APPENDIX. |
-| ROADMAP-03 | Add tests for roadmap forecast logic | P1 | ❌ Not started | `forecastEpic()` unit tests — complete/within-2-weeks/months/insufficient-data paths. |
+| ROADMAP-02 | P0 doc pass for /roadmap | P0 | ✅ Done (2026-06-26) | Audited and confirmed already complete since the feature shipped 2026-06-10: SRS FR-326/327, USE_CASES UC-101, USER_JOURNEYS UJ-036, SCENARIOS SCN-051, TEST_CASES §9.54, ALGORITHM_SPEC v4.6 section, `/help`, `/developer`, `/glossary`, RELEASE_NOTES v4.3.6, BRD BR-115/116 — all already present. Only this status row was stale. |
+| ROADMAP-03 | Add tests for roadmap forecast logic | P1 | ✅ Done (2026-06-26) | `src/__tests__/roadmapForecast.test.ts` — automates `TC-ROAD-01`–`05` (complete/insufficient-data/within-2-weeks/~N weeks/~N months paths) plus edge case `TC-ROAD-02b`. Suite: 700/74 (1 pre-existing unrelated failure). |
 
 ---
 
@@ -1041,7 +1041,7 @@ The following items are in the uploaded TODO as Done. Keep them, but verify trac
 |---|---|---:|---|---|
 | NAV-01 | Redesign /help navigation — replace 34 flat tabs with grouped two-level nav | P1 | ✅ Done 2026-06-10 | 9 category group pills (Getting Started, Dashboard, Planning, Analysis, Export & Data, System, Customization, People, Troubleshooting); clicking a group shows sub-section pills; active group derived from IntersectionObserver activeId; row 2 hidden when group has only 1 section. |
 | NAV-02 | Redesign /glossary navigation — replace 12 flat tabs with compact letter-jump nav | P1 | ✅ Done 2026-06-10 | Single row of letter chips (A–L) with section icon + letter label; click scrolls to section; tooltip shows full section title. |
-| NAV-03 | P0 doc pass for help/glossary nav changes | P0 | ❌ Not started | Update help page FAQ for new nav structure; glossary page sections unchanged. |
+| NAV-03 | P0 doc pass for help/glossary nav changes | P0 | ✅ Done (2026-06-26) | Added 2 FAQ entries to `app/help/page.tsx`'s "Welcome — Getting Started" section explaining the grouped category-pill `/help` nav and the letter-jump `/glossary` nav. Glossary page sections unchanged (per original acceptance criteria). |
 
 ---
 

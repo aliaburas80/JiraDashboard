@@ -19,6 +19,8 @@ const SECTIONS: Section[] = [
       { q: 'Step 4 — Use the sticky quick-filter bar', a: 'The quick-filter bar follows you as you scroll. Tap All, High Risk, Blocked, Needs Review, or Sprint Today to instantly narrow the flow table to matching work items. A blue badge in the filter bar shows how many filters are currently active.' },
       { q: 'Step 5 — Drill into the Flow Table', a: 'Open Story / Task Flow Health at the bottom of the dashboard. Apply any combination of the 11 available filters — key, status, sprint, assignee, health, labels, type, priority, epic, reason, or date range. Every matched item shows exactly why it is healthy or at risk, along with lead time, cycle time, and wait time.' },
       { q: 'Step 6 — Act on your results', a: 'Review high-risk items to identify the worst blockers, export a risk CSV for stakeholder reports, and save your layout view to remember filters for the next session. Use the ? buttons throughout the dashboard for section-specific explanations at any time.' },
+      { q: 'How is this Help page organized?', a: 'Help topics are grouped into 9 categories (Getting Started, Dashboard, Planning, Analysis, Export & Data, System, Customization, People, Troubleshooting) shown as pills at the top. Click a category to reveal its sub-section pills below; the active group highlights automatically as you scroll. This replaced an earlier flat list of 34 individual tabs.' },
+      { q: 'How is the Glossary page organized?', a: 'The Glossary (/glossary) uses a compact letter-jump row (A–L) instead of a flat tab list — each chip shows a section icon and starting letter; hover for the full section title, click to jump straight to it.' },
     ],
   },
   {
