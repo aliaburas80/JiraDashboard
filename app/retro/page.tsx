@@ -100,6 +100,22 @@ const labelSt: React.CSSProperties = {
   marginBottom: 4,
 };
 
+// Shared size/shape for both buttons on a suggested backlog item — Copy and
+// Create in Jira must look like the same control family, differing only in
+// disabled state (handled at the call site).
+const backlogItemButtonSt: React.CSSProperties = {
+  flex: 1,
+  fontSize: 11,
+  fontWeight: 600,
+  color: 'var(--dc-p2)',
+  background: 'var(--dc-s2)',
+  border: '1px solid var(--dc-bdr2)',
+  borderRadius: 6,
+  padding: '6px 10px',
+  cursor: 'pointer',
+  textAlign: 'center',
+};
+
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 function EntryList({
@@ -182,29 +198,26 @@ function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
                   <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: item.priority === 'high' ? 'var(--dc-red)' : item.priority === 'medium' ? 'var(--dc-amber)' : 'var(--dc-green)' }} />
                   <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--dc-acc2)' }}>{item.type}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)' }}>{item.title}</span>
-                  <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <button
-                      type="button"
-                      disabled
-                      title="Coming soon — requires Jira write access, which this app does not yet have (see FUT-JIRA-02 roadmap item)."
-                      style={{
-                        fontSize: 10, fontWeight: 600, color: 'var(--dc-p3)',
-                        background: 'var(--dc-s2)', border: '1px solid var(--dc-bdr2)', borderRadius: 6,
-                        padding: '4px 10px', cursor: 'not-allowed', opacity: 0.6,
-                      }}
-                    >
-                      Create in Jira (coming soon)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => navigator.clipboard?.writeText(`${item.title}\n\n${item.rationale}`)}
-                      style={{ fontSize: 10, fontWeight: 600, color: 'var(--dc-p3)', background: 'none', border: 'none', cursor: 'pointer' }}
-                    >
-                      Copy
-                    </button>
-                  </span>
                 </div>
-                <p style={{ fontSize: 11, color: 'var(--dc-p2)', margin: 0 }}>{item.rationale}</p>
+                <p style={{ fontSize: 11, color: 'var(--dc-p2)', margin: '0 0 10px 0' }}>{item.rationale}</p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard?.writeText(`${item.title}\n\n${item.rationale}`)}
+                    style={backlogItemButtonSt}
+                  >
+                    Copy
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    title="Coming soon — requires Jira write access, which this app does not yet have (see FUT-JIRA-02 roadmap item)."
+                    style={{ ...backlogItemButtonSt, cursor: 'not-allowed', opacity: 0.6, lineHeight: 1.3 }}
+                  >
+                    Create in Jira<br />
+                    <span style={{ fontSize: 9, fontWeight: 500 }}>coming soon</span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
