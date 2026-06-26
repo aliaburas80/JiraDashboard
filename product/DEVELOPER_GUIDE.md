@@ -1667,3 +1667,20 @@ Pure interpretation layer over the already-computed `DashboardMetrics` — close
 **Components:** `src/components/dashboard/CoachingInsightCard.tsx`, `CoachingCategoryTabs.tsx` (tabs render only when a role has >1 visible category — `manager` and `admin`). Severity renders via the existing `Badge` component (`severityToBadgeVariant()` in `src/lib/coachingBadge.ts`), never a raw color.
 
 **Testing:** `src/__tests__/roleBasedCoaching.test.ts` — 20 tests (`TC-RBC-01`–`09` + edge cases per CLAUDE.md §45.1: zero issues, empty `sprint.sprints`, confidence threshold boundaries, undefined `relations`). Suite: 689/71 passing.
+
+## Coaching Insights Redesign & Encouragement Enhancements (Implemented — v4.10.1)
+
+Presentation redesign of the page above plus two small derived-data helpers — closes `RBC-21`–`RBC-26` (TODO-List.md Section 16). No coaching generator, confidence formula, or severity rule is changed.
+
+**New services:**
+- `src/services/coaching/coachingTrend.service.ts` — `computeSeverityTrend(current, previous): 'improved' | 'worsened' | 'same'` — pure comparison of `SEVERITY_RANK` (now exported from `src/lib/coachingBadge.ts`; critical=0, high=1, medium=2, low=3); lower rank = more urgent, so a current rank higher than the previous rank is `'improved'`.
+- `src/lib/coachingEvidenceLink.ts` — `resolveEvidenceRoute(metricKey): string | null` — static prefix-match table mapping each coaching evidence family to its authoritative `/dashboard/*` route (`flow.*` → flow-health, `throughput.kanban.*` → kanban-health, `throughput.sprint.*` → sprint-status, `relations.*`/`risk.overdueIssues` → priority-attention, `risk.highPriorityOpenIssues`/`prediction.*`/`overallDeliveryConfidence` → delivery-controls, `capacity*` → ownership, `dataQuality.*` → data-quality, `epics[].*` → epic-readiness, `adminSignals.*`/`healthScore`/`completionRate` → summary). No mapping found → `null`, and the evidence chip stays non-interactive.
+
+**Trend data source:** `app/dashboard/coaching/page.tsx` fetches `GET /api/snapshots` (existing Snapshots feature endpoint, newest-first) and, when ≥2 exist, `GET /api/snapshots/:id` for the second-most-recent one; its `metricsJson` is parsed and re-run through the existing `generateAllCoachingInsights()` to get each category's previous severity. This intentionally reuses the existing `DashboardSnapshot` Prisma model and Snapshots API — no new persistence was added, and the trend is silently omitted (not faked) when fewer than 2 snapshots exist or either fetch fails.
+
+**Component changes:**
+- `CoachingInsightCard.tsx` — rewritten layout: mood-led hero banner (with trend badge + confidence-aware "Early signal:" prefix + quick-win celebration headline for `low` severity), evidence stat chips (clickable when `resolveEvidenceRoute()` resolves), merged "What to Watch" list, merged "Do This Next" checklist, collapsed-by-default Ceremony Advice accordion (with an `EmptyRow` "all clear" state when nothing fired), "Try This Next Sprint" highlight strip. Tailwind `slate-*` utilities replaced with real design tokens.
+- `CoachingCategoryTabs.tsx` — accepts `severityByCategory`; renders a small urgency nudge dot on any non-active tab whose severity is `high`/`critical`.
+- `app/dashboard/coaching/page.tsx` — sorts `bundle.categories` by `SEVERITY_RANK` before rendering tabs/default-active category; computes `trendByCategory` and `severityByCategory` and passes them down; dropped the old non-standard `.page` wrapper for the shared `shellStyles.pageBody` convention used by sibling `/dashboard/*` pages.
+
+**Testing:** `src/__tests__/coachingTrend.test.ts` (3 tests) and `src/__tests__/coachingEvidenceLink.test.ts` (2 tests) — `TC-RBC-10`–`13`. Suite: 694/73 passing.

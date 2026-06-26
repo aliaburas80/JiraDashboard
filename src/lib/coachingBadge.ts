@@ -15,6 +15,14 @@ export function severityToBadgeVariant(severity: CheckSeverity): BadgeVariant {
   return SEVERITY_TO_VARIANT[severity];
 }
 
+// Lower rank = more urgent. Shared ordering used for tab sorting and trend comparison.
+export const SEVERITY_RANK: Record<CheckSeverity, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+};
+
 export function deriveSeverity(weakPointCount: number, confidenceScore: number, criticalSignalPresent: boolean): CheckSeverity {
   if (criticalSignalPresent) return 'critical';
   if (weakPointCount >= 3) return 'high';

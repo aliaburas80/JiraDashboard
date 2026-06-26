@@ -328,3 +328,12 @@
 | **Coaching Category** | One of 7 content groupings (Scrum Master, Product Owner, Engineering Manager, Delivery Manager, Team Lead, C-level, Admin). Distinct from `AppRole` — the `manager` role sees 3 categories as tabs (Engineering Manager, Delivery Manager, Team Lead). |
 | **Ceremony Advice** | Team-wide cadence recommendations (daily standup, refinement, sprint planning, sprint review, retrospective) computed once per page load and embedded identically into every visible coaching category. Each line only appears when its trigger condition is met in the real data — never a generic placeholder. |
 | **Coaching Confidence Score** | A 0–100 score per coaching category, averaged from the relevant `MetricConfidenceMap` entries and downgraded ×0.75 (Weak) or ×0.5 (Critical) when Data Quality is poor. Shows "Not available" instead of a number when there isn't enough data yet. |
+
+## R — v4.10.1 Coaching Redesign Terms (2026-06-26)
+
+| Term | Definition |
+|---|---|
+| **Severity Trend** | An improved/worsened/unchanged comparison of a coaching category's current severity against its severity in the user's second-most-recent saved snapshot, computed by `computeSeverityTrend()`. Silently omitted when fewer than 2 snapshots exist — never fabricated. |
+| **Quick-Win Celebration** | When a coaching category's severity is `low`, its hero headline cites a specific evidence number (e.g. "92% completion rate") instead of a generic "Looking good" message. |
+| **Cross-Category Nudge** | A small colored dot shown on any non-active coaching tab whose severity is `high` or `critical`, surfacing urgency without requiring the user to click through every tab. |
+| **Evidence Routing** | The static `metricKey`-prefix lookup (`resolveEvidenceRoute()`) that maps a coaching evidence item to its source `/dashboard/*` page, making the evidence chip clickable when a mapping exists. |

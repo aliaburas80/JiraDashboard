@@ -1441,3 +1441,21 @@ Alex's flow (New User — First Login):
 **Outcome:** The user is told honestly that the system cannot yet vouch for this category's recommendations, rather than being shown a misleadingly precise number.
 
 **Related:** UC-114, FR-350, TC-RBC-09
+
+---
+
+### SCN-059 — Admin Lands on the Most Urgent Category and Sees It Improving
+
+**Context:** An admin oversees all 7 coaching categories and wants to immediately see what needs attention rather than clicking through every tab — and wants to know if last sprint's fix actually helped.
+
+**Flow:**
+1. The admin opens `/dashboard/coaching` having previously saved two snapshots (a "Sprint 14" and a "Sprint 15" snapshot via the Snapshots feature)
+2. The 7 category tabs are sorted by severity; "Team Lead" is `critical` and is shown first, already active — the admin doesn't need to find it
+3. "Product Owner" shows a small amber nudge dot because its severity is `high`, visible without switching tabs
+4. The admin switches to "Product Owner" and its hero banner shows a small green "improved" badge — `computeSeverityTrend()` compared today's `high` severity against the Sprint 14 snapshot's `critical` severity and confirmed it dropped in urgency
+5. Back on "Team Lead", the hero headline reads "Early signal: ..." because this category's confidence band is `Low` — the admin understands not to over-trust the verdict yet
+6. The admin clicks the "Average Cycle Time" evidence chip and is taken directly to `/dashboard/flow-health` to investigate further
+
+**Outcome:** The admin immediately sees what's most urgent, confirms an earlier fix on another category is trending in the right direction, is warned the most urgent category's data is still thin, and drills into the source dashboard in one click — instead of reading 7 fully-expanded text walls in a fixed order.
+
+**Related:** UC-114, FR-353, FR-354, TC-RBC-10–13

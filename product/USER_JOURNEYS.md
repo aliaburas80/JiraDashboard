@@ -1792,6 +1792,10 @@ Returning-user journeys now include bucket-first metrics restoration. After logi
 | 4 | User (e.g. Scrum Master) | Reviews the card | Health summary, weak points, evidence (real numbers), recommended actions, ceremony advice, confidence chip all shown | No generic Agile advice — every line cites real data |
 | 5 | User (Manager role) | Clicks the "Delivery Manager" tab | Card switches instantly, no reload | Same metrics, different lens |
 | 6 | User (Admin role) | Reviews the Admin category | Sees Data Quality plus unresolved system errors and storage/cloud-sync status | Admin-only operational signals |
+| 7 | User (any role, v4.10.1) | Lands on the page | Tabs are pre-sorted with the most urgent category active by default; a small dot marks any other tab needing attention | No clicking through tabs to find what matters |
+| 8 | User (low-severity category, v4.10.1) | Reviews the hero banner | Headline cites a specific evidence number with a celebratory tone instead of a generic "Looking good" line | Quick-win celebration |
+| 9 | User (has ≥2 saved snapshots, v4.10.1) | Reviews the mood label | Sees an improved/worsened/unchanged badge vs. the last saved snapshot | Silently omitted for first-time uploads |
+| 10 | User | Clicks an evidence chip (e.g. "Average Cycle Time") | Navigates to `/dashboard/flow-health`, the metric's source dashboard | Only chips with a known metric-family mapping are clickable |
 
-**Outcome:** The user gets evidence-cited, role-specific delivery coaching instead of generic Agile advice, with an honest confidence signal when data is thin.
-**Related:** UC-114, FR-346–FR-352, TC-RBC-01–09
+**Outcome:** The user gets evidence-cited, role-specific delivery coaching instead of generic Agile advice, presented in a scannable, encouraging layout that leads with what's most urgent, with an honest confidence signal when data is thin.
+**Related:** UC-114, FR-346–FR-354, TC-RBC-01–13

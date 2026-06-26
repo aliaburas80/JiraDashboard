@@ -1,24 +1,52 @@
 .tabRow {
-  @apply flex flex-wrap gap-2 mb-4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-4, 16px);
 }
 
 .tab {
-  @apply px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-white text-slate-600 transition-colors;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-chip, 20px);
+  font-size: var(--text-sm, 11px);
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background var(--transition-fast, 120ms), color var(--transition-fast, 120ms), border-color var(--transition-fast, 120ms);
 
   &:hover {
-    @apply bg-slate-50;
+    background: var(--color-subtle);
   }
 
   &:focus-visible {
-    outline: var(--focus-ring-width, 2px) solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
-    outline-offset: var(--focus-ring-offset, 2px);
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
   }
 }
 
+.nudgeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--color-warning);
+}
+
+.nudgeDotCritical {
+  background: var(--color-danger-strong);
+}
+
 .tabActive {
-  @apply bg-slate-900 text-white border-slate-900;
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
 
   &:hover {
-    @apply bg-slate-800;
+    background: var(--color-primary-hover);
   }
 }
