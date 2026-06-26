@@ -2,6 +2,7 @@
 // /retro — Sprint retrospective: fill in-app, download template, or upload file.
 'use client';
 import { useRef, useState } from 'react';
+import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { downloadRetroExcelTemplate } from '@/services/retro/retroTemplate.service';
@@ -98,36 +99,6 @@ const labelSt: React.CSSProperties = {
   fontWeight: 600,
   color: 'var(--dc-p2)',
   marginBottom: 4,
-};
-
-// Shared size/shape for both buttons on a suggested backlog item — Copy and
-// Create in Jira must look like the same control family. Color/border differ
-// (Copy is active/accent, Create in Jira is disabled/gray) but layout does not.
-const backlogItemButtonSt: React.CSSProperties = {
-  flex: 1,
-  fontSize: 11,
-  fontWeight: 600,
-  borderRadius: 6,
-  padding: '6px 10px',
-  textAlign: 'center',
-};
-
-const backlogCopyButtonSt: React.CSSProperties = {
-  ...backlogItemButtonSt,
-  color: 'var(--dc-acc2)',
-  background: 'rgba(255,138,76,0.08)',
-  border: '1px solid var(--dc-acc2)',
-  cursor: 'pointer',
-};
-
-const backlogJiraButtonSt: React.CSSProperties = {
-  ...backlogItemButtonSt,
-  color: 'var(--dc-p3)',
-  background: 'var(--dc-s2)',
-  border: '1px solid var(--dc-bdr2)',
-  cursor: 'not-allowed',
-  opacity: 0.6,
-  lineHeight: 1.3,
 };
 
 // Clipboard write can silently fail (insecure context, missing permission,
@@ -256,19 +227,20 @@ function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
                   <p key={li} style={{ fontSize: 11, color: 'var(--dc-p2)', margin: li === 0 ? '0 0 2px 0' : '0 0 6px 0' }}>{line}</p>
                 ))}
                 <p style={{ fontSize: 10, color: 'var(--dc-p3)', fontStyle: 'italic', margin: '0 0 10px 0' }}>Evidence: {item.evidence}</p>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => handleCopy(item, i)}
-                    style={copyFailedIndex === i ? { ...backlogCopyButtonSt, color: 'var(--dc-red)', border: '1px solid var(--dc-red)', background: 'rgba(248,113,113,0.08)' } : backlogCopyButtonSt}
+                    className={clsx('btn-xs flex-1', copyFailedIndex === i ? 'btn-outline-danger' : 'btn-primary')}
                   >
-                    {copiedIndex === i ? 'Copied!' : copyFailedIndex === i ? 'Copy failed — select text manually' : 'Copy'}
+                    {copiedIndex === i ? 'Copied!' : copyFailedIndex === i ? 'Copy failed — select manually' : 'Copy'}
                   </button>
                   <button
                     type="button"
                     disabled
                     title="Coming soon — requires Jira write access, which this app does not yet have (see FUT-JIRA-02 roadmap item)."
-                    style={backlogJiraButtonSt}
+                    className="btn-secondary btn-xs flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ lineHeight: 1.3 }}
                   >
                     Create in Jira<br />
                     <span style={{ fontSize: 9, fontWeight: 500 }}>coming soon</span>
