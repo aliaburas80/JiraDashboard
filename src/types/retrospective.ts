@@ -53,10 +53,18 @@ export interface ThemeMatch {
 export type BacklogItemType = 'story' | 'task' | 'spike';
 
 export interface SuggestedBacklogItem {
-  type:      BacklogItemType;
-  title:     string;
-  rationale: string;
-  priority:  ActionPriority;
+  type:        BacklogItemType;
+  title:       string;
+  // Standard story/task/spike write-up — "As a ... I want ... so that ..."
+  // for a story, "Task: ... Acceptance criteria: ..." for a task, "Spike:
+  // ... Goal: ..." for a spike. This is the text meant to be pasted
+  // directly into a backlog tool, not a sentence describing the suggestion.
+  description: string;
+  // The real retro signal (a quoted blocker/observation, a mention count)
+  // that triggered this suggestion — kept separate from description so the
+  // backlog item itself reads as a normal backlog item, not retro commentary.
+  evidence:    string;
+  priority:    ActionPriority;
 }
 
 // RETRO-37 — aggregate insight produced from one or more RetroRecords.

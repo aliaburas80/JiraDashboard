@@ -97,29 +97,34 @@ function buildSuggestedBacklogItems(
       ? {
           type: 'spike', priority: 'high',
           title: `Investigate root cause: "${blocker}"`,
-          rationale: 'This blocker has recurred across multiple sprints — a one-off workaround clearly is not resolving it; the next step is root-cause investigation, not another retry.',
+          description: `Spike: Time-box an investigation into the root cause of "${blocker}".\nGoal: identify why previous attempts to resolve this haven't held, and propose a permanent fix or process change to prevent it recurring again.`,
+          evidence: 'This blocker has recurred across multiple sprints.',
         }
       : {
           type: 'task', priority: 'high',
           title: `Resolve blocker: "${blocker}"`,
-          rationale: 'Recorded as a blocker this sprint — addressing it removes a known risk to next sprint\'s flow.',
+          description: `Task: Investigate and resolve "${blocker}" before it carries into next sprint.\nAcceptance criteria: the blocker is confirmed cleared and verified with the team.`,
+          evidence: 'Recorded as a blocker this sprint.',
         };
   });
 
   const topTheme = themes[0];
+  const themeLabel = topTheme ? THEME_LABEL[topTheme.category] : '';
   const themeItem: SuggestedBacklogItem | null = topTheme
     ? {
         type: 'story', priority: topTheme.count >= 2 ? 'high' : 'medium',
-        title: `Improve: ${THEME_LABEL[topTheme.category]}`,
-        rationale: `${topTheme.count} mention${topTheme.count > 1 ? 's' : ''} this sprint, e.g. "${topTheme.examples[0]}" — worth a dedicated story rather than letting it recur silently.`,
+        title: `Improve: ${themeLabel}`,
+        description: `As a team, we want to address recurring ${themeLabel.toLowerCase()} issues, so that they stop causing friction sprint after sprint.\nAcceptance criteria: a concrete process or workflow change is agreed and tried for at least one full sprint.`,
+        evidence: `${topTheme.count} mention${topTheme.count > 1 ? 's' : ''} this sprint, e.g. "${topTheme.examples[0]}".`,
       }
     : null;
 
   const goalItem: SuggestedBacklogItem | null = record.goalMet === 'no'
     ? {
         type: 'spike', priority: 'medium',
-        title: `Investigate why the sprint goal was not met${record.sprintGoal ? `: "${record.sprintGoal}"` : ''}`,
-        rationale: 'The sprint goal was not met — understanding why (scope, capacity, blockers, or estimation) prevents repeating the same miss next sprint.',
+        title: 'Investigate why the sprint goal was not met',
+        description: 'Spike: Review what caused the sprint goal to be missed — scope, capacity, estimation, or blockers.\nGoal: document findings and translate them into next sprint\'s planning so the same miss does not repeat.',
+        evidence: record.sprintGoal ? `Sprint goal "${record.sprintGoal}" was not met.` : 'The sprint goal was not met.',
       }
     : null;
 

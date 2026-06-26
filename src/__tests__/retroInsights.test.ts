@@ -142,7 +142,8 @@ test('TC-RETRO-23: the top theme produces a story citing the triggering example'
   const storyItem = insight.suggestedBacklogItems.find(i => i.type === 'story');
   expect(storyItem).toBeDefined();
   expect(storyItem!.title).toContain('Requirements');
-  expect(storyItem!.rationale).toContain('Requirements were unclear from the start');
+  expect(storyItem!.description).toMatch(/^As a team, we want to address recurring requirements issues/);
+  expect(storyItem!.evidence).toContain('Requirements were unclear from the start');
 });
 
 // TC-RETRO-24: a missed sprint goal produces an investigation spike
@@ -150,7 +151,7 @@ test('TC-RETRO-24: a missed sprint goal produces an investigation spike', () => 
   const record = buildRecord({ goalMet: 'no', sprintGoal: 'Ship login redesign' });
   const insight = generateRetrospectiveInsight(record, 'form');
   expect(insight.suggestedBacklogItems).toContainEqual(expect.objectContaining({
-    type: 'spike', title: expect.stringContaining('Ship login redesign'),
+    type: 'spike', evidence: expect.stringContaining('Ship login redesign'),
   }));
 });
 

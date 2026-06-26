@@ -197,8 +197,8 @@ function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [copyFailedIndex, setCopyFailedIndex] = useState<number | null>(null);
 
-  async function handleCopy(item: { title: string; rationale: string }, i: number) {
-    const ok = await copyToClipboard(`${item.title}\n\n${item.rationale}`);
+  async function handleCopy(item: { title: string; description: string; evidence: string }, i: number) {
+    const ok = await copyToClipboard(`${item.title}\n\n${item.description}\n\nEvidence: ${item.evidence}`);
     setCopiedIndex(ok ? i : null);
     setCopyFailedIndex(ok ? null : i);
     setTimeout(() => { setCopiedIndex(null); setCopyFailedIndex(null); }, 1800);
@@ -252,7 +252,10 @@ function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
                   <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--dc-acc2)' }}>{item.type}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)' }}>{item.title}</span>
                 </div>
-                <p style={{ fontSize: 11, color: 'var(--dc-p2)', margin: '0 0 10px 0' }}>{item.rationale}</p>
+                {item.description.split('\n').map((line, li) => (
+                  <p key={li} style={{ fontSize: 11, color: 'var(--dc-p2)', margin: li === 0 ? '0 0 2px 0' : '0 0 6px 0' }}>{line}</p>
+                ))}
+                <p style={{ fontSize: 10, color: 'var(--dc-p3)', fontStyle: 'italic', margin: '0 0 10px 0' }}>Evidence: {item.evidence}</p>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     type="button"
