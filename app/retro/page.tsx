@@ -433,6 +433,7 @@ export default function RetroPage() {
 
   // ── Insights ──────────────────────────────────────────────────────────────
 
+  if (view === 'insights') {
   const filledActions = form.actions.filter(a => a.text.trim());
   const goalColorMap = {
     yes:     { bg: 'rgba(34,197,94,0.1)',   border: 'rgba(34,197,94,0.25)',   text: 'var(--dc-green)' },
@@ -490,6 +491,7 @@ export default function RetroPage() {
       </div>
     </AppShell>
   );
+  }
 
   // ── Upload ────────────────────────────────────────────────────────────────
 
