@@ -7,7 +7,7 @@
 // blockers, duplicate action items) that only emerge with multiple records.
 
 import type {
-  RetroRecord, RetrospectiveInsight, ThemeCategory, ThemeMatch,
+  RetroRecord, RetrospectiveInsight, SuggestedBacklogItem, ThemeCategory, ThemeMatch,
 } from '@/types/retrospective';
 
 function compact(lines: (string | null)[]): string[] {
@@ -79,6 +79,53 @@ function buildNextSprintSuggestions(record: RetroRecord, themes: ThemeMatch[]): 
   ]);
 }
 
+// RETRO-29 — concrete, backlog-ready story/task/spike suggestions for next
+// sprint. Unlike buildNextSprintSuggestions() (free-text ceremony advice),
+// every item here is meant to be pasteable straight into a backlog. Each is
+// gated by a real signal — blocker, repeated blocker, top theme, or a missed
+// goal — and a repeated blocker produces a spike instead of a duplicate task
+// so the same issue isn't suggested twice in two different forms.
+function buildSuggestedBacklogItems(
+  record: RetroRecord, themes: ThemeMatch[], repeatedBlockers: string[],
+): SuggestedBacklogItem[] {
+  const repeatedSet = new Set(repeatedBlockers);
+  const blockers = record.blockers.filter((b) => b.trim());
+
+  const blockerItems: SuggestedBacklogItem[] = blockers.map((blocker) => {
+    const isRepeated = repeatedSet.has(blocker.trim().toLowerCase());
+    return isRepeated
+      ? {
+          type: 'spike', priority: 'high',
+          title: `Investigate root cause: "${blocker}"`,
+          rationale: 'This blocker has recurred across multiple sprints — a one-off workaround clearly is not resolving it; the next step is root-cause investigation, not another retry.',
+        }
+      : {
+          type: 'task', priority: 'high',
+          title: `Resolve blocker: "${blocker}"`,
+          rationale: 'Recorded as a blocker this sprint — addressing it removes a known risk to next sprint\'s flow.',
+        };
+  });
+
+  const topTheme = themes[0];
+  const themeItem: SuggestedBacklogItem | null = topTheme
+    ? {
+        type: 'story', priority: topTheme.count >= 2 ? 'high' : 'medium',
+        title: `Improve: ${THEME_LABEL[topTheme.category]}`,
+        rationale: `${topTheme.count} mention${topTheme.count > 1 ? 's' : ''} this sprint, e.g. "${topTheme.examples[0]}" — worth a dedicated story rather than letting it recur silently.`,
+      }
+    : null;
+
+  const goalItem: SuggestedBacklogItem | null = record.goalMet === 'no'
+    ? {
+        type: 'spike', priority: 'medium',
+        title: `Investigate why the sprint goal was not met${record.sprintGoal ? `: "${record.sprintGoal}"` : ''}`,
+        rationale: 'The sprint goal was not met — understanding why (scope, capacity, blockers, or estimation) prevents repeating the same miss next sprint.',
+      }
+    : null;
+
+  return [...blockerItems, themeItem, goalItem].filter((item): item is SuggestedBacklogItem => item !== null);
+}
+
 // RETRO-13 — ceremony-linked recommendations.
 function buildCeremonyRecommendations(record: RetroRecord, ownershipGaps: string[]): string[] {
   return compact([
@@ -126,6 +173,7 @@ export function generateRetrospectiveInsight(
     blockers: record.blockers.filter((t) => t.trim()),
     actionItems: record.actions.filter((a) => a.text.trim()),
     nextSprintSuggestions: buildNextSprintSuggestions(record, themes),
+    suggestedBacklogItems: buildSuggestedBacklogItems(record, themes, repeatedBlockers),
     ceremonyRecommendations: buildCeremonyRecommendations(record, ownershipGaps),
     risksIfIgnored: compact([
       record.blockers.some((b) => b.trim())

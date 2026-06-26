@@ -163,7 +163,7 @@ function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
         ) : <p style={{ fontSize: 12, color: 'var(--dc-p3)' }}>All clear — no pain points or blockers recorded.</p>}
       </div>
 
-      <div style={{ marginBottom: insight.repeatedBlockers.length || insight.duplicateActionItems.length ? 14 : 0 }}>
+      <div style={{ marginBottom: 14 }}>
         <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 6 }}>✅ Do This Next</h3>
         {doNext.length > 0 ? (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -171,6 +171,31 @@ function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
           </ul>
         ) : <p style={{ fontSize: 12, color: 'var(--dc-p3)' }}>No specific suggestions — good job, keep it up!</p>}
       </div>
+
+      {insight.suggestedBacklogItems.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 6 }}>📝 Suggested Stories &amp; Tasks for Next Sprint</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {insight.suggestedBacklogItems.map((item, i) => (
+              <div key={i} style={{ border: '1px solid var(--dc-bdr)', borderRadius: 8, padding: '10px 12px', background: 'var(--dc-s3)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: item.priority === 'high' ? 'var(--dc-red)' : item.priority === 'medium' ? 'var(--dc-amber)' : 'var(--dc-green)' }} />
+                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--dc-acc2)' }}>{item.type}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)' }}>{item.title}</span>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard?.writeText(`${item.title}\n\n${item.rationale}`)}
+                    style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 600, color: 'var(--dc-p3)', background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    Copy
+                  </button>
+                </div>
+                <p style={{ fontSize: 11, color: 'var(--dc-p2)', margin: 0 }}>{item.rationale}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {insight.repeatedBlockers.length > 0 && (
         <p style={{ fontSize: 11, color: 'var(--dc-amber)', marginBottom: 6 }}>

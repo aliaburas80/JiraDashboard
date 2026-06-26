@@ -111,3 +111,51 @@ test('TC-RETRO-20: detects a blocker repeated across multiple sprints', () => {
   expect(insights[1].repeatedBlockers).toContain('same blocker');
   expect(insights[2].repeatedBlockers).toContain('same blocker');
 });
+
+// TC-RETRO-21: a non-repeated blocker suggests a resolve task
+test('TC-RETRO-21: a non-repeated blocker produces a high-priority resolve task', () => {
+  const record = buildRecord({ blockers: ['Waiting on infra team for staging environment'] });
+  const insight = generateRetrospectiveInsight(record, 'form');
+  expect(insight.suggestedBacklogItems).toContainEqual(expect.objectContaining({
+    type: 'task', priority: 'high',
+    title: expect.stringContaining('Waiting on infra team for staging environment'),
+  }));
+});
+
+// TC-RETRO-22: a repeated blocker suggests a spike instead of a duplicate resolve task
+test('TC-RETRO-22: a repeated blocker produces a root-cause spike, not a duplicate resolve task', () => {
+  const record = buildRecord({ blockers: ['Waiting on infra team for staging environment'] });
+  const insight = generateRetrospectiveInsight(record, 'form', ['waiting on infra team for staging environment']);
+  // No plain "Resolve blocker" task for the same text — only the escalated spike (plus
+  // an unrelated theme-driven story, since this blocker text also matches the
+  // "dependency" theme keywords).
+  expect(insight.suggestedBacklogItems.some(i => i.title.startsWith('Resolve blocker:'))).toBe(false);
+  const spike = insight.suggestedBacklogItems.find(i => i.type === 'spike');
+  expect(spike).toBeDefined();
+  expect(spike!.title).toMatch(/root cause/i);
+});
+
+// TC-RETRO-23: the top theme produces a story suggestion citing the real evidence
+test('TC-RETRO-23: the top theme produces a story citing the triggering example', () => {
+  const record = buildRecord({ didntGoWell: ['Requirements were unclear from the start'] });
+  const insight = generateRetrospectiveInsight(record, 'form');
+  const storyItem = insight.suggestedBacklogItems.find(i => i.type === 'story');
+  expect(storyItem).toBeDefined();
+  expect(storyItem!.title).toContain('Requirements');
+  expect(storyItem!.rationale).toContain('Requirements were unclear from the start');
+});
+
+// TC-RETRO-24: a missed sprint goal produces an investigation spike
+test('TC-RETRO-24: a missed sprint goal produces an investigation spike', () => {
+  const record = buildRecord({ goalMet: 'no', sprintGoal: 'Ship login redesign' });
+  const insight = generateRetrospectiveInsight(record, 'form');
+  expect(insight.suggestedBacklogItems).toContainEqual(expect.objectContaining({
+    type: 'spike', title: expect.stringContaining('Ship login redesign'),
+  }));
+});
+
+// TC-RETRO-25: a clean sprint with nothing to flag produces no backlog suggestions
+test('TC-RETRO-25: an empty record produces no suggested backlog items', () => {
+  const insight = generateRetrospectiveInsight(buildRecord(), 'form');
+  expect(insight.suggestedBacklogItems).toEqual([]);
+});

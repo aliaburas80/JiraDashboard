@@ -17,6 +17,11 @@
 - 13 new tests (`retroFileParser.test.ts`, `retroInsights.test.ts` — `TC-RETRO-08`–`20`); full suite 703/73 passing; lint/typecheck clean (pre-existing warnings unchanged; new service/route/type files are 100% lint-clean, the page file keeps its established inline-style convention).
 - **Deferred:** saving a retrospective server-side (`RETRO-15`), a "save draft" affordance (`RETRO-30`), and linking retro items to delivery metrics (`RETRO-14`) remain open P2 items — no persistence model was introduced in this change.
 
+**Same-day fixes after user testing (2026-06-26):**
+- **Fixed a real bug** reported as "retro report not useful": theme detection was running over `wentWell` text too, so positive feedback like "Automated tests caught regressions" was flagged as a `qa-release` *problem* theme and then cited in suggestions as something to fix. Theme detection now only considers `didntGoWell` + `blockers`.
+- **New: "Suggested Stories & Tasks for Next Sprint"** — per a direct follow-up request ("suggest stories/tasks for next sprint"), each `InsightPanel` now shows concrete, copy-pasteable backlog items (not just free-text advice): a non-repeated blocker becomes a `task` to resolve it; a *repeated* blocker becomes a `spike` to investigate root cause instead of another one-off fix; the top theme becomes a `story` citing the real evidence sentence; a missed sprint goal becomes a `spike` to investigate why. Each item has a Copy button. No Jira ticket is created — copy-paste only, consistent with Jira write-back remaining a P3 roadmap item.
+- 6 new tests (2 regression tests for the theme-pollution fix, 4 for the new backlog-item suggestions); full suite 710/73 passing.
+
 ## v4.10.0 — Role-Based Delivery Coaching Insights (2026-06-23, P1 — in progress, unmerged)
 
 **Scope:** `RBC-01`–`RBC-20` — turns the metrics already computed for every dashboard into role-specific, evidence-cited coaching advice. No new metric calculations were introduced; this is a pure interpretation layer.

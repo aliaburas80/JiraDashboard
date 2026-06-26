@@ -787,6 +787,30 @@ Five independent rule groups (daily standup, refinement, sprint planning, sprint
 
 **Implementation:** `src/services/retro/retroInsights.service.ts — detectRepeatedBlockers()`, `generateInsightsForRecords()`
 
+### Suggested Backlog Items (`buildSuggestedBacklogItems`) — added 2026-06-26
+
+**Why:** user testing reported the retro report as "not useful" — `nextSprintSuggestions` and `ceremonyRecommendations` are free-text process advice, not anything a Scrum Master could paste straight into a backlog. This algorithm produces concrete `story`/`task`/`spike` suggestions instead.
+
+**Input:** `RetroRecord`, `themes: ThemeMatch[]`, `repeatedBlockers: string[]`
+
+**Steps (every item traceable to a real signal — never a generic placeholder):**
+1. For each non-empty blocker: if its lowercased/trimmed text is in `repeatedBlockers` → emit a `'spike'` titled `Investigate root cause: "<text>"` (priority `high`) — **not** a duplicate resolve task, because once a blocker has recurred, a one-off resolve task already failed to stick; otherwise → emit a `'task'` titled `Resolve blocker: "<text>"` (priority `high`)
+2. If a top theme exists (`themes[0]`): emit a `'story'` titled `Improve: <THEME_LABEL>`, rationale citing the match count and the actual triggering example sentence, priority `high` if count ≥ 2 else `medium`
+3. If `goalMet === 'no'`: emit a `'spike'` titled `Investigate why the sprint goal was not met` (with the sprint goal text appended when present), priority `medium`
+4. A retrospective with none of the above signals produces an empty array — not fabricated content
+
+**Output:** `SuggestedBacklogItem[]` — `{ type, title, rationale, priority }`. Rendered in the UI with a Copy button per item; no Jira ticket is created (write-back remains a P3 roadmap item).
+
+**Implementation:** `src/services/retro/retroInsights.service.ts — buildSuggestedBacklogItems()`
+
+### Theme Detection Bug Fix — Positive Feedback Pollution (2026-06-26)
+
+**Bug:** theme keyword-matching originally ran over `wentWell + didntGoWell + blockers` combined. Positive feedback like "Automated tests caught regressions" matched the `qa-release` regex and was flagged as a problem theme, then cited in `nextSprintSuggestions` as something to "discuss" — actively misleading, and the proximate cause of the "retro report not useful" feedback.
+
+**Fix:** theme detection now runs over `didntGoWell + blockers` only (`concerns`, not `wentWell`). `wentWell` is still used for `confidence` (more filled-in fields means more reliable input, regardless of sentiment) and for the `positives` field shown separately in the UI — just never for theme/problem detection. A few overly narrow keyword regexes were also broadened (e.g. `process` now catches "sprint planning"/"refinement session" complaints) to reduce false negatives on common real-world phrasing.
+
+**Implementation:** `src/services/retro/retroInsights.service.ts — detectThemes()`, `THEME_KEYWORDS`
+
 ### CSV Date-Mangling Fix
 
 **Problem discovered during implementation:** `XLSX.read()` (the `xlsx` npm package), when given CSV text containing an ISO-date-like string (e.g. `"2026-06-08"`), auto-detects it as a date cell and silently reformats it to a locale date string (e.g. `"6/8/26"`) on read — corrupting any date column in an uploaded retro file without any warning.

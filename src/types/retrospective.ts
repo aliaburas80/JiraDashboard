@@ -45,6 +45,20 @@ export interface ThemeMatch {
   examples: string[];
 }
 
+// RETRO-29 — a concrete, backlog-ready story/task/spike suggestion for next
+// sprint, distinct from the free-text ceremony/process advice in
+// nextSprintSuggestions. Each one must be traceable to a real signal from
+// this retrospective (a blocker, a repeated blocker, a theme, or a missed
+// goal) — never a generic placeholder item.
+export type BacklogItemType = 'story' | 'task' | 'spike';
+
+export interface SuggestedBacklogItem {
+  type:      BacklogItemType;
+  title:     string;
+  rationale: string;
+  priority:  ActionPriority;
+}
+
 // RETRO-37 — aggregate insight produced from one or more RetroRecords.
 export interface RetrospectiveInsight {
   id:                       string;
@@ -57,6 +71,7 @@ export interface RetrospectiveInsight {
   blockers:                 string[];
   actionItems:              RetroActionItem[];
   nextSprintSuggestions:    string[];
+  suggestedBacklogItems:    SuggestedBacklogItem[];
   ceremonyRecommendations:  string[];
   risksIfIgnored:           string[];
   ownershipGaps:            string[];
