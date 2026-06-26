@@ -1667,3 +1667,20 @@ Pure interpretation layer over the already-computed `DashboardMetrics` — close
 **Components:** `src/components/dashboard/CoachingInsightCard.tsx`, `CoachingCategoryTabs.tsx` (tabs render only when a role has >1 visible category — `manager` and `admin`). Severity renders via the existing `Badge` component (`severityToBadgeVariant()` in `src/lib/coachingBadge.ts`), never a raw color.
 
 **Testing:** `src/__tests__/roleBasedCoaching.test.ts` — 20 tests (`TC-RBC-01`–`09` + edge cases per CLAUDE.md §45.1: zero issues, empty `sprint.sprints`, confidence threshold boundaries, undefined `relations`). Suite: 689/71 passing.
+
+## Retrospective Upload, Insights Engine, and `.xlsx` Template (Implemented — v4.7)
+
+Closes `RETRO-04`–`RETRO-13`, `RETRO-17`, `RETRO-19`–`RETRO-22`, `RETRO-29`, `RETRO-33`–`RETRO-38` (TODO-List.md Section 17). Persistence (`RETRO-15`/`RETRO-30`) and metric-linking (`RETRO-14`) are explicitly out of scope — there is no new Prisma model and nothing is saved server-side; every upload is a stateless preview.
+
+**Module layout:** `src/services/retro/`
+- `retroFileParser.service.ts` — `parseRetroFile(buffer, filename)`. For `.csv`, uses a dedicated minimal RFC4180 parser (`parseCsvText()`) rather than the `xlsx` package — `XLSX.read()` was found during implementation to silently reformat ISO-date-like CSV strings (e.g. `"2026-06-08"`) into a locale date string, which would have corrupted any date column on upload. For `.xlsx`/`.xls`, uses `XLSX.read()` (binary cell types are accurate there). For `.md`/`.txt`, uses a heading + bullet heuristic (`parsePlainTextRetro()`). Header aliasing (`HEADER_ALIASES`) accepts both this app's template headers and the original RETRO-05 spec naming.
+- `retroInsights.service.ts` — `generateRetrospectiveInsight(record, source, repeatedBlockers?)` and `generateInsightsForRecords(records, source)`, the shared engine behind both the in-app form and the uploaded-file flow. Replaces the old flat-string `generateInsights(form)` that used to live inline in `app/retro/page.tsx` (see `product/ALGORITHM_SPEC.md`'s "superseded" note). `detectRepeatedBlockers(records)` is the cross-record signal that only exists for multi-sprint uploads.
+- `retroTemplate.service.ts` — `downloadRetroExcelTemplate()`, client-side `.xlsx` generation using the same `XLSX.writeFile()` pattern as `exportExplorerToExcel()` (`src/services/export/explorerExport.service.ts`).
+
+**Types:** `src/types/retrospective.ts` — `RetroRecord`, `RetroActionItem`, `RetrospectiveInsight` (RETRO-37), `ThemeCategory`/`ThemeMatch`, `RetroDataCorrection`.
+
+**Route:** `POST /api/retro/parse` (`app/api/retro/parse/route.ts`) — session-authenticated (401 if not logged in), validates extension (`.csv`/`.xlsx`/`.xls`/`.md`/`.txt`) and size (≤5 MB), calls `parseRetroFile()` then `generateInsightsForRecords()`, returns `{ records, insights, warnings, corrections }`. No persistence — purely a parse-and-preview endpoint.
+
+**Page:** `app/retro/page.tsx` gained two new views — `upload` (file picker) and `upload-insights` (one shared `InsightPanel` per parsed sprint, plus warnings/corrections). The existing `form`/`insights` views were updated to call the shared engine (`formToRecord()` maps `RetroForm` → `RetroRecord`) instead of the old inline flat-string function, so the in-app form gets theme detection, ownership-gap flags, and duplicate-action-item warnings it didn't have before. The file keeps its pre-existing inline-style convention (it is not on CLAUDE.md §60's named refactor-priority list) — new UI reuses the file's existing `sectionCard`/`inputSt`/`labelSt` style objects rather than introducing a parallel pattern or an unrelated SCSS-module migration.
+
+**Testing:** `src/__tests__/retroFileParser.test.ts` (8 tests, `TC-RETRO-08`–`13` + `08b`) and `src/__tests__/retroInsights.test.ts` (7 tests, `TC-RETRO-14`–`20`). Suite: 703/73 passing.

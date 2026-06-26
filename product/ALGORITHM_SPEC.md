@@ -665,7 +665,9 @@ Metric algorithms still compute from normalised Jira export rows, but the latest
 
 ---
 
-### Retro Insights Engine (`generateInsights`)
+### Retro Insights Engine (`generateInsights`) — superseded 2026-06-26
+
+*(Original flat-string engine, kept here for history. Replaced by "Retrospective Insights Engine" under v4.7 below — see that section for the current algorithm.)*
 
 **Input:** `RetroForm`
 
@@ -753,4 +755,42 @@ Five independent rule groups (daily standup, refinement, sprint planning, sprint
 
 **Implementation:** `src/services/coaching/ceremonyAdvice.service.ts — buildCeremonyAdvice()`
 
-**Implementation:** `app/retro/page.tsx` → `generateInsights()`
+---
+
+## v4.7 — Retrospective Insights Engine, Theme Detection, and CSV Parsing Fix (2026-06-26)
+
+### Retrospective Insights Engine (`generateRetrospectiveInsight`)
+
+**Input:** `RetroRecord` (one sprint — from the in-app form or one group of rows from an uploaded file), `source: 'form' | 'upload'`, `repeatedBlockers?: string[]`
+
+**Steps:**
+1. Concatenate `wentWell + didntGoWell + blockers` text into `allText`
+2. **Theme detection:** for each of 7 categories (process, communication, requirements, qa-release, dependency, technical, planning), keyword-match `allText`; keep categories with ≥1 match; sort descending by match count (ties keep the categories' fixed declaration order)
+3. **Ownership gaps:** count action items with non-empty text but empty `owner` → one line; count with empty `dueDate` → one line
+4. **Duplicate action items:** group action item text by `trim().toLowerCase()`; any key with count > 1 is a duplicate
+5. **Next-sprint suggestions** (each line gated by a real signal, never generic):
+   - `goalMet === 'no' | 'partial'` → re-plan-scope advice
+   - `blockers` count > 0 → "Address the N recorded blocker(s)..." citing the count
+   - a top theme exists → "theme was the most common theme this sprint (N mention(s))..." citing it
+6. **Ceremony recommendations:** standup advice if any blocker exists; planning advice if any ownership gap exists; retro advice if any "what did not go well" entry exists
+7. **Confidence:** count non-empty values in `[sprintGoal, goalMet, ...wentWell, ...didntGoWell, ...blockers]` → `'high'` if ≥4, `'medium'` if ≥2, else `'low'`
+
+**Output:** `RetrospectiveInsight` — `{ id, sprintName, team, source, themes, positives, painPoints, blockers, actionItems, nextSprintSuggestions, ceremonyRecommendations, risksIfIgnored, ownershipGaps, repeatedBlockers, duplicateActionItems, confidence }`
+
+**Implementation:** `src/services/retro/retroInsights.service.ts — generateRetrospectiveInsight()`
+
+### Repeated Blockers Across Sprints (`detectRepeatedBlockers`)
+
+**Input:** `RetroRecord[]` — only meaningful with 2+ records (i.e. a multi-sprint uploaded file)
+
+**Steps:** for each record, build a de-duplicated, lowercased, trimmed set of its blocker text; count how many *records* (not rows) contain each unique blocker text; any blocker appearing in more than one record is "repeated." The resulting list is embedded identically into every record's insight via `generateInsightsForRecords()` — the same "compute once, embed everywhere" pattern as the Coaching Ceremony Advice engine.
+
+**Implementation:** `src/services/retro/retroInsights.service.ts — detectRepeatedBlockers()`, `generateInsightsForRecords()`
+
+### CSV Date-Mangling Fix
+
+**Problem discovered during implementation:** `XLSX.read()` (the `xlsx` npm package), when given CSV text containing an ISO-date-like string (e.g. `"2026-06-08"`), auto-detects it as a date cell and silently reformats it to a locale date string (e.g. `"6/8/26"`) on read — corrupting any date column in an uploaded retro file without any warning.
+
+**Fix:** `parseRetroFile()` uses a dedicated minimal RFC4180 CSV parser (`parseCsvText()`) for `.csv` files instead of `XLSX.read()`, preserving cell text exactly as typed. `XLSX.read()` is still used for genuine binary `.xlsx`/`.xls` files, where its cell-type handling is accurate because the type is actually stored in the binary format.
+
+**Implementation:** `src/services/retro/retroFileParser.service.ts — parseCsvText()`, `parseRetroFile()`

@@ -5,6 +5,18 @@
 
 ---
 
+## v4.7 — Retrospective Upload, Insights Engine, and `.xlsx` Template (2026-06-26, P2 — in progress, unmerged)
+
+**Scope:** `RETRO-04`–`RETRO-13`, `RETRO-17`, `RETRO-19`–`RETRO-22`, `RETRO-29`, `RETRO-33`–`RETRO-38` — turns the "Upload Retro File" card on `/retro` from "coming soon" into a real upload-and-preview flow, replaces the original flat-string insights engine with a shared, richer engine, and upgrades the downloadable template to `.xlsx`. No persistence model was added — uploads are parsed and previewed in memory only; nothing is saved server-side.
+
+- **Upload Retro File** is now live: accepts `.csv`, `.xlsx`, `.xls`, `.md`, and `.txt` (≤5 MB) via a new `POST /api/retro/parse` route. CSV/Excel files are grouped into one retrospective per "Sprint Name" (carrying the name forward across blank rows, matching the existing template's shape); Markdown/plain text files are parsed with a heading + bullet heuristic. Missing data is never silently dropped — skipped rows and ambiguous parses are surfaced as warnings/corrections in the preview, not swallowed.
+- **Shared insights engine** (`src/services/retro/retroInsights.service.ts`) replaces the old inline flat-string `generateInsights()` — now used by both the in-app form and uploaded files. Adds: theme detection (process, communication, requirements, QA/release, dependency, technical, planning), ownership-gap flags (missing owner/due date), duplicate-action-item detection, and next-sprint suggestions that cite the specific blocker count or theme that triggered them — never generic advice.
+- **Repeated blockers across sprints** — uploading a multi-sprint file now flags any blocker text that recurs in more than one sprint, visible on every affected sprint's insight panel.
+- **`.xlsx` template** (`downloadRetroExcelTemplate()`) replaces the CSV-only download as the primary option — 2 sheets ("Retrospective" with 4 example rows covering carryover, late-discovered blockers, and mid-sprint scope change; "Instructions" explaining required/recommended fields and a privacy note). The original `.csv` template remains one click away.
+- **Found and fixed a real correctness bug** during implementation: the `xlsx` npm package's CSV reader auto-detects ISO-date-like strings and silently reformats them (e.g. `"2026-06-08"` → `"6/8/26"`) — would have corrupted any date column in an uploaded retro file. Fixed by routing `.csv` files through a dedicated minimal CSV parser instead of `XLSX.read()`; `.xlsx`/`.xls` binary files still use `XLSX.read()`, where this isn't an issue.
+- 13 new tests (`retroFileParser.test.ts`, `retroInsights.test.ts` — `TC-RETRO-08`–`20`); full suite 703/73 passing; lint/typecheck clean (pre-existing warnings unchanged; new service/route/type files are 100% lint-clean, the page file keeps its established inline-style convention).
+- **Deferred:** saving a retrospective server-side (`RETRO-15`), a "save draft" affordance (`RETRO-30`), and linking retro items to delivery metrics (`RETRO-14`) remain open P2 items — no persistence model was introduced in this change.
+
 ## v4.10.0 — Role-Based Delivery Coaching Insights (2026-06-23, P1 — in progress, unmerged)
 
 **Scope:** `RBC-01`–`RBC-20` — turns the metrics already computed for every dashboard into role-specific, evidence-cited coaching advice. No new metric calculations were introduced; this is a pure interpretation layer.

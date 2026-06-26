@@ -1761,24 +1761,36 @@ Returning-user journeys now include bucket-first metrics restoration. After logi
 | 5 | Scrum Master | Adds What Did Not Go Well entries | List grows | |
 | 6 | Scrum Master | Adds Blockers | List grows | |
 | 7 | Scrum Master | Adds Action Items with owner, due date, priority | Row per action item | H/M/L priority selector |
-| 8 | Scrum Master | Clicks "Submit & Get Suggestions" | `generateInsights()` runs; insights view shown | |
-| 9 | System | Evaluates form | Goal banner, suggestions list, action item summary rendered | Colour-coded by priority |
-| 10 | Scrum Master | Reviews suggestions | Sees missing-owner/due-date flags, goal advice, escalation advice | |
+| 8 | Scrum Master | Clicks "Submit & Get Suggestions" | `generateRetrospectiveInsight()` runs (shared engine); insights view shown | |
+| 9 | System | Evaluates form | Goal banner, theme chips, "What to Watch"/"Do This Next" lists, confidence chip rendered | |
+| 10 | Scrum Master | Reviews suggestions | Sees missing-owner/due-date flags, goal advice, blocker-escalation advice, duplicate-action-item warnings | |
 | 11 | Scrum Master | Clicks "New Retrospective" | Form resets; menu view shown | |
 
 **Outcome:** Team has a structured retrospective with automated improvement suggestions and no spreadsheet required.  
-**Related:** UC-103, UC-104, FR-330, FR-331, FR-332, FR-333, SCN-053, SCN-056
+**Related:** UC-103, UC-104, UC-115, FR-330, FR-331, FR-356, SCN-053, SCN-056
 
 **Alternate B — Template Download (UC-104):**
 
 | Step | Actor | Action | System Response | Notes |
 |------|-------|--------|-----------------|-------|
 | 1 | Any user | Navigates to `/retro` via Planning menu | Three-card menu shown | |
-| 2 | User | Clicks "Download CSV →" on the Download Template card | `downloadTemplate()` executes | No server call; pure client-side |
-| 3 | System | Builds CSV string and creates a `Blob` | Browser download dialog opens | |
-| 4 | User | Saves `Retrospective_Template.csv` | File saved to downloads folder with header + 2 example rows | |
+| 2 | User | Clicks "Download .xlsx →" on the Download Template card | `downloadRetroExcelTemplate()` executes | No server call; pure client-side |
+| 3 | System | Builds a 2-sheet workbook and triggers `XLSX.writeFile()` | Browser download dialog opens | |
+| 4 | User | Saves `Retrospective_Template.xlsx` | File saved with header + 4 example rows + an Instructions sheet | A "download as .csv instead" link still saves the original FR-333 template |
 
 **Outcome (Alt B):** User has the template for offline use in under 5 seconds.
+
+**Alternate C — Upload a Completed File (UC-115):**
+
+| Step | Actor | Action | System Response | Notes |
+|------|-------|--------|-----------------|-------|
+| 1 | Any user | Navigates to `/retro`, clicks "Upload →" | Upload view shown | |
+| 2 | User | Clicks the drop zone, picks a `.csv`/`.xlsx`/`.xls`/`.md`/`.txt` file | File POSTed to `/api/retro/parse` | 5 MB limit, session-authenticated |
+| 3 | System | Parses the file, groups rows into one record per sprint | Records returned to client | CSV uses a dedicated parser (not `xlsx`) to avoid date-string corruption |
+| 4 | System | Generates a `RetrospectiveInsight` per record, detects blockers repeated across sprints | Upload-insights view shown — one `InsightPanel` per sprint | |
+| 5 | User | Reviews warnings/corrections and each sprint's themes/suggestions | Nothing persisted — re-computed fresh on next upload | |
+
+**Outcome (Alt C):** User gets the same theme/ownership-gap/suggestion analysis as the in-app form, but for one or many sprints from a file their team filled out offline.
 
 ---
 
