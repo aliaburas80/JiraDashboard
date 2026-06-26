@@ -182,13 +182,23 @@ function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
                   <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: item.priority === 'high' ? 'var(--dc-red)' : item.priority === 'medium' ? 'var(--dc-amber)' : 'var(--dc-green)' }} />
                   <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--dc-acc2)' }}>{item.type}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)' }}>{item.title}</span>
-                  <button
-                    type="button"
-                    onClick={() => navigator.clipboard?.writeText(`${item.title}\n\n${item.rationale}`)}
-                    style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 600, color: 'var(--dc-p3)', background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
-                    Copy
-                  </button>
+                  <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <button
+                      type="button"
+                      disabled
+                      title="Coming soon — requires Jira write access, which this app does not yet have (see FUT-JIRA-02 roadmap item)."
+                      style={{ fontSize: 10, fontWeight: 600, color: 'var(--dc-p3)', background: 'none', border: 'none', cursor: 'not-allowed', opacity: 0.5 }}
+                    >
+                      Create in Jira (coming soon)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard?.writeText(`${item.title}\n\n${item.rationale}`)}
+                      style={{ fontSize: 10, fontWeight: 600, color: 'var(--dc-p3)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      Copy
+                    </button>
+                  </span>
                 </div>
                 <p style={{ fontSize: 11, color: 'var(--dc-p2)', margin: 0 }}>{item.rationale}</p>
               </div>
