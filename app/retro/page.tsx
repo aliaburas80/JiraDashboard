@@ -101,20 +101,64 @@ const labelSt: React.CSSProperties = {
 };
 
 // Shared size/shape for both buttons on a suggested backlog item — Copy and
-// Create in Jira must look like the same control family, differing only in
-// disabled state (handled at the call site).
+// Create in Jira must look like the same control family. Color/border differ
+// (Copy is active/accent, Create in Jira is disabled/gray) but layout does not.
 const backlogItemButtonSt: React.CSSProperties = {
   flex: 1,
   fontSize: 11,
   fontWeight: 600,
-  color: 'var(--dc-p2)',
-  background: 'var(--dc-s2)',
-  border: '1px solid var(--dc-bdr2)',
   borderRadius: 6,
   padding: '6px 10px',
-  cursor: 'pointer',
   textAlign: 'center',
 };
+
+const backlogCopyButtonSt: React.CSSProperties = {
+  ...backlogItemButtonSt,
+  color: 'var(--dc-acc2)',
+  background: 'rgba(255,138,76,0.08)',
+  border: '1px solid var(--dc-acc2)',
+  cursor: 'pointer',
+};
+
+const backlogJiraButtonSt: React.CSSProperties = {
+  ...backlogItemButtonSt,
+  color: 'var(--dc-p3)',
+  background: 'var(--dc-s2)',
+  border: '1px solid var(--dc-bdr2)',
+  cursor: 'not-allowed',
+  opacity: 0.6,
+  lineHeight: 1.3,
+};
+
+// Clipboard write can silently fail (insecure context, missing permission,
+// older browsers) — navigator.clipboard.writeText() alone has no fallback
+// and no way for the caller to know it didn't work. This tries the modern
+// API first, then falls back to a hidden-textarea + execCommand approach,
+// and reports success/failure so the UI can give real feedback.
+async function copyToClipboard(text: string): Promise<boolean> {
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // fall through to the legacy fallback below
+    }
+  }
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return ok;
+  } catch {
+    return false;
+  }
+}
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -150,6 +194,15 @@ function EntryList({
 function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
   const watch = [...insight.painPoints, ...insight.blockers];
   const doNext = [...insight.nextSprintSuggestions, ...insight.ceremonyRecommendations, ...insight.ownershipGaps];
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [copyFailedIndex, setCopyFailedIndex] = useState<number | null>(null);
+
+  async function handleCopy(item: { title: string; rationale: string }, i: number) {
+    const ok = await copyToClipboard(`${item.title}\n\n${item.rationale}`);
+    setCopiedIndex(ok ? i : null);
+    setCopyFailedIndex(ok ? null : i);
+    setTimeout(() => { setCopiedIndex(null); setCopyFailedIndex(null); }, 1800);
+  }
 
   return (
     <div style={{ ...sectionCard, marginBottom: 20 }}>
@@ -203,16 +256,16 @@ function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     type="button"
-                    onClick={() => navigator.clipboard?.writeText(`${item.title}\n\n${item.rationale}`)}
-                    style={backlogItemButtonSt}
+                    onClick={() => handleCopy(item, i)}
+                    style={copyFailedIndex === i ? { ...backlogCopyButtonSt, color: 'var(--dc-red)', border: '1px solid var(--dc-red)', background: 'rgba(248,113,113,0.08)' } : backlogCopyButtonSt}
                   >
-                    Copy
+                    {copiedIndex === i ? 'Copied!' : copyFailedIndex === i ? 'Copy failed — select text manually' : 'Copy'}
                   </button>
                   <button
                     type="button"
                     disabled
                     title="Coming soon — requires Jira write access, which this app does not yet have (see FUT-JIRA-02 roadmap item)."
-                    style={{ ...backlogItemButtonSt, cursor: 'not-allowed', opacity: 0.6, lineHeight: 1.3 }}
+                    style={backlogJiraButtonSt}
                   >
                     Create in Jira<br />
                     <span style={{ fontSize: 9, fontWeight: 500 }}>coming soon</span>
