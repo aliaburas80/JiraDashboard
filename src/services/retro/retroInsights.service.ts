@@ -15,14 +15,19 @@ function compact(lines: (string | null)[]): string[] {
 }
 
 // RETRO-34 — common themes, detected by keyword match against free-text entries.
+export const THEME_LABEL: Record<ThemeCategory, string> = {
+  process: 'Process', communication: 'Communication', requirements: 'Requirements',
+  'qa-release': 'QA & Release', dependency: 'Dependency', technical: 'Technical', planning: 'Planning',
+};
+
 const THEME_KEYWORDS: Record<ThemeCategory, RegExp> = {
-  process:       /process|ceremony|standup|retro|workflow|ritual/i,
-  communication: /communicat|misunderstand|alignment|silo|handoff/i,
-  requirements:  /requirement|acceptance criteria|scope|unclear|ambigu/i,
-  'qa-release':  /\bqa\b|test(ing)?|release|deploy|regression|defect|bug/i,
-  dependency:    /depend|blocked by|waiting on|external team|third.party/i,
-  technical:     /tech(nical)? debt|refactor|architecture|infrastructure|performance/i,
-  planning:      /estimat|capacity|sprint goal|carryover|over.?committed/i,
+  process:       /process|ceremony|standup|retro|workflow|ritual|sprint planning|refinement (session|meeting)|too (long|many) meeting/i,
+  communication: /communicat|misunderstand|alignment|silo|hand.?off|out of the loop|not (informed|aware)/i,
+  requirements:  /requirement|acceptance criteria|\bscope\b|unclear|ambigu|not (well )?defined/i,
+  'qa-release':  /\bqa\b|test(ing)?|release|deploy|regression|defect|\bbug(s)?\b|broke production|hotfix/i,
+  dependency:    /depend|blocked by|waiting on|external team|third.?party|another team/i,
+  technical:     /tech(nical)? debt|refactor|architecture|infrastructure|performance|flaky|legacy code/i,
+  planning:      /estimat|capacity|sprint goal|carryover|over.?committed|under.?estimat|too much work/i,
 };
 
 function detectThemes(text: string[]): ThemeMatch[] {
@@ -69,7 +74,7 @@ function buildNextSprintSuggestions(record: RetroRecord, themes: ThemeMatch[]): 
       ? `Address the ${blockerCount} recorded blocker${blockerCount > 1 ? 's' : ''} during refinement, before they recur next sprint.`
       : null,
     topTheme
-      ? `"${topTheme.category}" was the most common theme this sprint (${topTheme.count} mention${topTheme.count > 1 ? 's' : ''}) — discuss it explicitly at the next planning session.`
+      ? `"${THEME_LABEL[topTheme.category]}" was the most common concern this sprint (${topTheme.count} mention${topTheme.count > 1 ? 's' : ''}: ${topTheme.examples[0]}) — discuss it explicitly at the next planning session.`
       : null,
   ]);
 }
@@ -102,8 +107,12 @@ export function generateRetrospectiveInsight(
   source: 'form' | 'upload',
   repeatedBlockers: string[] = [],
 ): RetrospectiveInsight {
-  const allText = [...record.wentWell, ...record.didntGoWell, ...record.blockers].filter((t) => t.trim());
-  const themes = detectThemes(allText);
+  // Themes are problem signals — only derived from negative text (pain points
+  // and blockers). Including "wentWell" here previously caused positive
+  // feedback (e.g. "Automated tests caught regressions") to be flagged as a
+  // theme to "discuss" or "address," which is actively misleading.
+  const concerns = [...record.didntGoWell, ...record.blockers].filter((t) => t.trim());
+  const themes = detectThemes(concerns);
   const ownershipGaps = detectOwnershipGaps(record);
 
   return {

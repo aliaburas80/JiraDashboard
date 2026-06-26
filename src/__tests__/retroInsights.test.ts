@@ -21,6 +21,25 @@ test('TC-RETRO-14: detects the qa-release theme from QA/release-related text', (
   expect(insight.themes.some(t => t.category === 'qa-release')).toBe(true);
 });
 
+// TC-RETRO-14b: positive feedback must never be flagged as a theme to "address"
+test('TC-RETRO-14b: positive "What Went Well" text does not pollute theme detection', () => {
+  const record = buildRecord({
+    wentWell: ['Automated tests caught regressions before release'],
+    didntGoWell: [],
+    blockers: [],
+  });
+  const insight = generateRetrospectiveInsight(record, 'form');
+  expect(insight.themes).toEqual([]);
+  expect(insight.nextSprintSuggestions.some(s => s.includes('qa-release') || s.includes('QA & Release'))).toBe(false);
+});
+
+// TC-RETRO-14c: a sprint-planning-ceremony complaint is recognised as a process theme
+test('TC-RETRO-14c: detects the process theme from sprint-planning ceremony complaints', () => {
+  const record = buildRecord({ didntGoWell: ['Sprint planning was too long'] });
+  const insight = generateRetrospectiveInsight(record, 'form');
+  expect(insight.themes.some(t => t.category === 'process')).toBe(true);
+});
+
 // TC-RETRO-15: ownership gaps
 test('TC-RETRO-15: flags missing owner and missing due date on action items', () => {
   const record = buildRecord({ actions: [{ text: 'Fix flaky test', owner: '', dueDate: '', priority: 'medium' }] });

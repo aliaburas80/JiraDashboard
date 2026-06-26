@@ -5,7 +5,7 @@ import { useRef, useState } from 'react';
 import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { downloadRetroExcelTemplate } from '@/services/retro/retroTemplate.service';
-import { generateRetrospectiveInsight } from '@/services/retro/retroInsights.service';
+import { generateRetrospectiveInsight, THEME_LABEL } from '@/services/retro/retroInsights.service';
 import type { RetroRecord, RetrospectiveInsight, RetroDataCorrection } from '@/types/retrospective';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -130,11 +130,6 @@ function EntryList({
 }
 
 // ── Insight panel (shared by the in-app form and the upload flow) ──────────────
-
-const THEME_LABEL: Record<string, string> = {
-  process: 'Process', communication: 'Communication', requirements: 'Requirements',
-  'qa-release': 'QA & Release', dependency: 'Dependency', technical: 'Technical', planning: 'Planning',
-};
 
 function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
   const watch = [...insight.painPoints, ...insight.blockers];

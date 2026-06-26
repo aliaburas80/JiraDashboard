@@ -764,16 +764,16 @@ Five independent rule groups (daily standup, refinement, sprint planning, sprint
 **Input:** `RetroRecord` (one sprint — from the in-app form or one group of rows from an uploaded file), `source: 'form' | 'upload'`, `repeatedBlockers?: string[]`
 
 **Steps:**
-1. Concatenate `wentWell + didntGoWell + blockers` text into `allText`
-2. **Theme detection:** for each of 7 categories (process, communication, requirements, qa-release, dependency, technical, planning), keyword-match `allText`; keep categories with ≥1 match; sort descending by match count (ties keep the categories' fixed declaration order)
+1. Concatenate `didntGoWell + blockers` text into `concerns` — **`wentWell` is deliberately excluded** (fixed 2026-06-26; including positive feedback here previously caused praise like "Automated tests caught regressions" to be flagged as a "qa-release" theme to "address," which is actively misleading)
+2. **Theme detection:** for each of 7 categories (process, communication, requirements, qa-release, dependency, technical, planning), keyword-match `concerns`; keep categories with ≥1 match; sort descending by match count (ties keep the categories' fixed declaration order)
 3. **Ownership gaps:** count action items with non-empty text but empty `owner` → one line; count with empty `dueDate` → one line
 4. **Duplicate action items:** group action item text by `trim().toLowerCase()`; any key with count > 1 is a duplicate
 5. **Next-sprint suggestions** (each line gated by a real signal, never generic):
    - `goalMet === 'no' | 'partial'` → re-plan-scope advice
    - `blockers` count > 0 → "Address the N recorded blocker(s)..." citing the count
-   - a top theme exists → "theme was the most common theme this sprint (N mention(s))..." citing it
+   - a top theme exists → cites the theme's display label (`THEME_LABEL`, not the raw category slug), the match count, and the first matching example sentence as evidence
 6. **Ceremony recommendations:** standup advice if any blocker exists; planning advice if any ownership gap exists; retro advice if any "what did not go well" entry exists
-7. **Confidence:** count non-empty values in `[sprintGoal, goalMet, ...wentWell, ...didntGoWell, ...blockers]` → `'high'` if ≥4, `'medium'` if ≥2, else `'low'`
+7. **Confidence:** count non-empty values in `[sprintGoal, goalMet, ...wentWell, ...didntGoWell, ...blockers]` → `'high'` if ≥4, `'medium'` if ≥2, else `'low'` (confidence intentionally still considers `wentWell` — more filled-in fields means more reliable input overall, regardless of sentiment)
 
 **Output:** `RetrospectiveInsight` — `{ id, sprintName, team, source, themes, positives, painPoints, blockers, actionItems, nextSprintSuggestions, ceremonyRecommendations, risksIfIgnored, ownershipGaps, repeatedBlockers, duplicateActionItems, confidence }`
 
