@@ -562,7 +562,7 @@ Every implemented feature must be traceable end-to-end.
 | TRACE-08 | Add traceability rows for Cloud Storage and latest-metrics restore | P0 | ❌ Not started | Must include provider/admin UI/fallback tests. |
 | TRACE-09 | Add traceability placeholders for Backend Gateway | P1 | ❌ Not started | Create once implemented. |
 | TRACE-10 | Add traceability placeholders for User Add-Member Request | P1 | ❌ Not started | Create once implemented. |
-| TRACE-11 | Add traceability placeholders for Role-Based Coaching | P1 | ❌ Not started | Create once implemented. |
+| TRACE-11 | Add traceability placeholders for Role-Based Coaching | P1 | ✅ Done (2026-06-26) | Implemented and traced: FR-346–FR-354 (SRS Addendum H/H.6), UC-114, UJ-039, SCN-057/058/059, TC-RBC-01–13 (`product/TEST_CASES.md` §9.60/§9.61). See RBC-01–26 in Section 16. |
 | TRACE-12 | Add traceability placeholders for Retrospective features | P2 | ❌ Not started | Create once implemented. |
 | TRACE-13 | Add traceability placeholders for Forecasting | P2 | ❌ Not started | Create once implemented. |
 
@@ -1175,15 +1175,15 @@ Plan only unless explicitly approved.
 
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
-| TEST-RBC-01 | Suggestions generated per role | P1 | ❌ Not started | Scrum Master, PO, EM, DM, C-level, Team Lead, Admin. |
-| TEST-RBC-02 | Suggestions differ by role | P1 | ❌ Not started | Role responsibility matters. |
-| TEST-RBC-03 | Suggestions include metric evidence | P1 | ❌ Not started | No generic advice. |
-| TEST-RBC-04 | Weak points identified | P1 | ❌ Not started | Evidence-based. |
-| TEST-RBC-05 | Ceremony advice included | P1 | ❌ Not started | Daily/refinement/planning/review/retro. |
-| TEST-RBC-06 | Prevention advice included | P1 | ❌ Not started | What could have prevented situation. |
-| TEST-RBC-07 | Next-sprint suggestions included | P1 | ❌ Not started | Actionable. |
-| TEST-RBC-08 | Low data quality reduces confidence | P1 | ❌ Not started | Confidence logic. |
-| TEST-RBC-09 | Missing metrics produce safe fallback | P1 | ❌ Not started | No hallucinated certainty. |
+| TEST-RBC-01 | Suggestions generated per role | P1 | ✅ Done (2026-06-23) | Scrum Master, PO, EM, DM, C-level, Team Lead, Admin. Covered by `TC-RBC-01a–h` in `src/__tests__/roleBasedCoaching.test.ts` (see RBC-18). |
+| TEST-RBC-02 | Suggestions differ by role | P1 | ✅ Done (2026-06-23) | Role responsibility matters. Covered by `TC-RBC-01a–h` role-mapping table assertions. |
+| TEST-RBC-03 | Suggestions include metric evidence | P1 | ✅ Done (2026-06-23) | No generic advice. Covered by `TC-RBC-02`. |
+| TEST-RBC-04 | Weak points identified | P1 | ✅ Done (2026-06-23) | Evidence-based. Covered by `TC-RBC-03`. |
+| TEST-RBC-05 | Ceremony advice included | P1 | ✅ Done (2026-06-23) | Daily/refinement/planning/review/retro. Covered by `TC-RBC-05` (verifies identical ceremony advice embedded per RBC-10–14). |
+| TEST-RBC-06 | Prevention advice included | P1 | ✅ Done (2026-06-23) | What could have prevented situation. Covered by `TC-RBC-06`. |
+| TEST-RBC-07 | Next-sprint suggestions included | P1 | ✅ Done (2026-06-23) | Actionable. Covered by `TC-RBC-07`. |
+| TEST-RBC-08 | Low data quality reduces confidence | P1 | ✅ Done (2026-06-23) | Confidence logic. Covered by `TC-RBC-08` (×0.75/×0.5 downgrade per RBC-17). |
+| TEST-RBC-09 | Missing metrics produce safe fallback | P1 | ✅ Done (2026-06-23) | No hallucinated certainty. Covered by `TC-RBC-09` (all-zero sample sizes → `band: 'N/A'`). |
 
 ### Retrospective Tests
 
