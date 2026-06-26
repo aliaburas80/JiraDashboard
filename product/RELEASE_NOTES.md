@@ -5,6 +5,14 @@
 
 ---
 
+## v4.10.2 — Roadmap Forecast Tests + Nav Redesign Help Entries (2026-06-26, P0/P1 — doc-gate closure)
+
+**Scope:** `ROADMAP-02`, `ROADMAP-03`, `NAV-03` from TODO-List.md — closing doc/test gaps left open since the 2026-06-10 Roadmap page and Help/Glossary navigation redesign shipped. No production behavior changed.
+
+- **`ROADMAP-03`:** Added `src/__tests__/roadmapForecast.test.ts` — automates `TC-ROAD-01`–`05` (previously spec'd in `product/TEST_CASES.md` §9.54 but never implemented) plus one new edge case (`TC-ROAD-02b`: `remaining <= 0` with `progress < 100`). Suite: 700/74 (1 pre-existing, unrelated `adminUsers.test.ts` failure unchanged).
+- **`NAV-03`:** Added 2 FAQ entries to `app/help/page.tsx`'s "Welcome — Getting Started" section explaining the grouped category-pill `/help` nav and the letter-jump `/glossary` nav (both shipped 2026-06-10, previously undocumented for end users).
+- **`ROADMAP-02`:** Audited and confirmed already complete — SRS (FR-326/327), USE_CASES (UC-101), USER_JOURNEYS (UJ-036), SCENARIOS (SCN-051), TEST_CASES (§9.54), ALGORITHM_SPEC (v4.6 section), `/help`, `/developer`, `/glossary`, `RELEASE_NOTES` (v4.3.6), and `BRD` (BR-115/116) were all already updated when the feature shipped; only the TODO-List.md status row was stale.
+
 ## v4.10.1 — Coaching Insights Redesign & Encouragement Enhancements (2026-06-26, P1 — in progress, unmerged)
 
 **Scope:** `RBC-21`–`RBC-26` — presentation redesign of the v4.10.0 Coaching Insights page plus six small enhancements. No coaching generator, confidence formula, or severity rule changed.
