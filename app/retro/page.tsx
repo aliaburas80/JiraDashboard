@@ -187,7 +187,11 @@ function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
                       type="button"
                       disabled
                       title="Coming soon — requires Jira write access, which this app does not yet have (see FUT-JIRA-02 roadmap item)."
-                      style={{ fontSize: 10, fontWeight: 600, color: 'var(--dc-p3)', background: 'none', border: 'none', cursor: 'not-allowed', opacity: 0.5 }}
+                      style={{
+                        fontSize: 10, fontWeight: 600, color: 'var(--dc-p3)',
+                        background: 'var(--dc-s2)', border: '1px solid var(--dc-bdr2)', borderRadius: 6,
+                        padding: '4px 10px', cursor: 'not-allowed', opacity: 0.6,
+                      }}
                     >
                       Create in Jira (coming soon)
                     </button>
