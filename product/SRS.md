@@ -43,6 +43,7 @@
 | 4.10.1 | 2026-06-26 | Ali Abu Ras | P1 — Coaching Insights redesign + 6 enhancements (RBC-21–26): FR-353–FR-354, Addendum H.6, presentation-only redesign of `/dashboard/coaching` plus tab urgency sort, quick-win celebration headline, severity trend vs. last saved snapshot, confidence-aware framing, empty-section encouragement, cross-category nudge dot, evidence-chip dashboard links; 4 new tests; test suite 694/73 passing |
 | 4.7 | 2026-06-26 | Ali Abu Ras | P2 — Retrospective Upload, Insights Engine, `.xlsx` Template (RETRO-04–13, 17, 19–22, 29, 33–38): FR-355–FR-358, Addendum I, UC-103/104 updated, new `POST /api/retro/parse`, `src/services/retro/*`, shared `RetrospectiveInsight` engine replacing the flat-string `generateInsights()`, 13 new tests (`TC-RETRO-08`–`20`); fixed a real `XLSX.read()` CSV date-mangling bug found during implementation; persistence (RETRO-15/30) and metric-linking (RETRO-14) explicitly deferred; test suite 703/73 passing |
 | 4.7.1 | 2026-06-26 | Ali Abu Ras | P2 — Retro report quality fixes after user testing ("retro report not useful"): FR-356 corrected — theme detection no longer runs over positive ("What Went Well") text, fixing a real bug where praise was flagged as a problem theme; FR-356b (new) — `suggestedBacklogItems`, concrete copy-pasteable story/task/spike suggestions (vs. free-text advice) gated by blockers/repeated-blockers/top-theme/missed-goal; 6 new tests (`TC-RETRO-14b/14c`, `TC-RETRO-21`–`25`); test suite 710/73 passing |
+| 4.6.1 | 2026-06-27 | Ali Abu Ras | P2 — Forecasting Engine Extraction, Data-Quality-Aware Confidence, Risk Diagnosis, New Charts (FCAST-14–26): FR-359–FR-364, Addendum J, `computeForecast()` extracted to `src/services/forecast/forecastEngine.service.ts` (zero tests before this change → 12 new tests), confidence now folds in Data Quality + per-metric confidence, new "weakest factor" diagnosis, 2 new charts (Throughput Required vs. Current; Risk & Scope Trend); test suite 733/77 passing |
 
 ---
 
@@ -2147,3 +2148,27 @@ A single click on a notification item MUST: (1) mark the notification read (fire
 ### I.4 — Scope Note
 
 **FR-358 (P2 — Deferred):** Saving a retrospective record server-side (`RETRO-15`), a "save draft" affordance (`RETRO-30`), and linking retro items to delivery metrics (`RETRO-14`, e.g. carryover ↔ retro theme) are explicitly deferred — this addendum is upload, parsing, and insight-generation only, with no new persistence model. They remain open P2 items in TODO-List.md Section 17.
+
+---
+
+## Addendum J — v4.6.1 Forecast Engine Extraction, Data-Quality-Aware Confidence, Risk Diagnosis, and New Charts (2026-06-27, P2)
+
+*(Closes `FCAST-14`–`FCAST-26` from TODO-List.md Section 18. The forecast page already had more chart coverage than the original spec anticipated — burn-up, burn-down, velocity, sprint performance table, delivery pattern breakdown, delivery levers, next-quarter plan — so this addendum focuses on the genuine gaps: zero test coverage, confidence that ignored Data Quality, no "why" diagnosis, and two new charts, consolidating the originally-separate `FCAST-15`/`16`/`17` chart requests into one to avoid tripling chart density on an already-long page.)*
+
+### J.1 — Forecast Engine Extraction
+
+**FR-359 (P2 — Done, 2026-06-27):** `computeForecast(metrics)` MUST be extracted from `app/forecast/page.tsx` into `src/services/forecast/forecastEngine.service.ts`, with its types (`ForecastResult`, `ForecastStatus`, `SprintPoint`, `WeakestFactor`, `WeakestFactorKind`) in `src/types/forecast.ts` — mirroring the `src/services/retro/retroInsights.service.ts` extraction precedent. This is required to satisfy FCAST-24 (tests) without either importing a `'use client'` page module into Jest or duplicating ~75 lines of business logic inside a test file (CLAUDE.md §29, "Calculation Single Source of Truth"). The page's behavior MUST NOT change as a result of the extraction — confirmed via the pre-existing manual test cases (`TC-FCAST-01`–`05`) and a full visual comparison.
+
+### J.2 — Data-Quality-Aware Confidence and Risk Diagnosis
+
+**FR-360 (P2 — Done, 2026-06-27):** `computeForecast()` MUST fold `metrics.dataQuality` and `metrics.confidence` into forecast confidence, not just sprint count/velocity-trend/blocked-count as before. It MUST: (a) compute a structural score from sprint count/velocity-trend/blocked-count (90/65/35); (b) average `metrics.confidence.sprintThroughput` and `metrics.confidence.velocity` into a metric score; (c) blend the two scores and apply the same data-quality downgrade multipliers as the Coaching Confidence Score (×0.75 Weak, ×0.5 Critical — `product/ALGORITHM_SPEC.md`), reused as a documented formula rather than duplicated invention; (d) re-derive the `high`/`medium`/`low` band from the blended score (≥70/≥40/else); (e) produce a `confidenceReason: string` citing real numbers (sprint count, velocity trend, Data Quality band/score) — never generic, never silent about a downgrade.
+
+**FR-361 (P2 — Done, 2026-06-27):** `computeForecast()` MUST produce a `weakestFactor: WeakestFactor` identifying the single most significant drag on the forecast, checked in priority order: `blockedCount > 3` → `'blockers'`; `criticalCount > 2` → `'blockers'`; total recent added scope `> avgThroughput × 2` → `'scope'`; a Data Quality downgrade applied → `'data_quality'`; declining velocity trend → `'throughput'`; otherwise → `'none'` with a reassuring detail, never a fabricated risk. Each non-`'none'` kind MUST cite the real triggering number. Rendered in the UI as a "Forecast Diagnosis" card (`/forecast`, `data-kind` attribute drives the tone) directly answering "are we on track, and why?" (FCAST-19/20).
+
+**FR-362 (P2 — Done, 2026-06-27):** `adjustments: string[]` MUST gain two new rules beyond the pre-existing set, each gated by a real signal: heavy mid-sprint scope addition (`addedScope > avgThroughput × 2`) → tighten scope-discipline advice; an active Data Quality downgrade → improve-data-quality advice naming the current band. This extends FCAST-21's adjustment categories (scope, data quality) beyond the pre-existing blockers/critical/throughput-trend/descope set.
+
+### J.3 — New Charts
+
+**FR-363 (P2 — Done, 2026-06-27):** `/forecast` MUST render a "Throughput: Required vs. Current" comparison (FCAST-14) — two horizontal bars: current average throughput, and the throughput required to be on-track within 6 sprints at current remaining scope (`remainingIssues / 6`), with a one-line gap summary. Hidden when `status === 'complete'`.
+
+**FR-364 (P2 — Done, 2026-06-27):** `/forecast` MUST render a "Risk & Scope Trend" grouped-bar chart (consolidating FCAST-15/16/17) showing per-sprint mid-sprint-added-scope count and blocked-item count across up to the last 12 sprints, sourced from `SprintThroughput.addedScopeCount`/`blockedCount` (only available with rich `SprintThroughputSummary` data — empty array, and the section hidden, when only the legacy 8-sprint-capped shape is available). Requires ≥2 sprints of rich data to render; otherwise shows the same "Need ≥ 2 sprints" empty state convention as the existing `BurnUpChart`/`CombinedBurnChart`.
