@@ -6,112 +6,11 @@ import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { computeForecast } from '@/services/forecast/forecastEngine.service';
 import type { DashboardMetrics } from '@/types/metrics';
 import type { SprintThroughputSummary, SprintThroughput, SprintDeliveryPattern } from '@/types/throughput';
+import type { ForecastResult, SprintPoint } from '@/types/forecast';
 import styles from './page.module.scss';
-
-// ── Types ──────────────────────────────────────────────────────────────────────
-
-type ForecastStatus = 'on_track' | 'at_risk' | 'off_track' | 'complete' | 'insufficient_data';
-
-interface SprintPoint { sprint: string; done: number; total: number; cumDone: number; }
-
-interface ForecastResult {
-  status:           ForecastStatus;
-  totalIssues:      number;
-  doneIssues:       number;
-  remainingIssues:  number;
-  completionPct:    number;
-  avgThroughput:    number;
-  sprintsRemaining: number;
-  weeksRemaining:   number;
-  confidence:       'high' | 'medium' | 'low';
-  velocityTrend:    'improving' | 'stable' | 'declining';
-  adjustments:      string[];
-  sprintPoints:     SprintPoint[];
-  blockedCount:     number;
-  criticalCount:    number;
-  estimatedEndDate: string;
-}
-
-// ── Engine ─────────────────────────────────────────────────────────────────────
-
-function computeForecast(metrics: DashboardMetrics): ForecastResult {
-  const flow = (metrics.flow?.items ?? []) as any[];
-
-  const totalIssues     = flow.length;
-  const doneIssues      = flow.filter((i: any) => /^done|complete|closed|resolved/i.test(i.status ?? '')).length;
-  const remainingIssues = Math.max(0, totalIssues - doneIssues);
-  const blockedCount    = flow.filter((i: any) => i.blocked || /block/i.test(i.status ?? '')).length;
-  const criticalCount   = flow.filter((i: any) => /critical|highest/i.test(i.priority ?? '')).length;
-  const completionPct   = totalIssues > 0 ? Math.round(doneIssues / totalIssues * 100) : 0;
-
-  // Prefer throughput.sprint.sprints — it has all sprints and the correct `completedCount` field.
-  // metrics.sprint.sprints is capped at 8 and uses `completedIssues` (legacy field name).
-  const throughputSprints = (metrics.throughput?.sprint?.sprints ?? []) as any[];
-  const legacySprints     = (metrics.sprint?.sprints ?? []) as any[];
-  const useRich           = throughputSprints.length > 0;
-  const sprints           = useRich ? throughputSprints : legacySprints;
-
-  const getCount = (s: any): number =>
-    useRich ? (s.completedCount ?? 0) : (s.completedIssues ?? s.completedCount ?? 0);
-  const getName = (s: any): string =>
-    useRich ? (s.sprintName ?? s.name ?? '?') : (s.name ?? s.sprint ?? '?');
-
-  const validSprints  = sprints.filter((s: any) => getCount(s) > 0);
-  const avgThroughput = validSprints.length > 0
-    ? validSprints.reduce((acc: number, s: any) => acc + getCount(s), 0) / validSprints.length
-    : 0;
-
-  let cum = 0;
-  const sprintPoints: SprintPoint[] = sprints.slice(-12).map((s: any) => {
-    const done = getCount(s);
-    cum += done;
-    return { sprint: getName(s), done, total: totalIssues, cumDone: cum };
-  });
-
-  let velocityTrend: ForecastResult['velocityTrend'] = 'stable';
-  if (validSprints.length >= 3) {
-    const recent    = validSprints.slice(-3).map((s: any) => getCount(s));
-    const older     = validSprints.slice(0, -3).map((s: any) => getCount(s));
-    const recentAvg = recent.reduce((a: number, b: number) => a + b, 0) / recent.length;
-    const olderAvg  = older.length > 0 ? older.reduce((a: number, b: number) => a + b, 0) / older.length : recentAvg;
-    velocityTrend   = recentAvg > olderAvg * 1.1 ? 'improving' : recentAvg < olderAvg * 0.9 ? 'declining' : 'stable';
-  }
-
-  if (totalIssues === 0 || avgThroughput === 0) {
-    return { status: 'insufficient_data', totalIssues, doneIssues, remainingIssues, completionPct, avgThroughput: 0, sprintsRemaining: 0, weeksRemaining: 0, confidence: 'low', velocityTrend, adjustments: [], sprintPoints, blockedCount, criticalCount, estimatedEndDate: '—' };
-  }
-  if (remainingIssues === 0) {
-    return { status: 'complete', totalIssues, doneIssues, remainingIssues: 0, completionPct: 100, avgThroughput, sprintsRemaining: 0, weeksRemaining: 0, confidence: 'high', velocityTrend, adjustments: [], sprintPoints, blockedCount, criticalCount, estimatedEndDate: 'Complete' };
-  }
-
-  const sprintsRemaining = remainingIssues / avgThroughput;
-  const weeksRemaining   = Math.ceil(sprintsRemaining * 2);
-
-  const confidence: ForecastResult['confidence'] =
-    validSprints.length >= 4 && velocityTrend !== 'declining' && blockedCount === 0 ? 'high' :
-    validSprints.length >= 2 && blockedCount < 3 ? 'medium' : 'low';
-
-  const status: ForecastStatus =
-    remainingIssues === 0                          ? 'complete'   :
-    criticalCount > 2 || blockedCount > 3          ? 'off_track'  :
-    sprintsRemaining <= 6                          ? 'on_track'   :
-    sprintsRemaining <= 12                         ? 'at_risk'    : 'off_track';
-
-  const adjustments: string[] = [];
-  if (blockedCount > 0)               adjustments.push(`Unblock ${blockedCount} blocked item${blockedCount > 1 ? 's' : ''} to recover capacity.`);
-  if (criticalCount > 0)              adjustments.push(`Address ${criticalCount} critical item${criticalCount > 1 ? 's' : ''} — they affect forecast confidence.`);
-  if (velocityTrend === 'declining')  adjustments.push('Throughput is declining. Reduce WIP and review sprint commitments.');
-  if (velocityTrend === 'improving')  adjustments.push('Throughput is improving. Current trajectory is positive.');
-  if (remainingIssues > avgThroughput * 10) adjustments.push('Consider descoping low-priority items to hit nearer milestones.');
-  if (adjustments.length === 0)       adjustments.push('Velocity is stable. Maintain current pace to deliver on forecast.');
-
-  const endDate = new Date(Date.now() + weeksRemaining * 7 * 86_400_000);
-  const estimatedEndDate = endDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-  return { status, totalIssues, doneIssues, remainingIssues, completionPct, avgThroughput: parseFloat(avgThroughput.toFixed(1)), sprintsRemaining: parseFloat(sprintsRemaining.toFixed(1)), weeksRemaining, confidence, velocityTrend, adjustments, sprintPoints, blockedCount, criticalCount, estimatedEndDate };
-}
 
 // ── Chart: Completion Ring ─────────────────────────────────────────────────────
 
@@ -497,6 +396,58 @@ function CombinedBurnChart({ points, total }: { points: SprintPoint[]; total: nu
   );
 }
 
+// ── Chart: Risk & Scope Trend (FCAST-15/16/17) ────────────────────────────────
+// Combines the three originally-separate "risk trend," "scope change trend,"
+// and "blocker impact" chart requests into one grouped-bar chart — they are
+// all risk-signal-over-time views of the same per-sprint data
+// (SprintThroughput.blockedCount / addedScopeCount), and showing them as one
+// chart avoids tripling chart density on an already-long page.
+
+function RiskScopeTrendChart({ points }: { points: { sprint: string; added: number; removed: number; blocked: number }[] }) {
+  if (points.length < 2) return <p className={styles.emptyChart}>Need ≥ 2 sprints with scope/blocker data for a trend.</p>;
+
+  const W = 580; const H = 200; const PL = 36; const PB = 32; const PT = 12; const PR = 10;
+  const chartW = W - PL - PR; const chartH = H - PT - PB;
+  const maxVal = Math.max(...points.map(p => Math.max(p.added, p.blocked)), 1);
+  const groupW = chartW / points.length;
+  const barW = Math.max(6, Math.min(16, groupW * 0.3));
+
+  function barH(v: number) { return Math.max(2, (v / maxVal) * chartH); }
+  function barY(v: number) { return PT + chartH - barH(v); }
+
+  const maxLabels = 8;
+  const labelStep = Math.max(1, Math.ceil(points.length / maxLabels));
+  const showLabel = (i: number) => i === 0 || i === points.length - 1 || i % labelStep === 0;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+      {[0, 0.5, 1].map(v => {
+        const y = PT + chartH * (1 - v);
+        return (
+          <g key={v}>
+            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+            <text x={PL - 4} y={y + 4} fontSize="9" fill="#505050" textAnchor="end">{Math.round(maxVal * v)}</text>
+          </g>
+        );
+      })}
+      {points.map((p, i) => {
+        const groupX = PL + i * groupW + groupW / 2;
+        return (
+          <g key={i}>
+            <rect x={groupX - barW - 1} y={barY(p.added)} width={barW} height={barH(p.added)} rx="2" fill="#F59E0B" opacity="0.85" />
+            <rect x={groupX + 1} y={barY(p.blocked)} width={barW} height={barH(p.blocked)} rx="2" fill="#F87171" opacity="0.85" />
+            {showLabel(i) && (
+              <text x={groupX} y={H - 8} fontSize="8" fill="#606060" textAnchor="middle">
+                {p.sprint.replace(/sprint\s*/i, 'S').slice(0, 7)}
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 // ── Metadata maps ──────────────────────────────────────────────────────────────
 
 const STATUS_META = {
@@ -525,6 +476,15 @@ const PATTERN_COLORS: Partial<Record<SprintDeliveryPattern, string>> = {
   'Scope Instability':      '#F87171',
   'Blocked Sprint':         '#ef4444',
   'Late Delivery Risk':     '#FF8A4C',
+};
+
+// FCAST-20 — labels for the diagnosis card's weakest-factor headline.
+const WEAKEST_FACTOR_LABEL: Record<string, string> = {
+  throughput:   'Weakest link: Throughput',
+  blockers:     'Weakest link: Blockers',
+  scope:        'Weakest link: Scope growth',
+  data_quality: 'Weakest link: Data quality',
+  none:         'No dominant risk factor',
 };
 
 // ── Data requirements guide ────────────────────────────────────────────────────
@@ -657,6 +617,15 @@ export default function ForecastPage() {
               )}
             </div>
 
+            {/* ── Forecast Diagnosis (FCAST-19/20/21 — are we on track, and why?) ── */}
+            {result.status !== 'complete' && (
+              <div className={styles.diagnosisCard} data-kind={result.weakestFactor.kind}>
+                <span className={styles.diagnosisLabel}>{WEAKEST_FACTOR_LABEL[result.weakestFactor.kind]}</span>
+                {result.weakestFactor.detail && <p className={styles.diagnosisText}>{result.weakestFactor.detail}</p>}
+                <p className={styles.diagnosisReason}>{result.confidenceReason}</p>
+              </div>
+            )}
+
             {/* ── KPI Row ── */}
             <div className={styles.kpiGrid}>
               {[
@@ -734,6 +703,65 @@ export default function ForecastPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* ── Throughput Required vs Current (FCAST-14) ── */}
+            {result.status !== 'complete' && (() => {
+              const requiredForOnTrack = result.remainingIssues / 6; // on_track threshold — see computeForecast()
+              const maxVal = Math.max(result.avgThroughput, requiredForOnTrack, 1);
+              const gapPct = result.avgThroughput > 0 ? Math.round(((requiredForOnTrack - result.avgThroughput) / result.avgThroughput) * 100) : 0;
+              return (
+                <div className={styles.chartCard} style={{ '--anim-delay': '0.12s' } as CSSProperties}>
+                  <div className={styles.chartHead}>
+                    <div className={styles.chartTitleGroup}>
+                      <h2 className={styles.chartTitle}>Throughput: Required vs. Current</h2>
+                      <p className={styles.chartSubtitle}>
+                        How your current average throughput compares to what&apos;s needed to be on track (≤6 sprints remaining).
+                      </p>
+                    </div>
+                  </div>
+                  <div className={styles.throughputCompare}>
+                    <div className={styles.throughputRow}>
+                      <span className={styles.throughputRowLabel}>Current avg</span>
+                      <div className={styles.throughputTrack}>
+                        <div className={styles.throughputFill} style={{ '--fill-width': `${Math.round((result.avgThroughput / maxVal) * 100)}%`, '--fill-color': 'var(--dc-acc2, #FF8A4C)' } as CSSProperties} />
+                      </div>
+                      <span className={styles.throughputRowVal}>{result.avgThroughput}/sprint</span>
+                    </div>
+                    <div className={styles.throughputRow}>
+                      <span className={styles.throughputRowLabel}>Required (on track)</span>
+                      <div className={styles.throughputTrack}>
+                        <div className={styles.throughputFill} style={{ '--fill-width': `${Math.round((requiredForOnTrack / maxVal) * 100)}%`, '--fill-color': requiredForOnTrack > result.avgThroughput ? 'var(--dc-red, #F87171)' : 'var(--dc-green, #22C55E)' } as CSSProperties} />
+                      </div>
+                      <span className={styles.throughputRowVal}>{requiredForOnTrack.toFixed(1)}/sprint</span>
+                    </div>
+                  </div>
+                  <p className={styles.methodNote}>
+                    {gapPct > 0
+                      ? `Throughput would need to increase ~${gapPct}% to be on track within 6 sprints at current scope.`
+                      : 'Current throughput already meets the on-track bar.'}
+                  </p>
+                </div>
+              );
+            })()}
+
+            {/* ── Risk & Scope Trend (FCAST-15/16/17) ── */}
+            {result.scopeTrend.length >= 2 && (
+              <div className={styles.chartCard} style={{ '--anim-delay': '0.13s' } as CSSProperties}>
+                <div className={styles.chartHead}>
+                  <div className={styles.chartTitleGroup}>
+                    <h2 className={styles.chartTitle}>Risk &amp; Scope Trend</h2>
+                    <p className={styles.chartSubtitle}>
+                      Mid-sprint scope additions and blocked-item counts per sprint. Rising bars signal growing risk to the forecast.
+                    </p>
+                  </div>
+                  <div className={styles.chartLegend}>
+                    <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#F59E0B' } as CSSProperties} /> Scope added</span>
+                    <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#F87171' } as CSSProperties} /> Blocked</span>
+                  </div>
+                </div>
+                <RiskScopeTrendChart points={result.scopeTrend} />
               </div>
             )}
 

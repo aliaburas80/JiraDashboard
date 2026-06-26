@@ -5,6 +5,18 @@
 
 ---
 
+## v4.6.1 — Forecast Engine Tests, Data-Quality-Aware Confidence, Risk Diagnosis (2026-06-27, P2 — in progress, unmerged)
+
+**Scope:** `FCAST-14`–`FCAST-26` — the `/forecast` page already had more chart coverage than originally planned (burn-up, burn-down, velocity, sprint performance table, delivery pattern breakdown, delivery levers, next-quarter plan), so this closes the genuine gaps: zero test coverage, confidence that ignored Data Quality, and no "why aren't we on track?" diagnosis.
+
+- **Extracted `computeForecast()`** out of `app/forecast/page.tsx` into `src/services/forecast/forecastEngine.service.ts` (types in `src/types/forecast.ts`) — required to unit test it without importing a `'use client'` page module or duplicating ~75 lines of logic in a test file. No behavior change from the move.
+- **Confidence now considers Data Quality and per-metric confidence**, not just sprint count/velocity-trend/blocked-count. Reuses the same ×0.75 (Weak) / ×0.5 (Critical) downgrade multipliers as the Coaching Confidence Score, so "Weak data quality" means the same thing across the app. `confidenceReason` always cites real numbers.
+- **New "Forecast Diagnosis" card** under the status banner answers "are we on track, and why?" — identifies the single weakest factor (blockers > critical items > scope growth > data quality > declining throughput > none), each citing the real triggering number.
+- **Two new adjustment rules**: heavy mid-sprint scope growth, and an active Data Quality downgrade — both gated by a real signal.
+- **New "Throughput: Required vs. Current" chart** — current avg throughput vs. what's needed to be on-track within 6 sprints.
+- **New "Risk & Scope Trend" chart** — deliberately consolidates what were three separate planned charts (risk trend, scope-change trend, blocker-impact chart) into one grouped-bar chart, since all three are risk-signal-over-time views of the same per-sprint data; three separate cards would have tripled chart density on an already-long page without adding distinct information. Only renders when rich per-sprint data (not the legacy 8-sprint-capped shape) is available.
+- 12 new tests (`forecastEngine.test.ts` — `TC-FCAST-01`–`13`), closing a real gap where `TC-FCAST-04` (at-risk status) existed only as an undocumented-as-automated manual scenario. Full suite 700/72 passing; lint/typecheck/build clean.
+
 ## v4.10.0 — Role-Based Delivery Coaching Insights (2026-06-23, P1 — in progress, unmerged)
 
 **Scope:** `RBC-01`–`RBC-20` — turns the metrics already computed for every dashboard into role-specific, evidence-cited coaching advice. No new metric calculations were introduced; this is a pure interpretation layer.

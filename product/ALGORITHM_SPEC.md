@@ -661,7 +661,69 @@ Metric algorithms still compute from normalised Jira export rows, but the latest
 
 **Output:** `ForecastResult` with `status`, `avgThroughput`, `sprintsRemaining`, `weeksRemaining`, `confidence`, `adjustments`, `sprintPoints`, `blockedCount`, `criticalCount`
 
-**Implementation:** `app/forecast/page.tsx` → `computeForecast()`
+**Implementation:** `app/forecast/page.tsx` → `computeForecast()` (relocated 2026-06-27 to `src/services/forecast/forecastEngine.service.ts` — see "v4.6.1" below; behavior unchanged by the move).
+
+---
+
+## v4.6.1 — Forecast Confidence, Weakest-Factor Diagnosis, and Adjustment Rules (2026-06-27)
+
+**Why:** `computeForecast()` had zero test coverage and its confidence score never considered Data Quality or per-metric confidence — only sprint count, velocity trend, and blocked count. There was also no answer to "why aren't we on track?" beyond a flat adjustments list. This addendum closes both gaps (FCAST-23, FCAST-19/20/21) and adds the two genuinely-missing chart types (FCAST-14, and a consolidated FCAST-15/16/17).
+
+### Forecast Confidence Score
+
+**Input:** structural signals (`validSprints.length`, `velocityTrend`, `blockedCount`), `metrics.confidence.sprintThroughput`, `metrics.confidence.velocity`, `metrics.dataQuality`
+
+**Steps:**
+1. `structuralScore` = 90 if `validSprints.length >= 4 && velocityTrend !== 'declining' && blockedCount === 0`; 65 if `validSprints.length >= 2 && blockedCount < 3`; else 35
+2. `metricScore` = average of `metrics.confidence.sprintThroughput.confidence` and `metrics.confidence.velocity.confidence` (falls back to `structuralScore` if neither is present)
+3. `dqMultiplier` = ×0.5 if `dataQuality.band === 'Critical'`, ×0.75 if `'Weak'`, ×1 otherwise — **the same documented multipliers as the Coaching Confidence Score** (this section), reused rather than reinvented, so a "Weak" data quality band means the same thing across the whole app
+4. `blendedScore = ((structuralScore + metricScore) / 2) × dqMultiplier`
+5. `confidence` = `'high'` if `blendedScore >= 70`, `'medium'` if `>= 40`, else `'low'`
+6. `confidenceReason` cites the real sprint count, velocity trend, and Data Quality band/score — when `dqMultiplier < 1`, it explicitly says confidence was reduced and why
+
+**Output:** `confidence: 'high' | 'medium' | 'low'`, `confidenceReason: string`
+
+**Implementation:** `src/services/forecast/forecastEngine.service.ts — computeForecast()`
+
+### Weakest-Factor Diagnosis (FCAST-20)
+
+**Input:** `blockedCount`, `criticalCount`, `scopeTrend` (total added scope), `dqMultiplier`, `velocityTrend`
+
+**Steps (checked in this priority order — first match wins):**
+1. `blockedCount > 3` → `{ kind: 'blockers', detail: '<N> issues are blocked...' }`
+2. `criticalCount > 2` → `{ kind: 'blockers', detail: '<N> critical/highest-priority issues remain unresolved.' }`
+3. total recently-added scope `> avgThroughput × 2` → `{ kind: 'scope', detail: '<N> items were added mid-sprint...' }`
+4. a Data Quality downgrade was applied (`dqMultiplier < 1`) → `{ kind: 'data_quality', detail: 'Data Quality is <band> (<score>/100)...' }`
+5. `velocityTrend === 'declining'` → `{ kind: 'throughput', detail: 'Throughput has declined...' }`
+6. else → `{ kind: 'none', detail: 'No single dominant risk factor...' }`
+
+**Output:** `WeakestFactor — { kind, detail }`. Rendered as a "Forecast Diagnosis" card on `/forecast`, directly under the status banner — `data-kind` drives the card's color tone (red for blockers/throughput, amber for scope/data_quality, green for none).
+
+**Implementation:** `src/services/forecast/forecastEngine.service.ts — computeForecast()`
+
+### Throughput Required vs. Current (FCAST-14)
+
+**Input:** `remainingIssues`, `avgThroughput`
+
+**Steps:** `requiredForOnTrack = remainingIssues / 6` (the same 6-sprint threshold that defines `on_track` status). Rendered as two horizontal bars (current vs. required) with a gap percentage: `gapPct = round(((required - current) / current) × 100)` when positive.
+
+**Implementation:** `app/forecast/page.tsx` — inline in the page render (presentation-only; no new domain calculation beyond the existing on-track threshold).
+
+### Risk & Scope Trend (FCAST-15/16/17, consolidated)
+
+**Input:** `SprintThroughputSummary.sprints[].addedScopeCount`, `.removedScopeCount`, `.blockedCount` (only present on the rich per-sprint shape, not the legacy 8-sprint-capped shape)
+
+**Steps:** for each of the last 12 rich sprints, emit `{ sprint, added, removed, blocked }`. Empty array when only legacy sprint data is available — the UI hides the chart in that case rather than rendering a misleadingly-empty one.
+
+**Output:** `ForecastResult.scopeTrend: { sprint, added, removed, blocked }[]`. Rendered as a grouped-bar chart (amber = scope added, red = blocked) — the three originally-separate "risk trend," "scope change trend," and "blocker impact" requests are deliberately shown as one chart, since all three are risk-signal-over-time views of the same per-sprint data; showing them as three separate cards would have tripled chart density on an already long page without adding distinct information.
+
+**Implementation:** `src/services/forecast/forecastEngine.service.ts — computeForecast()` (data) + `app/forecast/page.tsx — RiskScopeTrendChart()` (rendering)
+
+### Adjustment Rules (FCAST-21, extended)
+
+Two new rules added to the pre-existing set (blockers/critical/throughput-trend/descope), each gated by a real signal: heavy mid-sprint scope growth (`addedScope > avgThroughput × 2`) recommends tightening sprint-start scope discipline; an active Data Quality downgrade recommends improving data quality, naming the current band. No rule fires without its triggering condition being true.
+
+**Implementation:** `src/services/forecast/forecastEngine.service.ts — computeForecast()`
 
 ---
 

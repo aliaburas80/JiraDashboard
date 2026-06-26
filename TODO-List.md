@@ -973,7 +973,7 @@ The following items are in the uploaded TODO as Done. Keep them, but verify trac
 | FCAST-01 | Define `DeliveryForecast` type | P1 | ✅ Done 2026-06-10 | `ForecastResult` in app/forecast/page.tsx: status, avgThroughput, sprintsRemaining, weeksRemaining, confidence, adjustments, sprintPoints, blockedCount, criticalCount. |
 | FCAST-02 | Calculate forecast status | P1 | ✅ Done 2026-06-10 | on_track / at_risk / off_track / complete / insufficient_data computed in `computeForecast()`. |
 | FCAST-03 | Calculate expected completion date | P1 | ✅ Done 2026-06-10 | `weeksRemaining` from sprint throughput × remaining issues, 2-week sprint assumption. |
-| FCAST-04 | Calculate confidence | P1 | ✅ Done 2026-06-10 | High (< 3 sprints), medium (< 6), low (≥ 6), none (insufficient data). |
+| FCAST-04 | Calculate confidence | P1 | ✅ Done 2026-06-10; extended 2026-06-27 (FCAST-23) | This row's original text was stale relative to the actual implementation (structural signals — sprint count/velocity-trend/blocked-count — not a simple sprints-remaining threshold). Now also folds in Data Quality + per-metric confidence — see FCAST-23. |
 | FCAST-05 | Calculate remaining work | P1 | ✅ Done 2026-06-10 | Remaining = total − done issues; story points if present. |
 | FCAST-06 | Calculate required throughput | P1 | ✅ Done 2026-06-10 | Derived from sprint completion history via `metrics.sprint.sprints`. |
 | FCAST-07 | Calculate current throughput | P1 | ✅ Done 2026-06-10 | `avgThroughput` = mean of completedCount per sprint across valid sprint records. |
@@ -983,19 +983,39 @@ The following items are in the uploaded TODO as Done. Keep them, but verify trac
 | FCAST-11 | Add Planned vs Actual progress chart | P1 | ✅ Done 2026-06-10 | Burn-up chart shows actual (solid blue) + forecast extension (dashed blue) + target (grey dashed). |
 | FCAST-12 | Add forecast completion line chart | P1 | ✅ Done 2026-06-10 | Dashed forecast line extends from last actual point to target. |
 | FCAST-13 | Add remaining work burn-up/burn-down | P1 | ✅ Done 2026-06-10 | Inline SVG burn-up chart in BurnUpChart component — no external library. |
-| FCAST-14 | Add required vs current throughput chart | P2 | ❌ Not started | Dashboard section. |
-| FCAST-15 | Add delivery risk trend | P2 | ❌ Not started | Dashboard section. |
-| FCAST-16 | Add scope change trend | P2 | ❌ Not started | Dashboard section. |
-| FCAST-17 | Add blocker impact chart | P2 | ❌ Not started | Dashboard section. |
+| FCAST-14 | Add required vs current throughput chart | P2 | ✅ Done (2026-06-27) | "Throughput: Required vs. Current" chart on `/forecast` — two horizontal bars (current avg vs. throughput needed for on-track within 6 sprints) + a gap-percentage summary line. Hidden when status is `complete`. |
+| FCAST-15 | Add delivery risk trend | P2 | ✅ Done (2026-06-27, consolidated — see FCAST-16/17) | Implemented together with FCAST-16/17 as one "Risk & Scope Trend" chart — see FCAST-17 for the consolidation rationale. |
+| FCAST-16 | Add scope change trend | P2 | ✅ Done (2026-06-27, consolidated — see FCAST-17) | Per-sprint `addedScopeCount` plotted in the same consolidated chart as FCAST-15/17. |
+| FCAST-17 | Add blocker impact chart | P2 | ✅ Done (2026-06-27, consolidated) | **Deliberately consolidated FCAST-15/16/17 into one "Risk & Scope Trend" grouped-bar chart** (`RiskScopeTrendChart` in `app/forecast/page.tsx`) instead of 3 separate cards — all three are risk-signal-*over-time* views of the same per-sprint `SprintThroughput.addedScopeCount`/`blockedCount` data; 3 separate cards would have tripled chart density on an already-long page (CLAUDE.md §5.1.UI/UX: "dashboards avoid excessive density") without adding distinct information. Only renders with rich per-sprint data (≥2 sprints); hidden for the legacy 8-sprint-capped shape. |
 | FCAST-18 | Add dedicated `/forecast` page | P1 | ✅ Done 2026-06-10 | `/forecast` page live: status banner, KPI row, burn-up chart, next-quarter plan, risk signals, recommendations. |
-| FCAST-19 | Answer “Are we on track?” | P2 | ❌ Not started | Must explain why. |
-| FCAST-20 | Identify weakest delivery point | P2 | ❌ Not started | Throughput, blockers, scope, WIP, refinement, capacity, data quality. |
-| FCAST-21 | Recommend adjustment to deliver on time | P2 | ❌ Not started | Scope/capacity/WIP/blockers/splitting/refinement/sprint goal renegotiation. |
-| FCAST-22 | Handle insufficient data safely | P2 | ❌ Not started | Message: “Forecast confidence is low because the uploaded data is missing key fields or has limited historical delivery records.” |
-| FCAST-23 | Use Data Quality Score and Metric Confidence Score | P2 | ❌ Not started | Must affect forecast confidence. |
-| FCAST-24 | Add tests | P2 | ❌ Not started | See TEST-FCAST. |
-| FCAST-25 | Update all related product docs | P2 | ❌ Not started | SRS, BRD, Use Cases, User Journeys, Scenarios, Test Cases, Developer Guide, Release Notes, README, Algorithm Spec, Technical Method, Appendix, TODO. |
-| FCAST-26 | Produce product documentation impact matrix before push | P0/P2 | ❌ Not started | Required gate. |
+| FCAST-19 | Answer “Are we on track?” | P2 | ✅ Done (2026-06-27) | New "Forecast Diagnosis" card directly under the status banner — combines `weakestFactor.detail` (FCAST-20) and `confidenceReason` (FCAST-23), both citing real numbers. |
+| FCAST-20 | Identify weakest delivery point | P2 | ✅ Done (2026-06-27, scoped to throughput/blockers/scope/data-quality) | `weakestFactor: WeakestFactor` in `computeForecast()` — checked in priority order: severe blockers (`>3`) → critical items (`>2`) → mid-sprint scope growth (`>avgThroughput×2`) → Data Quality downgrade → declining throughput → none. WIP/refinement/capacity were not implemented as distinct factors — `DashboardMetrics` doesn't carry a forecast-relevant WIP-limit or refinement-stage signal today; revisit if/when one is added. |
+| FCAST-21 | Recommend adjustment to deliver on time | P2 | ✅ Done (2026-06-27, extended) | Pre-existing rules (blockers/critical/throughput-trend/descope) plus 2 new ones: heavy mid-sprint scope growth → tighten scope discipline; active Data Quality downgrade → improve data quality, naming the band. Capacity/WIP/splitting/refinement/sprint-goal-renegotiation rules were not added — same WIP/refinement signal gap as FCAST-20. |
+| FCAST-22 | Handle insufficient data safely | P2 | ✅ Done 2026-06-10 (pre-existing, verified) | `insufficient_data` status + empty-state message were already implemented; confirmed still correct after the FCAST-23 confidence extension (`confidenceReason` for this branch: "Confidence is not available — no completed sprint throughput has been uploaded yet."). |
+| FCAST-23 | Use Data Quality Score and Metric Confidence Score | P2 | ✅ Done (2026-06-27) | Confidence now blends a structural score with `metrics.confidence.sprintThroughput`/`velocity`, then applies the same ×0.75 (Weak) / ×0.5 (Critical) Data Quality downgrade multipliers as the Coaching Confidence Score (reused, documented formula — not reinvented). `confidenceReason: string` always cites real numbers. |
+| FCAST-24 | Add tests | P2 | ✅ Done (2026-06-27) | `src/__tests__/forecastEngine.test.ts` — 12 tests (`TC-FCAST-01`–`13`). Closed a real gap: `computeForecast()` had **zero** automated tests before this change, and `TC-FCAST-04` (at-risk status) existed only as a manual scenario in TEST_CASES.md with no automated coverage. Required extracting `computeForecast()` to `src/services/forecast/forecastEngine.service.ts` first (FR-353) since it lived inline in a `'use client'` page file. |
+| FCAST-25 | Update all related product docs | P2 | ✅ Done (2026-06-27) | SRS Addendum I (FR-353–FR-358) + revision history v4.6.1; TEST_CASES §9.55 updated + new §9.55a; DEVELOPER_GUIDE new "Forecast Engine Extraction..." section; ALGORITHM_SPEC new "v4.6.1" section; RELEASE_NOTES new v4.6.1 entry; APPENDIX 3 new + 1 updated glossary terms; `app/help/page.tsx` Forecast FAQ extended (3 new entries, 2 corrected to match actual behavior); BRD/Technical Method reviewed — no update required (pure interpretation layer, no new patent-relevant method). |
+| FCAST-26 | Produce product documentation impact matrix before push | P0/P2 | ✅ Done (2026-06-27) | See the filled matrix immediately below this table. |
+
+**Documentation impact matrix — v4.6.1 (FCAST-14–26):**
+
+| Document | Updated? | Change |
+|---|---|---|
+| `product/SRS.md` | Yes | Addendum I (FR-353–FR-358), FR-328's confidence section noted as superseded inline, revision history v4.6.1 row |
+| `product/BRD.md` | No | BR-116 ("MUST provide a delivery forecast page") is satisfied at the capability level already; this change is internal engine quality (tests, confidence accuracy, diagnosis), not a new business capability — no BRD line needed. |
+| `product/USE_CASES.md` | No | UC-102 (View Delivery Forecast) already covers the `/forecast` page generically; the new diagnosis card and charts are presentation detail within the existing use case, not a new user goal. |
+| `product/USER_JOURNEYS.md` | No | UJ-037 already covers the forecast-review journey; no new journey branch introduced. |
+| `product/SCENARIOS.md` | No | SCN-052 already covers a forecast-review scenario; no new scenario needed for an internal accuracy/diagnosis improvement. |
+| `product/TEST_CASES.md` | Yes | §9.55 updated (TC-FCAST-01/02/03/04 now automated), new §9.55a (TC-FCAST-06–13) |
+| `product/DEVELOPER_GUIDE.md` | Yes | New "Forecast Engine Extraction, Data-Quality-Aware Confidence, and Risk Diagnosis" section |
+| `product/ALGORITHM_SPEC.md` | Yes | New "v4.6.1" section (confidence formula, weakest-factor algorithm, new charts, adjustment rules) |
+| `product/RELEASE_NOTES.md` | Yes | New v4.6.1 entry |
+| `product/APPENDIX.md` | Yes | 3 new glossary terms (Forecast Diagnosis, Weakest Factor, Risk & Scope Trend) + 1 corrected (Forecast Status, off_track condition) |
+| `app/help/page.tsx` | Yes | Forecast FAQ section: 3 new entries (Diagnosis card, Throughput chart, Risk & Scope Trend chart) + 2 corrected (page description, status meanings — `off_track` previously didn't mention the severe-blockers override) |
+| `app/glossary/page.tsx` | — | Not affected — forecast terms live in APPENDIX.md, matching established precedent |
+| `product/TECHNICAL_METHOD.md` | — | Not affected — this remains rule-based interpretation of existing metrics, not a new technical method among the patent-relevant claims |
+
+**Net result:** 7 of 13 applicable surfaces updated; 6 confirmed no-update-required, each with a stated reason. This satisfies `FCAST-25`/`FCAST-26`.
 
 ---
 
@@ -1188,15 +1208,15 @@ Plan only unless explicitly approved.
 
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
-| TEST-FCAST-01 | Forecast calculates on-track / at-risk / off-track | P2 | ❌ Not started | Core status. |
-| TEST-FCAST-02 | Forecast handles insufficient data | P2 | ❌ Not started | Low-confidence safe message. |
-| TEST-FCAST-03 | Forecast uses current throughput | P2 | ❌ Not started | Items/SP/day/sprint. |
-| TEST-FCAST-04 | Forecast compares required vs current throughput | P2 | ❌ Not started | Gap analysis. |
-| TEST-FCAST-05 | Forecast shows confidence | P2 | ❌ Not started | Low/medium/high. |
-| TEST-FCAST-06 | Forecast explains confidence | P2 | ❌ Not started | Reason, not just badge. |
-| TEST-FCAST-07 | Forecast chart data is generated | P2 | ❌ Not started | planned/actual/forecast data. |
-| TEST-FCAST-08 | Adjustment suggestions are generated | P2 | ❌ Not started | Scope, blockers, capacity, WIP, splitting, refinement. |
-| TEST-FCAST-09 | Data Quality Score affects forecast confidence | P2 | ❌ Not started | Confidence downgrade. |
+| TEST-FCAST-01 | Forecast calculates on-track / at-risk / off-track | P2 | ✅ Done (2026-06-27) | `TC-FCAST-03/04/06` (`src/__tests__/forecastEngine.test.ts`). |
+| TEST-FCAST-02 | Forecast handles insufficient data | P2 | ✅ Done (2026-06-27) | `TC-FCAST-02/13`. |
+| TEST-FCAST-03 | Forecast uses current throughput | P2 | ✅ Done (2026-06-27) | `TC-FCAST-07`. Points-per-sprint throughput was not separately tested — `avgThroughput` is issue-count-based only, same as the pre-existing implementation. |
+| TEST-FCAST-04 | Forecast compares required vs current throughput | P2 | ✅ Done (2026-06-27) | Covered at the UI level by the new "Throughput: Required vs. Current" chart (FCAST-14); no dedicated engine-level test since the comparison is presentation-only arithmetic (`remainingIssues / 6`) over already-tested `avgThroughput`/`remainingIssues` fields. |
+| TEST-FCAST-05 | Forecast shows confidence | P2 | ✅ Done (2026-06-27) | `TC-FCAST-01/02/08`. |
+| TEST-FCAST-06 | Forecast explains confidence | P2 | ✅ Done (2026-06-27) | `TC-FCAST-08` asserts `confidenceReason` content; `TC-FCAST-02` asserts the insufficient-data reason. |
+| TEST-FCAST-07 | Forecast chart data is generated | P2 | ✅ Done (2026-06-27) | `TC-FCAST-11/12` (`scopeTrend`). `sprintPoints` (burn-up chart data) was not re-tested — unchanged by this pass, pre-existing manual-only coverage (`TC-FCAST-05`). |
+| TEST-FCAST-08 | Adjustment suggestions are generated | P2 | ✅ Done (2026-06-27, scoped to scope/blockers/data-quality) | `TC-FCAST-10` (scope). Capacity/WIP/splitting/refinement rules were not added — `DashboardMetrics` has no forecast-relevant WIP-limit or refinement-stage signal today; see FCAST-20/21 status notes. |
+| TEST-FCAST-09 | Data Quality Score affects forecast confidence | P2 | ✅ Done (2026-06-27) | `TC-FCAST-08`. |
 
 ---
 

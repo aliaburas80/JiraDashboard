@@ -1667,3 +1667,19 @@ Pure interpretation layer over the already-computed `DashboardMetrics` — close
 **Components:** `src/components/dashboard/CoachingInsightCard.tsx`, `CoachingCategoryTabs.tsx` (tabs render only when a role has >1 visible category — `manager` and `admin`). Severity renders via the existing `Badge` component (`severityToBadgeVariant()` in `src/lib/coachingBadge.ts`), never a raw color.
 
 **Testing:** `src/__tests__/roleBasedCoaching.test.ts` — 20 tests (`TC-RBC-01`–`09` + edge cases per CLAUDE.md §45.1: zero issues, empty `sprint.sprints`, confidence threshold boundaries, undefined `relations`). Suite: 689/71 passing.
+
+## Forecast Engine Extraction, Data-Quality-Aware Confidence, and Risk Diagnosis (Implemented — v4.6.1)
+
+Closes `FCAST-14`–`FCAST-26` (TODO-List.md Section 18). The `/forecast` page already had more chart coverage than the original spec — burn-up, burn-down, velocity, sprint performance table, delivery pattern breakdown, delivery levers, next-quarter plan — so this work targets the genuine gaps: `computeForecast()` had **zero** test coverage, confidence ignored Data Quality entirely, and there was no "why" diagnosis beyond a flat adjustments list.
+
+**Extraction:** `computeForecast()` moved from inline in `app/forecast/page.tsx` to `src/services/forecast/forecastEngine.service.ts`, with its types in `src/types/forecast.ts` (`ForecastResult`, `ForecastStatus`, `SprintPoint`, `WeakestFactor`, `WeakestFactorKind`) — same rationale and pattern as the `src/services/retro/retroInsights.service.ts` extraction: a `'use client'` page file can't be imported into Jest, and mirroring ~75 lines of business logic in a test file would have violated CLAUDE.md §29 ("Calculation Single Source of Truth"). Page behavior is unchanged by the move.
+
+**Confidence (FCAST-23):** now blends a structural score (sprint count/velocity-trend/blocked-count) with `metrics.confidence.sprintThroughput`/`velocity`, then applies the same ×0.75 (Weak) / ×0.5 (Critical) Data Quality downgrade multipliers as the Coaching Confidence Score (`product/ALGORITHM_SPEC.md`) — reused as a documented formula, not reinvented, so "Weak data quality" means the same thing everywhere in the app. `confidenceReason` always cites real numbers.
+
+**Weakest-factor diagnosis (FCAST-19/20):** `weakestFactor: WeakestFactor` identifies the single biggest drag on the forecast (blockers > critical items > scope growth > data quality > declining throughput > none), checked in that priority order. Rendered as a "Forecast Diagnosis" card on `/forecast` directly under the status banner, `data-kind` driving its color tone.
+
+**Adjustment rules (FCAST-21):** two new rules beyond the pre-existing set — heavy mid-sprint scope growth and an active Data Quality downgrade — each gated by a real signal.
+
+**New charts:** "Throughput: Required vs. Current" (FCAST-14) — two bars comparing current avg throughput to what's needed to be on-track within 6 sprints. "Risk & Scope Trend" (FCAST-15/16/17, **consolidated into one chart** — all three are risk-signal-over-time views of the same per-sprint `addedScopeCount`/`blockedCount` data; three separate cards would have tripled chart density without adding distinct information). Both live in `app/forecast/page.tsx`; the trend chart's data (`scopeTrend`) is computed in the service, only populated when rich `SprintThroughputSummary` data is available (empty — and the chart hidden — for the legacy 8-sprint-capped shape).
+
+**Testing:** `src/__tests__/forecastEngine.test.ts` — 12 tests (`TC-FCAST-01`–`13`, IDs aligned with the pre-existing manual scenarios in `product/TEST_CASES.md` §9.55 where they overlap). Closes a real gap: `TC-FCAST-04` (at-risk status) existed only as a manual scenario with no automated coverage before this change. Suite: 700/72 passing.
