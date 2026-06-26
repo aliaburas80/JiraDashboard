@@ -1384,30 +1384,48 @@ Alex's flow (New User — First Login):
 6. Adds Blocker: "Dependency on infra team blocked 3 stories"
 7. Adds Action Items: "Schedule shorter planning sessions" (owner: Ana, due: next sprint, High), "Add complexity review to refinement" (owner: Tech Lead, Medium)
 8. Clicks "Submit & Get Suggestions"
-9. Insights view: ⚠️ goal-partially-achieved banner; suggestions include "Sprint goal was partially achieved. Identify which stories caused slippage and prioritise them first next sprint." and "1 blocker recorded. Escalate unresolved blockers to the next planning session."
+9. Insights view: ⚠️ goal-partially-achieved banner; "Do This Next" includes "Re-plan the sprint goal with a smaller, more achievable scope..." and "Address the 1 recorded blocker during refinement, before they recur next sprint."
 10. Action summary: 2 items listed — 1 red (high), 1 amber (medium) — both have owners and due dates
 
 **Outcome:** Retrospective completed in 5 minutes; team leaves with 2 owned action items and data-backed improvement advice.
 
-**Related:** UC-103, UC-104, UJ-038, FR-330, FR-331, FR-332, FR-333, BR-117
+**Related:** UC-103, UC-104, UJ-038, FR-330, FR-331, FR-356, BR-117
 
 ---
 
-### SCN-056 — Team Member Downloads the Retrospective CSV Template for Offline Use
+### SCN-056 — Team Member Downloads the Retrospective Template for Offline Use
 
 **Context:** David (Product Owner) wants to run a retro with a remote team over a shared spreadsheet. He needs the official template to share in Slack before the meeting.
 
 **Flow:**
 1. David logs in and navigates to `/retro` via Planning menu
-2. The three-card menu is shown: "Download Template", "Fill in App", "Upload Completed"
-3. David clicks "Download CSV →" on the Download Template card
-4. `downloadTemplate()` executes client-side: builds CSV string, creates a `Blob`, triggers browser download
-5. File `Retrospective_Template.csv` saves with: header row (Sprint Name, Team, What Went Well, What Did Not Go Well, Blockers, Action Item, Owner, Due Date, Priority) + 2 example rows
-6. David opens the file in Google Sheets and shares it with his team
+2. The three-card menu is shown: "Download Template", "Fill in App", "Upload Retro File"
+3. David clicks "Download .xlsx →" on the Download Template card
+4. `downloadRetroExcelTemplate()` executes client-side: builds a 2-sheet workbook ("Retrospective" with 4 example rows, "Instructions"), triggers browser download via `XLSX.writeFile()`
+5. File `Retrospective_Template.xlsx` saves with header row, 4 example rows, and an Instructions sheet explaining how to fill it in
+6. David opens the file in Excel and shares it with his team
 
-**Outcome:** David has the template in under 10 seconds with no server round-trip; the CSV is ready to share immediately.
+**Outcome:** David has the template in under 10 seconds with no server round-trip; the workbook is ready to share immediately, with the original CSV still one click away if preferred.
 
-**Related:** UC-104, FR-333
+**Related:** UC-104, FR-333, FR-357
+
+---
+
+### SCN-059 — Multi-Sprint Retro File Upload Surfaces a Repeated Blocker
+
+**Context:** A team has been filling in the offline `.xlsx` template for the last 3 sprints and finally uploads it instead of re-typing everything into the in-app form.
+
+**Flow:**
+1. A team lead navigates to `/retro`, clicks "Upload →"
+2. Selects `Q2_Retros.xlsx` containing 3 sprints' worth of rows (one "Sprint Name" group per sprint)
+3. `POST /api/retro/parse` groups the rows into 3 `RetroRecord`s and generates one `RetrospectiveInsight` per sprint
+4. The same blocker text — "Waiting on infra team for staging environment" — appears in Sprint 1 and Sprint 3's blocker rows
+5. `detectRepeatedBlockers()` flags it; both Sprint 1's and Sprint 3's `InsightPanel` show "⚠ Repeated across sprints: waiting on infra team for staging environment"
+6. The team lead immediately recognises this as a standing, unaddressed dependency rather than three unrelated one-off blockers
+
+**Outcome:** A pattern invisible across three separate single-sprint retros becomes visible the moment they're uploaded together — with no manual cross-referencing.
+
+**Related:** UC-115, FR-355, FR-356
 
 ---
 

@@ -3059,43 +3059,75 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 3. User fills What Went Well, What Did Not Go Well, Blockers entries (multi-item lists with add/remove)
 4. User fills Action Items: text, owner, due date, priority per item
 5. User clicks "Submit & Get Suggestions" (disabled until Sprint Name filled)
-6. `generateInsights(form)` runs; insights view shown
-7. Goal-status banner (green/amber/red) shown; suggestions list rendered
+6. `generateRetrospectiveInsight(formToRecord(form), 'form')` runs (shared engine — FR-356); insights view shown
+7. Goal-status banner (green/amber/red) shown; `InsightPanel` renders detected themes, "What to Watch" (pain points + blockers), "Do This Next" (next-sprint suggestions + ceremony recommendations + ownership gaps), and a confidence chip
 8. Colour-coded action item summary shown (red=high, amber=medium, green=low)
 
 **Alternate Flow — Missing owners:**
-7a. Insight: "N action items are missing an owner — assign owners to ensure accountability."
+7a. "What to Watch"/"Do This Next" includes: "N action item(s) are missing an owner."
 
 **Alternate Flow — Sprint goal not met:**
-7a. Insight: "Sprint goal was not met. Review capacity planning and scope commitment for the next sprint."
+7a. "Do This Next" includes: "Re-plan the sprint goal with a smaller, more achievable scope and confirm capacity before committing."
 
 **Postcondition:** Team has a recorded retrospective with actionable improvement suggestions  
-**Related FR:** FR-330, FR-331, FR-332  
-**Related:** UC-104, UC-105, BR-117, SCN-053  
+**Related FR:** FR-330, FR-331, FR-356  
+**Related:** UC-104, UC-105, UC-115, BR-117, SCN-053  
 **Related UJ:** UJ-038  
-**Related TC:** TC-RETRO-01–TC-RETRO-07
+**Related TC:** TC-RETRO-01–TC-RETRO-07, TC-RETRO-14–TC-RETRO-19
 
 ---
 
 ### UC-104 — Download Retrospective Template
 
 - **ID:** UC-104
-- **Title:** Download Retrospective CSV Template
+- **Title:** Download Retrospective Template
 - **Actor:** Any authenticated user
 - **Precondition:** User is logged in
-- **Trigger:** User navigates to `/retro` and clicks "Download CSV →"
+- **Trigger:** User navigates to `/retro` and clicks "Download .xlsx →" (or the secondary "download as .csv instead" link)
 
 **Main Flow:**
 1. User lands on `/retro` menu view
-2. Clicks "Download CSV →" on the Download Template card
-3. `downloadTemplate()` executes client-side: builds CSV string, creates a `Blob`, triggers browser download
-4. File `Retrospective_Template.csv` saves to user's downloads folder with header row + 2 example rows
+2. Clicks "Download .xlsx →" on the Download Template card
+3. `downloadRetroExcelTemplate()` executes client-side: builds a 2-sheet workbook ("Retrospective" with 4 example rows, "Instructions"), triggers browser download via `XLSX.writeFile()`
+4. File `Retrospective_Template.xlsx` saves to user's downloads folder
 
-**Postcondition:** User has a template they can fill offline and share with their team  
-**Related FR:** FR-333  
-**Related:** UC-103  
+**Alternate Flow — CSV:**
+2a. User clicks "or download as .csv instead" → original `downloadTemplate()` CSV flow (FR-333) runs unchanged, saving `Retrospective_Template.csv`
+
+**Postcondition:** User has a template they can fill offline and upload back via UC-115  
+**Related FR:** FR-333, FR-357  
+**Related:** UC-103, UC-115  
 **Related SCN:** SCN-056  
 **Related TC:** TC-RETRO-05
+
+---
+
+### UC-115 — Upload a Retrospective File for Automated Insights
+
+- **ID:** UC-115
+- **Title:** Upload a Completed Retrospective File
+- **Actor:** Any authenticated user
+- **Precondition:** User is logged in; has a completed CSV, Excel, Markdown, or plain text retrospective file (e.g. from UC-104's template)
+- **Trigger:** User navigates to `/retro`, clicks "Upload →", then chooses a file
+
+**Main Flow:**
+1. User clicks "Upload →" on the menu, landing on the upload view
+2. Clicks the dashed drop zone, browser file picker opens
+3. User selects a `.csv`, `.xlsx`, `.xls`, `.md`, or `.txt` file (≤ 5 MB)
+4. Client POSTs the file to `POST /api/retro/parse`
+5. Server parses the file (`parseRetroFile()`), groups rows into one record per sprint, generates a `RetrospectiveInsight` per record (`generateInsightsForRecords()`)
+6. Client navigates to the upload-insights view showing one `InsightPanel` per parsed sprint, plus any import warnings/corrections
+
+**Alternate Flow — Parse Error:**
+4a. File has an unsupported extension, exceeds 5 MB, or is missing the required "Sprint Name" column → server returns an error; client shows the error message and the user stays on the upload view
+
+**Alternate Flow — Multi-Sprint File:**
+5a. File contains multiple sprints (one record per "Sprint Name" group) → repeated blockers across sprints are detected and shown on every affected sprint's panel
+
+**Postcondition:** User sees themes, ownership gaps, duplicate action items, and next-sprint suggestions for every sprint in the file — nothing is persisted server-side; this is a one-time preview, re-computed from the uploaded file each time  
+**Related FR:** FR-355, FR-356, FR-356a  
+**Related:** UC-103, UC-104  
+**Related TC:** TC-RETRO-08 to TC-RETRO-20
 
 ---
 

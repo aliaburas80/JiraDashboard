@@ -1,9 +1,13 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 // /retro — Sprint retrospective: fill in-app, download template, or upload file.
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import { downloadRetroExcelTemplate } from '@/services/retro/retroTemplate.service';
+import { generateRetrospectiveInsight, THEME_LABEL } from '@/services/retro/retroInsights.service';
+import type { RetroRecord, RetrospectiveInsight, RetroDataCorrection } from '@/types/retrospective';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -20,6 +24,24 @@ interface RetroForm {
   didntGoWell: RetroEntry[];
   blockers:    RetroEntry[];
   actions:     ActionItem[];
+}
+
+interface UploadPreview {
+  records:     RetroRecord[];
+  insights:    RetrospectiveInsight[];
+  warnings:    string[];
+  corrections: RetroDataCorrection[];
+}
+
+function formToRecord(form: RetroForm): RetroRecord {
+  return {
+    sprintName: form.sprintName, teamName: form.teamName, retroDate: form.retroDate,
+    goalMet: form.goalMet, sprintGoal: form.sprintGoal,
+    wentWell: form.wentWell.map(e => e.text).filter(t => t.trim()),
+    didntGoWell: form.didntGoWell.map(e => e.text).filter(t => t.trim()),
+    blockers: form.blockers.map(e => e.text).filter(t => t.trim()),
+    actions: form.actions.filter(a => a.text.trim()),
+  };
 }
 
 const EMPTY_FORM: RetroForm = {
@@ -47,27 +69,9 @@ function downloadTemplate() {
   URL.revokeObjectURL(url);
 }
 
-// ── Insights engine ────────────────────────────────────────────────────────────
-
-function generateInsights(form: RetroForm): string[] {
-  const insights: string[] = [];
-  const blockers  = form.blockers.filter(b => b.text.trim()).length;
-  const actions   = form.actions.filter(a => a.text.trim()).length;
-  const highActs  = form.actions.filter(a => a.priority === 'high' && a.text.trim()).length;
-  const noOwner   = form.actions.filter(a => a.text.trim() && !a.owner.trim()).length;
-  const noDue     = form.actions.filter(a => a.text.trim() && !a.dueDate.trim()).length;
-
-  if (form.goalMet === 'no')      insights.push('Sprint goal was not met. Review capacity planning and scope commitment for the next sprint.');
-  if (form.goalMet === 'partial') insights.push('Sprint goal was partially met. Identify which stories caused slippage and prioritise them first next sprint.');
-  if (blockers > 0) insights.push(`${blockers} blocker${blockers > 1 ? 's' : ''} recorded. Escalate unresolved blockers to the next planning session.`);
-  if (highActs > 0) insights.push(`${highActs} high-priority action item${highActs > 1 ? 's' : ''} need immediate follow-up.`);
-  if (noOwner > 0)  insights.push(`${noOwner} action item${noOwner > 1 ? 's are' : ' is'} missing an owner — assign owners to ensure accountability.`);
-  if (noDue > 0)    insights.push(`${noDue} action item${noDue > 1 ? 's are' : ' is'} missing a due date — set deadlines to track completion.`);
-  if (actions === 0) insights.push('No action items recorded. Consider whether improvement opportunities were missed.');
-  if (form.wentWell.filter(w => w.text.trim()).length > 0) insights.push('Capture what went well and reinforce those practices in the next sprint.');
-
-  return insights;
-}
+// Insight generation (themes, ownership gaps, next-sprint suggestions, etc.)
+// lives in src/services/retro/retroInsights.service.ts — shared by the
+// in-app form (one record) and the uploaded-file flow (one or more records).
 
 // ── Shared styles ──────────────────────────────────────────────────────────────
 
@@ -96,6 +100,36 @@ const labelSt: React.CSSProperties = {
   color: 'var(--dc-p2)',
   marginBottom: 4,
 };
+
+// Clipboard write can silently fail (insecure context, missing permission,
+// older browsers) — navigator.clipboard.writeText() alone has no fallback
+// and no way for the caller to know it didn't work. This tries the modern
+// API first, then falls back to a hidden-textarea + execCommand approach,
+// and reports success/failure so the UI can give real feedback.
+async function copyToClipboard(text: string): Promise<boolean> {
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // fall through to the legacy fallback below
+    }
+  }
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return ok;
+  } catch {
+    return false;
+  }
+}
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -126,22 +160,153 @@ function EntryList({
   );
 }
 
+// ── Insight panel (shared by the in-app form and the upload flow) ──────────────
+
+function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
+  const watch = [...insight.painPoints, ...insight.blockers];
+  const doNext = [...insight.nextSprintSuggestions, ...insight.ceremonyRecommendations, ...insight.ownershipGaps];
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [copyFailedIndex, setCopyFailedIndex] = useState<number | null>(null);
+
+  async function handleCopy(item: { title: string; description: string; evidence: string }, i: number) {
+    const ok = await copyToClipboard(`${item.title}\n\n${item.description}\n\nEvidence: ${item.evidence}`);
+    setCopiedIndex(ok ? i : null);
+    setCopyFailedIndex(ok ? null : i);
+    setTimeout(() => { setCopiedIndex(null); setCopyFailedIndex(null); }, 1800);
+  }
+
+  return (
+    <div style={{ ...sectionCard, marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <h2 style={{ fontSize: 14, fontWeight: 800, color: 'var(--dc-p1)' }}>{insight.sprintName || 'Retrospective'}</h2>
+        <span className="chip" style={{ fontSize: 10, fontWeight: 700, borderRadius: 100, padding: '2px 8px' }}>
+          Confidence: {insight.confidence}
+        </span>
+      </div>
+
+      {insight.themes.length > 0 && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+          {insight.themes.map((t) => (
+            <span key={t.category} style={{ fontSize: 10, fontWeight: 700, color: 'var(--dc-acc2)', background: 'rgba(255,138,76,0.1)', border: '1px solid rgba(255,138,76,0.2)', borderRadius: 100, padding: '3px 10px' }}>
+              {THEME_LABEL[t.category] ?? t.category} ({t.count})
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div style={{ marginBottom: 14 }}>
+        <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 6 }}>👀 What to Watch</h3>
+        {watch.length > 0 ? (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {watch.map((w, i) => <li key={i} style={{ fontSize: 12, color: 'var(--dc-p2)' }}>• {w}</li>)}
+          </ul>
+        ) : <p style={{ fontSize: 12, color: 'var(--dc-p3)' }}>All clear — no pain points or blockers recorded.</p>}
+      </div>
+
+      <div style={{ marginBottom: 14 }}>
+        <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 6 }}>✅ Do This Next</h3>
+        {doNext.length > 0 ? (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {doNext.map((s, i) => <li key={i} style={{ fontSize: 12, color: 'var(--dc-p2)' }}>→ {s}</li>)}
+          </ul>
+        ) : <p style={{ fontSize: 12, color: 'var(--dc-p3)' }}>No specific suggestions — good job, keep it up!</p>}
+      </div>
+
+      {insight.suggestedBacklogItems.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 6 }}>📝 Suggested Stories &amp; Tasks for Next Sprint</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {insight.suggestedBacklogItems.map((item, i) => (
+              <div key={i} style={{ border: '1px solid var(--dc-bdr)', borderRadius: 8, padding: '10px 12px', background: 'var(--dc-s3)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: item.priority === 'high' ? 'var(--dc-red)' : item.priority === 'medium' ? 'var(--dc-amber)' : 'var(--dc-green)' }} />
+                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--dc-acc2)' }}>{item.type}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)' }}>{item.title}</span>
+                </div>
+                {item.description.split('\n').map((line, li) => (
+                  <p key={li} style={{ fontSize: 11, color: 'var(--dc-p2)', margin: li === 0 ? '0 0 2px 0' : '0 0 6px 0' }}>{line}</p>
+                ))}
+                <p style={{ fontSize: 10, color: 'var(--dc-p3)', fontStyle: 'italic', margin: '0 0 10px 0' }}>Evidence: {item.evidence}</p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(item, i)}
+                    className={clsx('btn-xs flex-1', copyFailedIndex === i ? 'btn-outline-danger' : 'btn-primary')}
+                  >
+                    {copiedIndex === i ? 'Copied!' : copyFailedIndex === i ? 'Copy failed — select manually' : 'Copy'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    title="Coming soon — requires Jira write access, which this app does not yet have (see FUT-JIRA-02 roadmap item)."
+                    className="btn-secondary btn-xs flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ lineHeight: 1.3 }}
+                  >
+                    Create in Jira<br />
+                    <span style={{ fontSize: 9, fontWeight: 500 }}>coming soon</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {insight.repeatedBlockers.length > 0 && (
+        <p style={{ fontSize: 11, color: 'var(--dc-amber)', marginBottom: 6 }}>
+          ⚠ Repeated across sprints: {insight.repeatedBlockers.join(', ')}
+        </p>
+      )}
+      {insight.duplicateActionItems.length > 0 && (
+        <p style={{ fontSize: 11, color: 'var(--dc-amber)' }}>
+          ⚠ Duplicate action items: {insight.duplicateActionItems.join(', ')}
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ── Page ───────────────────────────────────────────────────────────────────────
 
-type View = 'menu' | 'form' | 'insights';
+type View = 'menu' | 'form' | 'insights' | 'upload' | 'upload-insights';
 
 export default function RetroPage() {
   const [view,     setView]     = useState<View>('menu');
   const [form,     setForm]     = useState<RetroForm>(EMPTY_FORM);
-  const [insights, setInsights] = useState<string[]>([]);
+  const [insight,  setInsight]  = useState<RetrospectiveInsight | null>(null);
+  const [uploadPreview, setUploadPreview] = useState<UploadPreview | null>(null);
+  const [uploadError,   setUploadError]   = useState<string | null>(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleSubmit() {
-    setInsights(generateInsights(form));
+    setInsight(generateRetrospectiveInsight(formToRecord(form), 'form'));
     setView('insights');
   }
 
   function patchForm(partial: Partial<RetroForm>) {
     setForm(f => ({ ...f, ...partial }));
+  }
+
+  async function handleFileSelected(file: File) {
+    setUploadLoading(true);
+    setUploadError(null);
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      const res = await fetch('/api/retro/parse', { method: 'POST', body });
+      const data = await res.json();
+      if (!res.ok) {
+        setUploadError(data.error ?? 'Could not parse the uploaded file.');
+        return;
+      }
+      setUploadPreview(data);
+      setView('upload-insights');
+    } catch {
+      setUploadError('Network error while uploading. Check your connection and try again.');
+    } finally {
+      setUploadLoading(false);
+    }
   }
 
   // ── Menu ──────────────────────────────────────────────────────────────────
@@ -176,7 +341,7 @@ export default function RetroPage() {
           </button>
 
           {/* Download Template — secondary */}
-          <button type="button" onClick={downloadTemplate} style={{
+          <button type="button" onClick={downloadRetroExcelTemplate} style={{
             background: 'rgba(255,138,76,0.06)',
             border: '1px solid rgba(255,138,76,0.15)',
             borderTop: '2px solid var(--dc-acc2)',
@@ -188,23 +353,33 @@ export default function RetroPage() {
           }}>
             <SvgIcon name="download" size={22} style={{ color: 'var(--dc-acc2)', marginBottom: 12 }} />
             <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dc-p1)', marginBottom: 6 }}>Download Template</h2>
-            <p style={{ fontSize: 11, color: 'var(--dc-p2)', lineHeight: 1.6, marginBottom: 12 }}>Download a CSV template to fill with your team offline, then upload it here.</p>
-            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--dc-acc2)' }}>Download CSV →</p>
+            <p style={{ fontSize: 11, color: 'var(--dc-p2)', lineHeight: 1.6, marginBottom: 12 }}>Download an Excel template (with an Instructions sheet and examples) to fill offline, then upload it here.</p>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--dc-acc2)' }}>Download .xlsx →</p>
+            <span
+              role="button" tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); downloadTemplate(); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); downloadTemplate(); } }}
+              style={{ display: 'block', marginTop: 8, fontSize: 10, fontWeight: 600, color: 'var(--dc-p3)', textDecoration: 'underline', cursor: 'pointer' }}
+            >
+              or download as .csv instead
+            </span>
           </button>
 
-          {/* Upload File — disabled/coming soon */}
-          <div style={{
+          {/* Upload File */}
+          <button type="button" onClick={() => { setUploadError(null); setView('upload'); }} style={{
             background: 'rgba(255,255,255,0.03)',
             border: '1px solid var(--dc-bdr)',
             borderRadius: 12,
             padding: 20,
-            opacity: 0.6,
+            textAlign: 'left',
+            cursor: 'pointer',
+            transition: 'all 0.15s',
           }}>
-            <SvgIcon name="upload" size={22} style={{ color: 'var(--dc-p3)', marginBottom: 12 }} />
+            <SvgIcon name="upload" size={22} style={{ color: 'var(--dc-p2)', marginBottom: 12 }} />
             <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dc-p1)', marginBottom: 6 }}>Upload Retro File</h2>
-            <p style={{ fontSize: 11, color: 'var(--dc-p2)', lineHeight: 1.6, marginBottom: 12 }}>Upload a completed CSV or Excel retrospective for automated analysis.</p>
-            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--dc-p3)' }}>Coming soon</p>
-          </div>
+            <p style={{ fontSize: 11, color: 'var(--dc-p2)', lineHeight: 1.6, marginBottom: 12 }}>Upload a completed CSV, Excel, Markdown, or plain text retrospective for automated analysis.</p>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--dc-acc2)' }}>Upload →</p>
+          </button>
         </div>
 
         {/* Info panel */}
@@ -333,6 +508,7 @@ export default function RetroPage() {
 
   // ── Insights ──────────────────────────────────────────────────────────────
 
+  if (view === 'insights') {
   const filledActions = form.actions.filter(a => a.text.trim());
   const goalColorMap = {
     yes:     { bg: 'rgba(34,197,94,0.1)',   border: 'rgba(34,197,94,0.25)',   text: 'var(--dc-green)' },
@@ -364,18 +540,7 @@ export default function RetroPage() {
         )}
 
         {/* Insights */}
-        <div style={{ ...sectionCard, marginBottom: 20 }}>
-          <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 12 }}>💡 Suggestions</h2>
-          {insights.length > 0 ? (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {insights.map((ins, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--dc-p2)' }}>
-                  <span style={{ color: 'var(--dc-acc2)', marginTop: 2, flexShrink: 0 }}>→</span>{ins}
-                </li>
-              ))}
-            </ul>
-          ) : <p style={{ fontSize: 13, color: 'var(--dc-p3)' }}>No specific suggestions. Good job — keep it up!</p>}
-        </div>
+        {insight && <InsightPanel insight={insight} />}
 
         {/* Action items summary */}
         {filledActions.length > 0 && (
@@ -401,4 +566,85 @@ export default function RetroPage() {
       </div>
     </AppShell>
   );
+  }
+
+  // ── Upload ────────────────────────────────────────────────────────────────
+
+  if (view === 'upload') return (
+    <AppShell showNav>
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <button type="button" onClick={() => setView('menu')}
+            style={{ fontSize: 13, color: 'var(--dc-p2)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+          <div>
+            <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--dc-p1)' }}>Upload Retrospective</h1>
+            <p style={{ fontSize: 12, color: 'var(--dc-p3)' }}>CSV, Excel, Markdown, or plain text — up to 5 MB.</p>
+          </div>
+        </div>
+
+        <input
+          ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,.md,.txt" style={{ display: 'none' }}
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelected(f); }}
+        />
+
+        <button
+          type="button" onClick={() => fileInputRef.current?.click()} disabled={uploadLoading}
+          style={{
+            ...sectionCard, width: '100%', textAlign: 'center', padding: 40, cursor: uploadLoading ? 'wait' : 'pointer',
+            border: '1px dashed var(--dc-bdr2)',
+          }}
+        >
+          <SvgIcon name="upload" size={28} style={{ color: 'var(--dc-acc2)', marginBottom: 12 }} />
+          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 4 }}>
+            {uploadLoading ? 'Parsing file…' : 'Click to choose a file'}
+          </p>
+          <p style={{ fontSize: 11, color: 'var(--dc-p3)' }}>.csv, .xlsx, .xls, .md, .txt</p>
+        </button>
+
+        {uploadError && (
+          <div style={{ marginTop: 16, borderRadius: 10, border: '1px solid rgba(248,113,113,0.25)', background: 'rgba(248,113,113,0.1)', padding: '12px 16px' }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-red)' }}>{uploadError}</p>
+          </div>
+        )}
+      </div>
+    </AppShell>
+  );
+
+  // ── Upload preview + insights ───────────────────────────────────────────────
+
+  if (view === 'upload-insights' && uploadPreview) return (
+    <AppShell showNav>
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <button type="button" onClick={() => { setUploadPreview(null); setView('upload'); }}
+            style={{ fontSize: 13, color: 'var(--dc-p2)', background: 'none', border: 'none', cursor: 'pointer' }}>← Upload another</button>
+          <div>
+            <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--dc-p1)' }}>
+              {uploadPreview.records.length} Retrospective{uploadPreview.records.length > 1 ? 's' : ''} Imported
+            </h1>
+            <p style={{ fontSize: 12, color: 'var(--dc-p3)' }}>Review the preview below before relying on it.</p>
+          </div>
+        </div>
+
+        {(uploadPreview.warnings.length > 0 || uploadPreview.corrections.length > 0) && (
+          <div style={{ marginBottom: 20, borderRadius: 10, border: '1px solid rgba(245,158,11,0.25)', background: 'rgba(245,158,11,0.08)', padding: '12px 16px' }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-amber)', marginBottom: 6 }}>Import notes</p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {uploadPreview.warnings.map((w, i) => <li key={`w-${i}`} style={{ fontSize: 11, color: 'var(--dc-p2)' }}>• {w}</li>)}
+              {uploadPreview.corrections.map((c, i) => <li key={`c-${i}`} style={{ fontSize: 11, color: 'var(--dc-p2)' }}>• {c.reason}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {uploadPreview.insights.map((ins) => <InsightPanel key={ins.id} insight={ins} />)}
+
+        <div className="flex gap-3">
+          <button type="button" onClick={() => { setUploadPreview(null); setView('menu'); }} className="btn-primary">Done</button>
+          <button type="button" onClick={() => { setUploadPreview(null); setView('upload'); }} className="btn-secondary">Upload another</button>
+        </div>
+      </div>
+    </AppShell>
+  );
+
+  return null;
 }
