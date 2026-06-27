@@ -1,9 +1,9 @@
-# ORG-01–54 — Multi-Tenant Organization Management: Design Document
+# ORG-01–59 — Multi-Tenant Organization Management: Design Document
 
 **Status:** Design — not approved for implementation as a whole. A first Phase 1 slice (schema, migrations, `scopedRepository`, ESLint boundary rule, isolation unit tests — see TODO-List.md `ORG-04`/`05`/`05b`/`08`) is partially implemented on `feature/org-phase1-tenant-isolation`, held unmerged. Everything else, including the rest of Phase 1, remains design-only — required reading before any further `ORG-*` code is written (per `TODO-List.md` Section 20a's gate).
 **Owner:** Ali Abu Ras
-**Created:** 2026-06-27 (updated repeatedly same day — added the Organization Application & Owner Approval workflow, §4; structured rejection feedback and resubmission, §4.4.1/§4.4.2; Per-Organization Settings, §7a; Per-Organization Storage Isolation, §3a; Individual Data Privacy, Ownership, Sharing & Self-Service Deletion, §11)
-**Closes:** `ORG-01`–`ORG-54` in `TODO-List.md` Section 20a (P1 — Multi-Tenant Organization Management)
+**Created:** 2026-06-27 (updated repeatedly same day — added the Organization Application & Owner Approval workflow, §4; structured rejection feedback and resubmission, §4.4.1/§4.4.2; Per-Organization Settings, §7a; Per-Organization Storage Isolation, §3a; Individual Data Privacy, Ownership, Sharing & Self-Service Deletion, §11; Cross-Organization Peer Sharing, §11.4 — the one deliberate, narrow exception to §1's zero-data-overlap promise)
+**Closes:** `ORG-01`–`ORG-59` in `TODO-List.md` Section 20a (P1 — Multi-Tenant Organization Management)
 **Depends on:** Coordinates with `AIPLAN-03` (`organisationId` on canonical models, from the separate self-hosted-AI plan in Section 28) — this design is the authoritative schema owner; `AIPLAN-03` should consume this design's migration rather than run a second one.
 
 ---
@@ -12,9 +12,9 @@
 
 Delivery Clarity today is **single-tenant in practice, multi-user in name**. Every `User` row lives in one shared database with no organizational boundary above it — `canViewAllImportData()` lets `admin`/`manager`/`c_level` roles see *every* user's uploads, and there is no concept that two companies using the same deployment should never see each other's data, because today there is only ever one deployment per company (it's installed/run per customer, not offered as a shared hosted product).
 
-This design introduces an explicit **Organization** boundary so the app can safely run as a shared multi-customer product: each company applies to join (§4 — reviewed and approved by the platform owner, not self-serve instant signup), its users only ever see their own organization's data, and a seat limit and branding identity belong to the organization rather than floating free. The core promise this design must deliver, stated as a non-functional requirement: **zero data overlap between organizations, under any code path, by construction — not by convention.**
+This design introduces an explicit **Organization** boundary so the app can safely run as a shared multi-customer product: each company applies to join (§4 — reviewed and approved by the platform owner, not self-serve instant signup), its users only ever see their own organization's data, and a seat limit and branding identity belong to the organization rather than floating free. The core promise this design must deliver, stated as a non-functional requirement: **zero data overlap between organizations, under any code path, by construction — not by convention — except through one explicit, narrow, consent-gated channel described in §11.5 (aggregated results only, never raw data, never implicit).**
 
-**Explicitly out of scope for this design** (separate future efforts): billing/payment processing, org-to-org data sharing/collaboration features, SSO/SAML (only domain-ownership verification is in scope, not enterprise SSO), and the companion mobile app (`MOBILEAPP-*`) and client-export-sharing (`EXPORT-*`/`SHARE-*`) work, both of which are explicitly gated on this design landing first.
+**Explicitly out of scope for this design** (separate future efforts): billing/payment processing, org-to-org *raw* data sharing/collaboration features (§11.5 covers the one aggregated-results exception; anything beyond that is still out of scope), SSO/SAML (only domain-ownership verification is in scope, not enterprise SSO), and the companion mobile app (`MOBILEAPP-*`) and client-export-sharing (`EXPORT-*`/`SHARE-*`) work, both of which are explicitly gated on this design landing first.
 
 ---
 
@@ -344,7 +344,7 @@ Existing deployments have users and data with no `organizationId` at all. The mi
 
 ---
 
-## 11. Individual Data Privacy, Ownership, Sharing & Self-Service Deletion (`ORG-47`–`ORG-54`) — added 2026-06-27
+## 11. Individual Data Privacy, Ownership, Sharing & Self-Service Deletion (`ORG-47`–`ORG-59`) — added 2026-06-27, extended same day with cross-org peer sharing
 
 Every piece of org-owned data already has exactly one owning user (`ImportLog.userId`, `DashboardSnapshot.userId`, etc.) — that existing `userId` *is* the user's identity anchor this section builds on; no new identity concept is needed, only new behavior pivoting on the one that already exists. Default visibility is unchanged from §3.3 (confirmed with the user): `admin`/`manager`/`c_level` see all data within their own org; the plain `user` role sees only their own data by default. This section adds three new, deliberately opt-in/self-service capabilities on top of that default — it does not loosen or remove it.
 
@@ -383,17 +383,19 @@ model UserStorageSettings {
 
 ### 11.3 User-to-User Data Sharing by Explicit Permission (`ORG-51`–`ORG-53`)
 
-A user may grant another specific user (always within the **same organization** — cross-org sharing is never permitted, full stop, consistent with the rest of this design) view access to a specific piece of their own data:
+A user may grant another specific user **within the same organization** view access to a specific piece of their own data. (A separate, much narrower channel for sharing *aggregated results* — never raw data — *across* organizations is covered in §11.5; this section's same-org grants are otherwise unrestricted by role, e.g. a Scrum Master sharing with a Product Owner, Manager, or C-level peer in the same org works exactly the same way as Scrum-Master-to-Scrum-Master.)
 
 ```prisma
 model DataShareGrant {
   id             String    @id @default(cuid())
-  organizationId String
+  organizationId String    // the owner's org — always set
   ownerUserId    String    // the data owner, granting access
   granteeUserId  String    // the user being granted access
   resourceType   String    // "importLog" | "dashboardSnapshot" — extend deliberately, not speculatively
   resourceId     String    // always a specific resource — no blanket "share everything" grant in v1
   permission     String    @default("view") // view-only in v1; no write/delete delegation
+  isCrossOrg     Boolean   @default(false) // true only for §11.5 grants — see that section's extra constraints
+  crossOrgConnectionId String? // required when isCrossOrg is true; null otherwise — see §11.5
   createdAt      DateTime  @default(now())
   revokedAt      DateTime?
 
@@ -411,14 +413,49 @@ model DataShareGrant {
 - **Revocable anytime** by the owner; `revokedAt` set, grant never hard-deleted (so there's an audit trail of what was once shared).
 - **The owner gets a visible "active shares" list** of everything they've granted and to whom — sharing must never be a silent, forgotten state.
 - **The grantee's resulting access is read-only and additive** — it never expands to anything beyond the named resource, and never to anyone the grantee in turn tries to re-share with (no transitive sharing in v1).
+- **Same-org grants (`isCrossOrg: false`) must be rejected server-side if `granteeUserId`'s organization doesn't match `organizationId`** — this is the structural guard that keeps §11.3's default path strictly same-org; only the explicit §11.5 path may cross the boundary, and only under that section's extra constraints.
 - Enforced the same way as every other read: `scopedRepository`'s read methods check `organizationId` *and*, for a resource the caller doesn't already own/role-see, an active matching `DataShareGrant` — never a separate, easy-to-forget parallel check.
 
-### 11.4 Tests (`ORG-54`)
+### 11.4 Cross-Organization Peer Sharing — Aggregated Results Only (`ORG-55`–`ORG-59`) — added 2026-06-27
+
+Per explicit user request: two people who have never worked at the same company — e.g. a Scrum Master at Company A and a Scrum Master at Company B — should be able to share *results* with each other to learn from one another's delivery patterns, even though their organizations must otherwise never see each other's data. This is the **one deliberate, narrow exception** to §1's "zero data overlap" promise, and it is scoped tightly enough that it doesn't actually weaken that promise for anything else:
+
+- **Aggregated results only, never raw data** (confirmed with the user): a cross-org grant's `resourceType` may **only** ever be `"dashboardSnapshot"` — a `DashboardSnapshot` already holds *computed metrics* (`metricsJson`), not raw Jira issues, project names, or client-identifying detail. `resourceType: "importLog"` is rejected server-side whenever `isCrossOrg: true`, full stop, with no admin override — this is the one constraint in this whole section that is **not** configurable by anyone, because it's what makes the exception safe to grant at all.
+- **Individual-to-individual, no admin approval gate** (confirmed with the user): connecting across orgs doesn't require either organization's admin to approve it — it's a decision the two individuals make about their own data, the same trust model as §11.3's same-org grants.
+- **Mutual consent required before any cross-org grant can exist** — you cannot grant access to a stranger's account by guessing their email. New `CrossOrgConnection` model:
+
+```prisma
+model CrossOrgConnection {
+  id               String    @id @default(cuid())
+  requestingUserId String    // who initiated the connection
+  targetUserId     String?   // resolved once targetEmail matches an existing User; null until then
+  targetEmail      String    // the person being invited to connect — supplied by the requester, who must already know it (no cross-org user directory/search — that would itself leak org membership)
+  status           String    @default("pending") // "pending" | "accepted" | "rejected" | "revoked"
+  createdAt        DateTime  @default(now())
+  respondedAt       DateTime?
+
+  requestingUser User  @relation("CrossOrgConnectionRequester", fields: [requestingUserId], references: [id], onDelete: Cascade)
+  targetUser     User? @relation("CrossOrgConnectionTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@index([requestingUserId])
+  @@index([targetUserId])
+  @@index([targetEmail])
+}
+```
+
+- **No cross-org directory or search** — a user can only initiate a connection to an email address they already know (e.g. a peer they met at a conference), never by browsing/searching other organizations' members. This matters because a searchable directory would itself leak "this person/organization exists on the platform," which §1's isolation promise is supposed to prevent.
+- **The invite is enumeration-safe**: if `targetEmail` doesn't match any existing account, the connection simply sits `pending` indefinitely (or the requester gets a generic "invite sent" message) — the system never confirms or denies whether an account with that email exists, same discipline as the login/recovery flows in §6.
+- Once `status: "accepted"`, either side may then create `DataShareGrant` rows with `isCrossOrg: true, crossOrgConnectionId: <this connection>`, restricted to `resourceType: "dashboardSnapshot"` as above.
+- **Revoking the `CrossOrgConnection`** (either side, anytime) immediately invalidates every `DataShareGrant` that depends on it — a connection isn't a one-time unlock that outlives the relationship; the read-path check (§11.3) must verify the connection is still `accepted`, not just that the grant itself lacks a `revokedAt`.
+- This is genuinely new product surface (cross-org by definition touches both this design's core promise and real privacy/legal considerations around what "results" actually contain) — ship it behind its own feature flag (CLAUDE.md §37) and review the exact fields exposed in `DashboardSnapshot.metricsJson` once more at implementation time, in case any field there turns out to be more identifying than "aggregated" implies (e.g. a snapshot name the user typed themselves could contain a client/project name — the cross-org share UI must let the sharer review exactly what will be visible before confirming, not just trust the field is safe because the model says "metrics").
+
+### 11.5 Tests (`ORG-54`, `ORG-59`)
 
 - Deleting user A's data must not touch user B's rows, even when both belong to the same `ImportLog`-adjacent `JiraConnection` or other shared org-level entity.
 - A revoked `DataShareGrant` must immediately deny access on the very next request — no caching staleness window.
-- A `DataShareGrant` from org A's user can never resolve to a user in org B (the FK/relation itself prevents this structurally, but the test proves it rather than assuming it).
+- A same-org `DataShareGrant` (`isCrossOrg: false`) is rejected server-side if the grantee is actually in a different organization — proving §11.3's structural guard, not just assuming it.
 - `UserStorageSettings.enabled` user override is ignored (falls back to org default) when the org admin has set `allowUserStorageOverride: false`.
+- **Cross-org specific (`ORG-59`):** a cross-org `DataShareGrant` with `resourceType: "importLog"` is rejected server-side, unconditionally, with no configuration able to permit it; a `CrossOrgConnection` invite to a non-existent email produces the same response as one to an existing-but-not-yet-responded email (enumeration-safety); revoking a `CrossOrgConnection` immediately invalidates every dependent grant on the very next read, not just future ones; a connection request cannot be force-accepted or bypassed by either side acting alone.
 
 ---
 
@@ -434,6 +471,7 @@ This is large enough that it should not land as one PR:
 6. **Phase 6 — `ORG-10` single-occupancy roles** (confirmed hard constraint, §2.3): role-reassignment-with-confirmation UX, and the derived (non-editable) 6-seat cap.
 7. **Phase 7 — Per-Organization Settings (§7a):** `ORG-36`–`ORG-43` — `OrganizationSettings` model, the six service migrations (theme, issue hierarchy, thresholds, retention, storage, SMTP/app-config) off disk-JSON/single-blob storage and onto org-keyed caches, settings migration folded into the Phase 1 backfill script, and the isolation tests proving one org's settings can never leak into another's. Sequenced after Phase 1 because it reuses `scopedRepository` and the same backfill script.
 8. **Phase 8 — Per-Organization Storage Isolation (§3a):** `ORG-44`–`ORG-46` — `scopedStorage()` helper, migration of every existing storage call site onto it, and the adversarial cross-org storage-key test. Sequenced early-ish (could run alongside Phase 1) since it's foundational isolation work, not UX — but listed last here because it touches the storage layer Phase 7 also touches, so it's cleanest done after Phase 7's storage-settings migration lands.
-9. **Phase 9 — Individual Data Privacy, Sharing, Deletion (§11):** `ORG-47`–`ORG-54` — self-service "Delete My Data," per-user storage override (`UserStorageSettings`, depends on Phase 8's `scopedStorage`), and user-to-user `DataShareGrant` sharing. Sequenced last because it depends on both `scopedRepository` (Phase 1) and `scopedStorage` (Phase 8).
+9. **Phase 9 — Individual Data Privacy, Sharing, Deletion (§11.1–11.3):** `ORG-47`–`ORG-54` — self-service "Delete My Data," per-user storage override (`UserStorageSettings`, depends on Phase 8's `scopedStorage`), and same-org user-to-user `DataShareGrant` sharing. Sequenced last because it depends on both `scopedRepository` (Phase 1) and `scopedStorage` (Phase 8).
+10. **Phase 10 — Cross-Organization Peer Sharing (§11.4):** `ORG-55`–`ORG-59` — `CrossOrgConnection` model, the enumeration-safe invite flow, and `DataShareGrant.isCrossOrg` restricted to `resourceType: "dashboardSnapshot"` only. Sequenced last of all, behind its own feature flag, and only after Phase 9's same-org sharing has shipped and been reviewed — this phase is the one place the design deliberately crosses the org boundary, and deserves to land alone, not bundled with anything else.
 
 Each phase gets its own branch, its own doc-impact-matrix pass, and its own full-suite verification — consistent with how `FCAST-14–26`/`RETRO-04–38` shipped.

@@ -5,6 +5,19 @@
 
 ---
 
+## v4.12.3 — Cross-Organization Peer Sharing (Aggregated Results Only) Added to Org Design (2026-06-27, P1 — design, not implemented)
+
+**Scope:** Updates `product/MULTI_TENANT_ORG_DESIGN.md` (new §11.4, amends §1) and adds `ORG-55`–`59` to `TODO-List.md`, per explicit user request — e.g. two Scrum Masters at different companies, who've never worked together, sharing results to learn from each other. No code in this entry — design only.
+
+- **This is the one deliberate exception to "zero data overlap between organizations,"** the core promise stated in §1 — amended there explicitly rather than left silently contradicted by a later section.
+- **Aggregated results only, never raw data, confirmed with the user**: a cross-org share can only ever be a `DashboardSnapshot` (computed metrics) — `resourceType: "importLog"` is rejected unconditionally, with no admin override of that one constraint anywhere in the system. This single rule is what makes the rest of the exception safe to grant at all.
+- **Individual-to-individual, no admin-approval gate, confirmed with the user** — connecting across organizations is a decision the two people make about their own data, not a corporate-to-corporate integration requiring either admin's sign-off.
+- **Mutual consent required first**: a new `CrossOrgConnection` model — one user invites another by email they already know (deliberately no cross-org user directory or search, which would itself leak who's on the platform); the invite is enumeration-safe, using the same "never confirm or deny an account exists" discipline as the login flow (§6).
+- Revoking the connection immediately invalidates every grant that depends on it — checked at read time, not just left to a stale flag.
+- Sequenced as its own Phase 10 in the rollout plan, behind a feature flag, shipped only after same-org sharing (Phase 9) has landed and been reviewed — explicitly not bundled with anything else, given it's genuinely new trust surface.
+
+---
+
 ## v4.12.2 — Per-Organization Storage Isolation + Individual Data Privacy Added to Org Design (2026-06-27, P1 — design, not implemented)
 
 **Scope:** Updates `product/MULTI_TENANT_ORG_DESIGN.md` (new §3a, §11) and adds `ORG-44`–`54` to `TODO-List.md`, per explicit user request. No code in this entry — design only.
