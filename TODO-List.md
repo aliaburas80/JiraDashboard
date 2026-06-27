@@ -1086,6 +1086,41 @@ The following items are in the uploaded TODO as Done. Keep them, but verify trac
 
 ---
 
+## 18d. P0 — Pre-Merge QA Automation Gate
+
+A merge to `main` must not be treated as "done" just because the feature's own files were checked. This gate runs the *whole* app's automation before any merge to `main`, so a change in one feature can't silently break another.
+
+| ID | Task | Priority | Status | Details / Acceptance Criteria |
+|---|---|---:|---|---|
+| QA-GATE-01 | Run the full automated suite before every merge to `main`, not just changed-file tests | P0 | ❌ Not started | `npm run test:coverage` (or `jest` full run) must be green across the *entire* suite immediately before merging — a feature branch passing only its own new tests is not sufficient. Pre-existing failures must be identified and named explicitly (not waved away as "probably pre-existing") before merging. |
+| QA-GATE-02 | Run `typecheck`, `lint --max-warnings=0`, `lint:styles`, and `build` as a single pre-merge gate | P0 | ❌ Not started | Matches CLAUDE.md §52's `check:ci` script — wire it as an actual required script (`npm run check:ci`) rather than four separately-remembered commands, so it can't be partially skipped. |
+| QA-GATE-03 | Dependency health check before merge | P0 | ❌ Not started | Run `npm outdated` and `npm audit` (or equivalent) before merging; flag any dependency with a known vulnerability or a major-version-behind status. Do not silently bump versions — flag for review per CLAUDE.md §4.7/§4.8. |
+| QA-GATE-04 | Lockfile integrity check | P0 | ❌ Not started | Confirm `package-lock.json` is committed and `npm ci` (not `npm install`) succeeds cleanly from a fresh clone — catches "works on my machine" dependency drift before it reaches `main`. |
+| QA-GATE-05 | Cross-browser smoke pass | P1 | ❌ Not started | Run the critical-path Playwright/E2E suite (or a manual pass until one exists) against Chromium, Firefox, and WebKit at minimum — catches engine-specific CSS/JS issues before merge. |
+| QA-GATE-06 | Cross-platform/responsive smoke pass | P1 | ❌ Not started | Manually or via Playwright viewport emulation, verify the critical path (login → upload → dashboard) at desktop, tablet, and mobile breakpoints, and on at least one real mobile device if available — ties into the new `MOBILE-*` items below. |
+| QA-GATE-07 | Make the gate a literal git pre-merge checklist, not tribal knowledge | P0 | ❌ Not started | Add a short checklist to `DEVELOPER_GUIDE.md` (and, if GitHub branch protection is available, wire `QA-GATE-01/02` as required CI status checks) so "did we run everything" isn't a memory exercise per merge. |
+| QA-GATE-08 | Update all related product docs | P0 | ❌ Not started | DEVELOPER_GUIDE (merge checklist section), RELEASE_NOTES (process change, not a feature), TODO-List.md. |
+
+---
+
+## 18e. P0 — Mobile-First Redesign (Future Roadmap — Not Started)
+
+The app today is desktop-first with responsive retrofits. This is a deliberate priority shift: **mobile is the primary design target going forward**, not an afterthought layered on top of a desktop layout. Do not implement broadly until a P1 design doc (covering navigation pattern, breakpoint strategy, and which dashboard views are realistic on a small screen) is written and reviewed — see CLAUDE.md §60's existing inline-style refactor priority list, which this work should be sequenced with, not duplicate.
+
+| ID | Task | Priority | Status | Details / Acceptance Criteria |
+|---|---|---:|---|---|
+| MOBILE-01 | Mobile-experience audit of every route | P0 | ❌ Not started | Walk every route in `app/` at a 375px-wide viewport; record what's broken, cramped, or unusable (not just "could be nicer") — produces the punch list the rest of this section works from. |
+| MOBILE-02 | Define the mobile-first breakpoint strategy | P0 | ❌ Not started | Design-doc step: base styles target mobile, with `min-width` media queries scaling *up* to tablet/desktop (not the reverse) — a real strategy shift for SCSS Modules, not just "test at 375px after the fact." Must use existing design tokens (CLAUDE.md §18), not new ad hoc breakpoint values. |
+| MOBILE-03 | Mobile navigation pattern | P0 | ❌ Not started | Replace/adapt `DashboardNavSidebar` and `AppShell` top nav for small screens — bottom nav bar, slide-out drawer, or equivalent (pick one, document why) — must remain keyboard- and screen-reader-accessible (CLAUDE.md §26). |
+| MOBILE-04 | Touch-target sizing audit | P1 | ❌ Not started | All interactive elements (buttons, chips, table row actions) meet a minimum touch-target size; fix any below the accepted minimum found during MOBILE-01. |
+| MOBILE-05 | Dashboard/chart mobile layout strategy | P1 | ❌ Not started | Charts and dense tables (Explore, relation-map, KPI grids) need an explicit mobile strategy — e.g. horizontal scroll with a sticky first column, or a simplified mobile-only summary view — not just "shrink everything to fit." |
+| MOBILE-06 | Mobile performance budget | P1 | ❌ Not started | Define and measure LCP/INP/CLS budgets (CLAUDE.md §40) specifically on a throttled mobile profile, not desktop — mobile networks/CPUs are the actual constraint this section exists to address. |
+| MOBILE-07 | Forms and upload flow on mobile | P1 | ❌ Not started | File upload (`/`, retro upload), long forms (add-member request, settings) must be usable one-handed on a phone — test the golden path, not just that it renders. |
+| MOBILE-08 | Visual regression coverage at mobile breakpoints | P1 | ❌ Not started | Extend visual regression suite (CLAUDE.md §46) to include a mobile viewport for every covered route, not just desktop. |
+| MOBILE-09 | Tests and docs | P0 | ❌ Not started | Component/E2E tests at mobile breakpoints for the redesigned nav and any restructured layout; update DEVELOPER_GUIDE (mobile-first breakpoint convention), RELEASE_NOTES, TODO-List.md. |
+
+---
+
 ## 19. P2 — Architecture / Planning Track
 
 Do not implement PostgreSQL, CI/CD, or expanded gateway routing without explicit approval.
@@ -1201,6 +1236,23 @@ Do not implement until a P2 design doc defines exactly which visuals (which char
 | SHARE-05 | Security review of the share surface | P2 | ❌ Not started | Confirm the shared HTML cannot leak other orgs' data, cannot be used to probe the authenticated API, and contains no secrets/session tokens. |
 | SHARE-06 | Tests — export correctness and share-link access control | P2 | ❌ Not started | Export content matches source data; expired/revoked/forged share links are denied; shared page never reaches authenticated routes. |
 | EXPORT-07 | Update all related product docs | P2 | ❌ Not started | SRS, USE_CASES/SCENARIOS/USER_JOURNEYS for export + share flows, TEST_CASES, DEVELOPER_GUIDE, RELEASE_NOTES, TODO-List.md. |
+
+---
+
+## 20c. P3/P4 — Companion Mobile App (Future Roadmap — Not Started)
+
+A separate, deliberately *light* native/PWA mobile app — not a port of the full web app. Its job is to surface insights from data already computed by the web app, not to do new computation on-device. All heavy lifting (Jira import/parsing, metric calculation, forecasting, coaching insights, retro analysis) stays server-side on the web app; the mobile app is a read-mostly client. Do not start until `MOBILE-01`–`09` (mobile-first web redesign) and `ORG-01`–`22` (multi-tenant org/data isolation) are substantially done — a mobile app built before the web app is mobile-first or before tenant isolation is solid would just relocate both problems.
+
+| ID | Task | Priority | Status | Details / Acceptance Criteria |
+|---|---|---:|---|---|
+| MOBILEAPP-01 | Define the mobile app's scope as "insights only" | P3 | ❌ Not started | Design-doc step: explicitly enumerate what the mobile app shows (e.g. dashboard summary, coaching insights, forecast status, notifications) vs. what stays web-only (file upload, admin console, retro upload, Jira connection setup) — prevents scope creep into a full app port. |
+| MOBILEAPP-02 | Cached/pre-computed data contract | P3 | ❌ Not started | Mobile app reads a pre-computed insights payload the web backend already produces (existing `DashboardMetrics`, coaching/forecast view models) — no new calculation logic duplicated on-device, per CLAUDE.md §29's single-source-of-truth rule. |
+| MOBILEAPP-03 | Per-user data caching and freshness | P3 | ❌ Not started | Define cache TTL/staleness indicator so the user knows when they're viewing cached vs. fresh data; respect the tenant isolation guarantees from `ORG-04`/`ORG-05` — cached data must never leak across orgs or across a logged-out/different-user session on a shared device. |
+| MOBILEAPP-04 | Platform choice | P3 | ❌ Not started | Design-doc step: PWA (reuses existing Next.js app, lowest cost) vs. React Native/native (better device integration, push notifications) — pick one with a stated reason, not both. |
+| MOBILEAPP-05 | Offline/poor-connectivity behavior | P3 | ❌ Not started | Show last-cached insights with a clear "offline/stale" indicator rather than a blank error screen — this is the actual value proposition of a "light, cached-data" app. |
+| MOBILEAPP-06 | Push notifications (optional, P4) | P4 | ❌ Not started | Only if platform choice (MOBILEAPP-04) supports it natively; ties into the existing in-app `Notification` model rather than a separate notification system. |
+| MOBILEAPP-07 | Security review | P3 | ❌ Not started | Mobile app must authenticate the same way as the web app (no parallel/weaker auth path), must not cache credentials insecurely on-device, and must respect the same authorization/tenant boundaries as the web API it reads from. |
+| MOBILEAPP-08 | Tests and docs | P3 | ❌ Not started | Update SRS/BRD with the mobile app's explicit scope boundary, DEVELOPER_GUIDE with the data-contract/caching approach, RELEASE_NOTES, TODO-List.md. |
 
 ---
 
