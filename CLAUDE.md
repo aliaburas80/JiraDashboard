@@ -3282,21 +3282,75 @@ The following legacy areas contain inline styling from before these standards.
 
 Do not add new inline styling to them.
 
-## Pages with high inline-style volume
+## 60.1 Audited scope (2026-06-27)
 
-* `app/dashboard/*/page.tsx`
-* `app/admin/users/page.tsx`
-* `app/admin/settings/page.tsx`
+The lists below were last fully re-audited on 2026-06-27 via `eslint . --max-warnings=-1 -f json`
+(direct ESLint CLI, not `next lint` — `package.json`'s `lint` script still runs the §4.6-prohibited
+`next lint`; see `TODO-List.md` `STYLE-07` for why it can't simply be switched yet). Re-run that
+command before trusting these counts; they drift every time a file is touched.
 
-## Refactor priority
+**Result: 1,524 warnings, 0 errors, across 86 files.** All warnings are `react/forbid-dom-props`
+(this rule's CLAUDE.md Rule 1 message). This is far larger than this section previously documented —
+the previous version named only three files, two of which (`app/admin/users/page.tsx`,
+`app/admin/settings/page.tsx`) are now actually already clean and have been removed from the list below.
 
-1. `app/dashboard/flow-health/page.tsx`
-2. `app/dashboard/ownership/page.tsx`
-3. `app/dashboard/labels/page.tsx`
-4. `app/dashboard/epic-readiness/page.tsx`
-5. Remaining dashboard pages, one focused page at a time
-6. `app/admin/users/page.tsx`
-7. `app/admin/settings/page.tsx`
+Full per-file ticket breakdown is tracked in `TODO-List.md` Section 18f (`STYLE-01`–`08`). This section
+holds the prioritized summary; TODO-List.md holds the working checklist.
+
+## 60.2 Refactor priority — Tier 1: highest-volume standalone pages (486 warnings, ~32% of total)
+
+1. `app/retro/page.tsx` (112)
+2. `app/help/page.tsx` (98)
+3. `app/developer/page.tsx` (80)
+4. `app/data-quality/page.tsx` (71)
+5. `app/flow-health/page.tsx` (66)
+6. `app/forecast/page.tsx` (59)
+
+## 60.3 Refactor priority — Tier 2: `app/dashboard/*/page.tsx`
+
+Continues the original priority order from before this re-audit; do not restart it.
+
+1. `app/dashboard/flow-health/page.tsx` (52)
+2. `app/dashboard/labels/page.tsx` (49)
+3. `app/dashboard/epic-readiness/page.tsx` (42)
+4. `app/dashboard/delivery-controls/page.tsx` (34)
+5. `app/dashboard/delivery-composition/page.tsx` (30)
+6. `app/dashboard/sprint-status/page.tsx` (29)
+7. `app/dashboard/data-quality/page.tsx` (27)
+8. `app/dashboard/quarter-statistics/page.tsx` (26)
+9. `app/dashboard/visual-analytics/page.tsx` (23)
+10. `app/dashboard/ownership/page.tsx` (21)
+11. `app/dashboard/priority-attention/page.tsx` (21)
+12. `app/dashboard/kanban-health/page.tsx` (20)
+13. Remaining dashboard pages (`actions` 3, `key-metrics` 1)
+
+## 60.4 Refactor priority — Tier 3: shared `src/components/dashboard/**`
+
+Higher leverage than a single page — these render inside multiple dashboard routes, so one fix
+benefits several pages at once. They also carry broader regression risk for the same reason: changes
+here need manual verification across every page that mounts the component, not just one route.
+
+* `SprintComparePanel.tsx` (46), `SprintThroughputPanel.tsx` (33), `KanbanThroughputPanel.tsx` (31),
+  `MidSprintDeliveryPanel.tsx` (21)
+* Remaining `src/components/dashboard/**` files at ≤7 warnings each
+
+## 60.5 Refactor priority — Tier 4 and 5: remaining pages and shared components
+
+See `TODO-List.md` `STYLE-05`/`STYLE-06` for the full remaining file list (remaining standalone pages
+under `app/`, plus `src/components/explore/**`, `src/components/admin/**`, `src/components/dc-shell/**`,
+`src/components/tour/**`, and the long tail of files at ≤7 warnings each).
+
+## 60.6 Out of scope: legacy `frontend/` Create React App
+
+`frontend/` is a second, fully standalone Create React App project (own `package.json`, `node_modules`,
+`build`, `react-scripts`) — not part of the Next.js app, not imported by or referenced from `app/` or
+`src/` anywhere, last touched 2026-05-30. Running ESLint from the repo root currently reaches into it
+anyway (since nothing excludes it) and applies this project's Next.js-oriented rules to a project that
+isn't one — it contributes 59 of the 1,524 warnings counted above under that mismatch. Those 59 are
+**excluded** from the tier counts in §60.2–60.5 since fixing them with SCSS Modules makes no sense for a
+project this codebase doesn't own or build. See `TODO-List.md` `ORPHAN-01`: this needs an explicit
+decision (remove it, or keep it for a documented reason and exclude it from the root ESLint run) rather
+than sitting un-decided, which §5's "no unowned" principle does not allow indefinitely.
 
 When refactoring a page:
 

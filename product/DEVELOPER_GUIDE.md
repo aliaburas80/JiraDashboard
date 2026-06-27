@@ -279,6 +279,8 @@ SCSS      →  all component appearance (color, border, shadow, animation, typog
 - **`clsx`** — for conditional class composition.
 - **`DC_NAV_GROUPS`** (`src/components/dc-shell/navigation.ts`) — single source of truth for all nav items. Both `AppShell` and `DashboardTopbar` consume this config.
 
+**Known status (2026-06-27):** the zero-inline-style rule is enforced for new code, but the existing codebase is not yet compliant — a repo-wide audit found 1,524 `react/forbid-dom-props` warnings across 86 files. This is tracked, tiered, prioritized debt, not an unknown problem: see CLAUDE.md §60 for the file-by-file breakdown and `TODO-List.md` Section 18f (`STYLE-01`–`08`) for remediation status. Do not add *new* inline styles to a file just because it already has some.
+
 ### Layout injection patterns
 
 **Dashboard pages** (`/dashboard/*`): `DashboardTopbar` (fixed top) + `DashboardSidebarNav` (fixed left) via `app/dashboard/layout.tsx`.

@@ -5,6 +5,19 @@
 
 ---
 
+## v4.12.4 — Inline-Style Technical Debt Re-Audited (2026-06-27, P1 — documentation only, no code changed)
+
+**Scope:** Rewrites `CLAUDE.md` §60 (now §60.1–60.6) and adds `STYLE-01`–`08` + `ORPHAN-01` to `TODO-List.md` Section 18f. Triggered by a pasted ESLint warning dump revealing far more inline-style debt than previously documented. No code changed — this entry is a scope correction, not a fix.
+
+- **Real scope: 1,524 warnings, 0 errors, across 86 files** — found via `eslint . --max-warnings=-1 -f json` (the §4.6-mandated direct CLI, not `next lint`). The previous §60 named only three files; two of them (`app/admin/users/page.tsx`, `app/admin/settings/page.tsx`) are now already clean and were removed from the list.
+- **The debt reaches far beyond pages**: `src/components/dashboard/**`, `src/components/dc-shell/**`, `src/components/explore/**`, and `src/components/admin/**` all carry meaningful counts (e.g. `SprintComparePanel.tsx` alone has 46) — the original §60 only ever named page-level files.
+- Re-tiered the refactor priority by actual warning count (CLAUDE.md §60.2–60.5): Tier 1 standalone pages (486 warnings across 6 files), Tier 2 `app/dashboard/*` pages (continuing the existing order), Tier 3 shared dashboard components, Tiers 4–5 the remaining long tail.
+- **`npm run lint` itself is non-compliant** — it runs `next lint`, which §4.6 explicitly prohibits. Tracked as `STYLE-07`, but deliberately marked 🚫 Blocked: switching to the mandated `eslint . --max-warnings=0` today would fail every local/CI run immediately on the existing 1,524 warnings.
+- **Found and flagged a separate, unrelated issue while auditing**: `frontend/` is a fully standalone legacy Create React App (own `package.json`/`node_modules`/`build`), not imported by or connected to the Next.js app in any way, last touched 2026-05-30. It contributes 59 of the 1,524 warnings under a lint config that was never meant to apply to it. Excluded from the remediation counts above and tracked separately as `ORPHAN-01` — needs an explicit remove-or-keep-and-exclude decision, not silent indefinite presence.
+- Scope decision (asked the user directly given the size): document and tier the backlog now; do not start fixing files or flip the lint script until that's separately requested.
+
+---
+
 ## v4.12.3 — Cross-Organization Peer Sharing (Aggregated Results Only) Added to Org Design (2026-06-27, P1 — design, not implemented)
 
 **Scope:** Updates `product/MULTI_TENANT_ORG_DESIGN.md` (new §11.4, amends §1) and adds `ORG-55`–`59` to `TODO-List.md`, per explicit user request — e.g. two Scrum Masters at different companies, who've never worked together, sharing results to learn from each other. No code in this entry — design only.

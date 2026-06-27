@@ -1,6 +1,8 @@
 # Delivery Clarity — Master TODO List
 
-**Last updated:** 2026-06-16 (**v4.9.3 DOC AUDIT ✅ COMPLETE** — Comprehensive doc audit: SRS scope fixed (15 dashboard pages + 6 standalone, was 11), §8.1 updated 36→44 routes + app-config row added, DEVELOPER_GUIDE file tree + §3a added, APPENDIX 9 new entries, USE_CASES UC-107/108/109 added, RELEASE_NOTES v4.9.3 written. Security fix: 10 routes added to middleware PROTECTED array + config.matcher. Branch: style/visual-design-updates.)
+**Last updated:** 2026-06-27 (**v4.12.4 INLINE-STYLE DEBT RE-AUDITED** — Section 18f added: `eslint . --max-warnings=-1 -f json` re-audit found the real scope is 1,524 warnings/86 files (not the ~3 files CLAUDE.md §60 previously named — two of those, `app/admin/users`/`app/admin/settings`, are now already clean). CLAUDE.md §60 rewritten with the accurate tiered priority list (§60.1–60.6); TODO-List.md `STYLE-01`–`08` tracks remediation, `STYLE-07` (switching `npm run lint` off the prohibited `next lint`) is blocked until the count is paid down. New `ORPHAN-01`: discovered an unrelated, fully standalone legacy CRA app at `frontend/` (59 of the 1,524 warnings, not part of the Next.js app, not referenced anywhere) that needs an explicit keep-or-remove decision. Documentation only — no remediation code written yet. Branch: main.)
+
+**Previous:** 2026-06-16 (**v4.9.3 DOC AUDIT ✅ COMPLETE** — Comprehensive doc audit: SRS scope fixed (15 dashboard pages + 6 standalone, was 11), §8.1 updated 36→44 routes + app-config row added, DEVELOPER_GUIDE file tree + §3a added, APPENDIX 9 new entries, USE_CASES UC-107/108/109 added, RELEASE_NOTES v4.9.3 written. Security fix: 10 routes added to middleware PROTECTED array + config.matcher. Branch: style/visual-design-updates.)
 
 **Previous:** 2026-06-16 (**v4.9.2 P0 PASS ✅ COMPLETE** — REC-01–11/17/19–24 closed. TC-AC-01 + TC-REQ-10 fixed. Tests: 571/63 all passing. Lint: pass. Build: pass. RELEASE_NOTES v4.9.0/v4.9.1/v4.9.2 added. SRS v4.9.2, BRD v4.9.2, DEVELOPER_GUIDE, TEST_CASES all updated. Branch: style/visual-design-updates.)
 
@@ -1119,6 +1121,30 @@ The app today is desktop-first with responsive retrofits. This is a deliberate p
 | MOBILE-07 | Forms and upload flow on mobile | P1 | ❌ Not started | File upload (`/`, retro upload), long forms (add-member request, settings) must be usable one-handed on a phone — test the golden path, not just that it renders. |
 | MOBILE-08 | Visual regression coverage at mobile breakpoints | P1 | ❌ Not started | Extend visual regression suite (CLAUDE.md §46) to include a mobile viewport for every covered route, not just desktop. |
 | MOBILE-09 | Tests and docs | P0 | ❌ Not started | Component/E2E tests at mobile breakpoints for the redesigned nav and any restructured layout; update DEVELOPER_GUIDE (mobile-first breakpoint convention), RELEASE_NOTES, TODO-List.md. |
+
+---
+
+## 18f. P1 — Inline-Style Technical Debt Remediation (Audited 2026-06-27 — Not Started)
+
+A full repo-wide ESLint re-audit (`eslint . --max-warnings=-1 -f json`, the direct CLI command CLAUDE.md
+§4.6 mandates, not the prohibited `next lint`) found the inline-style debt is much larger than CLAUDE.md
+§60 previously documented: **1,524 warnings, 0 errors, across 86 files** — every one a
+`react/forbid-dom-props` (CLAUDE.md Rule 1) violation. The two admin pages §60 previously named
+(`app/admin/users/page.tsx`, `app/admin/settings/page.tsx`) are already clean and have been removed from
+the tracked list. This section is documentation-only for now — no remediation code has been written yet;
+see CLAUDE.md §60.1–60.6 for the full prioritized breakdown this table summarizes.
+
+| ID | Task | Priority | Status | Details / Acceptance Criteria |
+|---|---|---:|---|---|
+| STYLE-01 | Baseline audit: full inline-style warning inventory | P1 | ✅ Done (2026-06-27) | Ran `eslint . --max-warnings=-1 -f json` repo-wide via the ESLint JSON formatter (not the truncated default text formatter) to get an exact, file-by-file count. Result recorded in CLAUDE.md §60.1. No code changed. |
+| STYLE-02 | Refactor Tier 1 — highest-volume standalone pages | P1 | ❌ Not started | `app/retro/page.tsx` (112), `app/help/page.tsx` (98), `app/developer/page.tsx` (80), `app/data-quality/page.tsx` (71), `app/flow-health/page.tsx` (66), `app/forecast/page.tsx` (59) — six files, 486 warnings, ~32% of the total. One file per commit, following CLAUDE.md §60's existing "When refactoring a page" procedure (page.module.scss, design tokens, typed components, regression tests). |
+| STYLE-03 | Refactor Tier 2 — `app/dashboard/*/page.tsx` | P1 | ❌ Not started | `flow-health` (52), `labels` (49), `epic-readiness` (42), `delivery-controls` (34), `delivery-composition` (30), `sprint-status` (29), `data-quality` (27), `quarter-statistics` (26), `visual-analytics` (23), `ownership` (21), `priority-attention` (21), `kanban-health` (20), `actions` (3), `key-metrics` (1). Continues the priority order already established before this re-audit — do not restart it. |
+| STYLE-04 | Refactor Tier 3 — shared `src/components/dashboard/**` | P1 | ❌ Not started | `SprintComparePanel.tsx` (46), `SprintThroughputPanel.tsx` (33), `KanbanThroughputPanel.tsx` (31), `MidSprintDeliveryPanel.tsx` (21), plus the remaining files in this directory at ≤7 warnings each. Higher leverage than a single page (used across multiple dashboard routes) but needs wider manual regression for the same reason. |
+| STYLE-05 | Refactor Tier 4 — remaining standalone pages | P1 | ❌ Not started | `app/sprint-kanban` (39), `app/members` (32), `app/portfolio` (30), `app/landing` (28), `app/glossary` (26), `app/delivery-mix` (23), `app/customer` (20), `app/charts` (18), `app/roadmap` (16), `app/teams` (14), `app/release-readiness` (13), `app/trends` (6), `app/column-mapping` (2), `app/summary` (2), `app/profile` (1), `app/work-explorer` (1). |
+| STYLE-06 | Refactor Tier 5 — remaining shared components | P1 | ❌ Not started | `src/components/explore/**` (`RelationCharts` 20, `WorkItemGraph` 16, `RelationDetailsTable` 4, `RelationLegend` 2, `RelationStatsCards` 1), `src/components/admin/**` (`DataRetentionSettings` 23, `AdminConsoleLayout` 13, `IssueTypeHierarchySettings` 4), `src/components/dc-shell/**` (`DCTopbar` 13, `DCActionBoard` 6, `DCKpiCard` 6, `DCPageSidebar` 4, `DCStatusChip` 2), `src/components/tour/ProductTour.tsx` (13), and the remaining ~20 files at ≤7 warnings each (full list in the `eslint -f json` audit output, not duplicated here). |
+| STYLE-07 | Switch `npm run lint` to the CLAUDE.md §4.6-mandated command | P0 | 🚫 Blocked | `package.json`'s `lint` script currently runs `next lint`, which §4.6 explicitly prohibits in favor of `eslint . --max-warnings=0`. Blocked on `STYLE-02`–`06`: flipping it today would fail every local/CI lint run immediately on the 1,524 pre-existing warnings. Flip once the count reaches zero, or agree on an interim ratcheting `--max-warnings` ceiling that drops as each tier closes. |
+| STYLE-08 | Update docs once remediation actually completes | P1 | ❌ Not started | CLAUDE.md §60 (collapse/close finished tiers), RELEASE_NOTES.md, DEVELOPER_GUIDE.md styling section. Do not touch until the underlying refactor work is done — this row exists so doc cleanup isn't forgotten once `STYLE-02`–`07` close. |
+| ORPHAN-01 | Decide the fate of the legacy `frontend/` Create React App | P2 | ❌ Not started | A second, fully standalone CRA project (own `package.json`/`node_modules`/`build`, `react-scripts`) lives at `frontend/`, last touched 2026-05-30, not imported by or referenced from the Next.js app (`app/`, `src/`) anywhere. It contributes 59 of the 1,524 warnings under a lint config that doesn't apply to it (root ESLint currently reaches into it unintentionally) — those 59 are excluded from `STYLE-02`–`06`'s counts since SCSS-Module remediation makes no sense for a project this codebase doesn't build or own. Decide: remove it, or keep it for a documented reason and exclude it from the root ESLint run. CLAUDE.md §5 doesn't permit leaving unowned code undecided indefinitely. |
 
 ---
 
