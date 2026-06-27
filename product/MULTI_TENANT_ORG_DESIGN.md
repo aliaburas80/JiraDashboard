@@ -29,8 +29,7 @@ model Organization {
   domain        String    @unique          // verified domain, e.g. "ali.com" — lowercase, no scheme
   domainVerifiedAt DateTime?                // null until ORG-12 verification completes
   logoUrl       String?
-  maxSeats      Int       @default(6)       // ORG-02; default mirrors the 6 assignable AppRole values
-  plan          String    @default("solo")  // "solo" | "team" — see §2.3 for what this gates
+  maxSeats      Int       @default(6)       // ORG-10 (confirmed): fixed at ASSIGNABLE_ROLES.length, never admin-editable
   status        String    @default("active") // "active" | "suspended" — ORG-16, non-destructive
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -46,14 +45,14 @@ model Organization {
 
 Per `ORG-04`, every table that stores org-owned data gets a non-nullable `organizationId String` foreign key to `Organization`, with `onDelete: Cascade` from the org side reserved for the explicit deletion flow in §10 (never an accidental cascade from a user delete). This applies to: `User`, `Session` (inherited via `User`, no direct column needed), `ImportLog`, `DashboardSnapshot`, `AuditEvent`, `UserAddRequest`, `Notification`, `JiraConnection`. `SystemErrorLog` is the one explicitly org-agnostic table — it's an internal ops log of Prisma-level failures, not org-owned business data, and stays global so platform admins can debug across the whole deployment.
 
-### 2.3 Single-occupancy roles — resolving the open question from `ORG-10`
+### 2.3 Single-occupancy roles — `ORG-10`, confirmed 2026-06-27
 
-The original request ("each org has only one user for each rule") is ambiguous as a hard global rule — it would cap every organization at exactly 6 users (one per `AppRole`), which is a real product constraint, not an accident. Rather than guess, this design makes it an explicit **plan-gated** behavior instead of a universal law:
+**Confirmed with the user as a hard, universal constraint** (not plan-gated): every organization may have **exactly one user per role**, always. Since `ASSIGNABLE_ROLES` has 6 values (`admin`, `scrum_master`, `product_owner`, `manager`, `c_level`, `user`), this means every organization is capped at exactly 6 users, with no path to more. Consequences this drives elsewhere in the design:
 
-- **`plan: "solo"`** (the default): exactly one user per role, matching the literal request. This fits a single small team where one person *is* the Scrum Master, one *is* the Product Owner, etc. — `maxSeats` defaults to 6 and is not editable on this plan.
-- **`plan: "team"`**: multiple users may share a role (e.g. three Scrum Masters across different sub-teams); `maxSeats` becomes an admin-editable number (`ORG-02`).
-
-This must be confirmed with the user before `ORG-10` is implemented — it is the one place in this design where a literal reading of the request and a defensible product shape diverge, and it's cheaper to confirm in writing now than to build the wrong one.
+- **`maxSeats` is not admin-editable** — it is always exactly the count of `ASSIGNABLE_ROLES` (6), derived, not configured. `ORG-02`/`ORG-21` ("seat-limit-reached experience") are still needed, but the limit itself is fixed, not a plan tier.
+- **`Organization.plan`/`"solo"`/`"team"` distinction from the earlier draft of this section is removed** — there is only one shape.
+- **Assigning a role already held by another user in the same org must reassign-with-confirmation** (`ORG-10`'s original acceptance criterion) — e.g. promoting a second user to `admin` demotes the current `admin` to `user` (or another open role) only after an explicit confirmation step, never silently.
+- **Org growth beyond 6 people is out of scope for this org model entirely** — a company that outgrows 6 users is not a target customer for this product shape; this is a deliberate, confirmed product boundary, not an oversight.
 
 ---
 
@@ -163,6 +162,6 @@ This is large enough that it should not land as one PR:
 2. **Phase 2 — registration, login, domain verification:** `ORG-01`, `ORG-11`, `ORG-12`, `ORG-14`/`14a`, `ORG-19`.
 3. **Phase 3 — admin experience:** `ORG-02`/`03`/`06`/`15`/`18`/`21` (seat limits, org settings page, scoped admin, org audit log, seat-limit UX).
 4. **Phase 4 — branding, suspension, offboarding, per-org rate limiting:** `ORG-13`, `ORG-16`, `ORG-17`, `ORG-20`.
-5. **Phase 5 — `ORG-10` single-occupancy roles**, deliberately last and gated on the plan/seat-limit confirmation in §2.3 — it's the one item in this design that needs a product decision, not just an engineering one, before it's built.
+5. **Phase 5 — `ORG-10` single-occupancy roles** (confirmed hard constraint, §2.3): role-reassignment-with-confirmation UX, and the derived (non-editable) 6-seat cap.
 
 Each phase gets its own branch, its own doc-impact-matrix pass, and its own full-suite verification — consistent with how `FCAST-14–26`/`RETRO-04–38` shipped.
