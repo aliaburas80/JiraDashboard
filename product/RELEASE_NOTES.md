@@ -5,6 +5,17 @@
 
 ---
 
+## v4.11.3 — Organization Application & Owner Approval Workflow Added to Design (2026-06-27, P1 — design, not implemented)
+
+**Scope:** Updates `product/MULTI_TENANT_ORG_DESIGN.md` (new §4) and adds `ORG-23`–`33` to `TODO-List.md` Section 20a, per explicit user request. No code in this entry — design only.
+
+- **`ORG-01`'s self-serve instant-registration flow is superseded.** Organizations no longer create themselves — a prospective customer applies through a public, marketing-grade `/join` landing page and a multi-step wizard (company info, primary contact, domain, required "why you're joining" justification, logo + supporting photo/document uploads, review, confirmation), submitting an `OrganizationRequest`.
+- **A new, structurally singular Platform Owner concept** (`ORG-27`) — the user themselves — is the only account that can ever approve or reject an application. This is enforced as a structural guarantee, not a policy: the Owner is bootstrapped outside the application layer (no API field can set it), and every admin-style mutation route must explicitly refuse to act on the Owner's own account.
+- Domain ownership verification (`ORG-12`) is resequenced to run *after* Owner approval rather than before — an applicant shouldn't do DNS work for an application that might be rejected, and the Owner shouldn't decide under the time pressure of a half-finished verification.
+- Design doc rollout plan grew from 5 to 6 phases to accommodate this as its own phase (Phase 2), since it's now the prerequisite for every other `ORG-*` phase.
+
+---
+
 ## v4.11.2 — Multi-Tenant Organization Design Doc (2026-06-27, P1 — design, not implemented)
 
 **Scope:** `TODO-List.md` Section 20a's gate — a P1 design doc was required before any `ORG-01`–`22` code could be written. No code in this entry; `product/MULTI_TENANT_ORG_DESIGN.md` is new.

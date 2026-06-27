@@ -1,9 +1,9 @@
-# ORG-01–22 — Multi-Tenant Organization Management: Design Document
+# ORG-01–33 — Multi-Tenant Organization Management: Design Document
 
 **Status:** Design — not started, not approved for implementation. Required reading before any `ORG-*` code is written (per `TODO-List.md` Section 20a's gate).
 **Owner:** Ali Abu Ras
-**Created:** 2026-06-27
-**Closes:** `ORG-01`–`ORG-22` in `TODO-List.md` Section 20a (P1 — Multi-Tenant Organization Management)
+**Created:** 2026-06-27 (updated 2026-06-27 — added the Organization Application & Owner Approval workflow, §4)
+**Closes:** `ORG-01`–`ORG-33` in `TODO-List.md` Section 20a (P1 — Multi-Tenant Organization Management)
 **Depends on:** Coordinates with `AIPLAN-03` (`organisationId` on canonical models, from the separate self-hosted-AI plan in Section 28) — this design is the authoritative schema owner; `AIPLAN-03` should consume this design's migration rather than run a second one.
 
 ---
@@ -12,7 +12,7 @@
 
 Delivery Clarity today is **single-tenant in practice, multi-user in name**. Every `User` row lives in one shared database with no organizational boundary above it — `canViewAllImportData()` lets `admin`/`manager`/`c_level` roles see *every* user's uploads, and there is no concept that two companies using the same deployment should never see each other's data, because today there is only ever one deployment per company (it's installed/run per customer, not offered as a shared hosted product).
 
-This design introduces an explicit **Organization** boundary so the app can safely run as a shared multi-customer product: each company registers its own organization, its users only ever see their own organization's data, and a seat limit and branding identity belong to the organization rather than floating free. The core promise this design must deliver, stated as a non-functional requirement: **zero data overlap between organizations, under any code path, by construction — not by convention.**
+This design introduces an explicit **Organization** boundary so the app can safely run as a shared multi-customer product: each company applies to join (§4 — reviewed and approved by the platform owner, not self-serve instant signup), its users only ever see their own organization's data, and a seat limit and branding identity belong to the organization rather than floating free. The core promise this design must deliver, stated as a non-functional requirement: **zero data overlap between organizations, under any code path, by construction — not by convention.**
 
 **Explicitly out of scope for this design** (separate future efforts): billing/payment processing, org-to-org data sharing/collaboration features, SSO/SAML (only domain-ownership verification is in scope, not enterprise SSO), and the companion mobile app (`MOBILEAPP-*`) and client-export-sharing (`EXPORT-*`/`SHARE-*`) work, both of which are explicitly gated on this design landing first.
 
@@ -83,7 +83,7 @@ A lint rule (ESLint custom rule, per CLAUDE.md §49's "custom local rule" patter
 
 Layer 1 is application code and can theoretically have a bug. A second, independent layer must hold even then:
 
-- **Today (SQLite):** there is no SQLite equivalent of Postgres Row-Level Security. The second layer is a **mandatory integration test class** (§7) that attempts cross-org access through every route and asserts denial — not a runtime control, but the best available safety net pre-Postgres.
+- **Today (SQLite):** there is no SQLite equivalent of Postgres Row-Level Security. The second layer is a **mandatory integration test class** (§8) that attempts cross-org access through every route and asserts denial — not a runtime control, but the best available safety net pre-Postgres.
 - **After `FUT-POSTGRES-01` lands:** add real Postgres RLS policies (`CREATE POLICY ... USING (organization_id = current_setting('app.current_org_id')::text)`) on every org-scoped table, with the app setting `app.current_org_id` per request via `SET LOCAL`. This is the genuine second layer — it holds even if every line of application code has a bug — and should be treated as a required follow-up, not an optional nice-to-have, once Postgres is available.
 
 ### 3.3 Authorization layer
@@ -92,19 +92,90 @@ Layer 1 is application code and can theoretically have a bug. A second, independ
 
 ---
 
-## 4. Registration and domain ownership (`ORG-01`, `ORG-11`, `ORG-12`)
+## 4. Organization Application & Owner Approval (`ORG-23`–`ORG-33`) — added 2026-06-27
 
-1. A prospective customer visits a (new) `/register-organization` flow, enters a company name, a work email (e.g. `ali@ali.com`), and a password.
-2. The system derives the candidate domain from the email (`ali.com`) and checks `Organization.domain` is not already claimed.
-3. **Domain ownership verification** (`ORG-12`) happens *before* the org is created, not after — otherwise a second person with an `@ali.com` address could register a competing org first:
-   - Preferred: DNS TXT record challenge (`_deliveryclarity-verify.ali.com` = a generated token), checked server-side with a "Verify" button and a documented propagation-wait state.
-   - Fallback for domains without DNS access at signup time: a confirmation email loop to the registering address only, with a short-lived signed link — weaker than DNS but still proves control of *an* inbox at that domain, not just that the string matches.
-4. On verification success, create `Organization` (`domainVerifiedAt` set) and the first `User` with role `admin` in that org.
-5. Every subsequent invite/signup for that organization (`ORG-11`) must have an email domain exactly matching `Organization.domain` — checked server-side, fail-closed, same pattern as the email-format fix shipped in `FR-316`.
+**`ORG-01`'s original self-serve instant-registration shape is replaced by a gated application process**, per explicit user request. No organization is created automatically — every organization starts as a reviewed application, decided by a single accountable person: the platform owner. This is a deliberate product decision, not a placeholder: it keeps the customer roster curated, lets the owner vet who's joining a shared multi-tenant product, and gives the public-facing entry point a chance to be a genuine first impression rather than a bare signup form.
+
+### 4.1 The Platform Owner — structurally singular, not just a role (`ORG-27`)
+
+The Platform Owner is **not** a value of `AppRole` and is **not assignable through any admin UI, by anyone, including other admins**. It is bootstrapped once, outside the normal app (e.g. a `PLATFORM_OWNER_EMAIL` environment variable checked against `User.email` at runtime, or a one-time seed script setting a dedicated `User.isPlatformOwner` boolean column that has **no corresponding API field** — no PATCH route ever accepts it as input, so it cannot be set or unset through the application layer at all, only through a direct database migration/seed run by whoever controls the deploy). Consequences this drives:
+
+- **Only the Platform Owner can approve or reject an `OrganizationRequest`** (§4.3). Not org admins (none exist yet for a pending applicant), not the cross-org "platform-level support role" mentioned in §3.3 — that support role, if it's ever introduced, is itself grantable only by the Owner and can never gain authority to act on Owner-level decisions or on the Owner's own account.
+- **No code path may suspend, demote, delete, or reassign the Platform Owner.** Every admin-style mutation route must check "is the target the Platform Owner?" and refuse if so, structurally — not as a policy the Owner is just trusted to respect, but as a guard every such route must implement.
+- There is exactly one Platform Owner account for this design (singular, matching "no one has any role over me"). If the product later needs more than one trusted reviewer, that's a deliberate future extension requiring its own decision — not an accidental side effect of this design.
+
+### 4.2 Public-facing application entry point (`ORG-23`, `ORG-24`)
+
+This is the *first* thing a prospective customer sees, and it must read as a polished, trustworthy product, not a bare form:
+
+- **`/join` (or similar marketing-grade public route, no auth required):** a genuine landing page — value proposition, product highlights/screenshots, social proof if available, and a clear single primary call to action ("Apply to Join") — built with the same design-token/SCSS-module discipline as the rest of the app (CLAUDE.md §13–22), not a quick unstyled form bolted onto a route. This is explicitly a design/UX deliverable, not just a CRUD form — budget real UI/UX effort here, mirroring the polish already put into `/login`/`/landing`.
+- **The application itself is a multi-step wizard**, not one long form — short steps reduce abandonment and let validation/photo upload feel guided rather than overwhelming:
+  1. **Company basics:** legal/trading company name, industry, company size (headcount range), country.
+  2. **Primary contact:** full name, title/role at the company, work email (must match the company's claimed domain — reuses the `EMAIL_FORMAT` pattern from `FR-316`), phone.
+  3. **Organization domain:** the domain the org will operate under (e.g. `ali.com`) — format-validated here; *ownership* verification (still `ORG-12`, now run post-approval, see §4.4) happens later, not at this stage, since an unapproved applicant shouldn't be asked to prove DNS control before the Owner has even decided to consider them.
+  4. **Why you're joining:** a required free-text "intended use case" field (mirrors the existing high-privilege-reason pattern in `RequestAddMemberModal.tsx` — required, minimum length enforced server-side, not just client-side, learning directly from the real gap found and fixed in `FR-316`).
+  5. **Branding and verification photos:** company logo upload (becomes `Organization.logoUrl` on approval) plus one or more supporting photos/documents (e.g. a business-registration document, an office photo) that help the Owner make an informed decision — all validated by type/size/content per CLAUDE.md §38.4, never trusted by extension or declared MIME type alone.
+  6. **Review screen:** every field shown back to the applicant for confirmation before submission — no surprise edits, no silent autocorrection.
+  7. **Confirmation screen:** a genuine "thank you" state stating the application was received and giving a realistic response-time expectation — not a bare "submitted" toast.
+
+### 4.3 Data model and submission (`ORG-25`)
+
+```prisma
+model OrganizationRequest {
+  id                  String    @id @default(cuid())
+  companyName         String
+  industry            String?
+  companySizeRange    String?
+  country             String?
+  contactName         String
+  contactTitle        String?
+  contactEmail        String
+  contactPhone        String?
+  requestedDomain     String
+  useCase             String    // required, length-enforced server-side — see §4.2 step 4
+  logoUploadUrl        String?
+  supportingPhotoUrlsJson String? // JSON array — business doc / office photo / etc.
+  status              String    @default("pending") // "pending" | "approved" | "rejected" | "withdrawn"
+  ownerDecisionAt     DateTime?
+  ownerDecisionNote   String?
+  createdOrganizationId String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([status])
+  @@index([requestedDomain])
+}
+```
+
+`POST /api/organization-requests` is **public** (no auth — this is the front door for brand-new customers, by definition pre-account) but rate-limited per-IP, same `RATE_MAX`/`RATE_WINDOW_MS` pattern as `app/api/user-add-requests/route.ts`, to prevent the public form being used as a spam/DoS vector. On submission, the Platform Owner is notified (reuses the `Notification` model with a new `organization_request_submitted` type) — and, since the Owner is a single specific account, this can be a direct, immediate notification rather than a broadcast to "all admins."
+
+### 4.4 Owner review queue and decision (`ORG-26`, `ORG-28`, `ORG-29`)
+
+A dedicated Owner-only screen (mirrors `UserAddRequestsPanel.tsx`'s proven shape: filterable queue, expandable cards, decision note field) lists every `OrganizationRequest`, showing all submitted fields and rendering the uploaded logo/photos inline so the Owner can review without downloading attachments separately. Guarded by the Platform Owner check from §4.1 — **not** `role === 'admin'`, since a regular org admin must never reach this screen.
+
+- **Approve** (`PATCH /api/owner/organization-requests/:id/approve`): creates the `Organization` row (`domainVerifiedAt` left null), creates the first `User` with role `admin` in that org, sets `createdOrganizationId`, writes an `organization_request_approve` audit event, and notifies the applicant's contact email that they're approved and the next step (domain verification, §4.5) is required before first login. Re-checks `status === "pending"` first (same already-decided guard pattern as `userAddRequests`' accept/reject routes) — an Owner reviewing two browser tabs can't double-approve.
+- **Reject** (`PATCH .../reject`): requires `ownerDecisionNote` (unlike the optional note on the existing `UserAddRequest` reject flow — rejecting a whole company's application deserves an explained reason, not just a status flip), notifies the applicant, no `Organization` created.
+
+### 4.5 How this connects back to the rest of the design
+
+§5 below ("Domain verification and activation") no longer describes a self-serve flow — it now describes **the step that happens after Owner approval**: the approved applicant verifies domain ownership (`ORG-12`, unchanged mechanism, just moved later in the sequence) and only then gets to actually log in and use the product. §3 (tenant isolation) is unchanged by this addition — this section only changes *how* an `Organization` row comes to exist in the first place, not what it means once it does.
 
 ---
 
-## 5. Login flow (`ORG-14`, `ORG-14a`)
+## 5. Domain verification and activation (`ORG-11`, `ORG-12`) — runs after Owner approval
+
+1. Once the Owner approves an `OrganizationRequest` (§4.4), the `Organization` row exists but is not yet fully active — its first admin user must still prove control of `requestedDomain` before they can log in.
+2. **Domain ownership verification** (`ORG-12`), unchanged in mechanism from the original draft, just sequenced after approval rather than before any human review:
+   - Preferred: DNS TXT record challenge (`_deliveryclarity-verify.ali.com` = a generated token), checked server-side with a "Verify" button and a documented propagation-wait state.
+   - Fallback for domains without DNS access: a confirmation email loop to the registered contact email only, with a short-lived signed link — weaker than DNS but still proves control of *an* inbox at that domain, not just that the string matches.
+3. On verification success, `Organization.domainVerifiedAt` is set and the first admin account becomes usable (can set their password and log in).
+4. Every subsequent invite/signup for that organization (`ORG-11`) must have an email domain exactly matching `Organization.domain` — checked server-side, fail-closed, same pattern as the email-format fix shipped in `FR-316`.
+
+This sequencing (review-then-verify, not verify-then-review) means the Owner is never asked to make a trust decision under time pressure from a half-finished DNS challenge, and an applicant never does DNS work for an application that might be rejected.
+
+---
+
+## 6. Login flow (`ORG-14`, `ORG-14a`)
 
 Three-step form, but **not** three separate round-trips that leak information:
 
@@ -116,13 +187,13 @@ Account recovery (`ORG-19`) follows the identical generic-response, constant-tim
 
 ---
 
-## 6. Branding (`ORG-13`)
+## 7. Branding (`ORG-13`)
 
-`Organization.logoUrl` points to a validated upload (CLAUDE.md §38.4: type/size/content-checked, not just extension) stored under the existing cloud-storage abstraction (`src/lib/storage/`), keyed by `organizationId`. Rendering reuses the existing icon/token registry pattern (CLAUDE.md §10.3) — the app shell reads `session.organization.logoUrl` and renders it wherever the app currently renders its own brand mark (header, exports, future shared reports), and that lookup is itself scoped by the caller's own `organizationId` — there is no code path where org A's logo URL is reachable from org B's session.
+`Organization.logoUrl` points to a validated upload (CLAUDE.md §38.4: type/size/content-checked, not just extension) stored under the existing cloud-storage abstraction (`src/lib/storage/`), keyed by `organizationId`. Rendering reuses the existing icon/token registry pattern (CLAUDE.md §10.3) — the app shell reads `session.organization.logoUrl` and renders it wherever the app currently renders its own brand mark (header, exports, future shared reports), and that lookup is itself scoped by the caller's own `organizationId` — there is no code path where org A's logo URL is reachable from org B's session. The same upload-validation requirement applies to the logo/photos collected during the application step itself (§4.2).
 
 ---
 
-## 7. Required tests before this ships (`ORG-08`, `ORG-08a`)
+## 8. Required tests before this ships (`ORG-08`, `ORG-08a`, `ORG-32`)
 
 Beyond ordinary CRUD-scoping tests, the adversarial pass must explicitly attempt and assert denial for:
 
@@ -136,7 +207,7 @@ Zero findings required before merge, per `ORG-08a` — this is a security review
 
 ---
 
-## 8. Migration plan for existing single-tenant deployments
+## 9. Migration plan for existing single-tenant deployments
 
 Existing deployments have users and data with no `organizationId` at all. The migration must not silently destroy or merge anyone's data:
 
@@ -147,21 +218,22 @@ Existing deployments have users and data with no `organizationId` at all. The mi
 
 ---
 
-## 9. Suspension and offboarding (`ORG-16`, `ORG-17`)
+## 10. Suspension and offboarding (`ORG-16`, `ORG-17`)
 
 - **Suspension** sets `Organization.status = "suspended"`; the auth layer checks this on every login/session-refresh and rejects with a clear "account suspended, contact support" message — no data is touched, deleted, or modified. Reactivation is just flipping the flag back.
 - **Export and deletion** (`ORG-17`): an org admin (or platform admin acting on the org's explicit request) can trigger a full data export (reuses the existing Excel/backup-export machinery, scoped to that one `organizationId`) and, separately, a full deletion request. Deletion is **not** instant — it follows the same non-destructive-by-default principle as the rest of this app: mark `status = "pending_deletion"` with a recorded grace period (e.g. 30 days, configurable), then a scheduled job performs the actual cascade delete after the grace period, writing a final `AuditEvent` before the org's own audit trail is itself deleted.
 
 ---
 
-## 10. Rollout phases
+## 11. Rollout phases
 
 This is large enough that it should not land as one PR:
 
 1. **Phase 1 — schema + isolation core:** `Organization` model, `organizationId` backfill migration, `scopedRepository`, the ESLint boundary rule, and the `ORG-08`/`ORG-08a` test suite. No UI changes. This phase alone is what makes the "no data overlap" guarantee real — everything after this is UX around it.
-2. **Phase 2 — registration, login, domain verification:** `ORG-01`, `ORG-11`, `ORG-12`, `ORG-14`/`14a`, `ORG-19`.
-3. **Phase 3 — admin experience:** `ORG-02`/`03`/`06`/`15`/`18`/`21` (seat limits, org settings page, scoped admin, org audit log, seat-limit UX).
-4. **Phase 4 — branding, suspension, offboarding, per-org rate limiting:** `ORG-13`, `ORG-16`, `ORG-17`, `ORG-20`.
-5. **Phase 5 — `ORG-10` single-occupancy roles** (confirmed hard constraint, §2.3): role-reassignment-with-confirmation UX, and the derived (non-editable) 6-seat cap.
+2. **Phase 2 — Organization Application & Owner Approval:** `ORG-23`–`ORG-33` (public `/join` landing page + wizard, `OrganizationRequest` model, Owner-only review queue, approve/reject, Platform Owner bootstrap). This is now the *only* way an `Organization` row gets created — must land before Phase 3 can mean anything.
+3. **Phase 3 — domain verification, login:** `ORG-11`, `ORG-12`, `ORG-14`/`14a`, `ORG-19`.
+4. **Phase 4 — admin experience:** `ORG-03`/`06`/`15`/`18`/`21` (seat-limit enforcement, org settings page, scoped admin, org audit log, seat-limit UX). `ORG-02` (the seat limit itself) is already fixed/derived per §2.3, not built here.
+5. **Phase 5 — branding, suspension, offboarding, per-org rate limiting:** `ORG-13`, `ORG-16`, `ORG-17`, `ORG-20`.
+6. **Phase 6 — `ORG-10` single-occupancy roles** (confirmed hard constraint, §2.3): role-reassignment-with-confirmation UX, and the derived (non-editable) 6-seat cap.
 
 Each phase gets its own branch, its own doc-impact-matrix pass, and its own full-suite verification — consistent with how `FCAST-14–26`/`RETRO-04–38` shipped.

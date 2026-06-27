@@ -71,6 +71,7 @@ Do not expose source code, algorithms, diagrams, patent language, credentials, p
 | 📄 Planning only | Document/design only; no code |
 | ⏸️ Deferred | Intentionally postponed |
 | ⚠️ Conflict | Current docs/status disagree and must be reconciled |
+| ⛔ Superseded | Replaced by a different approach before implementation; left visible with a pointer to its replacement rather than deleted, so the design history isn't lost |
 
 ---
 
@@ -1188,15 +1189,17 @@ Do not implement until P2 design is documented and reviewed.
 
 ## 20a. P1 — Multi-Tenant Organization Management (Future Roadmap — Design Written, Awaiting Review)
 
-**Design doc written 2026-06-27:** `product/MULTI_TENANT_ORG_DESIGN.md` — covers the `Organization` model, `organizationId` migration plan, the two-layer tenant-isolation enforcement (mandatory `scopedRepository` + future Postgres RLS), domain ownership verification, the enumeration-safe domain-first login flow, branding, suspension/offboarding, and a 5-phase rollout plan. Overlaps with `AIPLAN-03` (`organisationId` on canonical models) — this design is the authoritative schema owner; one migration must serve both, not two competing ones.
+**Design doc written 2026-06-27, updated same day:** `product/MULTI_TENANT_ORG_DESIGN.md` — covers the `Organization` model, `organizationId` migration plan, the two-layer tenant-isolation enforcement (mandatory `scopedRepository` + future Postgres RLS), the public Organization Application & Owner Approval workflow (§4, `ORG-23`–`33`), domain ownership verification, the enumeration-safe domain-first login flow, branding, suspension/offboarding, and a 6-phase rollout plan. Overlaps with `AIPLAN-03` (`organisationId` on canonical models) — this design is the authoritative schema owner; one migration must serve both, not two competing ones.
 
-**`ORG-10` decision confirmed with the user 2026-06-27:** "one user per role" is a hard, universal constraint — every organization is capped at exactly 6 users (one per `AppRole`: admin, scrum_master, product_owner, manager, c_level, user), with no plan tier or seat-limit override. `maxSeats` is therefore fixed/derived, not admin-editable; see design doc §2.3 (updated to remove the earlier "solo vs. team" proposal now that this is resolved).
+**`ORG-01` superseded 2026-06-27, per explicit user request:** self-serve instant registration is replaced entirely by a gated application process — a public `/join` landing page (`ORG-23`) and multi-step application wizard (`ORG-24`) submit an `OrganizationRequest` (`ORG-25`) that only a single, structurally singular **Platform Owner** (`ORG-27` — the user themselves; no one has authority over this account, by design, not just by policy) can approve or reject (`ORG-26`/`28`/`29`). No `Organization` row is ever created without this explicit human approval step. See design doc §4.
+
+**`ORG-10` decision confirmed with the user 2026-06-27:** "one user per role" is a hard, universal constraint — every organization is capped at exactly 6 users (one per `AppRole`: admin, scrum_master, product_owner, manager, c_level, user), with no plan tier or seat-limit override. `maxSeats` is therefore fixed/derived, not admin-editable; see design doc §2.3.
 
 Still do not implement any `ORG-*` code until this design doc has been explicitly reviewed and approved — writing the design doc satisfies the *gate*, it is not itself the approval.
 
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
-| ORG-01 | Organization registration flow | P1 | ❌ Not started | Self-serve sign-up creates a new organization plus its first admin user. |
+| ORG-01 | Organization registration flow | P1 | ⛔ Superseded 2026-06-27 | Self-serve instant registration is replaced by the gated application/approval flow — see `ORG-23`–`33` and design doc §4. No `Organization` row is ever created without Owner approval. |
 | ORG-02 | Per-organization seat limit | P1 | ❌ Not started | **Confirmed 2026-06-27 (see ORG-10): fixed at 6 (one per `AppRole`), not admin-editable** — `maxSeats` is derived from `ASSIGNABLE_ROLES.length`, not a configurable plan/contract value. |
 | ORG-03 | Seat-limit enforcement on invite/add-member | P1 | ❌ Not started | Block new member creation once an org's seat limit is reached; show a clear blocked-state message (no silent failure). |
 | ORG-04 | Tenant data isolation — `organizationId` on every canonical model, zero exceptions | P1 | ❌ Not started | Every table that stores org-owned data carries a non-nullable `organizationId`; no table is allowed to be "shared/global" unless it is explicitly org-agnostic reference data (e.g. an icon registry) and documented as such. Coordinate with `AIPLAN-03` so this is one migration, not two. |
@@ -1221,6 +1224,17 @@ Still do not implement any `ORG-*` code until this design doc has been explicitl
 | ORG-20 | Per-org rate limiting / abuse isolation | P1 | ❌ Not started | One organization's abusive traffic (login attempts, exports, API calls) must not degrade availability for other organizations — rate limits applied per-org, not globally shared. |
 | ORG-21 | Seat-limit-reached experience | P1 | ❌ Not started | When ORG-03's limit is hit, surface a clear in-app message to the org admin (contact/upgrade path) instead of a bare error — no silent block. |
 | ORG-22 | Tests — single-occupancy roles, domain enforcement, branding isolation, login enumeration | P1 | ❌ Not started | Cover: duplicate-role assignment rejected/reassign-confirmed; off-domain signup/invite rejected; unverified-domain claim rejected; one org's logo never rendered for another org's session; login/recovery flows leak no domain/account existence info. |
+| ORG-23 | Public "Apply to Join" landing page | P1 | ❌ Not started | A genuine marketing-grade public route (`/join`, no auth) — value proposition, product highlights, clear single CTA — built with the same design-token/SCSS-module discipline as the rest of the app (CLAUDE.md §13–22), not a bare form. Replaces `ORG-01`'s self-serve flow. See design doc §4.2. |
+| ORG-24 | Multi-step organization application wizard | P1 | ❌ Not started | Steps: company basics → primary contact → org domain (format only, not yet verified) → required "why you're joining" (server-side length-enforced, learning from the `FR-316` client-only-validation gap) → logo + supporting photo/document uploads → review screen → confirmation screen with a realistic response-time expectation. See design doc §4.2. |
+| ORG-25 | `OrganizationRequest` model and public submission endpoint | P1 | ❌ Not started | New Prisma model (design doc §4.3); `POST /api/organization-requests` is public but rate-limited per-IP (same pattern as `app/api/user-add-requests/route.ts`) to prevent spam/DoS via the public form. |
+| ORG-26 | Owner-only application review queue | P1 | ❌ Not started | Mirrors `UserAddRequestsPanel.tsx`'s shape (filterable queue, expandable cards, decision note) but guarded by the Platform Owner check (`ORG-27`), not `role === 'admin'` — a regular org admin must never reach this screen. Renders uploaded logo/photos inline. |
+| ORG-27 | Platform Owner — structurally singular, not assignable through any UI | P1 | ❌ Not started | **Confirmed 2026-06-27:** the user is the sole Platform Owner; no one has authority over them. Bootstrapped outside the app (env var or one-time seed, never via an API field); no admin mutation route may suspend/demote/delete/reassign the Platform Owner — every such route must explicitly guard against the target being the Owner. See design doc §4.1. |
+| ORG-28 | Approve-application flow | P1 | ❌ Not started | Creates `Organization` + first admin `User`, sets `createdOrganizationId`, audits, notifies applicant that domain verification (`ORG-12`) is the next required step. Re-checks `status === "pending"` first — an Owner reviewing two tabs can't double-approve. See design doc §4.4. |
+| ORG-29 | Reject-application flow | P1 | ❌ Not started | Requires a decision note (mandatory, unlike the optional note on `UserAddRequest` rejection — rejecting a whole company deserves an explained reason); notifies applicant; no `Organization` created. |
+| ORG-30 | Logo/photo upload validation for applications | P1 | ❌ Not started | Type/size/content validated per CLAUDE.md §38.4 — never trusted by extension or declared MIME type alone. Same standard applies to the post-approval `Organization.logoUrl` upload (`ORG-13`). |
+| ORG-31 | Audit logging for application decisions | P1 | ❌ Not started | `organization_request_submit`/`organization_request_approve`/`organization_request_reject` audit events, mirroring the existing `user_add_request_*` pattern. |
+| ORG-32 | Tests — application workflow | P1 | ❌ Not started | Cover: public submission rate-limited; non-Owner cannot reach the review queue or approve/reject endpoints; double-approve/double-reject rejected; reject without a note rejected; Owner account itself cannot be suspended/demoted/reassigned by any route. |
+| ORG-33 | Update all related product docs | P1 | ❌ Not started | SRS (new Addendum), USE_CASES/SCENARIOS/USER_JOURNEYS for the application/approval flow, TEST_CASES, DEVELOPER_GUIDE (Platform Owner bootstrap process), RELEASE_NOTES, TODO-List.md. |
 
 ---
 
