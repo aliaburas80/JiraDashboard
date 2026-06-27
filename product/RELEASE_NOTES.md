@@ -5,6 +5,17 @@
 
 ---
 
+## v4.11.2 — Multi-Tenant Organization Design Doc (2026-06-27, P1 — design, not implemented)
+
+**Scope:** `TODO-List.md` Section 20a's gate — a P1 design doc was required before any `ORG-01`–`22` code could be written. No code in this entry; `product/MULTI_TENANT_ORG_DESIGN.md` is new.
+
+- Covers the new `Organization` model, `organizationId` on every canonical model, a two-layer tenant-isolation enforcement strategy (a mandatory `scopedRepository` data-access module today, plus future Postgres Row-Level Security once `FUT-POSTGRES-01` lands), domain-ownership verification (DNS TXT or confirmation-email loop, not just string matching), an enumeration-safe domain-first login flow, org branding, non-destructive suspension, and a graceful-period data export/deletion flow.
+- Includes a concrete nullable-then-backfill-then-tighten migration plan for existing single-tenant deployments (seeds one default `Organization` per existing deployment rather than breaking it).
+- **One open product decision flagged, not yet confirmed:** `ORG-10`'s "one user per role" rule is proposed as gated by an `Organization.plan` field (`"solo"` vs `"team"`) rather than a universal hard cap — see design doc §2.3. Implementation of `ORG-10` specifically is blocked on confirming this; the other 4 rollout phases are not.
+- This design doc satisfies the Section 20a gate's requirement to *write* a design doc — it does not itself constitute approval to implement. No `ORG-*` code has been written.
+
+---
+
 ## v4.11.1 — TRACE-04–13 Traceability Closure + Roadmap Additions (2026-06-27, P0/P1 — doc-gate closure)
 
 **Scope:** `TODO-List.md` §12 `TRACE-04`–`13`, plus new roadmap sections requested for multi-tenant organizations, export/sharing, a pre-merge QA gate, mobile-first redesign, and a future companion mobile app. No production behavior changed in this entry — documentation only.

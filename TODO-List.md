@@ -1186,9 +1186,13 @@ Do not implement until P2 design is documented and reviewed.
 
 ---
 
-## 20a. P1 — Multi-Tenant Organization Management (Future Roadmap — Not Started)
+## 20a. P1 — Multi-Tenant Organization Management (Future Roadmap — Design Written, Awaiting Review)
 
-Do not implement until a P1 design doc covering tenant isolation, seat enforcement, and migration of existing single-tenant data is written and reviewed. Overlaps with `AIPLAN-03` (`organisationId` on canonical models) — one schema change must serve both, not two competing migrations.
+**Design doc written 2026-06-27:** `product/MULTI_TENANT_ORG_DESIGN.md` — covers the `Organization` model, `organizationId` migration plan, the two-layer tenant-isolation enforcement (mandatory `scopedRepository` + future Postgres RLS), domain ownership verification, the enumeration-safe domain-first login flow, branding, suspension/offboarding, and a 5-phase rollout plan. Overlaps with `AIPLAN-03` (`organisationId` on canonical models) — this design is the authoritative schema owner; one migration must serve both, not two competing ones.
+
+**One open product decision flagged in the design doc (§2.3), not yet confirmed with the user:** `ORG-10`'s "one user per role" rule is proposed as gated by a new `Organization.plan` field (`"solo"` = exactly one user per role, matching the literal request; `"team"` = multiple users may share a role) rather than a universal hard cap, since a literal global reading would cap every org at exactly 6 users. **Do not implement `ORG-10` until this is confirmed.** All other phases (1–4 in the design doc) do not depend on this decision and may proceed once the design doc itself is reviewed/approved.
+
+Still do not implement any `ORG-*` code until this design doc has been explicitly reviewed and approved — writing the design doc satisfies the *gate*, it is not itself the approval.
 
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
