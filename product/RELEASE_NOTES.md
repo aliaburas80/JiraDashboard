@@ -5,6 +5,18 @@
 
 ---
 
+## v4.11.1 — TRACE-04–13 Traceability Closure + Roadmap Additions (2026-06-27, P0/P1 — doc-gate closure)
+
+**Scope:** `TODO-List.md` §12 `TRACE-04`–`13`, plus new roadmap sections requested for multi-tenant organizations, export/sharing, a pre-merge QA gate, mobile-first redesign, and a future companion mobile app. No production behavior changed in this entry — documentation only.
+
+- **`TRACE-04`–`08`** were stale duplicates of work `TRACE-01` already closed (UX-06/07/08/09, the F3-14/15/16 cluster, cloud-storage `COVER-16`) — closed with cross-references, no new docs needed.
+- **`TRACE-09/10/12/13`** (Backend Gateway, User Add-Member Request, Retrospective, Forecasting) had all shipped since these placeholders were written, but still said "create once implemented" — closed with real FR/UC/TC anchors.
+- **Found and fixed real documentation staleness in the opposite direction**: `COVER-01/06/07/09/11/12/17/19/20/21/22` still described the now-shipped gateway, forecasting, retrospective, and coaching features as roadmap-only/unbuilt. Corrected all of them. Also found `UC-102` (View Delivery Forecast) was never updated when `FCAST-14`–`26` merged — added the FR-359–364/Addendum J cross-reference.
+- **New roadmap sections added** (design-doc-required, nothing implemented): `ORG-01`–`22` (multi-tenant organizations — registration, seat limits, strict data isolation with defense-in-depth, domain-locked single-occupancy-role accounts, org branding, domain-first login), `EXPORT-04`–`07`/`SHARE-01`–`06` (Excel/PDF export with charts, no-login client-facing HTML report shared by email), `QA-GATE-01`–`08` (mandatory full-suite + dependency-health + cross-browser/platform check before any merge to `main`), `MOBILE-01`–`09` (mobile-first redesign — a priority shift, not a retrofit), `MOBILEAPP-01`–`08` (future light, cached-insights-only companion mobile app).
+- Test suite unchanged at 736/77 passing; `tsc`/build clean.
+
+---
+
 ## v4.11.0 — User Add-Member Request Test Traceability Closure (2026-06-27, P1 — doc-gate closure)
 
 **Scope:** `TODO-List.md` §22 `TEST-REQ-01`–`14`. Reconciled the 14 manual "Not started" test rows for the already-shipped User Add-Member Request Workflow (USERREQ-07–30) against the real automated `TC-REQ-*` suite, then closed the two genuine validation gaps the reconciliation found. No unrelated behavior changed.

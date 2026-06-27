@@ -3038,10 +3038,10 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 2a. Status banner shows "Insufficient data" with grey styling and a message explaining what data is missing
 
 **Postcondition:** User understands current delivery trajectory, confidence level, and next actions  
-**Related FR:** FR-328, FR-329  
+**Related FR:** FR-328, FR-329; extended by FR-359–FR-364 (Addendum J, 2026-06-27 — data-quality-aware confidence, weakest-factor diagnosis card, Throughput Required-vs-Current and Risk/Scope Trend charts)  
 **Related:** UC-101, BR-116, SCN-052  
 **Related UJ:** UJ-037  
-**Related TC:** TC-FCAST-01–TC-FCAST-05
+**Related TC:** TC-FCAST-01–TC-FCAST-05, TC-FCAST-06–TC-FCAST-13 (§9.55a)
 
 ---
 
