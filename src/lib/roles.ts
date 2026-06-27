@@ -34,6 +34,13 @@ export function canViewAllImportData(role: string | null | undefined): boolean {
   return role === 'admin' || role === 'manager' || role === 'c_level';
 }
 
+// USERREQ-11: roles that require an extended justification on an add-member request.
+export const HIGH_PRIVILEGE_ROLES: AppRole[] = ['admin', 'c_level'];
+
+export function isHighPrivilegeRole(role: string | null | undefined): boolean {
+  return HIGH_PRIVILEGE_ROLES.includes(role as AppRole);
+}
+
 export function defaultDashboardViewForRole(role: string | null | undefined): ViewId {
   switch (role) {
     case 'scrum_master':  return 'scrum_master';

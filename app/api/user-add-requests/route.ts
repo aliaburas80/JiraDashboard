@@ -6,7 +6,10 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
-import { isAppRole } from '@/lib/roles';
+import { isAppRole, isHighPrivilegeRole } from '@/lib/roles';
+
+const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const HIGH_PRIVILEGE_MIN_REASON_LENGTH = 20;
 import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
 
 // Simple in-process rate limiter — 10 submissions per 10 minutes per requester.
@@ -63,8 +66,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (!EMAIL_FORMAT.test(requestedEmail)) {
+    return NextResponse.json({ error: 'Please enter a valid email address.' }, { status: 400 });
+  }
+
   if (!isAppRole(requestedRole)) {
     return NextResponse.json({ error: 'Unsupported role.' }, { status: 400 });
+  }
+
+  if (isHighPrivilegeRole(requestedRole) && reason.length < HIGH_PRIVILEGE_MIN_REASON_LENGTH) {
+    return NextResponse.json(
+      { error: 'Admin and C-level requests require a detailed justification (at least 20 characters).' },
+      { status: 400 },
+    );
   }
 
   // Guard: the session userId must still exist in the DB. Iron-session stores

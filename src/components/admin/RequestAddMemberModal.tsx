@@ -2,15 +2,13 @@
 // USERREQ-02/03 — Modal for any logged-in user to request adding a new member.
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { ROLE_OPTIONS, ASSIGNABLE_ROLES } from '@/lib/roles';
+import { ROLE_OPTIONS, ASSIGNABLE_ROLES, isHighPrivilegeRole } from '@/lib/roles';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 
 interface Props {
   onClose: () => void;
   onSuccess?: () => void;
 }
-
-const HIGH_PRIVILEGE: string[] = ['admin', 'c_level'];
 
 export default function RequestAddMemberModal({ onClose, onSuccess }: Props) {
   const firstFieldRef = useRef<HTMLInputElement>(null);
@@ -33,7 +31,7 @@ export default function RequestAddMemberModal({ onClose, onSuccess }: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const isHighPrivilege = HIGH_PRIVILEGE.includes(role);
+  const isHighPrivilege = isHighPrivilegeRole(role);
   const reasonTooShort  = isHighPrivilege && reason.trim().length < 20;
 
   async function handleSubmit(e: React.FormEvent) {

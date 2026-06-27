@@ -5,6 +5,17 @@
 
 ---
 
+## v4.11.0 — User Add-Member Request Test Traceability Closure (2026-06-27, P1 — doc-gate closure)
+
+**Scope:** `TODO-List.md` §22 `TEST-REQ-01`–`14`. Reconciled the 14 manual "Not started" test rows for the already-shipped User Add-Member Request Workflow (USERREQ-07–30) against the real automated `TC-REQ-*` suite, then closed the two genuine validation gaps the reconciliation found. No unrelated behavior changed.
+
+- **12 of 14 `TEST-REQ` rows were already covered**, just never cross-referenced — anchored each to its real `TC-REQ-*` test in `src/__tests__/userAddRequests.test.ts`.
+- **Found a real gap:** `requestedEmail` format and the admin/c_level "≥20-character justification" rule were enforced only client-side, in `RequestAddMemberModal.tsx` — a direct API call could submit a malformed email or a one-word admin-access reason. Fixed by adding both checks to `POST /api/user-add-requests` (FR-316 updated), and extracted a shared `isHighPrivilegeRole()` helper (`src/lib/roles.ts`) so the modal and the route can no longer drift apart on which roles count as high-privilege.
+- **4 new tests:** `TC-REQ-19` (invalid email rejected), `TC-REQ-20`/`TC-REQ-20b` (high-privilege reason length rejected/accepted), and a submit-time audit-event assertion added to the existing `TC-REQ-01`. Test suite: 736/77 passing.
+- **2 real gaps left open, not silently marked done:** `TEST-REQ-12` (a true two-admin concurrent-accept race needs an integration test against a real database, not a mocked Prisma client — deferred to `FUT-POSTGRES-01`) and `TEST-REQ-14` (mobile layout needs a Playwright/visual pass, not Jest).
+
+---
+
 ## v4.10.2 — Roadmap Forecast Tests + Nav Redesign Help Entries (2026-06-26, P0/P1 — doc-gate closure)
 
 **Scope:** `ROADMAP-02`, `ROADMAP-03`, `NAV-03` from TODO-List.md — closing doc/test gaps left open since the 2026-06-10 Roadmap page and Help/Glossary navigation redesign shipped. No production behavior changed.

@@ -1151,6 +1151,59 @@ Do not implement until P2 design is documented and reviewed.
 
 ---
 
+## 20a. P1 — Multi-Tenant Organization Management (Future Roadmap — Not Started)
+
+Do not implement until a P1 design doc covering tenant isolation, seat enforcement, and migration of existing single-tenant data is written and reviewed. Overlaps with `AIPLAN-03` (`organisationId` on canonical models) — one schema change must serve both, not two competing migrations.
+
+| ID | Task | Priority | Status | Details / Acceptance Criteria |
+|---|---|---:|---|---|
+| ORG-01 | Organization registration flow | P1 | ❌ Not started | Self-serve sign-up creates a new organization plus its first admin user. |
+| ORG-02 | Per-organization seat limit | P1 | ❌ Not started | Configurable max-user count per org (plan/contract-driven), stored as org-level config, not hardcoded. |
+| ORG-03 | Seat-limit enforcement on invite/add-member | P1 | ❌ Not started | Block new member creation once an org's seat limit is reached; show a clear blocked-state message (no silent failure). |
+| ORG-04 | Tenant data isolation — `organizationId` on every canonical model, zero exceptions | P1 | ❌ Not started | Every table that stores org-owned data carries a non-nullable `organizationId`; no table is allowed to be "shared/global" unless it is explicitly org-agnostic reference data (e.g. an icon registry) and documented as such. Coordinate with `AIPLAN-03` so this is one migration, not two. |
+| ORG-05 | Cross-org access prevention enforced at the data-access layer, not just route handlers | P1 | ❌ Not started | Every read/write must be scoped by the authenticated user's `organizationId` at the query level (e.g. a shared data-access helper that injects the `organizationId` filter, not ad hoc per-route checks) — a forgotten `WHERE organizationId = ...` on one new route must not be possible by construction. Client-side hiding is not authorization (CLAUDE.md §36). Fail closed: on any ambiguity, deny rather than default-allow. |
+| ORG-05a | Defense-in-depth — second enforcement layer independent of application code | P1 | ❌ Not started | Add a layer that holds even if a route forgets the org filter: Postgres Row-Level Security policies (post `FUT-POSTGRES-01`) or, until then, a single shared repository/data-access module that *all* features must go through (no feature is permitted to query the ORM/store directly, bypassing the org filter). Document which layer is authoritative. |
+| ORG-06 | Organization admin scoping | P1 | ❌ Not started | Org admins manage only their own org's users/seats; platform-level admin role stays separate and is the only role that may ever query across organizations (and only for support/ops tooling, fully audited). |
+| ORG-07 | Audit logging for org lifecycle and cross-org attempts | P1 | ❌ Not started | Log org creation, seat changes, and any denied cross-org access attempt (no sensitive payload logging — CLAUDE.md §38.7). A denied cross-org attempt must be treated as a security event, not a normal 403. |
+| ORG-08 | Tests — seat-limit enforcement, tenant isolation, cross-org denial | P1 | ❌ Not started | Must include a test that proves org A can never read, list, update, delete, or enumerate (via ID guessing/incrementing) org B's data through any route, API, export, or search endpoint — not just the obvious CRUD ones. |
+| ORG-08a | Tenant-isolation security review before release | P1 | ❌ Not started | Dedicated adversarial pass (per CLAUDE.md §54 Architecture/Security gates) attempting cross-org access via: direct object reference manipulation (IDREF/IDOR), search/autocomplete leakage, bulk export endpoints, shared caches/queues, error messages that reveal another org's existence or data shape, and any background job that iterates "all records" without an org filter. Zero findings required before this feature ships, not "fix later." |
+| ORG-09 | Update all related product docs | P1 | ❌ Not started | SRS (new Addendum, explicitly stating the zero-data-overlap guarantee as a non-functional requirement), BRD scope, USE_CASES/SCENARIOS/USER_JOURNEYS for registration + seat-limit flows, TEST_CASES (including ORG-08/ORG-08a cases), DEVELOPER_GUIDE (tenancy model + which layer is authoritative for isolation), RELEASE_NOTES, TODO-List.md. |
+| ORG-10 | Single-occupancy roles — one user per role, per org | P1 | ❌ Not started | Each role (e.g. Admin, Owner, Member — final role list TBD in design doc) may be held by exactly one user within an organization at a time; assigning a role already held by another user must reassign-with-confirmation, not silently create a duplicate. **Open question for the design doc:** confirm this is intended as a hard product constraint (limits an org to N users = N roles) and not a misstatement of "one *admin* per role tier" — flag explicitly before building, since it caps org size by role-list length. |
+| ORG-11 | Email domain must match the organization's registered domain | P1 | ❌ Not started | Every user's email must share the exact domain registered to their org (e.g. org domain `ali.com` → only `*@ali.com` emails may join/be invited). Reject signup/invite at validation time if the domain doesn't match — fail closed, with a clear user-facing error (CLAUDE.md §32 external-data validation). |
+| ORG-12 | Domain *ownership* verification, not just string matching | P1 | ❌ Not started | Email-domain matching alone does not prove the org controls that domain — anyone with an `@ali.com` address could otherwise register the `ali.com` org first. Require a verification step (DNS TXT record, or admin-confirmation email loop) before a domain is bound to an org, and lock the domain-to-org mapping afterward so a second org cannot later claim the same domain. |
+| ORG-13 | Per-organization logo / branding | P1 | ❌ Not started | Org admin uploads a logo (validated file type/size/content per CLAUDE.md §38.4); displayed via the existing icon/branding token pattern wherever the app shows app identity (header, nav, exports, shared reports) — scoped strictly to that org's own users, never shown to or by another org. |
+| ORG-14 | Login flow — organization domain, then username, then password | P1 | ❌ Not started | Step 1: enter org domain → resolve org. Step 2: username + password scoped to that org. Must not change or weaken existing auth/session security (CLAUDE.md §38.1) — this changes the *form flow*, not the authorization model. |
+| ORG-14a | Login-flow enumeration protection | P1 | ❌ Not started | The domain-lookup step must not reveal whether a domain/org exists (e.g. identical response timing/message for "unknown domain" vs. "wrong password") and must be rate-limited per IP/domain to prevent org-existence or credential brute-forcing. |
+| ORG-15 | Organization settings/profile page | P1 | ❌ Not started | Single place for org name, domain, logo, seat usage (X of N), and plan/tier — admin-only, scoped to the admin's own org (per ORG-06). |
+| ORG-16 | Org suspension/deactivation (non-destructive) | P1 | ❌ Not started | Billing lapse or abuse must lock out access without deleting org data; reactivation restores access without data loss. Never silently delete on suspension. |
+| ORG-17 | Org data export and deletion on offboarding | P1 | ❌ Not started | An org (or platform admin on its behalf) can export all of its own data and request full deletion — supports the "private, no overlap" guarantee by giving each org a real exit path, and supports privacy/retention requirements (CLAUDE.md §39). |
+| ORG-18 | Org-level admin audit log | P1 | ❌ Not started | Visible-to-org-admin log of role/seat/branding/domain changes within their own org — separate from the platform-level security audit log in ORG-07. |
+| ORG-19 | Account recovery compatible with domain-first login | P1 | ❌ Not started | Forgot-password flow must follow the same enumeration-safe pattern as ORG-14a — must not confirm/deny domain or account existence to an unauthenticated requester. |
+| ORG-20 | Per-org rate limiting / abuse isolation | P1 | ❌ Not started | One organization's abusive traffic (login attempts, exports, API calls) must not degrade availability for other organizations — rate limits applied per-org, not globally shared. |
+| ORG-21 | Seat-limit-reached experience | P1 | ❌ Not started | When ORG-03's limit is hit, surface a clear in-app message to the org admin (contact/upgrade path) instead of a bare error — no silent block. |
+| ORG-22 | Tests — single-occupancy roles, domain enforcement, branding isolation, login enumeration | P1 | ❌ Not started | Cover: duplicate-role assignment rejected/reassign-confirmed; off-domain signup/invite rejected; unverified-domain claim rejected; one org's logo never rendered for another org's session; login/recovery flows leak no domain/account existence info. |
+
+---
+
+## 20b. P2 — Export to Sheet/PDF and Client Sharing (Future Roadmap — Not Started)
+
+Do not implement until a P2 design doc defines exactly which visuals (which charts/graphs, in what form) belong in the sheet export vs. the PDF export, and how the no-login client share page is isolated from the authenticated app.
+
+| ID | Task | Priority | Status | Details / Acceptance Criteria |
+|---|---|---:|---|---|
+| EXPORT-04 | Define export visual catalog | P2 | ❌ Not started | Design-doc step: enumerate which charts/graphs/tables are included per export type (sheet vs. PDF) before any code — avoids ad hoc per-page exceptions. Builds on existing `FUT-EXCEL`-style export (Smart Excel export, Section 12 F4 cluster) rather than duplicating it. |
+| EXPORT-05 | Export dashboard data + charts to Excel/Sheet | P2 | ❌ Not started | Native Excel charts or embedded chart images per EXPORT-04's catalog, alongside existing data sheets. |
+| EXPORT-06 | Export dashboard data + charts to PDF | P2 | ❌ Not started | Print/offline-friendly PDF with the same visual catalog as EXPORT-04; accessible text equivalent per CLAUDE.md §34. |
+| SHARE-01 | Generate a static, shareable client-facing HTML report | P2 | ❌ Not started | Snapshot of approved visuals/data at generation time — not a live view into the app. |
+| SHARE-02 | Email delivery of the shared report to a client | P2 | ❌ Not started | Send the SHARE-01 report link or HTML via email; no app login required to view it. |
+| SHARE-03 | Shared report is fully isolated from the authenticated app | P2 | ❌ Not started | Shared page must not expose navigation, other org data, or any path back into the authenticated app — separate route/surface, no session required, no app access of any kind. |
+| SHARE-04 | Share-link expiration and revocation | P2 | ❌ Not started | Time-boxed and/or manually revocable links; expired/revoked links must fail closed. |
+| SHARE-05 | Security review of the share surface | P2 | ❌ Not started | Confirm the shared HTML cannot leak other orgs' data, cannot be used to probe the authenticated API, and contains no secrets/session tokens. |
+| SHARE-06 | Tests — export correctness and share-link access control | P2 | ❌ Not started | Export content matches source data; expired/revoked/forged share links are denied; shared page never reaches authenticated routes. |
+| EXPORT-07 | Update all related product docs | P2 | ❌ Not started | SRS, USE_CASES/SCENARIOS/USER_JOURNEYS for export + share flows, TEST_CASES, DEVELOPER_GUIDE, RELEASE_NOTES, TODO-List.md. |
+
+---
+
 ## 21. P4 — Future Communication / Governance Layer
 
 Plan only unless explicitly approved.
@@ -1197,20 +1250,20 @@ Plan only unless explicitly approved.
 
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
-| TEST-REQ-01 | Anonymous user cannot submit request | P1 | ❌ Not started | Auth guard. |
-| TEST-REQ-02 | Logged-in user submits request | P1 | ❌ Not started | Happy path. |
-| TEST-REQ-03 | Invalid email rejected | P1 | ❌ Not started | Validation. |
-| TEST-REQ-04 | Missing reason rejected | P1 | ❌ Not started | Validation. |
-| TEST-REQ-05 | Duplicate email prevented/warned | P1 | ❌ Not started | No duplicate accounts. |
-| TEST-REQ-06 | Admin sees pending request | P1 | ❌ Not started | Queue/badge/card. |
-| TEST-REQ-07 | Admin accepts request | P1 | ❌ Not started | Creates user and updates status. |
-| TEST-REQ-08 | Admin rejects request | P1 | ❌ Not started | Does not create user. |
-| TEST-REQ-09 | Requester gets accepted notification | P1 | ❌ Not started | In-app notification. |
-| TEST-REQ-10 | Requester gets rejected notification | P1 | ❌ Not started | In-app notification. |
-| TEST-REQ-11 | High-privilege role warning | P1 | ❌ Not started | Admin/C-level. |
-| TEST-REQ-12 | Two admins cannot double-accept same request | P1 | ❌ Not started | Transaction/concurrency. |
-| TEST-REQ-13 | Audit event created | P1 | ❌ Not started | Submit/accept/reject. |
-| TEST-REQ-14 | Mobile layout works | P1 | ❌ Not started | Responsive UI. |
+| TEST-REQ-01 | Anonymous user cannot submit request | P1 | ✅ Done | Auth guard. Automated as `TC-REQ-02` (`src/__tests__/userAddRequests.test.ts`). |
+| TEST-REQ-02 | Logged-in user submits request | P1 | ✅ Done | Happy path. Automated as `TC-REQ-01`. |
+| TEST-REQ-03 | Invalid email rejected | P1 | ✅ Done (2026-06-27) | Was a real gap: email-format validation existed only client-side in `RequestAddMemberModal.tsx`, so a direct API call could submit a malformed email. Added server-side enforcement (`EMAIL_FORMAT` regex in `app/api/user-add-requests/route.ts`) and automated as new `TC-REQ-19`. |
+| TEST-REQ-04 | Missing reason rejected | P1 | ✅ Done | Validation. Automated as `TC-REQ-05` (covers all four required fields). |
+| TEST-REQ-05 | Duplicate email prevented/warned | P1 | ✅ Done | No duplicate accounts. Automated as `TC-REQ-03` (existing account) and `TC-REQ-04` (pending request for same email). |
+| TEST-REQ-06 | Admin sees pending request | P1 | ✅ Done | Queue/badge/card. Automated as `TC-REQ-08`. |
+| TEST-REQ-07 | Admin accepts request | P1 | ✅ Done | Creates user and updates status. Automated as `TC-REQ-10`. |
+| TEST-REQ-08 | Admin rejects request | P1 | ✅ Done | Does not create user. Automated as `TC-REQ-13`. |
+| TEST-REQ-09 | Requester gets accepted notification | P1 | ✅ Done | In-app notification. Asserted inside `TC-REQ-10` (`notification.create` called with `user_add_request_accepted`). |
+| TEST-REQ-10 | Requester gets rejected notification | P1 | ✅ Done | In-app notification. Asserted inside `TC-REQ-13` (`user_add_request_rejected`). |
+| TEST-REQ-11 | High-privilege role warning | P1 | ✅ Done (2026-06-27) | Was a real gap: the ≥20-character justification rule for `admin`/`c_level` requests existed only client-side. Added shared `isHighPrivilegeRole()` (`src/lib/roles.ts`, now used by both the modal and the API) plus server-side enforcement, automated as new `TC-REQ-20` (rejected) and `TC-REQ-20b` (accepted). |
+| TEST-REQ-12 | Two admins cannot double-accept same request | P1 | 🔍 Partial | `TC-REQ-12` proves the *second* accept attempt is rejected once `status` is no longer `pending` (state-based guard) — this is correct behavior, but there is no automated test simulating two concurrent in-flight requests racing against the same DB row (true concurrency test would need an integration test against a real Postgres/SQLite connection, not a mocked Prisma client). Remaining gap: a real concurrency/integration test once `FUT-POSTGRES-01` lands. |
+| TEST-REQ-13 | Audit event created | P1 | ✅ Done | Submit/accept/reject. Automated as `TC-REQ-01` (submit, newly asserted 2026-06-27), `TC-REQ-10` (accept), `TC-REQ-13` (reject). |
+| TEST-REQ-14 | Mobile layout works | P1 | ❌ Not started | Responsive UI — genuinely untested. Requires a visual/E2E (Playwright) pass on `RequestAddMemberModal.tsx`/`UserAddRequestsPanel.tsx` at mobile breakpoints; not coverable by Jest unit tests. |
 
 ### Role-Based Coaching Tests
 

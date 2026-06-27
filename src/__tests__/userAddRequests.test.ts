@@ -1,5 +1,5 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
-// TC-REQ-01 to TC-REQ-14 — User Add-Member Request Workflow
+// TC-REQ-01 to TC-REQ-20 — User Add-Member Request Workflow
 // USERREQ-07 Prisma models, USERREQ-10–14 API routes.
 
 export {};
@@ -142,6 +142,11 @@ test('TC-REQ-01: POST /api/user-add-requests — authenticated user submits a va
         status: 'pending',
         requestedByUserId: 'user-sm-1',
       }),
+    }),
+  );
+  expect(prisma.auditEvent.create).toHaveBeenCalledWith(
+    expect.objectContaining({
+      data: expect.objectContaining({ eventType: 'user_add_request_submit' }),
     }),
   );
 });
@@ -456,4 +461,64 @@ test('TC-REQ-18: POST /api/user-add-requests — 11th submission from the same u
   expect(blocked.status).toBe(429);
   const blockedBody = await blocked.json();
   expect(blockedBody.error).toMatch(/too many requests/i);
+});
+
+// ── TC-REQ-19: POST /api/user-add-requests — invalid email format rejected ────
+// USERREQ — server-side enforcement of the email-format rule that previously
+// only existed client-side in RequestAddMemberModal.tsx; a direct API call
+// could otherwise bypass it entirely.
+
+test('TC-REQ-19: POST /api/user-add-requests — returns 400 when email format is invalid', async () => {
+  mockSession.userId = 'user-req-19';
+  const { POST } = await import('../../app/api/user-add-requests/route');
+
+  const res = await POST(makeReq({
+    requestedName: 'Jane Doe',
+    requestedEmail: 'not-an-email',
+    requestedRole: 'scrum_master',
+    reason: 'New sprint team member',
+  }));
+  const body = await res.json();
+
+  expect(res.status).toBe(400);
+  expect(body.error).toMatch(/valid email/i);
+  expect(prisma.userAddRequest.create).not.toHaveBeenCalled();
+});
+
+// ── TC-REQ-20: POST /api/user-add-requests — high-privilege role requires a
+// detailed reason, enforced server-side ───────────────────────────────────────
+
+test('TC-REQ-20: POST /api/user-add-requests — returns 400 when an admin/c_level request has a reason under 20 characters', async () => {
+  mockSession.userId = 'user-req-20';
+  const { POST } = await import('../../app/api/user-add-requests/route');
+
+  const res = await POST(makeReq({
+    requestedName: 'Jane Doe',
+    requestedEmail: 'jane@example.com',
+    requestedRole: 'admin',
+    reason: 'short',
+  }));
+  const body = await res.json();
+
+  expect(res.status).toBe(400);
+  expect(body.error).toMatch(/detailed justification/i);
+  expect(prisma.userAddRequest.create).not.toHaveBeenCalled();
+});
+
+test('TC-REQ-20b: POST /api/user-add-requests — accepts an admin/c_level request with a sufficiently detailed reason', async () => {
+  mockSession.userId = 'user-req-20b';
+  (prisma.userAddRequest.findFirst as jest.Mock).mockResolvedValue(null);
+  (prisma.userAddRequest.create as jest.Mock).mockResolvedValue(
+    pendingRequest({ requestedRole: 'admin', reason: 'Needs full admin access to manage the new release pipeline.' }),
+  );
+  const { POST } = await import('../../app/api/user-add-requests/route');
+
+  const res = await POST(makeReq({
+    requestedName: 'Jane Doe',
+    requestedEmail: 'jane@example.com',
+    requestedRole: 'admin',
+    reason: 'Needs full admin access to manage the new release pipeline.',
+  }));
+
+  expect(res.status).toBe(201);
 });
