@@ -1,9 +1,9 @@
-# ORG-01–35 — Multi-Tenant Organization Management: Design Document
+# ORG-01–43 — Multi-Tenant Organization Management: Design Document
 
-**Status:** Design — not started, not approved for implementation. Required reading before any `ORG-*` code is written (per `TODO-List.md` Section 20a's gate).
+**Status:** Design — not approved for implementation as a whole. A first Phase 1 slice (schema, migrations, `scopedRepository`, ESLint boundary rule, isolation unit tests — see TODO-List.md `ORG-04`/`05`/`05b`/`08`) is partially implemented on `feature/org-phase1-tenant-isolation`, held unmerged. Everything else, including the rest of Phase 1, remains design-only — required reading before any further `ORG-*` code is written (per `TODO-List.md` Section 20a's gate).
 **Owner:** Ali Abu Ras
-**Created:** 2026-06-27 (updated 2026-06-27 — added the Organization Application & Owner Approval workflow, §4; updated again same day — added structured rejection feedback and resubmission, §4.4.1/§4.4.2)
-**Closes:** `ORG-01`–`ORG-35` in `TODO-List.md` Section 20a (P1 — Multi-Tenant Organization Management)
+**Created:** 2026-06-27 (updated repeatedly same day — added the Organization Application & Owner Approval workflow, §4; structured rejection feedback and resubmission, §4.4.1/§4.4.2; Per-Organization Settings, §7a)
+**Closes:** `ORG-01`–`ORG-43` in `TODO-List.md` Section 20a (P1 — Multi-Tenant Organization Management)
 **Depends on:** Coordinates with `AIPLAN-03` (`organisationId` on canonical models, from the separate self-hosted-AI plan in Section 28) — this design is the authoritative schema owner; `AIPLAN-03` should consume this design's migration rather than run a second one.
 
 ---
@@ -223,9 +223,67 @@ Account recovery (`ORG-19`) follows the identical generic-response, constant-tim
 
 `Organization.logoUrl` points to a validated upload (CLAUDE.md §38.4: type/size/content-checked, not just extension) stored under the existing cloud-storage abstraction (`src/lib/storage/`), keyed by `organizationId`. Rendering reuses the existing icon/token registry pattern (CLAUDE.md §10.3) — the app shell reads `session.organization.logoUrl` and renders it wherever the app currently renders its own brand mark (header, exports, future shared reports), and that lookup is itself scoped by the caller's own `organizationId` — there is no code path where org A's logo URL is reachable from org B's session. The same upload-validation requirement applies to the logo/photos collected during the application step itself (§4.2).
 
+The logo is one instance of a broader pattern — §7a generalizes it to every other piece of app-wide configuration that's currently a single global setting shared by the whole deployment.
+
 ---
 
-## 8. Required tests before this ships (`ORG-08`, `ORG-08a`, `ORG-32`)
+## 7a. Per-Organization Settings — Theme, Issue Hierarchy, Thresholds, Retention, Storage, SMTP (`ORG-36`–`ORG-43`) — added 2026-06-27
+
+Per explicit user request: every setting that currently affects the whole deployment must instead belong to one organization. Today, six categories of "global" configuration exist, none of them org-scoped:
+
+| Category | Today | File/module |
+|---|---|---|
+| Theme/branding colors | Per-*browser* localStorage (`dc_theme_custom`, `dc_branding`) — not server-side at all | `src/lib/themeCustomizer.ts` |
+| Issue type hierarchy | Single JSON file, shared by every user | `data/issue-type-hierarchy.json`, `src/services/settings/issueTypeHierarchy.service.ts` |
+| Health/severity thresholds | Single JSON file, shared by every user | `data/health-thresholds.json`, `src/services/settings/thresholds.service.ts` |
+| Data retention settings | Single JSON file | `data/retention-settings.json`, `src/services/settings/settings.service.ts` |
+| Cloud storage provider config | Single JSON file (+ env var fallback) | `data/storage-settings.json`, `src/services/storage/storageProvider.ts` |
+| SMTP / Jira token / app URL | Single encrypted blob (+ env var fallback) | `src/lib/app-config.ts` |
+
+None of these have a Prisma model today — they're all disk-JSON or an encrypted cloud blob, read through a module-level in-memory cache. That caching pattern is **exactly why this needs care**: a process-wide cache keyed by nothing is itself an isolation bug waiting to happen the moment two organizations share a Node process (which they will, in this product).
+
+### 7a.1 Data model — one settings home per organization
+
+Rather than six new tables, add a single `OrganizationSettings` model, 1:1 with `Organization`, with one JSON column per category (mirroring the existing JSON-file shapes 1:1, so the migration in §7a.3 is a straight copy, not a redesign):
+
+```prisma
+model OrganizationSettings {
+  id                     String   @id @default(cuid())
+  organizationId         String   @unique
+  themeJson              String?  // accent color, radius, font size, palette — was localStorage dc_theme_custom
+  brandingJson           String?  // app name override, favicon — logoUrl itself stays on Organization (§7)
+  issueTypeHierarchyJson String?  // was data/issue-type-hierarchy.json
+  healthThresholdsJson   String?  // was data/health-thresholds.json
+  retentionSettingsJson  String?  // was data/retention-settings.json
+  storageSettingsJson    String?  // was data/storage-settings.json — credentials encrypted same as today
+  smtpConfigJson         String?  // was the SMTP portion of app-config.ts — encrypted same as today
+  updatedAt              DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+```
+
+Each JSON column keeps its **existing** typed shape/schema (CLAUDE.md §9's runtime-validation requirement doesn't change — only *where* the validated blob lives changes, from a file path to a row). `getAppConfig()`/`getThresholds()`/etc. keep their existing function signatures and validation logic; only their storage backend changes, from `fs.readFile(path)`/cloud-blob-by-fixed-key to `scopedRepository(organizationId).organizationSettings.findFirst()`-equivalent (this model joins the `scopedRepository` pattern from §3.1 like every other org-owned table).
+
+### 7a.2 Cache key must include `organizationId`
+
+Every one of the six services above currently caches its parsed config in a module-level variable (`_cached`, `_cache`) with no key at all — fine for one organization, a cross-tenant leak risk for more than one. Each cache must become a `Map<organizationId, ParsedConfig>` (or be removed in favor of a short TTL), and every cache *read* must take `organizationId` as a required parameter — there is no "get the config" function anymore, only "get *this org's* config."
+
+### 7a.3 Migration — same default-org pattern as Phase 1
+
+When `prisma/backfillDefaultOrganization.ts` (§9, Phase 1) creates the one default organization for an existing single-tenant deployment, it must also read each of the six existing JSON files/encrypted blobs (if present) and write them verbatim into that default org's new `OrganizationSettings` row — an existing deployment's thresholds, hierarchy, retention rules, storage config, and SMTP settings must survive the migration unchanged, not reset to defaults. The original `data/*.json` files are left in place (read-only, unused) rather than deleted, as a rollback safety net, until an admin confirms the migrated settings are correct.
+
+### 7a.4 Per-org admin UI
+
+Every existing admin settings page/tab (Issue Type Hierarchy, Thresholds, Retention, Storage, App Config) keeps its current UI almost unchanged — only its data source changes from "the one global file" to "this admin's own organization's row." No cross-org admin can ever see or edit another organization's thresholds, hierarchy, branding, or credentials — enforced the same way as every other org-scoped read/write (§3).
+
+### 7a.5 Theme/branding specifically — org default, user override stays local
+
+Per-browser localStorage theme customization (`dc_theme_custom`) is a genuinely useful per-user preference (CLAUDE.md §7's "Level 4 — User preferences") and should **not** be deleted. Instead: `OrganizationSettings.themeJson` becomes the org's *default* theme (what a brand-new user in that org sees before they've customized anything), and a user's local override continues to take precedence once set — consistent with CLAUDE.md §7.1's "User preferences must not modify global product configuration" (here, "global" is now scoped to "this organization," not the whole deployment).
+
+---
+
+## 8. Required tests before this ships (`ORG-08`, `ORG-08a`, `ORG-32`, `ORG-43`)
 
 Beyond ordinary CRUD-scoping tests, the adversarial pass must explicitly attempt and assert denial for:
 
@@ -234,6 +292,7 @@ Beyond ordinary CRUD-scoping tests, the adversarial pass must explicitly attempt
 - Bulk export endpoints — Excel/CSV export must filter by the caller's `organizationId` at the query layer, not just at the UI layer.
 - Background/cron-style jobs (e.g. future scheduled Jira sync) — any job iterating "all `JiraConnection` rows" must iterate per-organization, never globally unscoped.
 - Error messages — generic enough that a 403 doesn't accidentally confirm "that record exists, you're just not allowed to see it" vs. "that record doesn't exist at all."
+- **`OrganizationSettings` specifically (`ORG-43`):** org A's admin saving a threshold/hierarchy/retention/storage/SMTP change must never affect org B's `OrganizationSettings` row; the six now-keyed-by-org caches from §7a.2 must never return another organization's cached value (the actual bug class this section exists to prevent); a brand-new org with no `OrganizationSettings` row yet must fall back to bundled safe defaults (CLAUDE.md §11.1), never another org's settings and never a crash.
 
 Zero findings required before merge, per `ORG-08a` — this is a security review gate, not a backlog of follow-up tickets.
 
@@ -247,6 +306,7 @@ Existing deployments have users and data with no `organizationId` at all. The mi
 2. Create exactly one `Organization` row per existing deployment — a "default" org seeded from the existing admin's email domain (or a placeholder domain requiring an admin to confirm/correct it post-migration if the existing admin's email isn't a real company domain, e.g. a personal Gmail used during development).
 3. Add `organizationId` columns as **nullable** in the same migration, backfill every existing row to the default org's ID, then a **second** migration flips the columns to non-nullable — never a single migration that adds a non-nullable FK with no backfill step, which would simply fail against existing data.
 4. This matches the existing project convention of nullable-then-backfill-then-tighten migrations (see how `mustChangePassword`/`isActive` were added to `User` with defaults rather than breaking existing rows).
+5. **(§7a) Settings migration, same pass:** read each existing global settings file/blob (`data/issue-type-hierarchy.json`, `data/health-thresholds.json`, `data/retention-settings.json`, `data/storage-settings.json`, the SMTP portion of `app-config.ts`) and write it into the default org's new `OrganizationSettings` row, unchanged. Leave the original files in place, unused, as a rollback safety net rather than deleting them immediately.
 
 ---
 
@@ -261,11 +321,12 @@ Existing deployments have users and data with no `organizationId` at all. The mi
 
 This is large enough that it should not land as one PR:
 
-1. **Phase 1 — schema + isolation core:** `Organization` model, `organizationId` backfill migration, `scopedRepository`, the ESLint boundary rule, and the `ORG-08`/`ORG-08a` test suite. No UI changes. This phase alone is what makes the "no data overlap" guarantee real — everything after this is UX around it.
+1. **Phase 1 — schema + isolation core:** `Organization` model, `organizationId` backfill migration, `scopedRepository`, the ESLint boundary rule, and the `ORG-08`/`ORG-08a` test suite. No UI changes. This phase alone is what makes the "no data overlap" guarantee real — everything after this is UX around it. **Partially implemented 2026-06-27** on `feature/org-phase1-tenant-isolation` (unmerged) — schema/migrations/backfill complete, `scopedRepository` built and unit-tested, ESLint rule live with an explicit shrink-only allowlist of ~31 files not yet migrated. See TODO-List.md `ORG-04`/`05`/`05a`/`05b`/`07`/`08` for the precise done-vs-remaining split.
 2. **Phase 2 — Organization Application & Owner Approval:** `ORG-23`–`ORG-33` (public `/join` landing page + wizard, `OrganizationRequest` model, Owner-only review queue, approve/reject, Platform Owner bootstrap). This is now the *only* way an `Organization` row gets created — must land before Phase 3 can mean anything.
 3. **Phase 3 — domain verification, login:** `ORG-11`, `ORG-12`, `ORG-14`/`14a`, `ORG-19`.
 4. **Phase 4 — admin experience:** `ORG-03`/`06`/`15`/`18`/`21` (seat-limit enforcement, org settings page, scoped admin, org audit log, seat-limit UX). `ORG-02` (the seat limit itself) is already fixed/derived per §2.3, not built here.
 5. **Phase 5 — branding, suspension, offboarding, per-org rate limiting:** `ORG-13`, `ORG-16`, `ORG-17`, `ORG-20`.
 6. **Phase 6 — `ORG-10` single-occupancy roles** (confirmed hard constraint, §2.3): role-reassignment-with-confirmation UX, and the derived (non-editable) 6-seat cap.
+7. **Phase 7 — Per-Organization Settings (§7a):** `ORG-36`–`ORG-43` — `OrganizationSettings` model, the six service migrations (theme, issue hierarchy, thresholds, retention, storage, SMTP/app-config) off disk-JSON/single-blob storage and onto org-keyed caches, settings migration folded into the Phase 1 backfill script, and the isolation tests proving one org's settings can never leak into another's. Sequenced after Phase 1 because it reuses `scopedRepository` and the same backfill script.
 
 Each phase gets its own branch, its own doc-impact-matrix pass, and its own full-suite verification — consistent with how `FCAST-14–26`/`RETRO-04–38` shipped.

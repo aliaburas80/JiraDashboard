@@ -5,6 +5,34 @@
 
 ---
 
+## v4.12.1 — Per-Organization Settings Added to Org Design (2026-06-27, P1 — design, not implemented)
+
+**Scope:** Updates `product/MULTI_TENANT_ORG_DESIGN.md` (new §7a) and adds `ORG-36`–`43` to `TODO-List.md`, per explicit user request: "each org has its own setting... colors, hierarchy, everything related to the org." No code in this entry — design only.
+
+- Found six categories of configuration that are currently **global to the whole deployment**, none org-scoped: theme/branding colors (today, actually per-browser `localStorage`, not server-side at all), issue type hierarchy, health/severity thresholds, data retention settings, cloud storage provider config, and SMTP/Jira-token/app-URL config — each backed by a single JSON file or encrypted blob with an unkeyed module-level cache.
+- **That unkeyed cache is the real bug-in-waiting**: the moment two organizations share a Node process, an unkeyed cache becomes a cross-tenant data leak, not just a missing feature. Flagged explicitly in the design (§7a.2) as something every one of the six services must fix, not just "add an org filter somewhere."
+- Proposed a single `OrganizationSettings` model (1:1 with `Organization`, one JSON column per category) rather than six new tables, reusing each category's existing validated schema unchanged — only the storage location moves.
+- Theme/branding gets a two-layer model: the org's settings become the *default* a new user sees; an existing per-user `localStorage` override still wins once set, rather than deleting that user preference layer.
+- Migration folds into the existing Phase 1 backfill script (`prisma/backfillDefaultOrganization.ts`) — an existing deployment's real thresholds/hierarchy/retention/storage/SMTP settings carry over unchanged into its new default org, with the original files left in place as a rollback safety net.
+- Rollout plan grew to 7 phases; this is Phase 7, sequenced after Phase 1 since it reuses `scopedRepository` and the same backfill script.
+
+---
+
+## v4.12.0 — Multi-Tenant Organization Phase 1 (Schema + Isolation Core), Partial (2026-06-27, P1 — in progress, unmerged on `feature/org-phase1-tenant-isolation`)
+
+**Scope:** First real implementation slice of `ORG-04`/`05`/`05a`/`05b`/`07`/`08`/`09` (Section 20a). Schema and the tenant-isolation foundation are done; full adoption across existing routes is not — see "Not yet done" below before treating this as a complete tenant-isolation guarantee.
+
+- **New `Organization` model** plus `organizationId` added to `User`, `ImportLog`, `DashboardSnapshot`, `UserAddRequest`, `Notification`, `JiraConnection` — `NOT NULL` on all six. `AuditEvent.organizationId` is deliberately, permanently nullable (mirrors its existing nullable `userId` for pre-auth/system events).
+- **3-migration sequence**, never collapsed into one: add-nullable-columns → `prisma/backfillDefaultOrganization.ts` (assigns every existing row to one default org, derived from the first admin's email domain, with a placeholder fallback for personal-email domains) → tighten-to-required. Verified against the real dev database: all 3 existing users, 62 import logs, 254 user-attributed audit events, 18 notifications, and 2 Jira connections backfilled correctly with zero data loss.
+- **`src/server/tenancy/scopedRepository.ts`** — the mandatory data-access module from the design doc. Injects `organizationId` into every read/write and **overwrites** (never merges) any caller-supplied `organizationId`, so a caller cannot widen a query past its own organization even by accident. 12 new unit tests (`TC-ORG-01–12`).
+- **New ESLint rule** (`no-restricted-syntax` in `.eslintrc.json`) bans direct `prisma.<orgScopedModel>.*` calls anywhere outside an explicit, fully-enumerated allowlist — verified it correctly flags a fresh violation while the existing codebase lints clean.
+- **Found and fixed a real isolation gap while doing this pass**: `POST /api/user-add-requests` was notifying *every* admin across the entire deployment on submission, not just admins in the requester's own organization. Fixed.
+- Session (`SessionData`) now carries `organizationId`, populated at login.
+- **Not yet done, tracked explicitly rather than silently deferred:** ~31 existing route/service files still query `prisma.<model>.*` directly for reads/updates/deletes (only their `.create()` calls were touched, to satisfy the now-required column) — each is named in the ESLint override allowlist, which must shrink file-by-file, never grow. Until that migration completes, the route-level adversarial tests (`ORG-08`) and security review (`ORG-08a`) the design doc calls for aren't yet meaningful, since every deployment still has exactly one organization post-backfill. `ORG-06` (admin scoping) and full product-doc updates (`ORG-09`) are also still pending.
+- Verified: `tsc` clean, full suite 748/78 passing, `next build` clean, full lint clean (0 errors; pre-existing 1524 inline-style warnings unchanged).
+
+---
+
 ## v4.11.4 — Structured Rejection Feedback + Resubmission Added to Org Design (2026-06-27, P1 — design, not implemented)
 
 **Scope:** Updates `product/MULTI_TENANT_ORG_DESIGN.md` (new §4.4.1/§4.4.2) and adds `ORG-34`/`ORG-35` to `TODO-List.md`, per explicit user request. No code in this entry — design only.
