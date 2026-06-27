@@ -5,6 +5,19 @@
 
 ---
 
+## v4.12.2 — Per-Organization Storage Isolation + Individual Data Privacy Added to Org Design (2026-06-27, P1 — design, not implemented)
+
+**Scope:** Updates `product/MULTI_TENANT_ORG_DESIGN.md` (new §3a, §11) and adds `ORG-44`–`54` to `TODO-List.md`, per explicit user request. No code in this entry — design only.
+
+- **Per-organization storage isolation (§3a):** rejected "shared bucket + remember to add a prefix" as insufficient — that's isolation by convention, exactly what this whole design exists to avoid. New `scopedStorage()` helper always constructs object keys server-side as `orgs/{organizationId}/...` from the session, the same discipline `scopedRepository` already applies to database rows, applied here to file paths (with path-traversal validation).
+- **Clarified a real tension before designing further**: the user's "individual data should never be shared with others" could have meant removing today's `admin`/`manager`/`c_level` "see all org data" visibility. Confirmed with the user: that visibility **stays** — it's how team dashboards work. The new privacy work is additive, not a removal.
+- **Self-service "Delete My Data"** (`ORG-47`/`48`): a user can permanently delete everything they personally own without affecting anyone else's data or their own login — scoped explicitly to *data*, not the account itself (account deletion is a larger, separate, not-yet-requested feature).
+- **Per-user storage override** (`ORG-49`/`50`): an individual can point their own uploads at their own storage instead of their org's default, with an org-admin kill switch (`allowUserStorageOverride`) for organizations that need to mandate one storage location for compliance.
+- **User-to-user sharing by explicit permission** (`ORG-51`–`53`): a `DataShareGrant` model lets one user grant another *specific* user (same org only, ever) view access to one *specific* resource — deliberately no blanket "share everything" grant, no transitive re-sharing, always revocable, with a visible "active shares" list so sharing is never a silent, forgotten state.
+- Rollout plan grew to 9 phases.
+
+---
+
 ## v4.12.1 — Per-Organization Settings Added to Org Design (2026-06-27, P1 — design, not implemented)
 
 **Scope:** Updates `product/MULTI_TENANT_ORG_DESIGN.md` (new §7a) and adds `ORG-36`–`43` to `TODO-List.md`, per explicit user request: "each org has its own setting... colors, hierarchy, everything related to the org." No code in this entry — design only.

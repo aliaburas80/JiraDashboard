@@ -1,9 +1,9 @@
-# ORG-01–43 — Multi-Tenant Organization Management: Design Document
+# ORG-01–54 — Multi-Tenant Organization Management: Design Document
 
 **Status:** Design — not approved for implementation as a whole. A first Phase 1 slice (schema, migrations, `scopedRepository`, ESLint boundary rule, isolation unit tests — see TODO-List.md `ORG-04`/`05`/`05b`/`08`) is partially implemented on `feature/org-phase1-tenant-isolation`, held unmerged. Everything else, including the rest of Phase 1, remains design-only — required reading before any further `ORG-*` code is written (per `TODO-List.md` Section 20a's gate).
 **Owner:** Ali Abu Ras
-**Created:** 2026-06-27 (updated repeatedly same day — added the Organization Application & Owner Approval workflow, §4; structured rejection feedback and resubmission, §4.4.1/§4.4.2; Per-Organization Settings, §7a)
-**Closes:** `ORG-01`–`ORG-43` in `TODO-List.md` Section 20a (P1 — Multi-Tenant Organization Management)
+**Created:** 2026-06-27 (updated repeatedly same day — added the Organization Application & Owner Approval workflow, §4; structured rejection feedback and resubmission, §4.4.1/§4.4.2; Per-Organization Settings, §7a; Per-Organization Storage Isolation, §3a; Individual Data Privacy, Ownership, Sharing & Self-Service Deletion, §11)
+**Closes:** `ORG-01`–`ORG-54` in `TODO-List.md` Section 20a (P1 — Multi-Tenant Organization Management)
 **Depends on:** Coordinates with `AIPLAN-03` (`organisationId` on canonical models, from the separate self-hosted-AI plan in Section 28) — this design is the authoritative schema owner; `AIPLAN-03` should consume this design's migration rather than run a second one.
 
 ---
@@ -89,6 +89,33 @@ Layer 1 is application code and can theoretically have a bug. A second, independ
 ### 3.3 Authorization layer
 
 `canViewAllImportData()` and friends (`src/lib/roles.ts`) currently mean "see all *users'* data" — they must be redefined to mean "see all data **within my organization**," never across organizations. The only role that may ever query across organizations is a new **platform-level** role (distinct from org `admin`), reserved for support/ops tooling, fully audited (`ORG-06`).
+
+**Confirmed with the user 2026-06-27:** this redefinition is the *only* change to today's visibility rules. `admin`/`manager`/`c_level` keep seeing all data **within their own organization** — that's how team-wide dashboards work and stays a deliberate product feature, not a bug. "Never shared with others" means (a) org-to-org isolation, which this whole section already guarantees, and (b) the plain `user` role's data stays private from other plain `user`-role peers by default, which it already effectively is today via the same `canViewAllImportData()` gate — §13 adds an explicit opt-in sharing mechanism on top of that default, it does not remove the existing role-based visibility.
+
+---
+
+## 3a. Per-Organization Storage Isolation (`ORG-44`–`ORG-46`) — added 2026-06-27
+
+Per explicit user request: no organization's files (uploads, exports, backups, logos, attachments) may ever live in storage reachable by another organization — "don't share any org storage space with other." `ORG-41` (migrate the existing global storage-provider config to `OrganizationSettings`) already lets each org point at its *own* bucket/container, but that's a configuration choice an org admin could still get wrong (e.g. accidentally pointing two orgs at the same bucket with no prefix). This section makes the isolation structural, not just configuration-dependent.
+
+### 3a.1 Two acceptable models, ranked
+
+1. **Dedicated bucket/container per organization (preferred).** When an org admin configures their own cloud credentials (`ORG-41`), they are by construction pointing at storage only they control — this is already maximally isolated and requires no further enforcement.
+2. **Shared platform-default storage, strict enforced prefix isolation.** For orgs that haven't configured their own provider, the platform's own default storage (local disk or one shared cloud account) is used, but **every** object key is always exactly `orgs/{organizationId}/...` — constructed server-side from `session.organizationId`, never accepted as or influenced by caller input. No code path may read or write an object key it constructed from anything other than the current session's `organizationId`. This is the same discipline as `scopedRepository` (§3.1), applied to file paths instead of database rows.
+
+A shared bucket with only an app-level "remember to add the org prefix" convention is **not** acceptable — that's exactly the kind of "isolation by convention, not by construction" this whole design exists to avoid.
+
+### 3a.2 Enforcement — `scopedStorage()` helper
+
+Mirrors `scopedRepository()`: a new `src/server/tenancy/scopedStorage.ts` exposes `scopedStorage(organizationId).put(key, data)` / `.get(key)` / `.delete(key)`, where `key` is always resolved internally as `orgs/{organizationId}/${key}` — the caller passes only the part *after* the org prefix, and cannot supply `../` or an absolute path to escape it (path-traversal validated, per CLAUDE.md §32/§38). Every existing call into `src/lib/storage/`/`src/services/storage/` is migrated onto this helper, the same incremental, never-grow-the-allowlist pattern as `ORG-05`'s Prisma migration.
+
+### 3a.3 Signed URLs and direct cloud access
+
+If/when the app ever issues a pre-signed upload/download URL directly to a browser (bypassing the Next.js server), that URL must be scoped (via the cloud provider's own signing mechanism) to exactly that org's prefix or bucket — never a broad, bucket-wide credential handed to the client. No such feature exists today; this is a constraint on any future one.
+
+### 3a.4 Tests
+
+Adversarial test: an org A admin's storage credentials (or the shared-storage code path under org A's session) must never be able to read, list, or write any key under `orgs/{orgB}/...` — attempted directly (constructed key) and indirectly (path traversal, `..` segments, symlink-style tricks where the underlying provider allows them).
 
 ---
 
@@ -317,7 +344,85 @@ Existing deployments have users and data with no `organizationId` at all. The mi
 
 ---
 
-## 11. Rollout phases
+## 11. Individual Data Privacy, Ownership, Sharing & Self-Service Deletion (`ORG-47`–`ORG-54`) — added 2026-06-27
+
+Every piece of org-owned data already has exactly one owning user (`ImportLog.userId`, `DashboardSnapshot.userId`, etc.) — that existing `userId` *is* the user's identity anchor this section builds on; no new identity concept is needed, only new behavior pivoting on the one that already exists. Default visibility is unchanged from §3.3 (confirmed with the user): `admin`/`manager`/`c_level` see all data within their own org; the plain `user` role sees only their own data by default. This section adds three new, deliberately opt-in/self-service capabilities on top of that default — it does not loosen or remove it.
+
+### 11.1 Self-service "Delete My Data" (`ORG-47`, `ORG-48`)
+
+A user can permanently delete all data they personally own, without affecting any other user's data or their own account/login:
+
+- **In scope:** their own `ImportLog`/`DashboardSnapshot` rows (and, by FK cascade already defined in `prisma/schema.prisma`, anything that references them). Their submitted `UserAddRequest`s and `Notification`s addressed to them are deleted too.
+- **Explicitly out of scope (this is "delete my *data*," not "delete my *account*"):** the `User` row itself stays — they keep their login and can upload fresh data afterward. Deleting the account entirely is a separate, larger action (would need to address who inherits their `JiraConnection`s, audit-trail integrity, etc.) and is not requested here — flagged as a future item, not built speculatively now (CLAUDE.md §5.5).
+- **Confirmation required**: a typed-confirmation step (e.g. type your email to confirm), since this is genuinely irreversible for the user's own data — unlike org suspension/deletion (§10), there is no grace-period undo window for an individual's self-service delete, because the blast radius is small and user-initiated, not admin-initiated on someone else's behalf.
+- Writes a final `AuditEvent` (`user_self_delete_data`) before the rows are gone, same pattern as org deletion's final audit write.
+- Scoped through `scopedRepository` (§3.1) exactly like every other org-owned read/write — there is no separate "delete everything by `userId`" raw query that could be tricked into crossing org boundaries.
+
+### 11.2 Per-User Individual Storage Override (`ORG-49`, `ORG-50`)
+
+An individual user may configure their *own* storage destination for their personal uploads/exports, instead of using their organization's default storage (`OrganizationSettings.storageSettingsJson`, `ORG-41`):
+
+```prisma
+model UserStorageSettings {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  organizationId  String   // must always equal the owning User's organizationId
+  storageSettingsJson String // same validated shape as OrganizationSettings.storageSettingsJson
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+```
+
+- **Resolution order**: a user's own `UserStorageSettings` (if `enabled`) takes precedence over their org's default for *that user's own* uploads only — it never affects where any other user's data is stored.
+- **Org admin override switch**: `OrganizationSettings` gains `allowUserStorageOverride: Boolean` (default `true`) — an org admin can disable per-user storage choice org-wide if their organization has a compliance reason to mandate one storage location for everyone. Without this, an org admin would have no way to enforce "all our data stays in our bucket," which would itself be a real isolation gap for that org.
+- A user's individual storage selection is still subject to the *same* path-construction discipline as §3a.2 (`scopedStorage`) — it changes *which* bucket/provider their files go to, never *whether* organizationId-prefix isolation applies.
+
+### 11.3 User-to-User Data Sharing by Explicit Permission (`ORG-51`–`ORG-53`)
+
+A user may grant another specific user (always within the **same organization** — cross-org sharing is never permitted, full stop, consistent with the rest of this design) view access to a specific piece of their own data:
+
+```prisma
+model DataShareGrant {
+  id             String    @id @default(cuid())
+  organizationId String
+  ownerUserId    String    // the data owner, granting access
+  granteeUserId  String    // the user being granted access
+  resourceType   String    // "importLog" | "dashboardSnapshot" — extend deliberately, not speculatively
+  resourceId     String    // always a specific resource — no blanket "share everything" grant in v1
+  permission     String    @default("view") // view-only in v1; no write/delete delegation
+  createdAt      DateTime  @default(now())
+  revokedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ownerUser    User         @relation("DataShareOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  granteeUser  User         @relation("DataShareGrantee", fields: [granteeUserId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([ownerUserId])
+  @@index([granteeUserId])
+}
+```
+
+- **No blanket "share all my data" grant in v1** — each grant names one specific resource. A user wanting to share several items creates several grants (the UI can batch-create them in one action; the data model still records each individually, so revocation can be granular). This is a deliberate scope limit, not an oversight — a single "share everything, forever" toggle is a much larger trust surface to design safely, and isn't what was asked for.
+- **Revocable anytime** by the owner; `revokedAt` set, grant never hard-deleted (so there's an audit trail of what was once shared).
+- **The owner gets a visible "active shares" list** of everything they've granted and to whom — sharing must never be a silent, forgotten state.
+- **The grantee's resulting access is read-only and additive** — it never expands to anything beyond the named resource, and never to anyone the grantee in turn tries to re-share with (no transitive sharing in v1).
+- Enforced the same way as every other read: `scopedRepository`'s read methods check `organizationId` *and*, for a resource the caller doesn't already own/role-see, an active matching `DataShareGrant` — never a separate, easy-to-forget parallel check.
+
+### 11.4 Tests (`ORG-54`)
+
+- Deleting user A's data must not touch user B's rows, even when both belong to the same `ImportLog`-adjacent `JiraConnection` or other shared org-level entity.
+- A revoked `DataShareGrant` must immediately deny access on the very next request — no caching staleness window.
+- A `DataShareGrant` from org A's user can never resolve to a user in org B (the FK/relation itself prevents this structurally, but the test proves it rather than assuming it).
+- `UserStorageSettings.enabled` user override is ignored (falls back to org default) when the org admin has set `allowUserStorageOverride: false`.
+
+---
+
+## 12. Rollout phases
 
 This is large enough that it should not land as one PR:
 
@@ -328,5 +433,7 @@ This is large enough that it should not land as one PR:
 5. **Phase 5 — branding, suspension, offboarding, per-org rate limiting:** `ORG-13`, `ORG-16`, `ORG-17`, `ORG-20`.
 6. **Phase 6 — `ORG-10` single-occupancy roles** (confirmed hard constraint, §2.3): role-reassignment-with-confirmation UX, and the derived (non-editable) 6-seat cap.
 7. **Phase 7 — Per-Organization Settings (§7a):** `ORG-36`–`ORG-43` — `OrganizationSettings` model, the six service migrations (theme, issue hierarchy, thresholds, retention, storage, SMTP/app-config) off disk-JSON/single-blob storage and onto org-keyed caches, settings migration folded into the Phase 1 backfill script, and the isolation tests proving one org's settings can never leak into another's. Sequenced after Phase 1 because it reuses `scopedRepository` and the same backfill script.
+8. **Phase 8 — Per-Organization Storage Isolation (§3a):** `ORG-44`–`ORG-46` — `scopedStorage()` helper, migration of every existing storage call site onto it, and the adversarial cross-org storage-key test. Sequenced early-ish (could run alongside Phase 1) since it's foundational isolation work, not UX — but listed last here because it touches the storage layer Phase 7 also touches, so it's cleanest done after Phase 7's storage-settings migration lands.
+9. **Phase 9 — Individual Data Privacy, Sharing, Deletion (§11):** `ORG-47`–`ORG-54` — self-service "Delete My Data," per-user storage override (`UserStorageSettings`, depends on Phase 8's `scopedStorage`), and user-to-user `DataShareGrant` sharing. Sequenced last because it depends on both `scopedRepository` (Phase 1) and `scopedStorage` (Phase 8).
 
 Each phase gets its own branch, its own doc-impact-matrix pass, and its own full-suite verification — consistent with how `FCAST-14–26`/`RETRO-04–38` shipped.
