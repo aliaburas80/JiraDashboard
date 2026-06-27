@@ -5,6 +5,15 @@
 
 ---
 
+## v4.11.4 — Structured Rejection Feedback + Resubmission Added to Org Design (2026-06-27, P1 — design, not implemented)
+
+**Scope:** Updates `product/MULTI_TENANT_ORG_DESIGN.md` (new §4.4.1/§4.4.2) and adds `ORG-34`/`ORG-35` to `TODO-List.md`, per explicit user request. No code in this entry — design only.
+
+- **Rejecting an organization application now pairs the mandatory free-text note with a structured checklist** (`company_info`/`contact_info`/`domain`/`use_case`/`logo`/`supporting_documents`/`other`) so the applicant gets specific, actionable feedback about exactly what to fix — not prose to parse.
+- **Resubmission is a first-class path, not a dead end:** the rejection message includes a reapply link carrying an unguessable `previousRequestId`; the `/join` wizard pre-fills everything except the flagged fields, and the Owner's review queue shows resubmission history so a second attempt isn't treated as a stranger. A resubmission always lands as a fresh `pending` row — it never silently overturns the prior rejection.
+
+---
+
 ## v4.11.3 — Organization Application & Owner Approval Workflow Added to Design (2026-06-27, P1 — design, not implemented)
 
 **Scope:** Updates `product/MULTI_TENANT_ORG_DESIGN.md` (new §4) and adds `ORG-23`–`33` to `TODO-List.md` Section 20a, per explicit user request. No code in this entry — design only.

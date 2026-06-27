@@ -1,9 +1,9 @@
-# ORG-01–33 — Multi-Tenant Organization Management: Design Document
+# ORG-01–35 — Multi-Tenant Organization Management: Design Document
 
 **Status:** Design — not started, not approved for implementation. Required reading before any `ORG-*` code is written (per `TODO-List.md` Section 20a's gate).
 **Owner:** Ali Abu Ras
-**Created:** 2026-06-27 (updated 2026-06-27 — added the Organization Application & Owner Approval workflow, §4)
-**Closes:** `ORG-01`–`ORG-33` in `TODO-List.md` Section 20a (P1 — Multi-Tenant Organization Management)
+**Created:** 2026-06-27 (updated 2026-06-27 — added the Organization Application & Owner Approval workflow, §4; updated again same day — added structured rejection feedback and resubmission, §4.4.1/§4.4.2)
+**Closes:** `ORG-01`–`ORG-35` in `TODO-List.md` Section 20a (P1 — Multi-Tenant Organization Management)
 **Depends on:** Coordinates with `AIPLAN-03` (`organisationId` on canonical models, from the separate self-hosted-AI plan in Section 28) — this design is the authoritative schema owner; `AIPLAN-03` should consume this design's migration rather than run a second one.
 
 ---
@@ -138,9 +138,14 @@ model OrganizationRequest {
   status              String    @default("pending") // "pending" | "approved" | "rejected" | "withdrawn"
   ownerDecisionAt     DateTime?
   ownerDecisionNote   String?
+  rejectionFieldsJson String?   // JSON array of RejectionField — see §4.4.1 — null unless status: "rejected"
+  previousRequestId   String?   // ORG-35 — set when this submission is a resubmission after a rejection
   createdOrganizationId String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+
+  previousRequest OrganizationRequest? @relation("OrganizationRequestResubmission", fields: [previousRequestId], references: [id], onDelete: SetNull)
+  resubmissions   OrganizationRequest[] @relation("OrganizationRequestResubmission")
 
   @@index([status])
   @@index([requestedDomain])
@@ -151,10 +156,37 @@ model OrganizationRequest {
 
 ### 4.4 Owner review queue and decision (`ORG-26`, `ORG-28`, `ORG-29`)
 
-A dedicated Owner-only screen (mirrors `UserAddRequestsPanel.tsx`'s proven shape: filterable queue, expandable cards, decision note field) lists every `OrganizationRequest`, showing all submitted fields and rendering the uploaded logo/photos inline so the Owner can review without downloading attachments separately. Guarded by the Platform Owner check from §4.1 — **not** `role === 'admin'`, since a regular org admin must never reach this screen.
+A dedicated Owner-only screen (mirrors `UserAddRequestsPanel.tsx`'s proven shape: filterable queue, expandable cards, decision note field) lists every `OrganizationRequest`, showing all submitted fields and rendering the uploaded logo/photos inline so the Owner can review without downloading attachments separately. Guarded by the Platform Owner check from §4.1 — **not** `role === 'admin'`, since a regular org admin must never reach this screen. If `previousRequestId` is set, the queue shows it's a resubmission with a link to the prior rejected request and its `rejectionFieldsJson`, so the Owner can see at a glance whether the gaps were actually addressed.
 
 - **Approve** (`PATCH /api/owner/organization-requests/:id/approve`): creates the `Organization` row (`domainVerifiedAt` left null), creates the first `User` with role `admin` in that org, sets `createdOrganizationId`, writes an `organization_request_approve` audit event, and notifies the applicant's contact email that they're approved and the next step (domain verification, §4.5) is required before first login. Re-checks `status === "pending"` first (same already-decided guard pattern as `userAddRequests`' accept/reject routes) — an Owner reviewing two browser tabs can't double-approve.
-- **Reject** (`PATCH .../reject`): requires `ownerDecisionNote` (unlike the optional note on the existing `UserAddRequest` reject flow — rejecting a whole company's application deserves an explained reason, not just a status flip), notifies the applicant, no `Organization` created.
+- **Reject** (`PATCH .../reject`): requires `ownerDecisionNote` (unlike the optional note on the existing `UserAddRequest` reject flow — rejecting a whole company's application deserves an explained reason, not just a status flip), notifies the applicant, no `Organization` created. See §4.4.1 for the structured "what's missing" feedback this notification carries.
+
+#### 4.4.1 Structured rejection feedback — "tell them what to fix" (`ORG-34`)
+
+A free-text note alone forces the applicant to parse prose for what to change. The reject form instead pairs the required note with a **structured checklist** the Owner selects from, covering every section of the application wizard (§4.2):
+
+```ts
+export const rejectionFieldOptions = [
+  'company_info',       // name/industry/size/country insufficient or implausible
+  'contact_info',       // contact name/title/email/phone unverifiable
+  'domain',              // domain format invalid, or looks unrelated to the company
+  'use_case',            // justification too vague/short/generic
+  'logo',                 // missing, wrong format, or unusable
+  'supporting_documents', // missing or insufficient proof (registration doc, office photo, etc.)
+  'other',                // covered only by the free-text note
+] as const;
+```
+
+`PATCH .../reject` accepts `{ ownerDecisionNote: string; rejectionFields: RejectionField[] }`, requiring at least one of `rejectionFields` or a non-`other`-only combination to carry real signal — `other` alone still requires the note to actually say something. The rejection notification email/in-app message to the applicant enumerates each selected field with a short human-readable explanation (e.g. "Supporting documents: the uploaded file didn't clearly show proof of business registration") followed by the Owner's free-text note, then a direct link back to `/join` to reapply.
+
+#### 4.4.2 Resubmission (`ORG-35`)
+
+Rejection is not a dead end. The `/join` wizard accepts an optional `previousRequestId` (carried via the rejection email's reapply link, not guessable) and:
+
+- Pre-fills every field from the prior submission except the ones flagged in `rejectionFieldsJson`, which start empty/highlighted so the applicant's attention goes straight to what needs fixing — they are not made to retype everything from scratch.
+- Stores the link as `OrganizationRequest.previousRequestId` on the new row, so the Owner's queue (§4.4) can show full history rather than treating every resubmission as a stranger.
+- Does **not** carry over `status` — every resubmission is a fresh `"pending"` row requiring a fresh decision; a rejection is never silently "auto-overturned" by a resubmission existing.
+- Is rate-limited the same as any other submission (§4.3) — resubmission is not an exemption from abuse protection.
 
 ### 4.5 How this connects back to the rest of the design
 
