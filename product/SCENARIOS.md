@@ -1462,7 +1462,9 @@ Alex's flow (New User — First Login):
 
 ---
 
-### SCN-059 — Admin Lands on the Most Urgent Category and Sees It Improving
+### SCN-060 — Admin Lands on the Most Urgent Category and Sees It Improving
+
+*(Renumbered from `SCN-059` 2026-06-28 — both this scenario (RBC-26) and "Multi-Sprint Retro File Upload Surfaces a Repeated Blocker" above (RETRO-39) were independently assigned `SCN-059` on the same day, 2026-06-26. The retro scenario keeps `SCN-059` since it was committed first; this one moves to the next free ID. No other content changed.)*
 
 **Context:** An admin oversees all 7 coaching categories and wants to immediately see what needs attention rather than clicking through every tab — and wants to know if last sprint's fix actually helped.
 
@@ -1477,3 +1479,22 @@ Alex's flow (New User — First Login):
 **Outcome:** The admin immediately sees what's most urgent, confirms an earlier fix on another category is trending in the right direction, is warned the most urgent category's data is still thin, and drills into the source dashboard in one click — instead of reading 7 fully-expanded text walls in a fixed order.
 
 **Related:** UC-114, FR-353, FR-354, TC-RBC-10–13
+
+---
+
+### SCN-061 — Forecast Confidence Drops and the Diagnosis Names Why
+
+*(Added 2026-06-28, closing a gap found during a documentation audit: FCAST-19–23's data-quality-aware confidence and weakest-factor diagnosis had algorithm/test/UC coverage but no scenario. Complements SCN-052, which covers the original forecast page before this addition.)*
+
+**Context:** Marcus is a Scrum Master checking `/forecast` the week after a rough sprint. Last time he checked, confidence was "High"; today it isn't, and he wants to know why before he repeats Sara's quarterly-planning conversation (SCN-052) with a number he can't explain.
+
+**Flow:**
+1. Marcus navigates to Planning → Forecast
+2. The confidence chip now reads "Low" instead of last week's "High" — `computeForecast()`'s `dqMultiplier` dropped because Data Quality fell into the `Weak` band since last sprint
+3. A "Forecast Diagnosis" card directly under the status banner names the weakest factor: `kind: 'data_quality'`, with detail text citing the current band and score
+4. Marcus opens Data Quality (`/data-quality`) via the same evidence-chip-style link pattern already used on the Coaching page, finds three sprints with unrecorded story points, and flags it to the team before planning
+5. The new "Throughput Required vs. Current" bars show the gap is still closeable once data is fixed; the Risk & Scope Trend chart shows blockers are not the driver this time
+
+**Outcome:** Marcus gets a specific, fixable reason for the confidence drop instead of an unexplained label, and the diagnosis correctly points him at data hygiene rather than a real delivery risk — preventing a false escalation.
+
+**Related:** UC-102 (extended by FR-359–FR-364), FR-359–FR-364, TC-FCAST-06–13

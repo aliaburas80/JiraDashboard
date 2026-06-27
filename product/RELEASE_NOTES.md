@@ -5,6 +5,20 @@
 
 ---
 
+## v4.13.0 — Full `product/` Documentation Audit (2026-06-28, P1 — documentation only, no code changed)
+
+**Scope:** Full audit of all 17 files in `product/` per explicit user request ("make sure all doc in the product are update"), triggered right after the inline-style re-audit (v4.12.4) below. Found two genuine gaps and one real bug, fixed all three; everything else checked out against its own established convention.
+
+- **Real gap — `BRD.md` had recorded no new business requirement since v4.6 (2026-06-10)**, despite ~2 weeks of shipped work and one major design initiative landing since. Added `BR-118`–`BR-124`: live admin-configured Jira sync with fallback, admin-configurable issue type hierarchy, role-based coaching insights, the retrospective insights engine, forecast engine v2, and the (design-only, not approved) multi-tenant organization initiative. Document version bumped 4.9.2 → 4.13.
+- **Real gap — the Phase 1 `scopedRepository` tests (`TC-ORG-01`–`12`) were not cataloged anywhere in `product/TEST_CASES.md`.** Added as new §9.62, explicitly marked "not on `main`" since the module and its tests exist only on the unmerged `feature/org-phase1-tenant-isolation` branch — listed per CLAUDE.md §55's documentation-as-part-of-Definition-of-Done so real, existing test coverage isn't invisible just because the branch hasn't merged yet.
+- **Real bug found and fixed — a genuine `SCN-059` ID collision**: both RBC-26 (coaching) and RETRO-39 (retrospective) independently picked `SCN-059` on the same day, 2026-06-26, the same class of collision TRACE-01 fixed for `FR-242`/`FR-243` back in June. Retro's `SCN-059` (committed first) keeps the ID; coaching's was renumbered to `SCN-060`, annotated in place, and both `TODO-List.md` citations corrected to match.
+- Added `SCN-061` for forecast v2 (confidence drop + named weakest-factor diagnosis) — had algorithm/test/UC coverage already but no scenario.
+- **Checked and found NOT stale, despite initial appearance:** `ALGORITHM_SPEC.md` and `USER_JOURNEYS.md` both have top-of-file version banners frozen at their original baseline (4.0, 2026-06-03) — confirmed via git history this is each file's own long-established, consistent convention (incremental dated sections in the body; banner never bumped), not a bug. Left both banners untouched rather than "fixing" something that wasn't broken.
+- `DEVELOPER_GUIDE.md`, `SRS.md` already current from the same-day v4.12.4 pass. `DEPLOYMENT_GUIDE.md`, patent-track docs (`CLAIM_CANDIDATE_MATRIX.md`, `PATENT_DISCLOSURE.md`, `PRIOR_ART_COMPARISON.md`, `TECHNICAL_METHOD.md`), and `README.md` checked and correctly unaffected — nothing shipped since their last update falls in their scope.
+- Noted but explicitly out of scope for this entry: an untracked, stale iCloud sync-conflict duplicate (`CLAUDE 2.md`, predates this session's CLAUDE.md edits) sitting in the repo root — flagged to the user, not deleted.
+
+---
+
 ## v4.12.4 — Inline-Style Technical Debt Re-Audited (2026-06-27, P1 — documentation only, no code changed)
 
 **Scope:** Rewrites `CLAUDE.md` §60 (now §60.1–60.6) and adds `STYLE-01`–`08` + `ORPHAN-01` to `TODO-List.md` Section 18f. Triggered by a pasted ESLint warning dump revealing far more inline-style debt than previously documented. No code changed — this entry is a scope correction, not a fix.

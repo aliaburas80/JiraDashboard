@@ -7,10 +7,10 @@
 | Field | Detail |
 |---|---|
 | **Document Title** | Delivery Clarity — Business Requirements Document |
-| **Version** | 4.9.2 |
-| **Date** | 2026-06-16 |
+| **Version** | 4.13 |
+| **Date** | 2026-06-28 |
 | **Author** | Ali Abu Ras |
-| **Status** | Approved — reconciled with v4.9.2 (P0 pass 2026-06-16: navigation architecture overhaul, admin layout injection, developer wiki theme, frontend standards enforced; test suite 571/63 all passing; lint and build clean) |
+| **Status** | Approved — catch-up pass 2026-06-28: BR-118–BR-124 added, covering live Jira sync, admin-configurable issue hierarchy, role-based coaching insights, the retrospective insights engine, forecast engine v2, and the (design-only, not yet approved) multi-tenant organization initiative — see Revision Note below |
 | **Classification** | Internal |
 
 ### Revision History
@@ -24,6 +24,7 @@
 | 1.0 | 2026-05-30 | Ali Abu Ras | Final review, all sections complete — approved for development baseline |
 | 4.0 | 2026-06-03 | Ali Abu Ras | v4 Quality & Trust Layer; scope updated; auth and database now in scope; BR-070–BR-090 added |
 | 4.9.2 | 2026-06-16 | Ali Abu Ras | P0 doc pass: navigation architecture overhaul (11 routed dashboard pages, DashboardTopbar, AdminNavSidebar, developer wiki, DC shell library, unified DC_NAV_GROUPS, frontend standards enforced) reflected in scope and capabilities |
+| 4.13 | 2026-06-28 | Ali Abu Ras | Catch-up pass — BR-118–BR-124 added: live admin-configured Jira sync with fallback (BR-118), admin-configurable issue type hierarchy (BR-119), role-based delivery coaching insights (BR-120), retrospective insights engine (BR-121), forecast engine v2 — data-quality-aware confidence and risk diagnosis (BR-122), and the design-only multi-tenant organization initiative (BR-123/BR-124) |
 
 ---
 
@@ -832,3 +833,23 @@ No business requirement IDs (BR-xxx) were renumbered or removed; only scope-fram
 **BR-116 (Must — P1 — Done 2026-06-10):** The application MUST provide a delivery forecast page (`/forecast`) that computes velocity-based delivery outlook from sprint history, renders a burn-up chart (actual + forecast + target), and gives actionable recommendations. Forecasting transforms raw throughput data into a forward-looking answer to "are we on track?" — the primary question delivery managers and C-level stakeholders ask. Without it, the dashboard is entirely backward-looking.
 
 **BR-117 (Should — P1 — Done 2026-06-10; upload path Done 2026-06-26):** The application SHOULD provide a sprint retrospective tool (`/retro`) that allows teams to record observations and action items, download a template for offline use, and receive automated improvement suggestions on submit. Retrospective data captures learning from delivery patterns; integrating it with the existing delivery metrics tool closes the Plan → Deliver → Review cycle in one workspace. Extended 2026-06-26: teams that fill the template offline across multiple sprints can now upload it directly instead of re-typing into the form, and get the same theme/ownership-gap analysis plus a new repeated-blocker signal only visible across multiple sprints.
+
+---
+
+## Revision Note — v4.13 Catch-Up: Jira Live Sync, Coaching, Retro Insights, Forecast v2, Multi-Tenant Design (2026-06-28, P1/P2)
+
+This BRD had not recorded a new business requirement since v4.6 (2026-06-10), despite roughly two weeks of shipped feature work and one major design initiative landing in the interim. This note closes that gap. See `product/SRS.md` revision history (`4.9.3`–`4.12.4`) and `product/RELEASE_NOTES.md` for the full technical detail behind each entry below; figures here are intentionally kept at business-requirement level.
+
+**BR-118 (Should — P1 — Phase 1 Done 2026-06-21; extended 2026-06-22; on `feature/arch-05-jira-integration`, unmerged):** The application SHOULD support a live, admin-configured connection to a real Jira instance (Cloud or Server) — connect once, then refresh data with a manual "Sync now" action instead of re-uploading an export every time. A failed or stale sync MUST fall back to the last successfully synced data rather than blanking the dashboard, with a visible source indicator (live API vs. last-good snapshot) so users always know what they're looking at. Extended 2026-06-22 so any logged-in user, not only an admin, can trigger a sync against a connection an admin already configured — re-syncing day to day shouldn't require an admin, only setting up the connection in the first place should. Export-first / zero-stored-credential positioning (BR-003 and related) is preserved throughout: the Jira API token lives in encrypted app config, never in the connection record or the client bundle.
+
+**BR-119 (Should — P1 — Done 2026-06-22):** The application SHOULD let an administrator edit the issue-type hierarchy (which Jira issue types are parents, which are leaf-level work items) instead of relying on a hardcoded type list. Real Jira instances customize issue types per project; a fixed hierarchy produced incorrect parent/child grouping in the Explore relation graph for any project that didn't match the originally assumed type set.
+
+**BR-120 (Should — P1 — Done 2026-06-23; redesigned 2026-06-26):** The application SHOULD generate role-aware coaching insights (`/dashboard/coaching`) — recommendations and observations framed differently for a Scrum Master, Product Owner, manager, or C-level reader, derived entirely from metrics already calculated elsewhere on the dashboard, with no new data collection. Raw metrics tell a user *what* the numbers are; coaching insights tell each role *what to do about it* — the gap between a reporting tool and a coaching tool. Redesigned 2026-06-26 for clarity and encouragement after initial user feedback: urgency-sorted tabs, a quick-win celebration headline, trend-vs-last-snapshot framing, and softer empty-state language.
+
+**BR-121 (Should — P2 — Done 2026-06-26; quality fixes 2026-06-26):** The application SHOULD analyze a submitted or uploaded retrospective and surface detected themes, ownership gaps, and concrete, copy-pasteable backlog suggestions (stories/tasks/spikes) for next sprint — not just store the raw retrospective text. A retrospective nobody acts on next sprint has no value; automated, evidence-backed suggestions make "act on it" the easy default instead of an extra step someone has to remember. Corrected 2026-06-26 after user testing found positive feedback (the "What Went Well" section) was being misflagged as a problem theme — theme detection now runs only over negative/blocker text.
+
+**BR-122 (Should — P2 — Done 2026-06-27):** The forecast page's (`/forecast`) confidence rating SHOULD reflect data quality and per-metric confidence, not velocity history alone, and SHOULD name the single weakest factor holding confidence down rather than leaving the user to guess why a forecast reads "Low." An unexplained confidence label isn't actionable; naming the weakest factor turns it into something a team can actually go fix.
+
+**BR-123 (Should — Future / P2 — Design only, not approved for implementation as a whole; a first partial data-isolation slice is built and unit-tested on `feature/org-phase1-tenant-isolation`, unmerged):** The application SHOULD support multiple client organizations on one deployment, each with completely isolated data, storage, and membership — no organization can see another organization's data under any role. Joining the platform SHOULD go through a structured application and an explicit Platform-Owner approval step, with actionable rejection feedback so a rejected applicant knows exactly what to fix and can resubmit, rather than open self-registration. This is what turns the product from a single-tenant internal tool into something that can be safely offered to multiple separate client companies. Full design in `product/MULTI_TENANT_ORG_DESIGN.md`; not yet approved for implementation as a whole.
+
+**BR-124 (Should — Future / P2 — Design only, not approved for implementation):** Within an organization, an individual user SHOULD be able to permanently delete their own data without affecting anyone else's, optionally route their own uploads to their own storage location instead of the organization's default, and explicitly share one specific piece of their data with one specific named colleague — never a blanket "share everything." As a narrow, explicitly-scoped exception, two individuals at *different* organizations who already know each other (e.g. two Scrum Masters who've never worked at the same company) SHOULD be able to mutually opt in to share aggregated results only, never raw data, with no admin approval gate on either side. This gives individual users real control over their own data without weakening the organization-level isolation BR-123 establishes. Full design in `product/MULTI_TENANT_ORG_DESIGN.md` §11; not yet approved for implementation.
