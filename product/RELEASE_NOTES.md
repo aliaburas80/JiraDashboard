@@ -5,6 +5,17 @@
 
 ---
 
+## Promotional Landing Page Added + Demo Email Corrected (2026-06-28, marketing collateral — not an app change)
+
+**Scope:** Adds the standalone promotional landing page under `promotion/delivery-clarity-promo/` (static HTML + CSS, no JS/frameworks/external assets) to version control, and corrects a transposed email on it. This is outward-facing marketing collateral, **not** part of the Delivery Clarity application — recorded here only so the repo addition and the email fix are traceable.
+
+- **Demo email corrected**: the "Request a demo" CTA and footer Contact link both emailed `aburasali80@gmail.com` (a character transposition); fixed to `aliaburas80@gmail.com` so demo requests actually reach the right inbox. Both spellings appear heavily across older vs. newer copyright headers in the repo — the correct, current address was confirmed with the owner before changing it.
+- **Now version-controlled**: the promo page (`index.html`, `styles.css`, `README.txt`), its packaged `.zip`, and 4 promo images are committed to `main`. `.DS_Store` stays excluded (already gitignored).
+- Rendered and visually verified on desktop (1280px) and mobile (390px) before committing — responsive, no console errors, no layout breakage.
+- **Documentation impact: intentionally none beyond this note.** No FR/UC/SCN/BR/test changes — a static marketing page has no application behavior, routes, or calculations to specify, so updating SRS/BRD/USE_CASES/SCENARIOS/TEST_CASES would be mechanical noise (CLAUDE.md §55.1).
+
+---
+
 ## v4.13.0 — Full `product/` Documentation Audit (2026-06-28, P1 — documentation only, no code changed)
 
 **Scope:** Full audit of all 17 files in `product/` per explicit user request ("make sure all doc in the product are update"), triggered right after the inline-style re-audit (v4.12.4) below. Found two genuine gaps and one real bug, fixed all three; everything else checked out against its own established convention.
