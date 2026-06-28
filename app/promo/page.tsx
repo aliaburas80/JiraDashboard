@@ -10,6 +10,7 @@ import PromoNav from './PromoNav';
 import Reveal from './Reveal';
 import CountUp from './CountUp';
 import Marquee from './Marquee';
+import DemoRequest from './DemoRequest';
 import styles from './page.module.scss';
 
 export const metadata: Metadata = {
@@ -125,44 +126,59 @@ export default function PromoPage() {
             </p>
 
             <div className={styles.heroActions}>
-              <a className={styles.btnPrimary} href="/login">
-                Open the app
-              </a>
-              <a className={styles.btnGhost} href="#how">
-                See how it works <span aria-hidden="true">→</span>
+              <DemoRequest label="Request a demo" triggerClassName={styles.btnPrimary} />
+              <a className={styles.btnGhost} href="/login">
+                Open the app <span aria-hidden="true">→</span>
               </a>
             </div>
 
             <div className={styles.heroCard} aria-hidden="true">
+              <div className={styles.heroCardGlow} />
               <div className={styles.heroCardHead}>
                 <span className={styles.heroCardDot} />
                 Delivery overview
+                <span className={styles.heroCardLive}>
+                  <span className={styles.heroCardLiveDot} />
+                  Live
+                </span>
               </div>
               <div className={styles.heroCardBody}>
-                <div className={styles.heroScore}>
-                  <span className={styles.heroScoreValue}>82</span>
-                  <span className={styles.heroScoreLabel}>Health</span>
+                <div className={styles.heroRing}>
+                  <svg className={styles.heroRingSvg} viewBox="0 0 120 120">
+                    <defs>
+                      <linearGradient id="heroRingGradient" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="#ff8a4c" />
+                        <stop offset="100%" stopColor="#8b7bff" />
+                      </linearGradient>
+                    </defs>
+                    <circle className={styles.heroRingTrack} cx="60" cy="60" r="52" />
+                    <circle className={styles.heroRingFill} cx="60" cy="60" r="52" />
+                  </svg>
+                  <div className={styles.heroRingInner}>
+                    <span className={styles.heroRingValue}>82</span>
+                    <span className={styles.heroRingLabel}>Health</span>
+                  </div>
                 </div>
                 <div className={styles.heroMetrics}>
-                  <div className={styles.heroMetric}>
+                  <div className={styles.heroMetric} data-tone="risk">
                     <span className={styles.heroMetricValue}>12</span>
                     <span className={styles.heroMetricLabel}>At risk</span>
                   </div>
-                  <div className={styles.heroMetric}>
+                  <div className={styles.heroMetric} data-tone="flow">
                     <span className={styles.heroMetricValue}>6.2</span>
                     <span className={styles.heroMetricLabel}>Avg cycle time</span>
                   </div>
-                  <div className={styles.heroMetric}>
+                  <div className={styles.heroMetric} data-tone="done">
                     <span className={styles.heroMetricValue}>94%</span>
                     <span className={styles.heroMetricLabel}>Done this sprint</span>
                   </div>
                 </div>
                 <div className={styles.heroBars}>
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                  <span />
+                  <span data-tone="a" />
+                  <span data-tone="b" />
+                  <span data-tone="c" />
+                  <span data-tone="d" />
+                  <span data-tone="e" />
                 </div>
               </div>
             </div>
@@ -337,11 +353,9 @@ export default function PromoPage() {
               From messy boards to measurable delivery confidence — starting with your next upload.
             </p>
             <div className={styles.heroActions}>
-              <a className={styles.btnPrimary} href="/login">
-                Open the app
-              </a>
-              <a className={styles.btnGhost} href="#top">
-                Back to top <span aria-hidden="true">↑</span>
+              <DemoRequest label="Request a demo" triggerClassName={styles.btnPrimary} />
+              <a className={styles.btnGhost} href="/login">
+                Open the app <span aria-hidden="true">→</span>
               </a>
             </div>
           </Reveal>
@@ -351,9 +365,16 @@ export default function PromoPage() {
       {/* ── Footer ─────────────────────────────────────────────────────── */}
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
-          <span className={styles.footerBrand}>Delivery Clarity</span>
+          <span className={styles.footerBrand}>
+            <span className={styles.footerMark} aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+            </span>
+            Delivery Clarity
+          </span>
           <p className={styles.footerTag}>From messy boards to measurable delivery confidence.</p>
-          <small className={styles.footerCopy}>© 2026 Ali Delivery Intelligence</small>
+          <small className={styles.footerCopy}>© 2026 Ali Abu Ras · aliaburas80@gmail.com</small>
         </div>
       </footer>
     </div>

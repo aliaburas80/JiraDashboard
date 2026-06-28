@@ -1,0 +1,280 @@
+// DemoRequest modal — portaled to document.body so it always renders above
+// transformed ancestors. The --p-* palette is declared here so it cascades
+// to all children regardless of where in the DOM the portal lands.
+
+.overlay {
+  // Promo dark palette — mirrors page.module.scss .page variables exactly.
+  --p-bg: #0d1017;
+  --p-surface: #181c27;
+  --p-surface-2: #20253291;
+  --p-text: #f5f6f8;
+  --p-text-2: #b2b6c2;
+  --p-text-3: #7c8090;
+  --p-border: rgba(255, 255, 255, 0.1);
+  --p-border-strong: rgba(255, 255, 255, 0.2);
+  --p-accent: #ff8a4c;
+  --p-accent-2: #e85d12;
+  --p-violet: #8b7bff;
+
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 9999);
+  display: grid;
+  place-items: center;
+  padding: var(--space-5, 20px);
+  background: color-mix(in srgb, #05060a 78%, transparent);
+  backdrop-filter: blur(6px);
+  overflow-y: auto;
+}
+
+.dialog {
+  position: relative;
+  inline-size: 100%;
+  max-inline-size: 560px;
+  margin-block: auto;
+  padding: clamp(24px, 4vw, 40px);
+  border-radius: var(--radius-2xl, 14px);
+  border: 1px solid var(--p-border-strong);
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(255, 138, 76, 0.12), transparent 60%),
+    radial-gradient(120% 80% at 100% 100%, rgba(139, 123, 255, 0.14), transparent 60%),
+    linear-gradient(180deg, var(--p-surface-2), var(--p-surface));
+  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .overlay {
+    animation: demo-overlay-in 240ms ease forwards;
+  }
+
+  .dialog {
+    animation: demo-dialog-in 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+}
+
+.dialogClose {
+  position: absolute;
+  inset-block-start: 14px;
+  inset-inline-end: 14px;
+  inline-size: 36px;
+  block-size: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--p-border);
+  border-radius: var(--radius-full, 9999px);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--p-text-2);
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+
+  svg {
+    inline-size: 18px;
+    block-size: 18px;
+  }
+
+  &:hover {
+    color: var(--p-text);
+    border-color: var(--p-border-strong);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--p-accent);
+    outline-offset: 2px;
+  }
+}
+
+.dialogHead {
+  margin-block-end: var(--space-6, 24px);
+}
+
+.dialogKicker {
+  margin: 0 0 var(--space-3, 12px);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--p-accent);
+}
+
+.dialogTitle {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--p-text);
+}
+
+.dialogSub {
+  margin: var(--space-3, 12px) 0 0;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--p-text-2);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4, 16px);
+
+  @media (min-width: 520px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+}
+
+.fieldLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--p-text-2);
+}
+
+.input,
+.textarea {
+  inline-size: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-lg, 10px);
+  border: 1px solid var(--p-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--p-text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+
+  &::placeholder {
+    color: var(--p-text-3);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--p-accent);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-accent) 28%, transparent);
+  }
+}
+
+.textarea {
+  resize: vertical;
+  min-block-size: 64px;
+  line-height: 1.5;
+}
+
+.error {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-lg, 10px);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+  font-size: 0.88rem;
+}
+
+.submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 24px;
+  border: none;
+  border-radius: var(--radius-full, 9999px);
+  background: linear-gradient(135deg, var(--p-accent), var(--p-accent-2));
+  color: #0a0b0d;
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(232, 93, 18, 0.32);
+  transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 42px rgba(232, 93, 18, 0.44);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--p-text);
+    outline-offset: 3px;
+  }
+
+  &:disabled {
+    cursor: progress;
+    opacity: 0.7;
+  }
+}
+
+.submitting {
+  cursor: progress;
+}
+
+.privacyNote {
+  margin: 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--p-text-3);
+}
+
+// ── Success state ──────────────────────────────────────────────────────────
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-4, 16px);
+  padding-block: var(--space-4, 16px);
+}
+
+.successMark {
+  display: grid;
+  place-items: center;
+  inline-size: 64px;
+  block-size: 64px;
+  border-radius: var(--radius-full, 9999px);
+  background: linear-gradient(135deg, var(--p-accent), var(--p-accent-2));
+  color: #0a0b0d;
+  box-shadow: 0 14px 34px rgba(232, 93, 18, 0.4);
+
+  svg {
+    inline-size: 30px;
+    block-size: 30px;
+  }
+}
+
+.success .submit {
+  margin-block-start: var(--space-2, 8px);
+}
+
+@keyframes demo-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes demo-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .successMark {
+    box-shadow: none;
+  }
+}

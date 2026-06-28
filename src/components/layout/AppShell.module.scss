@@ -381,3 +381,19 @@
     padding: var(--space-3, 12px) var(--space-6, 24px);
   }
 }
+
+.footerLink {
+  color: var(--color-primary, var(--dc-accent));
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary, var(--dc-accent));
+    outline-offset: 2px;
+    border-radius: var(--radius-xs, 4px);
+  }
+}

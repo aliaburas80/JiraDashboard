@@ -1,52 +1,74 @@
-// Marquee — seamless infinite ticker. Two identical groups translate left by
-// exactly half the track width, so the loop is invisible.
+// Marquee — two seamless infinite tickers scrolling in opposite directions.
+// Each row has two identical groups translated by exactly half the track width,
+// so the loop is invisible. Items are gradient-edged pills for a richer look.
 
 .marquee {
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+  padding-block: clamp(28px, 5vw, 44px);
   border-block: 1px solid var(--p-border);
-  background: var(--p-surface);
-  padding-block: var(--space-5, 20px);
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 8%,
-    #000 92%,
-    transparent
-  );
+  background:
+    radial-gradient(60% 120% at 50% 50%, rgba(139, 123, 255, 0.08), transparent 70%),
+    var(--p-surface);
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
 }
 
 .track {
   display: flex;
   width: max-content;
-  animation: marquee-scroll 38s linear infinite;
+  animation: marquee-scroll 42s linear infinite;
+}
+
+.reverse {
+  animation-name: marquee-scroll-reverse;
+  animation-duration: 52s;
+}
+
+.marquee:hover .track {
+  animation-play-state: paused;
 }
 
 .group {
   display: flex;
   align-items: center;
-  gap: var(--space-10, 40px);
+  gap: var(--space-4, 16px);
   margin: 0;
-  padding: 0 var(--space-5, 20px);
+  padding-inline: var(--space-2, 8px);
   list-style: none;
 }
 
 .item {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-4, 16px);
+  gap: var(--space-3, 12px);
   white-space: nowrap;
+  padding: 10px 20px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid transparent;
+  // Gradient pill: dark fill + a subtle gradient ring via two backgrounds.
+  background:
+    linear-gradient(var(--p-surface-2), var(--p-surface-2)) padding-box,
+    linear-gradient(120deg, rgba(255, 138, 76, 0.6), rgba(139, 123, 255, 0.5)) border-box;
   font-family: var(--font-jakarta);
-  font-size: clamp(1.1rem, 2.4vw, 1.9rem);
-  font-weight: 600;
+  font-size: clamp(0.95rem, 1.8vw, 1.25rem);
+  font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--p-text-2);
+  color: var(--p-text);
+  transition: transform 220ms var(--ease, ease), box-shadow 220ms var(--ease, ease);
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(232, 93, 18, 0.22);
+  }
 }
 
 .dot {
-  inline-size: 7px;
-  block-size: 7px;
+  inline-size: 8px;
+  block-size: 8px;
   border-radius: var(--radius-full, 9999px);
-  background: var(--p-accent);
+  background: linear-gradient(135deg, var(--p-accent), var(--p-violet));
   flex-shrink: 0;
 }
 
@@ -59,9 +81,20 @@
   }
 }
 
+@keyframes marquee-scroll-reverse {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .track {
     animation: none;
     flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3, 12px);
   }
 }

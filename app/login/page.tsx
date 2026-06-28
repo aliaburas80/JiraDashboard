@@ -4,6 +4,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { hasMetricsFromAnySource } from '@/lib/storage';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 
@@ -154,6 +155,13 @@ export default function LoginPage() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+
+        <p className="text-center text-sm text-slate-500 mt-6">
+          New to Delivery Clarity?{' '}
+          <Link href="/promo" className="font-semibold text-blue-600 hover:underline">
+            See the product tour →
+          </Link>
+        </p>
       </div>
     </div>
   );
