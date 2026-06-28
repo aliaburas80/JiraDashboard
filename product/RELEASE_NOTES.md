@@ -5,6 +5,24 @@
 
 ---
 
+## v4.15.0 — Promo Polish + "Request a Demo" (2026-06-28, P2 — promo refinement + new public demo-request feature)
+
+**Scope:** Acts on direct owner feedback on the `/promo` page (logo, colour, centring, marquee, animation) **and** adds a real application feature: a public "Request a demo" form that emails the product owner. The marketing styling is presentation-only; the demo-request flow is a new server feature (API route + email), so it carries the heavier documentation/verification weight.
+
+- **Canonical logo on `/promo`** — the nav and footer brand marks now use the same lightning-bolt glyph (`M13 2L3 14h9l-1 8 10-12h-9l1-8z`) the in-app shell/topbar use, replacing the off-brand circle-and-pointer placeholder.
+- **Footer copyright corrected** — `© 2026 Ali Delivery Intelligence` → `© 2026 Ali Abu Ras · aliaburas80@gmail.com`, matching the in-app shell footer.
+- **App → promo link** — the in-app `AppShell` footer now links to `/promo` ("Product tour"), and the public `/login` page links to it ("See the product tour →"), so the marketing page is reachable from the app, not only by direct URL.
+- **Less black, more colour** — the page palette moved off near-black (`#0a0b0d`) to a deep indigo-charcoal with cool surfaces, plus a fixed, slowly-drifting ambient colour wash behind all content; capability cards, hero metrics, and marquee pills gained gradient edges and per-tone accent colours (orange / violet / cyan / emerald / amber).
+- **Centred shape content** — the hero "Health" score is now an SVG ring with a perfectly centred inner value/label stack (replacing the conic-gradient block where the text could drift off-centre).
+- **Animated, interactive hero card** — the health ring animates its fill, the sample bars grow in with staggered multi-hue gradients, a "Live" pulse badge was added, the card gently floats, and metric tiles lift on hover. All gated by `prefers-reduced-motion`.
+- **Fancier marquee** — replaced the single ticker with two opposing-direction rows of gradient-edged pills that pause on hover; reduced-motion users get a static centred wrap.
+- **New feature — "Request a demo"**: a `DemoRequest` client component (accessible modal: Escape/overlay close, focus management, body-scroll lock, idle/submitting/success/error states) collects **who** (name, work email, organization, role), **what they need**, and **why** (justification, min. 20 chars). It posts to a new public `POST /api/demo-request`, which validates + IP-rate-limits (5 / 15 min) and emails the owner via the existing nodemailer wrapper (`src/lib/email.ts`, new `buildDemoRequestEmail` builder; all values HTML-escaped). Recipient defaults to `aliaburas80@gmail.com`, overridable via `DEMO_REQUEST_TO`. The trigger replaces the primary CTA in the nav, hero, final CTA, and mobile menu.
+- **Security/privacy**: the endpoint is public (the promo page is intentionally outside `middleware.ts`), so input is length-capped (2000 chars/field), strictly validated, rate-limited, and HTML-escaped before going into the email body. No demo-request data is persisted to the database — it is only relayed by email. When SMTP is unconfigured the form fails gracefully with a 503 and an "email us directly" message rather than silently dropping the request.
+- **Verified**: `tsc` clean; ESLint clean on all changed files (0 new warnings — the single AppShell warning at `135:33` is pre-existing inline-style debt from 2026-06-15, untouched here); Stylelint clean; production build registers `/promo` (static) and `/api/demo-request` (dynamic).
+- **Documentation impact**: RELEASE_NOTES (this entry). `/help`, `/glossary`, BRD, SRS, USE_CASES, SCENARIOS, TEST_CASES — **intentionally not updated**: the visual changes are marketing presentation, and the demo-request form is an outward marketing/contact flow with no in-app user role, domain calculation, or glossary term. New env var `DEMO_REQUEST_TO` is the only operational note (defaults safely).
+
+---
+
 ## v4.14.0 — In-App Promo Route `/promo` (2026-06-28, P2 — new public marketing route)
 
 **Scope:** Adds a new public, server-rendered marketing page at `/promo` inside the Next.js app — distinct from the in-app `/landing` showcase (which is authenticated) and from the standalone static `promotion/` folder. Built per explicit user request for a richer, animated page "not restricted to the current design," with the Exo Ape aesthetic as a reference. Copy is aligned to the product mission/vision.

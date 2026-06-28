@@ -219,7 +219,10 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
 
       <footer className={styles.footer}>
         <p className={styles.footerInner}>
-          © 2026 Ali Abu Ras · aliaburas80@gmail.com · Delivery Clarity v4.1
+          © 2026 Ali Abu Ras · aliaburas80@gmail.com · Delivery Clarity v4.1 ·{' '}
+          <Link href="/promo" className={styles.footerLink}>
+            Product tour
+          </Link>
         </p>
       </footer>
     </div>

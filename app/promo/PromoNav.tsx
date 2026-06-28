@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
+import DemoRequest from './DemoRequest';
 import styles from './PromoNav.module.scss';
 
 const LINKS = [
@@ -42,10 +43,8 @@ export default function PromoNav() {
       <div className={styles.inner}>
         <a className={styles.brand} href="#top" onClick={(e) => handleNav(e, '#top')} aria-label="Delivery Clarity — top of page">
           <span className={styles.brandMark} aria-hidden="true">
-            <svg viewBox="0 0 36 36" fill="none">
-              <circle cx="18" cy="18" r="15" />
-              <path d="M11 22.5 15.5 13l9.5-4.5-4.5 9.5-9.5 4.5Z" />
-              <circle cx="18" cy="15.5" r="2.3" />
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
             </svg>
           </span>
           <span className={styles.brandName}>Delivery Clarity</span>
@@ -60,9 +59,10 @@ export default function PromoNav() {
         </nav>
 
         <div className={styles.actions}>
-          <a className={styles.cta} href="/login">
+          <a className={styles.loginLink} href="/login">
             Open the app
           </a>
+          <DemoRequest label="Request a demo" triggerClassName={styles.cta} />
           <button
             type="button"
             className={styles.menuToggle}
@@ -84,7 +84,8 @@ export default function PromoNav() {
             {link.label}
           </a>
         ))}
-        <a className={styles.mobileCta} href="/login">
+        <DemoRequest label="Request a demo" triggerClassName={styles.mobileCta} />
+        <a className={styles.mobileLogin} href="/login">
           Open the app
         </a>
       </div>
