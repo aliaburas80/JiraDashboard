@@ -10,6 +10,7 @@ import { cookies } from 'next/headers';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { writeLatestMetrics } from '@/services/metrics/latestMetricsStorage';
+import { getServerEnv } from '@/lib/env/server';
 
 // ---------------------------------------------------------------------------
 // Simple in-process rate limiter — 20 uploads per 15 minutes per IP
@@ -31,7 +32,6 @@ function isRateLimited(ip: string): boolean {
 // ---------------------------------------------------------------------------
 // File validation helpers
 // ---------------------------------------------------------------------------
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 const ALLOWED_EXTENSIONS = ['.csv', '.xlsx', '.xls'];
 
 function getExtension(filename: string): string {
@@ -42,6 +42,9 @@ function getExtension(filename: string): string {
 // POST /api/upload
 // ---------------------------------------------------------------------------
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  const { MAX_UPLOAD_MB } = getServerEnv();
+  const maxFileSizeBytes = MAX_UPLOAD_MB * 1024 * 1024;
+
   // --- Rate limiting ---
   const ip =
     req.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
@@ -86,11 +89,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // --- File size check ---
-  if (file.size > MAX_FILE_SIZE) {
+  if (file.size > maxFileSizeBytes) {
     return NextResponse.json(
       {
         error:
-          'File exceeds the 20 MB size limit. Export a smaller date range or reduce the number of columns.',
+          `File exceeds the ${MAX_UPLOAD_MB} MB size limit. Export a smaller date range or reduce the number of columns.`,
       },
       { status: 413 },
     );

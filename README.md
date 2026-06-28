@@ -60,22 +60,21 @@ Delivery Clarity is a self-hosted analytics platform that transforms raw Jira ex
 ## Architecture
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                       Delivery Clarity                         │
-│                                                                │
-│  ┌──────────────────────┐  POST /api/upload  ┌─────────────┐  │
-│  │   React Frontend     │ ─────────────────► │  Node.js    │  │
-│  │   (port 3000)        │ ◄───────────────── │  Backend    │  │
-│  │                      │   JSON metrics     │  (port 4000)│  │
-│  │  UploadPage          │                    │             │  │
-│  │  DashboardPage       │                    │  parser.js  │  │
-│  │  HelpGuide           │                    │  metrics.js │  │
-│  │  KpiCard             │                    │  importLogs │  │
-│  └──────────────────────┘                    └─────────────┘  │
-└────────────────────────────────────────────────────────────────┘
+app/                 Next.js App Router pages and route handlers
+src/                 Shared components, domain services, storage, auth, Prisma
+prisma/              PostgreSQL schema, migrations, and seed entrypoint
+docs/deployment/     Koyeb, Neon, and database migration runbooks
 ```
 
-**No database.** The entire analysis happens in memory on each upload. Import history is stored in `backend/data/import-logs.json` for audit purposes.
+Delivery Clarity is now a single Next.js application backed by Prisma and PostgreSQL for production. The legacy `backend/` and `frontend/` directories are not the deployment target for the current app.
+
+Production deployment uses:
+
+- Next.js App Router
+- Prisma
+- Neon PostgreSQL
+- Koyeb Node.js web service
+- External object storage for persistent files
 
 ---
 
@@ -86,18 +85,18 @@ Delivery Clarity is a self-hosted analytics platform that transforms raw Jira ex
 ```
 User exports Jira → CSV or Excel
        ↓
-Frontend: POST /api/upload (multipart, max 20 MB, max 20 req/15 min)
+Browser: POST /api/upload (multipart, max 20 MB by default, max 20 req/15 min)
        ↓
-Backend: parser.js
+Next.js route handler: src/services/jira/parser.ts
   • Reads file with xlsx library
   • Normalises column headers against 55+ known aliases
   • Returns: issues[], warnings[], headers[], sheetName
        ↓
-Backend: validation.js
+Validation: src/services/jira/validation.ts
   • Checks Issue Key, Issue Type, Summary, Status are present
   • Returns 422 with specific errors if any are missing
        ↓
-Backend: metrics.js
+Domain metrics: src/services/metrics/metrics.service.ts
   • calculateDashboardMetrics(issues) — synchronous, ~50ms for 500 issues
   • Returns full metrics JSON
        ↓
@@ -199,44 +198,30 @@ Include these columns in your Jira export to see the Relations section.
 
 - **Node.js** 20 LTS (`nvm use` reads `.nvmrc`)
 - **npm** 10
+- PostgreSQL for production, with Neon recommended for Koyeb deployments
 
 ### Installation
 
 ```bash
 git clone https://github.com/aliaburas80/JiraDashboard.git
 cd JiraDashboard
-
-cd backend && npm install
-cd ../frontend && npm install
+nvm use
+npm ci
+npm run db:generate
 ```
 
 ### Configuration
 
 ```bash
 cp .env.example .env
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
 ```
 
-Edit `backend/.env`:
-```
-PORT=4000
-ALLOWED_ORIGIN=http://localhost:3000
-```
-
-Edit `frontend/.env`:
-```
-REACT_APP_API_BASE=http://localhost:4000/api
-```
+Set `DATABASE_URL`, `SESSION_SECRET`, `CONFIG_ENCRYPTION_KEY`, and storage variables as needed. SQLite is no longer the production database.
 
 ### Running (development)
 
 ```bash
-# Terminal 1 — Backend (auto-reloads with nodemon)
-cd backend && npm run dev
-
-# Terminal 2 — Frontend
-cd frontend && npm start
+npm run dev
 ```
 
 Open **http://localhost:3000**.
@@ -244,10 +229,19 @@ Open **http://localhost:3000**.
 ### Production build
 
 ```bash
-cd frontend && npm run build
-# Serve frontend/build/ with nginx or any static file server
-# Run backend with: cd backend && npm start
+npm run build
+npm run start
 ```
+
+`npm run start` runs `prisma migrate deploy` before starting Next.js on `0.0.0.0:$PORT`.
+
+### Deployment
+
+- Koyeb deployment guide: [docs/deployment/KOYEB_DEPLOYMENT.md](docs/deployment/KOYEB_DEPLOYMENT.md)
+- Database migration guide: [docs/deployment/DATABASE_MIGRATION.md](docs/deployment/DATABASE_MIGRATION.md)
+- Deployment audit: [docs/deployment/KOYEB_NEON_AUDIT.md](docs/deployment/KOYEB_NEON_AUDIT.md)
+
+For Koyeb, local application files are not persistent. Use object storage (`STORAGE_DRIVER=s3` or another supported cloud provider) for backups, app config, and persistent file artifacts.
 
 ---
 
@@ -295,6 +289,7 @@ Upload a Jira export for analysis.
 - **Content-Type:** `multipart/form-data`, field name `file`
 - **Accepted:** `.csv`, `.xlsx`, `.xls`
 - **Max size:** 20 MB
+- **Configurable with:** `MAX_UPLOAD_MB`
 - **Rate limit:** 20 requests per 15 minutes per IP
 
 | Status | Meaning |
@@ -317,19 +312,11 @@ Import history as `.xlsx`.
 
 ### `GET /api/health`
 ```json
-{ "status": "ok", "service": "delivery-clarity-backend", "version": "1.0.0" }
+{ "status": "ok", "service": "delivery-clarity", "version": "2.0.0", "timestamp": "..." }
 ```
 
----
-
-## Backend Control Center
-
-The backend includes a built-in control center at **http://localhost:4000**:
-
-- Browse all past imports with status, file details, and column statistics
-- Inspect extracted fields and row counts per upload
-- Download import history as Excel
-- Quick-links to health check and frontend
+### `GET /api/ready`
+Checks required runtime infrastructure, including a minimal database query. Returns `503` with a sanitized body when the app is not ready.
 
 ---
 
@@ -341,39 +328,12 @@ JiraDashboard/
 ├── .gitignore
 ├── README.md
 ├── RELEASE_NOTES.md
+├── app/                            # Next.js App Router
+├── src/                            # Shared app code, services, components
+├── prisma/                         # PostgreSQL schema, migrations, seed
+├── docs/deployment/                # Koyeb and Neon deployment docs
 │
-├── backend/
-│   ├── .env.example
-│   ├── package.json
-│   ├── data/
-│   │   └── import-logs.json        # Persisted import audit log
-│   ├── src/
-│   │   ├── index.js                # Express server, CORS, dotenv
-│   │   ├── routes/
-│   │   │   └── upload.js           # Upload endpoint + rate limiting
-│   │   ├── services/
-│   │   │   ├── metrics.js          # All metric calculations (~780 lines)
-│   │   │   ├── parser.js           # XLSX/CSV parsing, 55+ field aliases
-│   │   │   ├── importLogs.js       # Import history management
-│   │   │   └── backendView.js      # HTML control center UI
-│   │   └── utils/
-│   │       └── validation.js       # Required field validation
-│   └── tests/
-│       └── metrics.test.js
-│
-└── frontend/
-    ├── .env.example
-    ├── package.json
-    └── src/
-        ├── App.js                  # Root: theme, dark mode, help
-        ├── styles.css              # All styles (~3,200 lines)
-        ├── components/
-        │   ├── DashboardPage.js    # Main dashboard (~2,150 lines)
-        │   ├── HelpGuide.js        # 17-section interactive help
-        │   ├── KpiCard.js          # KPI card with threshold track
-        │   └── UploadPage.js       # File upload landing
-        └── services/
-            └── api.js              # Backend API client
+└── backend/, frontend/             # Legacy standalone projects, not current deployment target
 ```
 
 ---
@@ -382,10 +342,9 @@ JiraDashboard/
 
 | Limitation | Impact |
 |---|---|
-| No persistent state | Refreshing the browser clears the dashboard — re-upload to restore |
-| No user authentication | All users share the same view — add an auth proxy for team deployments |
-| No real-time updates | Manual export + upload required — Jira API integration is on the roadmap |
-| Flat JSON log store | Concurrent uploads may cause race conditions under high load |
+| Upload parser is request-bound | Keep `MAX_UPLOAD_MB` conservative on small Koyeb instances |
+| Koyeb local filesystem is ephemeral | Use object storage for persistent files |
+| Startup migrations assume one replica | Move migrations to a release step before scaling replicas |
 
 ---
 

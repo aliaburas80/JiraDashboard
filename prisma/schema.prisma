@@ -1,7 +1,7 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -10,30 +10,30 @@ generator client {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  name         String
-  email        String    @unique
-  passwordHash String
-  role         String    @default("user") // "user" | "admin"
-  avatarUrl    String?
-  position     String?
-  phone        String?
-  contactEmail String?
-  address      String?
-  certificates String?
-  bio          String?
-  isActive     Boolean   @default(true)
-  mustChangePassword Boolean @default(false)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  lastLoginAt  DateTime?
+  id                 String    @id @default(cuid())
+  name               String
+  email              String    @unique
+  passwordHash       String
+  role               String    @default("user") // "user" | "admin"
+  avatarUrl          String?
+  position           String?
+  phone              String?
+  contactEmail       String?
+  address            String?
+  certificates       String?
+  bio                String?
+  isActive           Boolean   @default(true)
+  mustChangePassword Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  lastLoginAt        DateTime?
 
   sessions        Session[]
   importLogs      ImportLog[]
   snapshots       DashboardSnapshot[]
   auditEvents     AuditEvent[]
-  userAddRequests UserAddRequest[]     @relation("UserAddRequestRequester")
-  notifications   Notification[]       @relation("UserNotifications")
+  userAddRequests UserAddRequest[]    @relation("UserAddRequestRequester")
+  notifications   Notification[]      @relation("UserNotifications")
   jiraConnections JiraConnection[]
 }
 
@@ -63,7 +63,7 @@ model ImportLog {
   fileType         String?
   jiraConnectionId String?
   rowCount         Int      @default(0)
-  status           String   // "success" | "partial" | "failed" | "validation_failed"
+  status           String // "success" | "partial" | "failed" | "validation_failed"
   warningsCount    Int      @default(0)
   errorsCount      Int      @default(0)
   totalIssues      Int      @default(0)
@@ -73,8 +73,8 @@ model ImportLog {
   processingTimeMs Int      @default(0)
   metadataJson     String?
 
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jiraConnection JiraConnection? @relation(fields: [jiraConnectionId], references: [id], onDelete: SetNull)
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jiraConnection JiraConnection?     @relation(fields: [jiraConnectionId], references: [id], onDelete: SetNull)
   snapshots      DashboardSnapshot[]
 
   @@index([userId])
@@ -98,7 +98,7 @@ model DashboardSnapshot {
 model AuditEvent {
   id               String   @id @default(cuid())
   userId           String?
-  eventType        String   // "login" | "logout" | "upload" | "export" | "register"
+  eventType        String // "login" | "logout" | "upload" | "export" | "register"
   eventDescription String
   createdAt        DateTime @default(now())
   ipAddress        String?
@@ -113,22 +113,22 @@ model AuditEvent {
 // ── User Add-Member Request Workflow (USERREQ-07–09) ─────────────────────────
 
 model UserAddRequest {
-  id                 String    @id @default(cuid())
-  requestedName      String
-  requestedEmail     String
-  requestedRole      String
-  reason             String
-  teamOrProject      String?
-  notes              String?
+  id                String    @id @default(cuid())
+  requestedName     String
+  requestedEmail    String
+  requestedRole     String
+  reason            String
+  teamOrProject     String?
+  notes             String?
   // Status: "pending" | "accepted" | "rejected" | "cancelled" | "expired"
-  status             String    @default("pending")
-  requestedByUserId  String
-  adminDecisionById  String?
-  adminDecisionAt    DateTime?
-  adminDecisionNote  String?
-  createdUserId      String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  status            String    @default("pending")
+  requestedByUserId String
+  adminDecisionById String?
+  adminDecisionAt   DateTime?
+  adminDecisionNote String?
+  createdUserId     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   requestedBy User @relation("UserAddRequestRequester", fields: [requestedByUserId], references: [id], onDelete: Cascade)
 
@@ -157,16 +157,16 @@ model Notification {
 
 model JiraConnection {
   id                     String    @id @default(cuid())
-  name                   String                      // admin-facing label, e.g. "Production Jira"
-  deploymentType         String                      // "cloud" | "server"
+  name                   String // admin-facing label, e.g. "Production Jira"
+  deploymentType         String // "cloud" | "server"
   baseUrl                String
-  authEmail              String?                     // Cloud only — paired with GATEWAY_JIRA_API_TOKEN (token never stored here)
-  projectFilters         String                      // JSON array of project keys
-  fieldMapping           String                      // JSON: { canonicalField: jiraFieldId }
+  authEmail              String? // Cloud only — paired with GATEWAY_JIRA_API_TOKEN (token never stored here)
+  projectFilters         String // JSON array of project keys
+  fieldMapping           String // JSON: { canonicalField: jiraFieldId }
   refreshMode            String    @default("manual") // "manual" | "scheduled"
   refreshIntervalMinutes Int       @default(30)
   lastSyncAt             DateTime?
-  lastSyncStatus         String?                     // "success" | "partial" | "failed"
+  lastSyncStatus         String? // "success" | "partial" | "failed"
   lastSyncError          String?
   createdByUserId        String
   createdAt              DateTime  @default(now())
@@ -182,12 +182,12 @@ model JiraConnection {
 
 model SystemErrorLog {
   id            String    @id @default(cuid())
-  errorCode     String    // Prisma code (P2003, P2025, …) or "UNKNOWN"
+  errorCode     String // Prisma code (P2003, P2025, …) or "UNKNOWN"
   errorMessage  String
-  prismaModel   String?   // model that failed, e.g. "AuditEvent"
-  operation     String    // e.g. "auditEvent.create", "notification.createMany"
-  context       String?   // route / action that triggered the error
-  payload       String?   // JSON-serialised data for retry
+  prismaModel   String? // model that failed, e.g. "AuditEvent"
+  operation     String // e.g. "auditEvent.create", "notification.createMany"
+  context       String? // route / action that triggered the error
+  payload       String? // JSON-serialised data for retry
   resolution    String    @default("logged") // "logged" | "auto-fixed" | "retried" | "resolved" | "skipped"
   retryCount    Int       @default(0)
   lastRetriedAt DateTime?

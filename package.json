@@ -9,14 +9,19 @@
   },
   "scripts": {
     "dev": "node scripts/start-server.js dev",
-    "build": "next build",
-    "start": "node scripts/start-server.js start",
-    "lint": "next lint",
-    "lint:css": "stylelint 'src/**/*.scss' 'app/**/*.scss'",
+    "build": "prisma generate && next build",
+    "start": "node scripts/start-production.mjs",
+    "lint": "eslint . --max-warnings=0",
+    "lint:css": "stylelint 'src/**/*.scss' 'app/**/*.scss' --max-warnings=0",
+    "db:generate": "prisma generate",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
     "test": "jest --passWithNoTests",
     "typecheck": "tsc --noEmit",
+    "validate": "prisma validate && prisma generate && npm run typecheck && npm run lint:css",
     "check:fast": "npm run typecheck && npm run lint:css && npm run test",
-    "check:ci": "npm run typecheck && npm run lint:css && npm run test && npm run build"
+    "check:ci": "npm run validate && npm run lint && npm run test && npm run build"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1062.0",
@@ -57,5 +62,8 @@
     "tailwindcss": "^3.4.4",
     "ts-jest": "^29.2.2",
     "typescript": "^5.4.5"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
   }
 }

@@ -37,6 +37,13 @@ todo
 # Data / logs
 backend/data/import-logs.json
 data/
+backups/
+uploads/
+tmp/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
 ~$*.xlsx
 
 # Workflow artefacts

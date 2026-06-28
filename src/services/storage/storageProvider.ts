@@ -4,6 +4,7 @@
 import fs   from 'fs';
 import path from 'path';
 import type { StorageSettings, StorageProvider, StorageProviderType } from '@/types/storage';
+import { getServerEnv } from '@/lib/env/server';
 
 const SETTINGS_FILE = path.join(process.cwd(), 'data', 'storage-settings.json');
 
@@ -20,12 +21,65 @@ const DEFAULTS: StorageSettings = {
 // ── Read / write ──────────────────────────────────────────────────────────────
 
 export function readStorageSettings(): StorageSettings {
+  const envSettings = readStorageSettingsFromEnv();
+  if (envSettings) return envSettings;
+
   try {
     if (!fs.existsSync(SETTINGS_FILE)) return { ...DEFAULTS };
     return sanitizeStorageSettings({ ...DEFAULTS, ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8')) });
   } catch {
     return { ...DEFAULTS };
   }
+}
+
+function readStorageSettingsFromEnv(): StorageSettings | null {
+  const { STORAGE_DRIVER } = getServerEnv();
+  if (STORAGE_DRIVER === 'temporary') return null;
+  if (STORAGE_DRIVER === 's3') {
+    return {
+      active: 's3',
+      local: DEFAULTS.local,
+      s3: {
+        bucket: process.env.STORAGE_BUCKET ?? '',
+        region: process.env.STORAGE_REGION ?? 'us-east-1',
+        endpoint: process.env.STORAGE_ENDPOINT || undefined,
+        accessKeyId: process.env.STORAGE_ACCESS_KEY_ID ?? process.env.AWS_ACCESS_KEY_ID ?? '',
+        secretAccessKey: process.env.STORAGE_SECRET_ACCESS_KEY ?? process.env.AWS_SECRET_ACCESS_KEY ?? '',
+        prefix: process.env.STORAGE_PREFIX || undefined,
+      },
+      azure: {},
+      gcp: {},
+    };
+  }
+  if (STORAGE_DRIVER === 'azure') {
+    return {
+      active: 'azure',
+      local: DEFAULTS.local,
+      s3: {},
+      azure: {
+        containerName: process.env.STORAGE_BUCKET ?? '',
+        connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING ?? '',
+        prefix: process.env.STORAGE_PREFIX || undefined,
+      },
+      gcp: {},
+    };
+  }
+  if (STORAGE_DRIVER === 'gcp') {
+    return {
+      active: 'gcp',
+      local: DEFAULTS.local,
+      s3: {},
+      azure: {},
+      gcp: {
+        bucket: process.env.STORAGE_BUCKET ?? '',
+        projectId: process.env.GOOGLE_CLOUD_PROJECT ?? '',
+        keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS || undefined,
+        prefix: process.env.STORAGE_PREFIX || undefined,
+      },
+    };
+  }
+
+  return null;
 }
 
 export function writeStorageSettings(settings: StorageSettings): void {
