@@ -67,6 +67,17 @@ export function getServerEnv(): ServerEnv {
   if (storageDriver === 's3' && process.env.NODE_ENV === 'production') {
     requireInProduction('STORAGE_BUCKET', read('STORAGE_BUCKET'), errors);
     requireInProduction('STORAGE_REGION', read('STORAGE_REGION'), errors);
+    const hasStorageCredentials = !!(
+      read('STORAGE_ACCESS_KEY_ID') && read('STORAGE_SECRET_ACCESS_KEY')
+    );
+    const hasAwsCredentials = !!(
+      read('AWS_ACCESS_KEY_ID') && read('AWS_SECRET_ACCESS_KEY')
+    );
+    if (!hasStorageCredentials && !hasAwsCredentials) {
+      errors.push(
+        'S3 storage requires STORAGE_ACCESS_KEY_ID/STORAGE_SECRET_ACCESS_KEY or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY in production.',
+      );
+    }
   }
 
   const env: ServerEnv = {

@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: delivery-clarity
+    runtime: node
+    plan: free
+    branch: main
+    autoDeploy: true
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: MAX_UPLOAD_MB
+        value: 20
+      - key: STORAGE_DRIVER
+        value: s3
+      - key: STORAGE_REGION
+        value: auto
+      - key: STORAGE_PREFIX
+        value: delivery-clarity
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: CONFIG_ENCRYPTION_KEY
+        sync: false
+      - key: STORAGE_BUCKET
+        sync: false
+      - key: STORAGE_ENDPOINT
+        sync: false
+      - key: STORAGE_ACCESS_KEY_ID
+        sync: false
+      - key: STORAGE_SECRET_ACCESS_KEY
+        sync: false

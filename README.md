@@ -237,11 +237,14 @@ npm run start
 
 ### Deployment
 
+- Free stack guide: [docs/deployment/FREE_STACK_DEPLOYMENT.md](docs/deployment/FREE_STACK_DEPLOYMENT.md)
 - Koyeb deployment guide: [docs/deployment/KOYEB_DEPLOYMENT.md](docs/deployment/KOYEB_DEPLOYMENT.md)
 - Database migration guide: [docs/deployment/DATABASE_MIGRATION.md](docs/deployment/DATABASE_MIGRATION.md)
 - Deployment audit: [docs/deployment/KOYEB_NEON_AUDIT.md](docs/deployment/KOYEB_NEON_AUDIT.md)
 
-For Koyeb, local application files are not persistent. Use object storage (`STORAGE_DRIVER=s3` or another supported cloud provider) for backups, app config, and persistent file artifacts.
+Recommended free stack: Render Free Web Service + Neon Free PostgreSQL + Cloudflare R2 Free.
+
+For hosted deployment, local application files are not persistent. Use object storage (`STORAGE_DRIVER=s3` or another supported cloud provider) for backups, app config, and persistent file artifacts.
 
 ---
 

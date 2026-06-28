@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
-// Koyeb production entrypoint: validate env, deploy migrations, then start Next.
+// Hosted production entrypoint: validate env, deploy migrations, then start Next.
 
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -56,6 +56,19 @@ function validateEnvironment() {
   if (storageDriver === 's3') {
     requireEnv('STORAGE_BUCKET', errors);
     requireEnv('STORAGE_REGION', errors);
+    const hasStorageCredentials = !!(
+      process.env.STORAGE_ACCESS_KEY_ID?.trim() &&
+      process.env.STORAGE_SECRET_ACCESS_KEY?.trim()
+    );
+    const hasAwsCredentials = !!(
+      process.env.AWS_ACCESS_KEY_ID?.trim() &&
+      process.env.AWS_SECRET_ACCESS_KEY?.trim()
+    );
+    if (!hasStorageCredentials && !hasAwsCredentials) {
+      errors.push(
+        'S3 storage requires STORAGE_ACCESS_KEY_ID/STORAGE_SECRET_ACCESS_KEY or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY in production.',
+      );
+    }
   }
 
   if (errors.length > 0) {
