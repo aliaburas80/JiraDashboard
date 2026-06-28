@@ -5,6 +5,20 @@
 
 ---
 
+## v4.14.0 — In-App Promo Route `/promo` (2026-06-28, P2 — new public marketing route)
+
+**Scope:** Adds a new public, server-rendered marketing page at `/promo` inside the Next.js app — distinct from the in-app `/landing` showcase (which is authenticated) and from the standalone static `promotion/` folder. Built per explicit user request for a richer, animated page "not restricted to the current design," with the Exo Ape aesthetic as a reference. Copy is aligned to the product mission/vision.
+
+- **New route**: `app/promo/` — `page.tsx` (server component, SEO metadata, all copy), plus four co-located components: `Reveal` (scroll-reveal), `PromoNav` (sticky nav + accessible mobile menu + smooth in-page navigation), `CountUp` (animated stats), and `Marquee` (capability ticker). Each interactive component is a small client island; the page body is server-rendered.
+- **Intentionally public**: `/promo` is deliberately **absent** from `middleware.ts`'s matcher, so it is reachable without login and shareable — unlike every authenticated route. Verified via build that it registers as a static (`○`) prerender.
+- **Distinct, page-scoped dark theme**: a self-contained premium dark palette (`--p-*` custom properties scoped to `.page`), separate from the app's light dashboard tokens, honouring the "not restricted to the current design" brief while still following the engineering standards (SCSS Modules, design tokens for spacing/radius/motion, logical properties, Tailwind-free identity, zero DOM inline styles).
+- **Motion, done accessibly**: hero line-reveal entrance, scroll-triggered section reveals, an infinite capability marquee, count-up stats, and smooth section-to-section navigation. All gated by `prefers-reduced-motion` (verified: deep content renders at opacity 1 under reduced motion). Scroll-reveal hiding is gated behind `@media (scripting: enabled)`, so with no JS the content is always visible — nothing is ever trapped hidden.
+- **Sections**: hero → capability marquee → problem statement → six-capability grid (throughput, flow health, forecasting, coaching, release readiness, retrospectives) → "go deeper than dashboards" → three-step how-it-works → animated stats band → "your delivery data stays yours" security trio → final CTA → footer. Every CTA routes to `/login` ("Open the app").
+- **Verified**: `tsc` clean; ESLint clean (0 new warnings — repo total unchanged at 1,524); Stylelint clean; production build registers the route; rendered and screenshotted at desktop (1280px) and mobile (390px), with the mobile menu open/closed and reduced-motion states all confirmed. One bug was found and fixed during verification — the mobile menu was permanently visible because a base `display: flex` overrode the `hidden` attribute; corrected to `display: none` until opened.
+- **Documentation impact**: RELEASE_NOTES (this entry), SRS (route inventory + revision row), DEVELOPER_GUIDE (routing section). **Intentionally not updated**: `/help`, `/glossary`, BRD, USE_CASES, SCENARIOS, USER_JOURNEYS, TEST_CASES — a marketing page has no end-user workflow, glossary term, business requirement, or domain calculation to specify, and no automated test was added (it's presentation-only; correctness was verified by build + live render). Forcing it into those documents would be mechanical noise (CLAUDE.md §55.1).
+
+---
+
 ## Promotional Landing Page Added + Demo Email Corrected (2026-06-28, marketing collateral — not an app change)
 
 **Scope:** Adds the standalone promotional landing page under `promotion/delivery-clarity-promo/` (static HTML + CSS, no JS/frameworks/external assets) to version control, and corrects a transposed email on it. This is outward-facing marketing collateral, **not** part of the Delivery Clarity application — recorded here only so the repo addition and the email fix are traceable.

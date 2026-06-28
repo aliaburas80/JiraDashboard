@@ -337,6 +337,14 @@ All dashboard sub-pages share the 3-zone layout injected by `app/dashboard/layou
 - `/sprint-kanban` — Sprint + Kanban overview (velocity, WIP, cycle time KPIs)
 - `/work-explorer` — Work Explorer table view (list of all items with risk/orphan status)
 
+### `app/promo/` — Public marketing page (`/promo`)
+
+A **public**, server-rendered marketing page — the only app route deliberately left **out of `middleware.ts`'s matcher**, so it is reachable without login and is publicly shareable. It does **not** use `AppShell`; it is fully self-contained with its own sticky `PromoNav`. Distinct from `/landing` (the authenticated in-app feature showcase) and from the standalone static `promotion/` folder.
+
+- Uses a page-scoped dark palette (`--p-*` custom properties on `.page` in `page.module.scss`), separate from the app's light dashboard tokens — an intentional off-theme design. Still follows the standards: SCSS Modules, design tokens for spacing/radius/motion, logical properties, no Tailwind for identity, no DOM inline styles.
+- Co-located client components: `PromoNav` (sticky nav, mobile menu, smooth in-page scroll), `Reveal` (IntersectionObserver scroll-reveal), `CountUp` (animated stats), `Marquee` (CSS ticker).
+- All motion is `prefers-reduced-motion`-gated; scroll-reveal hiding is gated behind `@media (scripting: enabled)` so content is never hidden without JS. CTAs route to `/login`.
+
 ### `app/page.tsx` — Upload (`/`)
 
 Entry point. Renders a drag-and-drop file zone. On file selection:

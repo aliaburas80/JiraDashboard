@@ -1,0 +1,811 @@
+// /promo — public marketing page.
+//
+// Deliberately off the in-app theme: a self-contained, premium dark palette
+// scoped to .page via --p-* custom properties (the app's light dashboard tokens
+// don't apply here). Raw hex lives only in this palette block; every rule below
+// consumes the --p-* variables, the same discipline the app's _tokens.scss uses,
+// just with a page-local palette. All motion is gated by prefers-reduced-motion.
+
+.page {
+  // ── Page-scoped palette ────────────────────────────────────────────────
+  --p-bg: #0a0b0d;
+  --p-surface: #131419;
+  --p-surface-2: #1b1d24;
+  --p-text: #f4f4f5;
+  --p-text-2: #a9abb3;
+  --p-text-3: #71747d;
+  --p-border: rgba(255, 255, 255, 0.1);
+  --p-border-strong: rgba(255, 255, 255, 0.18);
+  --p-accent: #ff8a4c;
+  --p-accent-2: #e85d12;
+  --p-violet: #8b7bff;
+
+  position: relative;
+  min-block-size: 100vh;
+  background: var(--p-bg);
+  color: var(--p-text);
+  font-family: var(--font-jakarta, 'Plus Jakarta Sans', sans-serif);
+  overflow-x: hidden;
+}
+
+// Smooth in-page navigation, disabled for reduced-motion users.
+@media (prefers-reduced-motion: no-preference) {
+  .page {
+    scroll-behavior: smooth;
+  }
+}
+
+// Sections clear the fixed header when scrolled to via anchor links.
+.section,
+.sectionAlt,
+.statsBand,
+.cta {
+  scroll-margin-top: 90px;
+}
+
+// ── Shared building blocks ───────────────────────────────────────────────
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 28px;
+  border-radius: var(--radius-full, 9999px);
+  background: linear-gradient(135deg, var(--p-accent), var(--p-accent-2));
+  color: #0a0b0d;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 10px 30px rgba(232, 93, 18, 0.28);
+  transition: transform 200ms var(--ease, ease), box-shadow 200ms var(--ease, ease);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(232, 93, 18, 0.4);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--p-text);
+    outline-offset: 3px;
+  }
+}
+
+.btnGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 15px 24px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid var(--p-border-strong);
+  color: var(--p-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 200ms var(--ease, ease), background-color 200ms var(--ease, ease);
+
+  span {
+    transition: transform 200ms var(--ease, ease);
+  }
+
+  &:hover {
+    border-color: var(--p-text);
+    background: rgba(255, 255, 255, 0.04);
+
+    span {
+      transform: translateX(4px);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--p-accent);
+    outline-offset: 3px;
+  }
+}
+
+.kicker {
+  display: inline-block;
+  margin: 0 0 var(--space-4, 16px);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--p-accent);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: clamp(1.9rem, 4.4vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  color: var(--p-text);
+}
+
+.sectionDesc {
+  margin: var(--space-5, 20px) 0 0;
+  max-inline-size: 52ch;
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  line-height: 1.6;
+  color: var(--p-text-2);
+}
+
+// ── Section frames ───────────────────────────────────────────────────────
+.section {
+  padding-block: clamp(80px, 12vw, 160px);
+}
+
+.sectionAlt {
+  padding-block: clamp(80px, 12vw, 160px);
+  background: var(--p-surface);
+  border-block: 1px solid var(--p-border);
+}
+
+.sectionInner,
+.splitInner,
+.statsInner,
+.heroInner,
+.footerInner {
+  max-inline-size: 1200px;
+  margin-inline: auto;
+  padding-inline: var(--space-6, 24px);
+}
+
+.sectionHead {
+  margin-block-end: clamp(40px, 6vw, 72px);
+}
+
+// ── Hero ─────────────────────────────────────────────────────────────────
+.hero {
+  position: relative;
+  min-block-size: 100vh;
+  display: flex;
+  align-items: center;
+  padding-block: 140px 80px;
+  overflow: hidden;
+}
+
+.heroMesh {
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  background:
+    radial-gradient(38% 44% at 22% 28%, rgba(232, 93, 18, 0.4), transparent 60%),
+    radial-gradient(34% 40% at 80% 22%, rgba(139, 123, 255, 0.34), transparent 62%),
+    radial-gradient(46% 50% at 68% 78%, rgba(255, 138, 76, 0.26), transparent 60%);
+  filter: blur(36px);
+  opacity: 0.85;
+}
+
+.heroGrain {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.05;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.heroInner {
+  position: relative;
+  z-index: 1;
+  inline-size: 100%;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 var(--space-6, 24px);
+  padding: 8px 16px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid var(--p-border);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--p-text-2);
+}
+
+.eyebrowDot {
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--p-accent);
+  box-shadow: 0 0 12px var(--p-accent);
+}
+
+.heroTitle {
+  margin: 0;
+  font-size: clamp(3rem, 11vw, 8.5rem);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+}
+
+.heroLine {
+  display: block;
+  overflow: hidden;
+}
+
+.heroLineInner {
+  display: inline-block;
+}
+
+.heroAccent {
+  background: linear-gradient(120deg, var(--p-accent), var(--p-violet));
+  background-clip: text;
+  // -webkit prefix is required for gradient-text clipping in Safari/WebKit;
+  // the unprefixed property alone does not clip to the text there.
+  // stylelint-disable-next-line property-no-vendor-prefix
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.heroSub {
+  margin: var(--space-8, 32px) 0 0;
+  max-inline-size: 56ch;
+  font-size: clamp(1.05rem, 1.9vw, 1.35rem);
+  line-height: 1.6;
+  color: var(--p-text-2);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4, 16px);
+  margin-block-start: var(--space-10, 40px);
+}
+
+// ── Hero floating mock card ──────────────────────────────────────────────
+.heroCard {
+  margin-block-start: clamp(56px, 8vw, 96px);
+  max-inline-size: 560px;
+  border-radius: var(--radius-2xl, 14px);
+  border: 1px solid var(--p-border);
+  background: linear-gradient(180deg, var(--p-surface-2), var(--p-surface));
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.heroCardHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-block-end: 1px solid var(--p-border);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--p-text-2);
+}
+
+.heroCardDot {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--p-accent);
+}
+
+.heroCardBody {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-6, 24px);
+  align-items: center;
+  padding: var(--space-6, 24px);
+}
+
+.heroScore {
+  display: grid;
+  place-items: center;
+  inline-size: 96px;
+  block-size: 96px;
+  border-radius: var(--radius-full, 9999px);
+  background: conic-gradient(var(--p-accent) 0% 82%, rgba(255, 255, 255, 0.08) 82% 100%);
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border-radius: inherit;
+    background: var(--p-surface);
+  }
+}
+
+.heroScoreValue {
+  position: relative;
+  z-index: 1;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--p-text);
+}
+
+.heroScoreLabel {
+  position: relative;
+  z-index: 1;
+  font-size: 0.7rem;
+  color: var(--p-text-3);
+}
+
+.heroMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3, 12px);
+}
+
+.heroMetric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.heroMetricValue {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--p-text);
+}
+
+.heroMetricLabel {
+  font-size: 0.68rem;
+  color: var(--p-text-3);
+}
+
+.heroBars {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  block-size: 56px;
+  margin-block-start: var(--space-2, 8px);
+
+  span {
+    flex: 1;
+    border-radius: var(--radius-sm, 6px) var(--radius-sm, 6px) 0 0;
+    background: linear-gradient(180deg, var(--p-accent), var(--p-accent-2));
+    opacity: 0.85;
+  }
+
+  // Fixed decorative sample heights — not runtime data, so plain CSS, no inline.
+  span:nth-child(1) { block-size: 90%; }
+  span:nth-child(2) { block-size: 62%; }
+  span:nth-child(3) { block-size: 78%; }
+  span:nth-child(4) { block-size: 45%; }
+  span:nth-child(5) { block-size: 83%; }
+}
+
+.scrollCue {
+  position: absolute;
+  inset-block-end: 28px;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--p-text-3);
+}
+
+.scrollCueLine {
+  inline-size: 1px;
+  block-size: 40px;
+  background: linear-gradient(var(--p-accent), transparent);
+}
+
+// ── Statement / lede (Why) ───────────────────────────────────────────────
+.statement {
+  margin: 0;
+  max-inline-size: 20ch;
+  font-size: clamp(2.2rem, 6vw, 4.6rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: var(--p-text);
+}
+
+.statementMuted {
+  color: var(--p-text-3);
+}
+
+.lede {
+  margin: var(--space-8, 32px) 0 0;
+  max-inline-size: 60ch;
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+  line-height: 1.65;
+  color: var(--p-text-2);
+}
+
+// ── Capabilities grid ────────────────────────────────────────────────────
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-5, 20px);
+}
+
+.card {
+  position: relative;
+  padding: var(--space-8, 32px);
+  border-radius: var(--radius-2xl, 14px);
+  border: 1px solid var(--p-border);
+  background: var(--p-surface);
+  overflow: hidden;
+  transition: transform 300ms var(--ease, ease), border-color 300ms var(--ease, ease);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: 2px;
+    background: linear-gradient(90deg, var(--p-accent), var(--p-violet));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 360ms var(--ease, ease);
+  }
+
+  &:hover {
+    transform: translateY(-6px);
+    border-color: var(--p-border-strong);
+
+    &::before {
+      transform: scaleX(1);
+    }
+  }
+}
+
+.cardIndex {
+  display: block;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--p-accent);
+}
+
+.cardTitle {
+  margin: var(--space-4, 16px) 0 var(--space-3, 12px);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--p-text);
+}
+
+.cardBody {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--p-text-2);
+}
+
+// ── Go deeper (split) ────────────────────────────────────────────────────
+.splitInner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(40px, 6vw, 80px);
+  align-items: center;
+
+  @media (min-width: 900px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.splitText {
+  .btnGhost {
+    margin-block-start: var(--space-8, 32px);
+  }
+}
+
+.splitPanel {
+  border-radius: var(--radius-2xl, 14px);
+  border: 1px solid var(--p-border);
+  background: var(--p-bg);
+  padding: var(--space-6, 24px);
+}
+
+.insightList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: var(--space-5, 20px);
+    border-radius: var(--radius-xl, 12px);
+    background: var(--p-surface);
+    border: 1px solid var(--p-border);
+    font-size: 0.98rem;
+    line-height: 1.5;
+    color: var(--p-text-2);
+  }
+}
+
+.insightTag {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: var(--radius-chip, 20px);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  &[data-tone='risk'] {
+    background: rgba(248, 113, 113, 0.16);
+    color: #fca5a5;
+  }
+
+  &[data-tone='coach'] {
+    background: rgba(139, 123, 255, 0.18);
+    color: #c4bbff;
+  }
+
+  &[data-tone='watch'] {
+    background: rgba(245, 158, 11, 0.16);
+    color: #fcd34d;
+  }
+}
+
+// ── Steps ────────────────────────────────────────────────────────────────
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-6, 24px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.step {
+  padding-block-start: var(--space-6, 24px);
+  border-block-start: 2px solid var(--p-border-strong);
+}
+
+.stepNo {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--p-accent);
+}
+
+.stepTitle {
+  margin: var(--space-4, 16px) 0 var(--space-3, 12px);
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--p-text);
+}
+
+.stepBody {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--p-text-2);
+}
+
+// ── Stats band ───────────────────────────────────────────────────────────
+.statsBand {
+  padding-block: clamp(64px, 9vw, 120px);
+  background: var(--p-surface);
+  border-block: 1px solid var(--p-border);
+}
+
+.statsInner {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-8, 32px);
+
+  @media (min-width: 760px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+}
+
+.statValue {
+  font-size: clamp(2.6rem, 6vw, 4rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: linear-gradient(120deg, var(--p-accent), var(--p-violet));
+  background-clip: text;
+  // -webkit prefix is required for gradient-text clipping in Safari/WebKit;
+  // the unprefixed property alone does not clip to the text there.
+  // stylelint-disable-next-line property-no-vendor-prefix
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.statLabel {
+  font-size: 0.92rem;
+  color: var(--p-text-2);
+}
+
+// ── Assurances (security) ────────────────────────────────────────────────
+.assurances {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-5, 20px);
+}
+
+.assurance {
+  padding: var(--space-8, 32px);
+  border-radius: var(--radius-2xl, 14px);
+  border: 1px solid var(--p-border);
+  background: var(--p-surface);
+}
+
+.assuranceMark {
+  display: block;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--radius-lg, 10px);
+  background: linear-gradient(135deg, var(--p-accent), var(--p-accent-2));
+  box-shadow: 0 8px 24px rgba(232, 93, 18, 0.3);
+}
+
+.assuranceTitle {
+  margin: var(--space-5, 20px) 0 var(--space-3, 12px);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--p-text);
+}
+
+.assuranceBody {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--p-text-2);
+}
+
+// ── Final CTA ────────────────────────────────────────────────────────────
+.cta {
+  position: relative;
+  padding-block: clamp(96px, 14vw, 200px);
+  text-align: center;
+  overflow: hidden;
+}
+
+.ctaMesh {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(40% 60% at 50% 0%, rgba(232, 93, 18, 0.32), transparent 60%),
+    radial-gradient(50% 60% at 50% 100%, rgba(139, 123, 255, 0.22), transparent 60%);
+  filter: blur(30px);
+}
+
+.ctaInner {
+  position: relative;
+  z-index: 1;
+  max-inline-size: 760px;
+  margin-inline: auto;
+  padding-inline: var(--space-6, 24px);
+
+  .heroActions {
+    justify-content: center;
+  }
+}
+
+.ctaTitle {
+  margin: 0;
+  font-size: clamp(2.4rem, 7vw, 5rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  color: var(--p-text);
+}
+
+.ctaSub {
+  margin: var(--space-6, 24px) auto 0;
+  max-inline-size: 48ch;
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+  line-height: 1.6;
+  color: var(--p-text-2);
+}
+
+// ── Footer ───────────────────────────────────────────────────────────────
+.footer {
+  border-block-start: 1px solid var(--p-border);
+  padding-block: var(--space-12, 48px);
+}
+
+.footerInner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  align-items: center;
+  text-align: center;
+}
+
+.footerBrand {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--p-text);
+}
+
+.footerTag {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--p-text-2);
+}
+
+.footerCopy {
+  margin-block-start: var(--space-3, 12px);
+  font-size: 0.82rem;
+  color: var(--p-text-3);
+}
+
+// ── Hero entrance animation (pure CSS; plays on load, no JS) ──────────────
+// Gated so reduced-motion users get the static, fully-visible layout.
+@media (prefers-reduced-motion: no-preference) {
+  .heroLineInner {
+    transform: translateY(110%);
+    animation: hero-rise 1s var(--ease, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
+  }
+
+  .heroLine:nth-child(2) .heroLineInner {
+    animation-delay: 120ms;
+  }
+
+  .eyebrow,
+  .heroSub,
+  .heroActions,
+  .heroCard,
+  .scrollCue {
+    opacity: 0;
+    animation: hero-fade 900ms var(--ease, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
+  }
+
+  .eyebrow {
+    animation-delay: 80ms;
+  }
+
+  .heroSub {
+    animation-delay: 360ms;
+  }
+
+  .heroActions {
+    animation-delay: 480ms;
+  }
+
+  .heroCard {
+    animation-delay: 600ms;
+  }
+
+  .scrollCue {
+    animation: hero-fade 900ms var(--ease, cubic-bezier(0.22, 1, 0.36, 1)) 900ms forwards,
+      scroll-bob 2.4s ease-in-out 1.8s infinite;
+  }
+}
+
+@keyframes hero-rise {
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-fade {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scroll-bob {
+  0%,
+  100% {
+    transform: translate(-50%, 0);
+  }
+  50% {
+    transform: translate(-50%, 6px);
+  }
+}

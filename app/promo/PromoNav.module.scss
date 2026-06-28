@@ -1,0 +1,230 @@
+// PromoNav — sticky marketing header. Colours come from the page-scoped
+// --p-* palette defined in page.module.scss (.page), which wraps this nav.
+
+.nav {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: var(--z-header, 500);
+  transition:
+    background-color var(--transition-base, 200ms ease),
+    border-color var(--transition-base, 200ms ease),
+    backdrop-filter var(--transition-base, 200ms ease);
+  border-block-end: 1px solid transparent;
+}
+
+.scrolled {
+  background: color-mix(in srgb, var(--p-bg) 72%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  border-block-end-color: var(--p-border);
+}
+
+.inner {
+  max-inline-size: 1200px;
+  margin-inline: auto;
+  padding: var(--space-4, 16px) var(--space-6, 24px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6, 24px);
+}
+
+// ── Brand ──────────────────────────────────────────────────────────────────
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  text-decoration: none;
+  color: var(--p-text);
+  flex-shrink: 0;
+}
+
+.brandMark {
+  inline-size: 30px;
+  block-size: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-lg, 10px);
+  background: linear-gradient(135deg, var(--p-accent), var(--p-accent-2));
+  color: #0a0b0d;
+
+  svg {
+    inline-size: 22px;
+    block-size: 22px;
+
+    circle,
+    path {
+      fill: currentColor;
+    }
+  }
+}
+
+.brandName {
+  font-family: var(--font-jakarta);
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+}
+
+// ── Desktop links ──────────────────────────────────────────────────────────
+.links {
+  display: none;
+  align-items: center;
+  gap: var(--space-8, 32px);
+
+  @media (min-width: 880px) {
+    display: flex;
+  }
+}
+
+.link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--p-text-2);
+  text-decoration: none;
+  transition: color var(--transition-fast, 120ms ease);
+
+  &:hover {
+    color: var(--p-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--p-accent);
+    outline-offset: 4px;
+    border-radius: var(--radius-xs, 4px);
+  }
+}
+
+// ── Actions ────────────────────────────────────────────────────────────────
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+}
+
+.cta {
+  display: none;
+  align-items: center;
+  padding: 10px 20px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--p-text);
+  color: var(--p-bg);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    transform var(--transition-fast, 120ms ease),
+    background-color var(--transition-fast, 120ms ease);
+
+  &:hover {
+    transform: translateY(-1px);
+    background: var(--p-accent);
+    color: #0a0b0d;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--p-accent);
+    outline-offset: 3px;
+  }
+
+  @media (min-width: 560px) {
+    display: inline-flex;
+  }
+}
+
+// ── Mobile toggle ──────────────────────────────────────────────────────────
+.menuToggle {
+  inline-size: 42px;
+  block-size: 42px;
+  display: grid;
+  place-items: center;
+  gap: 5px;
+  border: 1px solid var(--p-border);
+  border-radius: var(--radius-md, 8px);
+  background: var(--p-surface);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--p-accent);
+    outline-offset: 2px;
+  }
+
+  @media (min-width: 880px) {
+    display: none;
+  }
+}
+
+.menuBar {
+  inline-size: 18px;
+  block-size: 2px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--p-text);
+  transition: transform var(--transition-base, 200ms ease), opacity var(--transition-base, 200ms ease);
+}
+
+.menuBarOpenTop {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menuBarOpenMid {
+  opacity: 0;
+}
+
+.menuBarOpenBot {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+// ── Mobile menu panel ──────────────────────────────────────────────────────
+.mobileMenu {
+  // Hidden until opened. (A base of `display: flex` here would override the
+  // `hidden` attribute, leaving the menu permanently visible on mobile.)
+  display: none;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+  padding: var(--space-4, 16px) var(--space-6, 24px) var(--space-6, 24px);
+  background: color-mix(in srgb, var(--p-bg) 92%, transparent);
+  backdrop-filter: blur(14px);
+  border-block-end: 1px solid var(--p-border);
+}
+
+.mobileMenuOpen {
+  display: flex;
+}
+
+// Never show the mobile panel on desktop, even if toggled open before resizing.
+@media (min-width: 880px) {
+  .mobileMenu,
+  .mobileMenuOpen {
+    display: none;
+  }
+}
+
+.mobileLink {
+  padding: var(--space-3, 12px) var(--space-2, 8px);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--p-text);
+  text-decoration: none;
+  border-block-end: 1px solid var(--p-border);
+
+  &:focus-visible {
+    outline: 2px solid var(--p-accent);
+    outline-offset: 2px;
+  }
+}
+
+.mobileCta {
+  margin-block-start: var(--space-3, 12px);
+  padding: 14px 20px;
+  text-align: center;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--p-accent);
+  color: #0a0b0d;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--p-text);
+    outline-offset: 2px;
+  }
+}

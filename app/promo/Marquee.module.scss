@@ -1,0 +1,67 @@
+// Marquee — seamless infinite ticker. Two identical groups translate left by
+// exactly half the track width, so the loop is invisible.
+
+.marquee {
+  overflow: hidden;
+  border-block: 1px solid var(--p-border);
+  background: var(--p-surface);
+  padding-block: var(--space-5, 20px);
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 38s linear infinite;
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10, 40px);
+  margin: 0;
+  padding: 0 var(--space-5, 20px);
+  list-style: none;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4, 16px);
+  white-space: nowrap;
+  font-family: var(--font-jakarta);
+  font-size: clamp(1.1rem, 2.4vw, 1.9rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--p-text-2);
+}
+
+.dot {
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--p-accent);
+  flex-shrink: 0;
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+    flex-wrap: wrap;
+  }
+}
