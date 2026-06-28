@@ -3,6 +3,10 @@
   "version": "2.0.0",
   "description": "Delivery Clarity — Jira Delivery Intelligence Platform",
   "private": true,
+  "engines": {
+    "node": ">=20.9 <21",
+    "npm": ">=10 <11"
+  },
   "scripts": {
     "dev": "node scripts/start-server.js dev",
     "build": "next build",
