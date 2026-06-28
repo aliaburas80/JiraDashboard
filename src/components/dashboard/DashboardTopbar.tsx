@@ -32,9 +32,10 @@ function groupIsActive(pathname: string, group: typeof DC_NAV_GROUPS[0]): boolea
 
 interface Props {
   onNewUpload: () => void;
+  onToggleSidebar?: () => void;
 }
 
-export default function DashboardTopbar({ onNewUpload }: Props) {
+export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props) {
   const pathname = usePathname();
 
   const [openGroup, setOpenGroup] = useState<string | null>(null);
@@ -100,6 +101,21 @@ export default function DashboardTopbar({ onNewUpload }: Props) {
   return (
     <>
       <header className={styles.header}>
+
+        {/* ── HAMBURGER — mobile only, opens dashboard nav sidebar ── */}
+        {onToggleSidebar && (
+          <button
+            type="button"
+            className={styles.hamburger}
+            onClick={onToggleSidebar}
+            aria-label="Open navigation menu"
+            aria-haspopup="dialog"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M3 12h18M3 6h18M3 18h18" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
 
         {/* ── BRAND ── */}
         <Link href="/" className={styles.logo}>

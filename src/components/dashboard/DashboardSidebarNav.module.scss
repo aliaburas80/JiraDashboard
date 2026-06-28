@@ -3,6 +3,52 @@
   @apply hidden md:flex flex-col w-[228px] shrink-0 bg-white border-r border-slate-200 fixed top-[52px] bottom-0 left-0 overflow-y-auto font-sans;
 }
 
+// Mobile drawer — overrides Tailwind's hidden class to show as a slide-in overlay.
+// Controlled by DashboardNavSidebar's open prop.
+.sidebarOpen {
+  display: flex !important; /* justified: override Tailwind hidden !important at mobile */
+  z-index: 450; // above backdrop (440), below header (500)
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: sidebar-slide-in 240ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+}
+
+@keyframes sidebar-slide-in {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+// ── Mobile-only close button inside the sidebar drawer ───────────────────────
+.mobileClose {
+  display: none;
+
+  @media (max-width: 767px) {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2, 8px);
+    padding: 10px 12px;
+    width: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--color-text-secondary, #64748b);
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary, #2563eb);
+      outline-offset: -2px;
+    }
+
+    &:hover {
+      background: var(--color-surface-hover, #f8fafc);
+    }
+  }
+}
+
 // ── Health widget ─────────────────────────────────────────────────────────────
 .healthBlock {
   @apply p-3.5 border-b border-slate-200;

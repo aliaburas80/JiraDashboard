@@ -22,5 +22,24 @@
   margin-left: var(--sidebar-width, 228px);
   flex: 1;
   min-height: 0;
+
+  // Sidebar is hidden at <768px — reset the offset so content fills the viewport.
+  @media (max-width: 767px) {
+    margin-inline-start: 0;
+  }
+}
+
+// Semi-transparent backdrop shown behind the mobile sidebar drawer.
+// Invisible on desktop (sidebar is always visible and doesn't need a backdrop).
+.sidebarBackdrop {
+  display: none;
+
+  @media (max-width: 767px) {
+    display: block;
+    position: fixed;
+    inset: var(--header-height, 52px) 0 0 0;
+    z-index: 440;
+    background: rgba(0, 0, 0, 0.45);
+  }
 }
 

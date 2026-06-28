@@ -106,10 +106,12 @@ function GroupLabel({ label }: { label: string }) {
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface Props {
   metrics: DashboardMetrics | null;
+  open?: boolean;
+  onClose?: () => void;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function DashboardNavSidebar({ metrics }: Props) {
+export default function DashboardNavSidebar({ metrics, open, onClose }: Props) {
   const [userRole, setUserRole] = useState<string>('user');
 
   useEffect(() => {
@@ -174,7 +176,16 @@ export default function DashboardNavSidebar({ metrics }: Props) {
   const epicChipType: 'cc' | 'cw' | 'cg' = criticalEpics > 0 ? 'cc' : epics.length > 0 ? 'cw' : 'cg';
 
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar}${open ? ` ${styles.sidebarOpen}` : ''}`}>
+
+      {/* ── Mobile close button (hidden on desktop via CSS) ── */}
+      {onClose && (
+        <button type="button" className={styles.mobileClose} onClick={onClose} aria-label="Close navigation">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+            <path d="M6 18 18 6M6 6l12 12" strokeLinecap="round" />
+          </svg>
+        </button>
+      )}
 
       {/* ── Health block ── */}
       <div className={`${styles.healthBlock} ${healthVariantClass}`}>
