@@ -9,6 +9,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 import styles from './DemoRequest.module.scss';
 
@@ -30,10 +31,13 @@ export default function DemoRequest({ label, triggerClassName }: DemoRequestProp
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const firstFieldRef = useRef<HTMLInputElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const titleId = useId();
+
+  useEffect(() => { setMounted(true); }, []);
 
   // Close on Escape and lock body scroll while open; restore focus on close.
   useEffect(() => {
@@ -106,7 +110,7 @@ export default function DemoRequest({ label, triggerClassName }: DemoRequestProp
         {label}
       </button>
 
-      {open && (
+      {mounted && open && createPortal(
         <div
           className={styles.overlay}
           role="dialog"
@@ -217,7 +221,8 @@ export default function DemoRequest({ label, triggerClassName }: DemoRequestProp
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
