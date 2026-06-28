@@ -1,0 +1,544 @@
+// app/retro/page.module.scss
+// Replaces 112 inline style props from app/retro/page.tsx (STYLE-02 remediation).
+// All --dc-* references are global design tokens defined in src/styles/_tokens.scss.
+
+// ── Page header ────────────────────────────────────────────────────────────────
+.pageTitle {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--dc-p1);
+  letter-spacing: -0.02em;
+  margin-block-end: 4px;
+}
+
+.pageSubtitle {
+  font-size: 13px;
+  color: var(--dc-p2);
+}
+
+.formTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--dc-p1);
+}
+
+.formSubtitle {
+  font-size: 12px;
+  color: var(--dc-p3);
+}
+
+// ── Shared card ────────────────────────────────────────────────────────────────
+.card {
+  background: var(--dc-s2);
+  border: 1px solid var(--dc-bdr);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.cardMb {
+  margin-block-end: 20px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dc-p1);
+}
+
+.sectionSubtitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--dc-p1);
+  margin-block-end: 6px;
+}
+
+// ── Form controls ──────────────────────────────────────────────────────────────
+.input {
+  inline-size: 100%;
+  background: var(--dc-s3);
+  border: 1px solid var(--dc-bdr2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--dc-p1);
+  outline: none;
+  font-family: inherit;
+}
+
+.input:focus-visible,
+.backBtn:focus-visible,
+.addBtn:focus-visible,
+.removeBtn:focus-visible,
+.menuCard:focus-visible,
+.menuCardCtaButton:focus-visible,
+.menuCardCsv:focus-visible,
+.dropZone:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--dc-accent) 60%, transparent);
+  outline-offset: 2px;
+}
+
+.label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dc-p2);
+  margin-block-end: 4px;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.clipboardFallback {
+  position: fixed;
+  inset-inline-start: -9999px;
+}
+
+// ── Buttons ────────────────────────────────────────────────────────────────────
+.backBtn {
+  font-size: 13px;
+  color: var(--dc-p2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.addBtn {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dc-acc2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.removeBtn {
+  font-size: 18px;
+  color: var(--dc-p3);
+  padding: 0 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1;
+}
+
+// ── Menu cards ─────────────────────────────────────────────────────────────────
+.menuCard {
+  border-radius: 12px;
+  padding: 20px;
+  text-align: start;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--dc-bdr);
+}
+
+.menuCardPrimary {
+  background: rgba(232, 93, 18, 0.08);
+  border: 1px solid rgba(232, 93, 18, 0.2);
+  border-block-start: 2px solid var(--dc-accent);
+}
+
+.menuCardSecondary {
+  background: rgba(255, 138, 76, 0.06);
+  border: 1px solid rgba(255, 138, 76, 0.15);
+  border-block-start: 2px solid var(--dc-acc2);
+  cursor: default;
+}
+
+.menuCardIcon {
+  margin-block-end: 12px;
+  color: var(--dc-acc2);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.menuCardIconMuted {
+  margin-block-end: 12px;
+  color: var(--dc-p2);
+}
+
+.menuCardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dc-p1);
+  margin-block-end: 6px;
+}
+
+.menuCardDesc {
+  font-size: 11px;
+  color: var(--dc-p2);
+  line-height: 1.6;
+  margin-block-end: 12px;
+}
+
+.menuCardCta {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dc-acc2);
+}
+
+.menuCardCtaButton {
+  display: block;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dc-acc2);
+  cursor: pointer;
+  text-align: start;
+}
+
+.menuCardCsv {
+  display: block;
+  margin-block-start: 8px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--dc-p3);
+  text-decoration: underline;
+  cursor: pointer;
+  text-align: start;
+}
+
+// ── Info panel on the menu ─────────────────────────────────────────────────────
+.infoPanel {
+  margin-block-start: 32px;
+  background: var(--dc-s2);
+  border: 1px solid var(--dc-bdr);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.infoPanelTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--dc-p1);
+  margin-block-end: 8px;
+}
+
+.infoPanelItem {
+  font-size: 12px;
+  color: var(--dc-p2);
+  margin-block-end: 4px;
+
+  &:last-child {
+    margin-block-end: 0;
+  }
+}
+
+// ── Entry list (wentWell / didntGoWell / blockers) ────────────────────────────
+.entryLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dc-p1);
+  margin-block-end: 8px;
+}
+
+// ── Goal status banner ─────────────────────────────────────────────────────────
+.goalBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  padding: 12px 20px;
+  margin-block-end: 20px;
+
+  &[data-goal='yes'] {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.25);
+  }
+
+  &[data-goal='partial'] {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.25);
+  }
+
+  &[data-goal='no'] {
+    background: rgba(248, 113, 113, 0.1);
+    border-color: rgba(248, 113, 113, 0.25);
+  }
+}
+
+.goalBannerEmoji {
+  font-size: 20px;
+}
+
+.goalBannerText {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+
+  .goalBanner[data-goal='yes'] & {
+    color: var(--dc-green);
+  }
+
+  .goalBanner[data-goal='partial'] & {
+    color: var(--dc-amber);
+  }
+
+  .goalBanner[data-goal='no'] & {
+    color: var(--dc-red);
+  }
+}
+
+// ── Insight panel ──────────────────────────────────────────────────────────────
+.insightTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--dc-p1);
+}
+
+.confidenceChip {
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 100px;
+  padding: 2px 8px;
+}
+
+.themePills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-block-end: 14px;
+}
+
+.themePill {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--dc-acc2);
+  background: rgba(255, 138, 76, 0.1);
+  border: 1px solid rgba(255, 138, 76, 0.2);
+  border-radius: 100px;
+  padding: 3px 10px;
+}
+
+.watchSection {
+  margin-block-end: 14px;
+}
+
+.bulletList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bulletItem {
+  font-size: 12px;
+  color: var(--dc-p2);
+}
+
+.emptyNote {
+  font-size: 12px;
+  color: var(--dc-p3);
+  margin: 0;
+}
+
+// ── Backlog items ──────────────────────────────────────────────────────────────
+.backlogItems {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.backlogItem {
+  border: 1px solid var(--dc-bdr);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--dc-s3);
+}
+
+.backlogItemHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-block-end: 4px;
+}
+
+.priorityDot {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &[data-priority='high']   { background: var(--dc-red); }
+  &[data-priority='medium'] { background: var(--dc-amber); }
+  &[data-priority='low']    { background: var(--dc-green); }
+}
+
+.backlogItemType {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--dc-acc2);
+}
+
+.backlogItemTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dc-p1);
+}
+
+.backlogItemDesc {
+  font-size: 11px;
+  color: var(--dc-p2);
+  margin: 0 0 2px;
+
+  &:last-of-type {
+    margin-block-end: 6px;
+  }
+}
+
+.backlogItemEvidence {
+  font-size: 10px;
+  color: var(--dc-p3);
+  font-style: italic;
+  margin: 0 0 10px;
+}
+
+.jiraBtn {
+  line-height: 1.3;
+}
+
+.jiraBtnNote {
+  font-size: 9px;
+  font-weight: 500;
+}
+
+// ── Action items ───────────────────────────────────────────────────────────────
+.actionItems {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.actionItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.actionText {
+  flex: 1;
+  color: var(--dc-p1);
+}
+
+.actionMeta {
+  font-size: 11px;
+  color: var(--dc-p3);
+  flex-shrink: 0;
+}
+
+// ── Upload drop zone ───────────────────────────────────────────────────────────
+.dropZone {
+  display: block;
+  inline-size: 100%;
+  text-align: center;
+  padding: 40px;
+  background: var(--dc-s2);
+  border: 1px dashed var(--dc-bdr2);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &[disabled] {
+    cursor: wait;
+  }
+}
+
+.dropZoneIcon {
+  color: var(--dc-acc2);
+  margin-block-end: 12px;
+}
+
+.dropZoneTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dc-p1);
+  margin-block-end: 4px;
+}
+
+.dropZoneHint {
+  font-size: 11px;
+  color: var(--dc-p3);
+  margin: 0;
+}
+
+// ── Error banner ───────────────────────────────────────────────────────────────
+.errorBanner {
+  margin-block-start: 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  background: rgba(248, 113, 113, 0.1);
+  padding: 12px 16px;
+}
+
+.errorText {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--dc-red);
+  margin: 0;
+}
+
+// ── Warning banner (upload notes) ──────────────────────────────────────────────
+.warningBanner {
+  margin-block-end: 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  background: rgba(245, 158, 11, 0.08);
+  padding: 12px 16px;
+}
+
+.warningTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--dc-amber);
+  margin-block-end: 6px;
+}
+
+// ── Info panel list ────────────────────────────────────────────────────────────
+.infoPanelList {
+  padding-inline-start: 16px;
+  margin: 0;
+}
+
+// ── Delivery chip (page header badge) ──────────────────────────────────────────
+.deliveryChip {
+  border-radius: 100px;
+  padding: 4px 12px;
+  margin-block-end: 12px;
+  display: inline-flex;
+}
+
+// ── Priority select (compact col in action items table) ────────────────────────
+.prioritySelect {
+  padding: 8px 6px;
+  font-size: 11px;
+}
+
+// ── Amber notes (repeated blockers / duplicate actions) ───────────────────────
+.amberNote {
+  font-size: 11px;
+  color: var(--dc-amber);
+  margin-block-end: 6px;
+
+  &:last-child {
+    margin-block-end: 0;
+  }
+}

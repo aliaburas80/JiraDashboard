@@ -8,6 +8,7 @@ import { SvgIcon } from '@/components/ui/SvgIcon';
 import { downloadRetroExcelTemplate } from '@/services/retro/retroTemplate.service';
 import { generateRetrospectiveInsight, THEME_LABEL } from '@/services/retro/retroInsights.service';
 import type { RetroRecord, RetrospectiveInsight, RetroDataCorrection } from '@/types/retrospective';
+import styles from './page.module.scss';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -73,34 +74,6 @@ function downloadTemplate() {
 // lives in src/services/retro/retroInsights.service.ts — shared by the
 // in-app form (one record) and the uploaded-file flow (one or more records).
 
-// ── Shared styles ──────────────────────────────────────────────────────────────
-
-const inputSt: React.CSSProperties = {
-  width: '100%',
-  background: 'var(--dc-s3)',
-  border: '1px solid var(--dc-bdr2)',
-  borderRadius: 8,
-  padding: '8px 12px',
-  fontSize: 13,
-  color: 'var(--dc-p1)',
-  outline: 'none',
-};
-
-const sectionCard: React.CSSProperties = {
-  background: 'var(--dc-s2)',
-  border: '1px solid var(--dc-bdr)',
-  borderRadius: 12,
-  padding: 20,
-};
-
-const labelSt: React.CSSProperties = {
-  display: 'block',
-  fontSize: 11,
-  fontWeight: 600,
-  color: 'var(--dc-p2)',
-  marginBottom: 4,
-};
-
 // Clipboard write can silently fail (insecure context, missing permission,
 // older browsers) — navigator.clipboard.writeText() alone has no fallback
 // and no way for the caller to know it didn't work. This tries the modern
@@ -118,8 +91,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
   try {
     const textarea = document.createElement('textarea');
     textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.left = '-9999px';
+    textarea.className = styles.clipboardFallback;
     document.body.appendChild(textarea);
     textarea.focus();
     textarea.select();
@@ -138,23 +110,23 @@ function EntryList({
 }: { label: string; icon: string; items: RetroEntry[]; onChange: (v: RetroEntry[]) => void; placeholder: string }) {
   return (
     <div>
-      <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 8 }}>{icon} {label}</h3>
+      <h3 className={styles.entryLabel}>{icon} {label}</h3>
       <div className="space-y-2">
         {items.map((item, i) => (
           <div key={i} className="flex gap-2">
             <input
               type="text" value={item.text} placeholder={placeholder}
               onChange={e => { const next = [...items]; next[i] = { text: e.target.value }; onChange(next); }}
-              style={{ ...inputSt, flex: 1 }}
+              className={clsx(styles.input, 'flex-1')}
             />
             {items.length > 1 && (
               <button type="button" onClick={() => onChange(items.filter((_, j) => j !== i))}
-                style={{ color: 'var(--dc-p3)', fontSize: 18, padding: '0 4px', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                className={styles.removeBtn}>×</button>
             )}
           </div>
         ))}
         <button type="button" onClick={() => onChange([...items, { text: '' }])}
-          style={{ fontSize: 11, fontWeight: 700, color: 'var(--dc-acc2)', background: 'none', border: 'none', cursor: 'pointer' }}>+ Add another</button>
+          className={styles.addBtn}>+ Add another</button>
       </div>
     </div>
   );
@@ -176,57 +148,57 @@ function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
   }
 
   return (
-    <div style={{ ...sectionCard, marginBottom: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <h2 style={{ fontSize: 14, fontWeight: 800, color: 'var(--dc-p1)' }}>{insight.sprintName || 'Retrospective'}</h2>
-        <span className="chip" style={{ fontSize: 10, fontWeight: 700, borderRadius: 100, padding: '2px 8px' }}>
+    <div className={clsx(styles.card, styles.cardMb)}>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className={styles.insightTitle}>{insight.sprintName || 'Retrospective'}</h2>
+        <span className={clsx('chip', styles.confidenceChip)}>
           Confidence: {insight.confidence}
         </span>
       </div>
 
       {insight.themes.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+        <div className={styles.themePills}>
           {insight.themes.map((t) => (
-            <span key={t.category} style={{ fontSize: 10, fontWeight: 700, color: 'var(--dc-acc2)', background: 'rgba(255,138,76,0.1)', border: '1px solid rgba(255,138,76,0.2)', borderRadius: 100, padding: '3px 10px' }}>
+            <span key={t.category} className={styles.themePill}>
               {THEME_LABEL[t.category] ?? t.category} ({t.count})
             </span>
           ))}
         </div>
       )}
 
-      <div style={{ marginBottom: 14 }}>
-        <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 6 }}>👀 What to Watch</h3>
+      <div className={styles.watchSection}>
+        <h3 className={styles.sectionSubtitle}>👀 What to Watch</h3>
         {watch.length > 0 ? (
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {watch.map((w, i) => <li key={i} style={{ fontSize: 12, color: 'var(--dc-p2)' }}>• {w}</li>)}
+          <ul className={styles.bulletList}>
+            {watch.map((w, i) => <li key={i} className={styles.bulletItem}>• {w}</li>)}
           </ul>
-        ) : <p style={{ fontSize: 12, color: 'var(--dc-p3)' }}>All clear — no pain points or blockers recorded.</p>}
+        ) : <p className={styles.emptyNote}>All clear — no pain points or blockers recorded.</p>}
       </div>
 
-      <div style={{ marginBottom: 14 }}>
-        <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 6 }}>✅ Do This Next</h3>
+      <div className={styles.watchSection}>
+        <h3 className={styles.sectionSubtitle}>✅ Do This Next</h3>
         {doNext.length > 0 ? (
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {doNext.map((s, i) => <li key={i} style={{ fontSize: 12, color: 'var(--dc-p2)' }}>→ {s}</li>)}
+          <ul className={styles.bulletList}>
+            {doNext.map((s, i) => <li key={i} className={styles.bulletItem}>→ {s}</li>)}
           </ul>
-        ) : <p style={{ fontSize: 12, color: 'var(--dc-p3)' }}>No specific suggestions — good job, keep it up!</p>}
+        ) : <p className={styles.emptyNote}>No specific suggestions — good job, keep it up!</p>}
       </div>
 
       {insight.suggestedBacklogItems.length > 0 && (
-        <div style={{ marginBottom: 14 }}>
-          <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 6 }}>📝 Suggested Stories &amp; Tasks for Next Sprint</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className={styles.watchSection}>
+          <h3 className={styles.sectionSubtitle}>📝 Suggested Stories &amp; Tasks for Next Sprint</h3>
+          <div className={styles.backlogItems}>
             {insight.suggestedBacklogItems.map((item, i) => (
-              <div key={i} style={{ border: '1px solid var(--dc-bdr)', borderRadius: 8, padding: '10px 12px', background: 'var(--dc-s3)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: item.priority === 'high' ? 'var(--dc-red)' : item.priority === 'medium' ? 'var(--dc-amber)' : 'var(--dc-green)' }} />
-                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--dc-acc2)' }}>{item.type}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)' }}>{item.title}</span>
+              <div key={i} className={styles.backlogItem}>
+                <div className={styles.backlogItemHeader}>
+                  <span className={styles.priorityDot} data-priority={item.priority} />
+                  <span className={styles.backlogItemType}>{item.type}</span>
+                  <span className={styles.backlogItemTitle}>{item.title}</span>
                 </div>
                 {item.description.split('\n').map((line, li) => (
-                  <p key={li} style={{ fontSize: 11, color: 'var(--dc-p2)', margin: li === 0 ? '0 0 2px 0' : '0 0 6px 0' }}>{line}</p>
+                  <p key={li} className={styles.backlogItemDesc}>{line}</p>
                 ))}
-                <p style={{ fontSize: 10, color: 'var(--dc-p3)', fontStyle: 'italic', margin: '0 0 10px 0' }}>Evidence: {item.evidence}</p>
+                <p className={styles.backlogItemEvidence}>Evidence: {item.evidence}</p>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -239,11 +211,10 @@ function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
                     type="button"
                     disabled
                     title="Coming soon — requires Jira write access, which this app does not yet have (see FUT-JIRA-02 roadmap item)."
-                    className="btn-secondary btn-xs flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ lineHeight: 1.3 }}
+                    className={clsx('btn-secondary btn-xs flex-1 disabled:opacity-50 disabled:cursor-not-allowed', styles.jiraBtn)}
                   >
                     Create in Jira<br />
-                    <span style={{ fontSize: 9, fontWeight: 500 }}>coming soon</span>
+                    <span className={styles.jiraBtnNote}>coming soon</span>
                   </button>
                 </div>
               </div>
@@ -253,12 +224,12 @@ function InsightPanel({ insight }: { insight: RetrospectiveInsight }) {
       )}
 
       {insight.repeatedBlockers.length > 0 && (
-        <p style={{ fontSize: 11, color: 'var(--dc-amber)', marginBottom: 6 }}>
+        <p className={styles.amberNote}>
           ⚠ Repeated across sprints: {insight.repeatedBlockers.join(', ')}
         </p>
       )}
       {insight.duplicateActionItems.length > 0 && (
-        <p style={{ fontSize: 11, color: 'var(--dc-amber)' }}>
+        <p className={styles.amberNote}>
           ⚠ Duplicate action items: {insight.duplicateActionItems.join(', ')}
         </p>
       )}
@@ -315,84 +286,63 @@ export default function RetroPage() {
     <AppShell showNav>
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
-          <span className="chip c-acc" style={{ borderRadius: 100, padding: '4px 12px', marginBottom: 12, display: 'inline-flex' }}>
+          <span className={clsx('chip c-acc', styles.deliveryChip)}>
             🔄 Delivery
           </span>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--dc-p1)', letterSpacing: '-0.02em', marginBottom: 4 }}>Retrospective</h1>
-          <p style={{ fontSize: 13, color: 'var(--dc-p2)' }}>Capture what happened, what to improve, and generate next-action suggestions.</p>
+          <h1 className={styles.pageTitle}>Retrospective</h1>
+          <p className={styles.pageSubtitle}>Capture what happened, what to improve, and generate next-action suggestions.</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Fill in App — primary */}
-          <button type="button" onClick={() => setView('form')} style={{
-            background: 'rgba(232,93,18,0.08)',
-            border: '1px solid rgba(232,93,18,0.2)',
-            borderTop: '2px solid var(--dc-accent)',
-            borderRadius: 12,
-            padding: 20,
-            textAlign: 'left',
-            cursor: 'pointer',
-            transition: 'all 0.15s',
-          }}>
-            <div style={{ fontSize: 22, marginBottom: 12 }}>✍️</div>
-            <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dc-p1)', marginBottom: 6 }}>Fill in App</h2>
-            <p style={{ fontSize: 11, color: 'var(--dc-p2)', lineHeight: 1.6, marginBottom: 12 }}>Complete the retrospective form directly here. Get instant suggestions and action items on submit.</p>
-            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--dc-acc2)' }}>Start →</p>
+          <button type="button" onClick={() => setView('form')} className={clsx(styles.menuCard, styles.menuCardPrimary)}>
+            <div className={styles.menuCardIcon} aria-hidden="true">✍️</div>
+            <h2 className={styles.menuCardTitle}>Fill in App</h2>
+            <p className={styles.menuCardDesc}>Complete the retrospective form directly here. Get instant suggestions and action items on submit.</p>
+            <p className={styles.menuCardCta}>Start →</p>
           </button>
 
           {/* Download Template — secondary */}
-          <button type="button" onClick={downloadRetroExcelTemplate} style={{
-            background: 'rgba(255,138,76,0.06)',
-            border: '1px solid rgba(255,138,76,0.15)',
-            borderTop: '2px solid var(--dc-acc2)',
-            borderRadius: 12,
-            padding: 20,
-            textAlign: 'left',
-            cursor: 'pointer',
-            transition: 'all 0.15s',
-          }}>
-            <SvgIcon name="download" size={22} style={{ color: 'var(--dc-acc2)', marginBottom: 12 }} />
-            <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dc-p1)', marginBottom: 6 }}>Download Template</h2>
-            <p style={{ fontSize: 11, color: 'var(--dc-p2)', lineHeight: 1.6, marginBottom: 12 }}>Download an Excel template (with an Instructions sheet and examples) to fill offline, then upload it here.</p>
-            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--dc-acc2)' }}>Download .xlsx →</p>
-            <span
-              role="button" tabIndex={0}
-              onClick={(e) => { e.stopPropagation(); downloadTemplate(); }}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); downloadTemplate(); } }}
-              style={{ display: 'block', marginTop: 8, fontSize: 10, fontWeight: 600, color: 'var(--dc-p3)', textDecoration: 'underline', cursor: 'pointer' }}
+          <div className={clsx(styles.menuCard, styles.menuCardSecondary)}>
+            <SvgIcon name="download" size={22} className={styles.menuCardIcon} />
+            <h2 className={styles.menuCardTitle}>Download Template</h2>
+            <p className={styles.menuCardDesc}>Download an Excel template (with an Instructions sheet and examples) to fill offline, then upload it here.</p>
+            <button
+              type="button"
+              onClick={downloadRetroExcelTemplate}
+              className={styles.menuCardCtaButton}
+            >
+              Download .xlsx →
+            </button>
+            <button
+              type="button"
+              onClick={downloadTemplate}
+              className={styles.menuCardCsv}
             >
               or download as .csv instead
-            </span>
-          </button>
+            </button>
+          </div>
 
           {/* Upload File */}
-          <button type="button" onClick={() => { setUploadError(null); setView('upload'); }} style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid var(--dc-bdr)',
-            borderRadius: 12,
-            padding: 20,
-            textAlign: 'left',
-            cursor: 'pointer',
-            transition: 'all 0.15s',
-          }}>
-            <SvgIcon name="upload" size={22} style={{ color: 'var(--dc-p2)', marginBottom: 12 }} />
-            <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dc-p1)', marginBottom: 6 }}>Upload Retro File</h2>
-            <p style={{ fontSize: 11, color: 'var(--dc-p2)', lineHeight: 1.6, marginBottom: 12 }}>Upload a completed CSV, Excel, Markdown, or plain text retrospective for automated analysis.</p>
-            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--dc-acc2)' }}>Upload →</p>
+          <button type="button" onClick={() => { setUploadError(null); setView('upload'); }} className={styles.menuCard}>
+            <SvgIcon name="upload" size={22} className={styles.menuCardIconMuted} />
+            <h2 className={styles.menuCardTitle}>Upload Retro File</h2>
+            <p className={styles.menuCardDesc}>Upload a completed CSV, Excel, Markdown, or plain text retrospective for automated analysis.</p>
+            <p className={styles.menuCardCta}>Upload →</p>
           </button>
         </div>
 
         {/* Info panel */}
-        <div style={{ marginTop: 32, background: 'var(--dc-s2)', border: '1px solid var(--dc-bdr)', borderRadius: 10, padding: 16 }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 8 }}>What the retrospective tool does</p>
-          <ul style={{ paddingLeft: 16, margin: 0 }}>
+        <div className={styles.infoPanel}>
+          <p className={styles.infoPanelTitle}>What the retrospective tool does</p>
+          <ul className={styles.infoPanelList}>
             {[
               'Captures what went well, what did not, and blockers',
               'Records action items with owners and due dates',
               'Generates insights and next-sprint recommendations',
               'Flags missing owners, due dates, and unresolved blockers',
             ].map((item, i) => (
-              <li key={i} style={{ fontSize: 12, color: 'var(--dc-p2)', marginBottom: i < 3 ? 4 : 0 }}>{item}</li>
+              <li key={i} className={styles.infoPanelItem}>{item}</li>
             ))}
           </ul>
         </div>
@@ -406,37 +356,36 @@ export default function RetroPage() {
     <AppShell showNav>
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <button type="button" onClick={() => setView('menu')}
-            style={{ fontSize: 13, color: 'var(--dc-p2)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+          <button type="button" onClick={() => setView('menu')} className={styles.backBtn}>← Back</button>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--dc-p1)' }}>Sprint Retrospective</h1>
-            <p style={{ fontSize: 12, color: 'var(--dc-p3)' }}>Fill in all sections then click Submit to get suggestions.</p>
+            <h1 className={styles.formTitle}>Sprint Retrospective</h1>
+            <p className={styles.formSubtitle}>Fill in all sections then click Submit to get suggestions.</p>
           </div>
         </div>
 
         <div className="space-y-6">
           {/* Context */}
-          <div style={sectionCard}>
-            <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 16 }}>📋 Sprint Context</h2>
+          <div className={styles.card}>
+            <h2 className={clsx(styles.sectionTitle, 'mb-4')}>📋 Sprint Context</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label style={labelSt}>Sprint Name *</label>
+                <label className={styles.label}>Sprint Name *</label>
                 <input type="text" value={form.sprintName} placeholder="e.g. Sprint 42"
-                  onChange={e => patchForm({ sprintName: e.target.value })} style={inputSt} />
+                  onChange={e => patchForm({ sprintName: e.target.value })} className={styles.input} />
               </div>
               <div>
-                <label style={labelSt}>Team Name</label>
+                <label className={styles.label}>Team Name</label>
                 <input type="text" value={form.teamName} placeholder="e.g. Backend Team"
-                  onChange={e => patchForm({ teamName: e.target.value })} style={inputSt} />
+                  onChange={e => patchForm({ teamName: e.target.value })} className={styles.input} />
               </div>
               <div>
-                <label style={labelSt}>Retro Date</label>
-                <input type="date" value={form.retroDate} onChange={e => patchForm({ retroDate: e.target.value })} style={inputSt} />
+                <label className={styles.label}>Retro Date</label>
+                <input type="date" value={form.retroDate} onChange={e => patchForm({ retroDate: e.target.value })} className={styles.input} />
               </div>
               <div>
-                <label style={labelSt}>Sprint Goal Met?</label>
+                <label className={styles.label}>Sprint Goal Met?</label>
                 <select value={form.goalMet} onChange={e => patchForm({ goalMet: e.target.value as RetroForm['goalMet'] })}
-                  style={{ ...inputSt, background: 'var(--dc-s3)' }}>
+                  className={styles.input}>
                   <option value="">Select…</option>
                   <option value="yes">Yes</option>
                   <option value="partial">Partially</option>
@@ -444,50 +393,50 @@ export default function RetroPage() {
                 </select>
               </div>
             </div>
-            <div style={{ marginTop: 16 }}>
-              <label style={labelSt}>Sprint Goal</label>
+            <div className="mt-4">
+              <label className={styles.label}>Sprint Goal</label>
               <input type="text" value={form.sprintGoal} placeholder="What were you trying to achieve?"
-                onChange={e => patchForm({ sprintGoal: e.target.value })} style={inputSt} />
+                onChange={e => patchForm({ sprintGoal: e.target.value })} className={styles.input} />
             </div>
           </div>
 
           {/* Observations */}
-          <div style={{ ...sectionCard, display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)' }}>🗣️ Team Observations</h2>
+          <div className={clsx(styles.card, 'flex flex-col gap-5')}>
+            <h2 className={styles.sectionTitle}>🗣️ Team Observations</h2>
             <EntryList label="What Went Well" icon="✅" items={form.wentWell} onChange={v => patchForm({ wentWell: v })} placeholder="Something that worked well…" />
             <EntryList label="What Did Not Go Well" icon="❌" items={form.didntGoWell} onChange={v => patchForm({ didntGoWell: v })} placeholder="Something that caused friction or slippage…" />
             <EntryList label="Blockers & Impediments" icon="🚧" items={form.blockers} onChange={v => patchForm({ blockers: v })} placeholder="Something that blocked the team…" />
           </div>
 
           {/* Action Items */}
-          <div style={sectionCard}>
-            <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 12 }}>✅ Action Items</h2>
+          <div className={styles.card}>
+            <h2 className={clsx(styles.sectionTitle, 'mb-3')}>✅ Action Items</h2>
             <div className="space-y-3">
               {form.actions.map((a, i) => (
                 <div key={i} className="grid grid-cols-12 gap-2 items-start">
                   <input type="text" value={a.text} placeholder="Action…"
                     onChange={e => { const next = [...form.actions]; next[i] = { ...next[i], text: e.target.value }; patchForm({ actions: next }); }}
-                    style={inputSt} className="col-span-4" />
+                    className={clsx(styles.input, 'col-span-4')} />
                   <input type="text" value={a.owner} placeholder="Owner"
                     onChange={e => { const next = [...form.actions]; next[i] = { ...next[i], owner: e.target.value }; patchForm({ actions: next }); }}
-                    style={inputSt} className="col-span-3" />
+                    className={clsx(styles.input, 'col-span-3')} />
                   <input type="date" value={a.dueDate}
                     onChange={e => { const next = [...form.actions]; next[i] = { ...next[i], dueDate: e.target.value }; patchForm({ actions: next }); }}
-                    style={inputSt} className="col-span-3" />
+                    className={clsx(styles.input, 'col-span-3')} />
                   <select value={a.priority}
                     onChange={e => { const next = [...form.actions]; next[i] = { ...next[i], priority: e.target.value as ActionItem['priority'] }; patchForm({ actions: next }); }}
-                    style={{ ...inputSt, padding: '8px 6px', fontSize: 11 }} className="col-span-1">
+                    className={clsx(styles.input, styles.prioritySelect, 'col-span-1')}>
                     <option value="high">H</option><option value="medium">M</option><option value="low">L</option>
                   </select>
                   {form.actions.length > 1 && (
                     <button type="button" onClick={() => patchForm({ actions: form.actions.filter((_, j) => j !== i) })}
-                      style={{ color: 'var(--dc-p3)', fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                      className={styles.removeBtn}>×</button>
                   )}
                 </div>
               ))}
               <button type="button"
                 onClick={() => patchForm({ actions: [...form.actions, { text: '', owner: '', dueDate: '', priority: 'medium' }] })}
-                style={{ fontSize: 11, fontWeight: 700, color: 'var(--dc-acc2)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                className={styles.addBtn}>
                 + Add action item
               </button>
             </div>
@@ -510,30 +459,25 @@ export default function RetroPage() {
 
   if (view === 'insights') {
   const filledActions = form.actions.filter(a => a.text.trim());
-  const goalColorMap = {
-    yes:     { bg: 'rgba(34,197,94,0.1)',   border: 'rgba(34,197,94,0.25)',   text: 'var(--dc-green)' },
-    partial: { bg: 'rgba(245,158,11,0.1)',  border: 'rgba(245,158,11,0.25)',  text: 'var(--dc-amber)' },
-    no:      { bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', text: 'var(--dc-red)'   },
-  };
-  const gc = form.goalMet ? goalColorMap[form.goalMet as keyof typeof goalColorMap] : null;
 
   return (
     <AppShell showNav>
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <button type="button" onClick={() => setView('form')}
-            style={{ fontSize: 13, color: 'var(--dc-p2)', background: 'none', border: 'none', cursor: 'pointer' }}>← Edit</button>
+          <button type="button" onClick={() => setView('form')} className={styles.backBtn}>← Edit</button>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--dc-p1)' }}>Retrospective: {form.sprintName}</h1>
-            <p style={{ fontSize: 12, color: 'var(--dc-p3)' }}>{form.teamName || 'Team'} · {form.retroDate}</p>
+            <h1 className={styles.formTitle}>Retrospective: {form.sprintName}</h1>
+            <p className={styles.formSubtitle}>{form.teamName || 'Team'} · {form.retroDate}</p>
           </div>
         </div>
 
-        {/* Goal status */}
-        {gc && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, borderRadius: 12, border: `1px solid ${gc.border}`, background: gc.bg, padding: '12px 20px', marginBottom: 20 }}>
-            <span style={{ fontSize: 20 }}>{form.goalMet === 'yes' ? '✅' : form.goalMet === 'partial' ? '⚠️' : '❌'}</span>
-            <p style={{ fontSize: 13, fontWeight: 700, color: gc.text }}>
+        {/* Goal status — semantic data-attribute drives all color via SCSS */}
+        {form.goalMet && (
+          <div className={styles.goalBanner} data-goal={form.goalMet}>
+            <span className={styles.goalBannerEmoji}>
+              {form.goalMet === 'yes' ? '✅' : form.goalMet === 'partial' ? '⚠️' : '❌'}
+            </span>
+            <p className={styles.goalBannerText}>
               Sprint goal {form.goalMet === 'yes' ? 'achieved' : form.goalMet === 'partial' ? 'partially achieved' : 'not achieved'}{form.sprintGoal ? `: "${form.sprintGoal}"` : ''}
             </p>
           </div>
@@ -544,15 +488,15 @@ export default function RetroPage() {
 
         {/* Action items summary */}
         {filledActions.length > 0 && (
-          <div style={{ ...sectionCard, marginBottom: 20 }}>
-            <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 12 }}>✅ Next Actions ({filledActions.length})</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className={clsx(styles.card, styles.cardMb)}>
+            <h2 className={clsx(styles.sectionTitle, 'mb-3')}>✅ Next Actions ({filledActions.length})</h2>
+            <div className={styles.actionItems}>
               {filledActions.map((a, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: a.priority === 'high' ? 'var(--dc-red)' : a.priority === 'medium' ? 'var(--dc-amber)' : 'var(--dc-green)' }} />
-                  <span style={{ flex: 1, color: 'var(--dc-p1)' }}>{a.text}</span>
-                  {a.owner   && <span style={{ fontSize: 11, color: 'var(--dc-p3)', flexShrink: 0 }}>{a.owner}</span>}
-                  {a.dueDate && <span style={{ fontSize: 11, color: 'var(--dc-p3)', flexShrink: 0 }}>{a.dueDate}</span>}
+                <div key={i} className={styles.actionItem}>
+                  <span className={styles.priorityDot} data-priority={a.priority} />
+                  <span className={styles.actionText}>{a.text}</span>
+                  {a.owner   && <span className={styles.actionMeta}>{a.owner}</span>}
+                  {a.dueDate && <span className={styles.actionMeta}>{a.dueDate}</span>}
                 </div>
               ))}
             </div>
@@ -574,36 +518,32 @@ export default function RetroPage() {
     <AppShell showNav>
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <button type="button" onClick={() => setView('menu')}
-            style={{ fontSize: 13, color: 'var(--dc-p2)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+          <button type="button" onClick={() => setView('menu')} className={styles.backBtn}>← Back</button>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--dc-p1)' }}>Upload Retrospective</h1>
-            <p style={{ fontSize: 12, color: 'var(--dc-p3)' }}>CSV, Excel, Markdown, or plain text — up to 5 MB.</p>
+            <h1 className={styles.formTitle}>Upload Retrospective</h1>
+            <p className={styles.formSubtitle}>CSV, Excel, Markdown, or plain text — up to 5 MB.</p>
           </div>
         </div>
 
         <input
-          ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,.md,.txt" style={{ display: 'none' }}
+          ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,.md,.txt" className={styles.hiddenInput}
           onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelected(f); }}
         />
 
         <button
           type="button" onClick={() => fileInputRef.current?.click()} disabled={uploadLoading}
-          style={{
-            ...sectionCard, width: '100%', textAlign: 'center', padding: 40, cursor: uploadLoading ? 'wait' : 'pointer',
-            border: '1px dashed var(--dc-bdr2)',
-          }}
+          className={styles.dropZone}
         >
-          <SvgIcon name="upload" size={28} style={{ color: 'var(--dc-acc2)', marginBottom: 12 }} />
-          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-p1)', marginBottom: 4 }}>
+          <SvgIcon name="upload" size={28} className={styles.dropZoneIcon} />
+          <p className={styles.dropZoneTitle}>
             {uploadLoading ? 'Parsing file…' : 'Click to choose a file'}
           </p>
-          <p style={{ fontSize: 11, color: 'var(--dc-p3)' }}>.csv, .xlsx, .xls, .md, .txt</p>
+          <p className={styles.dropZoneHint}>.csv, .xlsx, .xls, .md, .txt</p>
         </button>
 
         {uploadError && (
-          <div style={{ marginTop: 16, borderRadius: 10, border: '1px solid rgba(248,113,113,0.25)', background: 'rgba(248,113,113,0.1)', padding: '12px 16px' }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-red)' }}>{uploadError}</p>
+          <div className={styles.errorBanner}>
+            <p className={styles.errorText}>{uploadError}</p>
           </div>
         )}
       </div>
@@ -617,21 +557,21 @@ export default function RetroPage() {
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button type="button" onClick={() => { setUploadPreview(null); setView('upload'); }}
-            style={{ fontSize: 13, color: 'var(--dc-p2)', background: 'none', border: 'none', cursor: 'pointer' }}>← Upload another</button>
+            className={styles.backBtn}>← Upload another</button>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--dc-p1)' }}>
+            <h1 className={styles.formTitle}>
               {uploadPreview.records.length} Retrospective{uploadPreview.records.length > 1 ? 's' : ''} Imported
             </h1>
-            <p style={{ fontSize: 12, color: 'var(--dc-p3)' }}>Review the preview below before relying on it.</p>
+            <p className={styles.formSubtitle}>Review the preview below before relying on it.</p>
           </div>
         </div>
 
         {(uploadPreview.warnings.length > 0 || uploadPreview.corrections.length > 0) && (
-          <div style={{ marginBottom: 20, borderRadius: 10, border: '1px solid rgba(245,158,11,0.25)', background: 'rgba(245,158,11,0.08)', padding: '12px 16px' }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-amber)', marginBottom: 6 }}>Import notes</p>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {uploadPreview.warnings.map((w, i) => <li key={`w-${i}`} style={{ fontSize: 11, color: 'var(--dc-p2)' }}>• {w}</li>)}
-              {uploadPreview.corrections.map((c, i) => <li key={`c-${i}`} style={{ fontSize: 11, color: 'var(--dc-p2)' }}>• {c.reason}</li>)}
+          <div className={styles.warningBanner}>
+            <p className={styles.warningTitle}>Import notes</p>
+            <ul className={styles.bulletList}>
+              {uploadPreview.warnings.map((w, i) => <li key={`w-${i}`} className={styles.bulletItem}>• {w}</li>)}
+              {uploadPreview.corrections.map((c, i) => <li key={`c-${i}`} className={styles.bulletItem}>• {c.reason}</li>)}
             </ul>
           </div>
         )}
