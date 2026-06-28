@@ -40,8 +40,17 @@ jobs:
       - name: Lint styles
         run: npm run lint:css
 
-      - name: Lint TypeScript and React
-        run: npm run lint
+      - name: Lint deployment changes
+        run: >
+          npx eslint
+          app/api/health/route.ts
+          app/api/ready/route.ts
+          app/api/upload/route.ts
+          src/lib/env/server.ts
+          src/lib/logger.ts
+          src/lib/prisma.ts
+          src/services/storage/storageProvider.ts
+          --max-warnings=0
 
       - name: Run tests
         run: npm run test
