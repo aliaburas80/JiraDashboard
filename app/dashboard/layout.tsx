@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import DashboardTopbar from '@/components/dashboard/DashboardTopbar';
 import DashboardNavSidebar from '@/components/dashboard/DashboardNavSidebar';
 import { loadMetricsWithSource } from '@/lib/storage';
@@ -10,7 +10,12 @@ import styles from './layout.module.scss';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close mobile sidebar whenever the route changes.
+  useEffect(() => { setSidebarOpen(false); }, [pathname]);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,10 +38,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className={styles.shell}>
       <DashboardTopbar
         onNewUpload={() => router.push('/')}
+        onToggleSidebar={() => setSidebarOpen(v => !v)}
       />
 
       <div className={styles.body}>
-        <DashboardNavSidebar metrics={metrics} />
+        {/* Backdrop — visible only at mobile when sidebar drawer is open */}
+        {sidebarOpen && (
+          <div
+            className={styles.sidebarBackdrop}
+            aria-hidden="true"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        <DashboardNavSidebar
+          metrics={metrics}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+
         <main className={styles.main} id="main-content">
           {children}
         </main>

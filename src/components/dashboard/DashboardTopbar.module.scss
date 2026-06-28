@@ -57,6 +57,38 @@
   margin-top: 4px;
 }
 
+// ── Hamburger — mobile-only sidebar toggle ────────────────────────────────────
+// Hidden on desktop; shown at <768px (the md breakpoint where the sidebar hides).
+.hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 36px;
+  block-size: 36px;
+  border-radius: var(--radius-md, 8px);
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-secondary, #64748b);
+  margin-inline-end: var(--space-2, 8px);
+  flex-shrink: 0;
+  transition: background-color 150ms ease, color 150ms ease;
+
+  &:hover {
+    background: var(--color-surface-hover, #f1f5f9);
+    color: var(--color-text-primary, #0f172a);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary, #2563eb);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 767px) {
+    display: flex;
+  }
+}
+
 // ── Spacer between brand and nav ─────────────────────────────────────────────
 .spacer { flex: 1; }
 
