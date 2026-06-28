@@ -635,7 +635,7 @@
   scrollbar-color: var(--dc-bdr2, rgba(255, 255, 255, 0.14)) transparent;
 }
 
-.detailSection {}
+.detailSection { /* intentionally empty — structural placeholder */ }
 
 .detailSectionTitle {
   font-size: 10px;

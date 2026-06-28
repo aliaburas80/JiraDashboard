@@ -62,7 +62,7 @@
     border-radius: 8px;
     outline: none;
 
-    &:focus { ring-color: color-mix(in srgb, var(--color-primary) 30%, transparent); border-color: var(--color-primary, #2563eb); }
+    &:focus { outline: 2px solid color-mix(in srgb, var(--color-primary) 30%, transparent); border-color: var(--color-primary, #2563eb); }
 
     &::placeholder { color: var(--color-text-muted, #94a3b8); }
   }

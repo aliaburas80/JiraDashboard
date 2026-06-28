@@ -296,8 +296,8 @@
 // ── Gantt grid ────────────────────────────────────────────────────────────────
 .ganttGrid {
   padding: 0 var(--space-5, 20px);
-  overflow-x: auto;
-  overflow-y: clip; // clip prevents y-scroll without creating a scroll container; bottom:-2000px tick lines stay visible within the grid rows
+  // clip prevents y-scroll without creating a scroll container; bottom:-2000px tick lines stay visible within the grid rows
+  overflow: auto clip;
   padding-right: 56px;
 }
 

@@ -1013,6 +1013,47 @@ These are not part of the root `npm test` command and are retained for reference
 
 ---
 
+## 11a. Pre-Merge Quality Gate (QA-GATE-01/02, v4.15.0+)
+
+Every branch must pass the merge gate before it is merged to `main`. This is not optional even for small fixes or documentation-only changes.
+
+### Scripts
+
+| Script | Command | When to use |
+|---|---|---|
+| `npm run typecheck` | `tsc --noEmit` | Any TypeScript change |
+| `npm run lint:css` | Stylelint on `src/**/*.scss` and `app/**/*.scss` | Any SCSS change |
+| `npm run test` | Jest full suite | Any logic change |
+| `npm run check:fast` | typecheck + lint:css + test | Pre-commit quick gate |
+| `npm run check:ci` | typecheck + lint:css + test + build | **Pre-merge gate — required** |
+
+**Note on `npm run lint`:** The `lint` script currently runs `next lint`, which is prohibited by CLAUDE.md §4.6. It is kept as-is because switching to `eslint . --max-warnings=0` would fail immediately on 1,524 existing warnings (`STYLE-07` — blocked until the inline-style backlog is paid down). Run `npm run lint:css` (Stylelint) instead as part of the gate.
+
+### Pre-merge checklist
+
+Run `npm run check:ci` and confirm all four stages pass before merging:
+
+```
+□  npm run typecheck          passes (0 errors)
+□  npm run lint:css           passes (0 warnings)
+□  npm run test               passes (all suites green)
+□  npm run build              passes (no build errors)
+□  product/ docs updated      (SRS, RELEASE_NOTES, and any affected files)
+□  TODO-List.md Last-updated  header reflects this version
+```
+
+A merge must not be created when any check is red. Pre-existing test failures must be identified by name (not waved away as "probably pre-existing") before a merge is allowed.
+
+### Future gate additions (not yet wired)
+
+These additional checks will be added as the infrastructure matures:
+
+- `eslint . --max-warnings=0` — once `STYLE-07` clears
+- `npm run test:e2e` — once Playwright is installed
+- `npm run test:a11y` — once accessibility test suite is set up
+- `npm run config:validate` — once a config validation script exists
+- `npm audit` — dependency security scan before merge
+
 ---
 
 ## v3.0 Additions (F1/F2/F3/F4)

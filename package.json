@@ -9,7 +9,10 @@
     "start": "node scripts/start-server.js start",
     "lint": "next lint",
     "lint:css": "stylelint 'src/**/*.scss' 'app/**/*.scss'",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "check:fast": "npm run typecheck && npm run lint:css && npm run test",
+    "check:ci": "npm run typecheck && npm run lint:css && npm run test && npm run build"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1062.0",
