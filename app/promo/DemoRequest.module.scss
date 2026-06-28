@@ -1,7 +1,21 @@
-// DemoRequest modal — rendered inside .page, so the page-scoped --p-* palette
-// applies. All motion is gated by prefers-reduced-motion.
+// DemoRequest modal — portaled to document.body so it always renders above
+// transformed ancestors. The --p-* palette is declared here so it cascades
+// to all children regardless of where in the DOM the portal lands.
 
 .overlay {
+  // Promo dark palette — mirrors page.module.scss .page variables exactly.
+  --p-bg: #0d1017;
+  --p-surface: #181c27;
+  --p-surface-2: #20253291;
+  --p-text: #f5f6f8;
+  --p-text-2: #b2b6c2;
+  --p-text-3: #7c8090;
+  --p-border: rgba(255, 255, 255, 0.1);
+  --p-border-strong: rgba(255, 255, 255, 0.2);
+  --p-accent: #ff8a4c;
+  --p-accent-2: #e85d12;
+  --p-violet: #8b7bff;
+
   position: fixed;
   inset: 0;
   z-index: var(--z-modal, 9999);
