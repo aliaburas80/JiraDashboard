@@ -117,6 +117,15 @@ GATEWAY_JIRA_API_TOKEN=
 
 Startup migrations are acceptable for one free Render instance. Move migrations to a controlled release step before scaling horizontally.
 
+For local development, use `npm run dev`. `npm start` is the production launcher and expects
+production-grade values: a PostgreSQL `DATABASE_URL` and persistent object storage (`STORAGE_DRIVER=s3`
+with the R2 values above). It intentionally rejects SQLite/file databases and temporary storage.
+
+If startup logs say an environment variable is "required in production", set it in Render's
+Environment tab or in the initial Blueprint secret prompt. If the log says `DATABASE_URL must be a
+PostgreSQL connection string`, the value being loaded is still a local SQLite/file URL or another
+non-PostgreSQL URL.
+
 ## Verification
 
 After deploy:

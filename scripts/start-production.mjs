@@ -3,11 +3,14 @@
 // Hosted production entrypoint: validate env, deploy migrations, then start Next.
 
 import { spawn } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { join } from 'node:path';
 
 const require = createRequire(import.meta.url);
 
 const SECRET_KEY_PATTERN = /(secret|password|token|database_url|access_key|secret_key|cookie|authorization)/i;
+const ENV_FILE_ORDER = ['.env.production.local', '.env.local', '.env.production', '.env'];
 
 function log(level, event, context = {}) {
   const safeContext = Object.fromEntries(
@@ -32,6 +35,49 @@ function requireEnv(name, errors) {
   const value = process.env[name]?.trim();
   if (!value) errors.push(`${name} is required in production.`);
   return value ?? '';
+}
+
+function unquoteEnvValue(value) {
+  const trimmed = value.trim();
+  const quote = trimmed[0];
+  if ((quote === '"' || quote === "'") && trimmed.endsWith(quote)) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
+function parseEnvLine(line) {
+  const normalized = line.trim();
+  if (!normalized || normalized.startsWith('#')) return null;
+
+  const assignment = normalized.startsWith('export ')
+    ? normalized.slice('export '.length).trim()
+    : normalized;
+  const separatorIndex = assignment.indexOf('=');
+  if (separatorIndex <= 0) return null;
+
+  const key = assignment.slice(0, separatorIndex).trim();
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) return null;
+
+  return {
+    key,
+    value: unquoteEnvValue(assignment.slice(separatorIndex + 1)),
+  };
+}
+
+function loadEnvFiles() {
+  for (const fileName of ENV_FILE_ORDER) {
+    const filePath = join(process.cwd(), fileName);
+    if (!existsSync(filePath)) continue;
+
+    const lines = readFileSync(filePath, 'utf8').split(/\r?\n/);
+    for (const line of lines) {
+      const parsed = parseEnvLine(line);
+      if (!parsed) continue;
+      if (process.env[parsed.key] !== undefined) continue;
+      process.env[parsed.key] = parsed.value;
+    }
+  }
 }
 
 function validateEnvironment() {
@@ -98,6 +144,7 @@ function runNodeScript(scriptPath, args, eventName) {
   });
 }
 
+loadEnvFiles();
 validateEnvironment();
 
 const prismaBin = require.resolve('prisma/build/index.js');
