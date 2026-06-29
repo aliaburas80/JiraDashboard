@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.scss';
 import { DataSourceProvider, CloudLoadingBanner } from '@/components/ui/DataSourceBadge';
+import { normalizeAppUrl } from '@/lib/url';
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+const appUrl = normalizeAppUrl(process.env.NEXT_PUBLIC_APP_URL);
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),

@@ -26,13 +26,19 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: APP_URL
-        sync: false
+        fromService:
+          name: delivery-clarity
+          type: web
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
       - key: NEXT_PUBLIC_APP_URL
-        sync: false
+        fromService:
+          name: delivery-clarity
+          type: web
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
       - key: SESSION_SECRET
-        sync: false
+        generateValue: true
       - key: CONFIG_ENCRYPTION_KEY
-        sync: false
+        generateValue: true
       - key: STORAGE_BUCKET
         sync: false
       - key: STORAGE_ENDPOINT

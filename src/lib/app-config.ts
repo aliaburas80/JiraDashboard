@@ -5,6 +5,7 @@
 // The file on disk / S3 is opaque: { v:1, d:"<base64 AES-256-GCM>" }.
 
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
+import { normalizeAppUrl } from '@/lib/url';
 
 const ALGORITHM  = 'aes-256-gcm';
 const KDF_SALT   = 'dc-app-config-v1';
@@ -122,7 +123,7 @@ function buildFromEnv(): AppConfig {
     jira: {
       apiToken: process.env.GATEWAY_JIRA_API_TOKEN ?? '',
     },
-    appUrl: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
+    appUrl: normalizeAppUrl(process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL),
   };
 }
 

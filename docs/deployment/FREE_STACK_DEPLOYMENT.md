@@ -64,18 +64,16 @@ Manual setup:
 8. Add the environment variables below.
 9. Deploy.
 
-Important: Render gives the final public URL after the service exists. After the first service is created, set `APP_URL` and `NEXT_PUBLIC_APP_URL` to that URL, then redeploy.
+Important: when created from the Blueprint, Render supplies `APP_URL` and `NEXT_PUBLIC_APP_URL`
+from the service hostname and generates `SESSION_SECRET` and `CONFIG_ENCRYPTION_KEY`. If the
+service is created manually instead of from `render.yaml`, add those values yourself before deploy.
 
 ## Required Render Environment Variables
 
 ```text
-DATABASE_URL=<Neon pooled PostgreSQL URL>
 NODE_ENV=production
-APP_URL=https://<your-render-service>.onrender.com
-NEXT_PUBLIC_APP_URL=https://<your-render-service>.onrender.com
-SESSION_SECRET=<32+ random characters>
-CONFIG_ENCRYPTION_KEY=<32+ random characters>
 STORAGE_DRIVER=s3
+DATABASE_URL=<Neon pooled PostgreSQL URL>
 STORAGE_BUCKET=<Cloudflare R2 bucket>
 STORAGE_REGION=auto
 STORAGE_ENDPOINT=https://<Cloudflare account id>.r2.cloudflarestorage.com
@@ -84,6 +82,15 @@ STORAGE_SECRET_ACCESS_KEY=<Cloudflare R2 secret>
 STORAGE_PREFIX=delivery-clarity
 MAX_UPLOAD_MB=20
 LOG_LEVEL=info
+```
+
+Required only for manual Web Service setup:
+
+```text
+APP_URL=https://<your-render-service>.onrender.com
+NEXT_PUBLIC_APP_URL=https://<your-render-service>.onrender.com
+SESSION_SECRET=<32+ random characters>
+CONFIG_ENCRYPTION_KEY=<32+ random characters>
 ```
 
 Optional:

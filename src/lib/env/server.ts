@@ -1,6 +1,8 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 // Server-only environment validation. Do not import this from Client Components.
 
+import { normalizeAppUrl } from '@/lib/url';
+
 export type StorageDriver = 'temporary' | 's3' | 'azure' | 'gcp';
 
 export interface ServerEnv {
@@ -84,7 +86,7 @@ export function getServerEnv(): ServerEnv {
     NODE_ENV: process.env.NODE_ENV ?? 'development',
     DATABASE_URL: requireInProduction('DATABASE_URL', read('DATABASE_URL'), errors),
     PORT: read('PORT') ?? '3000',
-    APP_URL: read('APP_URL') ?? read('NEXT_PUBLIC_APP_URL') ?? 'http://localhost:3000',
+    APP_URL: normalizeAppUrl(read('APP_URL') ?? read('NEXT_PUBLIC_APP_URL')),
     SESSION_SECRET: requireInProduction('SESSION_SECRET', read('SESSION_SECRET'), errors),
     CONFIG_ENCRYPTION_KEY: requireInProduction('CONFIG_ENCRYPTION_KEY', read('CONFIG_ENCRYPTION_KEY'), errors),
     STORAGE_DRIVER: storageDriver,
