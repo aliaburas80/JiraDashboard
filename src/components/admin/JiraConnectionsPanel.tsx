@@ -41,6 +41,7 @@ export default function JiraConnectionsPanel() {
   const [formError, setFormError]     = useState('');
 
   const [testing, setTesting]         = useState<string | null>(null);
+  const [deleting, setDeleting]       = useState<string | null>(null);
   const [testResult, setTestResult]   = useState<Record<string, { ok: boolean; message: string }>>({});
 
   const load = useCallback(() => {
@@ -114,6 +115,38 @@ export default function JiraConnectionsPanel() {
       setTestResult(r => ({ ...r, [id]: { ok: false, message: 'Network error while testing.' } }));
     } finally {
       setTesting(null);
+    }
+  }
+
+  async function handleDelete(conn: JiraConnection) {
+    const confirmed = window.confirm(`Delete Jira connection "${conn.name}"? This cannot be undone.`);
+    if (!confirmed) return;
+
+    setDeleting(conn.id);
+    setTestResult(r => {
+      const next = { ...r };
+      delete next[conn.id];
+      return next;
+    });
+
+    try {
+      const res = await fetch(`/api/admin/jira-connections/${conn.id}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setTestResult(r => ({
+          ...r,
+          [conn.id]: { ok: false, message: data.error ?? 'Could not delete connection.' },
+        }));
+        return;
+      }
+      setConnections(current => current.filter(item => item.id !== conn.id));
+    } catch {
+      setTestResult(r => ({
+        ...r,
+        [conn.id]: { ok: false, message: 'Network error while deleting.' },
+      }));
+    } finally {
+      setDeleting(null);
     }
   }
 
@@ -277,17 +310,30 @@ export default function JiraConnectionsPanel() {
                     </p>
                   )}
                 </div>
-                <button
-                  type="button"
-                  disabled={testing === conn.id}
-                  onClick={() => handleTest(conn.id)}
-                  className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50 flex items-center gap-1.5 shrink-0"
-                >
-                  {testing === conn.id ? (
-                    <span className="inline-block w-3.5 h-3.5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-                  ) : <SvgIcon name="retry" size={12} />}
-                  Test connection
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    disabled={testing === conn.id || deleting === conn.id}
+                    onClick={() => handleTest(conn.id)}
+                    className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {testing === conn.id ? (
+                      <span className="inline-block w-3.5 h-3.5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                    ) : <SvgIcon name="retry" size={12} />}
+                    Test connection
+                  </button>
+                  <button
+                    type="button"
+                    disabled={deleting === conn.id || testing === conn.id}
+                    onClick={() => handleDelete(conn)}
+                    className="px-3 py-2 rounded-xl text-xs font-bold border border-red-200 text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {deleting === conn.id ? (
+                      <span className="inline-block w-3.5 h-3.5 border-2 border-red-200 border-t-red-600 rounded-full animate-spin" />
+                    ) : <SvgIcon name="delete" size={12} />}
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}
