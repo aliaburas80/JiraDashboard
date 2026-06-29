@@ -176,6 +176,9 @@ export async function getSafeConfig(): Promise<SafeAppConfig> {
 
 /** Server-side helper for routes that need the raw Jira API token/PAT. */
 export async function getJiraApiToken(): Promise<string> {
+  // Jira credentials are often saved immediately before testing a connection.
+  // Re-read the encrypted config instead of trusting a stale module cache.
+  invalidateConfig();
   const cfg = await getAppConfig();
   return cfg.jira.apiToken;
 }

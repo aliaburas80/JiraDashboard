@@ -47,3 +47,5 @@ services:
         sync: false
       - key: STORAGE_SECRET_ACCESS_KEY
         sync: false
+      - key: GATEWAY_JIRA_API_TOKEN
+        sync: false
