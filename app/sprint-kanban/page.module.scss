@@ -115,12 +115,12 @@
 // ── KPI strip ─────────────────────────────────────────────────────────────────
 .kpiStrip {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   margin-bottom: 20px;
   animation: fadeUp 340ms 50ms ease both;
 
-  @media (min-width: 768px)  { grid-template-columns: repeat(4, 1fr); }
+  @media (min-width: 480px)  { grid-template-columns: repeat(4, 1fr); }
   @media (min-width: 1024px) { grid-template-columns: repeat(8, 1fr); }
 }
 

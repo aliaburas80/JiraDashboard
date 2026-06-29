@@ -196,8 +196,10 @@
   gap: 16px;
   align-items: start;
 
-  &[data-panel='open'] {
-    grid-template-columns: minmax(0, 1fr) 380px;
+  @media (min-width: 900px) {
+    &[data-panel='open'] {
+      grid-template-columns: minmax(0, 1fr) 380px;
+    }
   }
 }
 
