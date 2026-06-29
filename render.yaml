@@ -19,10 +19,12 @@ services:
         value: 20
       - key: STORAGE_DRIVER
         value: s3
+      - key: STORAGE_BUCKET
+        value: jira-data-logs
       - key: STORAGE_REGION
-        value: auto
+        value: us-west-2
       - key: STORAGE_PREFIX
-        value: delivery-clarity
+        value: images
       - key: DATABASE_URL
         sync: false
       - key: APP_URL
@@ -39,8 +41,6 @@ services:
         generateValue: true
       - key: CONFIG_ENCRYPTION_KEY
         generateValue: true
-      - key: STORAGE_BUCKET
-        sync: false
       - key: STORAGE_ENDPOINT
         sync: false
       - key: STORAGE_ACCESS_KEY_ID
