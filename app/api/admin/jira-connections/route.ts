@@ -16,6 +16,32 @@ import { encryptJiraConnectionToken, hasJiraConnectionToken } from '@/services/j
 
 const DEPLOYMENT_TYPES = ['cloud', 'server'];
 
+function parseStringArray(value: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed)
+      ? parsed.map(item => String(item).trim()).filter(Boolean)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function parseStringRecord(value: string): Record<string, string> {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed).map(([key, fieldValue]) => [key, String(fieldValue)]),
+    );
+  } catch {
+    return {};
+  }
+}
+
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
@@ -35,8 +61,8 @@ function serializeConnection(c: {
     deploymentType: c.deploymentType,
     baseUrl: c.baseUrl,
     authEmail: c.authEmail,
-    projectFilters: JSON.parse(c.projectFilters) as string[],
-    fieldMapping: JSON.parse(c.fieldMapping) as Record<string, string>,
+    projectFilters: parseStringArray(c.projectFilters),
+    fieldMapping: parseStringRecord(c.fieldMapping),
     refreshMode: c.refreshMode,
     refreshIntervalMinutes: c.refreshIntervalMinutes,
     lastSyncAt: c.lastSyncAt?.toISOString() ?? null,

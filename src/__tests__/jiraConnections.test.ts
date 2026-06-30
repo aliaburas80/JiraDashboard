@@ -124,6 +124,19 @@ test('TC-JIRA-03: GET jira-connections — admin lists connections without expos
   expect(body.connections[0]).not.toHaveProperty('token');
 });
 
+test('TC-JIRA-03b: GET jira-connections — malformed stored JSON falls back safely', async () => {
+  (prisma.jiraConnection.findMany as jest.Mock).mockResolvedValue([
+    connection({ projectFilters: 'AJ', fieldMapping: 'not-json' }),
+  ]);
+  const { GET } = await import('../../app/api/admin/jira-connections/route');
+  const res = await GET();
+  const body = await res.json();
+
+  expect(res.status).toBe(200);
+  expect(body.connections[0].projectFilters).toEqual([]);
+  expect(body.connections[0].fieldMapping).toEqual({});
+});
+
 // ── POST /api/admin/jira-connections ──────────────────────────────────────────
 
 test('TC-JIRA-04: POST jira-connections — returns 400 when required fields are missing', async () => {

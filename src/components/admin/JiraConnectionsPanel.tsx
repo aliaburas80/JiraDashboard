@@ -26,6 +26,51 @@ const STATUS_BADGE: Record<string, string> = {
   partial: 'bg-amber-100 text-amber-800',
 };
 
+function normalizeProjectFilters(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map(item => String(item).trim()).filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    try {
+      const parsed: unknown = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.map(item => String(item).trim()).filter(Boolean);
+      }
+    } catch {
+      return value.split(',').map(item => item.trim()).filter(Boolean);
+    }
+  }
+
+  return [];
+}
+
+function normalizeConnection(rawValue: unknown): JiraConnection {
+  const value = rawValue && typeof rawValue === 'object'
+    ? rawValue as Partial<JiraConnection> & Record<string, unknown>
+    : {};
+
+  return {
+    id: String(value.id ?? ''),
+    name: String(value.name ?? 'Jira connection'),
+    deploymentType: String(value.deploymentType ?? 'cloud'),
+    baseUrl: String(value.baseUrl ?? ''),
+    authEmail: typeof value.authEmail === 'string' ? value.authEmail : null,
+    projectFilters: normalizeProjectFilters(value.projectFilters),
+    refreshMode: String(value.refreshMode ?? 'manual'),
+    lastSyncAt: typeof value.lastSyncAt === 'string' ? value.lastSyncAt : null,
+    lastSyncStatus: typeof value.lastSyncStatus === 'string' ? value.lastSyncStatus : null,
+    lastSyncError: typeof value.lastSyncError === 'string' ? value.lastSyncError : null,
+    hasApiToken: Boolean(value.hasApiToken),
+    createdAt: String(value.createdAt ?? ''),
+  };
+}
+
+function formatProjectFilters(value: unknown): string {
+  const filters = normalizeProjectFilters(value);
+  return filters.length > 0 ? filters.join(', ') : 'All projects';
+}
+
 export default function JiraConnectionsPanel() {
   const [connections, setConnections] = useState<JiraConnection[]>([]);
   const [loading, setLoading]         = useState(true);
@@ -51,7 +96,10 @@ export default function JiraConnectionsPanel() {
       .then(async res => {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error ?? 'Could not load connections.');
-        setConnections(data.connections ?? []);
+        const nextConnections = Array.isArray(data.connections)
+          ? data.connections.map(item => normalizeConnection(item))
+          : [];
+        setConnections(nextConnections);
       })
       .catch(err => setError(err instanceof Error ? err.message : 'Could not load connections.'))
       .finally(() => setLoading(false));
@@ -317,7 +365,7 @@ export default function JiraConnectionsPanel() {
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
                     {conn.authEmail ? `${conn.authEmail} · ` : ''}
-                    {conn.projectFilters.length > 0 ? conn.projectFilters.join(', ') : 'All projects'}
+                    {formatProjectFilters(conn.projectFilters)}
                   </p>
                   {conn.lastSyncError && (
                       <p className="text-xs text-red-600 mt-1">{conn.lastSyncError}</p>
