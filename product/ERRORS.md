@@ -3,8 +3,8 @@
 This catalog covers every structured error code the application can produce.
 Each entry includes: what triggers it, root cause, and the exact fix.
 
-**Last updated:** 2026-06-30
-**Version:** 1.0
+**Last updated:** 2026-07-01
+**Version:** 1.1
 **Applies to:** v4.16.0+
 
 ---
@@ -223,6 +223,39 @@ Each entry includes: what triggers it, root cause, and the exact fix.
 **Fix:** Set `PORT` env var if you need a specific port. On Render, this is handled automatically.
 
 **Related:** None
+
+---
+
+### ERR-011 — SMTP test returns 500 on Render (works locally)
+
+| Field | Value |
+|---|---|
+| **Code** | ERR-011 |
+| **Event name** | N/A (HTTP 500 from `POST /api/admin/app-config?action=test`) |
+| **HTTP status** | 500 |
+| **Severity** | error |
+| **Where** | Admin → App Config → Send test email button (red "Failed — retry" state) |
+
+**Description:** The "Send test email" test returns a 500 on the live Render deployment but works in local dev. The red error banner shows the specific SMTP error and a "Show solution" expander with the fix.
+
+**Cause:** `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` are not declared in `render.yaml`, so Render has no SMTP credentials unless they were manually set in the dashboard. When they are absent, `getAppConfig()` returns empty SMTP fields. The form pre-fills from those empty values. If the password field is blank and no cloud config was saved, `sendEmailWith` returns `false` (skipped, not a 500). If credentials were typed and the connection still fails, the underlying SMTP error is the cause — see sub-cases below.
+
+**Sub-cases and fixes:**
+
+1. **Form fields are blank on Render** — SMTP vars were never set on Render. The form loads empty because `getSafeConfig()` falls back to env vars, and no SMTP env vars exist.
+   - Fix: In the Render dashboard → Service → Environment, add: `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USER=aliaburas80@gmail.com`, `SMTP_PASS=<16-char App Password>`, `SMTP_FROM=Delivery Clarity <aliaburas80@gmail.com>`. These are now declared as `sync: false` in `render.yaml` (added 2026-07-01).
+
+2. **Gmail 535 — App Password rejected** — The App Password was revoked, contains spaces, or the Google account "Less secure app access" was changed.
+   - Fix: Go to Google Account → Security → App Passwords → generate a new 16-character password. Paste it without spaces into `SMTP_PASS` in Render dashboard. Save. Test again.
+
+3. **ETIMEDOUT — Render cannot reach smtp.gmail.com:587** — Network-level block from Render's outbound ports (unusual; Render does not block 587 on paid plans, but verify). Also possible on Render free tier with cold-start first-connection delays.
+   - Fix: Retry once (cold-start timeout). If persistent, check Render's status page or upgrade from free tier.
+
+4. **SMTP credentials work but "to" address is wrong** — The test email is sent to the logged-in admin's session email. Confirm that the session email matches a real inbox.
+
+**After fix:** In Admin → App Config, fill in SMTP fields and click **Encrypt & Save to Cloud** first, then **Send test email**. Once the cloud config is saved, credentials persist across Render restarts without needing env vars.
+
+**Related:** ERR-008, ERR-003
 
 ---
 
