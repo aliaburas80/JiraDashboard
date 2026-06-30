@@ -16,7 +16,7 @@ interface JiraConnection {
   lastSyncAt: string | null;
   lastSyncStatus: string | null;
   lastSyncError: string | null;
-  hasGatewayToken: boolean;
+  hasApiToken: boolean;
   createdAt: string;
 }
 
@@ -36,6 +36,7 @@ export default function JiraConnectionsPanel() {
   const [deploymentType, setDeploymentType] = useState<'cloud' | 'server'>('cloud');
   const [baseUrl, setBaseUrl]         = useState('');
   const [authEmail, setAuthEmail]     = useState('');
+  const [apiToken, setApiToken]       = useState('');
   const [projectFilters, setProjectFilters] = useState('');
   const [submitting, setSubmitting]   = useState(false);
   const [formError, setFormError]     = useState('');
@@ -70,6 +71,10 @@ export default function JiraConnectionsPanel() {
       setFormError('Email is required for Jira Cloud connections.');
       return;
     }
+    if (!apiToken.trim()) {
+      setFormError('Jira API token / PAT is required.');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -81,6 +86,7 @@ export default function JiraConnectionsPanel() {
           deploymentType,
           baseUrl: baseUrl.trim(),
           authEmail: deploymentType === 'cloud' ? authEmail.trim() : undefined,
+          apiToken: apiToken.trim(),
           projectFilters: projectFilters.split(',').map(p => p.trim()).filter(Boolean),
         }),
       });
@@ -89,7 +95,7 @@ export default function JiraConnectionsPanel() {
         setFormError(data.error ?? 'Could not create connection.');
         return;
       }
-      setName(''); setBaseUrl(''); setAuthEmail(''); setProjectFilters('');
+      setName(''); setBaseUrl(''); setAuthEmail(''); setApiToken(''); setProjectFilters('');
       setShowForm(false);
       load();
     } catch {
@@ -154,7 +160,7 @@ export default function JiraConnectionsPanel() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-slate-500">
-          Read-only connections to a Jira Cloud or Server/Data Center instance. No write-back; credentials are never stored in the database.
+          Read-only connections to a Jira Cloud or Server/Data Center instance. No write-back; each token is encrypted for that connection before storage.
         </p>
         <button
           type="button"
@@ -179,13 +185,10 @@ export default function JiraConnectionsPanel() {
               {formError}
             </div>
           )}
-          <a
-            href="/admin/settings?tab=config"
-            className="flex items-center gap-2 rounded-[10px] border border-blue-200 bg-blue-50 px-4 py-3 text-xs font-semibold text-blue-800 hover:bg-blue-100 transition-colors"
-          >
+          <div className="flex items-center gap-2 rounded-[10px] border border-blue-200 bg-blue-50 px-4 py-3 text-xs font-semibold text-blue-800">
             <SvgIcon name="lock" size={14} />
-            Looking for the API token field? It&apos;s set once on the App Config tab →
-          </a>
+            The API token / PAT is encrypted and stored only for this Jira connection.
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-black uppercase text-slate-500 mb-1.5">
@@ -240,6 +243,21 @@ export default function JiraConnectionsPanel() {
             )}
             <div className="sm:col-span-2">
               <label className="block text-xs font-black uppercase text-slate-500 mb-1.5">
+                API token / Personal Access Token <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={apiToken}
+                onChange={e => setApiToken(e.target.value)}
+                placeholder={deploymentType === 'cloud' ? 'Paste the Atlassian token value only' : 'Paste the Jira PAT'}
+                className="w-full rounded-[10px] border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition"
+              />
+              <p className="mt-1.5 text-[11px] text-slate-500">
+                For Jira Cloud, paste only the token value, not the token label/name.
+              </p>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-black uppercase text-slate-500 mb-1.5">
                 Project keys <span className="text-slate-400 font-normal">(comma-separated, optional)</span>
               </label>
               <input
@@ -291,7 +309,7 @@ export default function JiraConnectionsPanel() {
                         {conn.lastSyncStatus}
                       </span>
                     )}
-                    {!conn.hasGatewayToken && (
+                    {!conn.hasApiToken && (
                       <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
                         Token not set
                       </span>
@@ -302,7 +320,7 @@ export default function JiraConnectionsPanel() {
                     {conn.projectFilters.length > 0 ? conn.projectFilters.join(', ') : 'All projects'}
                   </p>
                   {conn.lastSyncError && (
-                    <p className="text-xs text-red-600 mt-1">{conn.lastSyncError}</p>
+                      <p className="text-xs text-red-600 mt-1">{conn.lastSyncError}</p>
                   )}
                   {testResult[conn.id] && (
                     <p className={`text-xs mt-1 font-semibold ${testResult[conn.id].ok ? 'text-green-700' : 'text-red-600'}`}>
@@ -366,7 +384,7 @@ function ConnectionInfoGuide({ deploymentType }: { deploymentType: 'cloud' | 'se
             <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank" rel="noopener noreferrer" className="font-bold underline">
               id.atlassian.com → Security → API tokens
             </a>{' '}
-            and click &quot;Create API token&quot;. Paste it under <strong>Admin Settings → App Config → Jira API Token</strong> (it&apos;s encrypted before being stored, the same as your SMTP password) — never enter it in this form.
+            and click &quot;Create API token&quot;. Paste the token value into this connection form; it is encrypted before being stored.
           </li>
           <li>
             <strong>Project keys</strong> (optional) — the short prefix on any issue in that project, e.g. issue <code className="font-mono bg-white/60 px-1 rounded">PROJ-123</code> belongs to project key <code className="font-mono bg-white/60 px-1 rounded">PROJ</code>. Leave blank to allow all projects this token can see.
@@ -378,7 +396,7 @@ function ConnectionInfoGuide({ deploymentType }: { deploymentType: 'cloud' | 'se
             <strong>Base URL</strong> — your organization&apos;s Jira Server/Data Center address (e.g. <code className="font-mono bg-white/60 px-1 rounded">https://jira.yourcompany.com</code>). Ask your Jira administrator if you&apos;re not sure.
           </li>
           <li>
-            <strong>Personal Access Token (PAT)</strong> — in Jira, click your profile avatar (top right) → Personal Access Tokens → Create token. Paste it under <strong>Admin Settings → App Config → Jira API Token</strong> (it&apos;s encrypted before being stored, the same as your SMTP password) — never enter it in this form.
+            <strong>Personal Access Token (PAT)</strong> — in Jira, click your profile avatar (top right) → Personal Access Tokens → Create token. Paste it into this connection form; it is encrypted before being stored.
           </li>
           <li>
             <strong>Project keys</strong> (optional) — the short prefix on any issue in that project, e.g. issue <code className="font-mono bg-white/60 px-1 rounded">PROJ-123</code> belongs to project key <code className="font-mono bg-white/60 px-1 rounded">PROJ</code>. Leave blank to allow all projects this token can see.

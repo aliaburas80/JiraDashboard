@@ -28,8 +28,10 @@ jest.mock('@/lib/prisma', () => ({
     },
   },
 }));
-jest.mock('@/lib/app-config', () => ({
-  getJiraApiToken: jest.fn(async () => 'fake-token'),
+jest.mock('@/services/jira/connectionCredentials', () => ({
+  getJiraConnectionToken: jest.fn((connection: { apiTokenEncrypted?: string | null }) => (
+    connection.apiTokenEncrypted ? 'fake-token' : ''
+  )),
 }));
 jest.mock('@/services/jira/sync', () => ({
   fetchAllJiraIssues: jest.fn(),
@@ -42,7 +44,6 @@ jest.mock('@/services/storage/cloudSync', () => ({
 }));
 
 import { prisma } from '@/lib/prisma';
-import { getJiraApiToken } from '@/lib/app-config';
 import { fetchAllJiraIssues } from '@/services/jira/sync';
 
 function connection(overrides: Record<string, unknown> = {}) {
@@ -52,6 +53,7 @@ function connection(overrides: Record<string, unknown> = {}) {
     deploymentType: 'cloud',
     baseUrl: 'https://example.atlassian.net',
     authEmail: 'svc@example.com',
+    apiTokenEncrypted: 'encrypted-token',
     projectFilters: '["PROJ"]',
     fieldMapping: '{}',
     refreshMode: 'manual',
@@ -70,7 +72,6 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockSession.isLoggedIn = true;
   mockSession.role = 'user';
-  (getJiraApiToken as jest.Mock).mockResolvedValue('fake-token');
 });
 
 // ── resolveActiveJiraConnection() ──────────────────────────────────────────────

@@ -3,7 +3,8 @@
 // admin-only), exposed on the dashboard. Auto-resolves which connection to
 // sync: the most recently synced one, falling back to the most recently
 // created connection if none has ever synced. The Jira API token itself is
-// never exposed to the client — only resolved server-side via getJiraApiToken().
+// never exposed to the client; sync resolves the encrypted token on the active
+// JiraConnection row.
 //
 // ARCH-05 — see product/JIRA_INTEGRATION_DESIGN.md §5/§7/§8.
 

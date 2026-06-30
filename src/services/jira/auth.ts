@@ -1,6 +1,6 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
-// ARCH-05 — shared Jira auth-header logic, used by the test-connection,
-// field-discovery, and App Config "test token" routes.
+// ARCH-05 — shared Jira auth-header logic, used by connection testing,
+// field discovery, and sync routes.
 
 /** Builds the `Authorization` header value for a Jira Cloud or Server/DC call. */
 export function buildJiraAuthHeader(

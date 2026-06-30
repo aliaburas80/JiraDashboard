@@ -27,13 +27,13 @@ Two Jira deployment types need two different credential shapes. Both are **read-
 | Jira Cloud | Email + API token (Atlassian account, scoped to a service account, not a personal login) | `Authorization: Basic base64(email:token)` |
 | Jira Server / Data Center | Personal Access Token (PAT) | `Authorization: Bearer <PAT>` |
 
-**Storage (revised 2026-06-20 — implemented):** the token is managed through the same encrypted app-config system already used for SMTP credentials (`src/lib/app-config.ts`, `app/api/admin/app-config/route.ts`), not a raw `.env` entry:
-- An admin enters the token once in **Admin Settings → App Config → Jira API Token**. On save it's AES-256-GCM encrypted (via `CONFIG_ENCRYPTION_KEY`) into the same `app-config.json` blob uploaded to the active cloud storage provider — never written to Prisma/SQLite.
-- `GATEWAY_JIRA_API_TOKEN` (env) remains supported as a fallback/override — useful before any cloud provider is configured, or to force-rotate a token without touching the cloud copy. If both are set, the env var wins (same precedence as `SMTP_USER`/`SMTP_PASS`).
-- Server-side routes read the resolved token via `getJiraApiToken()` (`src/lib/app-config.ts`), never `process.env` directly.
-- **Never** returned in any GET response — only a `hasJiraToken: boolean` flag, identical to the SMTP `hasPass` pattern (and `S3StorageConfig`'s `hasCredentials`).
-- A "Test connection" action (mirroring `POST /api/admin/storage?action=test`) calls `GET /rest/api/{2|3}/myself` to confirm the token is valid and report the authenticated account name, without exposing the token itself. Because credential presence is no longer env-var-only, the Backend Gateway's `getProviderConfig()` was extended with a `credentialsPresentOverride` so a caller that already resolved a token via `getJiraApiToken()` can tell the gateway credentials are present (see `JIRA-05c` in `TODO-List.md`).
-- Submitting an empty token field on update preserves the existing stored token (same `preserveSecret()`-style pattern already implemented for SMTP/storage credentials).
+**Storage (revised 2026-06-30 — implemented):** the token is encrypted per `JiraConnection`, not shared through one global App Config value:
+- An admin enters the token while creating a Jira connection in **Admin Settings → Jira Integration**. On save it is AES-256-GCM encrypted with `CONFIG_ENCRYPTION_KEY` and stored in `JiraConnection.apiTokenEncrypted`.
+- This lets different Jira connections use different Jira Cloud accounts or Server/DC PATs.
+- Server-side routes decrypt the selected connection's token through `src/services/jira/connectionCredentials.ts`; the token is never returned to the client.
+- GET responses expose only `hasApiToken: boolean`.
+- A "Test connection" action calls `GET /rest/api/{2|3}/myself` to confirm that connection's token is valid and report the authenticated account name, without exposing the token itself. The Backend Gateway still receives `credentialsPresentOverride: true` after the route resolves the encrypted connection token.
+- Existing connection rows created before this change have no token; recreate them with a token to enable test/sync.
 
 **Who can configure it:** admin-only, same `ADMIN_ONLY` guard as `/admin/settings`. No non-admin role ever sees or touches the token.
 
@@ -106,7 +106,7 @@ model JiraConnection {
 
 `ImportLog` gains two nullable columns: `sourceType String @default("file")` (`"file" | "api"`) and `jiraConnectionId String?` (FK to `JiraConnection`, nullable so existing file-upload rows are unaffected). No other existing model changes. `DashboardSnapshot.metricsJson` already stores the full computed-metrics blob regardless of source — unchanged.
 
-The Jira API token itself **never** enters Prisma/SQLite — it lives only in `GATEWAY_JIRA_API_TOKEN` (env) or the gateway's non-secret config file for non-token fields, per §2.
+The Jira API token itself is stored only as encrypted ciphertext in `JiraConnection.apiTokenEncrypted`. Plaintext exists only transiently during create/test/sync on the server and is never returned in an API response.
 
 ---
 

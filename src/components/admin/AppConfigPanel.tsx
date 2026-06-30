@@ -10,7 +10,6 @@ interface SafeConfig {
   port:    number;
   user:    string;
   hasPass: boolean;
-  hasJiraToken: boolean;
   from:    string;
   appUrl:  string;
   source:  'cloud' | 'env';
@@ -118,7 +117,6 @@ export default function AppConfigPanel() {
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
   const [testing,  setTesting]  = useState(false);
-  const [testingJira, setTestingJira] = useState(false);
   const [hasEncKey, setHasEncKey] = useState(false);
   const [source,   setSource]   = useState<'cloud' | 'env'>('env');
   const [status,   setStatus]   = useState<{ type: 'success' | 'error' | 'info'; msg: string; solution?: string; details?: string } | null>(null);
@@ -130,11 +128,8 @@ export default function AppConfigPanel() {
   const [pass,    setPass]    = useState('');
   const [from,    setFrom]    = useState('');
   const [appUrl,  setAppUrl]  = useState('');
-  const [jiraToken, setJiraToken] = useState('');
-  const [hasJiraToken, setHasJiraToken] = useState(false);
 
   const [editingSmtp,   setEditingSmtp]   = useState(false);
-  const [editingJira,   setEditingJira]   = useState(false);
   const [editingAppUrl, setEditingAppUrl] = useState(false);
 
   useEffect(() => {
@@ -150,7 +145,6 @@ export default function AppConfigPanel() {
         setAppUrl(c.appUrl);
         setSource(c.source);
         setHasEncKey(data.hasEncKey);
-        setHasJiraToken(c.hasJiraToken);
       })
       .catch(() => setStatus({ type: 'error', msg: 'Failed to load config.' }))
       .finally(() => setLoading(false));
@@ -166,7 +160,6 @@ export default function AppConfigPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           smtp: { host, port: parseInt(port, 10), user, pass: pass || undefined, from },
-          jira: { apiToken: jiraToken || undefined },
           appUrl,
         }),
       });
@@ -180,12 +173,9 @@ export default function AppConfigPanel() {
         });
         return;
       }
-      if (jiraToken) setHasJiraToken(true);
       setPass('');
-      setJiraToken('');
       setSource('cloud');
       setEditingSmtp(false);
-      setEditingJira(false);
       setEditingAppUrl(false);
       setStatus({ type: 'success', msg: 'Config encrypted and saved to cloud storage.' });
     } catch {
@@ -226,35 +216,6 @@ export default function AppConfigPanel() {
       setStatus({ type: 'error', msg: 'Network error — test failed.' });
     } finally {
       setTesting(false);
-    }
-  }
-
-  async function handleTestJira() {
-    setTestingJira(true);
-    setStatus(null);
-    setShowStatusSolution(false);
-    try {
-      // Pass the current (possibly unsaved) token so the test reflects what's
-      // on screen, same "test before saving" UX as SMTP's handleTest above.
-      const res = await fetch('/api/admin/app-config?action=test-jira', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jira: { apiToken: jiraToken || undefined } }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        setStatus({
-          type: data.skipped ? 'info' : 'error',
-          msg: data.error ?? 'Jira token test failed.',
-          solution: data.skipped ? undefined : 'Check the token value, then try again.',
-        });
-        return;
-      }
-      setStatus({ type: 'success', msg: `Connected to "${data.connectionName}" as ${data.account}.` });
-    } catch {
-      setStatus({ type: 'error', msg: 'Network error — test failed.' });
-    } finally {
-      setTestingJira(false);
     }
   }
 
@@ -329,36 +290,6 @@ export default function AppConfigPanel() {
           testing={testing}
           onTest={handleTest}
           testLabel="Send test email"
-        />
-      </div>
-
-      {/* Jira API Token section (ARCH-05) */}
-      <div className={`bg-white border rounded-2xl p-5 shadow-sm space-y-4 transition-colors ${editingJira ? 'border-amber-300 ring-2 ring-amber-100' : 'border-slate-200'}`}>
-        <SectionHeader
-          icon="link"
-          title="Jira API Token"
-          description="Used by every connection on the Jira Integration tab to authenticate with Jira (read-only)."
-          editing={editingJira}
-          onToggleEdit={() => setEditingJira(v => !v)}
-        />
-        <Field
-          label="API Token / Personal Access Token"
-          value={jiraToken}
-          type="password"
-          onChange={setJiraToken}
-          disabled={!editingJira}
-          placeholder={hasJiraToken ? '••••••••  (unchanged)' : 'Paste your Jira API token or PAT'}
-          hint={hasJiraToken
-            ? 'Leave blank to keep the existing stored token. Generate a fresh one from id.atlassian.com (Cloud) or your Jira profile (Server/DC) if it stops working.'
-            : 'Cloud: create at id.atlassian.com → Security → API tokens. Server/DC: your profile avatar → Personal Access Tokens. See the guide on the Jira Integration tab for details.'}
-        />
-        <SectionActions
-          editing={editingJira}
-          saving={saving}
-          onSave={handleSave}
-          testing={testingJira}
-          onTest={handleTestJira}
-          testLabel="Test token"
         />
       </div>
 

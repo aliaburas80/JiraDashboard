@@ -35,8 +35,14 @@ jest.mock('@/lib/system-error-logger', () => ({
 jest.mock('@/server/gateway/externalGateway', () => ({
   callExternal: jest.fn(),
 }));
-jest.mock('@/lib/app-config', () => ({
-  getJiraApiToken: jest.fn(async () => ''),
+jest.mock('@/services/jira/connectionCredentials', () => ({
+  encryptJiraConnectionToken: jest.fn((token: string) => `encrypted:${token}`),
+  getJiraConnectionToken: jest.fn((connection: { apiTokenEncrypted?: string | null }) => (
+    connection.apiTokenEncrypted ? 'secret-token' : ''
+  )),
+  hasJiraConnectionToken: jest.fn((connection: { apiTokenEncrypted?: string | null }) => (
+    !!connection.apiTokenEncrypted
+  )),
 }));
 jest.mock('@/services/jira/sync', () => ({
   fetchAllJiraIssues: jest.fn(),
@@ -50,7 +56,7 @@ jest.mock('@/services/storage/cloudSync', () => ({
 
 import { prisma } from '@/lib/prisma';
 import { callExternal } from '@/server/gateway/externalGateway';
-import { getJiraApiToken } from '@/lib/app-config';
+import { encryptJiraConnectionToken } from '@/services/jira/connectionCredentials';
 import { fetchAllJiraIssues } from '@/services/jira/sync';
 
 function makeReq(body: unknown) {
@@ -67,6 +73,7 @@ function connection(overrides: Record<string, unknown> = {}) {
     deploymentType: 'cloud',
     baseUrl: 'https://example.atlassian.net',
     authEmail: 'svc@example.com',
+    apiTokenEncrypted: null,
     projectFilters: '["PROJ"]',
     fieldMapping: '{}',
     refreshMode: 'manual',
@@ -85,7 +92,6 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockSession.isLoggedIn = true;
   mockSession.role = 'admin';
-  (getJiraApiToken as jest.Mock).mockResolvedValue('');
 });
 
 // ── GET /api/admin/jira-connections ───────────────────────────────────────────
@@ -114,7 +120,7 @@ test('TC-JIRA-03: GET jira-connections — admin lists connections without expos
   expect(body.connections).toHaveLength(1);
   expect(body.connections[0].name).toBe('Production Jira');
   expect(body.connections[0].projectFilters).toEqual(['PROJ']);
-  expect(body.connections[0].hasGatewayToken).toBe(false);
+  expect(body.connections[0].hasApiToken).toBe(false);
   expect(body.connections[0]).not.toHaveProperty('token');
 });
 
@@ -156,6 +162,7 @@ test('TC-JIRA-08: POST jira-connections — creates a connection and audits it',
     deploymentType: 'cloud',
     baseUrl: 'https://example.atlassian.net',
     authEmail: 'svc@example.com',
+    apiToken: 'secret-token',
     projectFilters: ['PROJ'],
   }));
   const body = await res.json();
@@ -167,6 +174,7 @@ test('TC-JIRA-08: POST jira-connections — creates a connection and audits it',
       data: expect.objectContaining({ name: 'Production Jira', deploymentType: 'cloud' }),
     }),
   );
+  expect(encryptJiraConnectionToken).toHaveBeenCalledWith('secret-token');
 });
 
 // ── POST /api/admin/jira-connections/[id]/test ────────────────────────────────
@@ -178,18 +186,17 @@ test('TC-JIRA-09: test connection — returns 404 when the connection does not e
   expect(res.status).toBe(404);
 });
 
-test('TC-JIRA-10: test connection — returns 409 when GATEWAY_JIRA_API_TOKEN is not set', async () => {
+test('TC-JIRA-10: test connection — returns 409 when the connection has no token', async () => {
   (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
   const { POST } = await import('../../app/api/admin/jira-connections/[id]/test/route');
   const res = await POST(makeReq({}), { params: { id: 'conn-1' } });
   const body = await res.json();
   expect(res.status).toBe(409);
-  expect(body.error).toMatch(/GATEWAY_JIRA_API_TOKEN/);
+  expect(body.error).toMatch(/for this connection/);
 });
 
 test('TC-JIRA-11: test connection — success calls the gateway with Basic auth for Cloud and records lastSyncStatus', async () => {
-  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
-  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection({ apiTokenEncrypted: 'encrypted-token' }));
   (callExternal as jest.Mock).mockResolvedValue({
     ok: true,
     data: { displayName: 'Service Account' },
@@ -224,9 +231,8 @@ test('TC-JIRA-11: test connection — success calls the gateway with Basic auth 
 });
 
 test('TC-JIRA-12: test connection — uses Bearer auth and the v2 endpoint for Server/DC', async () => {
-  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
   (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(
-    connection({ deploymentType: 'server', authEmail: null }),
+    connection({ deploymentType: 'server', authEmail: null, apiTokenEncrypted: 'encrypted-token' }),
   );
   (callExternal as jest.Mock).mockResolvedValue({
     ok: true,
@@ -251,8 +257,7 @@ test('TC-JIRA-12: test connection — uses Bearer auth and the v2 endpoint for S
 });
 
 test('TC-JIRA-13: test connection — gateway failure records lastSyncStatus failed and returns 502', async () => {
-  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
-  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection({ apiTokenEncrypted: 'encrypted-token' }));
   (callExternal as jest.Mock).mockResolvedValue({
     ok: false,
     errorCategory: 'non_retryable_http',
@@ -290,12 +295,11 @@ test('TC-JIRA-26: field discovery — returns 409 when no Jira token is configur
   const res = await GET(makeReq({}), { params: { id: 'conn-1' } });
   const body = await res.json();
   expect(res.status).toBe(409);
-  expect(body.error).toMatch(/App Config/);
+  expect(body.error).toMatch(/for this connection/);
 });
 
 test('TC-JIRA-27: field discovery — success returns the field list from the gateway', async () => {
-  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
-  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection({ apiTokenEncrypted: 'encrypted-token' }));
   (callExternal as jest.Mock).mockResolvedValue({
     ok: true,
     data: [{ id: 'customfield_10016', name: 'Story Points' }, { id: 'summary', name: 'Summary' }],
@@ -322,8 +326,7 @@ test('TC-JIRA-27: field discovery — success returns the field list from the ga
 });
 
 test('TC-JIRA-28: field discovery — gateway failure returns 502', async () => {
-  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
-  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection({ apiTokenEncrypted: 'encrypted-token' }));
   (callExternal as jest.Mock).mockResolvedValue({
     ok: false,
     error: 'HTTP 401: Unauthorized',
@@ -382,8 +385,7 @@ test('TC-JIRA-43: sync — returns 409 when no Jira token is configured', async 
 });
 
 test('TC-JIRA-44: sync — fetch failure returns 502 and records lastSyncStatus failed', async () => {
-  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
-  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection({ apiTokenEncrypted: 'encrypted-token' }));
   (fetchAllJiraIssues as jest.Mock).mockResolvedValue({ ok: false, error: 'HTTP 401: Unauthorized' });
 
   const { POST } = await import('../../app/api/admin/jira-connections/[id]/sync/route');
@@ -396,8 +398,7 @@ test('TC-JIRA-44: sync — fetch failure returns 502 and records lastSyncStatus 
 });
 
 test('TC-JIRA-44b: sync — a config error (e.g. no project keys) returns 409, not 502', async () => {
-  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
-  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection({ apiTokenEncrypted: 'encrypted-token' }));
   (fetchAllJiraIssues as jest.Mock).mockResolvedValue({
     ok: false,
     error: 'This connection has no valid project keys configured.',
@@ -411,8 +412,7 @@ test('TC-JIRA-44b: sync — a config error (e.g. no project keys) returns 409, n
 });
 
 test('TC-JIRA-45: sync — validation failure (no issues) returns 422 without writing metrics', async () => {
-  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
-  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection({ apiTokenEncrypted: 'encrypted-token' }));
   (fetchAllJiraIssues as jest.Mock).mockResolvedValue({ ok: true, issues: [], truncated: false });
 
   const { POST } = await import('../../app/api/admin/jira-connections/[id]/sync/route');
@@ -425,8 +425,7 @@ test('TC-JIRA-45: sync — validation failure (no issues) returns 422 without wr
 });
 
 test('TC-JIRA-46: sync — success writes latest metrics, an ImportLog (sourceType: "api"), and marks the connection successful', async () => {
-  (getJiraApiToken as jest.Mock).mockResolvedValue('secret-token');
-  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection());
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection({ apiTokenEncrypted: 'encrypted-token' }));
   (fetchAllJiraIssues as jest.Mock).mockResolvedValue({
     ok: true,
     issues: [rawJiraIssue('PROJ-1'), rawJiraIssue('PROJ-2')],

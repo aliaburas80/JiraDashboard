@@ -11,8 +11,8 @@ import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { callExternal } from '@/server/gateway/externalGateway';
-import { getJiraApiToken } from '@/lib/app-config';
 import { buildJiraAuthHeader, jiraMyselfPath } from '@/services/jira/auth';
+import { getJiraConnectionToken } from '@/services/jira/connectionCredentials';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -40,10 +40,10 @@ export async function POST(
     return NextResponse.json({ error: 'Connection not found.' }, { status: 404 });
   }
 
-  const token = await getJiraApiToken();
+  const token = getJiraConnectionToken(connection);
   if (!token) {
     return NextResponse.json(
-      { error: 'No Jira API token is configured. Set it in Admin Settings → App Config (or GATEWAY_JIRA_API_TOKEN in your environment) before testing a connection.' },
+      { error: 'No Jira API token is configured for this connection. Delete and recreate the connection with its API token / PAT.' },
       { status: 409 },
     );
   }
@@ -61,9 +61,8 @@ export async function POST(
     path: jiraMyselfPath(connection.deploymentType),
     headers: { Authorization: authHeader, Accept: 'application/json' },
     baseUrlOverride: connection.baseUrl,
-    // We already resolved `token` above via getJiraApiToken() (encrypted
-    // app-config or env fallback) — tell the gateway credentials are
-    // present rather than re-checking its own env-var-only default.
+    // We already resolved this connection's encrypted token above — tell the
+    // gateway credentials are present rather than re-checking env-var defaults.
     credentialsPresentOverride: true,
     userId: session.userId,
     timeoutMs: 15000,

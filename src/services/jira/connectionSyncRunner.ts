@@ -7,7 +7,7 @@
 
 import type { JiraConnection } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { getJiraApiToken } from '@/lib/app-config';
+import { getJiraConnectionToken } from '@/services/jira/connectionCredentials';
 import { fetchAllJiraIssues } from '@/services/jira/sync';
 import { normalizeJiraIssues } from '@/services/jira/apiAdapter';
 import { validateIssueData } from '@/services/jira/validation';
@@ -38,11 +38,11 @@ export async function runJiraConnectionSync(
   connection: JiraConnection,
   userId: string,
 ): Promise<JiraSyncRunResult> {
-  const token = await getJiraApiToken();
+  const token = getJiraConnectionToken(connection);
   if (!token) {
     return {
       status: 409,
-      body: { ok: false, error: 'No Jira API token is configured. Set it in Admin Settings → App Config before syncing.' },
+      body: { ok: false, error: 'No Jira API token is configured for this connection. Delete and recreate the connection with its API token / PAT.' },
     };
   }
 

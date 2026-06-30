@@ -160,7 +160,8 @@ model JiraConnection {
   name                   String // admin-facing label, e.g. "Production Jira"
   deploymentType         String // "cloud" | "server"
   baseUrl                String
-  authEmail              String? // Cloud only — paired with GATEWAY_JIRA_API_TOKEN (token never stored here)
+  authEmail              String? // Cloud only — paired with this connection's encrypted API token/PAT.
+  apiTokenEncrypted      String?
   projectFilters         String // JSON array of project keys
   fieldMapping           String // JSON: { canonicalField: jiraFieldId }
   refreshMode            String    @default("manual") // "manual" | "scheduled"
