@@ -199,3 +199,21 @@ model SystemErrorLog {
   @@index([createdAt])
   @@index([resolution])
 }
+
+// ── SMTP Settings (per-deployment; future: per-organisation) ──────────────────
+// Password is stored AES-256-GCM encrypted via secret-field.ts.
+// Priority chain at runtime: this table → cloud S3 config → SMTP_* env vars.
+
+model SmtpSettings {
+  id             String   @id @default(cuid())
+  host           String
+  port           Int      @default(587)
+  username       String
+  passEncrypted  String
+  fromAddress    String
+  updatedByUserId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([updatedAt])
+}

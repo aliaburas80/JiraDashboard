@@ -129,27 +129,45 @@ function buildFromEnv(): AppConfig {
 
 // ── Public getters ────────────────────────────────────────────────────────────
 
+// Priority chain for SMTP config:
+//   1. Database SmtpSettings table (encrypted, set via Admin UI)
+//   2. Cloud S3/Azure/GCP config (legacy encrypted blob)
+//   3. SMTP_* environment variables (local dev / Render dashboard fallback)
 export async function getAppConfig(): Promise<AppConfig> {
   if (_cached) return _cached;
+
+  // 1. Try database first — avoids cloud storage dependency for SMTP.
+  try {
+    const { getSmtpConfig } = await import('@/services/smtp/smtpSettings.service');
+    const dbSmtp = await getSmtpConfig();
+    if (dbSmtp) {
+      const env = buildFromEnv();
+      _cached = {
+        smtp:   dbSmtp,
+        jira:   { apiToken: env.jira.apiToken },
+        appUrl: env.appUrl,
+      };
+      _source = 'cloud'; // treat DB as the "cloud" source for the UI badge
+      return _cached;
+    }
+  } catch {
+    // DB unavailable or decryption failed — fall through to cloud config.
+  }
+
+  // 2. Try encrypted cloud blob (S3 / Azure / GCP).
   const cloud = await loadFromCloud();
   if (cloud) {
-    // Configs saved before the `jira` field existed won't have it — default it
-    // so callers can always read cfg.jira.apiToken safely.
     cloud.jira ??= { apiToken: '' };
-
-    // If SMTP/Jira env vars are explicitly set, they override the cloud config.
-    // This lets operators fix credentials via .env without needing a cloud update.
     const env = buildFromEnv();
-    if (env.smtp.user && env.smtp.pass) {
-      cloud.smtp = env.smtp;
-    }
-    if (env.jira.apiToken) {
-      cloud.jira = env.jira;
-    }
+    // Env vars override cloud when explicitly set — lets operators fix via dashboard.
+    if (env.smtp.user && env.smtp.pass) cloud.smtp = env.smtp;
+    if (env.jira.apiToken)              cloud.jira = env.jira;
     _cached = cloud;
     _source = 'cloud';
     return _cached;
   }
+
+  // 3. Fall back to environment variables.
   _cached = buildFromEnv();
   _source = 'env';
   return _cached;

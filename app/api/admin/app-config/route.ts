@@ -64,13 +64,31 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
     appUrl: body.appUrl?.trim() ?? existing.appUrl,
   };
 
+  // Save SMTP to database (primary store) — does not require cloud storage to be configured.
+  try {
+    const { saveSmtpSettings } = await import('@/services/smtp/smtpSettings.service');
+    await saveSmtpSettings({
+      host:            updated.smtp.host,
+      port:            updated.smtp.port,
+      username:        updated.smtp.user,
+      pass:            body.smtp?.pass?.trim() || undefined, // only pass new pass if explicitly provided
+      fromAddress:     updated.smtp.from,
+      updatedByUserId: (auth as SessionData).userId,
+    });
+  } catch (err) {
+    // DB save failed — still attempt cloud save below; log but don't abort.
+    console.error('[app-config] DB SMTP save failed:', (err as Error).message);
+  }
+
+  // Also save to cloud (S3/Azure/GCP) as a secondary backup, when configured.
   try {
     await saveToCloud(updated);
-    invalidateConfig();
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  } catch {
+    // Cloud not configured or save failed — DB is the primary store, this is optional.
   }
+
+  invalidateConfig();
+  return NextResponse.json({ ok: true });
 }
 
 interface JiraMyselfResponse {
