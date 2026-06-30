@@ -1,6 +1,8 @@
 # Delivery Clarity — Master TODO List
 
-**Last updated:** 2026-06-29 (**v4.16.0 MOBILE-01–04 AUDIT + FIXES** — `MOBILE-01` full static-code mobile audit (375px reasoning) across every route: 14 issues found, 2 broken/5 cramped/7 minor, repeating shared-component patterns identified. `MOBILE-02` breakpoint-strategy decision: keep existing desktop-first SCSS Modules, standardize a missing `480px` step rather than rewriting to mobile-first. `MOBILE-03` found already done pre-existing (`AppShell` hamburger + dashboard slide-in drawer from the prior session both already keyboard/screen-reader accessible). Fixed the two genuinely-broken findings in code: `work-explorer`'s 380px sidebar now gated to `min-width: 900px`; `sprint-kanban`/`delivery-mix` `.kpiStrip` base corrected from a stuck 4-col mobile default to 2-col with a `480px` step-up. `MOBILE-04` (touch targets): attempted a global fix, reverted as too high-blast-radius without browser verification — left as an open per-component follow-up. `npm run lint:css` clean. Branch: main.)
+**Last updated:** 2026-07-01 (**v4.17.0 SOFT LAUNCH MASTER PLAN + ERROR CATALOG** — Added Section 29 (72 rows): P0-A 10 items / P0-B 15 items / P1 19 items / P2 8 items / Risk register R-01–R-20, all sourced verbatim from `Delivery_Clarity_Soft_Launch_AI_Master_Plan_v1.1.docx` (2026-06-30). P0A-06/07/08 marked partially done (Neon PostgreSQL provisioned, structured startup logging, release notes maintained). Created `product/ERRORS.md` v1.0: 33 error codes across 9 categories — startup/config (ERR-001–010), upload/processing (ERR-021–026), auth (ERR-041–045), authorization (ERR-061–062), database/storage (ERR-071–073), API/client (ERR-091–093), analytics (ERR-111–112), AI service (ERR-121–123), payments P1 (ERR-131–133). Each entry has event name, HTTP status, severity, cause and exact fix. No code changed. Branch: main.)
+
+**Previous:** 2026-06-29 (**v4.16.0 MOBILE-01–04 AUDIT + FIXES** 2026-06-29 (**v4.16.0 MOBILE-01–04 AUDIT + FIXES** — `MOBILE-01` full static-code mobile audit (375px reasoning) across every route: 14 issues found, 2 broken/5 cramped/7 minor, repeating shared-component patterns identified. `MOBILE-02` breakpoint-strategy decision: keep existing desktop-first SCSS Modules, standardize a missing `480px` step rather than rewriting to mobile-first. `MOBILE-03` found already done pre-existing (`AppShell` hamburger + dashboard slide-in drawer from the prior session both already keyboard/screen-reader accessible). Fixed the two genuinely-broken findings in code: `work-explorer`'s 380px sidebar now gated to `min-width: 900px`; `sprint-kanban`/`delivery-mix` `.kpiStrip` base corrected from a stuck 4-col mobile default to 2-col with a `480px` step-up. `MOBILE-04` (touch targets): attempted a global fix, reverted as too high-blast-radius without browser verification — left as an open per-component follow-up. `npm run lint:css` clean. Branch: main.)
 
 **Previous:** 2026-06-29 (**v4.15.1 QA GATE + STYLE-02 RETRO PAGE** — `QA-GATE-01`/`02` closed: `package.json` gained `typecheck`/`check:fast`/`check:ci` scripts, DEVELOPER_GUIDE.md §11a documents the pre-merge checklist (`QA-GATE-07` partially closed alongside it — branch-protection CI wiring still open, no workflow file exists yet). `STYLE-02` tier 1 first file done: `app/retro/page.tsx`'s 112 inline-style warnings eliminated via `app/retro/page.module.scss` + `data-priority`/`data-goal` attribute selectors for semantic state, 0 ESLint warnings confirmed; 5 files/374 warnings remain in this tier. `npm run check:fast` green (`forecastEngine.test.ts` Jest-worker SIGSEGV is pre-existing and unrelated). Branch: main.)
 
@@ -1707,6 +1709,110 @@ Jira: SSRF/host-allowlist test, credential encryption round-trip, key rotation w
 | AIPLAN-03 | Phase 1: add `organisationId` to all canonical models | P1 | ❌ Not started |
 | AIPLAN-04 | Phase 1: add `SnapshotCanonicalRecord` model | P1 | ❌ Not started |
 | AIPLAN-05 | Obtain and append the missing remainder of the source plan (Phase 1 continuation through final section) | P0 | ❌ Not started — blocked on user re-pasting truncated content |
+
+---
+
+## 29. Soft Launch, Analytics & AI Intelligence (Master Plan v1.1 — 2026-06-30)
+
+Source: `product/Delivery_Clarity_Soft_Launch_AI_Master_Plan_v1.1.docx`
+Decision principle: P0-A must pass before P0-B work; P0-B must pass before P1 AI work.
+
+### 29.1 P0-A — Existing product completion gate
+
+| ID | Task | Priority | Status | Notes |
+|---|---|---|---|---|
+| P0A-01 | Repository and documentation audit | P0 | ❌ Not started | Map current features, incomplete TODOs, migrations, tests and known defects to the master plan. Done when: audit report and traceability matrix approved. |
+| P0A-02 | Upload pipeline reliability | P0 | ❌ Not started | Verify CSV/Excel validation, retries, large-file limits, duplicate handling and actionable errors. Done when: representative Jira files process reliably; failures do not corrupt entitlement. |
+| P0A-03 | Metric calculation correctness | P0 | ❌ Not started | Regression-test lead/cycle time, throughput, velocity, predictability, flow health, releases and hierarchy relations. Done when: formula reference and automated tests pass against known datasets. |
+| P0A-04 | Data isolation and workspace security | P0 | ❌ Not started | Ensure every query is tenant/user scoped and unauthorised IDs cannot access another workspace. Done when: negative access tests pass across API and exports. |
+| P0A-05 | Authentication/session baseline | P0 | ❌ Not started | Verify login, logout, reset, verification, secure cookies, CSRF and rate limits. Done when: security test checklist passes. |
+| P0A-06 | Database production readiness | P0 | 🟡 Partially done | Neon PostgreSQL provisioned, connection URL configured (.env updated 2026-06-29). Migrations, indexes, backups and restore procedure still need verification. |
+| P0A-07 | Audit and operational logging | P0 | 🟡 Partially done | `scripts/start-production.mjs` has structured JSON logging with correlation IDs and secret redaction. Full sensitive-action and processing-failure coverage not yet verified. |
+| P0A-08 | Release/version discipline | P0 | 🟡 Partially done | `RELEASE_NOTES.md` exists and is maintained. App version not yet exposed at runtime (no `app_version` in responses). Rollback steps not formally documented. |
+| P0A-09 | Performance baseline | P0 | ❌ Not started | Measure upload, analysis, dashboard and export performance with representative 3k–7k issue datasets. Done when: agreed performance thresholds documented and met. |
+| P0A-10 | Core documentation completion | P0 | 🟡 Partially done | BRD/SRS/RELEASE_NOTES/DEVELOPER_GUIDE maintained and current. Calculation reference and full data-model doc not yet complete. |
+
+### 29.2 P0-B — Safe soft-launch essentials
+
+| ID | Task | Priority | Status | Notes |
+|---|---|---|---|---|
+| P0B-01 | Signup and role profile | P0 | ❌ Not started | Free signup, email verification, primary and secondary persona roles (Scrum Master, Agile Coach, PO, PM, Delivery Manager, EM, Team Lead, Executive, Jira Admin, Consultant, Other). Depends on: P0A-05. |
+| P0B-02 | Trial entitlement | P0 | ❌ Not started | One successful free analysis, 30-day workspace access, expiry and optional 24-hour replacement upload. Failed validation attempts must NOT consume entitlement. Depends on: P0B-01, P0A-02. |
+| P0B-03 | Consent and privacy controls | P0 | ❌ Not started | Privacy notice, consent records, analytics choices, terms, retention and withdrawal. Depends on: P0B-01. |
+| P0B-04 | Data lifecycle | P0 | ❌ Not started | Delete/export account, expiry jobs, uploaded-original policy and retention enforcement. Depends on: P0B-03, P0A-06. |
+| P0B-05 | Event taxonomy and SDK | P0 | ❌ Not started | Versioned meaningful events (see §4.2 taxonomy) with pseudonymous IDs, schema version, event_id, context fields. Depends on: P0A-08. |
+| P0B-06 | IndexedDB event queue | P0 | ❌ Not started | 10-second batching, thresholds (20–50 events), offline retry, sendBeacon for exit payloads, acknowledgements and idempotency. Delete only server-acknowledged events. Depends on: P0B-05. |
+| P0B-07 | Server event ingestion | P0 | ❌ Not started | Validation, rate limits, accepted/rejected event ID response, deduplication and storage. Depends on: P0B-06, P0A-06. |
+| P0B-08 | Structured error monitoring | P0 | ❌ Not started | Fingerprints, severity, first/last occurrence, affected users, release version, page/component, route, HTTP status, correlation ID, sanitised stack. Connect error to fix version and release note. Never put Jira content, auth secrets, or PII in error logs. Depends on: P0A-07, P0A-08. |
+| P0B-09 | Feedback control | P0 | ❌ Not started | Persistent feedback popup on all public pages, categories (Suggestion, Problem/Bug, Feature Request, Complaint, Question, Data Concern, Other), context autofill, screenshot, impact level, status workflow. Do NOT auto-attach Jira data. Depends on: P0B-01, P0A-06. |
+| P0B-10 | Separate admin application | P0 | ❌ Not started | Admin frontend on port 3001/subdomain, separate auth/session/cookies, no public link, separate build. Every admin request requires server-side auth. Depends on: P0A-05. |
+| P0B-11 | Owner Admin bootstrap | P0 | ❌ Not started | Secure deployment/CLI creation of initial owner — no public admin signup page. Depends on: P0B-10. |
+| P0B-12 | Admin user management | P0 | ❌ Not started | Invite (one-time expiring link), mandatory MFA, explicit permissions (not role-based), session revocation, audit log. Admin cannot create Owner Admin or grant self additional access. Depends on: P0B-11. |
+| P0B-13 | Minimum admin operations | P0 | ❌ Not started | View users, entitlements, uploads, errors, feedback, releases and audit logs from the admin app. Depends on: P0B-10 to P0B-12. |
+| P0B-14 | Launch security review | P0 | ❌ Not started | Threat model, dependency scan (npm audit), secrets review, admin tests and abuse controls. Depends on: all P0-B. |
+| P0B-15 | Soft-launch readiness test | P0 | ❌ Not started | End-to-end test from signup to expiry, feedback, error and owner review. Depends on: all P0-A/P0-B. |
+
+### 29.3 P1 — Product learning and AI intelligence
+
+| ID | Task | Priority | Status | Notes |
+|---|---|---|---|---|
+| P1-01 | Admin overview metrics | P1 | ❌ Not started | Activation, successful analysis, Time to First Value, return rate (7-day), feedback volume and error-free sessions. Depends on: P0B-07, P0B-13. |
+| P1-02 | Funnels and journeys | P1 | ❌ Not started | Signup-to-value funnel, path analysis, abandonment and filters by role/device/release/source. Depends on: P1-01. |
+| P1-03 | Feature usage and weak-area views | P1 | ❌ Not started | Most/least visited pages, sections, reports, filters and role differences. Depends on: P0B-07. |
+| P1-04 | Release and communication centre | P1 | ❌ Not started | Release notes, fix links, audience selection, delivery status and preference-aware updates. Signed unsubscribe tokens. Do NOT use "Do not send me an email" as primary preference control. Depends on: P0B-08, P0B-13. |
+| P1-05 | Email preferences | P1 | ❌ Not started | Manage preferences, unsubscribe tokens, category history and suppression. Depends on: P1-04. |
+| P1-06 | GA4 integration | P1 | ❌ Not started | Consent-aware public acquisition and aggregate conversion events ONLY. Never send: email, phone, username, Jira data, feedback text, raw errors, IP, machine identifiers or internal admin activity to GA4. Depends on: P0B-03, P0B-05. |
+| P1-07 | Heatmaps/dead-click MVP | P1 | ❌ Not started | Privacy-safe interaction heatmaps or vetted third-party tool; mask sensitive dashboard areas. Depends on: P0B-05. |
+| P1-08 | AI service foundation | P1 | ❌ Not started | Internal port 4100, provider adapter (Ollama + Qwen3.5:4b initial), prompt/model versioning in `ai_prompt_versions` table, JSON schema validation of all output. Ollama on private network — never exposed to internet. Depends on: P0A-06, P0B-10. |
+| P1-09 | AI weekly product report | P1 | ❌ Not started | Generate evidence-based 7/30-day report from validated SQL aggregates. Output: type, title, finding, evidence_ids, confidence, classification, recommended_action, success_metric. Depends on: P1-01 to P1-03, P1-08. |
+| P1-10 | Feedback embeddings/clusters | P1 | ❌ Not started | Generate embeddings via Ollama embedding model, store in pgvector, group duplicates/similar requests. Depends on: P0B-09, P1-08. |
+| P1-11 | AI error correlations | P1 | ❌ Not started | Explain calculated release/browser/page/journey error concentrations. Uses validated counts/rates only — no invented causes. Depends on: P0B-08, P1-08. |
+| P1-12 | AI recommendation review | P1 | ❌ Not started | Owner Admin UI: Approve / Reject / Request more evidence / Convert to backlog. No automatic production changes. Depends on: P1-09. |
+| P1-13 | Impact measurement | P1 | ❌ Not started | Before/after metric attached to implemented suggestions and release. Depends on: P1-12, P1-04. |
+| P1-14 | Admin export/reporting | P1 | ❌ Not started | Export filtered metrics, findings and feedback without exposing restricted personal data. Depends on: P1-01 to P1-03. |
+| P1-15 | Billing domain and provider adapter | P1 | ❌ Not started | Plans, prices, subscriptions, orders, entitlements, webhook inbox and provider-neutral BillingProvider interface. Keep provider secrets server-side. Depends on: P0A-06, P0B-01 to P0B-04. |
+| P1-16 | Lemon Squeezy integration | P1 | ❌ Not started | Hosted checkout for one-time/subscription plans, signed webhooks, renewals, cancellation, refunds. Verify Jordan account approval and current commercial terms before production. Depends on: P1-15. |
+| P1-17 | PayPal Checkout integration | P1 | ❌ Not started | Current PayPal JS SDK + Orders REST API, server-side capture (never browser redirect alone), signed webhook verification, refund and cancellation handling. Depends on: P1-15. |
+| P1-18 | Payments admin and reconciliation | P1 | ❌ Not started | Owner views for checkout conversion, subscriptions, failures, refunds, disputes, provider fees and entitlement mismatches. Depends on: P1-16, P1-17, P0B-13. |
+| P1-19 | Payment analytics and AI evidence | P1 | ❌ Not started | Sanitised payment funnel metrics for product analysis. NO card credentials or raw provider payloads in AI evidence. Depends on: P1-18, P1-08. |
+
+### 29.4 P2 — Later optimisation (deferred)
+
+| ID | Task | Priority | Status | Notes |
+|---|---|---|---|---|
+| P2-01 | Sampled session replay | P2 | ⏸ Deferred | Only after privacy masking is verified and sensitive dashboards are excluded. |
+| P2-02 | Anomaly detection | P2 | ⏸ Deferred | Statistical detection of unusual changes in conversion, errors and feature use. Requires sufficient baseline data. |
+| P2-03 | Experiment framework | P2 | ⏸ Deferred | Controlled onboarding/UX experiments with primary and guardrail metrics. |
+| P2-04 | Role-adaptive recommendations | P2 | ⏸ Deferred | Role-specific next actions and dashboard guidance. |
+| P2-05 | Advanced AI model routing | P2 | ⏸ Deferred | Use larger Qwen3.5:9b only for complex reports; keep 4b for classification. |
+| P2-06 | SSO/hardware keys/VPN | P2 | ⏸ Deferred | Enterprise admin-access options when operational need appears. |
+| P2-07 | Predictive engagement risk | P2 | ⏸ Deferred | Only after sufficient consented representative longitudinal data exists. |
+| P2-08 | Automated backlog drafting | P2 | ⏸ Deferred | AI drafts tickets with evidence, but owner approves before creation. |
+
+### 29.5 Soft-launch risk register (from Master Plan v1.1)
+
+| ID | Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|---|
+| R-01 | Incorrect Jira calculations produce misleading conclusions | Medium | Critical | Regression datasets, calculation reference, unit/integration tests, release blocking on material variance. Roll back affected release and label impacted reports. Owner: Product / P0-A |
+| R-02 | Uploaded Jira files expose personal or confidential data | Medium | Critical | Minimise fields, encrypt, isolate tenants, delete originals by policy, redact logs/AI prompts, test access controls. Activate incident response and affected-data deletion. Owner: Security / P0 |
+| R-03 | User accesses another user's workspace by guessing IDs | Low | Critical | Server-side tenant scoping, object-level authorisation, negative tests, immutable audit logs. Revoke sessions and investigate all related access. Owner: Engineering / P0-A |
+| R-04 | Free entitlement abused through repeated accounts/automated uploads | High | Medium | Verified accounts, rate limits, risk signals, file hashes, manual review. Never hard-block by shared IP. Throttle or suspend suspicious patterns. Owner: Product/Security / P0-B |
+| R-05 | IP/device anti-abuse rules falsely block legitimate users | Medium | High | Account-first entitlement and soft scoring; clear appeal/support path. Restore entitlement after owner review. Owner: Product / P0-B |
+| R-06 | Analytics collection becomes excessive or non-compliant | Medium | High | Purpose-limited event taxonomy, consent, minimisation, retention and deletion controls. Disable non-essential collection until remediated. Owner: Privacy / P0-B |
+| R-07 | Event loss, duplication or ordering errors distort funnels | Medium | High | UUIDs, IndexedDB queue, acknowledgements, schema validation, idempotency and reconciliation jobs. Rebuild aggregates from raw accepted events. Owner: Engineering / P0-B |
+| R-08 | Admin application or account is compromised | Low | Critical | Separate app/session, MFA, least privilege, short sessions, re-authentication, rate limits, audit alerts. Revoke sessions/keys and rotate secrets immediately. Owner: Owner/Security / P0-B |
+| R-09 | Error logs, GA4 or AI prompts leak Jira content or PII | Medium | Critical | Allowlisted schemas, sanitisation tests, masking and provider separation. Stop affected pipeline and purge prohibited records. Owner: Engineering/Privacy / P0–P1 |
+| R-10 | AI invents causes, features or priorities not in evidence | High | High | Validated aggregates, evidence IDs, strict JSON schema, confidence, mandatory owner review. Reject recommendation and improve prompt/test set. Owner: Product AI / P1 |
+| R-11 | Local AI model too slow or consumes excessive server resources | Medium | Medium | Small model, scheduled workers, queue limits, caching and provider adapter. Defer reports or move approved workloads to stronger infrastructure. Owner: Engineering / P1 |
+| R-12 | Low soft-launch traffic produces unreliable AI comparisons | High | Medium | Show sample size, confidence and insufficient-evidence states. Delay automated conclusions until thresholds are met. Owner: Product / P1 |
+| R-13 | Users do not trust uploading Jira exports | Medium | High | Transparent privacy/retention notice, demo data, calculation explanations, concise onboarding, Time-to-First-Value optimisation. Offer deletion and support. Owner: Product/UX / P0–P1 |
+| R-14 | Lemon Squeezy/PayPal approval, country capability or fees differ from assumptions | Medium | High | Verify legal entity, supported business, payouts, currencies and commercial terms before production. Keep provider adapter and fallback manual invoicing. Owner: Owner/Finance / P1 |
+| R-15 | Forged, duplicate or out-of-order payment webhooks create incorrect entitlements | Medium | Critical | Signature verification, provider event uniqueness, idempotent state machine, server capture and reconciliation. Freeze affected entitlement changes and replay verified events. Owner: Engineering / P1 |
+| R-16 | Refund, dispute or cancellation not reflected in product access | Medium | High | Explicit entitlement policy, webhook handling, daily reconciliation and owner exception queue. Correct access and contact affected user. Owner: Product/Finance / P1 |
+| R-17 | Payment credentials or card data accidentally logged or stored | Low | Critical | Hosted checkout, secrets vault, strict log redaction, no card fields and security tests. Rotate credentials, purge logs and follow incident response. Owner: Security / P1 |
+| R-18 | Single-owner dependency delays support, release response or security action | High | High | Runbooks, backup administrator, alerts, documented recovery and least-privilege delegation. Activate approved backup admin. Owner: Owner / All |
+| R-19 | Third-party analytics/payment/AI dependency changes price, terms or availability | Medium | High | Adapters, data export, documented replacement path and minimal vendor-specific coupling. Switch provider or disable non-core feature. Owner: Architecture / P1–P2 |
+| R-20 | Hosting, storage, email, AI or payment costs exceed early revenue | Medium | High | Usage budgets, quotas, lifecycle deletion, scheduled AI and unit-economics dashboard. Reduce free limits or pause costly optional workloads. Owner: Owner/Product / P1 |
 
 ---
 
