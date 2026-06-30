@@ -3,7 +3,17 @@
 // falling back to environment variables when no cloud config exists.
 
 import nodemailer from 'nodemailer';
+import type SMTPTransport from 'nodemailer/lib/smtp-transport';
+import { setDefaultResultOrder } from 'node:dns';
 import { getAppConfig, type AppSmtpConfig } from './app-config';
+
+// Render free tier (and many other PaaS) block IPv6 outbound traffic.
+// Nodemailer's `service: 'gmail'` shorthand defaults to port 465 + SSL,
+// which resolves smtp.gmail.com to an IPv6 address → ENETUNREACH.
+// setDefaultResultOrder('ipv4first') tells Node's DNS resolver to always
+// return IPv4 addresses before IPv6 for every outbound connection in this
+// process — no per-transporter type gymnastics required.
+setDefaultResultOrder('ipv4first');
 
 interface EmailOptions {
   to:      string;
@@ -20,17 +30,18 @@ interface SmtpErrorDescription {
 }
 
 function createTransporter(smtp: AppSmtpConfig) {
-  const isGmail = smtp.host.toLowerCase() === 'smtp.gmail.com';
-  return isGmail
-    ? nodemailer.createTransport({ service: 'gmail', auth: { user: smtp.user, pass: smtp.pass } })
-    : nodemailer.createTransport({
-        host:              smtp.host,
-        port:              smtp.port,
-        secure:            smtp.port === 465,
-        auth:              { user: smtp.user, pass: smtp.pass },
-        connectionTimeout: 10_000,
-        greetingTimeout:   10_000,
-      });
+  // Never use `service: 'gmail'` — it hard-codes port 465/SSL and may pick IPv6.
+  // Always use explicit host + port 587 + STARTTLS so the IPv4 fix above applies.
+  const effectivePort = smtp.port === 465 ? 587 : smtp.port;
+  const options: SMTPTransport.Options = {
+    host:              smtp.host,
+    port:              effectivePort,
+    secure:            false,   // STARTTLS on 587; not direct TLS
+    auth:              { user: smtp.user, pass: smtp.pass },
+    connectionTimeout: 15_000,
+    greetingTimeout:   15_000,
+  };
+  return nodemailer.createTransport(options);
 }
 
 export function describeSmtpErrorDetails(err: unknown, smtp?: AppSmtpConfig): SmtpErrorDescription {
