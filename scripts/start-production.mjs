@@ -144,6 +144,36 @@ function runNodeScript(scriptPath, args, eventName) {
   });
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function runNodeScriptWithRetries(scriptPath, args, eventName, options = {}) {
+  const attempts = options.attempts ?? 5;
+  const delayMs = options.delayMs ?? 5000;
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await runNodeScript(scriptPath, args, eventName);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts) break;
+
+      log('warn', `${eventName}.retry`, {
+        attempt,
+        attempts,
+        delayMs,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      await sleep(delayMs);
+    }
+  }
+
+  throw lastError ?? new Error(`${eventName} failed`);
+}
+
 loadEnvFiles();
 validateEnvironment();
 
@@ -152,7 +182,10 @@ const nextBin = require.resolve('next/dist/bin/next');
 const port = process.env.PORT?.trim() || '3000';
 
 try {
-  await runNodeScript(prismaBin, ['migrate', 'deploy'], 'prisma_migrate_deploy');
+  await runNodeScriptWithRetries(prismaBin, ['migrate', 'deploy'], 'prisma_migrate_deploy', {
+    attempts: 5,
+    delayMs: 8000,
+  });
 } catch (error) {
   log('error', 'startup.migration_failed', {
     error: error instanceof Error ? error.message : String(error),
