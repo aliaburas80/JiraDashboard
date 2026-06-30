@@ -77,16 +77,34 @@ function SectionHeader({
 }
 
 function SectionActions({
-  editing, saving, onSave, testing, onTest, testLabel,
+  editing, saving, onSave, testing, testResult, onTest, testLabel,
 }: {
-  editing:    boolean;
-  saving:     boolean;
-  onSave:     () => void;
-  testing?:   boolean;
-  onTest?:    () => void;
-  testLabel?: string;
+  editing:     boolean;
+  saving:      boolean;
+  onSave:      () => void;
+  testing?:    boolean;
+  testResult?: 'idle' | 'success' | 'error';
+  onTest?:     () => void;
+  testLabel?:  string;
 }) {
   if (!editing) return null;
+
+  const result = testResult ?? 'idle';
+  const testBtnClass =
+    result === 'success'
+      ? 'inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-green-700 transition-colors disabled:opacity-50'
+      : result === 'error'
+        ? 'inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3.5 py-2 text-xs font-bold text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50'
+        : 'inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50';
+  const testIcon  = result === 'success' ? 'checkCircle' : result === 'error' ? 'crossCircle' : 'send';
+  const testText  = testing
+    ? 'Testing…'
+    : result === 'success'
+      ? 'Sent — test again'
+      : result === 'error'
+        ? 'Failed — retry'
+        : (testLabel ?? 'Send test');
+
   return (
     <div className="flex items-center gap-2 pt-1">
       <button
@@ -103,10 +121,10 @@ function SectionActions({
           type="button"
           onClick={onTest}
           disabled={testing}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+          className={testBtnClass}
         >
-          <SvgIcon name="send" size={12} />
-          {testing ? 'Testing…' : testLabel}
+          <SvgIcon name={testIcon} size={12} />
+          {testText}
         </button>
       )}
     </div>
@@ -114,10 +132,11 @@ function SectionActions({
 }
 
 export default function AppConfigPanel() {
-  const [loading,  setLoading]  = useState(true);
-  const [saving,   setSaving]   = useState(false);
-  const [testing,  setTesting]  = useState(false);
-  const [hasEncKey, setHasEncKey] = useState(false);
+  const [loading,    setLoading]    = useState(true);
+  const [saving,     setSaving]     = useState(false);
+  const [testing,    setTesting]    = useState(false);
+  const [testResult, setTestResult] = useState<'idle' | 'success' | 'error'>('idle');
+  const [hasEncKey,  setHasEncKey]  = useState(false);
   const [source,   setSource]   = useState<'cloud' | 'env'>('env');
   const [status,   setStatus]   = useState<{ type: 'success' | 'error' | 'info'; msg: string; solution?: string; details?: string } | null>(null);
   const [showStatusSolution, setShowStatusSolution] = useState(false);
@@ -187,6 +206,7 @@ export default function AppConfigPanel() {
 
   async function handleTest() {
     setTesting(true);
+    setTestResult('idle');
     setStatus(null);
     setShowStatusSolution(false);
     try {
@@ -202,6 +222,7 @@ export default function AppConfigPanel() {
       });
       const data = await res.json();
       if (!res.ok) {
+        setTestResult('error');
         setStatus({
           type: 'error',
           msg: data.error ?? 'Test failed.',
@@ -210,9 +231,15 @@ export default function AppConfigPanel() {
         });
         return;
       }
-      if (data.skipped) { setStatus({ type: 'info', msg: 'SMTP not configured — fill in Host, Username, and Password first.' }); return; }
+      if (data.skipped) {
+        setTestResult('error');
+        setStatus({ type: 'error', msg: 'SMTP not configured — fill in Host, Username, and Password first.' });
+        return;
+      }
+      setTestResult('success');
       setStatus({ type: 'success', msg: `Test email sent to ${user} — check your inbox.` });
     } catch {
+      setTestResult('error');
       setStatus({ type: 'error', msg: 'Network error — test failed.' });
     } finally {
       setTesting(false);
@@ -288,6 +315,7 @@ export default function AppConfigPanel() {
           saving={saving}
           onSave={handleSave}
           testing={testing}
+          testResult={testResult}
           onTest={handleTest}
           testLabel="Send test email"
         />
@@ -317,10 +345,10 @@ export default function AppConfigPanel() {
       {status && (
         <div className={`flex items-start gap-2 rounded-xl border px-4 py-3 text-sm ${
           status.type === 'success' ? 'border-green-200 bg-green-50 text-green-700' :
-          status.type === 'error'   ? 'border-blue-300 bg-blue-50 text-blue-800' :
+          status.type === 'error'   ? 'border-red-200 bg-red-50 text-red-800' :
                                       'border-blue-200 bg-blue-50 text-blue-700'
         }`}>
-          <SvgIcon name={status.type === 'success' ? 'checkCircle' : status.type === 'error' ? 'info' : 'info'} size={14} />
+          <SvgIcon name={status.type === 'success' ? 'checkCircle' : status.type === 'error' ? 'crossCircle' : 'info'} size={14} />
           <div className="min-w-0 flex-1">
             <p className="font-semibold">{status.msg}</p>
             {status.type === 'error' && (status.solution || status.details) && (
@@ -328,16 +356,16 @@ export default function AppConfigPanel() {
                 <button
                   type="button"
                   onClick={() => setShowStatusSolution(v => !v)}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 underline underline-offset-2"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-red-700 underline underline-offset-2"
                   aria-expanded={showStatusSolution}
                 >
                   {showStatusSolution ? 'Hide solution' : 'Show solution'}
                   <SvgIcon name={showStatusSolution ? 'chevronUp' : 'chevronDown'} size={11} />
                 </button>
                 {showStatusSolution && (
-                  <div className="mt-2 rounded-lg border border-blue-200 bg-white px-3 py-2 text-[11px] leading-relaxed text-blue-800">
+                  <div className="mt-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-[11px] leading-relaxed text-red-800">
                     {status.solution && <p><span className="font-black">Solution: </span>{status.solution}</p>}
-                    {status.details && <p className="mt-1 text-blue-600"><span className="font-black">Details: </span>{status.details}</p>}
+                    {status.details && <p className="mt-1 text-red-600"><span className="font-black">Details: </span>{status.details}</p>}
                   </div>
                 )}
               </div>
