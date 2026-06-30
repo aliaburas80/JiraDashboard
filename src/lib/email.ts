@@ -1,18 +1,20 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
-// Thin nodemailer wrapper. SMTP settings loaded from encrypted cloud config first,
-// falling back to environment variables when no cloud config exists.
+// Email dispatch with two-provider strategy:
+//   1. Resend HTTP API  (RESEND_API_KEY env var set)  — works on Render free tier;
+//      Render blocks outbound SMTP ports 465/587 making raw SMTP impossible there.
+//   2. SMTP via nodemailer (fallback)                 — used in local dev and on
+//      any host that allows outbound 587/STARTTLS.
+//
+// Provider selection is automatic: set RESEND_API_KEY on production, omit it
+// locally to keep using SMTP from .env.
 
 import nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { setDefaultResultOrder } from 'node:dns';
 import { getAppConfig, type AppSmtpConfig } from './app-config';
 
-// Render free tier (and many other PaaS) block IPv6 outbound traffic.
-// Nodemailer's `service: 'gmail'` shorthand defaults to port 465 + SSL,
-// which resolves smtp.gmail.com to an IPv6 address → ENETUNREACH.
-// setDefaultResultOrder('ipv4first') tells Node's DNS resolver to always
-// return IPv4 addresses before IPv6 for every outbound connection in this
-// process — no per-transporter type gymnastics required.
+// Still set IPv4-first as a safety net for any remaining outbound connections
+// (e.g. Jira, external APIs) that run through this Node process.
 setDefaultResultOrder('ipv4first');
 
 interface EmailOptions {
@@ -29,14 +31,36 @@ interface SmtpErrorDescription {
   details?: string;
 }
 
-function createTransporter(smtp: AppSmtpConfig) {
-  // Never use `service: 'gmail'` — it hard-codes port 465/SSL and may pick IPv6.
-  // Always use explicit host + port 587 + STARTTLS so the IPv4 fix above applies.
+// ── Resend (HTTPS API — primary for production) ───────────────────────────────
+
+interface ResendErrorBody { message?: string; name?: string; }
+
+async function sendViaResend(from: string, opts: EmailOptions): Promise<boolean> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return false;
+
+  const to = opts.toName ? `${opts.toName} <${opts.to}>` : opts.to;
+  const res = await fetch('https://api.resend.com/emails', {
+    method:  'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ from, to: [to], subject: opts.subject, html: opts.html ?? opts.text, text: opts.text }),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({})) as ResendErrorBody;
+    throw new Error(`Resend ${res.status}: ${body.message ?? body.name ?? 'unknown error'}`);
+  }
+  return true;
+}
+
+// ── SMTP (nodemailer — fallback for local dev / SMTP-capable hosts) ───────────
+
+function createSmtpTransporter(smtp: AppSmtpConfig) {
   const effectivePort = smtp.port === 465 ? 587 : smtp.port;
   const options: SMTPTransport.Options = {
     host:              smtp.host,
     port:              effectivePort,
-    secure:            false,   // STARTTLS on 587; not direct TLS
+    secure:            false,
     auth:              { user: smtp.user, pass: smtp.pass },
     connectionTimeout: 15_000,
     greetingTimeout:   15_000,
@@ -73,7 +97,7 @@ export function describeSmtpErrorDetails(err: unknown, smtp?: AppSmtpConfig): Sm
   if (combined.includes('etimedout') || combined.includes('timeout')) {
     return {
       message:  'SMTP connection timed out.',
-      solution: 'Check the SMTP host, port, firewall, and provider settings. For Gmail, use smtp.gmail.com with port 587.',
+      solution: 'Render free tier blocks outbound SMTP (port 587). Set RESEND_API_KEY in your Render environment to use the Resend HTTP API instead — it works from any PaaS. Get a free key at resend.com.',
       details:  message,
     };
   }
@@ -90,14 +114,19 @@ export function describeSmtpError(err: unknown, smtp?: AppSmtpConfig): string {
   return `${description.message} ${description.solution}`.trim();
 }
 
-// Send using explicit SMTP config — used by the admin test endpoint so it can
-// test form-supplied credentials before they are saved to cloud.
+// ── Public send functions ─────────────────────────────────────────────────────
+
+// Used by the admin test endpoint — tests the form-supplied SMTP credentials
+// directly, or Resend if RESEND_API_KEY is set (SMTP unreachable on Render free).
 export async function sendEmailWith(smtp: AppSmtpConfig, opts: EmailOptions): Promise<boolean> {
+  // Resend takes priority when the API key is present — SMTP is blocked on Render free.
+  if (process.env.RESEND_API_KEY) {
+    return sendViaResend(smtp.from || opts.to, opts);
+  }
   if (!smtp.host || !smtp.user || !smtp.pass) return false;
-  const transporter = createTransporter(smtp);
-  await transporter.sendMail({
-    from: smtp.from,
-    to:   opts.toName ? `${opts.toName} <${opts.to}>` : opts.to,
+  await createSmtpTransporter(smtp).sendMail({
+    from:    smtp.from,
+    to:      opts.toName ? `${opts.toName} <${opts.to}>` : opts.to,
     subject: opts.subject,
     text:    opts.text,
     html:    opts.html,
@@ -105,23 +134,28 @@ export async function sendEmailWith(smtp: AppSmtpConfig, opts: EmailOptions): Pr
   return true;
 }
 
+// General-purpose send used by welcome emails, password reset, notifications, etc.
 export async function sendEmail(opts: EmailOptions): Promise<boolean> {
   const cfg  = await getAppConfig();
   const smtp = cfg.smtp;
+
+  // Resend takes priority when the API key is present.
+  if (process.env.RESEND_API_KEY) {
+    return sendViaResend(smtp.from || opts.to, opts);
+  }
 
   if (!smtp.host || !smtp.user || !smtp.pass) {
     console.warn(`[email] SMTP not configured — skipping email to ${opts.to}`);
     return false;
   }
 
-  await createTransporter(smtp).sendMail({
-    from: smtp.from,
-    to:   opts.toName ? `${opts.toName} <${opts.to}>` : opts.to,
+  await createSmtpTransporter(smtp).sendMail({
+    from:    smtp.from,
+    to:      opts.toName ? `${opts.toName} <${opts.to}>` : opts.to,
     subject: opts.subject,
     text:    opts.text,
     html:    opts.html,
   });
-
   return true;
 }
 

@@ -40,7 +40,9 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: CONFIG_ENCRYPTION_KEY
-        generateValue: true
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
       - key: STORAGE_ENDPOINT
         sync: false
       - key: STORAGE_ACCESS_KEY_ID
