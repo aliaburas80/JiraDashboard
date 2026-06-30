@@ -12,7 +12,7 @@ import { prisma } from '@/lib/prisma';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { callExternal } from '@/server/gateway/externalGateway';
 import { buildJiraAuthHeader, jiraMyselfPath } from '@/services/jira/auth';
-import { getJiraConnectionToken } from '@/services/jira/connectionCredentials';
+import { resolveJiraConnectionToken } from '@/services/jira/connectionCredentials';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -40,10 +40,10 @@ export async function POST(
     return NextResponse.json({ error: 'Connection not found.' }, { status: 404 });
   }
 
-  const token = getJiraConnectionToken(connection);
-  if (!token) {
+  const tokenResult = resolveJiraConnectionToken(connection);
+  if ('error' in tokenResult) {
     return NextResponse.json(
-      { error: 'No Jira API token is configured for this connection. Delete and recreate the connection with its API token / PAT.' },
+      { error: tokenResult.error },
       { status: 409 },
     );
   }
@@ -52,7 +52,7 @@ export async function POST(
     return NextResponse.json({ error: 'This Cloud connection is missing its email address.' }, { status: 409 });
   }
 
-  const authHeader = buildJiraAuthHeader(connection.deploymentType, connection.authEmail, token);
+  const authHeader = buildJiraAuthHeader(connection.deploymentType, connection.authEmail, tokenResult.token);
 
   const result = await callExternal<JiraMyselfResponse>({
     provider: 'jira',

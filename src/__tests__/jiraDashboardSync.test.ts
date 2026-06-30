@@ -32,6 +32,11 @@ jest.mock('@/services/jira/connectionCredentials', () => ({
   getJiraConnectionToken: jest.fn((connection: { apiTokenEncrypted?: string | null }) => (
     connection.apiTokenEncrypted ? 'fake-token' : ''
   )),
+  resolveJiraConnectionToken: jest.fn((connection: { apiTokenEncrypted?: string | null }) => (
+    connection.apiTokenEncrypted
+      ? { ok: true, token: 'fake-token' }
+      : { ok: false, error: 'No Jira API token is configured for this connection.' }
+  )),
 }));
 jest.mock('@/services/jira/sync', () => ({
   fetchAllJiraIssues: jest.fn(),

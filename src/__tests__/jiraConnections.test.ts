@@ -40,6 +40,11 @@ jest.mock('@/services/jira/connectionCredentials', () => ({
   getJiraConnectionToken: jest.fn((connection: { apiTokenEncrypted?: string | null }) => (
     connection.apiTokenEncrypted ? 'secret-token' : ''
   )),
+  resolveJiraConnectionToken: jest.fn((connection: { apiTokenEncrypted?: string | null }) => (
+    connection.apiTokenEncrypted
+      ? { ok: true, token: 'secret-token' }
+      : { ok: false, error: 'No Jira API token is configured for this connection.' }
+  )),
   hasJiraConnectionToken: jest.fn((connection: { apiTokenEncrypted?: string | null }) => (
     !!connection.apiTokenEncrypted
   )),
@@ -56,7 +61,7 @@ jest.mock('@/services/storage/cloudSync', () => ({
 
 import { prisma } from '@/lib/prisma';
 import { callExternal } from '@/server/gateway/externalGateway';
-import { encryptJiraConnectionToken } from '@/services/jira/connectionCredentials';
+import { encryptJiraConnectionToken, resolveJiraConnectionToken } from '@/services/jira/connectionCredentials';
 import { fetchAllJiraIssues } from '@/services/jira/sync';
 
 function makeReq(body: unknown) {
@@ -206,6 +211,20 @@ test('TC-JIRA-10: test connection — returns 409 when the connection has no tok
   const body = await res.json();
   expect(res.status).toBe(409);
   expect(body.error).toMatch(/for this connection/);
+});
+
+test('TC-JIRA-10b: test connection — returns 409 when the stored token cannot be decrypted', async () => {
+  (resolveJiraConnectionToken as jest.Mock).mockReturnValueOnce({
+    ok: false,
+    error: 'The Jira API token saved for this connection cannot be decrypted.',
+  });
+  (prisma.jiraConnection.findUnique as jest.Mock).mockResolvedValue(connection({ apiTokenEncrypted: 'stale-ciphertext' }));
+  const { POST } = await import('../../app/api/admin/jira-connections/[id]/test/route');
+  const res = await POST(makeReq({}), { params: { id: 'conn-1' } });
+  const body = await res.json();
+
+  expect(res.status).toBe(409);
+  expect(body.error).toMatch(/cannot be decrypted/);
 });
 
 test('TC-JIRA-11: test connection — success calls the gateway with Basic auth for Cloud and records lastSyncStatus', async () => {

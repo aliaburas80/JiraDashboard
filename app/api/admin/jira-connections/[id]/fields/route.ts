@@ -9,7 +9,7 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
-import { getJiraConnectionToken } from '@/services/jira/connectionCredentials';
+import { resolveJiraConnectionToken } from '@/services/jira/connectionCredentials';
 import { discoverJiraFields } from '@/services/jira/fieldDiscovery';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
@@ -31,10 +31,10 @@ export async function GET(
     return NextResponse.json({ error: 'Connection not found.' }, { status: 404 });
   }
 
-  const token = getJiraConnectionToken(connection);
-  if (!token) {
+  const tokenResult = resolveJiraConnectionToken(connection);
+  if ('error' in tokenResult) {
     return NextResponse.json(
-      { error: 'No Jira API token is configured for this connection. Delete and recreate the connection with its API token / PAT.' },
+      { error: tokenResult.error },
       { status: 409 },
     );
   }
@@ -43,7 +43,7 @@ export async function GET(
     baseUrl: connection.baseUrl,
     deploymentType: connection.deploymentType,
     authEmail: connection.authEmail,
-    token,
+    token: tokenResult.token,
     userId: session.userId,
   });
 
