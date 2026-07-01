@@ -351,6 +351,57 @@ done
 
 ---
 
+## 10. Feedback Control (P0B-09)
+
+### 10.1 Floating button appears on every page
+1. Log in to the live app
+2. Navigate to any page: dashboard, retro, help, admin, etc.
+3. ✅ A **💬 Feedback** button appears fixed in the **bottom-right corner** on every page
+4. ✅ It does not cover important page content (stays at the very edge)
+
+### 10.2 Feedback form opens and submits
+1. Click the **💬 Feedback** button
+2. ✅ A modal appears with:
+   - Category dropdown (7 options: Suggestion, Problem/Bug, Feature Request, Complaint, Question, Data/Calculation Concern, Other)
+   - Message textarea
+   - Impact level buttons: **Minor** / **Affects My Work** / **Blocks Me**
+   - "May we contact you?" checkbox
+3. Select **Problem/Bug**, type at least 5 characters, choose an impact level
+4. Click **Send feedback**
+5. ✅ The form replaces with "✅ Thank you! Your feedback has been recorded."
+
+### 10.3 Validation rejects empty or too-short messages
+1. Open the feedback form
+2. Leave the message blank and click **Send feedback**
+3. ✅ Error message: "Please enter at least a few words."
+4. Form stays open, nothing submitted
+
+### 10.4 Feedback is stored in the database
+After submitting feedback, verify in the Neon SQL editor:
+```sql
+SELECT category, message, "impactLevel", "canContact", status, "createdAt"
+FROM "Feedback"
+ORDER BY "createdAt" DESC
+LIMIT 5;
+```
+✅ Your submission appears with `status = "New"`
+
+### 10.5 Keyboard and accessibility
+1. Open the feedback form
+2. Press **Tab** — focus moves through: category → message → impact buttons → checkbox → submit
+3. Press **Escape** — modal closes, focus returns to the Feedback button
+4. ✅ All interactive elements have visible focus rings
+5. ✅ Modal has `role="dialog"` and `aria-modal="true"`
+
+### 10.6 Close without submitting
+1. Open the feedback form, fill in some text
+2. Click the × button or press Escape
+3. ✅ Modal closes, nothing is submitted
+4. Reopen the form
+5. ✅ Form is reset (blank, default category, Minor impact)
+
+---
+
 ## How to add new tests
 
 When a new feature is built, add a new numbered section here following the same format:

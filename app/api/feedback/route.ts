@@ -1,0 +1,99 @@
+// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// POST /api/feedback — capture structured user feedback (P0B-09).
+// Auth optional — feedback accepted from logged-in and anonymous users.
+// Rate-limited: 10 submissions per IP per 15 minutes.
+// Never attaches uploaded Jira data (master plan §4.6).
+
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getIronSession } from 'iron-session';
+import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
+import { prisma } from '@/lib/prisma';
+import packageJson from '../../../package.json';
+
+export const dynamic = 'force-dynamic';
+
+const VALID_CATEGORIES = [
+  'Suggestion',
+  'Problem/Bug',
+  'Feature Request',
+  'Complaint',
+  'Question',
+  'Data/Calculation Concern',
+  'Other',
+] as const;
+
+const VALID_IMPACTS = ['Minor', 'Affects My Work', 'Blocks Me'] as const;
+
+async function isFeedbackRateLimited(ip: string): Promise<boolean> {
+  const key         = `fb:${ip}`;
+  const WINDOW_MS   = 15 * 60_000;
+  const windowStart = new Date(Date.now() - WINDOW_MS);
+  const prunePoint  = new Date(Date.now() - 60 * 60_000);
+
+  const [count] = await Promise.all([
+    prisma.loginAttempt.count({ where: { ip: key, attemptedAt: { gte: windowStart } } }),
+    prisma.loginAttempt.deleteMany({ where: { ip: key, attemptedAt: { lt: prunePoint } } }),
+  ]);
+
+  if (count >= 10) return true;
+  await prisma.loginAttempt.create({ data: { ip: key } });
+  return false;
+}
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+
+  if (await isFeedbackRateLimited(ip)) {
+    return NextResponse.json({ error: 'Too many feedback submissions. Try again later.' }, { status: 429 });
+  }
+
+  let body: Record<string, unknown>;
+  try { body = await req.json(); }
+  catch { return NextResponse.json({ error: 'Invalid request.' }, { status: 400 }); }
+
+  const category    = String(body.category ?? '');
+  const message     = String(body.message  ?? '').trim().slice(0, 2000);
+  const impactLevel = String(body.impactLevel ?? 'Minor');
+  const canContact  = body.canContact === true;
+  const page        = String(body.page ?? '').slice(0, 200) || undefined;
+  const browserFamily = String(body.browserFamily ?? '').slice(0, 50) || undefined;
+
+  if (!VALID_CATEGORIES.includes(category as typeof VALID_CATEGORIES[number])) {
+    return NextResponse.json({ error: 'Invalid category.' }, { status: 400 });
+  }
+  if (!VALID_IMPACTS.includes(impactLevel as typeof VALID_IMPACTS[number])) {
+    return NextResponse.json({ error: 'Invalid impact level.' }, { status: 400 });
+  }
+  if (message.length < 5) {
+    return NextResponse.json({ error: 'Feedback message is too short.' }, { status: 400 });
+  }
+
+  // Resolve session — best effort.
+  let userId: string | undefined;
+  let userEmail: string | undefined;
+  try {
+    const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+    if (session.isLoggedIn) {
+      userId    = session.userId;
+      userEmail = canContact ? session.email : undefined;
+    }
+  } catch { /* session unavailable */ }
+
+  await prisma.feedback.create({
+    data: {
+      category,
+      message,
+      impactLevel,
+      canContact,
+      page,
+      browserFamily,
+      appVersion: packageJson.version,
+      userId,
+      userEmail,
+      status: 'New',
+    },
+  });
+
+  return NextResponse.json({ ok: true });
+}

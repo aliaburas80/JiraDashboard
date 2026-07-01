@@ -1,0 +1,258 @@
+// FeedbackButton — floating trigger and modal overlay (P0B-09)
+
+// ── Floating trigger button ────────────────────────────────────────────────────
+.trigger {
+  position:        fixed;
+  inset-block-end: 24px;
+  inset-inline-end: 24px;
+  z-index:         var(--z-dropdown, 600);
+
+  display:         flex;
+  align-items:     center;
+  gap:             6px;
+
+  padding:         8px 14px;
+  border-radius:   100px;
+  border:          1px solid var(--dc-bdr, rgba(255,255,255,0.1));
+  background:      var(--dc-s2, #1a1a1a);
+  color:           var(--dc-p2, #909090);
+  font-size:       12px;
+  font-weight:     700;
+  font-family:     inherit;
+  cursor:          pointer;
+  box-shadow:      0 4px 12px rgba(0,0,0,0.3);
+  transition:      background 0.15s, color 0.15s, transform 0.15s;
+
+  &:hover {
+    background: var(--dc-s3, #222);
+    color:      var(--dc-p1, #e0e0e0);
+    transform:  translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline:        2px solid var(--dc-accent, #e85d12);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    &:hover { transform: none; }
+  }
+}
+
+// ── Modal backdrop ─────────────────────────────────────────────────────────────
+.backdrop {
+  position: fixed;
+  inset:    0;
+  z-index:  var(--z-modal, 9999);
+  background: rgba(0,0,0,0.55);
+  display:  flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding:  0 24px 80px;
+
+  @media (max-width: 480px) {
+    padding:       0;
+    align-items:   flex-end;
+    justify-content: stretch;
+  }
+}
+
+// ── Modal panel ────────────────────────────────────────────────────────────────
+.modal {
+  background:    var(--dc-s1, #111);
+  border:        1px solid var(--dc-bdr, rgba(255,255,255,0.1));
+  border-radius: 16px;
+  padding:       24px;
+  width:         360px;
+  max-height:    calc(100vh - 120px);
+  overflow-y:    auto;
+  box-shadow:    0 20px 40px rgba(0,0,0,0.5);
+
+  @media (max-width: 480px) {
+    width:         100%;
+    border-radius: 16px 16px 0 0;
+    max-height:    85vh;
+  }
+}
+
+.modalHeader {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  margin-block-end: 16px;
+}
+
+.modalTitle {
+  font-size:   14px;
+  font-weight: 800;
+  color:       var(--dc-p1, #e0e0e0);
+  margin:      0;
+}
+
+.closeBtn {
+  display:     flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 28px;
+  block-size:  28px;
+  border:      none;
+  background:  none;
+  cursor:      pointer;
+  color:       var(--dc-p3, #505050);
+  border-radius: 6px;
+  font-size:   18px;
+  line-height: 1;
+  font-family: inherit;
+
+  &:hover       { background: var(--dc-s3); color: var(--dc-p1); }
+  &:focus-visible {
+    outline:        2px solid var(--dc-accent, #e85d12);
+    outline-offset: 2px;
+  }
+}
+
+// ── Form fields ────────────────────────────────────────────────────────────────
+.label {
+  display:          block;
+  font-size:        11px;
+  font-weight:      600;
+  color:            var(--dc-p2, #909090);
+  margin-block-end: 4px;
+}
+
+.select,
+.textarea {
+  inline-size:   100%;
+  background:    var(--dc-s3, #1e1e1e);
+  border:        1px solid var(--dc-bdr2, rgba(255,255,255,0.08));
+  border-radius: 8px;
+  padding:       8px 10px;
+  font-size:     13px;
+  color:         var(--dc-p1, #e0e0e0);
+  font-family:   inherit;
+  outline:       none;
+
+  &:focus-visible {
+    border-color: var(--dc-accent, #e85d12);
+    box-shadow:   0 0 0 2px rgba(232,93,18,0.2);
+  }
+}
+
+.textarea {
+  resize:     vertical;
+  min-height: 80px;
+}
+
+.field {
+  margin-block-end: 12px;
+}
+
+// ── Impact chips ───────────────────────────────────────────────────────────────
+.impactRow {
+  display: flex;
+  gap:     6px;
+  flex-wrap: wrap;
+}
+
+.impactChip {
+  flex:          1;
+  min-inline-size: 0;
+  padding:       6px 8px;
+  border-radius: 8px;
+  border:        1px solid var(--dc-bdr, rgba(255,255,255,0.1));
+  background:    var(--dc-s3);
+  color:         var(--dc-p2);
+  font-size:     11px;
+  font-weight:   600;
+  cursor:        pointer;
+  text-align:    center;
+  font-family:   inherit;
+  transition:    background 0.1s, color 0.1s, border-color 0.1s;
+
+  &:hover { background: var(--dc-s2); color: var(--dc-p1); }
+
+  &:focus-visible {
+    outline:        2px solid var(--dc-accent, #e85d12);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}
+
+.impactChipActive {
+  background:   rgba(232,93,18,0.15);
+  border-color: var(--dc-accent, #e85d12);
+  color:        var(--dc-acc2, #FF8A4C);
+}
+
+// ── Contact checkbox ───────────────────────────────────────────────────────────
+.checkRow {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+  margin-block-end: 16px;
+}
+
+.checkLabel {
+  font-size:   12px;
+  color:       var(--dc-p2);
+  cursor:      pointer;
+  user-select: none;
+}
+
+// ── Submit button ──────────────────────────────────────────────────────────────
+.submitBtn {
+  inline-size:   100%;
+  padding:       10px;
+  border-radius: 10px;
+  border:        none;
+  background:    var(--dc-accent, #e85d12);
+  color:         #fff;
+  font-size:     13px;
+  font-weight:   700;
+  cursor:        pointer;
+  font-family:   inherit;
+  transition:    background 0.15s, opacity 0.15s;
+
+  &:hover    { background: var(--dc-acc2, #FF8A4C); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &:focus-visible {
+    outline:        2px solid #fff;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}
+
+// ── Success state ──────────────────────────────────────────────────────────────
+.success {
+  text-align:  center;
+  padding:     24px 0;
+}
+
+.successIcon {
+  font-size:        32px;
+  margin-block-end: 8px;
+}
+
+.successTitle {
+  font-size:        14px;
+  font-weight:      800;
+  color:            var(--dc-p1);
+  margin-block-end: 4px;
+}
+
+.successSub {
+  font-size: 12px;
+  color:     var(--dc-p3);
+  margin:    0;
+}
+
+.errorNote {
+  font-size:   11px;
+  color:       var(--dc-red, #f87171);
+  margin-block-start: 8px;
+  text-align:  center;
+}

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.scss';
 import { DataSourceProvider, CloudLoadingBanner } from '@/components/ui/DataSourceBadge';
 import { GlobalErrorHandler } from '@/components/ui/GlobalErrorHandler';
+import { FeedbackButton } from '@/components/feedback/FeedbackButton';
 import { normalizeAppUrl } from '@/lib/url';
 
 const appUrl = normalizeAppUrl(process.env.NEXT_PUBLIC_APP_URL);
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <GlobalErrorHandler />
           <CloudLoadingBanner />
           {children}
+          <FeedbackButton />
         </DataSourceProvider>
       </body>
     </html>

@@ -202,6 +202,31 @@ model SystemErrorLog {
   @@index([resolution])
 }
 
+// ── User feedback (P0B-09) ────────────────────────────────────────────────────
+// Captures structured feedback from the floating "Feedback" button on every page.
+// Never attaches uploaded Jira data (master plan §4.6 requirement).
+
+model Feedback {
+  id            String    @id @default(cuid())
+  category      String    // Suggestion | Problem/Bug | Feature Request | Complaint | Question | Data/Calculation Concern | Other
+  message       String
+  impactLevel   String    @default("Minor") // Minor | Affects My Work | Blocks Me
+  canContact    Boolean   @default(false)
+  page          String?   // pathname where feedback was submitted
+  appVersion    String?
+  browserFamily String?
+  status        String    @default("New") // New | Reviewing | Accepted | Planned | In Progress | Released | Rejected
+  statusNote    String?   // admin note on the current status
+  userId        String?   // populated if user was logged in
+  userEmail     String?   // email for contact if canContact = true
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@index([category, createdAt])
+}
+
 // ── Client error monitoring (P0B-08) ─────────────────────────────────────────
 // Captures client-side crashes and unhandled rejections from the browser.
 // Identical errors are de-duplicated by fingerprint (hash of message+page+component).
