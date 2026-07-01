@@ -169,7 +169,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     smtpToTest = (await getAppConfig()).smtp;
   }
 
-  if (!smtpToTest.host || !smtpToTest.user || !smtpToTest.pass) {
+  const usingResend = !!process.env.RESEND_API_KEY;
+
+  // When Resend is active the password is irrelevant — only the From address matters.
+  // When falling back to SMTP, host + user + pass are all required.
+  if (!usingResend && (!smtpToTest.host || !smtpToTest.user || !smtpToTest.pass)) {
     return NextResponse.json({ ok: false, skipped: true });
   }
 
@@ -177,13 +181,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const adminEmail = (auth as SessionData).email ?? '';
     const sent = await sendEmailWith(smtpToTest, {
       to:      adminEmail,
-      subject: 'Delivery Clarity — SMTP test',
-      text:    'This is a test email from your Delivery Clarity app-config SMTP settings.',
-      html:    '<p>This is a <strong>test email</strong> from your <strong>Delivery Clarity</strong> app-config SMTP settings.</p>',
+      subject: 'Delivery Clarity — email test',
+      text:    `This is a test email from Delivery Clarity. Provider: ${usingResend ? 'Resend' : 'SMTP'}.`,
+      html:    `<p>This is a <strong>test email</strong> from <strong>Delivery Clarity</strong>.<br>Provider: <code>${usingResend ? 'Resend' : 'SMTP'}</code></p>`,
     });
-    return NextResponse.json({ ok: sent, skipped: !sent });
+    return NextResponse.json({ ok: sent, skipped: !sent, provider: usingResend ? 'resend' : 'smtp' });
   } catch (err) {
-    const description = describeSmtpErrorDetails(err, smtpToTest);
+    const errMsg = err instanceof Error ? err.message : String(err ?? '');
+    const isResendErr = usingResend || errMsg.toLowerCase().includes('resend');
+
+    const description = isResendErr
+      ? {
+          message:  'Resend email failed.',
+          solution: errMsg.includes('403') || errMsg.includes('401')
+            ? 'The RESEND_API_KEY is invalid or expired. Regenerate it at resend.com/api-keys and update the Render environment variable.'
+            : errMsg.includes('422')
+              ? 'Resend rejected the From address. Use "onboarding@resend.dev" for testing, or verify your own domain at resend.com/domains.'
+              : 'Check your RESEND_API_KEY and From address at resend.com, then try again.',
+          details: errMsg,
+        }
+      : describeSmtpErrorDetails(err, smtpToTest);
+
     return NextResponse.json({
       error:    description.message,
       solution: description.solution,
