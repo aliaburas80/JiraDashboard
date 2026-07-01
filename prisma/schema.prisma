@@ -200,6 +200,19 @@ model SystemErrorLog {
   @@index([resolution])
 }
 
+// ── Login attempt log (persistent rate limiter — survives cold starts) ────────
+// Replaces the in-memory Map in login/route.ts (GAP-1 from P0A-05 audit).
+// Rows older than 10 minutes are purged on each login attempt so the table
+// stays small even under sustained traffic.
+
+model LoginAttempt {
+  id          String   @id @default(cuid())
+  ip          String
+  attemptedAt DateTime @default(now())
+
+  @@index([ip, attemptedAt])
+}
+
 // ── SMTP Settings (per-deployment; future: per-organisation) ──────────────────
 // Password is stored AES-256-GCM encrypted via secret-field.ts.
 // Priority chain at runtime: this table → cloud S3 config → SMTP_* env vars.

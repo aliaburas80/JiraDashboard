@@ -33,7 +33,12 @@ jest.mock('@/lib/prisma', () => ({
       })),
       update: jest.fn(async () => ({})),
     },
-    auditEvent: { create: jest.fn(async () => ({})) },
+    auditEvent:    { create: jest.fn(async () => ({})) },
+    loginAttempt:  {
+      count:      jest.fn(async () => 0),
+      create:     jest.fn(async () => ({})),
+      deleteMany: jest.fn(async () => ({ count: 0 })),
+    },
   },
 }));
 jest.mock('@/services/storage/cloudSync', () => ({

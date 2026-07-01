@@ -8,10 +8,33 @@ import { prisma } from '@/lib/prisma';
 import { hashPassword, validatePasswordStrength, verifyPassword } from '@/lib/auth';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 
+// Rate limit: 10 password-change attempts per user per 15 minutes.
+// Prevents authenticated brute-forcing of the current-password field (GAP-2, P0A-05).
+// Reuses the LoginAttempt table with a "cp:" prefix to distinguish from login attempts.
+async function isChangeRateLimited(userId: string): Promise<boolean> {
+  const key         = `cp:${userId}`;
+  const windowStart = new Date(Date.now() - 15 * 60_000);
+  const prunePoint  = new Date(Date.now() - 60 * 60_000);
+  const [count] = await Promise.all([
+    prisma.loginAttempt.count({ where: { ip: key, attemptedAt: { gte: windowStart } } }),
+    prisma.loginAttempt.deleteMany({ where: { ip: key, attemptedAt: { lt: prunePoint } } }),
+  ]);
+  if (count >= 10) return true;
+  await prisma.loginAttempt.create({ data: { ip: key } });
+  return false;
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+  }
+
+  if (await isChangeRateLimited(session.userId)) {
+    return NextResponse.json(
+      { error: 'Too many password-change attempts. Try again in 15 minutes.' },
+      { status: 429 },
+    );
   }
 
   let body: { currentPassword?: string; newPassword?: string };

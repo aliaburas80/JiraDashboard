@@ -9,8 +9,6 @@ import { verifyPassword } from '@/lib/auth';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { isAppRole } from '@/lib/roles';
 
-const LOGIN_RATE = new Map<string, number[]>();
-
 function loginError(
   status: number,
   error: string,
@@ -20,17 +18,28 @@ function loginError(
   return NextResponse.json({ error, solution, details }, { status });
 }
 
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const hits = (LOGIN_RATE.get(ip) ?? []).filter(t => t > now - 60_000);
-  if (hits.length >= 5) return true;
-  LOGIN_RATE.set(ip, [...hits, now]);
+// Persistent rate limiter backed by PostgreSQL — survives Render cold starts.
+// The previous in-memory Map reset on every process restart (GAP-1, P0A-05).
+// Window: 5 attempts per IP per 60 seconds. Rows older than 10 minutes are
+// pruned on each call so the table stays small.
+async function isRateLimited(ip: string): Promise<boolean> {
+  const windowStart = new Date(Date.now() - 60_000);
+  const prunePoint  = new Date(Date.now() - 10 * 60_000);
+
+  const [count] = await Promise.all([
+    prisma.loginAttempt.count({ where: { ip, attemptedAt: { gte: windowStart } } }),
+    prisma.loginAttempt.deleteMany({ where: { attemptedAt: { lt: prunePoint } } }),
+  ]);
+
+  if (count >= 5) return true;
+
+  await prisma.loginAttempt.create({ data: { ip } });
   return false;
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
-  if (isRateLimited(ip)) {
+  if (await isRateLimited(ip)) {
     return loginError(
       429,
       'Too many login attempts.',

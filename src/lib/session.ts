@@ -12,8 +12,17 @@ export interface SessionData {
   isLoggedIn: boolean;
 }
 
+// In production SESSION_SECRET is enforced by start-production.mjs before the
+// process starts. In local dev, fall back to a clearly-labelled dev placeholder
+// so the app starts without the var, but the string is never a guessable secret.
+const _sessionPassword =
+  process.env.SESSION_SECRET ??
+  (process.env.NODE_ENV === 'production'
+    ? (() => { throw new Error('SESSION_SECRET must be set in production.'); })()
+    : 'dev-only-placeholder-not-a-real-secret-do-not-use');
+
 export const SESSION_OPTIONS = {
-  password: process.env.SESSION_SECRET ?? 'delivery-clarity-change-this-in-production-32chars',
+  password: _sessionPassword,
   cookieName: 'dc_session',
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',

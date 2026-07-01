@@ -118,6 +118,11 @@ jest.mock('../lib/prisma', () => ({
     auditEvent: {
       create: jest.fn().mockResolvedValue({}),
     },
+    loginAttempt: {
+      count:      jest.fn().mockResolvedValue(0),
+      create:     jest.fn().mockResolvedValue({}),
+      deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
   },
 }));
 
