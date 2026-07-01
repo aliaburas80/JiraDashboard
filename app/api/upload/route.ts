@@ -13,20 +13,32 @@ import { writeLatestMetrics } from '@/services/metrics/latestMetricsStorage';
 import { getServerEnv } from '@/lib/env/server';
 
 // ---------------------------------------------------------------------------
-// Simple in-process rate limiter — 20 uploads per 15 minutes per IP
+// DB-backed rate limiter — 20 uploads per 15 minutes per user (P0A-02)
+// Replaces the in-memory Map which reset on every Render cold start.
+// Reuses LoginAttempt table with "ul:" prefix to distinguish upload attempts.
 // ---------------------------------------------------------------------------
-const RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const RATE_MAX = 20;
-const ipTimestamps = new Map<string, number[]>();
+async function checkUploadRateLimit(userId: string): Promise<{ limited: boolean; retryAfterSeconds: number }> {
+  const key         = `ul:${userId}`;
+  const WINDOW_MS   = 15 * 60_000;
+  const windowStart = new Date(Date.now() - WINDOW_MS);
+  const prunePoint  = new Date(Date.now() - 60 * 60_000);
 
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const cutoff = now - RATE_WINDOW_MS;
-  const timestamps = (ipTimestamps.get(ip) ?? []).filter((t) => t > cutoff);
-  if (timestamps.length >= RATE_MAX) return true;
-  timestamps.push(now);
-  ipTimestamps.set(ip, timestamps);
-  return false;
+  const [attempts] = await Promise.all([
+    prisma.loginAttempt.findMany({
+      where:   { ip: key, attemptedAt: { gte: windowStart } },
+      orderBy: { attemptedAt: 'asc' },
+      select:  { attemptedAt: true },
+    }),
+    prisma.loginAttempt.deleteMany({ where: { ip: key, attemptedAt: { lt: prunePoint } } }),
+  ]);
+
+  if (attempts.length >= 20) {
+    const earliest          = attempts[0].attemptedAt.getTime();
+    const retryAfterSeconds = Math.ceil(Math.max((earliest + WINDOW_MS) - Date.now(), 1) / 1000);
+    return { limited: true, retryAfterSeconds };
+  }
+  await prisma.loginAttempt.create({ data: { ip: key } });
+  return { limited: false, retryAfterSeconds: 0 };
 }
 
 // ---------------------------------------------------------------------------
@@ -45,16 +57,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const { MAX_UPLOAD_MB } = getServerEnv();
   const maxFileSizeBytes = MAX_UPLOAD_MB * 1024 * 1024;
 
-  // --- Rate limiting ---
-  const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-    req.headers.get('x-real-ip') ??
-    'unknown';
+  // --- Auth first (P0A-02/P0A-04): reject unauthenticated before touching the body ---
+  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  if (!session.isLoggedIn) {
+    return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+  }
+  const userId = session.userId;
 
-  if (isRateLimited(ip)) {
+  // --- DB-backed rate limit by userId (20 uploads / 15 min, survives cold starts) ---
+  const { limited, retryAfterSeconds } = await checkUploadRateLimit(userId);
+  if (limited) {
+    const mins = Math.floor(retryAfterSeconds / 60);
+    const secs = retryAfterSeconds % 60;
+    const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
     return NextResponse.json(
-      { error: 'Too many uploads from this IP. Please wait 15 minutes before trying again.' },
-      { status: 429 },
+      { error: `Too many uploads. Try again in ${timeStr}.`, retryAfterSeconds },
+      { status: 429, headers: { 'Retry-After': String(retryAfterSeconds) } },
     );
   }
 
@@ -132,13 +150,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       { status: 422 },
     );
   }
-
-  // P0A-04: upload and metrics writes require an authenticated session.
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
-  if (!session.isLoggedIn) {
-    return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
-  }
-  const userId = session.userId;
 
   // --- Metrics + log ---
   try {
