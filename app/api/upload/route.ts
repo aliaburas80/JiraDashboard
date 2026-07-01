@@ -133,9 +133,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // --- Get session user (optional — works without auth too) ---
+  // P0A-04: upload and metrics writes require an authenticated session.
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
-  const userId  = session.isLoggedIn ? session.userId : null;
+  if (!session.isLoggedIn) {
+    return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+  }
+  const userId = session.userId;
 
   // --- Metrics + log ---
   try {

@@ -2,6 +2,9 @@
 // GET /api/metrics/latest — load latest dashboard metrics from cloud-backed server storage.
 
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getIronSession } from 'iron-session';
+import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { readLatestMetrics } from '@/services/metrics/latestMetricsStorage';
 
 export const dynamic = 'force-dynamic';
@@ -17,6 +20,12 @@ function sourceFromSync(sync: any): 'bucket' | 'cache' | 'server-local' | 'none'
 }
 
 export async function GET() {
+  // P0A-04: metrics data is not public — require an active session.
+  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  if (!session.isLoggedIn) {
+    return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+  }
+
   let sync: any = null;
 
   try {

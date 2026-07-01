@@ -92,14 +92,18 @@ test('TC-A-14a: upload while logged in persists an ImportLog row tagged with the
   }));
 });
 
-test('TC-A-14b: anonymous upload (no session) does not write an ImportLog row', async () => {
+// P0A-04 (2026-07-01): anonymous upload is now rejected with 401 — the upload
+// route previously allowed unauthenticated submissions ("optional auth"). This
+// was a data-isolation vulnerability: anyone could overwrite the shared metrics
+// file. The test is updated to assert the new correct behaviour.
+test('TC-A-14b: anonymous upload (no session) is rejected with 401', async () => {
   mockSession.isLoggedIn = false;
   mockSession.userId = null;
   const { prisma } = await import('@/lib/prisma');
   const { POST } = await import('../../app/api/upload/route');
 
   const response = await POST(request(blobFile()));
-  expect(response.status).toBe(200);
+  expect(response.status).toBe(401);
 
   expect(prisma.importLog.create).not.toHaveBeenCalled();
 });

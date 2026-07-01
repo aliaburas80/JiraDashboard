@@ -1,6 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getIronSession } from 'iron-session';
+import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 
 export async function GET() {
+  // P0A-04: internal architecture details are not public.
+  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  if (!session.isLoggedIn) {
+    return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+  }
   const developerView = {
     architecture: {
       framework: "Next.js 14",

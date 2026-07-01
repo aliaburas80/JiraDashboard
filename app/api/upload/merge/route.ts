@@ -3,6 +3,9 @@
 // raw issues by Issue Key, and returns unified DashboardMetrics.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getIronSession } from 'iron-session';
+import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { parseJiraFile } from '@/services/jira/parser';
 import { validateIssueData } from '@/services/jira/validation';
 import { calculateDashboardMetrics } from '@/services/metrics/metrics.service';
@@ -18,6 +21,11 @@ function ext(name: string): string {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  // P0A-04: file upload and metrics writes are not public — require an active session.
+  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  if (!session.isLoggedIn) {
+    return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+  }
   let formData: FormData;
   try { formData = await req.formData(); } catch {
     return NextResponse.json({ error: 'Invalid multipart form data.' }, { status: 400 });

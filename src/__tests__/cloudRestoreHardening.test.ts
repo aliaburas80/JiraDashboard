@@ -26,6 +26,19 @@ function installBrowserStorage(initial: Record<string, string> = {}) {
   return store;
 }
 
+// /api/metrics/latest now requires authentication (P0A-04). Stub iron-session
+// with a logged-in session so these cloud-restore tests keep testing what they
+// were designed to test (cloud-sync and source detection), not auth.
+jest.mock('next/headers', () => ({ cookies: jest.fn(() => ({})) }));
+jest.mock('iron-session', () => ({
+  getIronSession: jest.fn(async () => ({
+    isLoggedIn: true,
+    userId: 'test-user',
+    email: 'test@test.com',
+    role: 'admin',
+  })),
+}));
+
 afterEach(() => {
   jest.dontMock('fs');
   jest.dontMock('@/services/storage/cloudSync');
