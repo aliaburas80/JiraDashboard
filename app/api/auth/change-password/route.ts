@@ -11,17 +11,26 @@ import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 // Rate limit: 10 password-change attempts per user per 15 minutes.
 // Prevents authenticated brute-forcing of the current-password field (GAP-2, P0A-05).
 // Reuses the LoginAttempt table with a "cp:" prefix to distinguish from login attempts.
-async function isChangeRateLimited(userId: string): Promise<boolean> {
+async function checkChangeRateLimit(userId: string): Promise<{ limited: boolean; retryAfterSeconds: number }> {
   const key         = `cp:${userId}`;
-  const windowStart = new Date(Date.now() - 15 * 60_000);
+  const WINDOW_MS   = 15 * 60_000;
+  const windowStart = new Date(Date.now() - WINDOW_MS);
   const prunePoint  = new Date(Date.now() - 60 * 60_000);
-  const [count] = await Promise.all([
-    prisma.loginAttempt.count({ where: { ip: key, attemptedAt: { gte: windowStart } } }),
+  const [attempts] = await Promise.all([
+    prisma.loginAttempt.findMany({
+      where:   { ip: key, attemptedAt: { gte: windowStart } },
+      orderBy: { attemptedAt: 'asc' },
+      select:  { attemptedAt: true },
+    }),
     prisma.loginAttempt.deleteMany({ where: { ip: key, attemptedAt: { lt: prunePoint } } }),
   ]);
-  if (count >= 10) return true;
+  if (attempts.length >= 10) {
+    const earliest          = attempts[0].attemptedAt.getTime();
+    const retryAfterSeconds = Math.ceil(Math.max((earliest + WINDOW_MS) - Date.now(), 1) / 1000);
+    return { limited: true, retryAfterSeconds };
+  }
   await prisma.loginAttempt.create({ data: { ip: key } });
-  return false;
+  return { limited: false, retryAfterSeconds: 0 };
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -30,10 +39,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
 
-  if (await isChangeRateLimited(session.userId)) {
+  const { limited, retryAfterSeconds } = await checkChangeRateLimit(session.userId);
+  if (limited) {
+    const mins = Math.floor(retryAfterSeconds / 60);
+    const secs = retryAfterSeconds % 60;
+    const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
     return NextResponse.json(
-      { error: 'Too many password-change attempts. Try again in 15 minutes.' },
-      { status: 429 },
+      { error: 'Too many password-change attempts.', retryAfterSeconds, solution: `Wait ${timeStr} and try again.` },
+      { status: 429, headers: { 'Retry-After': String(retryAfterSeconds) } },
     );
   }
 

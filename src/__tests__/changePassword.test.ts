@@ -36,6 +36,7 @@ jest.mock('@/lib/prisma', () => ({
     auditEvent:    { create: jest.fn(async () => ({})) },
     loginAttempt:  {
       count:      jest.fn(async () => 0),
+      findMany:   jest.fn(async () => []),
       create:     jest.fn(async () => ({})),
       deleteMany: jest.fn(async () => ({ count: 0 })),
     },

@@ -1,7 +1,7 @@
 // © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
 // NOTE: Fully functional after npm install iron-session prisma @prisma/client bcryptjs
 'use client';
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -22,9 +22,18 @@ export default function LoginPage() {
   const [error, setError]       = useState<LoginErrorState | null>(null);
   const [showSolution, setShowSolution] = useState(false);
   const [loading, setLoading]   = useState(false);
+  const [rateLimitSecs, setRateLimitSecs] = useState(0);
+
+  // Count down every second until the rate-limit window expires.
+  useEffect(() => {
+    if (rateLimitSecs <= 0) return;
+    const timer = setTimeout(() => setRateLimitSecs(s => Math.max(0, s - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [rateLimitSecs]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (rateLimitSecs > 0) return; // blocked — button should already be disabled
     setLoading(true);
     setError(null);
     setShowSolution(false);
@@ -43,6 +52,9 @@ export default function LoginPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        if (res.status === 429 && data.retryAfterSeconds) {
+          setRateLimitSecs(data.retryAfterSeconds);
+        }
         setError({
           message:  data.error ?? 'Login failed.',
           solution: data.solution ?? 'Check your email and password, then try again.',
@@ -92,7 +104,27 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-4">
-          {error && (
+          {/* Rate-limit countdown banner — shown above any other error */}
+          {rateLimitSecs > 0 && (
+            <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 text-sm shadow-sm" role="alert" aria-live="polite">
+              <div className="flex items-center gap-2">
+                <SvgIcon name="warning" size={16} className="text-amber-500 shrink-0" />
+                <div>
+                  <p className="font-black text-amber-800">Too many login attempts.</p>
+                  <p className="text-amber-700 mt-0.5">
+                    Try again in{' '}
+                    <span className="font-black tabular-nums">
+                      {rateLimitSecs >= 60
+                        ? `${Math.floor(rateLimitSecs / 60)}m ${rateLimitSecs % 60}s`
+                        : `${rateLimitSecs}s`}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {error && rateLimitSecs === 0 && (
             <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm shadow-sm" role="alert">
               <div className="flex items-start gap-2">
                 <SvgIcon name="info" size={16} className="mt-0.5 text-red-400 shrink-0" />
@@ -149,10 +181,15 @@ export default function LoginPage() {
           </div>
 
           <button
-            type="submit" disabled={loading}
-            className="w-full btn-primary py-2.5 disabled:opacity-50"
+            type="submit"
+            disabled={loading || rateLimitSecs > 0}
+            className="w-full btn-primary py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading
+              ? 'Signing in…'
+              : rateLimitSecs > 0
+                ? `Try again in ${rateLimitSecs}s`
+                : 'Sign in'}
           </button>
         </form>
 

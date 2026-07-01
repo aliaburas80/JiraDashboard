@@ -19,32 +19,52 @@ function loginError(
 }
 
 // Persistent rate limiter backed by PostgreSQL — survives Render cold starts.
-// The previous in-memory Map reset on every process restart (GAP-1, P0A-05).
-// Window: 5 attempts per IP per 60 seconds. Rows older than 10 minutes are
-// pruned on each call so the table stays small.
-async function isRateLimited(ip: string): Promise<boolean> {
-  const windowStart = new Date(Date.now() - 60_000);
-  const prunePoint  = new Date(Date.now() - 10 * 60_000);
+// Returns { limited, retryAfterSeconds } so the 429 response can tell the
+// client exactly how long to wait before retrying.
+async function checkLoginRateLimit(ip: string): Promise<{ limited: boolean; retryAfterSeconds: number }> {
+  const WINDOW_MS  = 60_000;
+  const PRUNE_MS   = 10 * 60_000;
+  const windowStart = new Date(Date.now() - WINDOW_MS);
+  const prunePoint  = new Date(Date.now() - PRUNE_MS);
 
-  const [count] = await Promise.all([
-    prisma.loginAttempt.count({ where: { ip, attemptedAt: { gte: windowStart } } }),
+  const [attempts] = await Promise.all([
+    prisma.loginAttempt.findMany({
+      where:   { ip, attemptedAt: { gte: windowStart } },
+      orderBy: { attemptedAt: 'asc' },
+      select:  { attemptedAt: true },
+    }),
     prisma.loginAttempt.deleteMany({ where: { attemptedAt: { lt: prunePoint } } }),
   ]);
 
-  if (count >= 5) return true;
+  if (attempts.length >= 5) {
+    // The 1st (oldest) attempt in the window determines when a slot frees up.
+    const earliest         = attempts[0].attemptedAt.getTime();
+    const retryAfterMs     = (earliest + WINDOW_MS) - Date.now();
+    const retryAfterSeconds = Math.ceil(Math.max(retryAfterMs, 1) / 1000);
+    return { limited: true, retryAfterSeconds };
+  }
 
   await prisma.loginAttempt.create({ data: { ip } });
-  return false;
+  return { limited: false, retryAfterSeconds: 0 };
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
-  if (await isRateLimited(ip)) {
-    return loginError(
-      429,
-      'Too many login attempts.',
-      'Wait 1 minute, then try again. If you recently changed your password, use the newest password from your administrator.',
-      'This limit protects the app from repeated password guessing.',
+  const { limited, retryAfterSeconds } = await checkLoginRateLimit(ip);
+  if (limited) {
+    const mins = Math.floor(retryAfterSeconds / 60);
+    const secs = retryAfterSeconds % 60;
+    const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+    return NextResponse.json(
+      {
+        error:              'Too many login attempts.',
+        solution:           `Wait ${timeStr} and try again. If you recently changed your password, use the newest password from your administrator.`,
+        retryAfterSeconds,
+      },
+      {
+        status:  429,
+        headers: { 'Retry-After': String(retryAfterSeconds) },
+      },
     );
   }
 

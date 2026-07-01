@@ -120,6 +120,7 @@ jest.mock('../lib/prisma', () => ({
     },
     loginAttempt: {
       count:      jest.fn().mockResolvedValue(0),
+      findMany:   jest.fn().mockResolvedValue([]),
       create:     jest.fn().mockResolvedValue({}),
       deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
     },
