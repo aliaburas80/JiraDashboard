@@ -11,6 +11,7 @@
 import nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { setDefaultResultOrder } from 'node:dns';
+import { resolve4 } from 'node:dns/promises';
 import { getAppConfig, type AppSmtpConfig } from './app-config';
 
 // Still set IPv4-first as a safety net for any remaining outbound connections
@@ -55,13 +56,24 @@ async function sendViaResend(from: string, opts: EmailOptions): Promise<boolean>
 
 // ── SMTP (nodemailer — fallback for local dev / SMTP-capable hosts) ───────────
 
-function createSmtpTransporter(smtp: AppSmtpConfig) {
+async function resolveSmtpHost(host: string): Promise<string> {
+  try {
+    const [address] = await resolve4(host);
+    return address ?? host;
+  } catch {
+    return host;
+  }
+}
+
+async function createSmtpTransporter(smtp: AppSmtpConfig) {
   const effectivePort = smtp.port === 465 ? 587 : smtp.port;
+  const resolvedHost = await resolveSmtpHost(smtp.host);
   const options: SMTPTransport.Options = {
-    host:              smtp.host,
+    host:              resolvedHost,
     port:              effectivePort,
     secure:            false,
     auth:              { user: smtp.user, pass: smtp.pass },
+    tls:               { servername: smtp.host },
     connectionTimeout: 15_000,
     greetingTimeout:   15_000,
   };
@@ -124,7 +136,8 @@ export async function sendEmailWith(smtp: AppSmtpConfig, opts: EmailOptions): Pr
     return sendViaResend(smtp.from || opts.to, opts);
   }
   if (!smtp.host || !smtp.user || !smtp.pass) return false;
-  await createSmtpTransporter(smtp).sendMail({
+  const transporter = await createSmtpTransporter(smtp);
+  await transporter.sendMail({
     from:    smtp.from,
     to:      opts.toName ? `${opts.toName} <${opts.to}>` : opts.to,
     subject: opts.subject,
@@ -149,7 +162,8 @@ export async function sendEmail(opts: EmailOptions): Promise<boolean> {
     return false;
   }
 
-  await createSmtpTransporter(smtp).sendMail({
+  const transporter = await createSmtpTransporter(smtp);
+  await transporter.sendMail({
     from:    smtp.from,
     to:      opts.toName ? `${opts.toName} <${opts.to}>` : opts.to,
     subject: opts.subject,
