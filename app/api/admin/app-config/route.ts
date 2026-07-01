@@ -88,6 +88,16 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
   }
 
   invalidateConfig();
+
+  // P0A-07: audit log every config save so changes are traceable.
+  await prisma.auditEvent.create({
+    data: {
+      userId:           (auth as SessionData).userId,
+      eventType:        'admin_config_save',
+      eventDescription: `${(auth as SessionData).email} saved app config (SMTP host: ${updated.smtp.host || 'unchanged'}, appUrl: ${updated.appUrl || 'unchanged'}).`,
+    },
+  }).catch(() => {}); // never block the response on audit failure
+
   return NextResponse.json({ ok: true });
 }
 

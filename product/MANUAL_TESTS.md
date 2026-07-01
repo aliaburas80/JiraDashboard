@@ -237,6 +237,45 @@ npx jest src/__tests__/metricFormulas.test.ts --no-coverage
 
 ---
 
+## 7. Database & Infrastructure (P0A-06/07/08)
+
+### 7.1 Health and readiness endpoints work
+```bash
+curl -s https://delivery-clarity.onrender.com/api/health | python3 -m json.tool
+```
+✅ Returns: `{"status":"ok","service":"delivery-clarity","version":"2.0.0","timestamp":"..."}`
+
+```bash
+curl -s https://delivery-clarity.onrender.com/api/ready | python3 -m json.tool
+```
+✅ Returns: `{"status":"ready","service":"delivery-clarity","version":"2.0.0","checks":{"database":"ok"}}`
+✅ The `version` field is present in both responses
+
+### 7.2 Config save is audit-logged
+1. Log in as admin, go to **Admin → Settings → App Config**
+2. Change any field (e.g. From address) and click **Save this section**
+3. Go to **Admin → Audit Log** (if visible) or check the AuditEvent table
+4. ✅ An entry with `eventType: admin_config_save` appears with your email and timestamp
+
+### 7.3 Migrations are applied on Render
+1. After each deploy, check Render logs at startup
+2. Look for: `{"event":"prisma_migrate_deploy.success"}`
+3. ✅ Migrations apply cleanly — no error about missing tables or columns
+
+### 7.4 Neon database backup (automatic)
+Neon PostgreSQL provides automatic daily backups on all plans.
+1. Go to your Neon dashboard → Project → Backups
+2. ✅ At least one backup is listed with a recent timestamp
+
+### 7.5 Restore procedure (in case of data loss)
+To restore to a previous Neon snapshot:
+1. Neon dashboard → Project → Branches → main → Restore
+2. Select the point-in-time to restore to
+3. Neon restores the branch without downtime
+4. ✅ After restore: `/api/ready` returns `{"status":"ready"}` confirming DB is accessible
+
+---
+
 ## How to add new tests
 
 When a new feature is built, add a new numbered section here following the same format:

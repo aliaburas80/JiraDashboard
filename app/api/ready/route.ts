@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerEnv } from '@/lib/env/server';
 import { logServerEvent } from '@/lib/logger';
+import packageJson from '../../../package.json';
 
 const READINESS_TIMEOUT_MS = 3_000;
 
@@ -20,12 +21,11 @@ export async function GET() {
     await checkDatabase();
 
     return NextResponse.json({
-      status: 'ready',
-      service: 'delivery-clarity',
+      status:    'ready',
+      service:   'delivery-clarity',
+      version:   packageJson.version,
       timestamp: new Date().toISOString(),
-      checks: {
-        database: 'ok',
-      },
+      checks:    { database: 'ok' },
     });
   } catch (error) {
     logServerEvent('warn', 'readiness.failed', {
@@ -34,12 +34,11 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        status: 'not_ready',
-        service: 'delivery-clarity',
+        status:    'not_ready',
+        service:   'delivery-clarity',
+        version:   packageJson.version,
         timestamp: new Date().toISOString(),
-        checks: {
-          database: 'unavailable',
-        },
+        checks:    { database: 'unavailable' },
       },
       { status: 503 },
     );
