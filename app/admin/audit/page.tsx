@@ -1,8 +1,11 @@
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
 'use client';
 
+import type { CSSProperties } from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import styles from './page.module.scss';
 
@@ -155,7 +158,7 @@ function DonutChart({ data, total }: { data: Array<{ type: string; count: number
           <div key={s.type} className={styles.legendItem}>
             <span
               className={styles.legendDot}
-              style={{ background: DONUT_COLORS[i % DONUT_COLORS.length] }}
+              style={{ '--dot-color': DONUT_COLORS[i % DONUT_COLORS.length] } as CSSVars}
               aria-hidden="true"
             />
             <span>{s.type}</span>
@@ -164,7 +167,7 @@ function DonutChart({ data, total }: { data: Array<{ type: string; count: number
         ))}
         {other > 0 && (
           <div className={styles.legendItem}>
-            <span className={styles.legendDot} style={{ background: DONUT_COLORS[9] }} aria-hidden="true" />
+            <span className={styles.legendDot} style={{ '--dot-color': DONUT_COLORS[9] } as CSSVars} aria-hidden="true" />
             <span>other</span>
             <span className={styles.legendCount}>{other}</span>
           </div>
@@ -189,9 +192,10 @@ function JourneySection({ edges }: { edges: Array<{ from: string; to: string; co
           <span className={styles.journeyArrow} aria-hidden="true">→</span>
           <span className={styles.journeyTo}>{e.to}</span>
           <div className={styles.journeyBar} aria-hidden="true">
+            {/* DYNAMIC CSS VARIABLE: bar width is a runtime-calculated percentage */}
             <div
               className={styles.journeyBarFill}
-              style={{ width: `${Math.round((e.count / max) * 100)}%` }}
+              style={{ '--bar-width': `${Math.round((e.count / max) * 100)}%` } as CSSVars}
             />
           </div>
           <span className={styles.journeyCount}>{e.count}×</span>
@@ -235,7 +239,7 @@ function EventsTable({
                 <td className={styles.descCell} title={ev.eventDescription}>{ev.eventDescription}</td>
                 <td className={styles.muted}>{ev.user?.email ?? '—'}</td>
                 <td className={styles.muted}>{ev.ipAddress ?? '—'}</td>
-                <td className={styles.muted} style={{ whiteSpace: 'nowrap' }}>
+                <td className={`${styles.muted} ${styles.nowrap}`}>
                   {new Date(ev.createdAt).toLocaleString()}
                 </td>
               </tr>
@@ -359,7 +363,7 @@ export default function AuditEventsPage() {
 
       {/* ── User Journey ── */}
       {stats && (
-        <div className={styles.card} style={{ marginBlockEnd: 20 }}>
+        <div className={`${styles.card} ${styles.cardGap}`}>
           <p className={styles.cardTitle}>User Journey — Top Event Transitions (Last 30 Days)</p>
           <JourneySection edges={stats.journeyEdges} />
         </div>

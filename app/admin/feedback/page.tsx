@@ -80,8 +80,7 @@ function FeedbackRow({ item, onStatusChange }: {
         {expanded && (
           <button
             type="button"
-            className={styles.muted}
-            style={{ marginBlockStart: 4, cursor: 'pointer', background: 'none', border: 'none', padding: 0, fontFamily: 'inherit' }}
+            className={`${styles.muted} ${styles.collapseBtn}`}
             onClick={() => setExpanded(false)}
           >
             Collapse ↑
@@ -94,7 +93,7 @@ function FeedbackRow({ item, onStatusChange }: {
       <td className={styles.muted}>{item.page ?? '—'}</td>
       <td className={styles.muted}>
         {item.canContact && item.userEmail ? (
-          <a href={`mailto:${item.userEmail}`} style={{ color: 'var(--dc-accent)' }}>{item.userEmail}</a>
+          <a href={`mailto:${item.userEmail}`} className={styles.emailLink}>{item.userEmail}</a>
         ) : '—'}
       </td>
       <td>
@@ -107,7 +106,7 @@ function FeedbackRow({ item, onStatusChange }: {
           {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </td>
-      <td className={styles.muted} style={{ whiteSpace: 'nowrap' }}>
+      <td className={`${styles.muted} ${styles.nowrap}`}>
         {new Date(item.createdAt).toLocaleDateString()}
       </td>
     </tr>
@@ -225,7 +224,7 @@ export default function AdminFeedbackPage() {
 
         {/* Table */}
         {items.length === 0 ? (
-          <p className={styles.muted}>No feedback with status "{tab}".</p>
+          <p className={styles.muted}>No feedback with status &ldquo;{tab}&rdquo;.</p>
         ) : (
           <div className={styles.tableWrap}>
             <table className={styles.table}>
