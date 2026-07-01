@@ -20,15 +20,36 @@ const SETTINGS_SUB_ITEMS = [
   { id: 'browser',    label: 'Browser Data',        icon: 'delete', tab: 'browser' },
 ];
 
-const NAV_ITEMS = [
-  { id: 'users',       label: 'User Management',   href: '/admin/users',        icon: 'people' },
-  { id: 'settings',    label: 'Settings',          href: '/admin/settings',     icon: 'tools' },
-  { id: 'theme',       label: 'Theme & Branding',  href: '/admin/theme',        icon: 'palette' },
-  { id: 'diagnostics', label: 'Diagnostics',       href: '/admin/diagnostics',  icon: 'statusInfo' },
-  { id: 'security',    label: 'Security',          href: '/admin/security',     icon: 'shield' },
-  { id: 'logs',        label: 'Import Logs',       href: '/admin/logs',         icon: 'clipboard' },
-  { id: 'syserrors',   label: 'System Errors',     href: '/admin/system-errors', icon: 'warning' },
+type NavItem = { id: string; label: string; href: string; icon: string };
+type NavSection = { label: string; items: NavItem[] };
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    label: 'Activity',
+    items: [
+      { id: 'audit',    label: 'Audit Events',    href: '/admin/audit',         icon: 'clipboard' },
+      { id: 'logs',     label: 'Import Logs',     href: '/admin/logs',          icon: 'archive' },
+      { id: 'feedback', label: 'User Feedback',   href: '/admin/feedback',      icon: 'email' },
+    ],
+  },
+  {
+    label: 'Observability',
+    items: [
+      { id: 'syserrors',   label: 'System Errors', href: '/admin/system-errors', icon: 'warning' },
+      { id: 'diagnostics', label: 'Diagnostics',   href: '/admin/diagnostics',   icon: 'statusInfo' },
+      { id: 'security',    label: 'Security',       href: '/admin/security',      icon: 'shield' },
+    ],
+  },
+  {
+    label: 'Configure',
+    items: [
+      { id: 'users',    label: 'User Management', href: '/admin/users',    icon: 'people' },
+      { id: 'settings', label: 'Settings',        href: '/admin/settings', icon: 'tools' },
+      { id: 'theme',    label: 'Theme & Branding', href: '/admin/theme',   icon: 'palette' },
+    ],
+  },
 ];
+
 
 export default function AdminNavSidebar() {
   const pathname = usePathname();
@@ -37,49 +58,56 @@ export default function AdminNavSidebar() {
   const activeTab = searchParams.get('tab') ?? '';
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  function renderNavItem(item: NavItem, onLinkClick?: () => void) {
+    const active = item.href === '/admin/settings'
+      ? onSettings
+      : pathname === item.href || pathname.startsWith(`${item.href}/`);
+    return (
+      <div key={item.id}>
+        <Link
+          href={item.href}
+          aria-current={active ? 'page' : undefined}
+          className={clsx(styles.navItem, { [styles.navItemActive]: active })}
+          onClick={onLinkClick}
+        >
+          <SvgIcon name={item.icon} className={styles.navIcon} />
+          <span className={styles.navLabel}>{item.label}</span>
+        </Link>
+
+        {item.id === 'settings' && onSettings && (
+          <div className={styles.subNav} role="list" aria-label="Settings sections">
+            {SETTINGS_SUB_ITEMS.map(sub => {
+              const subActive = sub.tab === '' ? activeTab === '' : activeTab === sub.tab;
+              const href = sub.tab ? `/admin/settings?tab=${sub.tab}` : '/admin/settings';
+              return (
+                <Link
+                  key={sub.id}
+                  href={href}
+                  role="listitem"
+                  aria-current={subActive ? 'page' : undefined}
+                  className={clsx(styles.subNavItem, { [styles.subNavItemActive]: subActive })}
+                  onClick={onLinkClick}
+                >
+                  <SvgIcon name={sub.icon} className={styles.subNavIcon} />
+                  {sub.label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   function renderNav(onLinkClick?: () => void) {
     return (
-      <nav className={styles.nav}>
-        {NAV_ITEMS.map(item => {
-          const active = item.href === '/admin/settings'
-            ? onSettings
-            : pathname === item.href || pathname.startsWith(`${item.href}/`);
-          return (
-            <div key={item.id}>
-              <Link
-                href={item.href}
-                aria-current={active ? 'page' : undefined}
-                className={clsx(styles.navItem, { [styles.navItemActive]: active })}
-                onClick={onLinkClick}
-              >
-                <SvgIcon name={item.icon} className={styles.navIcon} />
-                <span className={styles.navLabel}>{item.label}</span>
-              </Link>
-
-              {item.id === 'settings' && onSettings && (
-                <div className={styles.subNav} role="list" aria-label="Settings sections">
-                  {SETTINGS_SUB_ITEMS.map(sub => {
-                    const subActive = sub.tab === '' ? activeTab === '' : activeTab === sub.tab;
-                    const href = sub.tab ? `/admin/settings?tab=${sub.tab}` : '/admin/settings';
-                    return (
-                      <Link
-                        key={sub.id}
-                        href={href}
-                        role="listitem"
-                        aria-current={subActive ? 'page' : undefined}
-                        className={clsx(styles.subNavItem, { [styles.subNavItemActive]: subActive })}
-                        onClick={onLinkClick}
-                      >
-                        <SvgIcon name={sub.icon} className={styles.subNavIcon} />
-                        {sub.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
+      <nav className={styles.nav} aria-label="Administration navigation">
+        {NAV_SECTIONS.map(section => (
+          <div key={section.label} className={styles.navSection}>
+            <p className={styles.navSectionLabel}>{section.label}</p>
+            {section.items.map(item => renderNavItem(item, onLinkClick))}
+          </div>
+        ))}
       </nav>
     );
   }

@@ -98,8 +98,26 @@
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
   padding: 0 var(--space-2, 8px);
+}
+
+// ── Section group with label ─────────────────────────────────────────────────
+.navSection {
+  display:          flex;
+  flex-direction:   column;
+  gap:              2px;
+  margin-block-end: 4px;
+}
+
+.navSectionLabel {
+  font-size:        9px;
+  font-weight:      800;
+  letter-spacing:   0.1em;
+  text-transform:   uppercase;
+  color:            var(--color-text-muted, #94a3b8);
+  padding:          12px var(--space-3, 12px) 4px;
+  margin:           0;
 }
 
 .navItem {
