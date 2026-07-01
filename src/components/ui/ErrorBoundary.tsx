@@ -1,13 +1,18 @@
+// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// React error boundary — catches render errors in the component subtree,
+// reports them to /api/events/error (P0B-08), and shows a fallback UI.
 import React from 'react';
+import { reportError } from '@/lib/errorReporter';
 
 interface ErrorBoundaryProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  children:   React.ReactNode;
+  fallback?:  React.ReactNode;
+  component?: string; // label for the error report (e.g. "DashboardPage")
 }
 
 interface ErrorBoundaryState {
   hasError: boolean;
-  error: Error | null;
+  error:    Error | null;
 }
 
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -21,40 +26,28 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo): void {
-    console.error('ErrorBoundary caught an error:', error, info);
+    // Report to structured error monitoring (P0B-08).
+    reportError({
+      message:   error.message,
+      stack:     `${error.stack ?? ''}\n\nComponent stack:\n${info.componentStack ?? ''}`,
+      component: this.props.component ?? 'ErrorBoundary',
+      severity:  'error',
+    });
   }
 
   render(): React.ReactNode {
     if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback;
-      }
+      if (this.props.fallback) return this.props.fallback;
 
       return (
-        <div
-          style={{
-            border: '1px solid #f87171',
-            borderRadius: '6px',
-            backgroundColor: '#fef2f2',
-            color: '#b91c1c',
-            padding: '16px',
-            margin: '16px 0',
-          }}
-        >
-          <p style={{ margin: '0 0 12px 0', fontWeight: 600 }}>
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 my-4">
+          <p className="font-semibold text-red-700 mb-3 text-sm">
             {this.state.error?.message ?? 'An unexpected error occurred.'}
           </p>
           <button
+            type="button"
             onClick={() => window.location.reload()}
-            style={{
-              backgroundColor: '#dc2626',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '8px 16px',
-              cursor: 'pointer',
-              fontWeight: 600,
-            }}
+            className="rounded-lg bg-red-600 text-white border-none px-4 py-2 cursor-pointer font-semibold text-sm hover:bg-red-700 transition-colors"
           >
             Reload
           </button>

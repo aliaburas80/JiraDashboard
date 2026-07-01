@@ -202,6 +202,34 @@ model SystemErrorLog {
   @@index([resolution])
 }
 
+// ── Client error monitoring (P0B-08) ─────────────────────────────────────────
+// Captures client-side crashes and unhandled rejections from the browser.
+// Identical errors are de-duplicated by fingerprint (hash of message+page+component).
+// Stack traces are sanitised server-side before storage.
+
+model AppError {
+  id              String    @id @default(cuid())
+  fingerprint     String    // sha256(message+page+component) — dedup key
+  message         String
+  stack           String?   // sanitised stack — no absolute paths or PII
+  severity        String    @default("error") // "error" | "warning" | "critical"
+  page            String?   // pathname where the error occurred
+  component       String?   // React component or handler name
+  userId          String?   // populated if the user was logged in
+  browserFamily   String?   // Chrome, Firefox, Safari …
+  releaseVersion  String?   // package.json version at build time
+  count           Int       @default(1)      // incremented on each occurrence
+  firstSeenAt     DateTime  @default(now())
+  lastSeenAt      DateTime  @default(now())
+  resolvedAt      DateTime?
+  resolutionNote  String?
+
+  @@index([fingerprint])
+  @@index([severity, lastSeenAt])
+  @@index([page, lastSeenAt])
+  @@index([resolvedAt])
+}
+
 // ── Login attempt log (persistent rate limiter — survives cold starts) ────────
 // Replaces the in-memory Map in login/route.ts (GAP-1 from P0A-05 audit).
 // Rows older than 10 minutes are purged on each login attempt so the table

@@ -237,7 +237,43 @@ npx jest src/__tests__/metricFormulas.test.ts --no-coverage
 
 ---
 
-## 7. Database & Infrastructure (P0A-06/07/08)
+## 7. Performance Baseline (P0A-09)
+
+Upload a real Jira export with **3,000–7,000 issues** and measure these timings.
+The service already logs calculation time — check Render logs after uploading.
+
+### Agreed performance thresholds
+
+| Operation | Target | Where to measure |
+|---|---|---|
+| File upload + parse + metrics calculation | < 10 seconds end-to-end | Browser: time from click to dashboard loading |
+| `calculateDashboardMetrics` for 5k issues | < 3 seconds | Render logs: `[metrics] calculateDashboardMetrics: Xms` |
+| Dashboard page initial load (data already uploaded) | < 3 seconds | Browser DevTools → Network → page load |
+| `/api/metrics/latest` API response | < 1 second | Browser DevTools → Network → request time |
+
+### 7.1 Upload a large file and measure timing
+1. Export 3,000–7,000 issues from your Jira instance as CSV
+2. Log in to the live app
+3. Start a stopwatch
+4. Upload the file
+5. Stop when the dashboard metrics appear
+6. ✅ Total time < 10 seconds
+
+### 7.2 Check server-side calculation time in Render logs
+1. After uploading, go to Render dashboard → `delivery-clarity` → **Logs**
+2. Search for: `calculateDashboardMetrics`
+3. ✅ Line reads: `[metrics] calculateDashboardMetrics: Xms for Y issues`
+4. ✅ X (milliseconds) is under 3,000 for 5,000 issues
+
+### 7.3 Dashboard load is fast after upload
+1. After uploading, hard-refresh the dashboard (Cmd+Shift+R / Ctrl+Shift+R)
+2. Open DevTools → Network → reload
+3. ✅ Page is interactive within 3 seconds
+4. ✅ No loading spinner stays visible longer than 3 seconds
+
+---
+
+## 8. Database, Infrastructure & Version (P0A-06/07/08)
 
 ### 7.1 Health and readiness endpoints work
 ```bash
@@ -273,6 +309,45 @@ To restore to a previous Neon snapshot:
 2. Select the point-in-time to restore to
 3. Neon restores the branch without downtime
 4. ✅ After restore: `/api/ready` returns `{"status":"ready"}` confirming DB is accessible
+
+---
+
+## 9. Error Monitoring (P0B-08)
+
+### 9.1 Client errors are captured automatically
+1. Log in to the live app
+2. Open DevTools → Console
+3. To simulate a captured error, paste this and press Enter:
+   ```js
+   window.dispatchEvent(new ErrorEvent('error', { message: 'Test error from manual test', error: new Error('Test') }))
+   ```
+4. The app should NOT crash or show a broken UI
+5. Check the `AppError` table in Neon (via Neon SQL editor):
+   ```sql
+   SELECT message, page, severity, count, "lastSeenAt" FROM "AppError" ORDER BY "lastSeenAt" DESC LIMIT 5;
+   ```
+6. ✅ A row appears with `message = "Test error from manual test"`
+
+### 9.2 React component crash is captured
+1. If any dashboard section shows an error boundary (red "An unexpected error occurred" box)
+2. Check the Neon `AppError` table as above
+3. ✅ The error appears with the component name and page path
+
+### 9.3 Same error increments count, not creates duplicate
+1. Trigger the same simulated error from 9.1 three more times
+2. Check the database
+3. ✅ `count` column is now 4, there is still only ONE row with that fingerprint
+
+### 9.4 Error endpoint blocks unauthenticated abuse
+```bash
+# Rate limit: 30 per IP per 15 minutes
+for i in $(seq 1 31); do
+  curl -s -X POST https://delivery-clarity.onrender.com/api/events/error \
+    -H "Content-Type: application/json" \
+    -d '{"message":"test","page":"/","severity":"error"}' | python3 -m json.tool
+done
+```
+✅ The 31st request returns `{"ok":false,"reason":"rate_limited"}` with status 429
 
 ---
 

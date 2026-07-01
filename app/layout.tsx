@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.scss';
 import { DataSourceProvider, CloudLoadingBanner } from '@/components/ui/DataSourceBadge';
+import { GlobalErrorHandler } from '@/components/ui/GlobalErrorHandler';
 import { normalizeAppUrl } from '@/lib/url';
 
 const appUrl = normalizeAppUrl(process.env.NEXT_PUBLIC_APP_URL);
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="antialiased overflow-x-hidden">
         <DataSourceProvider>
+          <GlobalErrorHandler />
           <CloudLoadingBanner />
           {children}
         </DataSourceProvider>
