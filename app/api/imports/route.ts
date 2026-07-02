@@ -9,6 +9,7 @@ import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { readImportLogs } from '@/services/imports/importLogs.service';
 import { canViewAllImportData } from '@/lib/roles';
+import { getWorkspaceForUser } from '@/lib/workspace';
 
 export async function GET(req: NextRequest) {
   try {
@@ -18,8 +19,16 @@ export async function GET(req: NextRequest) {
       const canViewAll = canViewAllImportData(session.role);
       const showAll = canViewAll && req.nextUrl.searchParams.get('all') === 'true';
 
+      // EP-008: scope by workspaceId (workspace boundary is the isolation unit).
+      // Admin all=true bypasses workspace scope to view all tenants.
+      let workspaceFilter: { workspaceId?: string } = {};
+      if (!showAll) {
+        const workspace = await getWorkspaceForUser(session.userId);
+        workspaceFilter = { workspaceId: workspace?.id };
+      }
+
       const logs = await prisma.importLog.findMany({
-        where:   showAll ? {} : { userId: session.userId },
+        where:   showAll ? {} : { userId: session.userId, ...workspaceFilter },
         include: { user: { select: { name: true, email: true } } },
         orderBy: { uploadedAt: 'desc' },
         take:    100,

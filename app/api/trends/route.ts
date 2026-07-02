@@ -6,6 +6,7 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
+import { getWorkspaceForUser } from '@/lib/workspace';
 import type { TrendPoint } from '@/types/trends';
 
 export type { TrendPoint };
@@ -17,8 +18,10 @@ export async function GET(req: Request) {
   const url   = new URL(req.url);
   const limit = Math.min(Number(url.searchParams.get('last') ?? 30), 30);
 
+  // EP-008: scope by workspaceId so trends only include the user's own workspace data.
+  const workspace = await getWorkspaceForUser(session.userId).catch(() => null);
   const logs = await prisma.importLog.findMany({
-    where:   { userId: session.userId, status: 'success' },
+    where:   { userId: session.userId, workspaceId: workspace?.id, status: 'success' },
     orderBy: { uploadedAt: 'asc' },
     take:    limit,
     select:  { id: true, fileName: true, uploadedAt: true, healthScore: true,

@@ -9,12 +9,15 @@ import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { getWorkspaceForUser } from '@/lib/workspace';
 
+
 export async function GET() {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
+  // EP-008: scope by workspaceId so only snapshots within the user's workspace are listed.
+  const workspace = await getWorkspaceForUser(session.userId).catch(() => null);
   const snapshots = await prisma.dashboardSnapshot.findMany({
-    where:   { userId: session.userId },
+    where:   { userId: session.userId, workspaceId: workspace?.id },
     orderBy: { createdAt: 'desc' },
     select: { id: true, snapshotName: true, createdAt: true, importLogId: true },
   });

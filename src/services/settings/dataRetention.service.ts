@@ -77,8 +77,14 @@ export async function deleteImportLog(
   id: string,
   requesterId: string,
   isAdmin: boolean,
+  workspaceId?: string, // EP-008: workspace scope for non-admin deletions
 ): Promise<{ success: boolean; error?: string }> {
-  const log = await prisma.importLog.findUnique({ where: { id } });
+  // EP-008: when workspaceId is provided for non-admin, scope the lookup so records
+  // in other workspaces return "not found" (fail-closed, no existence leakage).
+  // When workspaceId is absent, use findUnique + userId check (original safe behaviour).
+  const log = (isAdmin || workspaceId === undefined)
+    ? await prisma.importLog.findUnique({ where: { id } })
+    : await prisma.importLog.findFirst({ where: { id, workspaceId } });
   if (!log) return { success: false, error: 'Import log not found.' };
   if (!isAdmin && log.userId !== requesterId) {
     return { success: false, error: 'You can only delete your own import logs.' };
@@ -141,8 +147,12 @@ export async function deleteDashboardSnapshot(
   id: string,
   requesterId: string,
   isAdmin: boolean,
+  workspaceId?: string, // EP-008: workspace scope for non-admin deletions
 ): Promise<{ success: boolean; error?: string }> {
-  const snap = await prisma.dashboardSnapshot.findUnique({ where: { id } });
+  // EP-008: same fail-closed pattern as deleteImportLog — no existence leakage.
+  const snap = (isAdmin || workspaceId === undefined)
+    ? await prisma.dashboardSnapshot.findUnique({ where: { id } })
+    : await prisma.dashboardSnapshot.findFirst({ where: { id, workspaceId } });
   if (!snap) return { success: false, error: 'Snapshot not found.' };
   if (!isAdmin && snap.userId !== requesterId) {
     return { success: false, error: 'You can only delete your own snapshots.' };
