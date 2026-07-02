@@ -24,10 +24,6 @@ export async function middleware(req: NextRequest) {
   const isProtected = PROTECTED.some(p => p === '/' ? pathname === '/' : pathname.startsWith(p));
   const isAdminOnly = ADMIN_ONLY.some(p => pathname.startsWith(p));
 
-  if (pathname === '/register') {
-    return NextResponse.redirect(new URL('/login', req.url));
-  }
-
   if (!isProtected && !isAdminOnly) return NextResponse.next();
 
   const res     = NextResponse.next();
@@ -61,7 +57,7 @@ export const config = {
     '/explore/:path*',   '/backend/:path*', '/profile/:path*',
     '/customer/:path*',  '/snapshots/:path*', '/trends/:path*', '/readiness/:path*',
     '/teams/:path*', '/portfolio/:path*', '/landing/:path*', '/glossary/:path*',
-    '/', '/register/:path*', '/developer/:path*', '/help/:path*', '/admin/:path*',
+    '/', '/developer/:path*', '/help/:path*', '/admin/:path*',
     '/change-password/:path*', '/members/:path*',
     '/roadmap/:path*', '/forecast/:path*', '/retro/:path*',
     '/data-quality/:path*', '/delivery-mix/:path*', '/flow-health/:path*',
