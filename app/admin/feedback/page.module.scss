@@ -65,7 +65,7 @@
 }
 
 .table td {
-  padding:         10px 10px;
+  padding:         10px;
   border-block-end: 1px solid var(--color-border, #e2e8f0);
   color:           var(--color-text-primary, #0f172a);
   vertical-align:  top;
@@ -105,7 +105,7 @@
 
 .messageFull {
   white-space: pre-wrap;
-  word-break:  break-word;
+  overflow-wrap: break-word;
   font-size:   12px;
 }
 
