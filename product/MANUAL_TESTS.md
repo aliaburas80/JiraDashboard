@@ -402,6 +402,174 @@ LIMIT 5;
 
 ---
 
+## 11. Workspace Model (EP-006)
+
+Every user must have exactly one private workspace. These checks confirm the migration ran correctly and new users get a workspace automatically.
+
+### 11.1 Existing users have a workspace after migration
+
+Run in the **Neon SQL editor**:
+
+```sql
+-- Every user should have exactly one workspace
+SELECT u.email, w.id AS workspace_id, w.slug, w.status
+FROM "User" u
+LEFT JOIN "Workspace" w ON w."ownerUserId" = u.id
+ORDER BY u."createdAt";
+```
+✅ Every row has a non-null `workspace_id` — no user without a workspace  
+✅ Slugs follow the pattern `ws-{userId}`  
+✅ All statuses are `active`
+
+```sql
+-- Every workspace has exactly one member with role = owner
+SELECT w.slug, wm."userId", wm."accessRole"
+FROM "Workspace" w
+JOIN "WorkspaceMember" wm ON wm."workspaceId" = w.id
+ORDER BY w."createdAt";
+```
+✅ Every workspace has one row with `accessRole = owner`
+
+### 11.2 Existing import logs are linked to a workspace
+
+```sql
+-- No import logs should have NULL workspaceId after migration
+SELECT COUNT(*) AS unlinked_imports
+FROM "ImportLog"
+WHERE "workspaceId" IS NULL;
+```
+✅ Returns `0` — all import logs are workspace-linked
+
+```sql
+-- Spot-check: import logs belong to the correct workspace
+SELECT il."fileName", il."workspaceId", w."ownerUserId", il."userId"
+FROM "ImportLog" il
+JOIN "Workspace" w ON w.id = il."workspaceId"
+LIMIT 10;
+```
+✅ `ownerUserId` matches `userId` on every row
+
+### 11.3 New user created by admin gets a workspace
+
+1. Log in as admin → go to **Admin → Settings → User Management**
+2. Create a new test user (any email, any role)
+3. ✅ User appears in the list
+4. Verify in Neon SQL:
+   ```sql
+   SELECT u.email, w.id, w.slug, w.status
+   FROM "User" u
+   JOIN "Workspace" w ON w."ownerUserId" = u.id
+   WHERE u.email = 'your-new-test-user@email.com';
+   ```
+5. ✅ One row returned with a valid workspace ID and `status = active`
+
+### 11.4 New upload goes into the user's workspace
+
+1. Log in as a non-admin user
+2. Upload a valid Jira CSV
+3. Verify in Neon SQL:
+   ```sql
+   SELECT il."fileName", il."workspaceId", w."ownerUserId"
+   FROM "ImportLog" il
+   JOIN "Workspace" w ON w.id = il."workspaceId"
+   ORDER BY il."uploadedAt" DESC
+   LIMIT 1;
+   ```
+4. ✅ The latest import log has a `workspaceId` that matches your user's workspace
+
+### 11.5 New snapshot goes into the user's workspace
+
+1. Log in, upload data, then save a snapshot
+2. Verify in Neon SQL:
+   ```sql
+   SELECT ds."snapshotName", ds."workspaceId", w."ownerUserId"
+   FROM "DashboardSnapshot" ds
+   JOIN "Workspace" w ON w.id = ds."workspaceId"
+   ORDER BY ds."createdAt" DESC
+   LIMIT 1;
+   ```
+3. ✅ Latest snapshot has a non-null `workspaceId`
+
+---
+
+## 12. Workspace Data Isolation (EP-008 / EP-009)
+
+These tests prove that a logged-in user cannot read or delete another user's data — even if they know the ID. You need **two test accounts** for these tests.
+
+### Setup
+
+```bash
+# Log in as User A and save cookie
+curl -s -c /tmp/user_a.txt \
+  -X POST https://delivery-clarity.onrender.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user_a@test.com","password":"PasswordA1"}' | python3 -m json.tool
+
+# Log in as User B and save cookie
+curl -s -c /tmp/user_b.txt \
+  -X POST https://delivery-clarity.onrender.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user_b@test.com","password":"PasswordB1"}' | python3 -m json.tool
+```
+
+### 12.1 User A cannot see User B's imports in the list
+
+```bash
+# Get User B's import log ID from Neon:
+# SELECT id FROM "ImportLog" WHERE "userId" = '<user_b_id>' LIMIT 1;
+
+# Now request the imports list as User A
+curl -s -b /tmp/user_a.txt \
+  https://delivery-clarity.onrender.com/api/imports | python3 -m json.tool
+```
+✅ The response contains **only User A's own import logs** — no User B records appear
+
+### 12.2 User A cannot read User B's snapshot by ID
+
+```bash
+# Get User B's snapshot ID from Neon:
+# SELECT id FROM "DashboardSnapshot" WHERE "userId" = '<user_b_id>' LIMIT 1;
+SNAP_B_ID="<paste-user-b-snapshot-id>"
+
+curl -s -b /tmp/user_a.txt \
+  https://delivery-clarity.onrender.com/api/snapshots/$SNAP_B_ID | python3 -m json.tool
+```
+✅ Returns `{"error":"Snapshot not found."}` with HTTP 404 — **not** 403  
+✅ Response does NOT contain User B's `metricsJson` or any analysis data
+
+### 12.3 User A cannot delete User B's import log
+
+```bash
+# Get User B's import log ID from Neon:
+# SELECT id FROM "ImportLog" WHERE "userId" = '<user_b_id>' LIMIT 1;
+IMPORT_B_ID="<paste-user-b-import-id>"
+
+curl -s -b /tmp/user_a.txt \
+  -X DELETE https://delivery-clarity.onrender.com/api/imports/$IMPORT_B_ID | python3 -m json.tool
+```
+✅ Returns `{"error":"Import log not found."}` with HTTP 404  
+✅ The import log still exists in Neon (verify: `SELECT id FROM "ImportLog" WHERE id = '<id>'`)
+
+### 12.4 User A's trends only show User A's data
+
+```bash
+curl -s -b /tmp/user_a.txt \
+  https://delivery-clarity.onrender.com/api/trends | python3 -m json.tool
+```
+✅ All `points` in the response have upload dates/files matching only User A's uploads  
+✅ User B's uploads are not in the list
+
+### 12.5 Import list workspace scope is confirmed in API response
+
+```bash
+curl -s -b /tmp/user_a.txt \
+  https://delivery-clarity.onrender.com/api/imports | python3 -m json.tool
+```
+✅ All logs in the response share the same `workspaceId` (User A's workspace)  
+✅ No log has a `workspaceId` belonging to User B
+
+---
+
 ## How to add new tests
 
 When a new feature is built, add a new numbered section here following the same format:
