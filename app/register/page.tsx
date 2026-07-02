@@ -13,6 +13,7 @@ export default function RegisterPage() {
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [persona,  setPersona]  = useState('');
+  const [consent,  setConsent]  = useState(false);
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
   const [done,     setDone]     = useState(false);
@@ -25,7 +26,7 @@ export default function RegisterPage() {
       const res  = await fetch('/api/auth/register', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ name, email, password, persona }),
+        body:    JSON.stringify({ name, email, password, persona, consentAccepted: consent }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -148,10 +149,30 @@ export default function RegisterPage() {
                 </select>
               </div>
 
+              {/* Consent — EP-014 */}
+              <div className={styles.field}>
+                <label className={styles.consentLabel}>
+                  <input
+                    type="checkbox"
+                    className={styles.consentCheck}
+                    checked={consent}
+                    onChange={e => setConsent(e.target.checked)}
+                    required
+                    aria-required="true"
+                  />
+                  <span className={styles.consentText}>
+                    I agree to the{' '}
+                    <Link href="/terms" target="_blank">Terms of Use</Link>
+                    {' '}and{' '}
+                    <Link href="/privacy" target="_blank">Privacy Policy</Link>
+                  </span>
+                </label>
+              </div>
+
               <button
                 type="submit"
                 className={styles.submit}
-                disabled={loading}
+                disabled={loading || !consent}
               >
                 {loading ? 'Creating account…' : 'Create free account'}
               </button>

@@ -1,0 +1,99 @@
+// Privacy and Terms pages share this stylesheet
+
+.page {
+  min-block-size:  100vh;
+  background:      var(--color-page, var(--dc-bg, #0d0d0d));
+  padding:         48px var(--space-4, 16px) 80px;
+}
+
+.inner {
+  max-inline-size: 720px;
+  margin-inline:   auto;
+}
+
+.back {
+  display:          inline-flex;
+  align-items:      center;
+  gap:              6px;
+  font-size:        13px;
+  color:            var(--dc-p3, #505050);
+  text-decoration:  none;
+  margin-block-end: 32px;
+
+  &:hover { color: var(--dc-p1, #f0f0f0); }
+}
+
+.badge {
+  display:          inline-block;
+  font-size:        11px;
+  font-weight:      700;
+  color:            var(--dc-accent, #e85d12);
+  background:       rgba(232,93,18,0.12);
+  border-radius:    100px;
+  padding:          3px 10px;
+  margin-block-end: 12px;
+  letter-spacing:   0.05em;
+  text-transform:   uppercase;
+}
+
+.title {
+  font-size:        32px;
+  font-weight:      900;
+  color:            var(--dc-p1, #f0f0f0);
+  letter-spacing:   -0.02em;
+  margin:           0 0 8px;
+  line-height:      1.15;
+}
+
+.meta {
+  font-size:        13px;
+  color:            var(--dc-p3, #505050);
+  margin-block-end: 40px;
+}
+
+.section {
+  margin-block-end: 32px;
+}
+
+.sectionTitle {
+  font-size:        16px;
+  font-weight:      800;
+  color:            var(--dc-p1, #f0f0f0);
+  margin:           0 0 12px;
+}
+
+.body {
+  font-size:   14px;
+  line-height: 1.75;
+  color:       var(--dc-p2, #909090);
+
+  p   { margin: 0 0 12px; }
+  ul  { margin: 0 0 12px; padding-inline-start: 20px; }
+  li  { margin-block-end: 6px; }
+  strong { color: var(--dc-p1, #f0f0f0); font-weight: 700; }
+
+  a {
+    color:           var(--dc-accent, #e85d12);
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+}
+
+.divider {
+  block-size:       1px;
+  background:       var(--color-border, rgba(255,255,255,0.07));
+  margin:           32px 0;
+}
+
+.contactBox {
+  background:    rgba(232,93,18,0.07);
+  border:        1px solid rgba(232,93,18,0.2);
+  border-radius: 12px;
+  padding:       20px 24px;
+  font-size:     13px;
+  color:         var(--dc-p2, #909090);
+  line-height:   1.6;
+
+  strong { color: var(--dc-p1, #f0f0f0); }
+  a      { color: var(--dc-accent, #e85d12); }
+}

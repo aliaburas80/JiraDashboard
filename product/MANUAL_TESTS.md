@@ -704,6 +704,59 @@ done
 
 ---
 
+## 15. Consent and Legal Documents (EP-014)
+
+### 15.1 Terms of Use and Privacy Policy pages are public
+
+1. Open an **incognito window** (no session)
+2. Go to `https://delivery-clarity.onrender.com/terms`
+3. ✅ Terms of Use page loads — no login required
+4. Go to `https://delivery-clarity.onrender.com/privacy`
+5. ✅ Privacy Policy page loads — no login required
+6. ✅ Both pages have a "← Back to registration" link
+
+### 15.2 Registration requires consent checkbox
+
+1. Go to `/register`
+2. Fill in all fields (name, email, password, role) but **leave the consent checkbox unchecked**
+3. ✅ The **Create free account** button is disabled — it cannot be clicked
+4. Check the consent checkbox
+5. ✅ The button becomes active and can be clicked
+
+### 15.3 API rejects registration without consent
+
+```bash
+# Submit registration WITHOUT consentAccepted
+curl -s -X POST https://delivery-clarity.onrender.com/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test","email":"consent-test@test.com","password":"Password1!","persona":"Other","consentAccepted":false}' | python3 -m json.tool
+```
+✅ Returns 400: `{"error":"You must accept the Terms of Use and Privacy Policy to create an account."}`
+
+### 15.4 Consent timestamp is recorded on successful registration
+
+After a successful registration, verify in the Neon SQL editor:
+
+```sql
+SELECT email, "termsAcceptedAt", "termsVersion"
+FROM "User"
+WHERE email = 'your-registered-email@test.com';
+```
+✅ `termsAcceptedAt` is a timestamp close to when you registered  
+✅ `termsVersion` is `v1`
+
+### 15.5 Existing admin-created users are backfilled as accepted
+
+```sql
+-- All existing users should have consent recorded
+SELECT COUNT(*) AS without_consent
+FROM "User"
+WHERE "termsAcceptedAt" IS NULL;
+```
+✅ Returns `0` — no user without a consent record
+
+---
+
 ## How to add new tests
 
 When a new feature is built, add a new numbered section here following the same format:

@@ -18,6 +18,9 @@ model User {
   // EP-011: public registration fields
   emailVerified      Boolean   @default(false)  // true once verification link is clicked (EP-012)
   persona            String    @default("")     // primary professional persona chosen at signup
+  // EP-014: consent and legal document acceptance
+  termsAcceptedAt    DateTime?                  // when user accepted the Terms of Use + Privacy Policy
+  termsVersion       String    @default("")     // document version accepted e.g. "v1"
   avatarUrl          String?
   position           String?
   phone              String?

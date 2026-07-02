@@ -9,7 +9,7 @@ import { prisma } from '@/lib/prisma';
 import { hashPassword, validatePasswordStrength } from '@/lib/auth';
 import { createWorkspaceForUser } from '@/lib/workspace';
 import { safeAuditEvent } from '@/lib/system-error-logger';
-import { PERSONAS, type Persona } from '@/lib/personas';
+import { PERSONAS, CURRENT_TERMS_VERSION, type Persona } from '@/lib/personas';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,10 +45,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: 'Invalid request.' }, { status: 400 }); }
 
-  const name    = String(body.name    ?? '').trim().slice(0, 100);
-  const email   = String(body.email   ?? '').toLowerCase().trim().slice(0, 254);
-  const password = String(body.password ?? '');
-  const persona  = String(body.persona  ?? '');
+  const name            = String(body.name    ?? '').trim().slice(0, 100);
+  const email           = String(body.email   ?? '').toLowerCase().trim().slice(0, 254);
+  const password        = String(body.password ?? '');
+  const persona         = String(body.persona  ?? '');
+  const consentAccepted = body.consentAccepted === true;
 
   // ── Validation ─────────────────────────────────────────────────────────────
 
@@ -64,6 +65,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
   if (!PERSONAS.includes(persona as Persona)) {
     return NextResponse.json({ error: 'Please select your primary role.' }, { status: 400 });
+  }
+  if (!consentAccepted) {
+    return NextResponse.json(
+      { error: 'You must accept the Terms of Use and Privacy Policy to create an account.' },
+      { status: 400 },
+    );
   }
 
   // ── Duplicate email check ───────────────────────────────────────────────────
@@ -82,11 +89,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         name,
         email,
         passwordHash,
-        role:             'user',
-        emailVerified:    false, // requires EP-012 verification link
+        role:               'user',
+        emailVerified:      false, // requires EP-012 verification link
         persona,
-        isActive:         true,
+        isActive:           true,
         mustChangePassword: false,
+        termsAcceptedAt:    new Date(),
+        termsVersion:       CURRENT_TERMS_VERSION,
       },
     });
     await createWorkspaceForUser(tx, created.id, created.name);

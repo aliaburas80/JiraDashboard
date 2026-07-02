@@ -166,3 +166,28 @@
   background:       var(--color-border, rgba(255,255,255,0.08));
   margin:           20px 0;
 }
+
+.consentLabel {
+  display:     flex;
+  align-items: flex-start;
+  gap:         10px;
+  cursor:      pointer;
+}
+
+.consentCheck {
+  margin-block-start: 2px;
+  flex-shrink:        0;
+}
+
+.consentText {
+  font-size:   12px;
+  color:       var(--dc-p2, #909090);
+  line-height: 1.5;
+
+  a {
+    color:           var(--dc-accent, #e85d12);
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+  }
+}
