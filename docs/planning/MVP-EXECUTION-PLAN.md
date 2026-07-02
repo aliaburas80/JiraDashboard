@@ -13,10 +13,10 @@ Only the current and next packet are fully detailed. Later packets are summarise
 | Packet | Title | Status | Blocker |
 |---|---|---|---|
 | EP-001 | Repository and TODO Reconciliation | ✅ Complete | — |
-| EP-002 | Reproducible Quality Baseline | ⏳ Next | EP-001 |
+| EP-002 | Reproducible Quality Baseline | ✅ Complete | — |
 | EP-003 | Canonical Version Alignment | ❌ Pending | EP-002 |
-| EP-004 | Security Remediation (npm vulns + Jira flag) | ❌ Pending | EP-002 |
-| EP-005 | PostgreSQL Migration and Restore Verification | ❌ Pending | EP-004 |
+| EP-004 | Security Remediation (Next.js upgrade + npm vulns) | ⏸️ DEFERRED — final pre-launch round | PO decision 2026-07-02 |
+| EP-005 | PostgreSQL Migration and Restore Verification | ❌ Pending | EP-002 |
 | EP-006 | Workspace Data Model | ❌ Pending | EP-005 + PO decision |
 | EP-007 | Existing-Data Workspace Migration | ❌ Pending | EP-006 |
 | EP-008 | Workspace Authorisation Enforcement | ❌ Pending | EP-007 |
@@ -48,21 +48,25 @@ Only the current and next packet are fully detailed. Later packets are summarise
 ## Critical Path
 
 ```
-EP-001 (Done)
-→ EP-002 Quality Baseline
-→ EP-004 Security Remediation
+EP-001 (Done) → EP-002 (Done)
+→ EP-005 DB Readiness
 → EP-006 Workspace Model   ← PO decision required
-→ EP-008 Auth Enforcement
+→ EP-008 Workspace Auth Enforcement
+→ EP-010 Session Hardening
 → EP-011 Public Registration
 → EP-012 Email Verification
 → EP-013 Password Reset
-→ EP-014 Consent
+→ EP-014 Consent + Privacy
 → EP-015 Trial Entitlement
 → EP-016 Upload + Entitlement Guard
 → EP-022 Separate Admin App
+→ EP-023 Owner Bootstrap + Admin MFA
 → EP-027 E2E + Security Tests
+→ EP-004 Next.js Upgrade + npm Security (full product round)  ← PO decision: last before launch
 → EP-030 Go/No-Go
 ```
+
+**Product Owner decision (2026-07-02):** EP-004 (Next.js upgrade and npm vulnerability remediation) is deferred to the final pre-launch round. It requires a full product regression test cycle and must not be run mid-build. Accepted risk: Next.js 14.2.5 CVEs are present during the build phase. The soft launch is controlled and limited in account count; risk is accepted and recorded.
 
 ---
 
