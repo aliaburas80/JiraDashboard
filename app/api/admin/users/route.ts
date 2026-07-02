@@ -11,6 +11,7 @@ import { getAppConfig, invalidateConfig } from '@/lib/app-config';
 import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { ASSIGNABLE_ROLES, isAppRole, roleLabel, type AppRole } from '@/lib/roles';
+import { createWorkspaceForUser } from '@/lib/workspace';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -101,9 +102,14 @@ export async function POST(req: NextRequest) {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return NextResponse.json({ error: 'An account with this email already exists.' }, { status: 409 });
 
-  const user = await prisma.user.create({
-    data: { name, email, passwordHash: await hashPassword(body.password), role, mustChangePassword: true },
-    include: { _count: { select: { importLogs: true, snapshots: true } } },
+  const passwordHash = await hashPassword(body.password);
+  const { user } = await prisma.$transaction(async (tx) => {
+    const created = await tx.user.create({
+      data: { name, email, passwordHash, role, mustChangePassword: true },
+      include: { _count: { select: { importLogs: true, snapshots: true } } },
+    });
+    await createWorkspaceForUser(tx, created.id, created.name);
+    return { user: created };
   });
 
   await safeAuditEvent({

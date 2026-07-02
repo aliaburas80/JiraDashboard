@@ -30,6 +30,15 @@ jest.mock('@/lib/prisma', () => ({
     },
     userAddRequest: { updateMany: jest.fn() },
     auditEvent: { create: jest.fn() },
+    // EP-006: transaction wrapper used in user creation to also create workspace
+    $transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => {
+      const tx = {
+        user:            { create: jest.fn(async (args: unknown) => (jest.requireMock('@/lib/prisma').prisma.user.create as jest.Mock)(args)) },
+        workspace:       { create: jest.fn(async () => ({ id: 'ws-tx-1', name: 'Sam', slug: 'ws-user-1', status: 'active' })) },
+        workspaceMember: { create: jest.fn(async () => ({ id: 'mem-tx-1' })) },
+      };
+      return fn(tx);
+    }),
   },
 }));
 jest.mock('@/services/storage/cloudSync', () => ({

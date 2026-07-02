@@ -7,6 +7,7 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
+import { getWorkspaceForUser } from '@/lib/workspace';
 
 export async function GET() {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -40,9 +41,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Snapshot limit reached (20). Delete an old snapshot first.' }, { status: 400 });
   }
 
+  const workspace = await getWorkspaceForUser(session.userId).catch(() => null);
   const snapshot = await prisma.dashboardSnapshot.create({
     data: {
       userId:       session.userId,
+      workspaceId:  workspace?.id ?? null,
       snapshotName: snapshotName.trim(),
       metricsJson,
       importLogId:  importLogId ?? null,

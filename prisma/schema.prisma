@@ -28,13 +28,54 @@ model User {
   updatedAt          DateTime  @updatedAt
   lastLoginAt        DateTime?
 
-  sessions        Session[]
+  sessions             Session[]
+  importLogs           ImportLog[]
+  snapshots            DashboardSnapshot[]
+  auditEvents          AuditEvent[]
+  userAddRequests      UserAddRequest[]    @relation("UserAddRequestRequester")
+  notifications        Notification[]      @relation("UserNotifications")
+  jiraConnections      JiraConnection[]
+  ownedWorkspace       Workspace?          @relation("WorkspaceOwner")
+  workspaceMemberships WorkspaceMember[]
+}
+
+// ── Workspace (EP-006 — one workspace per user for MVP) ───────────────────────
+// Each registered user owns exactly one Workspace.
+// All their analysis data (imports, snapshots, jira connections) is scoped here.
+// Schema supports future multi-member workspaces; MVP enforces single-member only.
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  status      String   @default("active") // "active" | "suspended" | "deleted"
+  ownerUserId String   @unique             // one workspace per user in MVP
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner           User              @relation("WorkspaceOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  members         WorkspaceMember[]
   importLogs      ImportLog[]
   snapshots       DashboardSnapshot[]
-  auditEvents     AuditEvent[]
-  userAddRequests UserAddRequest[]    @relation("UserAddRequestRequester")
-  notifications   Notification[]      @relation("UserNotifications")
   jiraConnections JiraConnection[]
+
+  @@index([ownerUserId])
+  @@index([status])
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  accessRole  String   @default("owner") // "owner" | "member" (member for future use)
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([workspaceId])
+  @@index([userId])
 }
 
 model Session {
@@ -73,12 +114,16 @@ model ImportLog {
   processingTimeMs Int      @default(0)
   metadataJson     String?
 
+  workspaceId    String?
+
   user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   jiraConnection JiraConnection?     @relation(fields: [jiraConnectionId], references: [id], onDelete: SetNull)
+  workspace      Workspace?          @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   snapshots      DashboardSnapshot[]
 
   @@index([userId])
   @@index([jiraConnectionId])
+  @@index([workspaceId])
   @@index([status, uploadedAt])  // fast "last successful import" query
 }
 
@@ -86,14 +131,17 @@ model DashboardSnapshot {
   id           String   @id @default(cuid())
   userId       String
   importLogId  String?
+  workspaceId  String?
   snapshotName String
   metricsJson  String
   createdAt    DateTime @default(now())
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   importLog ImportLog? @relation(fields: [importLogId], references: [id], onDelete: SetNull)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([workspaceId])
 }
 
 model AuditEvent {
@@ -172,13 +220,16 @@ model JiraConnection {
   lastSyncStatus         String? // "success" | "partial" | "failed"
   lastSyncError          String?
   createdByUserId        String
+  workspaceId            String?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
   createdBy  User        @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+  workspace  Workspace?  @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   importLogs ImportLog[]
 
   @@index([createdByUserId])
+  @@index([workspaceId])
 }
 
 // ── System Error Log (P-SYSERR) ───────────────────────────────────────────────

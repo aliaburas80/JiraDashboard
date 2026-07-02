@@ -11,6 +11,7 @@ import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { writeLatestMetrics } from '@/services/metrics/latestMetricsStorage';
 import { getServerEnv } from '@/lib/env/server';
+import { getWorkspaceForUser } from '@/lib/workspace';
 
 // ---------------------------------------------------------------------------
 // DB-backed rate limiter — 20 uploads per 15 minutes per user (P0A-02)
@@ -162,6 +163,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Save to DB if user is logged in — include trend metrics in metadataJson
     if (userId) {
+      const workspace = await getWorkspaceForUser(userId).catch(() => null);
       const flow = (metrics.flow ?? {}) as any;
       const releaseConfidenceScore = computeReleaseConfidence({
         completionRate: metrics.completionRate  ?? 0,
@@ -172,6 +174,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       });
       await prisma.importLog.create({ data: {
         userId,
+        workspaceId:     workspace?.id ?? null,
         fileName:        originalname,
         fileSize:        file.size,
         fileType:        ext.replace('.', ''),
