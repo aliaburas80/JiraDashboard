@@ -194,10 +194,13 @@ export default function LoginPage() {
         </form>
 
         <p className="text-center text-sm text-slate-500 mt-6">
-          New to Delivery Clarity?{' '}
-          <Link href="/promo" className="font-semibold text-blue-600 hover:underline">
-            See the product tour →
+          No account?{' '}
+          <Link href="/register" className="font-semibold text-orange-500 hover:underline">
+            Create one free →
           </Link>
+        </p>
+        <p className="text-center text-xs text-slate-600 mt-2">
+          <Link href="/promo" className="hover:underline">Learn more about Delivery Clarity</Link>
         </p>
       </div>
     </div>

@@ -1,0 +1,168 @@
+// Registration page — matches the login page aesthetic
+
+.page {
+  min-block-size:  100vh;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  background:      var(--color-page, var(--dc-bg, #0d0d0d));
+  padding:         var(--space-6, 24px) var(--space-4, 16px);
+}
+
+.card {
+  inline-size:   100%;
+  max-inline-size: 440px;
+  background:    var(--color-surface, #111);
+  border:        1px solid var(--color-border, rgba(255,255,255,0.08));
+  border-radius: 20px;
+  padding:       clamp(24px, 5vw, 40px);
+  box-shadow:    0 24px 60px rgba(0,0,0,0.5);
+}
+
+.logo {
+  display:         flex;
+  align-items:     center;
+  gap:             10px;
+  margin-block-end: 28px;
+}
+
+.logoText {
+  font-size:   16px;
+  font-weight: 800;
+  color:       var(--dc-p1, #f0f0f0);
+  line-height: 1;
+}
+
+.title {
+  font-size:        22px;
+  font-weight:      900;
+  color:            var(--dc-p1, #f0f0f0);
+  margin:           0 0 6px;
+  letter-spacing:   -0.02em;
+}
+
+.subtitle {
+  font-size:        13px;
+  color:            var(--dc-p3, #505050);
+  margin:           0 0 24px;
+}
+
+.field {
+  margin-block-end: 16px;
+}
+
+.label {
+  display:          block;
+  font-size:        11px;
+  font-weight:      700;
+  color:            var(--dc-p2, #909090);
+  margin-block-end: 6px;
+  letter-spacing:   0.03em;
+  text-transform:   uppercase;
+}
+
+.input,
+.select {
+  inline-size:   100%;
+  padding:       10px 12px;
+  background:    var(--dc-s3, #1a1a1a);
+  border:        1px solid var(--dc-bdr, rgba(255,255,255,0.1));
+  border-radius: 10px;
+  color:         var(--dc-p1, #f0f0f0);
+  font-size:     14px;
+  font-family:   inherit;
+  outline:       none;
+  transition:    border-color 0.15s;
+
+  &::placeholder { color: var(--dc-p4, #383838); }
+
+  &:focus-visible {
+    border-color: var(--dc-accent, #e85d12);
+    box-shadow:   0 0 0 3px rgba(232,93,18,0.18);
+  }
+}
+
+.select { cursor: pointer; }
+
+.passwordHint {
+  font-size:  10px;
+  color:      var(--dc-p3, #505050);
+  margin-block-start: 4px;
+}
+
+.error {
+  padding:       10px 14px;
+  border-radius: 10px;
+  background:    rgba(248,113,113,0.1);
+  border:        1px solid rgba(248,113,113,0.25);
+  color:         var(--dc-red, #f87171);
+  font-size:     13px;
+  margin-block-end: 16px;
+}
+
+.submit {
+  inline-size:   100%;
+  padding:       12px;
+  border-radius: 10px;
+  border:        none;
+  background:    var(--dc-accent, #e85d12);
+  color:         #fff;
+  font-size:     14px;
+  font-weight:   800;
+  cursor:        pointer;
+  font-family:   inherit;
+  margin-block-start: 8px;
+  transition:    background 0.15s, opacity 0.15s;
+
+  &:hover:not(:disabled) { background: var(--dc-acc2, #FF8A4C); }
+  &:disabled             { opacity: 0.5; cursor: not-allowed; }
+  &:focus-visible        { outline: 2px solid #fff; outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}
+
+.success {
+  text-align:  center;
+  padding:     8px 0;
+}
+
+.successIcon {
+  font-size:        40px;
+  margin-block-end: 12px;
+}
+
+.successTitle {
+  font-size:        18px;
+  font-weight:      900;
+  color:            var(--dc-p1, #f0f0f0);
+  margin-block-end: 8px;
+}
+
+.successText {
+  font-size:   13px;
+  color:       var(--dc-p3, #505050);
+  line-height: 1.6;
+  margin-block-end: 20px;
+}
+
+.loginLink {
+  display:         block;
+  text-align:      center;
+  margin-block-start: 20px;
+  font-size:       13px;
+  color:           var(--dc-p3, #505050);
+
+  a {
+    color:          var(--dc-accent, #e85d12);
+    font-weight:    700;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+  }
+}
+
+.divider {
+  block-size:       1px;
+  background:       var(--color-border, rgba(255,255,255,0.08));
+  margin:           20px 0;
+}

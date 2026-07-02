@@ -570,6 +570,140 @@ curl -s -b /tmp/user_a.txt \
 
 ---
 
+## 13. Session Hardening (EP-010)
+
+### 13.1 Suspended user is ejected immediately on next request
+
+1. Log in as a non-admin user — note the session works
+2. In Admin → Users, find that user and click **Deactivate**
+3. Without logging out in the user's browser, navigate to any dashboard page
+4. ✅ The page redirects to `/login` — the session was destroyed automatically
+5. ✅ Trying to log back in as that user shows: "Account is disabled."
+
+### 13.2 Deleted user account does not persist in session
+
+1. Log in as a test user
+2. In Admin → Users, delete that user
+3. In the original browser session, navigate to any page
+4. ✅ Redirected to `/login` — account no longer exists
+
+### 13.3 DB unavailability does not lock out active users
+
+This cannot be easily tested on live Render, but the logic is: if the DB check in `/api/auth/me` throws, the cookie session is trusted. Users are not logged out on transient DB errors.
+
+---
+
+## 14. Public Registration (EP-011)
+
+### 14.1 Registration page is accessible
+
+1. Open a **new incognito window** (no session)
+2. Go to `https://delivery-clarity.onrender.com/register`
+3. ✅ A registration form appears with: Full name, Work email, Password, Primary role dropdown
+4. ✅ The form is NOT redirecting to `/login`
+
+### 14.2 Login page links to registration
+
+1. Go to `/login`
+2. ✅ A "No account? Create one free →" link appears below the sign-in button
+3. Click it → ✅ Taken to `/register`
+
+### 14.3 Registration validation works
+
+1. Go to `/register`
+2. Submit with an empty name → ✅ Error: "Please enter your full name"
+3. Submit with an invalid email like `notanemail` → ✅ Error: "Please enter a valid email address"
+4. Submit with a weak password like `password` → ✅ Error about password strength
+5. Submit without selecting a role → ✅ Error: "Please select your primary role"
+
+### 14.4 Successful registration shows verification message
+
+1. Fill in: valid name, valid email, strong password (8+ chars, uppercase, number), select any role
+2. Click **Create free account**
+3. ✅ Form disappears, replaced with ✉️ "Check your inbox" message
+4. ✅ Message shows the email address you used
+5. ✅ Message explains a verification link has been sent
+
+### 14.5 New user and workspace are created in the database
+
+After a successful registration, verify in the Neon SQL editor:
+
+```sql
+-- Find the new user
+SELECT id, name, email, "emailVerified", persona, "isActive", "createdAt"
+FROM "User"
+WHERE email = 'your-registered-email@test.com';
+```
+✅ Row exists with `emailVerified = false`, `isActive = true`
+
+```sql
+-- Confirm workspace was auto-created
+SELECT w.slug, w.status, wm."accessRole"
+FROM "Workspace" w
+JOIN "WorkspaceMember" wm ON wm."workspaceId" = w.id
+WHERE w."ownerUserId" = '<paste-user-id>';
+```
+✅ One workspace with `status = active` and one member with `accessRole = owner`
+
+```sql
+-- Confirm audit event was recorded
+SELECT "eventType", "eventDescription", "createdAt"
+FROM "AuditEvent"
+WHERE "eventType" = 'register'
+ORDER BY "createdAt" DESC
+LIMIT 3;
+```
+✅ Entry appears with `eventType = register` and the email address
+
+### 14.6 Duplicate email returns success (no enumeration)
+
+1. Register with the same email a second time
+2. ✅ The form shows the same "Check your inbox" success message
+3. ✅ No error message revealing the email already exists
+4. ✅ Neon confirms no duplicate user row was created
+
+### 14.7 Unverified user cannot upload
+
+1. Register a new account (the account starts unverified)
+2. Log in with those credentials
+3. Try to upload a Jira file via the upload page
+4. ✅ Error: "Please verify your email address before uploading. Check your inbox for the verification link."
+5. ✅ No import log is created in the database for this attempt
+
+Verify via curl:
+```bash
+# 1. Register
+curl -s -X POST https://delivery-clarity.onrender.com/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"newuser@test.com","password":"Password1!","persona":"Scrum Master"}'
+
+# 2. Login with the new account and save cookie
+curl -s -c /tmp/new_user.txt \
+  -X POST https://delivery-clarity.onrender.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"newuser@test.com","password":"Password1!"}' | python3 -m json.tool
+
+# 3. Try to upload — should be blocked
+curl -s -b /tmp/new_user.txt \
+  -X POST https://delivery-clarity.onrender.com/api/upload \
+  -F "file=@any-jira.csv" | python3 -m json.tool
+```
+✅ Step 3 returns: `{"error":"Please verify your email address before uploading..."}`
+
+### 14.8 Rate limiting blocks excessive registrations
+
+```bash
+# Attempt 6 registrations from the same IP
+for i in $(seq 1 6); do
+  curl -s -X POST https://delivery-clarity.onrender.com/api/auth/register \
+    -H "Content-Type: application/json" \
+    -d "{\"name\":\"Test $i\",\"email\":\"test$i@rate.test\",\"password\":\"Password1!\",\"persona\":\"Other\"}" | python3 -m json.tool
+done
+```
+✅ The 6th request returns HTTP 429: "Too many registration attempts from this location. Try again in an hour."
+
+---
+
 ## How to add new tests
 
 When a new feature is built, add a new numbered section here following the same format:

@@ -130,12 +130,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Use cookies() from next/headers — correct App Router approach for iron-session v8
     const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
-    session.userId     = user.id;
-    session.email      = user.email;
-    session.name       = user.name;
-    session.role       = isAppRole(user.role) ? user.role : 'user';
+    session.userId             = user.id;
+    session.email              = user.email;
+    session.name               = user.name;
+    session.role               = isAppRole(user.role) ? user.role : 'user';
     session.mustChangePassword = user.mustChangePassword;
-    session.isLoggedIn = true;
+    session.emailVerified      = (user as any).emailVerified ?? true;
+    session.isLoggedIn         = true;
     await session.save();
 
     await Promise.all([

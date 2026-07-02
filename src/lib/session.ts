@@ -4,12 +4,13 @@
 import type { AppRole } from '@/lib/roles';
 
 export interface SessionData {
-  userId: string;
-  email: string;
-  name: string;
-  role: AppRole;
+  userId:              string;
+  email:               string;
+  name:                string;
+  role:                AppRole;
   mustChangePassword?: boolean;
-  isLoggedIn: boolean;
+  emailVerified?:      boolean; // EP-011: false until verification link clicked (EP-012)
+  isLoggedIn:          boolean;
 }
 
 // In production SESSION_SECRET is enforced by start-production.mjs before the

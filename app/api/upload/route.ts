@@ -65,6 +65,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
   const userId = session.userId;
 
+  // EP-011: email must be verified before uploads are allowed.
+  // emailVerified defaults to true for admin-created users (backward compat).
+  if (session.emailVerified === false) {
+    return NextResponse.json(
+      { error: 'Please verify your email address before uploading. Check your inbox for the verification link.' },
+      { status: 403 },
+    );
+  }
+
   // --- DB-backed rate limit by userId (20 uploads / 15 min, survives cold starts) ---
   const { limited, retryAfterSeconds } = await checkUploadRateLimit(userId);
   if (limited) {
