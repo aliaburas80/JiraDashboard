@@ -1,222 +1,87 @@
 'use client';
 // © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
-// EP-VIS-01: Animated data-flow background — Canvas-based, zero dependencies.
-// 52 nodes drift slowly across the canvas; nearby nodes draw connecting lines
-// that pulse with orange accents, representing delivery data in motion.
-// Fully respects prefers-reduced-motion — completely stops when set.
+// EP-VIS-01 (redesign): Pure CSS/SVG animated background using real product icons.
+// No Canvas. No JavaScript animation loop. GPU-accelerated CSS keyframes only.
+// Icons sourced from /public/icons/ — actual Jira/delivery intelligence icons.
 
-import { useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import styles from './AnimatedDataBackground.module.scss';
 
-interface AnimatedDataBackgroundProps {
+interface Props {
   className?: string;
 }
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+// ── Inline SVG paths from /public/icons/ ─────────────────────────────────────
 
-type NodeType = 'primary' | 'secondary' | 'accent';
+// 0128-data-flow — branching pipeline graph
+const PATH_DATA_FLOW = 'M13.75 1.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5m-2.122 0a2.251 2.251 0 1 1 0 1.5H9.563C8.976 3 8.5 3.476 8.5 4.063V7.25h3.128a2.251 2.251 0 1 1 0 1.5H8.5v3.188c0 .586.476 1.062 1.063 1.062h2.065a2.251 2.251 0 1 1 0 1.5H9.563A2.563 2.563 0 0 1 7 11.938V8.75H4.372a2.25 2.25 0 1 1 0-1.5H7V4.063A2.56 2.56 0 0 1 9.563 1.5zM2.25 7.25a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5m11.5 0a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5m0 5.75a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5';
 
-interface Node {
-  x:       number;
-  y:       number;
-  vx:      number;
-  vy:      number;
-  radius:  number;
-  type:    NodeType;
-  opacity: number;
-  pulse:   number; // 0 = idle, 1 = peak — counts down each frame
+// 0317-sprint — circular sprint arrow
+const PATH_SPRINT = 'M8 1.5A4.75 4.75 0 0 0 8 11h5.44l-2.22-2.22 1.06-1.06 3.5 3.5a.75.75 0 0 1 0 1.06l-3.5 3.5-1.06-1.06 2.22-2.22H0V11h3.938A6.25 6.25 0 1 1 14.25 6.25h-1.5A4.75 4.75 0 0 0 8 1.5';
+
+// 0092-chart-trend-up — upward trend line
+const PATH_TREND_UP = 'M1 13V1h1.5v12a.5.5 0 0 0 .5.5h12V15H3a2 2 0 0 1-2-2M15 7.5h-1.5V5.56L9.78 9.28a.75.75 0 0 1-1.06 0L7.25 7.81l-2.22 2.22-1.06-1.06 2.75-2.75.056-.052a.75.75 0 0 1 1.004.052l1.47 1.47 3.19-3.19H10.5V3h3.75a.75.75 0 0 1 .75.75z';
+
+// 0088-chart-bar — bar chart
+const PATH_CHART_BAR = 'M1 13V1h1.5v12a.5.5 0 0 0 .5.5h12V15H3a2 2 0 0 1-2-2m4.25-4.5.077.004A.75.75 0 0 1 6 9.25v2.5a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1-.75-.75v-2.5a.75.75 0 0 1 .75-.75zm4-3.5a.75.75 0 0 1 .75.75v6a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1-.75-.75v-6A.75.75 0 0 1 8.25 5zm4-3a.75.75 0 0 1 .75.75v9a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1-.75-.75v-9a.75.75 0 0 1 .75-.75z';
+
+// 0127-dashboard — grid layout
+const PATH_DASHBOARD = 'M3 2.5a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h4.25v-11zm5.75 0v4.75h4.75V3a.5.5 0 0 0-.5-.5zm4.75 6.25H8.75v4.75H13a.5.5 0 0 0 .5-.5zM1 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z';
+
+// 0149-epic — lightning bolt
+const PATH_EPIC = 'M10.271.05a.75.75 0 0 1 .479.7v4.635l3.147.63a.75.75 0 0 1 .407 1.24l-7.75 8.5a.75.75 0 0 1-1.304-.505v-4.635l-3.147-.63a.75.75 0 0 1-.407-1.24l7.75-8.5A.75.75 0 0 1 10.27.05M3.698 8.776l3.052.61v3.93l5.552-6.09-3.052-.61v-3.93z';
+
+// 0352-task — completed task checkbox
+const PATH_TASK = 'M1 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2zm2-.5a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V3a.5.5 0 0 0-.5-.5zm9.326 2.98-5 6a.75.75 0 0 1-1.152 0l-2.5-3 1.152-.96L6.75 9.828l4.424-5.308z';
+
+// 0075-board — kanban board
+const PATH_BOARD = 'M2 3.5a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 .5.5h2.833v-9zm4.333 0v9h3.334v-9zm4.834 0v9H14a.5.5 0 0 0 .5-.5V4a.5.5 0 0 0-.5-.5zM0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2z';
+
+// 0353-task-in-progress — circular progress arrow
+const PATH_TASK_PROG = 'M1.543 7.25h7.646L6.97 5.03l1.06-1.06 3.5 3.5a.75.75 0 0 1 0 1.06l-3.5 3.5-1.06-1.06 2.22-2.22H1.542a6.501 6.501 0 1 0 0-1.5M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8';
+
+// ── Shared SVG wrapper ────────────────────────────────────────────────────────
+
+function Icon({ path, className }: { path: string; className: string }) {
+  return (
+    <svg
+      viewBox="-4 -4 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d={path} fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+    </svg>
+  );
 }
 
-// ── Constants ──────────────────────────────────────────────────────────────────
+// ── Component ─────────────────────────────────────────────────────────────────
 
-const NODE_COUNT     = 52;
-const MAX_DIST       = 160;
-const BG_COLOR       = '#050508';
-const COLORS: Record<NodeType, string> = {
-  primary:   'rgba(232, 93, 18, 0.85)',
-  secondary: 'rgba(99, 179, 237, 0.65)',
-  accent:    'rgba(255, 255, 255, 0.50)',
-};
-const LINE_BASE      = 'rgba(255, 255, 255, 0.04)';
-const LINE_ACTIVE    = 'rgba(232, 93, 18, 0.22)';
-const GLOW_COLOR     = 'rgba(232, 93, 18, 0.50)';
-const FADE_FRAMES    = 48; // ~800ms at 60fps
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function rnd(min: number, max: number) {
-  return Math.random() * (max - min) + min;
-}
-
-function makeNode(w: number, h: number): Node {
-  const r = Math.random();
-  const type: NodeType = r < 0.60 ? 'primary' : r < 0.90 ? 'secondary' : 'accent';
-  // Avoid near-zero velocities so nodes always move
-  const vx = (Math.random() < 0.5 ? -1 : 1) * rnd(0.12, 0.35);
-  const vy = (Math.random() < 0.5 ? -1 : 1) * rnd(0.12, 0.35);
-  return {
-    x:       rnd(0, w),
-    y:       rnd(0, h),
-    vx,
-    vy,
-    radius:  rnd(2, 4.5),
-    type,
-    opacity: rnd(0.5, 1.0),
-    pulse:   0,
-  };
-}
-
-// ── Component ──────────────────────────────────────────────────────────────────
-
-export function AnimatedDataBackground({ className }: AnimatedDataBackgroundProps) {
-  const canvasRef    = useRef<HTMLCanvasElement>(null);
-  const nodesRef     = useRef<Node[]>([]);
-  const rafRef       = useRef<number>(0);
-  const frameRef     = useRef<number>(0);
-  const reducedMotion = typeof window !== 'undefined'
-    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    : false;
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Respect prefers-reduced-motion
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (mq.matches) return; // static background only
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // ── Sizing ──────────────────────────────────────────────────────────────
-
-    function resize() {
-      if (!canvas) return;
-      const parent = canvas.parentElement;
-      if (!parent) return;
-      canvas.width  = parent.offsetWidth;
-      canvas.height = parent.offsetHeight;
-      // Clamp node positions to new bounds
-      nodesRef.current.forEach(n => {
-        n.x = Math.min(n.x, canvas!.width);
-        n.y = Math.min(n.y, canvas!.height);
-      });
-    }
-
-    const ro = new ResizeObserver(resize);
-    if (canvas.parentElement) ro.observe(canvas.parentElement);
-    resize();
-
-    // ── Init nodes ──────────────────────────────────────────────────────────
-
-    nodesRef.current = Array.from(
-      { length: NODE_COUNT },
-      () => makeNode(canvas.width, canvas.height),
-    );
-
-    // ── Animation loop ──────────────────────────────────────────────────────
-
-    function draw() {
-      if (!canvas || !ctx) return;
-      const w = canvas.width;
-      const h = canvas.height;
-      const nodes = nodesRef.current;
-      const frame = frameRef.current++;
-
-      // Fade-in global alpha
-      const fadeIn = Math.min(1, frame / FADE_FRAMES);
-
-      // Background
-      ctx.fillStyle = BG_COLOR;
-      ctx.fillRect(0, 0, w, h);
-
-      // ── Draw connection lines (O(n²), n=52 → 1326 pairs) ──────────────
-
-      for (let i = 0; i < nodes.length - 1; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i];
-          const b = nodes[j];
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist >= MAX_DIST) continue;
-
-          const proximity = 1 - dist / MAX_DIST;
-          const pulsing   = a.pulse > 0 || b.pulse > 0;
-
-          ctx.globalAlpha = proximity * (pulsing ? 0.9 : 0.6) * fadeIn;
-          ctx.strokeStyle = pulsing ? LINE_ACTIVE : LINE_BASE;
-          ctx.lineWidth   = pulsing ? 1.0 : 0.7;
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.stroke();
-        }
-      }
-
-      // ── Draw nodes ──────────────────────────────────────────────────────
-
-      nodes.forEach(n => {
-        // Pulse glow
-        if (n.pulse > 0) {
-          const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.radius * 5);
-          grad.addColorStop(0, `rgba(232, 93, 18, ${n.pulse * 0.35})`);
-          grad.addColorStop(1, 'rgba(232, 93, 18, 0)');
-          ctx.globalAlpha = fadeIn;
-          ctx.fillStyle   = grad;
-          ctx.beginPath();
-          ctx.arc(n.x, n.y, n.radius * 5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Node circle
-        ctx.globalAlpha = n.opacity * fadeIn;
-        ctx.fillStyle   = COLORS[n.type];
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, n.radius + n.pulse * 1.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Move
-        n.x += n.vx;
-        n.y += n.vy;
-
-        // Bounce off edges
-        if (n.x < n.radius || n.x > w - n.radius) { n.vx *= -1; n.x = Math.max(n.radius, Math.min(w - n.radius, n.x)); }
-        if (n.y < n.radius || n.y > h - n.radius) { n.vy *= -1; n.y = Math.max(n.radius, Math.min(h - n.radius, n.y)); }
-
-        // Pulse decay
-        if (n.pulse > 0) n.pulse = Math.max(0, n.pulse - 0.015);
-
-        // Random pulse trigger: 0.05% chance per frame
-        if (n.pulse === 0 && Math.random() < 0.0005) n.pulse = 1.0;
-      });
-
-      ctx.globalAlpha = 1;
-      rafRef.current  = requestAnimationFrame(draw);
-    }
-
-    rafRef.current = requestAnimationFrame(draw);
-
-    // Also listen for runtime media-query changes
-    const handleMqChange = (e: MediaQueryListEvent) => {
-      if (e.matches) cancelAnimationFrame(rafRef.current);
-    };
-    mq.addEventListener('change', handleMqChange);
-
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-      ro.disconnect();
-      mq.removeEventListener('change', handleMqChange);
-    };
-  }, []);
-
-  // When reduced motion is set at render time, return static background only
-  if (reducedMotion) return null;
-
+export function AnimatedDataBackground({ className }: Props) {
   return (
     <div className={clsx(styles.root, className)} aria-hidden="true">
-      <canvas ref={canvasRef} className={styles.canvas} />
+
+      {/* Dot grid */}
+      <div className={styles.grid} />
+
+      {/* Ambient colour glows */}
+      <div className={styles.glowOrange} />
+      <div className={styles.glowBlue} />
+
+      {/* 12 floating delivery-intelligence icons */}
+      <Icon path={PATH_DATA_FLOW}  className={clsx(styles.icon, styles.iconOrange, styles.i1)}  />
+      <Icon path={PATH_TREND_UP}   className={clsx(styles.icon, styles.iconBlue,   styles.i2)}  />
+      <Icon path={PATH_SPRINT}     className={clsx(styles.icon, styles.iconOrange, styles.i3)}  />
+      <Icon path={PATH_DASHBOARD}  className={clsx(styles.icon, styles.iconBlue,   styles.i4)}  />
+      <Icon path={PATH_EPIC}       className={clsx(styles.icon, styles.iconOrange, styles.i5)}  />
+      <Icon path={PATH_TASK}       className={clsx(styles.icon, styles.iconBlue,   styles.i6)}  />
+      <Icon path={PATH_BOARD}      className={clsx(styles.icon, styles.iconOrange, styles.i7)}  />
+      <Icon path={PATH_CHART_BAR}  className={clsx(styles.icon, styles.iconBlue,   styles.i8)}  />
+      <Icon path={PATH_TASK_PROG}  className={clsx(styles.icon, styles.iconOrange, styles.i9)}  />
+      <Icon path={PATH_DATA_FLOW}  className={clsx(styles.icon, styles.iconBlue,   styles.i10)} />
+      <Icon path={PATH_SPRINT}     className={clsx(styles.icon, styles.iconOrange, styles.i11)} />
+      <Icon path={PATH_TREND_UP}   className={clsx(styles.icon, styles.iconBlue,   styles.i12)} />
     </div>
   );
 }

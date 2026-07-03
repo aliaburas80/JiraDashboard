@@ -5,7 +5,7 @@
 .page {
   position:       relative;
   min-block-size: 100vh;
-  background:     #050508;
+  background:     #080d1a;
   overflow:       hidden;
 }
 
@@ -27,9 +27,10 @@
   max-inline-size: 760px;
   margin-inline:   auto;
   padding:         40px 40px 80px;
-  background:      rgba(8, 8, 13, 0.72);
-  backdrop-filter: blur(20px);
-  border-inline:   1px solid rgba(255, 255, 255, 0.06);
+  background:      rgba(6, 10, 22, 0.82);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-inline:   1px solid rgba(99, 130, 210, 0.10);
   min-block-size:  100vh;
 
   @media (max-width: 600px) { padding: 24px 20px 60px; }
