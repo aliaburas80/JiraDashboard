@@ -10,25 +10,16 @@
 
 .bg { /* AnimatedDataBackground — absolute inset:0 */ }
 
-.bgDim::after {
-  content:        '';
-  position:       absolute;
-  inset:          0;
-  background:     rgba(5, 5, 8, 0.60);
-  z-index:        0;
-  pointer-events: none;
-}
-
 .inner {
   position:        relative;
   z-index:         1;
   max-inline-size: 760px;
   margin-inline:   auto;
   padding:         40px 40px 80px;
-  background:      rgba(6, 10, 22, 0.82);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-inline:   1px solid rgba(99, 130, 210, 0.10);
+  background:      rgba(3, 6, 16, 0.42);
+  backdrop-filter: blur(48px);
+  -webkit-backdrop-filter: blur(48px);
+  border-inline:   1px solid rgba(99, 130, 210, 0.12);
   min-block-size:  100vh;
 
   @media (max-width: 600px) { padding: 24px 20px 60px; }

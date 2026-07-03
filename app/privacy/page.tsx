@@ -36,7 +36,7 @@ function PrivacyContent() {
 
   return (
     <div className={styles.page} dir={dir}>
-      <AnimatedDataBackground className={`${styles.bg} ${styles.bgDim}`} />
+      <AnimatedDataBackground className={styles.bg} />
 
       <div className={styles.inner}>
         {/* Actions bar */}
