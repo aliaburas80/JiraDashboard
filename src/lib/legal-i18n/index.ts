@@ -3,7 +3,7 @@
 
 export const LANGUAGES = {
   en: { name: 'English',    dir: 'ltr' as const, flag: '🇬🇧' },
-  ar: { name: 'العربية',    dir: 'rtl' as const, flag: '🇦🇪' },
+  ar: { name: 'العربية',    dir: 'rtl' as const, flag: '🇵🇸' },
   ru: { name: 'Русский',    dir: 'ltr' as const, flag: '🇷🇺' },
   ja: { name: '日本語',      dir: 'ltr' as const, flag: '🇯🇵' },
   ko: { name: '한국어',      dir: 'ltr' as const, flag: '🇰🇷' },

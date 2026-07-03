@@ -25,7 +25,7 @@ export const en: LegalTranslation = {
         title: '1. About the service',
         blocks: [
           { p: 'Delivery Clarity is a private, software-as-a-service delivery analytics platform that processes Jira CSV and Excel exports to generate sprint health metrics, flow efficiency scores, release readiness assessments, and delivery coaching recommendations ("the Service").' },
-          { p: 'The Service is operated by Ali Abu Ras, an individual trader based in the United Kingdom ("we", "us", "our").' },
+          { p: 'The Service is operated by Ali Abu Ras, an individual based in Jordan ("we", "us", "our").' },
           { b: 'The Service is provided for informational and analytical purposes only.' },
           { p: 'It does not constitute professional project management, financial, legal, compliance, or investment advice. All metrics, recommendations, and forecasts are produced algorithmically from the data you provide and carry no warranty of accuracy, completeness, or fitness for any particular business decision.' },
         ],
@@ -238,7 +238,7 @@ export const en: LegalTranslation = {
         title: '1. Who we are and how to contact us',
         blocks: [
           { p: 'The data controller for all personal data processed through Delivery Clarity is:' },
-          { ul: ['Name: Ali Abu Ras', 'Operating as: Delivery Clarity', 'Email: aliaburas80@gmail.com', 'Country of establishment: United Kingdom'] },
+          { ul: ['Name: Ali Abu Ras', 'Operating as: Delivery Clarity', 'Email: aliaburas80@gmail.com', 'Country: Jordan'] },
           { p: 'For all data protection enquiries, rights requests, or complaints, please contact us at the email address above.' },
         ],
       },

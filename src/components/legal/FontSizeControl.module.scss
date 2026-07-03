@@ -1,0 +1,50 @@
+// Font size control — legal pages only
+
+.wrap {
+  display:     flex;
+  align-items: center;
+  gap:         2px;
+
+  @media print { display: none; }
+}
+
+.btn {
+  display:       flex;
+  align-items:   center;
+  justify-content: center;
+  inline-size:   30px;
+  block-size:    30px;
+  border-radius: 7px;
+  border:        1px solid rgba(255, 255, 255, 0.10);
+  background:    rgba(10, 14, 28, 0.70);
+  color:         #a0a0a8;
+  font-size:     14px;
+  font-weight:   700;
+  cursor:        pointer;
+  font-family:   inherit;
+  line-height:   1;
+  transition:    background 0.1s, color 0.1s;
+
+  &:hover:not(:disabled) {
+    background: rgba(232, 93, 18, 0.15);
+    color:      #f0f0f0;
+    border-color: rgba(232, 93, 18, 0.35);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor:  default;
+  }
+
+  &:focus-visible {
+    outline:        2px solid #e85d12;
+    outline-offset: 2px;
+  }
+}
+
+.label {
+  font-size:   10px;
+  color:       #545460;
+  padding:     0 4px;
+  user-select: none;
+}

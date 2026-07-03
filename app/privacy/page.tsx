@@ -9,6 +9,7 @@ import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
 import { LanguageSwitcher } from '@/components/legal/LanguageSwitcher';
 import { DownloadPdfButton } from '@/components/legal/DownloadPdfButton';
 import { translations, LANGUAGES, DEFAULT_LANG, type LangCode, type Block } from '@/lib/legal-i18n';
+import { FontSizeControl } from '@/components/legal/FontSizeControl';
 import styles from './page.module.scss';
 
 const EFFECTIVE_DATE = '3 July 2026';
@@ -38,11 +39,12 @@ function PrivacyContent() {
     <div className={styles.page} dir={dir}>
       <AnimatedDataBackground className={styles.bg} />
 
-      <div className={styles.inner}>
+      <div id="privacy-body" className={styles.inner}>
         {/* Actions bar */}
         <div className={styles.pageActions}>
           <Link href="/register" className={styles.back}>{t.ui.backToRegister}</Link>
           <div className={styles.actionButtons}>
+            <FontSizeControl targetId="privacy-body" />
             <LanguageSwitcher current={lang} selectLabel={t.ui.selectLanguage} />
             <DownloadPdfButton label={t.ui.downloadPdf} />
           </div>
