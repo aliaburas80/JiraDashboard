@@ -16,8 +16,10 @@
   max-inline-size: 760px;
   margin-inline:   auto;
   padding:         40px 40px 80px;
-  background:      rgba(3, 6, 16, 0.42);
-  backdrop-filter: blur(48px);
+  // 68% dark + 6px blur: arrows visible through panel, text stays readable
+  background:      rgba(3, 6, 16, 0.68);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border-inline:   1px solid rgba(99, 130, 210, 0.12);
   min-block-size:  100vh;
 

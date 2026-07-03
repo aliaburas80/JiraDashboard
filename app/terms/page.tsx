@@ -5,7 +5,7 @@
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
+import { LegalRainBackground } from '@/components/ui/LegalRainBackground';
 import { LanguageSwitcher } from '@/components/legal/LanguageSwitcher';
 import { DownloadPdfButton } from '@/components/legal/DownloadPdfButton';
 import { translations, LANGUAGES, DEFAULT_LANG, type LangCode, type Block } from '@/lib/legal-i18n';
@@ -41,7 +41,7 @@ function TermsContent() {
 
   return (
     <div className={styles.page} dir={dir}>
-      <AnimatedDataBackground className={styles.bg} />
+      <LegalRainBackground className={styles.bg} />
 
       <div id="terms-body" className={styles.inner}>
         {/* Actions bar */}
