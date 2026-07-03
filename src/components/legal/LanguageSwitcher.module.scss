@@ -57,8 +57,7 @@
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
 
   [dir='rtl'] & {
-    inset-inline-start: auto;
-    inset-inline-end:   0;
+    inset-inline: auto 0;
   }
 }
 

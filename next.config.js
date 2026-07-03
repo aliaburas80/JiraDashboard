@@ -19,6 +19,12 @@ const DIST_DIR = process.env.NEXT_DIST_DIR
 
 const nextConfig = {
   distDir: DIST_DIR,
+  eslint: {
+    // Linting is enforced as a dedicated CI step. Keep `next build` focused on
+    // compilation so it does not duplicate the tracked legacy inline-style
+    // warning backlog in GitHub Actions logs.
+    ignoreDuringBuilds: true,
+  },
   experimental: {
     serverComponentsExternalPackages: [
       'xlsx', 'prisma', '@prisma/client', 'bcryptjs',

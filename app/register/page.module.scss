@@ -44,7 +44,6 @@
   max-inline-size: 440px;
   background:      rgba(10, 10, 14, 0.82);
   backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
   border:          1px solid rgba(255, 255, 255, 0.09);
   border-radius:   20px;
   padding:         clamp(28px, 5vw, 44px);
@@ -108,7 +107,6 @@
   font-family:   inherit;
   outline:       none;
   appearance:    none;
-  -webkit-appearance: none;
   transition:    border-color 0.15s;
 
   &::placeholder { color: #38383f; }
