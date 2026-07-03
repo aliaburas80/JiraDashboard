@@ -1,51 +1,17 @@
-// AnimatedDataBackground — static deep-navy background with dot grid.
-// No floating elements. Pure CSS gradients + SVG pattern.
+// AnimatedDataBackground — Vanta-waves-inspired sine-wave canvas.
+// Reference: vantajs.com/waves, anime.js, freefrontend.com canvas effects.
 
 .root {
   position:   absolute;
   inset:      0;
   overflow:   hidden;
   z-index:    0;
-  // Rich deep navy — depth without being flat black
-  background: radial-gradient(
-    ellipse 120% 100% at 50% 0%,
-    #0d1630 0%,
-    #080d1a 55%,
-    #050810 100%
-  );
+  // Deeper navy — waves need contrast to pop
+  background: #050b16;
 }
 
-// Subtle dot-grid — like Figma / Linear
-.grid {
-  position:         absolute;
-  inset:            0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px);
-  background-size:  28px 28px;
-  // Edge vignette so dots fade toward corners
-  mask-image: radial-gradient(
-    ellipse 80% 80% at 50% 50%,
-    black 0%,
-    transparent 100%
-  );
-}
-
-// Soft ambient colour blobs — warm orange top-left, cool blue bottom-right
-.glowOrange {
-  position:           absolute;
-  inset-block-start:  -10%;
-  inset-inline-start: -10%;
-  inline-size:        60%;
-  block-size:         60%;
-  background:         radial-gradient(ellipse, rgba(232, 93, 18, 0.07) 0%, transparent 70%);
-  pointer-events:     none;
-}
-
-.glowBlue {
-  position:         absolute;
-  inset-block-end:  -10%;
-  inset-inline-end: -10%;
-  inline-size:      60%;
-  block-size:       60%;
-  background:       radial-gradient(ellipse, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
-  pointer-events:   none;
+.canvas {
+  display:     block;
+  inline-size: 100%;
+  block-size:  100%;
 }
