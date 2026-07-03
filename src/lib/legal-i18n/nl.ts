@@ -95,19 +95,102 @@ export const nl: LegalTranslation = {
           'Wij behouden het recht in de toekomst betaalde abonnementen in te voeren.',
         ]},
       ]},
-      { title: '9. Intellectueel eigendom', blocks: [
-        { p: 'De Service, inclusief algoritmen, berekeningsmethoden, scoremodellen, gebruikersinterface, ontwerp, branding, bedrijfsgeheimen, databaseschema, broncode, documentatie en alle afgeleide materialen, is het exclusieve intellectueel eigendom van Ali Abu Ras en wordt beschermd door auteursrecht, bedrijfsgeheimenwetgeving en andere toepasselijke wetten in het VK en internationaal.' },
-        { p: 'Niets in deze Voorwaarden verleent u enig recht op het intellectueel eigendom van de Service buiten de beperkte licentie in Artikel 4.' },
-        { p: 'De naam, het logo en de branding van Delivery Clarity zijn eigendomsmerken van Ali Abu Ras. U mag deze niet zonder voorafgaande schriftelijke toestemming gebruiken.' },
+      { title: '9. Intellectueel eigendom — alle rechten voorbehouden', blocks: [
+        { b: '© 2026 Ali Abu Ras. Alle rechten voorbehouden.' },
+        { p: 'De Service — inclusief de broncode, algoritmen, berekeningsmethoden, scoremodellen, metric-taxonomie, coachingmethodologie, functiearchitectuur, gebruikersinterface, visueel ontwerp, trade dress, databaseschema, gegevenspijplijn, documentatie, marketingmateriaal en alle afgeleide materialen — is het exclusieve intellectueel eigendom van Ali Abu Ras en wordt beschermd door auteursrecht, modelrecht, databankrecht, merkenrecht, bedrijfsgeheimen, oneerlijke concurrentie en alle andere toepasselijke wetgeving inzake intellectueel eigendom.' },
+        { p: 'De output die de Service produceert — waaronder rapporten, visualisaties, metric-scores, leveringsaanbevelingen en coachinginzichten — vormt afgeleide werken van de Service en is eigendom van Ali Abu Ras. Uw gebruik van deze output is onderworpen aan de licentie in Artikel 4. U mag deze output niet opnieuw publiceren, verkopen of distribueren als basis voor een concurrerend analyseproduct.' },
+        { p: 'Niets in deze Voorwaarden, noch enige toegang tot of gebruik van de Service, verleent u enige licentie, recht, titel of belang in het intellectueel eigendom van Ali Abu Ras buiten de strikt beperkte licentie in Artikel 4. Er ontstaat geen impliciete licentie door gebruik van de Service, toegang tot enige output, of enige gedragslijn.' },
+        { p: 'De naam Delivery Clarity, het logo, de productnaam, de visuele identiteit en de branding zijn eigendomsmerken van Ali Abu Ras. U mag deze niet gebruiken zonder voorafgaande schriftelijke toestemming.' },
+        { p: 'De database van metric-definities, drempelwaardeconfiguraties, workflowsjablonen en coachingbibliotheken wordt beschermd als databank onder de Databankenrichtlijn 96/9/EG (EU) en het Britse equivalent daarvan. Het extraheren of hergebruiken van een substantieel deel van deze databank is verboden.' },
+        { b: 'Elke persoon of entiteit die, na eerder gebruik van of toegang tot de Service, een product of dienst ontwikkelt die substantieel gelijkwaardig is aan Delivery Clarity, kan worden verondersteld eigendomsrechtelijk beschermde bedrijfsgeheimen en vertrouwelijke informatie te hebben misbruikt. Dergelijke partijen kunnen worden verplicht rekenschap af te leggen over alle winst en zijn onderworpen aan alle beschikbare civielrechtelijke en strafrechtelijke rechtsmiddelen.' },
       ]},
-      { title: '10. Beschikbaarheid, wijzigingen en beëindiging', blocks: [{ ul: [
+      { title: '10. Bedrijfsgeheimen en vertrouwelijke informatie', blocks: [
+        { p: 'De volgende elementen van de Service vormen eigendomsrechtelijk beschermde bedrijfsgeheimen van Ali Abu Ras, beschermd onder de Trade Secrets (Enforcement, etc.) Regulations 2018 (VK), EU-Richtlijn 2016/943 inzake bedrijfsgeheimen, en gelijkwaardige wetgeving in alle toepasselijke rechtsgebieden:' },
+        { ul: [
+          'De algoritmen en wiskundige formules die worden gebruikt om sprintgezondheid, leveringsvoorspelbaarheid, flow-efficiëntie, releasegereedheid, eigendomsrisico, epic-gereedheid, ouderdom van werkitems, doorvoertrends en alle overige analytische scores te berekenen;',
+          'De wegingssystemen, drempelwaardedefinities, normalisatiemethoden en beslisbomen die aanbevelingen en coachinginzichten opleveren;',
+          'De gegevensverwerkingspijplijn, validatielogica, schemaontwerp en importarchitectuur;',
+          'De metric-taxonomie, het analysekader en de volledige productmethodologie die ruwe Jira-gegevens verbindt met bruikbare leveringsinformatie;',
+          'De functiearchitectuur, technische beslissingen, technologiekeuzes en implementatieaanpak;',
+          'Het configuratiesysteem, het widgetregister, de navigatiestructuur en de productcompositiestrategie.',
+        ]},
+        { p: 'Door toegang te krijgen tot de Service erkent u dat u kennis kunt nemen van vertrouwelijke informatie ("Vertrouwelijke Informatie") die economische waarde ontleent aan het feit dat zij niet openbaar bekend is. U stemt ermee in om:' },
+        { ul: [
+          'Alle Vertrouwelijke Informatie strikt vertrouwelijk te houden en te beschermen met ten minste dezelfde mate van zorg als u toepast op uw eigen meest gevoelige informatie, maar niet minder dan redelijke zorg;',
+          'Geen Vertrouwelijke Informatie aan derden te onthullen, te beschrijven, te documenteren, te publiceren of mee te delen zonder onze voorafgaande schriftelijke toestemming;',
+          'Vertrouwelijke Informatie niet te gebruiken voor enig ander doel dan het gebruik van de Service binnen de reikwijdte van deze Voorwaarden;',
+          'Ons onmiddellijk te informeren via aliaburas80@gmail.com indien u zich bewust wordt van een daadwerkelijke of vermoede ongeoorloofde openbaarmaking van Vertrouwelijke Informatie.',
+        ]},
+        { b: 'Deze geheimhoudingsverplichting blijft van kracht na beëindiging of afloop van uw account gedurende een periode van zeven (7) jaar, of voor de maximale periode toegestaan door toepasselijk recht, welke van beide langer is.' },
+      ]},
+      { title: '11. Verboden concurrerende en imiterende activiteiten', blocks: [
+        { p: 'Als tegenprestatie voor uw toegang tot de Service en de eigendomsrechtelijk beschermde informatie die via die toegang wordt onthuld, stemt u ermee in dat u, zonder onze voorafgaande uitdrukkelijke schriftelijke toestemming, niet zult:' },
+        { ul: [
+          'Enig product of enige dienst ontwikkelen, ontwerpen, bouwen, eraan bijdragen, vermarkten, financieren of erin investeren die substantieel gelijkwaardig is aan, rechtstreeks concurreert met, of wezenlijk is geïnspireerd door Delivery Clarity;',
+          'De gebruikersinterface, functieset, analysekader, scoretaxonomie, productworkflow, coachingmethodologie, visueel ontwerp of algehele gebruikerservaring van de Service reproduceren, klonen, imiteren of er een substantieel gelijkwaardige versie van maken;',
+          'Screenshots, schermopnames, sessiedocumentatie, functielijsten of andere vastleggingen van de Service — of deze nu van uzelf zijn of van een andere gebruiker zijn verkregen — gebruiken om de ontwikkeling van een concurrerend of imiterend product te vergemakkelijken;',
+          'Enige ontwikkelaar, ontwerper, investeerder, productmanager, werkgever of derde beschrijven, informeren, briefen of instrueren over de specifieke werking, functies, algoritmen of methodologie van de Service met het oog op replicatie of concurrentie;',
+          'Enige persoon of entiteit inschakelen, in dienst nemen, contracteren, adviseren of anderszins aansturen om een product te ontwikkelen dat is gebaseerd op, wezenlijk geïnspireerd is door, of bedoeld is om de Service te vervangen.',
+        ]},
+        { p: 'U erkent dat:' },
+        { ul: [
+          'Uw gebruik van de Service noodzakelijkerwijs vertrouwelijke en eigendomsrechtelijk beschermde informatie onthult die aanzienlijke commerciële waarde heeft;',
+          'Deze beperking een redelijke en proportionele contractuele toegangsvoorwaarde vormt, en geen onredelijke handelsbeperking;',
+          'Schending van dit artikel misbruik van bedrijfsgeheimen, schending van vertrouwen en schending van deze overeenkomst vormt, en u blootstelt aan alle beschikbare rechtsmiddelen.',
+        ]},
+        { b: 'Het feit dat iemand toegang heeft gekregen tot de Service voordat hij een substantieel gelijkwaardig product ontwikkelde, vormt op zichzelf bewijs van mogelijk misbruik en kan als zodanig worden toegelaten in elke gerechtelijke procedure.' },
+      ]},
+      { title: '12. Anti-omzeiling en technische beschermingsmaatregelen', blocks: [
+        { p: 'De Service wordt beschermd door technische beschermingsmaatregelen ("TBM\'s"), onder meer op grond van:' },
+        { ul: [
+          'Hoofdstuk III van de Copyright, Designs and Patents Act 1988 (VK) en de Copyright and Related Rights Regulations 2003;',
+          'EU-Richtlijn 2001/29/EG inzake auteursrecht (artikelen 6 en 7) en de nationale implementaties daarvan in alle EU-lidstaten;',
+          'De Amerikaanse Digital Millennium Copyright Act (DMCA) van 1998, voor toegang vanaf Amerikaans grondgebied;',
+          'Gelijkwaardige nationale anti-omzeilingswetgeving in alle rechtsgebieden waarin toegang tot de Service wordt verkregen.',
+        ]},
+        { p: 'Het is u niet toegestaan om:' },
+        { ul: [
+          'Enig authenticatiemechanisme, encryptie, toegangscontrole, snelheidsbeperkingssysteem of andere TBM die de Service beschermt, te omzeilen, te ontwijken, uit te schakelen, te kraken, te decoderen of te verwijderen;',
+          'De broncode, algoritmen, scorelogica of databaseschema van de Service door middel van reverse-engineering, decompilatie, disassemblage of anderszins te reconstrueren, met inbegrip van statische of dynamische analyse;',
+          'Netwerkverkeer tussen uw client en de Service te onderscheppen, te monitoren, vast te leggen of te herhalen voor enig ander doel dan uw eigen legitieme debugging;',
+          'Te proberen toegang te krijgen tot serverprocessen, bestandsopslag, interne API\'s, databaseverbindingen of infrastructuurcomponenten via middelen die niet uitdrukkelijk door de interface van de Service worden geboden;',
+          'Geautomatiseerde tools, bots, scripts, crawlers of gegevensextractieprogramma\'s te gebruiken om functies, inhoud of functionaliteit te catalogiseren, in kaart te brengen of te reproduceren;',
+          'Gebruikspatronen of API-aanroepreeksen te analyseren om eigendomsrechtelijk beschermd algoritmisch gedrag af te leiden.',
+        ]},
+        { b: 'Omzeiling van TBM\'s kan een strafbaar feit vormen onder toepasselijk recht, naast civielrechtelijke aansprakelijkheid onder deze Voorwaarden.' },
+      ]},
+      { title: '13. Internationaal kader voor intellectueel eigendom', blocks: [
+        { p: 'Het intellectueel eigendom dat in de Service is belichaamd, wordt erkend en beschermd onder de volgende internationale kaders en verdragen, afdwingbaar in elk rechtsgebied waarin toegang tot de Service wordt verkregen of waarin een inbreuk wordt gepleegd:' },
+        { ul: [
+          'De Berner Conventie voor de bescherming van werken van letterkunde en kunst (179 verdragsstaten): automatische auteursrechtelijke bescherming bestaat in alle lidstaten zonder registratie of formaliteiten. De broncode, documentatie, visueel ontwerp en inhoud van de Service zijn allemaal beschermde werken van letterkunde en kunst vanaf het moment van creatie;',
+          'De Overeenkomst inzake de handelsaspecten van de intellectuele eigendom (TRIPS-overeenkomst, WTO): afdwingbare minimumnormen voor intellectueel eigendom gelden in alle 164 WTO-lidstaten, met inbegrip van auteursrecht, merken, bedrijfsgeheimen en modelrechten;',
+          'Het WIPO-Auteursrechtverdrag (WCT) en het WIPO-Verdrag inzake uitvoeringen en fonogrammen (WPPT): uitgebreide digitale auteursrechtelijke bescherming in alle verdragsstaten;',
+          'Het Verdrag van Parijs tot bescherming van de industriële eigendom (179 lidstaten): merken- en modelrechtelijke bescherming afdwingbaar in alle lidstaten;',
+          'Het Protocol van Madrid inzake de internationale inschrijving van merken: merkbescherming die mogelijk in meerdere rechtsgebieden wordt geregistreerd;',
+          'EU-Richtlijn 2016/943 inzake bedrijfsgeheimen: volledige civielrechtelijke rechtsmiddelen in alle EU-lidstaten;',
+          'De EU-Databankenrichtlijn 96/9/EG en het Britse equivalent daarvan: het sui-generis databankrecht dat de aanzienlijke investering in het samenstellen en presenteren van de analytische datasets van de Service beschermt;',
+          'Toepasselijke nationale wetgeving inzake auteursrecht, merken, modelrechten, oneerlijke concurrentie, misbruik en bedrijfsgeheimen in elk rechtsgebied van waaruit toegang tot de Service wordt verkregen.',
+        ]},
+        { b: 'Deze bescherming geldt wereldwijd, ongeacht uw locatie, en ongeacht of een specifiek recht in uw land is geregistreerd. Schending van deze Voorwaarden vormt een schending van het toepasselijke recht in uw rechtsgebied en kan u blootstellen aan civielrechtelijke en strafrechtelijke aansprakelijkheid, ongeacht waar u zich bevindt.' },
+      ]},
+      { title: '14. Voorlopige voorzieningen en billijkheidsrechtsmiddelen', blocks: [
+        { p: 'U erkent en stemt uitdrukkelijk in met het volgende:' },
+        { ul: [
+          'Elke daadwerkelijke of dreigende schending van Artikel 9, 10, 11 of 12 van deze Voorwaarden zal onmiddellijke, aanzienlijke en onherstelbare schade toebrengen aan Ali Abu Ras, waarvoor schadevergoeding alleen een ontoereikend rechtsmiddel zou zijn;',
+          'Ali Abu Ras heeft het recht om, zonder beperking, spoedeisende, voorlopige, tussentijdse of permanente voorlopige voorzieningen, nakoming, winstafdracht, afgifte en vernietiging van inbreukmakend materiaal, en elk ander billijkheidsrechtsmiddel te vorderen bij elke bevoegde rechtbank — zonder de noodzaak om daadwerkelijke schade te bewijzen en zonder de vereiste om een borgsom, zekerheid of andere garantie te stellen als voorwaarde voor het verkrijgen van dat rechtsmiddel;',
+          'U stemt onherroepelijk in met de bevoegdheid van de rechtbanken van Engeland en Wales, de rechtbanken van uw land van verblijf of vestiging, en elke rechtbank in elk rechtsgebied waarin een inbreuk plaatsvindt of dreigt plaats te vinden, uitsluitend met het oog op het verlenen, afdwingen of erkennen van dergelijke voorlopige voorzieningen of billijkheidsrechtsmiddelen;',
+          'Het bestaan van enige geschillenbeslechtingsprocedure, arbitragebeding of onderhandelingsverplichting in deze Voorwaarden belet of vertraagt Ali Abu Ras niet in het zoeken en verkrijgen van onmiddellijke billijkheidsrechtsmiddelen bij enige bevoegde rechtbank;',
+          'Elke voorlopige voorziening of ander billijkheidsrechtsmiddel dat aan Ali Abu Ras wordt toegekend, vormt niet het exclusieve rechtsmiddel, en Ali Abu Ras kan tegelijkertijd alle andere beschikbare rechtsmiddelen nastreven, met inbegrip van schadevergoeding, winstafdracht en elk toepasselijk wettelijk of strafrechtelijk rechtsmiddel.',
+        ]},
+      ]},
+      { title: '15. Beschikbaarheid, wijzigingen en beëindiging', blocks: [{ ul: [
         'Geen uptime-garantie. De Service wordt verleend "zoals beschikbaar". Wij garanderen geen ononderbroken of foutloze beschikbaarheid.',
         'Wij behouden het recht de Service te allen tijde te wijzigen, op te schorten of te staken.',
         'Wij behouden het recht uw account zonder kennisgeving op te schorten of te beëindigen bij schending van deze Voorwaarden.',
         'Bij beëindiging om welke reden dan ook eindigt uw licentie onmiddellijk.',
-        'Artikelen 6, 7, 9, 11, 12, 13, 14 en 15 blijven van kracht na beëindiging.',
+        'Artikelen 6, 7, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19 en 20 blijven van kracht na beëindiging.',
       ]}]},
-      { title: '11. Vrijwaring van garanties', blocks: [
+      { title: '16. Vrijwaring van garanties', blocks: [
         { b: 'Voor zover maximaal toegestaan door toepasselijk recht, wordt de Service verstrekt "zoals hij is" en "zoals beschikbaar" zonder garanties van welke aard dan ook.' },
         { p: 'Wij wijzen uitdrukkelijk alle garanties af, waaronder zonder beperking:' },
         { ul: [
@@ -118,7 +201,7 @@ export const nl: LegalTranslation = {
         ]},
         { b: 'U gebruikt de Service en haar resultaten volledig op eigen risico. Geen enkel resultaat van de Service mag worden gebruikt als enige basis voor zakelijke, personele, financiële of operationele beslissingen.' },
       ]},
-      { title: '12. Beperking van aansprakelijkheid', blocks: [
+      { title: '17. Beperking van aansprakelijkheid', blocks: [
         { b: 'Voor zover maximaal toegestaan door toepasselijk recht, zijn wij niet aansprakelijk voor:' },
         { ul: [
           'Indirecte, incidentele, bijzondere, gevolgschade of punitieve schade;',
@@ -133,7 +216,7 @@ export const nl: LegalTranslation = {
         { b: 'In alle gevallen is onze totale aansprakelijkheid niet groter dan: (a) de totale vergoedingen die u ons in de twaalf maanden voorafgaand aan de claim heeft betaald, of (b) vijftig Britse pond sterling (£50 GBP).' },
         { p: 'Niets in deze Voorwaarden sluit onze aansprakelijkheid uit voor overlijden of lichamelijk letsel als gevolg van onze nalatigheid, fraude, frauduleuze onjuiste voorstelling of andere aansprakelijkheid die niet bij wet kan worden uitgesloten.' },
       ]},
-      { title: '13. Vrijwaring', blocks: [
+      { title: '18. Vrijwaring', blocks: [
         { p: 'U stemt ermee in Ali Abu Ras en zijn functionarissen, agenten, partners, medewerkers en rechtsopvolgers te verdedigen, schadeloos te stellen en te vrijwaren van alle claims, schade, verliezen, kosten en onkosten (inclusief redelijke advocatenkosten) die voortvloeien uit of verband houden met:' },
         { ul: [
           'Uw gebruik van of toegang tot de Service;',
@@ -143,17 +226,17 @@ export const nl: LegalTranslation = {
           'Claims van uw organisatie of toezichthouder als gevolg van uw gebruik van Jira-gegevens waarvoor u niet bevoegd was.',
         ]},
       ]},
-      { title: '14. Diensten en links van derden', blocks: [
+      { title: '19. Diensten en links van derden', blocks: [
         { p: 'De Service maakt gebruik van infrastructuurproviders van derden, waaronder Render (hosting), Neon (database) en Resend/SMTP (e-mail). Wij zijn niet verantwoordelijk voor hun beschikbaarheid, beveiliging of voorwaarden buiten onze contractuele verplichtingen.' },
         { p: 'De Service kan links naar websites of diensten van derden bevatten. Wij aanvaarden geen verantwoordelijkheid voor hun inhoud of privacypraktijken. Toegang tot links van derden is geheel op eigen risico.' },
       ]},
-      { title: '15. Geschillenbeslechting en toepasselijk recht', blocks: [
+      { title: '20. Geschillenbeslechting en toepasselijk recht', blocks: [
         { p: 'Deze Voorwaarden en eventuele geschillen of claims worden beheerst door en uitgelegd conform het recht van Engeland en Wales.' },
         { p: 'Alvorens formele procedures te starten, komen partijen overeen gedurende 30 dagen na schriftelijke kennisgeving van een geschil te goeder trouw te onderhandelen.' },
         { p: 'Partijen onderwerpen zich onherroepelijk aan de exclusieve bevoegdheid van de rechtbanken van Engeland en Wales.' },
         { note: 'EU-consumenten kunnen ook gebruikmaken van het EU-platform voor onlinegeschillenbeslechting op ec.europa.eu/consumers/odr.' },
       ]},
-      { title: '16. Algemene bepalingen', blocks: [
+      { title: '21. Algemene bepalingen', blocks: [
         { b: 'Volledige overeenkomst.' },
         { p: 'Deze Voorwaarden en het Privacybeleid vormen de volledige overeenkomst tussen u en ons betreffende de Service en vervangen alle eerdere overeenkomsten en verklaringen.' },
         { b: 'Scheidbaarheid.' },
