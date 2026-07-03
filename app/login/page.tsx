@@ -7,6 +7,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { hasMetricsFromAnySource } from '@/lib/storage';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
+import loginStyles from './page.module.scss';
 
 interface LoginErrorState {
   message:  string;
@@ -87,8 +89,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-sm">
+    <div className={loginStyles.wrapper}>
+      <AnimatedDataBackground className={loginStyles.bg} />
+      <div className={loginStyles.vignette} aria-hidden="true" />
+      <div className={loginStyles.content}>
         {/* Brand */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-3">

@@ -1,0 +1,32 @@
+// PDF download button for legal pages
+
+.btn {
+  display:       flex;
+  align-items:   center;
+  gap:           6px;
+  padding:       6px 14px;
+  border-radius: 8px;
+  border:        1px solid rgba(232, 93, 18, 0.35);
+  background:    rgba(232, 93, 18, 0.10);
+  color:         var(--dc-acc2, #FF8A4C);
+  font-size:     12px;
+  font-weight:   700;
+  cursor:        pointer;
+  font-family:   inherit;
+  white-space:   nowrap;
+  transition:    background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background:   rgba(232, 93, 18, 0.20);
+    border-color: var(--dc-accent, #e85d12);
+  }
+
+  &:focus-visible {
+    outline:        2px solid var(--dc-accent, #e85d12);
+    outline-offset: 2px;
+  }
+
+  @media print { display: none; }
+}
+
+.icon { font-size: 13px; }

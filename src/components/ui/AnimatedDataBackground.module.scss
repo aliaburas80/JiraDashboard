@@ -1,0 +1,14 @@
+// AnimatedDataBackground — fullscreen Canvas data-flow animation
+
+.root {
+  position: absolute;
+  inset:    0;
+  overflow: hidden;
+  z-index:  0;
+}
+
+.canvas {
+  display:     block;
+  inline-size: 100%;
+  block-size:  100%;
+}

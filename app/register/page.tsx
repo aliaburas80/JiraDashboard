@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import styles from './page.module.scss';
 import { PERSONAS } from '@/lib/personas';
+import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
 
 export default function RegisterPage() {
   const [name,     setName]     = useState('');
@@ -43,6 +44,8 @@ export default function RegisterPage() {
 
   return (
     <div className={styles.page}>
+      <AnimatedDataBackground className={styles.bg} />
+      <div className={styles.vignette} aria-hidden="true" />
       <div className={styles.card}>
         {/* Logo */}
         <div className={styles.logo}>

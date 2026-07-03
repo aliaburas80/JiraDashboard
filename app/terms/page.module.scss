@@ -1,14 +1,30 @@
-// Privacy and Terms pages share this stylesheet
+// Terms page — animated data-flow background, glass content panel
 
 .page {
-  min-block-size:  100vh;
-  background:      var(--color-page, var(--dc-bg, #0d0d0d));
-  padding:         48px var(--space-4, 16px) 80px;
+  position:       relative;
+  min-block-size: 100vh;
+  background:     #050508;
+  overflow:       hidden;
+}
+
+.bg { /* inherits absolute inset:0 from AnimatedDataBackground */ }
+
+// Dim overlay so long-form text stays readable against the animation
+.bgDim::after {
+  content:        '';
+  position:       absolute;
+  inset:          0;
+  background:     rgba(5, 5, 8, 0.55);
+  z-index:        0;
+  pointer-events: none;
 }
 
 .inner {
+  position:        relative;
+  z-index:         1;
   max-inline-size: 720px;
   margin-inline:   auto;
+  padding:         48px 24px 80px;
 }
 
 .back {
@@ -96,4 +112,56 @@
 
   strong { color: var(--dc-p1, #f0f0f0); }
   a      { color: var(--dc-accent, #e85d12); }
+}
+
+// ── Page actions bar (language switcher + PDF button) ─────────────────────────
+.pageActions {
+  display:          flex;
+  align-items:      center;
+  justify-content:  space-between;
+  flex-wrap:        wrap;
+  gap:              12px;
+  margin-block-end: 24px;
+}
+
+.actionButtons {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+}
+
+// ── Translation warning banner ─────────────────────────────────────────────────
+.translationBanner {
+  background:       rgba(232, 93, 18, 0.08);
+  border:           1px solid rgba(232, 93, 18, 0.25);
+  border-radius:    8px;
+  padding:          10px 14px;
+  font-size:        12px;
+  color:            var(--dc-acc2, #FF8A4C);
+  margin-block-end: 20px;
+  line-height:      1.5;
+}
+
+// ── Print / PDF ────────────────────────────────────────────────────────────────
+@media print {
+  .page       { background: white; }
+  .bg,
+  .bgDim,
+  .pageActions,
+  .translationBanner { display: none !important; }
+
+  .inner {
+    padding:    0;
+    max-inline-size: 100%;
+    background: white;
+  }
+
+  .title       { color: black; font-size: 22pt; }
+  .sectionTitle { color: black; font-size: 13pt; }
+  .badge       { background: #eee; color: black; border-radius: 4px; font-size: 9pt; }
+  .meta        { color: #444; font-size: 10pt; }
+  .divider     { background: #ccc; }
+  .back        { display: none; }
+  .contactBox  { border: 1px solid #ccc; background: #f9f9f9; color: #222; }
+  .body        { color: #222; font-size: 10.5pt; }
 }

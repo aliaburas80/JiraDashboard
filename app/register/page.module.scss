@@ -1,22 +1,45 @@
-// Registration page — matches the login page aesthetic
+// Registration page — dark canvas animated background
 
 .page {
+  position:        relative;
   min-block-size:  100vh;
   display:         flex;
   align-items:     center;
   justify-content: center;
-  background:      var(--color-page, var(--dc-bg, #0d0d0d));
+  background:      #050508;
   padding:         var(--space-6, 24px) var(--space-4, 16px);
+  overflow:        hidden;
+}
+
+.bg { /* inherits absolute inset:0 */ }
+
+.vignette {
+  position:   absolute;
+  inset:      0;
+  z-index:    0;
+  background: radial-gradient(
+    ellipse 80% 70% at 50% 50%,
+    transparent 40%,
+    rgba(5, 5, 8, 0.6) 100%
+  );
+  pointer-events: none;
 }
 
 .card {
-  inline-size:   100%;
+  position:        relative;
+  z-index:         1;
+  inline-size:     100%;
   max-inline-size: 440px;
-  background:    var(--color-surface, #111);
-  border:        1px solid var(--color-border, rgba(255,255,255,0.08));
-  border-radius: 20px;
-  padding:       clamp(24px, 5vw, 40px);
-  box-shadow:    0 24px 60px rgba(0,0,0,0.5);
+  background:      rgba(10, 10, 14, 0.78);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border:          1px solid rgba(255, 255, 255, 0.10);
+  border-radius:   20px;
+  padding:         clamp(28px, 5vw, 44px);
+  box-shadow:
+    0 0 0 1px rgba(232, 93, 18, 0.06),
+    0 32px 80px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .logo {
