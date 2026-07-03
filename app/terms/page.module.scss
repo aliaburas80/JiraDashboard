@@ -1,4 +1,6 @@
-// Terms page — animated data-flow background, glass content panel
+// Terms page — always dark, never inherits dashboard theme variables.
+
+// ── Background + layout ───────────────────────────────────────────────────────
 
 .page {
   position:       relative;
@@ -7,121 +9,44 @@
   overflow:       hidden;
 }
 
-.bg { /* inherits absolute inset:0 from AnimatedDataBackground */ }
+.bg { /* AnimatedDataBackground — absolute inset:0 */ }
 
-// Dim overlay so long-form text stays readable against the animation
 .bgDim::after {
   content:        '';
   position:       absolute;
   inset:          0;
-  background:     rgba(5, 5, 8, 0.55);
+  background:     rgba(5, 5, 8, 0.60);
   z-index:        0;
   pointer-events: none;
 }
 
+// Glass reading panel — gives the content visual definition
 .inner {
   position:        relative;
   z-index:         1;
-  max-inline-size: 720px;
+  max-inline-size: 760px;
   margin-inline:   auto;
-  padding:         48px 24px 80px;
+  padding:         40px 40px 80px;
+  background:      rgba(8, 8, 13, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-inline:   1px solid rgba(255, 255, 255, 0.06);
+  min-block-size:  100vh;
+
+  @media (max-width: 600px) { padding: 24px 20px 60px; }
 }
 
-.back {
-  display:          inline-flex;
-  align-items:      center;
-  gap:              6px;
-  font-size:        13px;
-  color:            var(--dc-p3, #505050);
-  text-decoration:  none;
-  margin-block-end: 32px;
+// ── Page actions bar ──────────────────────────────────────────────────────────
 
-  &:hover { color: var(--dc-p1, #f0f0f0); }
-}
-
-.badge {
-  display:          inline-block;
-  font-size:        11px;
-  font-weight:      700;
-  color:            var(--dc-accent, #e85d12);
-  background:       rgba(232,93,18,0.12);
-  border-radius:    100px;
-  padding:          3px 10px;
-  margin-block-end: 12px;
-  letter-spacing:   0.05em;
-  text-transform:   uppercase;
-}
-
-.title {
-  font-size:        32px;
-  font-weight:      900;
-  color:            var(--dc-p1, #f0f0f0);
-  letter-spacing:   -0.02em;
-  margin:           0 0 8px;
-  line-height:      1.15;
-}
-
-.meta {
-  font-size:        13px;
-  color:            var(--dc-p3, #505050);
-  margin-block-end: 40px;
-}
-
-.section {
-  margin-block-end: 32px;
-}
-
-.sectionTitle {
-  font-size:        16px;
-  font-weight:      800;
-  color:            var(--dc-p1, #f0f0f0);
-  margin:           0 0 12px;
-}
-
-.body {
-  font-size:   14px;
-  line-height: 1.75;
-  color:       var(--dc-p2, #909090);
-
-  p   { margin: 0 0 12px; }
-  ul  { margin: 0 0 12px; padding-inline-start: 20px; }
-  li  { margin-block-end: 6px; }
-  strong { color: var(--dc-p1, #f0f0f0); font-weight: 700; }
-
-  a {
-    color:           var(--dc-accent, #e85d12);
-    text-decoration: none;
-    &:hover { text-decoration: underline; }
-  }
-}
-
-.divider {
-  block-size:       1px;
-  background:       var(--color-border, rgba(255,255,255,0.07));
-  margin:           32px 0;
-}
-
-.contactBox {
-  background:    rgba(232,93,18,0.07);
-  border:        1px solid rgba(232,93,18,0.2);
-  border-radius: 12px;
-  padding:       20px 24px;
-  font-size:     13px;
-  color:         var(--dc-p2, #909090);
-  line-height:   1.6;
-
-  strong { color: var(--dc-p1, #f0f0f0); }
-  a      { color: var(--dc-accent, #e85d12); }
-}
-
-// ── Page actions bar (language switcher + PDF button) ─────────────────────────
 .pageActions {
   display:          flex;
   align-items:      center;
   justify-content:  space-between;
   flex-wrap:        wrap;
   gap:              12px;
-  margin-block-end: 24px;
+  margin-block-end: 32px;
+  padding-block-end: 20px;
+  border-block-end: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .actionButtons {
@@ -130,38 +55,136 @@
   gap:         8px;
 }
 
-// ── Translation warning banner ─────────────────────────────────────────────────
+// ── Navigation ────────────────────────────────────────────────────────────────
+
+.back {
+  display:         inline-flex;
+  align-items:     center;
+  gap:             6px;
+  font-size:       13px;
+  color:           #545460;
+  text-decoration: none;
+
+  &:hover { color: #f0f0f0; }
+}
+
+// ── Translation warning ───────────────────────────────────────────────────────
+
 .translationBanner {
   background:       rgba(232, 93, 18, 0.08);
-  border:           1px solid rgba(232, 93, 18, 0.25);
+  border:           1px solid rgba(232, 93, 18, 0.22);
   border-radius:    8px;
   padding:          10px 14px;
   font-size:        12px;
-  color:            var(--dc-acc2, #FF8A4C);
+  color:            #ff8a4c;
   margin-block-end: 20px;
   line-height:      1.5;
 }
 
-// ── Print / PDF ────────────────────────────────────────────────────────────────
-@media print {
-  .page       { background: white; }
-  .bg,
-  .bgDim,
-  .pageActions,
-  .translationBanner { display: none !important; }
+// ── Header ────────────────────────────────────────────────────────────────────
 
-  .inner {
-    padding:    0;
-    max-inline-size: 100%;
-    background: white;
+.badge {
+  display:          inline-block;
+  font-size:        10px;
+  font-weight:      800;
+  color:            #e85d12;
+  background:       rgba(232, 93, 18, 0.12);
+  border-radius:    100px;
+  padding:          3px 10px;
+  margin-block-end: 12px;
+  letter-spacing:   0.06em;
+  text-transform:   uppercase;
+}
+
+.title {
+  font-size:        32px;
+  font-weight:      900;
+  color:            #f0f0f0;
+  letter-spacing:   -0.02em;
+  margin:           0 0 8px;
+  line-height:      1.15;
+}
+
+.meta {
+  font-size:        13px;
+  color:            #545460;
+  margin-block-end: 36px;
+  line-height:      1.6;
+
+  a {
+    color:           #e85d12;
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
   }
+}
 
-  .title       { color: black; font-size: 22pt; }
-  .sectionTitle { color: black; font-size: 13pt; }
-  .badge       { background: #eee; color: black; border-radius: 4px; font-size: 9pt; }
-  .meta        { color: #444; font-size: 10pt; }
-  .divider     { background: #ccc; }
-  .back        { display: none; }
-  .contactBox  { border: 1px solid #ccc; background: #f9f9f9; color: #222; }
-  .body        { color: #222; font-size: 10.5pt; }
+// ── Sections ──────────────────────────────────────────────────────────────────
+
+.section {
+  margin-block-end: 28px;
+}
+
+.sectionTitle {
+  font-size:        15px;
+  font-weight:      800;
+  color:            #f0f0f0;
+  margin:           0 0 12px;
+  letter-spacing:   -0.01em;
+}
+
+.body {
+  font-size:   14px;
+  line-height: 1.75;
+  color:       #a0a0a8;
+
+  p     { margin: 0 0 12px; }
+  ul    { margin: 0 0 12px; padding-inline-start: 20px; }
+  li    { margin-block-end: 6px; }
+  strong { color: #d8d8df; font-weight: 700; }
+  em    { color: #707080; font-style: normal; font-size: 12px; }
+  code  { background: rgba(255,255,255,0.06); padding: 2px 5px; border-radius: 4px; font-size: 12px; color: #a0a0a8; }
+
+  a {
+    color:           #e85d12;
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+}
+
+.divider {
+  block-size:       1px;
+  background:       rgba(255, 255, 255, 0.06);
+  margin:           0 0 28px;
+}
+
+// ── Contact box ───────────────────────────────────────────────────────────────
+
+.contactBox {
+  background:    rgba(232, 93, 18, 0.06);
+  border:        1px solid rgba(232, 93, 18, 0.18);
+  border-radius: 12px;
+  padding:       20px 24px;
+  font-size:     13px;
+  color:         #a0a0a8;
+  line-height:   1.7;
+  margin-block-start: 12px;
+
+  strong { color: #f0f0f0; }
+  a      { color: #e85d12; text-decoration: none; &:hover { text-decoration: underline; } }
+}
+
+// ── Print / PDF ───────────────────────────────────────────────────────────────
+
+@media print {
+  .page, .inner  { background: white; backdrop-filter: none; }
+  .bg, .bgDim, .pageActions, .translationBanner { display: none !important; }
+  .inner         { padding: 0; max-inline-size: 100%; border: none; }
+  .title         { color: black; font-size: 22pt; }
+  .sectionTitle  { color: black; font-size: 13pt; }
+  .badge         { background: #eee; color: black; font-size: 9pt; }
+  .meta          { color: #444; font-size: 10pt; }
+  .body          { color: #222; font-size: 10.5pt; }
+  .divider       { background: #ccc; }
+  .back          { display: none; }
+  .contactBox    { border: 1px solid #ccc; background: #f9f9f9; color: #222; }
 }

@@ -1,4 +1,16 @@
-// Registration page — dark canvas animated background
+// Registration page — always dark, never inherits dashboard theme variables.
+// All colors are explicit hex/rgba so the global light theme cannot override them.
+
+// ── Dark palette ──────────────────────────────────────────────────────────────
+// bg:        #050508   (near-black)
+// surface:   rgba(10,10,14,0.78) glass
+// border:    rgba(255,255,255,0.10)
+// input bg:  #131318
+// text-1:    #f0f0f0
+// text-2:    #a0a0a8
+// text-3:    #545460
+// accent:    #e85d12
+// accent-2:  #ff8a4c
 
 .page {
   position:        relative;
@@ -7,11 +19,11 @@
   align-items:     center;
   justify-content: center;
   background:      #050508;
-  padding:         var(--space-6, 24px) var(--space-4, 16px);
+  padding:         24px 16px;
   overflow:        hidden;
 }
 
-.bg { /* inherits absolute inset:0 */ }
+.bg { /* AnimatedDataBackground — absolute inset:0 */ }
 
 .vignette {
   position:   absolute;
@@ -20,7 +32,7 @@
   background: radial-gradient(
     ellipse 80% 70% at 50% 50%,
     transparent 40%,
-    rgba(5, 5, 8, 0.6) 100%
+    rgba(5, 5, 8, 0.60) 100%
   );
   pointer-events: none;
 }
@@ -30,43 +42,43 @@
   z-index:         1;
   inline-size:     100%;
   max-inline-size: 440px;
-  background:      rgba(10, 10, 14, 0.78);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border:          1px solid rgba(255, 255, 255, 0.10);
+  background:      rgba(10, 10, 14, 0.82);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border:          1px solid rgba(255, 255, 255, 0.09);
   border-radius:   20px;
   padding:         clamp(28px, 5vw, 44px);
   box-shadow:
     0 0 0 1px rgba(232, 93, 18, 0.06),
-    0 32px 80px rgba(0, 0, 0, 0.65),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 32px 80px rgba(0, 0, 0, 0.70),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .logo {
-  display:         flex;
-  align-items:     center;
-  gap:             10px;
+  display:          flex;
+  align-items:      center;
+  gap:              10px;
   margin-block-end: 28px;
 }
 
 .logoText {
   font-size:   16px;
   font-weight: 800;
-  color:       var(--dc-p1, #f0f0f0);
+  color:       #f0f0f0;
   line-height: 1;
 }
 
 .title {
   font-size:        22px;
   font-weight:      900;
-  color:            var(--dc-p1, #f0f0f0);
+  color:            #f0f0f0;
   margin:           0 0 6px;
   letter-spacing:   -0.02em;
 }
 
 .subtitle {
   font-size:        13px;
-  color:            var(--dc-p3, #505050);
+  color:            #545460;
   margin:           0 0 24px;
 }
 
@@ -78,9 +90,9 @@
   display:          block;
   font-size:        11px;
   font-weight:      700;
-  color:            var(--dc-p2, #909090);
+  color:            #a0a0a8;
   margin-block-end: 6px;
-  letter-spacing:   0.03em;
+  letter-spacing:   0.05em;
   text-transform:   uppercase;
 }
 
@@ -88,56 +100,72 @@
 .select {
   inline-size:   100%;
   padding:       10px 12px;
-  background:    var(--dc-s3, #1a1a1a);
-  border:        1px solid var(--dc-bdr, rgba(255,255,255,0.1));
+  background:    #131318;
+  border:        1px solid rgba(255, 255, 255, 0.10);
   border-radius: 10px;
-  color:         var(--dc-p1, #f0f0f0);
+  color:         #f0f0f0;
   font-size:     14px;
   font-family:   inherit;
   outline:       none;
+  appearance:    none;
+  -webkit-appearance: none;
   transition:    border-color 0.15s;
 
-  &::placeholder { color: var(--dc-p4, #383838); }
+  &::placeholder { color: #38383f; }
 
-  &:focus-visible {
-    border-color: var(--dc-accent, #e85d12);
-    box-shadow:   0 0 0 3px rgba(232,93,18,0.18);
+  &:focus-visible,
+  &:focus {
+    border-color: #e85d12;
+    box-shadow:   0 0 0 3px rgba(232, 93, 18, 0.18);
+    outline:      none;
+  }
+
+  // Select arrow
+  option {
+    background: #131318;
+    color:      #f0f0f0;
   }
 }
 
-.select { cursor: pointer; }
+.select {
+  cursor:               pointer;
+  background-image:     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a0a0a8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:    no-repeat;
+  background-position:  right 12px center;
+  padding-inline-end:   32px;
+}
 
 .passwordHint {
-  font-size:  10px;
-  color:      var(--dc-p3, #505050);
+  font-size:          10px;
+  color:              #545460;
   margin-block-start: 4px;
 }
 
 .error {
-  padding:       10px 14px;
-  border-radius: 10px;
-  background:    rgba(248,113,113,0.1);
-  border:        1px solid rgba(248,113,113,0.25);
-  color:         var(--dc-red, #f87171);
-  font-size:     13px;
+  padding:          10px 14px;
+  border-radius:    10px;
+  background:       rgba(248, 113, 113, 0.10);
+  border:           1px solid rgba(248, 113, 113, 0.25);
+  color:            #f87171;
+  font-size:        13px;
   margin-block-end: 16px;
 }
 
 .submit {
-  inline-size:   100%;
-  padding:       12px;
-  border-radius: 10px;
-  border:        none;
-  background:    var(--dc-accent, #e85d12);
-  color:         #fff;
-  font-size:     14px;
-  font-weight:   800;
-  cursor:        pointer;
-  font-family:   inherit;
+  inline-size:        100%;
+  padding:            12px;
+  border-radius:      10px;
+  border:             none;
+  background:         #e85d12;
+  color:              #fff;
+  font-size:          14px;
+  font-weight:        800;
+  cursor:             pointer;
+  font-family:        inherit;
   margin-block-start: 8px;
-  transition:    background 0.15s, opacity 0.15s;
+  transition:         background 0.15s, opacity 0.15s;
 
-  &:hover:not(:disabled) { background: var(--dc-acc2, #FF8A4C); }
+  &:hover:not(:disabled) { background: #ff8a4c; }
   &:disabled             { opacity: 0.5; cursor: not-allowed; }
   &:focus-visible        { outline: 2px solid #fff; outline-offset: 2px; }
 
@@ -145,8 +173,8 @@
 }
 
 .success {
-  text-align:  center;
-  padding:     8px 0;
+  text-align: center;
+  padding:    8px 0;
 }
 
 .successIcon {
@@ -157,37 +185,31 @@
 .successTitle {
   font-size:        18px;
   font-weight:      900;
-  color:            var(--dc-p1, #f0f0f0);
+  color:            #f0f0f0;
   margin-block-end: 8px;
 }
 
 .successText {
-  font-size:   13px;
-  color:       var(--dc-p3, #505050);
-  line-height: 1.6;
+  font-size:        13px;
+  color:            #545460;
+  line-height:      1.6;
   margin-block-end: 20px;
 }
 
 .loginLink {
-  display:         block;
-  text-align:      center;
+  display:            block;
+  text-align:         center;
   margin-block-start: 20px;
-  font-size:       13px;
-  color:           var(--dc-p3, #505050);
+  font-size:          13px;
+  color:              #545460;
 
   a {
-    color:          var(--dc-accent, #e85d12);
-    font-weight:    700;
+    color:           #e85d12;
+    font-weight:     700;
     text-decoration: none;
 
     &:hover { text-decoration: underline; }
   }
-}
-
-.divider {
-  block-size:       1px;
-  background:       var(--color-border, rgba(255,255,255,0.08));
-  margin:           20px 0;
 }
 
 .consentLabel {
@@ -198,19 +220,19 @@
 }
 
 .consentCheck {
-  margin-block-start: 2px;
+  margin-block-start: 3px;
   flex-shrink:        0;
+  accent-color:       #e85d12;
 }
 
 .consentText {
   font-size:   12px;
-  color:       var(--dc-p2, #909090);
+  color:       #a0a0a8;
   line-height: 1.5;
 
   a {
-    color:           var(--dc-accent, #e85d12);
+    color:           #e85d12;
     text-decoration: none;
-
     &:hover { text-decoration: underline; }
   }
 }
