@@ -21,10 +21,10 @@ export function FontSizeControl({ targetId }: { targetId: string }) {
     }
   }, []);
 
-  // Apply font size to target element
+  // Set CSS custom property on the container; .body in SCSS reads --legal-font-size
   useEffect(() => {
     const el = document.getElementById(targetId);
-    if (el) el.style.fontSize = `${size}px`;
+    if (el) el.style.setProperty('--legal-font-size', `${size}px`);
     localStorage.setItem(KEY, String(size));
   }, [size, targetId]);
 

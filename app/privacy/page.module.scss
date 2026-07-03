@@ -110,7 +110,7 @@
 }
 
 .body {
-  font-size:   14px;
+  font-size:   var(--legal-font-size, 14px);
   line-height: 1.75;
   color:       #a0a0a8;
 
