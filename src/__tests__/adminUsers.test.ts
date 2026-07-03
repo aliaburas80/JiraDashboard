@@ -36,6 +36,7 @@ jest.mock('@/lib/prisma', () => ({
         user:            { create: jest.fn(async (args: unknown) => (jest.requireMock('@/lib/prisma').prisma.user.create as jest.Mock)(args)) },
         workspace:       { create: jest.fn(async () => ({ id: 'ws-tx-1', name: 'Sam', slug: 'ws-user-1', status: 'active' })) },
         workspaceMember: { create: jest.fn(async () => ({ id: 'mem-tx-1' })) },
+        entitlement:     { create: jest.fn(async () => ({ id: 'ent-tx-1' })) },
       };
       return fn(tx);
     }),

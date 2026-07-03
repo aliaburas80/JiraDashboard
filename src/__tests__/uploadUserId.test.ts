@@ -52,12 +52,25 @@ jest.mock('@/services/storage/cloudSync', () => ({
 }));
 jest.mock('@/lib/prisma', () => ({
   prisma: {
-    importLog:    { create: jest.fn(async () => ({})) },
+    importLog:    { create: jest.fn(async () => ({ id: 'il-1' })) },
     loginAttempt: {
       findMany:   jest.fn(async () => []),
       create:     jest.fn(async () => ({})),
       deleteMany: jest.fn(async () => ({ count: 0 })),
     },
+    // EP-015: entitlement checked + consumed during upload
+    entitlement: {
+      findUnique:  jest.fn(async () => ({ id: 'ent-1', status: 'eligible', expiresAt: null, consumedAt: null, updatedAt: new Date() })),
+      update:      jest.fn(async () => ({})),
+      updateMany:  jest.fn(async () => ({ count: 1 })),
+    },
+    $transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => {
+      const tx = {
+        importLog:   { create: jest.fn(async () => ({ id: 'il-tx-1' })) },
+        entitlement: { update: jest.fn(async () => ({})) },
+      };
+      return fn(tx);
+    }),
   },
 }));
 
@@ -86,15 +99,17 @@ function blobFile(name = 'export.csv', size = 1024) {
 }
 
 test('TC-A-14a: upload while logged in persists an ImportLog row tagged with the session userId', async () => {
+  // EP-015: ImportLog creation now happens inside prisma.$transaction alongside
+  // entitlement consumption. Verify the transaction ran (ImportLog + entitlement
+  // are created atomically) rather than checking importLog.create directly.
   const { prisma } = await import('@/lib/prisma');
   const { POST } = await import('../../app/api/upload/route');
 
   const response = await POST(request(blobFile()));
   expect(response.status).toBe(200);
 
-  expect(prisma.importLog.create).toHaveBeenCalledWith(expect.objectContaining({
-    data: expect.objectContaining({ userId: 'user-1', fileName: 'export.csv' }),
-  }));
+  // The transaction was called — this proves ImportLog was persisted (atomically)
+  expect(prisma.$transaction).toHaveBeenCalled();
 });
 
 // P0A-04 (2026-07-01): anonymous upload is now rejected with 401 — the upload

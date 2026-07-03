@@ -12,6 +12,7 @@ import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { ASSIGNABLE_ROLES, isAppRole, roleLabel, type AppRole } from '@/lib/roles';
 import { createWorkspaceForUser } from '@/lib/workspace';
+import { createEntitlementForUser } from '@/lib/entitlement';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -108,7 +109,8 @@ export async function POST(req: NextRequest) {
       data: { name, email, passwordHash, role, mustChangePassword: true },
       include: { _count: { select: { importLogs: true, snapshots: true } } },
     });
-    await createWorkspaceForUser(tx, created.id, created.name);
+    const ws = await createWorkspaceForUser(tx, created.id, created.name);
+    await createEntitlementForUser(tx, created.id, ws.id);
     return { user: created };
   });
 

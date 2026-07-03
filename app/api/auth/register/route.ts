@@ -10,6 +10,7 @@ import { hashPassword, validatePasswordStrength } from '@/lib/auth';
 import { createWorkspaceForUser } from '@/lib/workspace';
 import { safeAuditEvent } from '@/lib/system-error-logger';
 import { PERSONAS, CURRENT_TERMS_VERSION, type Persona } from '@/lib/personas';
+import { createEntitlementForUser } from '@/lib/entitlement';
 
 export const dynamic = 'force-dynamic';
 
@@ -98,7 +99,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         termsVersion:       CURRENT_TERMS_VERSION,
       },
     });
-    await createWorkspaceForUser(tx, created.id, created.name);
+    const ws = await createWorkspaceForUser(tx, created.id, created.name);
+    await createEntitlementForUser(tx, created.id, ws.id);
     return { user: created };
   });
 

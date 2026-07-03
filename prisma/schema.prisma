@@ -43,6 +43,40 @@ model User {
   jiraConnections      JiraConnection[]
   ownedWorkspace       Workspace?          @relation("WorkspaceOwner")
   workspaceMemberships WorkspaceMember[]
+  entitlement          Entitlement?
+}
+
+// ── Trial Entitlement (EP-015) ─────────────────────────────────────────────────
+// One entitlement per user. Tracks the free-trial lifecycle.
+// Status flow: eligible → [processing →] consumed → expired
+//              eligible → suspended (admin action)
+//              consumed/expired → restored (admin action) → eligible
+
+model Entitlement {
+  id          String    @id @default(cuid())
+  userId      String    @unique // one entitlement per user
+  workspaceId String?   // linked to the user's workspace
+
+  // eligible | processing | consumed | expired | suspended | restored
+  status      String    @default("eligible")
+
+  consumedAt  DateTime? // when the first successful analysis completed
+  expiresAt   DateTime? // consumedAt + 30 days
+  importLogId String?   // the ImportLog that consumed the entitlement
+
+  restoredBy  String?   // admin userId who manually restored
+  restoredAt  DateTime?
+  restoredNote String?  // reason for restoration
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  importLog ImportLog? @relation(fields: [importLogId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([expiresAt])
+  @@index([userId])
 }
 
 // ── Workspace (EP-006 — one workspace per user for MVP) ───────────────────────
@@ -126,6 +160,7 @@ model ImportLog {
   jiraConnection JiraConnection?     @relation(fields: [jiraConnectionId], references: [id], onDelete: SetNull)
   workspace      Workspace?          @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   snapshots      DashboardSnapshot[]
+  entitlements   Entitlement[]
 
   @@index([userId])
   @@index([jiraConnectionId])

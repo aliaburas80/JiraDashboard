@@ -757,6 +757,86 @@ WHERE "termsAcceptedAt" IS NULL;
 
 ---
 
+## 16. Trial Entitlement State Machine (EP-015)
+
+### 16.1 New user starts as eligible
+
+After registering (or being created by admin), verify in Neon SQL:
+```sql
+SELECT e.status, e."consumedAt", e."expiresAt"
+FROM "Entitlement" e
+JOIN "User" u ON u.id = e."userId"
+WHERE u.email = 'your-email@test.com';
+```
+✅ `status = eligible` and `consumedAt` / `expiresAt` are NULL
+
+### 16.2 Successful upload consumes entitlement atomically
+
+1. Log in as a user with `status = eligible`
+2. Upload a valid Jira file
+3. ✅ Dashboard loads with analysis results
+4. Verify entitlement was consumed:
+```sql
+SELECT status, "consumedAt", "expiresAt", "importLogId"
+FROM "Entitlement" WHERE "userId" = '<your-user-id>';
+```
+✅ `status = consumed`, `consumedAt` is set, `expiresAt` = consumedAt + 30 days, `importLogId` is linked
+
+### 16.3 Validation failure does NOT consume entitlement
+
+1. Upload a file that will fail validation (e.g., wrong columns)
+2. ✅ Error shown: "Validation failed"
+3. Check entitlement in Neon:
+```sql
+SELECT status FROM "Entitlement" WHERE "userId" = '<your-user-id>';
+```
+✅ `status = eligible` — entitlement was NOT consumed
+
+### 16.4 Consumed user cannot upload again
+
+```bash
+# Log in as a user who has already consumed their entitlement
+curl -s -c /tmp/consumed.txt \
+  -X POST https://delivery-clarity.onrender.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"consumed@test.com","password":"Password1!"}' | python3 -m json.tool
+
+# Try to upload
+curl -s -b /tmp/consumed.txt \
+  -X POST https://delivery-clarity.onrender.com/api/upload \
+  -F "file=@any-jira.csv" | python3 -m json.tool
+```
+✅ Returns 403: `"Your workspace is in read-only mode for X more days."`
+
+### 16.5 Expired user is blocked
+
+After 30 days from consumption, or manually update the DB to simulate:
+```sql
+UPDATE "Entitlement"
+SET "expiresAt" = NOW() - INTERVAL '1 minute', status = 'consumed'
+WHERE "userId" = '<test-user-id>';
+```
+Then attempt upload:
+✅ Returns 403: "Your 30-day free trial has expired."
+✅ The entitlement row is lazily updated to `status = expired` on the next request
+
+### 16.6 Admin always bypasses entitlement
+
+1. Log in as admin
+2. Upload a file
+3. ✅ Upload succeeds regardless of any entitlement state
+4. The Entitlement table is not checked or updated for admin users
+
+### 16.7 GET /api/entitlement returns current state
+
+```bash
+curl -s -b /tmp/user.txt https://delivery-clarity.onrender.com/api/entitlement | python3 -m json.tool
+```
+✅ Returns `{"status":"eligible","daysLeft":null,"consumedAt":null,"expiresAt":null}`
+After consumption: `{"status":"consumed","daysLeft":28,"consumedAt":"...","expiresAt":"..."}`
+
+---
+
 ## How to add new tests
 
 When a new feature is built, add a new numbered section here following the same format:
