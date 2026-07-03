@@ -95,19 +95,73 @@ export const fr: LegalTranslation = {
           'Nous nous réservons le droit d\'introduire des formules payantes à l\'avenir.',
         ]},
       ]},
-      { title: '9. Propriété intellectuelle', blocks: [
-        { p: 'Le Service, y compris ses algorithmes, méthodes de calcul, modèles de notation, interface utilisateur, design, image de marque, secrets commerciaux, schéma de base de données, code source, documentation et tous les éléments dérivés, est la propriété intellectuelle exclusive d\'Ali Abu Ras et est protégé par le droit d\'auteur, le droit des secrets d\'affaires et les autres lois applicables au Royaume-Uni et à l\'international.' },
-        { p: 'Aucune disposition des présentes Conditions ne vous accorde de droits sur la propriété intellectuelle du Service au-delà de la licence limitée prévue à l\'article 4.' },
-        { p: 'Le nom, le logo et l\'image de marque de Delivery Clarity sont des marques propriétaires d\'Ali Abu Ras. Vous ne pouvez pas les utiliser sans autorisation écrite préalable.' },
+      { title: '9. Propriété intellectuelle — tous droits réservés', blocks: [
+        { b: '© 2026 Ali Abu Ras. Tous droits réservés.' },
+        { p: 'Le Service — y compris son code source, ses algorithmes, méthodes de calcul, modèles de notation, taxonomie des indicateurs, méthodologie d\'accompagnement, architecture des fonctionnalités, interface utilisateur, design visuel, image de marque, schéma de base de données, pipeline de données, documentation, matériels marketing et tous les éléments dérivés — est la propriété intellectuelle exclusive d\'Ali Abu Ras, protégée par le droit d\'auteur, le droit des dessins et modèles, le droit des bases de données, le droit des marques, le droit des secrets d\'affaires, la concurrence déloyale et toutes les autres lois applicables en matière de propriété intellectuelle.' },
+        { p: 'Les résultats produits par le Service constituent des œuvres dérivées appartenant à Ali Abu Ras. Leur utilisation est soumise à la licence prévue à l\'article 4. Vous ne pouvez pas les republier, les vendre ou les distribuer comme base d\'un produit analytique concurrent.' },
+        { p: 'Les présentes Conditions ne vous accordent aucun droit, titre ou intérêt sur la propriété intellectuelle d\'Ali Abu Ras au-delà de la licence strictement limitée prévue à l\'article 4. Aucune licence implicite ne découle de l\'utilisation du Service.' },
+        { p: 'Le nom Delivery Clarity, son logo et son identité visuelle sont des marques propriétaires d\'Ali Abu Ras. Vous ne pouvez pas les utiliser sans autorisation écrite préalable.' },
+        { p: 'La base de données des définitions d\'indicateurs, configurations de seuils, modèles de processus et bibliothèques d\'accompagnement est protégée en tant que base de données en vertu de la directive 96/9/CE et de son équivalent britannique.' },
+        { b: 'Toute personne ou entité qui développe un produit substantiellement similaire à Delivery Clarity après avoir utilisé le Service peut être présumée avoir détourné des secrets d\'affaires propriétaires. Ces parties peuvent être tenues de rendre compte de tous les bénéfices et seront exposées à toutes les voies de recours civiles et pénales disponibles.' },
       ]},
-      { title: '10. Disponibilité, modifications et résiliation', blocks: [{ ul: [
+      { title: '10. Secrets d\'affaires et informations confidentielles', blocks: [
+        { p: 'Les éléments suivants constituent des secrets d\'affaires propriétaires d\'Ali Abu Ras, protégés par la loi anglaise sur les secrets d\'affaires, la directive UE 2016/943 sur les secrets d\'affaires et les lois équivalentes applicables :' },
+        { ul: [
+          'Les algorithmes et formules mathématiques de calcul des indicateurs de santé de sprint, prédictibilité de livraison, efficacité des flux, préparation des versions et tous les autres scores analytiques ;',
+          'Les systèmes de pondération, définitions de seuils, méthodes de normalisation et arbres de décision produisant les recommandations et éclairages ;',
+          'Le pipeline de traitement des données, la logique de validation, la conception du schéma et l\'architecture d\'importation ;',
+          'La taxonomie des indicateurs, le cadre analytique et la méthodologie complète du produit ;',
+          'L\'architecture des fonctionnalités, les décisions techniques et l\'approche d\'implémentation.',
+        ]},
+        { p: 'En accédant au Service, vous acceptez de : garder toutes les informations confidentielles strictement secrètes ; ne pas les divulguer à des tiers sans notre accord écrit préalable ; ne pas les utiliser à d\'autres fins que l\'utilisation du Service ; nous notifier immédiatement de toute divulgation non autorisée.' },
+        { b: 'Cette obligation de confidentialité survit à la résiliation de votre compte pendant sept (7) ans ou pendant la durée maximale autorisée par la loi applicable.' },
+      ]},
+      { title: '11. Activités concurrentielles et imitatives interdites', blocks: [
+        { p: 'En contrepartie de votre accès au Service et aux informations propriétaires divulguées par cet accès, vous acceptez de ne pas, sans notre accord écrit préalable :' },
+        { ul: [
+          'Développer, concevoir, construire, contribuer à, commercialiser, financer ou investir dans tout produit ou service substantiellement similaire à Delivery Clarity ou en concurrence directe avec lui ;',
+          'Reproduire, cloner, imiter ou créer une version substantiellement similaire de l\'interface, de l\'ensemble de fonctionnalités, du cadre analytique, de la taxonomie de notation, de la méthodologie ou de l\'expérience utilisateur du Service ;',
+          'Utiliser des captures d\'écran, enregistrements ou documentations de fonctionnalités pour faciliter le développement d\'un produit concurrent ou imitatif ;',
+          'Décrire, présenter ou instruire tout développeur, investisseur ou tiers sur les fonctionnalités ou algorithmes spécifiques du Service à des fins de reproduction ;',
+          'Engager, employer ou mandater toute personne pour développer un produit basé sur le Service ou s\'en inspirant substantiellement.',
+        ]},
+        { b: 'Le fait qu\'une personne ait accédé au Service avant de développer un produit substantiellement similaire constitue en soi une preuve de détournement potentiel et peut être admis dans toute procédure juridique.' },
+      ]},
+      { title: '12. Anti-contournement et mesures de protection technique', blocks: [
+        { p: 'Le Service est protégé par des mesures de protection technique (MPT) en vertu du droit d\'auteur britannique de 1988, de la directive UE 2001/29/CE, du DMCA américain de 1998 pour les accès depuis le territoire américain, et des lois équivalentes dans toutes les juridictions concernées.' },
+        { p: 'Vous ne devez pas : contourner, désactiver ou pirater tout mécanisme d\'authentification ou chiffrement ; procéder à la rétroingénierie ou à la décompilation ; intercepter le trafic réseau à des fins non légitimes ; accéder aux processus serveur ou API internes par des moyens non autorisés ; utiliser des outils automatisés pour cataloguer les fonctionnalités ; analyser les appels API pour inférer le comportement algorithmique.' },
+        { b: 'Le contournement des MPT peut constituer une infraction pénale et engage également la responsabilité civile.' },
+      ]},
+      { title: '13. Cadre international de la propriété intellectuelle', blocks: [
+        { p: 'La propriété intellectuelle du Service est protégée par les conventions et cadres internationaux suivants, applicables dans toute juridiction :' },
+        { ul: [
+          'Convention de Berne (179 États) : protection automatique du droit d\'auteur sans formalité dans tous les États membres ;',
+          'Accord ADPIC (OMC, 164 membres) : normes minimales exécutoires de propriété intellectuelle ;',
+          'Traités OMPI (WCT et WPPT) : protection étendue du droit d\'auteur numérique ;',
+          'Convention de Paris (179 membres) : protection des marques et dessins et modèles ;',
+          'Directive UE 2016/943 sur les secrets d\'affaires : recours civils complets dans tous les États membres de l\'UE ;',
+          'Directive UE sur les bases de données 96/9/CE et son équivalent britannique : droit sui generis sur les bases de données ;',
+          'Lois nationales applicables sur le droit d\'auteur, les marques, la concurrence déloyale et les secrets d\'affaires dans toutes les juridictions concernées.',
+        ]},
+        { b: 'Ces protections s\'appliquent mondialement. La violation des présentes Conditions constitue une violation de la loi applicable dans votre juridiction et peut vous exposer à des responsabilités civiles et pénales.' },
+      ]},
+      { title: '14. Injonctions et voies de recours en équité', blocks: [
+        { p: 'Vous reconnaissez et acceptez expressément que :' },
+        { ul: [
+          'Toute violation réelle ou menacée des articles 9, 10, 11 ou 12 causerait un préjudice immédiat et irréparable à Ali Abu Ras, pour lequel les dommages-intérêts seuls seraient insuffisants ;',
+          'Ali Abu Ras est en droit de demander des mesures injonctives d\'urgence, préliminaires ou permanentes, ainsi que toute autre voie de recours en équité, sans avoir à prouver le préjudice effectif et sans devoir fournir de caution ;',
+          'Vous consentez irrévocablement à la compétence des tribunaux anglais et gallois, des tribunaux de votre pays de résidence et de tout tribunal dans la juridiction où une violation se produit, aux fins de l\'octroi ou de l\'exécution de ces mesures ;',
+          'Aucun processus de règlement des litiges ne peut empêcher Ali Abu Ras de demander des mesures immédiates en équité.',
+        ]},
+      ]},
+      { title: '15. Disponibilité, modifications et résiliation', blocks: [{ ul: [
         'Sans garantie de disponibilité. Le Service est fourni « tel quel disponible ». Nous ne garantissons pas une disponibilité ininterrompue ou sans erreur.',
         'Nous nous réservons le droit de modifier, suspendre ou interrompre tout ou partie du Service à tout moment.',
         'Nous nous réservons le droit de suspendre ou de résilier votre compte sans préavis en cas de violation des présentes Conditions.',
         'En cas de résiliation quelle qu\'en soit la cause, votre licence prend immédiatement fin.',
-        'Les articles 6, 7, 9, 11, 12, 13, 14 et 15 survivent à la résiliation.',
+        'Les articles 6, 7, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19 et 20 survivent à la résiliation.',
       ]}]},
-      { title: '11. Exclusion de garanties', blocks: [
+      { title: '16. Exclusion de garanties', blocks: [
         { b: 'Dans la mesure maximale permise par la loi applicable, le Service est fourni « en l\'état » et « selon disponibilité », sans garantie d\'aucune sorte, qu\'elle soit expresse, implicite, légale ou autre.' },
         { p: 'Nous excluons expressément toutes garanties, notamment :' },
         { ul: [

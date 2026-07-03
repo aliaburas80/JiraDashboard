@@ -124,27 +124,125 @@ export const en: LegalTranslation = {
         ],
       },
       {
-        title: '9. Intellectual property',
+        title: '9. Intellectual property — all rights reserved',
         blocks: [
-          { p: 'The Service, including its algorithms, calculation methods, scoring models, user interface, design, branding, trade secrets, database schema, source code, documentation, and all derived materials, is the exclusive intellectual property of Ali Abu Ras and is protected by copyright, trade secret, and other applicable intellectual property laws of the United Kingdom and internationally.' },
-          { p: 'No part of these Terms, nor any access to or use of the Service, grants you any rights in the Service\'s intellectual property beyond the limited licence in Section 4. All rights not expressly granted are reserved.' },
-          { p: 'The Delivery Clarity name, logo, and branding are proprietary marks of Ali Abu Ras. You may not use them without prior written permission.' },
+          { b: '© 2026 Ali Abu Ras. All rights reserved.' },
+          { p: 'The Service — including its source code, algorithms, calculation methods, scoring models, metric taxonomy, coaching methodology, feature architecture, user interface, visual design, trade dress, database schema, data pipeline, documentation, marketing materials, and all derived materials — is the exclusive intellectual property of Ali Abu Ras, protected by copyright, design right, database right, trade mark, trade secret, unfair competition, and all other applicable intellectual property laws.' },
+          { p: 'The output produced by the Service — including reports, visualisations, metric scores, delivery recommendations, and coaching insights — constitutes derivative works of the Service and is owned by Ali Abu Ras. Your use of those outputs is subject to the licence in Section 4. You may not republish, sell, or distribute those outputs as the basis of a competing analytical product.' },
+          { p: 'No part of these Terms, nor any access to or use of the Service, grants you any licence, right, title, or interest in any intellectual property of Ali Abu Ras beyond the strictly limited licence in Section 4. No implied licence arises from use of the Service, access to any output, or any course of conduct.' },
+          { p: 'The Delivery Clarity name, logo, product name, visual identity, and branding are proprietary marks of Ali Abu Ras. You may not use them without prior written permission.' },
+          { p: 'The database of metric definitions, threshold configurations, workflow templates, and coaching libraries is protected as a database under the Copyright and Rights in Databases Regulations 1997 (UK) and Directive 96/9/EC (EU). Extraction or re-utilisation of a substantial part of that database is prohibited.' },
+          { b: 'Any individual or entity who creates a product or service substantially similar to Delivery Clarity, having previously used or accessed the Service, may be presumed to have misappropriated proprietary trade secrets and confidential information. Such parties may be required to account for all profits and shall be exposed to all available civil and criminal remedies.' },
         ],
       },
       {
-        title: '10. Availability, modifications, and termination',
+        title: '10. Trade secrets and confidential information',
+        blocks: [
+          { p: 'The following elements of the Service constitute proprietary trade secrets of Ali Abu Ras, protected under the Trade Secrets (Enforcement, etc.) Regulations 2018 (UK), EU Trade Secrets Directive 2016/943, and equivalent legislation in all applicable jurisdictions:' },
+          { ul: [
+            'The algorithms and mathematical formulas used to calculate sprint health, delivery predictability, flow efficiency, release readiness, ownership risk, epic readiness, work-item age, throughput trends, and all other analytical scores;',
+            'The weighting systems, threshold definitions, normalisation methods, and decision trees that produce recommendations and coaching insights;',
+            'The data processing pipeline, validation logic, schema design, and import architecture;',
+            'The metric taxonomy, analytical framework, and the complete product methodology that links raw Jira data to actionable delivery intelligence;',
+            'The feature architecture, engineering decisions, technology choices, and implementation approach;',
+            'The configuration system, widget registry, navigation structure, and product composition strategy.',
+          ]},
+          { p: 'By accessing the Service you acknowledge that you may be exposed to confidential information ("Confidential Information") that has economic value precisely because it is not publicly known. You agree to:' },
+          { ul: [
+            'Keep all Confidential Information strictly confidential and protect it with at least the same degree of care you use for your own most sensitive information, but no less than reasonable care;',
+            'Not disclose, describe, document, publish, or communicate any Confidential Information to any third party without our prior written consent;',
+            'Not use Confidential Information for any purpose other than using the Service within the scope of these Terms;',
+            'Notify us immediately at aliaburas80@gmail.com if you become aware of any actual or suspected unauthorised disclosure of Confidential Information.',
+          ]},
+          { b: 'This obligation of confidentiality survives termination or expiry of your account for a period of seven (7) years, or for the maximum period permitted by applicable law, whichever is longer.' },
+        ],
+      },
+      {
+        title: '11. Prohibited competitive and imitative activity',
+        blocks: [
+          { p: 'In consideration of your access to the Service and the proprietary information disclosed through that access, you agree that you will not, without our prior express written consent:' },
+          { ul: [
+            'Develop, design, architect, build, contribute to, market, fund, or invest in any product or service that is substantially similar to, directly competitive with, or meaningfully inspired by Delivery Clarity;',
+            'Reproduce, clone, imitate, or create a substantially similar version of the Service\'s user interface, feature set, analytical framework, scoring taxonomy, product workflow, coaching methodology, visual design, or overall user experience;',
+            'Use screenshots, screen recordings, session documentation, feature lists, or any other capture of the Service — whether your own or obtained from another user — for the purpose of facilitating the development of any competing or imitative product;',
+            'Describe, pitch, brief, or instruct any developer, designer, investor, product manager, employer, or third party on the specific workings, features, algorithms, or methodology of the Service for the purpose of replication or competition;',
+            'Engage, employ, contract, advise, or otherwise direct any person or entity to develop any product based on, substantially inspired by, or designed to replace the Service.',
+          ]},
+          { p: 'You acknowledge that:' },
+          { ul: [
+            'Your use of the Service necessarily discloses confidential and proprietary information that has substantial commercial value;',
+            'This restriction constitutes a reasonable and proportionate contractual condition of access, not an unreasonable restraint of trade;',
+            'Violation of this section would constitute misappropriation of trade secrets, breach of confidence, and breach of this agreement, and would expose you to all available legal remedies.',
+          ]},
+          { b: 'The fact that a person accessed the Service prior to developing a substantially similar product is itself evidence of potential misappropriation and may be admitted in any legal proceeding.' },
+        ],
+      },
+      {
+        title: '12. Anti-circumvention and technical protection measures',
+        blocks: [
+          { p: 'The Service is protected by technological protection measures ("TPMs") under, without limitation:' },
+          { ul: [
+            'Chapter III of the Copyright, Designs and Patents Act 1988 (UK) and the Copyright and Related Rights Regulations 2003;',
+            'EU Copyright Directive 2001/29/EC (Articles 6 and 7) and national implementations in all EU member states;',
+            'Digital Millennium Copyright Act 1998 (DMCA), for access from United States territory;',
+            'Equivalent national anti-circumvention legislation in all jurisdictions in which the Service is accessed.',
+          ]},
+          { p: 'You must not:' },
+          { ul: [
+            'Circumvent, bypass, disable, crack, decode, or remove any authentication mechanism, encryption, access control, rate limiting system, or other TPM protecting the Service;',
+            'Reverse-engineer, decompile, disassemble, or otherwise reconstruct the source code, algorithms, scoring logic, or database schema of the Service by any means, including static or dynamic analysis;',
+            'Intercept, monitor, capture, or replay network traffic between your client and the Service for any purpose other than your own legitimate debugging;',
+            'Attempt to access server processes, file storage, internal APIs, database connections, or infrastructure components through any means not expressly provided by the Service interface;',
+            'Use any automated tool, bot, script, crawler, or data-extraction utility to catalogue, map, or reproduce features, content, or functionality;',
+            'Analyse usage patterns or API call sequences to infer proprietary algorithmic behaviour.',
+          ]},
+          { b: 'Circumvention of TPMs may constitute a criminal offence under applicable law, in addition to exposing you to civil liability under these Terms.' },
+        ],
+      },
+      {
+        title: '13. International intellectual property framework',
+        blocks: [
+          { p: 'The intellectual property embodied in the Service is recognised and protected under the following international frameworks and conventions, enforceable in every jurisdiction where the Service is accessed or where a violation is committed:' },
+          { ul: [
+            'Berne Convention for the Protection of Literary and Artistic Works (179 contracting states): automatic copyright protection exists in all member states without registration or formality. The source code, documentation, visual design, and content of the Service are all protected literary and artistic works from the moment of creation;',
+            'Agreement on Trade-Related Aspects of Intellectual Property Rights (TRIPS Agreement, WTO): minimum enforceable IP standards apply in all 164 WTO member states, including copyright, trade marks, trade secrets, and design rights;',
+            'WIPO Copyright Treaty (WCT) and WIPO Performances and Phonograms Treaty (WPPT): extended digital copyright protection across all contracting parties;',
+            'Paris Convention for the Protection of Industrial Property: trade mark and design right protections enforceable in all 179 member states;',
+            'Madrid Protocol for the International Registration of Marks: trade mark protections potentially registered across multiple jurisdictions;',
+            'EU Directive 2016/943 on Trade Secrets: protection of undisclosed know-how and business information with full civil remedies across all EU member states;',
+            'EU Database Directive 96/9/EC and UK equivalent: sui generis database right protecting the substantial investment in compiling and presenting the Service\'s analytical datasets;',
+            'Applicable national copyright, trade mark, design right, unfair competition, misappropriation, and trade secret laws in every jurisdiction from which the Service is accessed.',
+          ]},
+          { b: 'These protections apply globally, regardless of your location, and irrespective of whether any specific right has been registered in your country. Violation of these Terms constitutes a violation of applicable law in your jurisdiction and may expose you to civil and criminal liability wherever you are located.' },
+        ],
+      },
+      {
+        title: '14. Injunctive and equitable relief',
+        blocks: [
+          { p: 'You acknowledge and expressly agree that:' },
+          { ul: [
+            'Any actual or threatened breach of Sections 9, 10, 11, or 12 of these Terms would cause immediate, substantial, and irreparable harm to Ali Abu Ras for which monetary damages alone would be an inadequate remedy;',
+            'Ali Abu Ras is entitled to seek, without limitation, emergency, preliminary, interim, or permanent injunctive relief, specific performance, account of profits, delivery up and destruction of infringing materials, and any other equitable remedy from any court of competent jurisdiction — without the necessity of proving actual damage and without any requirement to post a bond, security deposit, or other undertaking as a precondition to obtaining such relief;',
+            'You irrevocably consent to the jurisdiction of the courts of England and Wales, the courts of your country of residence or establishment, and any court in any jurisdiction where an infringement occurs or threatens to occur, for the sole and limited purpose of granting, enforcing, or recognising such injunctive or equitable relief;',
+            'The existence of any dispute resolution process, arbitration clause, or negotiation obligation in these Terms shall not prevent or delay Ali Abu Ras from seeking and obtaining immediate equitable relief from any competent court;',
+            'Any injunction or equitable relief granted to Ali Abu Ras shall not be the exclusive remedy, and Ali Abu Ras may simultaneously pursue all other available legal remedies including damages, an account of profits, and any applicable statutory or criminal remedy.',
+          ]},
+        ],
+      },
+      {
+        title: '15. Availability, modifications, and termination',
         blocks: [
           { ul: [
             'No uptime guarantee. The Service is provided on an "as available" basis. We do not warrant uninterrupted or error-free availability and accept no liability for outages, maintenance windows, or service degradation.',
             'We reserve the right to modify, suspend, or discontinue any feature or the entire Service at any time, with or without notice.',
             'We reserve the right to suspend or terminate your account without notice if we determine, in our sole discretion, that you have violated these Terms, engaged in fraudulent or abusive conduct, or that your account poses a risk to other users or the Service.',
             'Upon termination for any reason, your licence to use the Service immediately ceases and you must stop all use.',
-            'Sections 6, 7, 9, 11, 12, 13, 14, and 15 survive termination.',
+            'Sections 6, 7, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, and 20 survive termination.',
           ]},
         ],
       },
       {
-        title: '11. Disclaimer of warranties',
+        title: '16. Disclaimer of warranties',
         blocks: [
           { b: 'To the fullest extent permitted by applicable law, the Service is provided "as is" and "as available" without warranties of any kind, whether express, implied, statutory, or otherwise.' },
           { p: 'We expressly disclaim all warranties including, without limitation:' },
@@ -160,7 +258,7 @@ export const en: LegalTranslation = {
         ],
       },
       {
-        title: '12. Limitation of liability',
+        title: '17. Limitation of liability',
         blocks: [
           { b: 'To the fullest extent permitted by applicable law, we shall not be liable to you or any third party for:' },
           { ul: [
@@ -179,7 +277,7 @@ export const en: LegalTranslation = {
         ],
       },
       {
-        title: '13. Indemnification',
+        title: '18. Indemnification',
         blocks: [
           { p: 'You agree to defend, indemnify, and hold harmless Ali Abu Ras and any officers, agents, partners, employees, and successors from and against any and all claims, damages, losses, costs, and expenses (including reasonable legal fees) arising out of or relating to:' },
           { ul: [
@@ -192,14 +290,14 @@ export const en: LegalTranslation = {
         ],
       },
       {
-        title: '14. Third-party services and links',
+        title: '19. Third-party services and links',
         blocks: [
           { p: 'The Service uses third-party infrastructure providers including Render (hosting), Neon (database), and Resend or SMTP providers (email). We are not responsible for the availability, security, or terms of these providers beyond our contractual obligations to you.' },
           { p: 'The Service may contain links to third-party websites or services that are not owned or controlled by us. We have no control over and accept no responsibility for the content, privacy practices, or terms of any third-party site or service. Accessing third-party links is entirely at your own risk.' },
         ],
       },
       {
-        title: '15. Dispute resolution and governing law',
+        title: '20. Dispute resolution and governing law',
         blocks: [
           { p: 'These Terms and any dispute or claim arising out of or in connection with them shall be governed by and construed in accordance with the laws of England and Wales.' },
           { p: 'Before commencing any formal proceedings, both parties agree to attempt to resolve any dispute in good faith by negotiation for a period of 30 days following written notice of the dispute.' },
@@ -208,7 +306,7 @@ export const en: LegalTranslation = {
         ],
       },
       {
-        title: '16. General provisions',
+        title: '21. General provisions',
         blocks: [
           { b: 'Entire agreement.' },
           { p: 'These Terms and the Privacy Policy constitute the entire agreement between you and us regarding the Service and supersede all prior agreements, representations, and understandings.' },
