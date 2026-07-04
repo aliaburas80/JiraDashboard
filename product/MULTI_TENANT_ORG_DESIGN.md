@@ -117,6 +117,10 @@ If/when the app ever issues a pre-signed upload/download URL directly to a brows
 
 Adversarial test: an org A admin's storage credentials (or the shared-storage code path under org A's session) must never be able to read, list, or write any key under `orgs/{orgB}/...` — attempted directly (constructed key) and indirectly (path traversal, `..` segments, symlink-style tricks where the underlying provider allows them).
 
+### 3a.5 EP-020 (2026-07-05) — an interim fix landed ahead of this section
+
+Before this section was built, `data/latest-metrics.json` (the live dashboard's data file, and its cloud backup entry) was discovered to be a single file shared by the entire deployment — any two cloud-mode users, regardless of company/org, saw whichever one uploaded or synced most recently. That's a live, active P0 leak, so it was fixed on `fix/EP-020-workspace-scoped-dashboard-data` using the current, already-in-production `Workspace` model (one file per `ws:<workspaceId>` / `user:<userId>` scope key under `data/metrics/`) rather than waiting for `scopedStorage()`/`Organization` here. See `product/SRS.md` v4.24.0 and `product/TEST_CASES.md` §9.72 for the full detail. **Follow-up required when this section is actually built:** reconcile `getMetricsScopeKeyForUser()` (`src/lib/workspace.ts`) with `scopedStorage()` — the eventual scope key should likely become `organizationId`-based (or workspace-within-organization) rather than bare `workspaceId`, consistent with whatever `ORG-44`–`46` lands on.
+
 ---
 
 ## 4. Organization Application & Owner Approval (`ORG-23`–`ORG-33`) — added 2026-06-27

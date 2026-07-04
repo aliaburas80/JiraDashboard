@@ -6,6 +6,7 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { readLatestMetrics } from '@/services/metrics/latestMetricsStorage';
+import { getMetricsScopeKeyForUser } from '@/lib/workspace';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +41,10 @@ export async function GET() {
     };
   }
 
-  const latest = readLatestMetrics();
+  // EP-020: this used to read one flat file shared by every logged-in user —
+  // now scoped to the caller's own workspace/user.
+  const scopeKey = await getMetricsScopeKeyForUser(session.userId);
+  const latest = readLatestMetrics(scopeKey);
   if (!latest) {
     return NextResponse.json({
       available: false,

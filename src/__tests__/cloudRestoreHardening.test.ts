@@ -2,7 +2,6 @@
 // Cloud restore hardening tests — Jira integration gate.
 
 const DATA_DIR = `${process.cwd()}/data`;
-const LATEST_METRICS_FILE = `${DATA_DIR}/latest-metrics.json`;
 const CACHE_FILE = `${DATA_DIR}/.cloud-cache-meta.json`;
 const STORAGE_SETTINGS_FILE = `${DATA_DIR}/storage-settings.json`;
 
@@ -37,6 +36,12 @@ jest.mock('iron-session', () => ({
     email: 'test@test.com',
     role: 'admin',
   })),
+}));
+// EP-020: /api/metrics/latest resolves a per-user/workspace scope key before
+// reading metrics — stub it out so these tests keep exercising cloud-sync and
+// source detection rather than real workspace/DB lookups.
+jest.mock('@/lib/workspace', () => ({
+  getMetricsScopeKeyForUser: jest.fn(async () => 'user:test-user'),
 }));
 
 afterEach(() => {
@@ -73,27 +78,54 @@ test('TC-CS-09: /api/metrics/latest returns HTTP 200 with available:false when l
   expect(body.message).toContain('Local storage mode');
 });
 
-test('TC-CS-10: latest-metrics.json is included in backup bundles when present', async () => {
+test('TC-CS-10: workspace/user-scoped metrics files (EP-020) are individually included in backup bundles', async () => {
+  const METRICS_DIR = `${DATA_DIR}/metrics`;
+  const scopedFile = `${METRICS_DIR}/ws_team-1.json`;
   const files: Record<string, Buffer> = {
-    [LATEST_METRICS_FILE]: Buffer.from(JSON.stringify({ savedAt: '2026-06-06T00:00:00.000Z', metrics: { totalIssues: 3 } })),
+    [scopedFile]: Buffer.from(JSON.stringify({ savedAt: '2026-06-06T00:00:00.000Z', metrics: { totalIssues: 3 } })),
   };
 
   jest.doMock('fs', () => ({
-    existsSync: jest.fn((path: string) => path in files),
+    existsSync: jest.fn((path: string) => path in files || path === METRICS_DIR),
     readFileSync: jest.fn((path: string) => files[path]),
     writeFileSync: jest.fn(),
     copyFileSync: jest.fn(),
     mkdirSync: jest.fn(),
     statSync: jest.fn((path: string) => ({ size: files[path]?.length ?? 0 })),
+    readdirSync: jest.fn(() => ['ws_team-1.json']),
   }));
 
   const { createBackup } = await import('../services/settings/backup.service');
   const bundle = createBackup();
-  const manifestRow = bundle.manifest.files.find(file => file.name === 'latest-metrics.json');
+  const manifestRow = bundle.manifest.files.find(file => file.name === 'metrics/ws_team-1.json');
 
   expect(manifestRow?.included).toBe(true);
-  expect(bundle.files['latest-metrics.json']).toBeDefined();
-  expect(Buffer.from(bundle.files['latest-metrics.json'], 'base64').toString('utf-8')).toContain('totalIssues');
+  expect(bundle.files['metrics/ws_team-1.json']).toBeDefined();
+  expect(Buffer.from(bundle.files['metrics/ws_team-1.json'], 'base64').toString('utf-8')).toContain('totalIssues');
+});
+
+test('TC-CS-10b: two different workspace metrics files never collide or overwrite each other in a backup bundle', async () => {
+  const METRICS_DIR = `${DATA_DIR}/metrics`;
+  const files: Record<string, Buffer> = {
+    [`${METRICS_DIR}/ws_team-a.json`]: Buffer.from(JSON.stringify({ savedAt: '2026-06-06T00:00:00.000Z', metrics: { totalIssues: 3, owner: 'A' } })),
+    [`${METRICS_DIR}/user_solo-b.json`]: Buffer.from(JSON.stringify({ savedAt: '2026-06-06T00:00:00.000Z', metrics: { totalIssues: 9, owner: 'B' } })),
+  };
+
+  jest.doMock('fs', () => ({
+    existsSync: jest.fn((path: string) => path in files || path === METRICS_DIR),
+    readFileSync: jest.fn((path: string) => files[path]),
+    writeFileSync: jest.fn(),
+    copyFileSync: jest.fn(),
+    mkdirSync: jest.fn(),
+    statSync: jest.fn((path: string) => ({ size: files[path]?.length ?? 0 })),
+    readdirSync: jest.fn(() => ['ws_team-a.json', 'user_solo-b.json']),
+  }));
+
+  const { createBackup } = await import('../services/settings/backup.service');
+  const bundle = createBackup();
+
+  expect(Buffer.from(bundle.files['metrics/ws_team-a.json'], 'base64').toString('utf-8')).toContain('"owner":"A"');
+  expect(Buffer.from(bundle.files['metrics/user_solo-b.json'], 'base64').toString('utf-8')).toContain('"owner":"B"');
 });
 
 test('TC-CS-11: syncFromCloud does not overwrite pending local changes with bucket data', async () => {

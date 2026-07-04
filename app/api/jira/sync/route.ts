@@ -13,12 +13,17 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { resolveActiveJiraConnection, runJiraConnectionSync } from '@/services/jira/connectionSyncRunner';
+import { getWorkspaceForUser } from '@/lib/workspace';
 
 export async function POST() {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
-  const connection = await resolveActiveJiraConnection();
+  // EP-020: only resolve a connection this caller created or that belongs
+  // to their own workspace — this route used to auto-pick the single most
+  // recently synced connection system-wide, regardless of owner.
+  const workspace = await getWorkspaceForUser(session.userId).catch(() => null);
+  const connection = await resolveActiveJiraConnection({ userId: session.userId, workspaceId: workspace?.id ?? null });
   if (!connection) {
     return NextResponse.json(
       { error: 'No Jira connection is configured yet. Ask an admin to set one up in Admin Settings → Jira Integration.' },

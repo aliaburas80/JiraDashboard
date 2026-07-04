@@ -61,6 +61,16 @@ jest.mock('@/lib/workspace', () => ({
     return null;
   }),
   createWorkspaceForUser: jest.fn(),
+  // EP-020: mirrors the real getMetricsScopeKeyForUser's workspace-or-user
+  // fallback, using the fixture data above.
+  getMetricsScopeKeyForUser: jest.fn(async (userId: string) => (
+    userId === USER_A_ID ? `ws:${WS_A_ID}` : `user:${userId}`
+  )),
+}));
+
+const mockReadLatestMetrics = jest.fn();
+jest.mock('@/services/metrics/latestMetricsStorage', () => ({
+  readLatestMetrics: (...a: unknown[]) => mockReadLatestMetrics(...a),
 }));
 
 jest.mock('@/lib/roles', () => ({
@@ -179,4 +189,30 @@ test('TC-ISO-06: GET /api/trends only queries records scoped to the user workspa
       where: expect.objectContaining({ workspaceId: WS_A_ID }),
     }),
   );
+});
+
+// ── TC-ISO-07/08: EP-020 — the live dashboard metrics file must be scoped ──────
+// per workspace/user, never a single shared file every logged-in user reads.
+
+test('TC-ISO-07: GET /api/metrics/latest resolves and reads the caller\'s own workspace scope key, never a shared/global one', async () => {
+  mockReadLatestMetrics.mockReturnValueOnce({ savedAt: '2026-07-05T00:00:00.000Z', metrics: { totalIssues: 1 }, origin: null });
+
+  const { GET } = await import('../../app/api/metrics/latest/route');
+  await GET();
+
+  // Session A must read data/metrics/ws_ws-a.json (via the ws:ws-a scope key)
+  // — never an unscoped call and never another workspace's key.
+  expect(mockReadLatestMetrics).toHaveBeenCalledWith(`ws:${WS_A_ID}`);
+  expect(mockReadLatestMetrics).not.toHaveBeenCalledWith(`ws:${WS_B_ID}`);
+});
+
+test('TC-ISO-08: GET /api/metrics/latest returns available:false for a user with no scoped file yet, never falling back to another user\'s data', async () => {
+  mockReadLatestMetrics.mockReturnValueOnce(null); // this scope has nothing written yet
+
+  const { GET } = await import('../../app/api/metrics/latest/route');
+  const res  = await GET();
+  const body = await res.json();
+
+  expect(body.available).toBe(false);
+  expect(body.metrics).toBeUndefined();
 });

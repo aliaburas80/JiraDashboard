@@ -5,6 +5,16 @@
 
 ---
 
+## Live Dashboard Data and Jira Connections Are Now Isolated Per Workspace (2026-07-05, P0 security fix)
+
+**From a large request covering data isolation, per-user Jira connections, and several UI items.** Before writing any code, two research passes checked what actually needed fixing — most of the request's assumptions were already correct (registration already offers job titles only, never permission roles; self-registered accounts already default to local-only storage). The real bug was worse than described: for any user in **cloud** storage mode, the live dashboard read from a single file shared by the entire server (`data/latest-metrics.json`) — whoever uploaded or synced most recently determined what every cloud-mode user saw, regardless of workspace. The same was true for "Sync Jira": it auto-picked the most recently synced connection **system-wide**, not the caller's own.
+
+Fixed: dashboard data is now stored one file per workspace (`data/metrics/`), and "Sync Jira" only ever resolves a connection the caller created or that belongs to their own workspace. Cloud backup/restore updated to match. A brand-new cloud-mode user (or one who's never uploaded anything) now correctly sees an empty dashboard instead of someone else's real data. The pre-existing shared file is left on disk but no longer read by anyone — deliberately not auto-assigned to any one user, since guessing would risk repeating the same bug. 8 new/updated tests; full suite 872/94 passing. Manually verified against the real dev database with two throwaway users: confirmed uploading as one never appeared for the other, and each got their own isolated file.
+
+Not part of this fix (tracked as separate follow-on work): password show/hide toggles on credential fields, a Cancel button on the cloud-storage "Change provider" form, and a manual admin tool to reset a non-employee account's workspace data.
+
+---
+
 ## Account Menu No Longer Flashes "Sign In" on Route Change (2026-07-05, P2)
 
 **Same-day follow-up**, from a screenshot: the account menu had the exact bug the previous fix just closed for the nav — "the user name hide, and show signin then return the username." `UserMenu.tsx` is also a child of `AppShell`, so it remounts every route change too, and its own independent session fetch started blank each time. Generalized the previous fix instead of duplicating it: `src/lib/currentUser.ts` now caches the whole signed-in identity (not just role), so `UserMenu` renders the real username immediately instead of "Sign in" while it re-confirms in the background. 5 new tests; full suite 866/94 passing.

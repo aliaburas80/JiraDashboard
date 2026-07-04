@@ -20,11 +20,25 @@ export interface JiraSyncRunResult {
   body: Record<string, unknown>;
 }
 
-/** Picks the connection currently powering the live dashboard: the most
- * recently synced one, falling back to the most recently created connection
- * if none has ever synced yet. Returns null when no connection exists. */
-export async function resolveActiveJiraConnection(): Promise<JiraConnection | null> {
-  const connections = await prisma.jiraConnection.findMany();
+export interface JiraConnectionScope {
+  userId: string;
+  workspaceId?: string | null;
+}
+
+/** Picks the connection currently powering the caller's live dashboard: the
+ * most recently synced one THEY OWN (created it, or it belongs to their
+ * workspace), falling back to the most recently created one they own if
+ * none has ever synced yet. Returns null when they have no connection.
+ *
+ * EP-020: this used to be an unfiltered `prisma.jiraConnection.findMany()` —
+ * any logged-in user could trigger a sync against a connection someone else
+ * created. Now scoped to connections the caller created or that belong to
+ * their workspace. */
+export async function resolveActiveJiraConnection(scope: JiraConnectionScope): Promise<JiraConnection | null> {
+  const ownerFilters: Record<string, unknown>[] = [{ createdByUserId: scope.userId }];
+  if (scope.workspaceId) ownerFilters.push({ workspaceId: scope.workspaceId });
+
+  const connections = await prisma.jiraConnection.findMany({ where: { OR: ownerFilters } });
   if (connections.length === 0) return null;
 
   const everSynced = connections.filter(c => c.lastSyncAt);
@@ -91,7 +105,12 @@ export async function runJiraConnectionSync(
 
     // All-or-nothing: only overwrite the live dashboard once everything above
     // has succeeded — a failed sync never clobbers the last-good data.
-    writeLatestMetrics(metrics, {
+    // EP-020: scoped to this connection's own workspace/owner, not the
+    // single shared latest-metrics.json every user used to read.
+    const scopeKey = connection.workspaceId
+      ? `ws:${connection.workspaceId}`
+      : `user:${connection.createdByUserId}`;
+    writeLatestMetrics(scopeKey, metrics, {
       source: 'jira-api',
       connectionName: connection.name,
       connectionId: connection.id,

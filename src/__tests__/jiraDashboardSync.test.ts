@@ -47,6 +47,11 @@ jest.mock('@/services/metrics/latestMetricsStorage', () => ({
 jest.mock('@/services/storage/cloudSync', () => ({
   pushToCloud: jest.fn(async () => ({ status: 'pushed' })),
 }));
+// EP-020: resolveActiveJiraConnection is now scoped to the caller's own
+// workspace/user — the route resolves that scope via getWorkspaceForUser.
+jest.mock('@/lib/workspace', () => ({
+  getWorkspaceForUser: jest.fn(async () => null),
+}));
 
 import { prisma } from '@/lib/prisma';
 import { fetchAllJiraIssues } from '@/services/jira/sync';
@@ -82,10 +87,12 @@ beforeEach(() => {
 // ── resolveActiveJiraConnection() ──────────────────────────────────────────────
 
 describe('TC-JIRA-54 to TC-JIRA-56: resolveActiveJiraConnection()', () => {
+  const scope = { userId: 'user-1', workspaceId: null as string | null };
+
   test('TC-JIRA-54: returns null when no connection exists', async () => {
     (prisma.jiraConnection.findMany as jest.Mock).mockResolvedValue([]);
     const { resolveActiveJiraConnection } = await import('@/services/jira/connectionSyncRunner');
-    expect(await resolveActiveJiraConnection()).toBeNull();
+    expect(await resolveActiveJiraConnection(scope)).toBeNull();
   });
 
   test('TC-JIRA-55: prefers the most recently synced connection over a never-synced one', async () => {
@@ -94,7 +101,7 @@ describe('TC-JIRA-54 to TC-JIRA-56: resolveActiveJiraConnection()', () => {
     const neverSynced = connection({ id: 'conn-never', lastSyncAt: null, createdAt: new Date('2026-06-22T00:00:00.000Z') });
     (prisma.jiraConnection.findMany as jest.Mock).mockResolvedValue([older, neverSynced, newer]);
     const { resolveActiveJiraConnection } = await import('@/services/jira/connectionSyncRunner');
-    expect((await resolveActiveJiraConnection())?.id).toBe('conn-new');
+    expect((await resolveActiveJiraConnection(scope))?.id).toBe('conn-new');
   });
 
   test('TC-JIRA-56: falls back to the most recently created connection when none has ever synced', async () => {
@@ -102,7 +109,21 @@ describe('TC-JIRA-54 to TC-JIRA-56: resolveActiveJiraConnection()', () => {
     const newer = connection({ id: 'conn-new', lastSyncAt: null, createdAt: new Date('2026-06-20T00:00:00.000Z') });
     (prisma.jiraConnection.findMany as jest.Mock).mockResolvedValue([older, newer]);
     const { resolveActiveJiraConnection } = await import('@/services/jira/connectionSyncRunner');
-    expect((await resolveActiveJiraConnection())?.id).toBe('conn-new');
+    expect((await resolveActiveJiraConnection(scope))?.id).toBe('conn-new');
+  });
+
+  // EP-020 — the actual bug being fixed: the caller's own scope must be
+  // sent to the database query, never an unfiltered findMany().
+  test('TC-JIRA-61: only queries connections owned by the caller or their workspace, never an unfiltered list', async () => {
+    (prisma.jiraConnection.findMany as jest.Mock).mockResolvedValue([]);
+    const { resolveActiveJiraConnection } = await import('@/services/jira/connectionSyncRunner');
+    await resolveActiveJiraConnection({ userId: 'user-1', workspaceId: 'ws-9' });
+
+    const callArg = (prisma.jiraConnection.findMany as jest.Mock).mock.calls[0][0];
+    expect(callArg).toBeDefined();
+    expect(callArg.where.OR).toEqual(
+      expect.arrayContaining([{ createdByUserId: 'user-1' }, { workspaceId: 'ws-9' }]),
+    );
   });
 });
 

@@ -17,8 +17,10 @@ interface DiagnosticsData {
   imports:       { total: number; successful: number; failed: number; successRate: number; avgHealthScore: number; avgProcessingMs: number; lastAt: string | null; lastFileName: string | null; lastHealthScore: number | null; lastStatus: string | null };
   snapshots:     { total: number };
   metricsSync:   {
-    available: boolean; savedAt: string | null; ageMinutes: number | null;
-    source: 'file' | 'jira-api' | null; connectionName: string | null;
+    // EP-020: metrics are now per-workspace/user, so this describes the
+    // deployment as a whole (how many scoped files exist, most recent write)
+    // rather than any single tenant's data.
+    available: boolean; scopedFileCount: number; mostRecentWriteAt: string | null; ageMinutes: number | null;
     cloudProvider: 'local' | 's3' | 'azure' | 'gcp';
     cloudBackupCount: number; latestCloudBackupAt: string | null;
     latestCloudBackupKey: string | null; cloudListError: string | null;
@@ -252,10 +254,10 @@ export default function DiagnosticsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <KpiCard
               label="Live Dashboard Data"
-              value={data.metricsSync.available ? 'Available' : 'Missing'}
+              value={data.metricsSync.available ? `${data.metricsSync.scopedFileCount} workspace file${data.metricsSync.scopedFileCount !== 1 ? 's' : ''}` : 'None yet'}
               sub={data.metricsSync.available
-                ? `${data.metricsSync.source === 'jira-api' ? `Jira (${data.metricsSync.connectionName ?? 'connection'})` : data.metricsSync.source === 'file' ? 'File upload' : 'Unknown source'} · ${ago(data.metricsSync.savedAt)}`
-                : 'No latest-metrics snapshot on the server yet'}
+                ? `Most recent write ${ago(data.metricsSync.mostRecentWriteAt)}`
+                : 'No per-workspace metrics snapshot on the server yet'}
               tone={data.metricsSync.available ? (data.metricsSync.ageMinutes !== null && data.metricsSync.ageMinutes > 1440 ? 'amber' : 'green') : 'red'}
             />
             <KpiCard
