@@ -196,7 +196,11 @@ export default function AppConfigPanel() {
       setSource('cloud');
       setEditingSmtp(false);
       setEditingAppUrl(false);
-      setStatus({ type: 'success', msg: 'Config encrypted and saved to cloud storage.' });
+      setStatus(
+        data.dbSaveError
+          ? { type: 'error', msg: `Saved to cloud, but the database save failed: ${data.dbSaveError}`, solution: 'This setting may not persist reliably until the database save succeeds — try saving again.' }
+          : { type: 'success', msg: 'Config encrypted and saved to cloud storage.' },
+      );
     } catch {
       setStatus({ type: 'error', msg: 'Network error — save failed.' });
     } finally {

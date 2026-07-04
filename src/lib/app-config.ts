@@ -159,9 +159,14 @@ export async function getAppConfig(): Promise<AppConfig> {
   if (cloud) {
     cloud.jira ??= { apiToken: '' };
     const env = buildFromEnv();
-    // Env vars override cloud when explicitly set — lets operators fix via dashboard.
-    if (env.smtp.user && env.smtp.pass) cloud.smtp = env.smtp;
-    if (env.jira.apiToken)              cloud.jira = env.jira;
+    // Env vars are a bootstrap fallback for a config that has never been explicitly
+    // saved — NOT a permanent override. Bug found 2026-07-04: this used to apply
+    // unconditionally, so once an admin saved e.g. a custom "From address" to the
+    // cloud config, it was silently clobbered by SMTP_* env vars on every single
+    // read, forever, with no way to make the saved value stick. Now env only fills
+    // in when the cloud config genuinely has nothing saved yet.
+    if (!cloud.smtp.host && !cloud.smtp.user && env.smtp.user && env.smtp.pass) cloud.smtp = env.smtp;
+    if (!cloud.jira.apiToken && env.jira.apiToken)                             cloud.jira = env.jira;
     _cached = cloud;
     _source = 'cloud';
     return _cached;
