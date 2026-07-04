@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, validatePasswordStrength } from '@/lib/auth';
-import { sendEmail, buildWelcomeEmail } from '@/lib/email';
+import { sendEmail, buildWelcomeEmail, describeSmtpError } from '@/lib/email';
 import { getAppConfig, invalidateConfig } from '@/lib/app-config';
 import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
@@ -135,13 +135,31 @@ export async function POST(req: NextRequest) {
 
   // Send welcome email to the new user.
   let emailSent = false;
+  let emailError: string | undefined;
   try {
     invalidateConfig();          // always read fresh env/cloud merge, not stale cache
     const { appUrl } = await getAppConfig();
     const welcome = buildWelcomeEmail(user.name, user.email, body.password!, appUrl);
     emailSent = await sendEmail({ to: user.email, toName: user.name, ...welcome });
+    if (!emailSent) {
+      emailError = 'No email provider is configured (no Resend API key and no SMTP host/username/password set).';
+    }
   } catch (err) {
+    // Distinguish "not configured" (sendEmail returns false) from a genuine send failure
+    // (Resend/SMTP rejected it) so the admin sees the real cause, not a generic guess.
+    const { smtp } = await getAppConfig();
+    emailError = process.env.RESEND_API_KEY
+      ? `Resend failed: ${err instanceof Error ? err.message : String(err)}`
+      : describeSmtpError(err, smtp);
     console.warn('[email] Failed to send welcome email:', err);
+  }
+
+  if (emailError) {
+    await safeAuditEvent({
+      userId: session.userId,
+      eventType: 'admin_user_welcome_email_failed',
+      eventDescription: `Welcome email failed for ${email}: ${emailError}`,
+    });
   }
 
   await safeNotifications([{
@@ -150,12 +168,12 @@ export async function POST(req: NextRequest) {
     title: '✅ User account created',
     message: emailSent
       ? `${name} (${email}) was created as ${roleLabel(role)}. A welcome email with their temporary password has been sent.`
-      : `${name} (${email}) was created as ${roleLabel(role)}. Welcome email could not be sent — configure SMTP in Admin → Settings.`,
+      : `${name} (${email}) was created as ${roleLabel(role)}. Welcome email could not be sent — ${emailError}`,
     relatedEntityType: 'User',
     relatedEntityId: user.id,
   }], 'admin_user_create notification');
 
-  return NextResponse.json({ ok: true, emailSent, user: safeUser(user) }, { status: 201 });
+  return NextResponse.json({ ok: true, emailSent, emailError, user: safeUser(user) }, { status: 201 });
 }
 
 export async function PATCH(req: NextRequest) {
