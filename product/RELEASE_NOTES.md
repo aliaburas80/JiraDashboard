@@ -5,6 +5,12 @@
 
 ---
 
+## Header Nav No Longer Flashes on Route Change (2026-07-05, P2)
+
+**Immediate follow-up**, per explicit request: "don't refresh the header menu... keep the header without change or refresh for each route change." Root cause: `AppShell.tsx` is imported directly by ~28 pages rather than one shared layout, so it fully remounts on every navigation — the role-fetch added in the previous fix re-ran each time, and the nav briefly flashed from unfiltered back to role-filtered. New `src/lib/currentRole.ts` caches the resolved role at module level so every remount starts already-correct instead of waiting on a fresh network round trip. 4 new tests; full suite 865/94 passing.
+
+---
+
 ## Main Nav Now Role-Filtered + "App Storage" Rename (2026-07-04, P2)
 
 **Immediate follow-up to EP-018 below**, from a screenshot showing the main app navigation still offering every menu item to every role. The new Settings-hub role gate only covered the new tab menu — the actual top nav (`AppShell.tsx`, `DashboardTopbar.tsx`) had a comment literally documenting "no role-based filtering in the nav" as deliberate. Concretely wrong for "Developer," already admin-only at the middleware level — every other role saw a working-looking link that would redirect them away on click. New shared `getNavGroupsForRole(role)` fixes both live nav components (two more, `DCTopbar`/`DCPageSidebar`, turned out to be dead code and were left alone). Also renamed the Storage tab's "Cloud storage" option to **"App storage"** — the old label contradicted its own description ("not a third-party bucket") and risked misleading users on data-residency questions. Display text only; the underlying `dataStorageMode: "cloud"` value is unchanged. 7 new tests; full suite 861/93 passing.
