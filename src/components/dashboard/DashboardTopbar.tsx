@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect, useCallback, type CSSProperties } from 'react';
 import clsx from 'clsx';
-import { DC_NAV_GROUPS } from '@/components/dc-shell/navigation';
+import { DC_NAV_GROUPS, getNavGroupsForRole } from '@/components/dc-shell/navigation';
 import UserMenu from '@/components/auth/UserMenu';
 import NotificationBell from '@/components/auth/NotificationBell';
 import { DataSourceBadge } from '@/components/ui/DataSourceBadge';
@@ -42,6 +42,15 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
   const [dropPos, setDropPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const groupButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const dropMenuRef = useRef<HTMLDivElement>(null);
+  const [role, setRole] = useState<string | null>(null);
+
+  // Nav items/groups this role can't open are filtered out below (getNavGroupsForRole) —
+  // previously every menu showed every group to every role regardless of access.
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.ok ? r.json() : null)
+      .then(data => setRole(data?.role ?? null))
+      .catch(() => setRole(null));
+  }, []);
 
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState('');
@@ -96,7 +105,8 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
     };
   }, [openGroup]);
 
-  const activeGroup = openGroup ? DC_NAV_GROUPS.find(g => g.id === openGroup) : null;
+  const visibleGroups = getNavGroupsForRole(role);
+  const activeGroup = openGroup ? visibleGroups.find(g => g.id === openGroup) : null;
 
   return (
     <>
@@ -133,7 +143,7 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
 
         {/* ── CENTER NAV ── */}
         <nav className={styles.nav} aria-label="Primary navigation">
-          {DC_NAV_GROUPS.map(group => {
+          {visibleGroups.map(group => {
             const active = groupIsActive(pathname, group);
             const isOpen = openGroup === group.id;
             const label  = GROUP_LABEL_OVERRIDE[group.id] ?? group.label;

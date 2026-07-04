@@ -7,7 +7,7 @@ import { applyTheme } from '@/lib/theme';
 import { initThemeCustom, loadBranding } from '@/lib/themeCustomizer';
 import UserMenu from '@/components/auth/UserMenu';
 import NotificationBell from '@/components/auth/NotificationBell';
-import { DC_NAV_GROUPS } from '@/components/dc-shell/navigation';
+import { DC_NAV_GROUPS, getNavGroupsForRole } from '@/components/dc-shell/navigation';
 import styles from './AppShell.module.scss';
 
 // Single source of truth: DC_NAV_GROUPS from navigation.ts
@@ -33,6 +33,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
   const [openGroup, setOpenGroup]   = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [brandName, setBrandName]   = useState('Delivery Clarity');
+  const [role, setRole] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -40,6 +41,14 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
     initThemeCustom();
     const b = loadBranding();
     if (b.appName) setBrandName(b.appName);
+  }, []);
+
+  // Nav items/groups this role can't open are filtered out below (getNavGroupsForRole) —
+  // previously every menu showed every group to every role regardless of access.
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.ok ? r.json() : null)
+      .then(data => setRole(data?.role ?? null))
+      .catch(() => setRole(null));
   }, []);
 
   useEffect(() => {
@@ -62,8 +71,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
     return group.items.some(item => isActivePath(pathname, item.href));
   }
 
-  // Show all nav groups — matches DashboardTopbar (no role-based filtering in the nav)
-  const visibleGroups = DC_NAV_GROUPS.map(group => ({
+  const visibleGroups = getNavGroupsForRole(role).map(group => ({
     ...group,
     label: GROUP_LABEL_OVERRIDE[group.id] ?? group.label,
   }));
