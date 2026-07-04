@@ -73,14 +73,17 @@ export default function UserMenu() {
             <span className={styles.roleBadge}>{roleLabel(me.role)}</span>
           </div>
 
-          {/* My Profile */}
+          {/* My Settings — /profile, now a tabbed Profile/Storage/Security hub.
+              Labeled "My Settings" rather than bare "Settings" to avoid reading as
+              a duplicate of the admin-only "Settings" link (-> /admin/settings)
+              further down this same menu for admin users. */}
           <Link
             href="/profile"
             role="menuitem"
             onClick={() => setOpen(false)}
             className={styles.menuItem}
           >
-            <SvgIcon name="person" size={14} /> My Profile
+            <SvgIcon name="settings" size={14} /> My Settings
           </Link>
 
           {/* Admin-only links */}

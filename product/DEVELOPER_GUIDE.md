@@ -519,7 +519,11 @@ When the logged-in user's `dataStorageMode` (see below) is `"local"`, `handleFil
 
 File: `app/api/profile/route.ts`
 
-Authenticated profile endpoint. `GET` returns the signed-in user's public member profile, including `dataStorageMode` (`"cloud" | "local"`, default `"cloud"` — EP-017). `PATCH` updates editable team-facing fields: `name`, `avatarUrl`, `position`, `phone`, `contactEmail`, `address`, `certificates`, and `bio`, writes a `profile_update` audit event, updates the session display name, and pushes the DB backup to cloud when configured. It also optionally accepts `dataStorageMode` (`"cloud" | "local"`, 400 on any other value), updates the session and logs a distinct `profile_storage_mode_change` audit event when present — switching only affects future uploads, no data is migrated between modes.
+Authenticated profile endpoint. `GET` returns the signed-in user's public member profile, including `dataStorageMode` (`"cloud" | "local"`, schema default `"cloud"` — EP-017). `PATCH` updates editable team-facing fields: `name`, `avatarUrl`, `position`, `phone`, `contactEmail`, `address`, `certificates`, and `bio`, writes a `profile_update` audit event, updates the session display name, and pushes the DB backup to cloud when configured. It also optionally accepts `dataStorageMode` (`"cloud" | "local"`, 400 on any other value), updates the session and logs a distinct `profile_storage_mode_change` audit event when present — switching only affects future uploads, no data is migrated between modes.
+
+**EP-018 note:** `POST /api/auth/register` (self-registration) explicitly sets `dataStorageMode: "local"` at creation time rather than relying on the schema default — so the `"cloud"` default above is effectively only reached by `POST /api/admin/users` and the accept-add-member-request flow (admin-driven account creation), which don't set it explicitly.
+
+**EP-018 UI note:** `/profile` is a role-gated tabbed "Settings" hub (`app/profile/page.tsx`, tabs in `src/components/settings/{ProfileTab,StorageTab,SecurityTab}.tsx`), not a single page — the Storage tab is EP-017's Data & Privacy section, unchanged in behavior. A new Security tab reuses `POST /api/auth/change-password` (see below) as the first voluntary, non-forced password-change entry point. Each tab config supports an optional `roles?: AppRole[]` restriction, filtered client-side before rendering the tab menu — nothing is currently restricted.
 
 ### `GET/POST /api/profile/image`
 

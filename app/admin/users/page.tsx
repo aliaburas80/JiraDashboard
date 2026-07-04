@@ -7,10 +7,15 @@ import { ASSIGNABLE_ROLES, roleLabel, type AppRole } from '@/lib/roles';
 import type { ManagedUser } from '@/lib/adminConsole';
 import styles from './page.module.scss';
 
+// Includes 'user' — needed for the role FILTER dropdown and each row's role
+// select, which must be able to represent existing self-registered accounts
+// (role: 'user'). Assigning 'user' is intentionally excluded from the Create
+// User form and bulk role-change select below (use ASSIGNABLE_ROLES there) —
+// self-registration is the only path that ever creates a 'user'-role account.
 const ALL_ROLES: AppRole[] = ['admin', 'scrum_master', 'product_owner', 'manager', 'c_level', 'user'];
 
 interface CreateForm { name: string; email: string; password: string; role: AppRole }
-const EMPTY_FORM: CreateForm = { name: '', email: '', password: '', role: 'user' };
+const EMPTY_FORM: CreateForm = { name: '', email: '', password: '', role: 'scrum_master' };
 
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -28,7 +33,7 @@ export default function AdminUsersPage() {
   const [meId, setMeId]             = useState('');
   const [selectedIds, setSelectedIds]       = useState<Set<string>>(new Set());
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
-  const [bulkRole, setBulkRole]             = useState<AppRole>('user');
+  const [bulkRole, setBulkRole]             = useState<AppRole>('scrum_master');
   const [bulkProcessing, setBulkProcessing] = useState(false);
 
   const loadUsers = useCallback(async () => {
@@ -225,7 +230,7 @@ export default function AdminUsersPage() {
                   onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
                   className={styles.formSelect}
                 >
-                  {ALL_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
+                  {ASSIGNABLE_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
                 </select>
               </div>
             </div>
@@ -272,7 +277,7 @@ export default function AdminUsersPage() {
               onChange={e => setBulkRole(e.target.value as AppRole)}
               className={styles.bulkRoleSelect}
             >
-              {ALL_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
+              {ASSIGNABLE_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
             </select>
             <button
               type="button"

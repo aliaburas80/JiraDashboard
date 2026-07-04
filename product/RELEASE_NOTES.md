@@ -5,6 +5,25 @@
 
 ---
 
+## EP-018 — Settings Hub, Role-Gated Nav, Registration Defaults (2026-07-04, P2)
+
+**8-part request in one message.** Two items needed clarifying questions first: whether "cloud storage should never use my storage" meant fixing wording (today's "cloud mode" is already just Delivery Clarity's own server database, not a 3rd-party bucket) or designing a full "bring your own cloud" feature — user chose wording-only for now, BYOC noted as a future option; and whether the new "local" default should apply to new accounts only, new accounts locked out of cloud, or retroactively to everyone — user chose new accounts only, nothing retroactive.
+
+- `/profile` is now a role-gated tabbed **Settings** hub (Profile / Storage / Security) instead of one long page — `src/components/settings/{ProfileTab,StorageTab,SecurityTab}.tsx`. Each tab can declare a `roles` restriction and is hidden from the menu entirely when not permitted (nothing is restricted today — the gate is just in place for future use, per a direct follow-up instruction).
+- "My Profile" in the account dropdown is now "My Settings" (kept distinct from the admin-only "Settings" link in the same menu to avoid a duplicate label).
+- Self-registered accounts now default to **local-only storage** (`dataStorageMode: "local"`) instead of the `"cloud"` schema default — admin-created team accounts are unaffected and still default to cloud.
+- Found and fixed a real gap: Admin → User Management's Create User form and bulk role-change dropdown still offered "User" as an assignable role via a page-local constant that had silently diverged from the shared, already-correct role list — fixed to match.
+- New **Security** tab adds the product's first voluntary, non-forced "change your password" action (the only prior path was the forced first-login flow, which redirects away once already satisfied).
+- 1 new test; full suite 854/92 passing. The new tab UI has no automated coverage — this repo has no component-testing setup — recommended manual pass per role before shipping.
+
+---
+
+## Saved SMTP "From Address" No Longer Reverts to env-var Value (2026-07-04, bug fix)
+
+**Found from a real report**: an admin saved a custom "From address" via Admin → Settings and it kept reverting to the value baked into `SMTP_*` env vars. Two compounding bugs: (1) saving with the password field blank (normal when only editing "From address") passed `undefined` to the DB save, which threw "password required" on a first-ever save with no existing row — silently swallowed, so the DB row was never created; (2) the cloud-config fallback unconditionally let env vars override an explicitly-saved config whenever they were set. Both fixed — saves now use the currently-effective password when the field is blank, a genuine DB failure now surfaces instead of a silent success, and env vars only bootstrap a config that's never been saved. 5 new tests; full suite 853/91 passing. Manually verified end-to-end against the real dev database: reproduced the 0-rows bug, then confirmed the fix persists correctly.
+
+---
+
 ## EP-017 — Per-User Local-Only Data Storage Mode (2026-07-04, P1)
 
 **Per explicit user request**, framed as a trust/privacy concern: "let users pick storage method... by default local storage... and don't save them on my storage method so everyone feels safe and secure." Scoped down with the user via clarifying questions to: uploaded Jira data + computed metrics only (not account/auth data), per-user opt-in (not a global switch), with cross-device/admin-visibility/clear-cache trade-offs explicitly accepted.

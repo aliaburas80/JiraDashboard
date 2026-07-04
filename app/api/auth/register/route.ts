@@ -102,6 +102,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         mustChangePassword: false,
         termsAcceptedAt:    new Date(),
         termsVersion:       CURRENT_TERMS_VERSION,
+        // EP-018: public self-registrations default to local-only storage — uploads
+        // stay in the registrant's own browser, never the shared server database,
+        // until they deliberately opt into cloud storage from /profile. Admin-created
+        // accounts (POST /api/admin/users) are unaffected and keep defaulting to
+        // "cloud", since an admin adding their own team wants shared visibility.
+        dataStorageMode:    'local',
       },
     });
     const ws = await createWorkspaceForUser(tx, created.id, created.name);
