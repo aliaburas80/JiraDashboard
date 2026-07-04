@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
+import { listLocalImports, removeLocalImport, clearLocalImportHistory } from '@/lib/localImportHistory';
 
 interface Profile {
   name: string;
@@ -16,6 +17,7 @@ interface Profile {
   address: string;
   certificates: string;
   bio: string;
+  dataStorageMode: 'cloud' | 'local';
 }
 
 interface Log {
@@ -39,6 +41,7 @@ const EMPTY_PROFILE: Profile = {
   address: '',
   certificates: '',
   bio: '',
+  dataStorageMode: 'cloud',
 };
 
 export default function ProfilePage() {
@@ -53,23 +56,52 @@ export default function ProfilePage() {
   const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState('');
+  const [savingStorageMode, setSavingStorageMode] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/profile').then(r => r.ok ? r.json() : null),
-      fetch('/api/imports').then(r => r.ok ? r.json() : null),
-    ])
-      .then(([profileData, importData]) => {
+    fetch('/api/profile').then(r => r.ok ? r.json() : null)
+      .then(async profileData => {
         if (!profileData?.profile) {
           router.replace('/login');
           return;
         }
         setProfile(profileData.profile);
-        if (importData?.logs) setLogs(importData.logs.slice(0, 10));
+        // EP-017: local-mode history lives in this browser only — never fetched from the server.
+        if (profileData.profile.dataStorageMode === 'local') {
+          setLogs(listLocalImports());
+        } else {
+          const importData = await fetch('/api/imports').then(r => r.ok ? r.json() : null).catch(() => null);
+          if (importData?.logs) setLogs(importData.logs.slice(0, 10));
+        }
       })
       .catch(() => router.replace('/login'))
       .finally(() => setLoading(false));
   }, [router]);
+
+  async function updateStorageMode(mode: 'cloud' | 'local') {
+    if (mode === profile.dataStorageMode) return;
+    setSavingStorageMode(true);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: profile.name, dataStorageMode: mode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Could not update storage mode.');
+      setProfile(data.profile);
+      setLogs(mode === 'local' ? listLocalImports() : []);
+      if (mode !== 'local') {
+        const importData = await fetch('/api/imports').then(r => r.ok ? r.json() : null).catch(() => null);
+        if (importData?.logs) setLogs(importData.logs.slice(0, 10));
+      }
+      showToast(`Storage mode switched to "${mode === 'local' ? 'This device only' : 'Cloud storage'}". This only affects new uploads going forward.`);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to update storage mode.');
+    } finally {
+      setSavingStorageMode(false);
+    }
+  }
 
   function showToast(msg: string) {
     setToast(msg);
@@ -129,8 +161,12 @@ export default function ProfilePage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/imports/${deleteTarget.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error();
+      if (profile.dataStorageMode === 'local') {
+        removeLocalImport(deleteTarget.id);
+      } else {
+        const res = await fetch(`/api/imports/${deleteTarget.id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error();
+      }
       setLogs(prev => prev.filter(l => l.id !== deleteTarget.id));
       showToast(`Deleted "${deleteTarget.name}"`);
     } catch { showToast('Failed to delete.'); }
@@ -140,11 +176,18 @@ export default function ProfilePage() {
   async function handleDeleteAll() {
     setDeleting(true);
     try {
-      const res = await fetch('/api/imports/all', { method: 'DELETE' });
-      const json = await res.json();
-      if (!res.ok) throw new Error();
-      setLogs([]);
-      showToast(`Deleted ${json.deleted} import log${json.deleted !== 1 ? 's' : ''}`);
+      if (profile.dataStorageMode === 'local') {
+        const count = logs.length;
+        clearLocalImportHistory();
+        setLogs([]);
+        showToast(`Deleted ${count} import log${count !== 1 ? 's' : ''}`);
+      } else {
+        const res = await fetch('/api/imports/all', { method: 'DELETE' });
+        const json = await res.json();
+        if (!res.ok) throw new Error();
+        setLogs([]);
+        showToast(`Deleted ${json.deleted} import log${json.deleted !== 1 ? 's' : ''}`);
+      }
     } catch { showToast('Failed to delete.'); }
     finally { setDeleting(false); setDeleteAllConfirm(false); }
   }
@@ -262,6 +305,41 @@ export default function ProfilePage() {
           <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
             <button type="button" onClick={saveProfile} disabled={saving} className="btn-primary px-5 py-2.5 disabled:opacity-50">
               {saving ? 'Saving...' : 'Save profile'}
+            </button>
+          </div>
+        </section>
+
+        <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-1 text-sm font-black uppercase tracking-wider text-slate-700">Data & Privacy</h2>
+          <p className="mb-4 text-xs text-slate-500">
+            Choose where new Jira uploads and their computed metrics are stored. Switching only affects uploads from now on — existing data stays where it already is.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              disabled={savingStorageMode}
+              onClick={() => updateStorageMode('cloud')}
+              className={`rounded-xl border-2 p-4 text-left transition-colors disabled:opacity-50 ${
+                profile.dataStorageMode === 'cloud' ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              <p className="text-sm font-black text-slate-900">Cloud storage <span className="font-semibold text-slate-400">(default)</span></p>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                Uploads and metrics are stored on Delivery Clarity's server. Works across devices; admins can support you with your data.
+              </p>
+            </button>
+            <button
+              type="button"
+              disabled={savingStorageMode}
+              onClick={() => updateStorageMode('local')}
+              className={`rounded-xl border-2 p-4 text-left transition-colors disabled:opacity-50 ${
+                profile.dataStorageMode === 'local' ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              <p className="text-sm font-black text-slate-900">This device only</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                Uploads are processed entirely in your browser and never sent to the server. No cross-device sync, no admin visibility, and the data is lost if you clear your browser storage.
+              </p>
             </button>
           </div>
         </section>

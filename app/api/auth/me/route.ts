@@ -37,5 +37,6 @@ export async function GET(): Promise<NextResponse> {
     role:               session.role,
     mustChangePassword: Boolean(session.mustChangePassword),
     emailVerified:      session.emailVerified !== false, // default true for backward compat
+    dataStorageMode:    session.dataStorageMode === 'local' ? 'local' : 'cloud',
   });
 }

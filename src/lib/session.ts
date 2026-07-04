@@ -10,6 +10,8 @@ export interface SessionData {
   role:                AppRole;
   mustChangePassword?: boolean;
   emailVerified?:      boolean; // EP-011: false until verification link clicked (EP-012)
+  // EP-017: "cloud" (default) or "local" — see prisma/schema.prisma User.dataStorageMode.
+  dataStorageMode?:    'cloud' | 'local';
   isLoggedIn:          boolean;
 }
 

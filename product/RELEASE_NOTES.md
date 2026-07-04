@@ -5,6 +5,29 @@
 
 ---
 
+## EP-017 — Per-User Local-Only Data Storage Mode (2026-07-04, P1)
+
+**Per explicit user request**, framed as a trust/privacy concern: "let users pick storage method... by default local storage... and don't save them on my storage method so everyone feels safe and secure." Scoped down with the user via clarifying questions to: uploaded Jira data + computed metrics only (not account/auth data), per-user opt-in (not a global switch), with cross-device/admin-visibility/clear-cache trade-offs explicitly accepted.
+
+- New `User.dataStorageMode` (`"cloud" | "local"`, default `"cloud"` — zero behavior change for existing users). Set/read via `GET`/`PATCH /api/profile`; mirrored onto the session at login (`app/api/auth/login/route.ts`) and exposed via `GET /api/auth/me`.
+- **Local mode runs the entire upload pipeline client-side**: `app/page.tsx`'s `handleFile()` calls the new `processFileLocally()` (`src/lib/localUpload.ts`) instead of `POST /api/upload` — it never sends the file's contents over the network. Discovered that this was already low-risk: `calculateDashboardMetrics()` already runs client-side today (live on `/developer`'s docs page) and its two `fs`-based config reads already fail safe to defaults in the browser; `parseJiraFile()` needed one line to accept a browser `ArrayBuffer` in addition to a Node `Buffer`.
+- New `src/lib/localImportHistory.ts` gives local-mode users an import-history equivalent (capped at 20, validated on read) to the cloud-mode `GET/DELETE /api/imports`, surfaced on `/profile`.
+- `/profile` gained a "Data & Privacy" section to switch modes — switching only affects future uploads, existing data is never migrated between modes.
+- **Accepted limitations (documented in `/help`):** local mode uses system-default health thresholds/orphan-issue rules, not an org's admin-customized ones; multi-file merge upload, Jira API-connection-sourced imports, and named-snapshot trend comparison remain cloud-only in this pass.
+- 22 new tests (parser ArrayBuffer support, local import history CRUD/validation/quota, profile PATCH, session propagation, local-upload-never-calls-fetch); full suite 848/89 passing, no regressions.
+
+---
+
+## Welcome-Email Failure Reporting — Direct Add-User Flow (2026-07-04, bug fix)
+
+**Found immediately after the accept-request fix below**, from the same real report: the *other* place a welcome email gets sent — the admin "Add User" form (`POST /api/admin/users`) — had the identical bug the fix below closed for the accept-request flow, just never patched here. It caught the real send error, `console.warn`'d it, and always showed the hardcoded "configure SMTP in Admin → Settings" guess.
+
+- `app/api/admin/users/route.ts` now distinguishes "no provider configured" from a genuine thrown send failure, returns the real reason as `emailError`, and logs an `admin_user_welcome_email_failed` audit event — same pattern as the accept-request fix.
+- `app/admin/users/page.tsx` now displays the real `emailError` instead of the hardcoded guess.
+- Full suite green after the change; no new test file added since `adminUsers.test.ts`'s existing coverage of this route continued to pass unchanged.
+
+---
+
 ## Accurate Welcome-Email Failure Reporting (2026-07-04, bug fix)
 
 **Found while investigating a real report** of a welcome email not being sent when accepting an add-member request: `UserAddRequestsPanel.tsx` hardcoded "Email not sent — SMTP not configured" whenever `emailSent` was `false`, **regardless of the actual reason**. Since `sendEmail()` only returns `false` (without throwing) when no email provider is configured at all — any *other* failure (a Resend API error, a network timeout, a real SMTP auth failure) throws instead, was caught, `console.warn`'d with no persisted trace, and then shown to the admin under the same misleading "SMTP not configured" message. There was no way to tell these apart from the UI, and no audit trail to check afterward.

@@ -141,7 +141,7 @@ export function buildColumnMapping(
   };
 }
 
-export function parseJiraFile(file: { buffer: Buffer; originalname: string }): {
+export function parseJiraFile(file: { buffer: Buffer | ArrayBuffer; originalname: string }): {
   issues: Record<string, unknown>[];
   warnings: string[];
   headers: string[];
@@ -149,8 +149,11 @@ export function parseJiraFile(file: { buffer: Buffer; originalname: string }): {
   sheetName: string;
   columnMapping: ColumnMappingResult;
 } {
-  const buffer   = file.buffer;
-  const workbook = XLSX.read(buffer, { type: 'buffer' });
+  const buffer = file.buffer;
+  // Browser uploads (local storage mode, EP-017) hand in an ArrayBuffer — Node's
+  // Buffer type/global doesn't exist client-side, so detect it defensively.
+  const isNodeBuffer = typeof Buffer !== 'undefined' && Buffer.isBuffer(buffer);
+  const workbook = XLSX.read(buffer, { type: isNodeBuffer ? 'buffer' : 'array' });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
   const rawRows   = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' });

@@ -361,6 +361,16 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    id: 'data-storage-mode', icon: 'shield', title: 'Data Storage Mode (Cloud vs. This Device Only)',
+    items: [
+      { q: 'What is Data Storage Mode?', a: 'Go to /profile → Data & Privacy to choose where your uploaded Jira data and computed dashboard metrics live: "Cloud storage" (the default — stored on Delivery Clarity\'s server, same as always) or "This device only" — your file is parsed and your metrics are calculated entirely inside your own browser and are never uploaded to the server at all.' },
+      { q: 'What do I give up by choosing "This device only"?', a: 'Three things: (1) no cross-device access — your data only exists in the browser you uploaded it in; (2) no admin visibility — support staff cannot see or help troubleshoot that data, since it never reached the server; (3) it is lost if you clear your browser\'s site data. This is intentional — it is what makes the mode private.' },
+      { q: 'Does switching modes move my existing data?', a: 'No. Switching only changes where your *next* upload goes. Data you already uploaded under the old mode stays exactly where it was — nothing is migrated automatically in either direction.' },
+      { q: 'Are health thresholds and orphan-issue rules the same in "This device only" mode?', a: 'Local-mode calculations use Delivery Clarity\'s built-in default thresholds and orphan-issue rules, not any custom values an admin has configured for your organization, since those live on the server. Cloud mode always reflects the current admin-configured values.' },
+      { q: 'Can I still see my past local uploads?', a: 'Yes — /profile\'s Import History list shows your local uploads too (stored in your browser, capped at your 20 most recent). Use "Delete all history" there, or "Clear Local Data" on the upload page, to remove them.' },
+    ],
+  },
+  {
     id: 'diagnostics', icon: 'statusInfo', title: 'System Diagnostics',
     items: [
       { q: 'What is the System Diagnostics page?', a: 'The /admin/diagnostics page (admin-only) shows a live system health snapshot including: an Ops Health Score (0–100), database row counts (users, sessions, imports, snapshots), import success rate and average health score, environment variable checks, system info (Node version, uptime), and the last 8 audit events.' },
@@ -616,7 +626,7 @@ const SECTION_GROUPS: { id: string; label: string; icon: string; sectionIds: str
   { id: 'planning', label: 'Planning',        icon: 'calendar', sectionIds: ['quarters','kanban','sprint','ownership','readiness'] },
   { id: 'analysis', label: 'Analysis',        icon: 'search', sectionIds: ['justification','flow','labels','relations','teams','portfolio','release-confidence','filter-bar'] },
   { id: 'export',   label: 'Export & Data',   icon: 'upload', sectionIds: ['export-guide','aliases','api','explorer-export','export-sheets','executive-pdf'] },
-  { id: 'system',   label: 'System',          icon: 'cloud', sectionIds: ['cloud-sync','cloud-storage','diagnostics','deployment','about','branding'] },
+  { id: 'system',   label: 'System',          icon: 'cloud', sectionIds: ['cloud-sync','cloud-storage','data-storage-mode','diagnostics','deployment','about','branding'] },
   { id: 'ux',       label: 'Customization',   icon: 'palette', sectionIds: ['chart-customization','layout-builder','theme-customization','product-tour'] },
   { id: 'delivery', label: 'Delivery Intel',  icon: 'roadmap', sectionIds: ['roadmap','forecast','retro'] },
   { id: 'people',   label: 'People',          icon: 'people', sectionIds: ['member-requests','rec-owners'] },
