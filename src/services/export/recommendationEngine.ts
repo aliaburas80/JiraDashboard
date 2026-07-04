@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Rule-based recommendation engine.
 // Every recommendation carries: priority, area, text, evidence, impact,

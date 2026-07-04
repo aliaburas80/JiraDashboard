@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // POST /api/auth/register — public self-registration (EP-011).
 // Creates user + workspace atomically. Rate-limited 5/IP/hour.
 // New users start with emailVerified = false until EP-012 verification link is clicked.

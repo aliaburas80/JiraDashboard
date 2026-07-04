@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Shared "run a sync for this connection" logic — used by both the
 // admin-scoped per-connection route (POST /api/admin/jira-connections/:id/sync)
 // and the any-logged-in-user dashboard route (POST /api/jira/sync). Extracted

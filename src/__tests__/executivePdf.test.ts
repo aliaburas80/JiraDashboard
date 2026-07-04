@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Executive PDF export tests — TC-EP-01 to TC-EP-08
 
 import { buildExecutivePdfHtml } from '../lib/executivePdf';

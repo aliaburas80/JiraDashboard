@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Email dispatch with two-provider strategy:
 //   1. Resend HTTP API  (RESEND_API_KEY env var set)  — works on Render free tier;
 //      Render blocks outbound SMTP ports 465/587 making raw SMTP impossible there.
@@ -344,4 +344,47 @@ export function buildVerificationEmail(
 </div>`.trim();
 
   return { subject: 'Verify your email — Delivery Clarity', text, html };
+}
+
+// EP-013: sent when a user requests a password reset. Clicking the link lands on
+// /reset-password, which calls POST /api/auth/reset-password to consume the token.
+export function buildPasswordResetEmail(
+  name:   string,
+  token:  string,
+  appUrl: string,
+): Pick<EmailOptions, 'subject' | 'text' | 'html'> {
+  const resetUrl = `${appUrl}/reset-password?token=${token}`;
+
+  const text = [
+    `Hi ${name},`,
+    '',
+    'We received a request to reset your Delivery Clarity password. Click the link below to choose a new one:',
+    '',
+    resetUrl,
+    '',
+    'This link expires in 1 hour. If you did not request this, you can safely ignore this email — your password will not be changed.',
+    '',
+    '— Delivery Clarity',
+  ].join('\n');
+
+  const html = `
+<div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1e293b;background:#ffffff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#2563eb,#0891b2);padding:24px 28px">
+    <h1 style="margin:0;font-size:20px;color:#ffffff;font-weight:800;letter-spacing:-0.3px">Delivery Clarity</h1>
+    <p style="margin:4px 0 0;font-size:13px;color:#bfdbfe">Reset your password</p>
+  </div>
+  <div style="padding:28px">
+    <p style="margin-top:0">Hi <strong>${name}</strong>,</p>
+    <p>We received a request to reset your Delivery Clarity password. Click below to choose a new one.</p>
+    <a href="${resetUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;margin:8px 0 20px">
+      Reset Password →
+    </a>
+    <p style="font-size:13px;color:#475569">This link expires in 1 hour.</p>
+    <p style="font-size:11px;color:#94a3b8;margin-top:28px;padding-top:16px;border-top:1px solid #f1f5f9">
+      If you did not request this, you can safely ignore this email — your password will not be changed.
+    </p>
+  </div>
+</div>`.trim();
+
+  return { subject: 'Reset your password — Delivery Clarity', text, html };
 }

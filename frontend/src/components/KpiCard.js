@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 export default function KpiCard({ label, value, detail, accent = 'blue', onClick, tooltip, thresholds }) {
   const numeric = (() => {
     if (typeof value === 'number') return value;

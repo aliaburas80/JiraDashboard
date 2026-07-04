@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Release confidence trend tests — TC-RC-01 to TC-RC-10
 
 import { computeReleaseConfidence, releaseConfidenceBand } from '../lib/releaseConfidence';

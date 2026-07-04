@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET /api/entitlement — returns current user's trial entitlement state.
 // Used by the dashboard and upload page to show status/time remaining.
 

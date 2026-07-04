@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 const express = require('express');
 const multer = require('multer');
 const rateLimit = require('express-rate-limit');

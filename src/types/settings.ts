@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 
 export type RetentionPeriod = 7 | 30 | 90 | 365 | -1; // -1 = keep forever
 

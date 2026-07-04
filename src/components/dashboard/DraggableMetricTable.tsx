@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Drag-and-drop column reordering for the issue table.
 // Uses the HTML5 drag-and-drop API — no extra library required.
 // Column order is persisted to localStorage.

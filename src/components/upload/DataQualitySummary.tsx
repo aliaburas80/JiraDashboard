@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Shown immediately after upload — compact quality score + top issues.
 'use client';
 import type { DataQualityResult, DataQualityBand } from '@/types/dataQuality';

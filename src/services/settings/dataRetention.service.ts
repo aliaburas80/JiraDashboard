@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Data retention enforcement — deletes logs/snapshots older than the configured
 // retention period. Also provides per-user and admin delete operations.
 

@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import UploadPage from './components/UploadPage';
@@ -249,7 +249,7 @@ function AppHeader({ theme, setTheme, openHelp, showNav, showSectionNav }) {
 function AppFooter() {
   return (
     <footer className="app-footer">
-      © {new Date().getFullYear()} Ali Abu Ras &nbsp;·&nbsp; aburasali80@gmail.com &nbsp;·&nbsp; All rights reserved.
+      © {new Date().getFullYear()} Ali Abu Ras &nbsp;·&nbsp; ali.aburas@deliveryclarity.app &nbsp;·&nbsp; All rights reserved.
     </footer>
   );
 }

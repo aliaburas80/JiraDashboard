@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Missing-column impact service — goes beyond the data quality score.
 // For each missing or incomplete field it tells the user EXACTLY what they

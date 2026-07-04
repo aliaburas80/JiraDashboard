@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — aburasali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Sprint throughput service.
 // Calculates per-sprint committed/completed counts, story points, carryover,

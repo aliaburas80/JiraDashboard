@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 
 datasource db {
   provider = "postgresql"
@@ -20,6 +20,9 @@ model User {
   // EP-012: email verification link — set at registration, cleared once verified.
   emailVerificationToken   String?   @unique
   emailVerificationExpires DateTime?
+  // EP-013: "Forgot your password" — set on request, cleared once used or on successful login.
+  passwordResetToken   String?   @unique
+  passwordResetExpires DateTime?
   persona            String    @default("")     // primary professional persona chosen at signup
   // EP-014: consent and legal document acceptance
   termsAcceptedAt    DateTime?                  // when user accepted the Terms of Use + Privacy Policy

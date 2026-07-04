@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Health threshold tests — TC-TH-01 to TC-TH-10
 
 import { DEFAULT_THRESHOLDS, THRESHOLD_LABELS } from '../types/thresholds';

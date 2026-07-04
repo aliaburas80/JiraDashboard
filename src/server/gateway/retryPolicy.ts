@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Backend Integration Gateway — timeout / retry / backoff policy (GW-06, GW-17–GW-19).
 
 import type { GatewayErrorCategory, RetryPolicy } from './types';

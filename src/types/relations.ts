@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 
 // Issue type labels are admin-configurable (custom types allowed — see
 // src/types/issueTypeHierarchy.ts and the "Issue Type Hierarchy" admin

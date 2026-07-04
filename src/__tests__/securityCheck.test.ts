@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Security check tests — TC-SC2-01 to TC-SC2-08
 
 import { runSecurityChecks } from '../services/settings/securityCheck.service';

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // TC-REQ-01 to TC-REQ-20 — User Add-Member Request Workflow
 // USERREQ-07 Prisma models, USERREQ-10–14 API routes.
 

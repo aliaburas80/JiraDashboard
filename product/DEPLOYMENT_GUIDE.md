@@ -446,5 +446,5 @@ The app also includes a built-in backup feature at `/admin/settings` (Backup & R
 
 ---
 
-*Delivery Clarity v4.1 — © 2026 Ali Abu Ras — aburasali80@gmail.com*  
+*Delivery Clarity v4.1 — © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app*  
 *From messy boards to measurable delivery confidence*

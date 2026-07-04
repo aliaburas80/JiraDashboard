@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Pure helpers for the dashboard's section-trigger status chips — shared between the page and its tests.
 
 export type ChipType = 'good' | 'warning' | 'critical' | 'neutral' | 'info';

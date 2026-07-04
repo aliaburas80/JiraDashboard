@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Merge and deduplicate raw Jira issue arrays from multiple exports.
 // Deduplication key: Issue Key field.
 // When the same key appears in multiple files, fields are merged by preferring

@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Upload-to-upload trend tests — TC-TR-01 to TC-TR-10
 
 import type { TrendPoint } from '../../app/api/trends/route';

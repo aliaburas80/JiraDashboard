@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // POST /api/admin/cleanup — trigger manual retention cleanup (admin only)
 // POST /api/admin/cleanup?action=clear_all — clear ALL data (admin only)
 

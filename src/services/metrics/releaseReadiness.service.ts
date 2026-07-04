@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Release Readiness Service — calculates per-version Go/Conditional Go/No-Go
 // assessment with an actionable checklist from Jira export data.

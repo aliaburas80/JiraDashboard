@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Missing-column impact tests — TC-MF-01 to TC-MF-12
 
 import { calculateFieldImpacts } from '../services/dataQuality/missingFieldImpact.service';

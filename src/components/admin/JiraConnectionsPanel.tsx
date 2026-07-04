@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // JIRA-04 — Admin panel to create and test read-only Jira API connections.
 // See product/JIRA_INTEGRATION_DESIGN.md. Field-mapping UI lands with JIRA-06.
 'use client';

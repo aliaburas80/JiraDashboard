@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Roadmap page epic-forecast logic — TC-ROAD-01 to TC-ROAD-05
 // Mirrors forecastEpic() in app/roadmap/page.tsx (see product/TEST_CASES.md §9.54).
 

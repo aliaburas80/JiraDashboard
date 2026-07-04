@@ -1,5 +1,5 @@
 'use client';
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // EP-014 / EP-I18N-01: Privacy Policy — fully data-driven, all content in every language.
 
 import { Suspense } from 'react';
@@ -14,7 +14,7 @@ import styles from './page.module.scss';
 
 const EFFECTIVE_DATE = '3 July 2026';
 const VERSION        = 'v1';
-const CONTACT_EMAIL  = 'aliaburas80@gmail.com';
+const CONTACT_EMAIL  = 'ali.aburas@deliveryclarity.app';
 
 function RenderBlock({ block, idx }: { block: Block; idx: number }) {
   if ('p'    in block) return <p key={idx}>{block.p}</p>;

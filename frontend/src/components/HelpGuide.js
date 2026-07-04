@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 import { useEffect, useState } from 'react';
 
 // ─── shared step builder ────────────────────────────────────────────────────
@@ -288,7 +288,7 @@ export default function HelpGuide({ open, activeSection: requestedSection = 'wel
         />
 
         <p className="help-copyright">
-          © {new Date().getFullYear()} Ali Abu Ras · aburasali80@gmail.com · All rights reserved.
+          © {new Date().getFullYear()} Ali Abu Ras · ali.aburas@deliveryclarity.app · All rights reserved.
         </p>
       </section>
   );

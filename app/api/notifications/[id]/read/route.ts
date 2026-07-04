@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // PATCH /api/notifications/:id/read — marks a notification as read for the current user.
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';

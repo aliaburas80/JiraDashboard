@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // EP-012: lands here from the verification link emailed at registration.
 'use client';
 import { useEffect, useState } from 'react';

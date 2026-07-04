@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Seed script — creates the first admin user for PostgreSQL deployments.
 
 import { PrismaClient } from '@prisma/client';

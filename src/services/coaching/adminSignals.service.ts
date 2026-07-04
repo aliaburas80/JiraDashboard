@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Admin operational signals for RBC-09 — server-only, read-only. Reuses
 // existing storage/system-error infrastructure rather than building new

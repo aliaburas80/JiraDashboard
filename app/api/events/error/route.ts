@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // POST /api/events/error — receive a client-side error report from the browser.
 //
 // Public endpoint (no auth required — errors can occur before/during login).

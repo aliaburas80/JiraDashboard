@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Dashboard view tests — TC-DV-01 to TC-DV-10
 
 import { DASHBOARD_VIEWS, DEFAULT_VIEW_ID } from '../types/dashboardView';

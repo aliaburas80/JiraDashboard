@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET /api/admin/jira-connections/:id/fields — discover this Jira instance's
 // field ID -> name mapping, for a future field-mapping UI step (JIRA-06b).
 //

@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // NOTE: Fully functional after npm install iron-session prisma @prisma/client bcryptjs
 'use client';
 import { useState, useEffect, FormEvent } from 'react';
@@ -171,7 +171,12 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">Password</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-slate-700">Password</label>
+              <Link href="/forgot-password" className="text-xs font-bold text-blue-600 underline underline-offset-2">
+                Forgot password?
+              </Link>
+            </div>
             <input
               type="password"
               name="password"

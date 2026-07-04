@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET  /api/admin/backup — create and download a backup bundle (admin only)
 // GET  /api/admin/backup?info=true — return file stats without downloading
 

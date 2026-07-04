@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Shows what specific data each missing/incomplete column is causing in the dashboard.
 'use client';
 import { useState } from 'react';

@@ -1,5 +1,5 @@
 'use client';
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 
 import { useState, useEffect, useCallback } from 'react';
 import styles from './page.module.scss';
@@ -1394,7 +1394,7 @@ export default function DeveloperPage() {
 
           <div className="mt-auto pt-3 px-3" style={{ borderTop: '1px solid var(--color-border, #e2e8f0)' }}>
             <p style={{ fontSize: 10, color: 'var(--dc-p3, #505050)' }}>© 2026 Ali Abu Ras</p>
-            <p className="truncate" style={{ fontSize: 10, color: 'var(--dc-p3, #505050)' }}>aliaburas80@gmail.com</p>
+            <p className="truncate" style={{ fontSize: 10, color: 'var(--dc-p3, #505050)' }}>ali.aburas@deliveryclarity.app</p>
           </div>
         </aside>
 

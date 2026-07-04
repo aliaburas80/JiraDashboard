@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 
 export interface OrphanRules {
   // Fields checked for a parent link — item is an orphan if NONE of these have a value

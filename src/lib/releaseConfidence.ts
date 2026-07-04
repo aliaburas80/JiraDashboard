@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Release confidence score (0–100) derived from upload metrics.
 // Distinct from Health Score: focused on the four release-gate signals

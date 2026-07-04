@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // ARCH-05 Phase 1 (JIRA-06) — normalizes raw Jira REST API issue objects into
 // the same canonical Record<string, unknown> shape src/services/jira/parser.ts's
 // parseJiraFile() produces, so validateIssueData()/calculateDashboardMetrics()

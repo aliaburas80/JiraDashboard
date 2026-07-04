@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Action-owner assignment tests — TC-AO-01 to TC-AO-08
 
 import { getRecOwner, setRecOwner, clearRecOwner, getAllRecOwners, clearAllRecOwners } from '../lib/recOwners';

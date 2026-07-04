@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Backend Integration Gateway — secret redaction and audit logging (GW-07, GW-15, GW-20).
 //
 // Gateway calls are high-volume *operational* telemetry, not human-readable

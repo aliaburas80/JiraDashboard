@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // /roadmap — Epic delivery roadmap: animated Gantt + card view.
 'use client';
 import { useEffect, useState, type CSSProperties } from 'react';

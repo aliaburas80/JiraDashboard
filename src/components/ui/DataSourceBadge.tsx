@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // DataSourceBadge — shows where the current data is coming from.
 // CloudLoadingBanner — shows a loading indicator when fetching from cloud.
 'use client';

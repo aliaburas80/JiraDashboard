@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Retrospective file parser — TC-RETRO-08 to TC-RETRO-13 (RETRO-04 to RETRO-07)
 
 import * as XLSX from 'xlsx';

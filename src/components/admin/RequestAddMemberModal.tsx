@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // USERREQ-02/03 — Modal for any logged-in user to request adding a new member.
 'use client';
 import { useEffect, useRef, useState } from 'react';

@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Orphan detection rules tests — TC-OR-01 to TC-OR-10
 
 import { isOrphanByRules } from '../services/settings/orphanRules.service';

@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Explorer export tests — TC-EX-01 to TC-EX-08
 
 import * as XLSX from 'xlsx';

@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Shown after file upload before redirecting to dashboard.
 // Lets users verify column mapping, see aliased columns, and understand
 // which important fields are missing before committing to the analysis.

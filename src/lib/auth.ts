@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Password hashing and verification.
 
 import bcrypt from 'bcryptjs';
@@ -6,6 +6,10 @@ import { randomBytes } from 'crypto';
 
 // EP-012: how long an email verification link stays valid after registration.
 export const EMAIL_VERIFICATION_TTL_HOURS = 24;
+
+// EP-013: how long a "forgot password" reset link stays valid — shorter than email
+// verification since a leaked reset link grants immediate account takeover.
+export const PASSWORD_RESET_TTL_HOURS = 1;
 
 const SALT_ROUNDS = 12;
 
@@ -55,7 +59,9 @@ export function generateTempPassword(): string {
   return chars.join('');
 }
 
-// EP-012: opaque, unguessable token embedded in the emailed verification link.
+// Opaque, unguessable token embedded in an emailed link. Reused as-is for both the
+// EP-012 email-verification link and the EP-013 password-reset link — same shape
+// (32 random bytes, hex-encoded), different table columns and TTLs per caller.
 export function generateVerificationToken(): string {
   return randomBytes(32).toString('hex');
 }

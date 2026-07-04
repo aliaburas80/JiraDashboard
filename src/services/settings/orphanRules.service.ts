@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 import fs   from 'fs';
 import path from 'path';
 import type { OrphanRules } from '@/types/orphanRules';

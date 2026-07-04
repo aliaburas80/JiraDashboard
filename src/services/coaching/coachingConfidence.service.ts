@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Confidence aggregation (RBC-17) — averages the relevant MetricConfidenceMap
 // entries for a coaching category, then downgrades the result when the

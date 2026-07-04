@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Scrum Master / Agile Coach insights (RBC-03) — blocked items, aging WIP,
 // flow efficiency, cycle time, daily discipline, impediment removal, WIP limits.

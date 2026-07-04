@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Backend Integration Gateway — single entry point for all external HTTP
 // calls (GW-03, GW-09–GW-14, GW-21, GW-22).
 //

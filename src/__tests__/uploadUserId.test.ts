@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Upload-route session/userId persistence tests — TC-A-14 (added 2026-06-08 to
 // close TRACE-02 / Gaps Summary COVER-11 — see TODO-List.md Section 8 /
 // product/TEST_CASES.md §F3): a logged-in user's upload MUST be saved to the

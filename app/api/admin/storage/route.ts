@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET  /api/admin/storage — return current storage settings + provider info
 // POST /api/admin/storage — update active provider and credentials
 // POST /api/admin/storage?action=test — test current provider connectivity

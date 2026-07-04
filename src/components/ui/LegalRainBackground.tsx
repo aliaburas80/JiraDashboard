@@ -1,5 +1,5 @@
 'use client';
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Arrow-rain background for legal pages.
 // Draws the chevron from public/icons/0012-svg-0012.svg rotated 90° CW so the
 // sharp edge points DOWN, then animates them falling like data rain.

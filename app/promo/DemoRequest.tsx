@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // DemoRequest — a "Request a demo" trigger button plus its modal form. Used in
 // several spots on the public /promo page (nav, hero, final CTA). The form
 // collects who the visitor is, what they need, and why, then POSTs to

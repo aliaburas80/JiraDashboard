@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Data Quality Score — calculates how complete and trustworthy an uploaded
 // Jira export is. Score drives the DataQualityCard and upload warning panel.

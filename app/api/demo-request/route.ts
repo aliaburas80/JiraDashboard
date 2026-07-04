@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // POST /api/demo-request — public endpoint behind the /promo "Request a demo"
 // form. A visitor supplies who they are, what they need, and why; we email the
 // product owner so they can follow up. No authentication (the promo page is
@@ -14,7 +14,7 @@ const MIN_JUSTIFICATION = 20;
 
 // Owner inbox that receives demo requests. Configurable, with the project
 // owner's address as the documented default.
-const DEMO_REQUEST_TO = process.env.DEMO_REQUEST_TO ?? 'aliaburas80@gmail.com';
+const DEMO_REQUEST_TO = process.env.DEMO_REQUEST_TO ?? 'ali.aburas@deliveryclarity.app';
 
 // Simple in-process rate limiter — 5 submissions per 15 minutes per IP.
 const RATE_WINDOW_MS = 15 * 60_000;
@@ -91,14 +91,14 @@ export async function POST(req: NextRequest) {
       // SMTP not configured — record it so the request is not silently lost.
       console.warn(`[demo-request] SMTP unavailable — unsent request from ${email} (${organization}).`);
       return NextResponse.json(
-        { error: 'We could not send your request right now. Please email aliaburas80@gmail.com directly.' },
+        { error: 'We could not send your request right now. Please email ali.aburas@deliveryclarity.app directly.' },
         { status: 503 },
       );
     }
   } catch (err) {
     console.error('[demo-request] Failed to send demo request email:', err);
     return NextResponse.json(
-      { error: 'Something went wrong sending your request. Please email aliaburas80@gmail.com directly.' },
+      { error: 'Something went wrong sending your request. Please email ali.aburas@deliveryclarity.app directly.' },
       { status: 502 },
     );
   }

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // TC-JIRA-14 to TC-JIRA-24 — ARCH-05 Phase 1 (JIRA-06): normalizing raw Jira
 // REST API issues into the canonical shape parseJiraFile() already produces.
 

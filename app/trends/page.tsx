@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Upload-to-upload trend analysis — tracks how delivery metrics change over time.
 'use client';
 import { useEffect, useState } from 'react';

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Snapshot-load error-state tests — TC-SN-09 to TC-SN-11 (added 2026-06-08 to
 // close TRACE-02 / Gaps Summary COVER-12 — see TODO-List.md Section 8): the
 // GET /api/snapshots/:id route guards for 401, 404, and cross-workspace access.

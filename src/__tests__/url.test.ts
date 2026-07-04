@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // TC-URL-01 to TC-URL-06 — resolveRequestOrigin()
 
 import { resolveRequestOrigin, normalizeAppUrl } from '../lib/url';

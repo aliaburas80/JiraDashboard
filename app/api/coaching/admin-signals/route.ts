@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET /api/coaching/admin-signals — admin-only operational signals for the
 // Admin coaching category (RBC-09). Read-only.
 

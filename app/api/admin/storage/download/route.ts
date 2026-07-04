@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET /api/admin/storage/download?key=<object-key>
 // Downloads a backup file from the active cloud provider and returns it as JSON.
 // Optionally: ?restore=true to immediately restore the downloaded bundle.

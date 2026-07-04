@@ -1,5 +1,5 @@
 'use client';
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // EP-I18N-01: PDF download — opens browser print dialog (zero dependencies).
 
 import styles from './DownloadPdfButton.module.scss';

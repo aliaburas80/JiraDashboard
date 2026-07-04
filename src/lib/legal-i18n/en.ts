@@ -50,7 +50,7 @@ export const en: LegalTranslation = {
             'You may hold only one account. Duplicate accounts are prohibited.',
             'You are solely responsible for all activity that occurs under your account credentials.',
             'You must choose a strong, unique password and must not share your login credentials with any other person or entity.',
-            'You must notify us immediately at aliaburas80@gmail.com if you believe your account has been compromised.',
+            'You must notify us immediately at ali.aburas@deliveryclarity.app if you believe your account has been compromised.',
             'We reserve the right to suspend or terminate any account we reasonably believe has been accessed by an unauthorised party.',
             'You must verify your email address before accessing analysis features. We reserve the right to require re-verification at any time.',
           ]},
@@ -152,7 +152,7 @@ export const en: LegalTranslation = {
             'Keep all Confidential Information strictly confidential and protect it with at least the same degree of care you use for your own most sensitive information, but no less than reasonable care;',
             'Not disclose, describe, document, publish, or communicate any Confidential Information to any third party without our prior written consent;',
             'Not use Confidential Information for any purpose other than using the Service within the scope of these Terms;',
-            'Notify us immediately at aliaburas80@gmail.com if you become aware of any actual or suspected unauthorised disclosure of Confidential Information.',
+            'Notify us immediately at ali.aburas@deliveryclarity.app if you become aware of any actual or suspected unauthorised disclosure of Confidential Information.',
           ]},
           { b: 'This obligation of confidentiality survives termination or expiry of your account for a period of seven (7) years, or for the maximum period permitted by applicable law, whichever is longer.' },
         ],
@@ -336,7 +336,7 @@ export const en: LegalTranslation = {
         title: '1. Who we are and how to contact us',
         blocks: [
           { p: 'The data controller for all personal data processed through Delivery Clarity is:' },
-          { ul: ['Name: Ali Abu Ras', 'Operating as: Delivery Clarity', 'Email: aliaburas80@gmail.com', 'Country: Jordan'] },
+          { ul: ['Name: Ali Abu Ras', 'Operating as: Delivery Clarity', 'Email: ali.aburas@deliveryclarity.app', 'Country: Jordan'] },
           { p: 'For all data protection enquiries, rights requests, or complaints, please contact us at the email address above.' },
         ],
       },
@@ -391,7 +391,7 @@ export const en: LegalTranslation = {
         title: '5. International data transfers',
         blocks: [
           { p: 'Our primary infrastructure is located in the United States. Transfers of personal data from the UK or European Economic Area to the USA are made in reliance on Standard Contractual Clauses (SCCs) incorporated into our sub-processor agreements, and/or the UK International Data Transfer Agreement (IDTA) framework where appropriate.' },
-          { p: 'You may request details of the specific transfer mechanisms we rely on by contacting aliaburas80@gmail.com.' },
+          { p: 'You may request details of the specific transfer mechanisms we rely on by contacting ali.aburas@deliveryclarity.app.' },
         ],
       },
       {
@@ -438,7 +438,7 @@ export const en: LegalTranslation = {
         title: '9. Children\'s privacy',
         blocks: [
           { p: 'The Service is not directed at, and is not intended for use by, anyone under the age of 18. We do not knowingly collect personal data from children under 18. If we become aware that we have collected personal data from a child under 18, we will delete it promptly.' },
-          { p: 'If you believe a child has provided us with personal data, please contact us immediately at aliaburas80@gmail.com.' },
+          { p: 'If you believe a child has provided us with personal data, please contact us immediately at ali.aburas@deliveryclarity.app.' },
         ],
       },
       {
@@ -455,7 +455,7 @@ export const en: LegalTranslation = {
             'Right to withdraw consent: Where we process data based on consent, you may withdraw consent at any time.',
             'Right not to be subject to automated decision-making (Article 22): We do not make automated decisions that produce legal effects about you.',
           ]},
-          { p: 'To exercise any of these rights, please contact aliaburas80@gmail.com. We will respond within one month.' },
+          { p: 'To exercise any of these rights, please contact ali.aburas@deliveryclarity.app. We will respond within one month.' },
           { b: 'Right to lodge a complaint: If you believe we have processed your data unlawfully, you have the right to lodge a complaint with the Information Commissioner\'s Office (ICO) at ico.org.uk, or with your local data protection authority if you are in the EEA.' },
         ],
       },

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // POST /api/retro/parse — RETRO-04 to RETRO-10. Parses an uploaded retro
 // file (CSV/XLSX/XLS/Markdown/plain text) and returns a preview — records,
 // generated insights, warnings, and corrections — for the user to review

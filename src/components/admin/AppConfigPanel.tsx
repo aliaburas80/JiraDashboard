@@ -1,5 +1,5 @@
 'use client';
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Admin panel for viewing and saving encrypted app config (SMTP + app URL) to cloud storage.
 
 import { useEffect, useState } from 'react';

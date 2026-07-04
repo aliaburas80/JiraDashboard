@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // EP-006: workspace helper — single authoritative lookup for a user's workspace.
 // EP-008 will add workspace-scoped query enforcement on top of this.
 

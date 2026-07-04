@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET  /api/admin/system-errors            — list all system error logs
 // POST /api/admin/system-errors?action=retry — retry a logged operation
 // PATCH /api/admin/system-errors           — mark one or all resolved

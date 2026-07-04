@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // EP-010: Session hardening tests — TC-SH-01 to TC-SH-04
 // Verifies that /api/auth/me ejects suspended users mid-session
 // rather than trusting the cookie indefinitely.

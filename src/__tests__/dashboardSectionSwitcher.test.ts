@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Dashboard Section Switcher tests — TC-DS-01 to TC-DS-10
 
 import { DASHBOARD_SECTIONS, OVERVIEW_KEYS } from '../lib/dashboardSections';

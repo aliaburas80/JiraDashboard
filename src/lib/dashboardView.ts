@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 import { DASHBOARD_VIEWS, DEFAULT_VIEW_ID, type ViewId, type DashboardView } from '@/types/dashboardView';
 import { defaultDashboardViewForRole, isDashboardViewLockedForRole } from '@/lib/roles';
 

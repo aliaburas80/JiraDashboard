@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Marquee — two infinite capability tickers scrolling in opposite directions
 // for a layered, dynamic feel. Pure CSS animation (no JS), each row's track
 // duplicated for a seamless loop. Decorative: the same words appear as real,

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Backend Integration Gateway — shared type contract (GW-02).
 //
 // This is the foundation that ALL future external HTTP calls (Jira, cloud

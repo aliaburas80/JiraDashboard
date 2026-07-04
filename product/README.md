@@ -2,7 +2,7 @@
 
 **Brand:** Ali Delivery Intelligence  
 **Slogan:** From messy boards to measurable delivery confidence  
-**Author:** Ali Abu Ras (aburasali80@gmail.com)  
+**Author:** Ali Abu Ras (ali.aburas@deliveryclarity.app)  
 **Last updated:** 2026-06-03  
 **Branch:** feat/enhancements  
 
@@ -232,4 +232,4 @@ Update when:
 
 ---
 
-© 2026 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+© 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.

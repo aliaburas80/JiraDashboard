@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Ceremony advice rules (RBC-10–14) — team-wide cadence recommendations computed
 // once from DashboardMetrics and embedded identically into every visible coaching

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Multi-file merge / dedup tests — TC-UM-01 to TC-UM-06
 // Closes TRACE-02 / Gaps Summary COVER-06 (UC-094, FR-312): mergeIssueArrays() had
 // a live route and UI but zero FR/UC/TC anchor and zero test coverage.

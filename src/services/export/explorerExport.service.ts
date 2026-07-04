@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Work Item Explorer export — Excel (5 sheets) and CSV.
 // Input: RelationGraph produced by buildRelationGraph().

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // /forecast — Delivery forecasting: velocity trend, burn-up, sprint analytics, pattern insights.
 'use client';
 import { CSSProperties, useEffect, useState } from 'react';

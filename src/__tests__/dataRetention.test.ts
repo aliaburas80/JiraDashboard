@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Data retention tests — TC-DR-01 to TC-DR-10
 
 import { readSettings, writeSettings } from '../services/settings/settings.service';

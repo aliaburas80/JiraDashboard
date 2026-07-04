@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 
 export function normalizeAppUrl(value: string | undefined, fallback = 'http://localhost:3000'): string {
   const candidate = value?.trim();

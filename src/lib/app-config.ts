@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Encrypted app-config service.
 // Stores SMTP and app-level settings in the active cloud provider as app-config.json.
 // Falls back to environment variables when no cloud is configured or decryption fails.

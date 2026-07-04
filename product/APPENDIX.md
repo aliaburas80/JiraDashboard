@@ -243,7 +243,7 @@
 
 ---
 
-*© 2026 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity v4.0*
+*© 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app — Delivery Clarity v4.0*
 
 ## N — v4.1 UX Design System Terms
 

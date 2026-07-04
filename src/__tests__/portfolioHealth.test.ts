@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Portfolio health tests — TC-PF-01 to TC-PF-10
 
 import { computePortfolioSummary, portfolioBand, portfolioBandColor } from '../lib/portfolioHealth';

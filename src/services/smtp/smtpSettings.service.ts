@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // CRUD for encrypted per-deployment SMTP settings stored in the database.
 // The password is encrypted with AES-256-GCM via secret-field.ts before
 // storage and decrypted only at send time — plaintext never persists.

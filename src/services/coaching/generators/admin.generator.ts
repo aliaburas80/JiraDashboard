@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Admin insights (RBC-09) — storage, data, security, governance, diagnostics.
 // Data-quality-heavy, not delivery-metric-heavy. Admin operational signals are

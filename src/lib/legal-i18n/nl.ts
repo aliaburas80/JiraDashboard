@@ -39,7 +39,7 @@ export const nl: LegalTranslation = {
         'U mag slechts één account bezitten. Dubbele accounts zijn verboden.',
         'U bent als enige verantwoordelijk voor alle activiteiten die plaatsvinden onder uw accountgegevens.',
         'Kies een sterk, uniek wachtwoord en deel uw inloggegevens niet met anderen.',
-        'Meld ons onmiddellijk via aliaburas80@gmail.com als u vermoedt dat uw account is gecompromitteerd.',
+        'Meld ons onmiddellijk via ali.aburas@deliveryclarity.app als u vermoedt dat uw account is gecompromitteerd.',
         'Wij behouden het recht een account op te schorten of te beëindigen dat naar onze redelijke mening onbevoegd is benaderd.',
         'U moet uw e-mailadres verifiëren voordat u toegang krijgt tot analysefuncties.',
       ]}]},
@@ -119,7 +119,7 @@ export const nl: LegalTranslation = {
           'Alle Vertrouwelijke Informatie strikt vertrouwelijk te houden en te beschermen met ten minste dezelfde mate van zorg als u toepast op uw eigen meest gevoelige informatie, maar niet minder dan redelijke zorg;',
           'Geen Vertrouwelijke Informatie aan derden te onthullen, te beschrijven, te documenteren, te publiceren of mee te delen zonder onze voorafgaande schriftelijke toestemming;',
           'Vertrouwelijke Informatie niet te gebruiken voor enig ander doel dan het gebruik van de Service binnen de reikwijdte van deze Voorwaarden;',
-          'Ons onmiddellijk te informeren via aliaburas80@gmail.com indien u zich bewust wordt van een daadwerkelijke of vermoede ongeoorloofde openbaarmaking van Vertrouwelijke Informatie.',
+          'Ons onmiddellijk te informeren via ali.aburas@deliveryclarity.app indien u zich bewust wordt van een daadwerkelijke of vermoede ongeoorloofde openbaarmaking van Vertrouwelijke Informatie.',
         ]},
         { b: 'Deze geheimhoudingsverplichting blijft van kracht na beëindiging of afloop van uw account gedurende een periode van zeven (7) jaar, of voor de maximale periode toegestaan door toepasselijk recht, welke van beide langer is.' },
       ]},
@@ -262,7 +262,7 @@ export const nl: LegalTranslation = {
     sections: [
       { title: '1. Wie wij zijn en hoe u contact met ons kunt opnemen', blocks: [
         { p: 'De verwerkingsverantwoordelijke voor alle persoonsgegevens die via Delivery Clarity worden verwerkt:' },
-        { ul: ['Naam: Ali Abu Ras', 'Handelsnaam: Delivery Clarity', 'E-mail: aliaburas80@gmail.com', 'Land van vestiging: Verenigd Koninkrijk'] },
+        { ul: ['Naam: Ali Abu Ras', 'Handelsnaam: Delivery Clarity', 'E-mail: ali.aburas@deliveryclarity.app', 'Land van vestiging: Verenigd Koninkrijk'] },
         { p: 'Voor alle vragen over gegevensbescherming, verzoeken om rechten of klachten kunt u contact opnemen via het bovenstaande e-mailadres.' },
       ]},
       { title: '2. Welke gegevens wij verzamelen en waarom', blocks: [
@@ -295,7 +295,7 @@ export const nl: LegalTranslation = {
       ]},
       { title: '5. Internationale gegevensoverdrachten', blocks: [
         { p: 'Onze primaire infrastructuur bevindt zich in de VS. Overdrachten van persoonsgegevens vanuit het VK of de EER naar de VS vinden plaats op basis van Standaard Contractuele Clausules (SCC\'s) en/of de Britse International Data Transfer Agreement (IDTA).' },
-        { p: 'U kunt de details van de gebruikte overdrachts-mechanismen opvragen via aliaburas80@gmail.com.' },
+        { p: 'U kunt de details van de gebruikte overdrachts-mechanismen opvragen via ali.aburas@deliveryclarity.app.' },
       ]},
       { title: '6. Bewaring van gegevens', blocks: [
         { ul: [
@@ -326,7 +326,7 @@ export const nl: LegalTranslation = {
       ]},
       { title: '9. Privacy van kinderen', blocks: [
         { p: 'De Service is niet gericht op personen onder de 18 jaar. Wij verzamelen niet bewust persoonsgegevens van kinderen. Als wij dit ontdekken, verwijderen wij deze onmiddellijk.' },
-        { p: 'Als u denkt dat een kind ons persoonsgegevens heeft verstrekt, neem dan onmiddellijk contact op via aliaburas80@gmail.com.' },
+        { p: 'Als u denkt dat een kind ons persoonsgegevens heeft verstrekt, neem dan onmiddellijk contact op via ali.aburas@deliveryclarity.app.' },
       ]},
       { title: '10. Uw rechten', blocks: [
         { p: 'Onder de UK GDPR heeft u de volgende rechten:' },
@@ -340,7 +340,7 @@ export const nl: LegalTranslation = {
           'Recht op intrekking van toestemming: u kunt uw toestemming te allen tijde intrekken.',
           'Recht op geen geautomatiseerde besluitvorming (art. 22): wij nemen geen geautomatiseerde beslissingen over u.',
         ]},
-        { p: 'Neem contact op via aliaburas80@gmail.com om uw rechten uit te oefenen. Wij reageren binnen één maand.' },
+        { p: 'Neem contact op via ali.aburas@deliveryclarity.app om uw rechten uit te oefenen. Wij reageren binnen één maand.' },
         { b: 'Recht op klacht: u kunt een klacht indienen bij de ICO (ico.org.uk) of, als u in de EER verblijft, bij uw lokale gegevensbeschermingsautoriteit.' },
       ]},
       { title: '11. Uw Jira-gegevens — specifieke toezeggingen', blocks: [

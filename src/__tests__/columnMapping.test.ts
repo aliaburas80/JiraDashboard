@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Column mapping preview tests — TC-CM-01 to TC-CM-10
 
 import { buildColumnMapping } from '../services/jira/parser';

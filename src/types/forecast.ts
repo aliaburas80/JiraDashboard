@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Delivery forecast domain types. Shared by the forecast engine
 // (src/services/forecast/forecastEngine.service.ts) and the /forecast page.

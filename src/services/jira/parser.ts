@@ -1,5 +1,5 @@
 // Migrated from backend/src/services/parser.js
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 import * as XLSX from 'xlsx';
 import type { ColumnMappingResult, ColumnEntry, ColumnStatus } from '@/types/columnMapping';
 

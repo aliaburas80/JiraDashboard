@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Role-Based Coaching orchestrator (RBC-15/16) — maps an AppRole to its
 // visible coaching categories and generates the full insight bundle.

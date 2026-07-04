@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Throughput formula tests — TC-T-01 to TC-T-11
 
 import { calculateSprintThroughput } from '../services/metrics/throughput.service';

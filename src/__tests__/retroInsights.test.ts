@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Retrospective insights engine — TC-RETRO-14 to TC-RETRO-20 (RETRO-11,13,29,33-36)
 
 import {

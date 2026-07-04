@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Release readiness tests — TC-RR-01 to TC-RR-10
 
 import { calculateReleaseReadiness } from '../services/metrics/releaseReadiness.service';

@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // "What changed since last upload?" panel.
 // Fetches the 2 most recent upload logs and compares them automatically.
 'use client';

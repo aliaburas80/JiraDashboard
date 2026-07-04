@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET /api/notifications — returns notifications for the current user, newest first.
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';

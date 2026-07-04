@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Retrospective insights engine — RETRO-11 to RETRO-14, RETRO-29, RETRO-33 to
 // RETRO-36. Works over one or more RetroRecord (single in-app form submission,

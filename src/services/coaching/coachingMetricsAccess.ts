@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Small, typed accessors for the DashboardMetrics fields that src/types/metrics.ts
 // declares as `unknown` (relations, epics) even though the runtime shape built by

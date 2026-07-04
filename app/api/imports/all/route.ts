@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // DELETE /api/imports/all — delete all import logs for the current user
 // Admin can pass ?userId=xxx to delete logs for any user
 

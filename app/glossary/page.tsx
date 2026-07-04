@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 'use client';
 import { useState, useMemo, type CSSProperties } from 'react';
 import AppShell from '@/components/layout/AppShell';
@@ -444,7 +444,7 @@ export default function GlossaryPage() {
         {/* ── Footer ── */}
         <div className="text-center py-6"
           style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', fontSize: 12, color: 'var(--dc-p3, #505050)' }}>
-          © 2026 Ali Abu Ras · aliaburas80@gmail.com · Delivery Clarity v4.6
+          © 2026 Ali Abu Ras · ali.aburas@deliveryclarity.app · Delivery Clarity v4.6
           <span className="mx-2">·</span>
           Also in <code className="font-mono">product/APPENDIX.md</code>
         </div>

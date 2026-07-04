@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Role-based view selector — lets users switch between curated dashboard presets.
 'use client';
 import { useRef, useState, useEffect } from 'react';

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // PATCH /api/admin/user-add-requests/:id/reject — admin rejects a user add request.
 // Marks the request rejected, creates a notification for the requester, and writes an audit event.
 

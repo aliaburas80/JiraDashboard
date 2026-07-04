@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET  /api/admin/issue-type-hierarchy — return current config (any logged-in user can read,
 //      since the Explore page needs it for every user, not just admins)
 // POST /api/admin/issue-type-hierarchy — replace config (admin only)

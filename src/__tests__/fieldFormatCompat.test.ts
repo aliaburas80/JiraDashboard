@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Work Item Explorer field-format compatibility tests — TC-FF-01 to TC-FF-06
 // Confirms buildRelationGraph resolves issue fields identically whether the
 // dataset uses raw JiraIssue export field names (Title Case), normalized

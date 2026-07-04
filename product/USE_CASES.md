@@ -2482,7 +2482,7 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 **Main Flow:**
 1. Stakeholder opens the HTML or PDF report
 2. Header shows the Delivery Clarity lightning bolt brand mark + "Delivery Report" / "Executive Summary"
-3. Footer shows "Delivery Clarity v4.1 · Ali Abu Ras · aliaburas80@gmail.com"
+3. Footer shows "Delivery Clarity v4.1 · Ali Abu Ras · ali.aburas@deliveryclarity.app"
 4. Browser tab shows branded favicon and title "Delivery Clarity — Jira Intelligence"
 **Related FR:** FR-300, BR-105
 
@@ -2960,7 +2960,7 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 - **Trigger:** New user opens welcome email delivered to their inbox
 
 **Main Flow:**
-1. New user receives an HTML welcome email from `JiraDashboard <aburasali80@gmail.com>` with subject "Welcome to JiraDashboard — Your Account is Ready"
+1. New user receives an HTML welcome email from `JiraDashboard <ali.aburas@deliveryclarity.app>` with subject "Welcome to JiraDashboard — Your Account is Ready"
 2. Email body contains full name, login email, temporary password, and a "Log In Now" button/link pointing to the app login page
 3. User clicks the login link; opens the app in their browser
 4. User enters their email and the temporary password from the email; submits the login form

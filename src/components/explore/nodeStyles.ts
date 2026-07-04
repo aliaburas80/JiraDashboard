@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 import type { NodeTypeConfig, RelationEdgeType, EdgeConfig } from '@/types/relations';
 import type { IssueTypeDefinition } from '@/types/issueTypeHierarchy';
 import { DEFAULT_ISSUE_TYPES, UNKNOWN_ISSUE_TYPE } from '@/types/issueTypeHierarchy';

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET/POST /api/profile/image — authenticated S3-backed profile image upload/proxy.
 
 import { NextRequest, NextResponse } from 'next/server';

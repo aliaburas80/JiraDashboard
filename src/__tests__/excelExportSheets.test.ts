@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Smart Excel export — sheet-content and trigger-flow tests, TC-X-09 to TC-X-13
 // Closes the F4-05/06/08 traceability gap: the Risks & Blockers, Orphan & Data
 // Quality, Cycle & Lead Time percentile, and Release Readiness sheets, plus the

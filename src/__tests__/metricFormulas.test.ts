@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // P0A-03 — Metric formula regression tests.
 // Covers gaps found in the P0A-03 audit: lead/cycle time calculation,
 // zero-denominator safety, safeAverage with empty/NaN inputs, sprint

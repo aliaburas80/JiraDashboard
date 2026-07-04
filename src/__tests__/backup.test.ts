@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Database backup and restore tests — TC-BK-01 to TC-BK-08
 
 import { restoreBackup } from '../services/settings/backup.service';

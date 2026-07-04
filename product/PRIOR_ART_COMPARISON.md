@@ -151,7 +151,7 @@ The following combinations of capabilities do not appear in any single prior-art
 
 ---
 
-*© 2025 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity*
+*© 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app — Delivery Clarity*
 
 ---
 

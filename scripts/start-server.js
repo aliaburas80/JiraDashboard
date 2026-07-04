@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Launches Next.js on the requested port, falling back to the next free
 // port if it's already taken — avoids hard-failing with EADDRINUSE.
 

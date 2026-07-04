@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET /api/auth/me — returns current session user data.
 // EP-010: verifies isActive in DB so suspended users are ejected immediately
 // on their next request rather than waiting for cookie expiry.

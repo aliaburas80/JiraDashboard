@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Backend Integration Gateway tests — TC-GW-01 onward (added 2026-06-08 to
 // close GW-23 / TODO-List.md Section 14): endpoint policy (SSRF/allowlist),
 // retry/backoff policy, secret redaction + audit logging, the config-driven

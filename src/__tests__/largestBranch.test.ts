@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Largest unfinished branch tests — TC-LB-01 to TC-LB-08
 // Note: The graph includes focus node + its direct parent + its direct children.
 // Branch computation works on VISIBLE graph nodes/edges (not full hierarchy).

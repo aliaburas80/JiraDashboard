@@ -1,5 +1,5 @@
 'use client';
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Vanta-waves-inspired animated background using Canvas sine waves.
 // References: vantajs.com/waves · anime.js · freefrontend.com canvas effects
 // 6 overlapping sine-wave streams at different speeds, phases, amplitudes, colors.

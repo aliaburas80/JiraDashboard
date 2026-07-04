@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // PromoNav — sticky top navigation for the public /promo page.
 //  • Gains a blurred background once the user scrolls past the hero.
 //  • Smooth-scrolls to in-page sections (the "page transition" between

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET /api/admin/feedback — paginated feedback list for admin triage.
 
 import { NextRequest, NextResponse } from 'next/server';

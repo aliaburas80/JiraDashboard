@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -381,7 +381,7 @@ const SECTIONS: Section[] = [
     items: [
       { q: 'Why do the login and register pages show a logo instead of text?', a: 'The login and register pages now display the Delivery Clarity horizontal logo SVG instead of plain text, for consistent visual branding across all user-facing pages.' },
       { q: 'Does the product have a favicon?', a: 'Yes — the browser tab shows a Delivery Clarity lightning bolt favicon (SVG + ICO fallback). On iOS/Android home screens, the 128×128 PNG icon is used as the apple-touch-icon.' },
-      { q: 'What branding appears in exported reports?', a: 'HTML reports and Executive PDF files include the lightning bolt brand mark in the header alongside the report title. Footers show "Delivery Clarity v4.1 · Ali Abu Ras · aliaburas80@gmail.com". Excel workbooks include the product name, slogan, and author in the Executive Summary sheet.' },
+      { q: 'What branding appears in exported reports?', a: 'HTML reports and Executive PDF files include the lightning bolt brand mark in the header alongside the report title. Footers show "Delivery Clarity v4.1 · Ali Abu Ras · ali.aburas@deliveryclarity.app". Excel workbooks include the product name, slogan, and author in the Executive Summary sheet.' },
     ],
   },
   {
@@ -521,6 +521,8 @@ const SECTIONS: Section[] = [
       { q: 'Do notifications navigate me somewhere when I click them?', a: 'Yes. Clicking a navigable notification (one with a → arrow) marks it as read, closes the dropdown, and routes you to the relevant page. Accepted/rejected request notifications take non-admin users to /members and admin users to Admin Settings → Member Requests.' },
       { q: 'I signed up myself — do I need to verify my email?', a: "Yes. After creating an account through the public registration page, you'll receive a verification email with a link. Click it (it goes to /verify-email) to confirm your address. You can log in immediately either way, but uploading data is blocked with a \"Please verify your email address\" message until you click the link." },
       { q: 'I never received my verification email — what do I do?', a: 'Check your spam folder first. If it\'s genuinely missing, this usually means the app\'s email provider isn\'t configured or the sending domain isn\'t verified with it yet — contact your administrator. The verification link expires 24 hours after signup; an expired or already-used link shows a clear message on the /verify-email page rather than a generic error.' },
+      { q: 'I forgot my password — how do I reset it?', a: 'Click "Forgot password?" next to the password field on the login page, or go directly to /forgot-password. Enter your email — if an account exists for it, you\'ll receive a reset link. Clicking it takes you to /reset-password, where you set a new password. The link expires after 1 hour and can only be used once.' },
+      { q: 'I requested a password reset but nothing arrived — does that mean I don\'t have an account?', a: 'No — for security, the response is identical whether or not an account exists for that email, so you can\'t tell from the page alone. If nothing arrives after checking spam, either the email doesn\'t have an account or, like verification email, the app\'s email provider isn\'t configured — contact your administrator.' },
     ],
   },
   {
@@ -919,7 +921,7 @@ export default function HelpPage() {
             ↑ Back to Top
           </button>
           <p style={{ fontSize: 11, color: 'var(--dc-p3, #505050)', marginTop: 14 }}>
-            Delivery Clarity v4.6 · © 2026 Ali Abu Ras · aliaburas80@gmail.com
+            Delivery Clarity v4.6 · © 2026 Ali Abu Ras · ali.aburas@deliveryclarity.app
           </p>
         </div>
       </div>

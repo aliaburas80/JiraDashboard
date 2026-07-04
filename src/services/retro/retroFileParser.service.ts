@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Retrospective file parser — RETRO-04 to RETRO-07. Supports CSV/XLSX/XLS
 // (column-based, one row per observation/action, Sprint Name carried

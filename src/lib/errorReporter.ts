@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Client-side error reporter (P0B-08).
 // Sends structured error payloads to POST /api/events/error for storage.
 // Never attaches cookies, tokens, Jira data, or form values.

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // TC-JIRA-54 to TC-JIRA-60 — POST /api/jira/sync (any logged-in user, not
 // admin-only) and resolveActiveJiraConnection(). See TODO-List.md Section
 // 19a, "JIRA-14" item: a dashboard-facing Sync button for every user type.

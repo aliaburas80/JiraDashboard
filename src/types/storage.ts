@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Cloud storage provider types — P3-01.
 
 export type StorageProviderType = 'local' | 's3' | 'azure' | 'gcp';

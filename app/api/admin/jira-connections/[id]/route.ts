@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // DELETE /api/admin/jira-connections/:id — remove a Jira API connection.
 
 import { NextRequest, NextResponse } from 'next/server';

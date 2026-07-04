@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 const DONE_STATUSES = ['Done', 'Closed', 'Resolved'];
 const IN_PROGRESS_STATUSES = ['In Progress', 'Code Review', 'QA', 'Testing', 'UAT'];
 const MONTHS = {

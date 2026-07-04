@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Advanced chart customization — order, visibility, and column span per chart.
 // Persisted to dc_chart_prefs in localStorage.
 

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Regression tests (JIRA-11 follow-up): a root-level container above Epic
 // (Initiative/Project/Product under Advanced Roadmaps hierarchy) must never
 // receive a phantom epic link from prefix-based inference, and must never be

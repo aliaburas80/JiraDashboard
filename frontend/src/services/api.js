@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:4000/api';
 
 export async function uploadJiraFile(file) {

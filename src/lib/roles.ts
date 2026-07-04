@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Shared application role definitions for auth, admin user management, and role-scoped views.
 
 import type { ViewId } from '@/types/dashboardView';

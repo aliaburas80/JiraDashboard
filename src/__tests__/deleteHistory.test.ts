@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Delete import history tests — TC-DH-01 to TC-DH-10
 
 // These tests cover the business logic around delete operations.

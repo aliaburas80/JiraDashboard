@@ -39,7 +39,7 @@ export const fr: LegalTranslation = {
         'Vous ne pouvez détenir qu\'un seul compte. La création de comptes en double est interdite.',
         'Vous êtes seul responsable de toutes les activités réalisées sous vos identifiants de connexion.',
         'Vous devez choisir un mot de passe fort et unique et ne pas partager vos identifiants avec qui que ce soit.',
-        'Vous devez nous notifier immédiatement à aliaburas80@gmail.com si vous pensez que votre compte a été compromis.',
+        'Vous devez nous notifier immédiatement à ali.aburas@deliveryclarity.app si vous pensez que votre compte a été compromis.',
         'Nous nous réservons le droit de suspendre ou de résilier tout compte dont nous estimons raisonnablement qu\'il a fait l\'objet d\'un accès non autorisé.',
         'Vous devez vérifier votre adresse e-mail avant d\'accéder aux fonctionnalités d\'analyse.',
       ]}]},
@@ -233,7 +233,7 @@ export const fr: LegalTranslation = {
     sections: [
       { title: '1. Qui nous sommes et comment nous contacter', blocks: [
         { p: 'Le responsable du traitement pour toutes les données personnelles traitées via Delivery Clarity :' },
-        { ul: ['Nom : Ali Abu Ras', 'Nom commercial : Delivery Clarity', 'E-mail : aliaburas80@gmail.com', 'Pays d\'établissement : Royaume-Uni'] },
+        { ul: ['Nom : Ali Abu Ras', 'Nom commercial : Delivery Clarity', 'E-mail : ali.aburas@deliveryclarity.app', 'Pays d\'établissement : Royaume-Uni'] },
         { p: 'Pour toute question relative à la protection des données, demande de droits ou réclamation, contactez-nous à l\'adresse e-mail ci-dessus.' },
       ]},
       { title: '2. Les données que nous collectons et pourquoi', blocks: [
@@ -266,7 +266,7 @@ export const fr: LegalTranslation = {
       ]},
       { title: '5. Transferts internationaux de données', blocks: [
         { p: 'Notre infrastructure principale est située aux États-Unis. Les transferts de données personnelles du Royaume-Uni ou de l\'EEE vers les États-Unis s\'effectuent sur la base des Clauses Contractuelles Types (CCT) et/ou de l\'accord britannique de transfert international de données (IDTA).' },
-        { p: 'Vous pouvez demander les détails des mécanismes de transfert utilisés en nous contactant à aliaburas80@gmail.com.' },
+        { p: 'Vous pouvez demander les détails des mécanismes de transfert utilisés en nous contactant à ali.aburas@deliveryclarity.app.' },
       ]},
       { title: '6. Conservation des données', blocks: [
         { ul: [
@@ -297,7 +297,7 @@ export const fr: LegalTranslation = {
       ]},
       { title: '9. Vie privée des enfants', blocks: [
         { p: 'Le Service ne s\'adresse pas aux personnes de moins de 18 ans. Nous ne collectons pas sciemment de données personnelles d\'enfants. Si nous apprenons que nous l\'avons fait, nous les supprimons immédiatement.' },
-        { p: 'Si vous pensez qu\'un enfant nous a fourni des données personnelles, contactez-nous immédiatement à aliaburas80@gmail.com.' },
+        { p: 'Si vous pensez qu\'un enfant nous a fourni des données personnelles, contactez-nous immédiatement à ali.aburas@deliveryclarity.app.' },
       ]},
       { title: '10. Vos droits', blocks: [
         { p: 'En vertu du RGPD britannique et de la législation applicable en matière de protection des données, vous bénéficiez des droits suivants :' },
@@ -311,7 +311,7 @@ export const fr: LegalTranslation = {
           'Droit de retrait du consentement : vous pouvez retirer votre consentement à tout moment.',
           'Droit de ne pas faire l\'objet d\'une décision automatisée (article 22) : nous ne prenons pas de décision automatisée à votre égard.',
         ]},
-        { p: 'Pour exercer vos droits, contactez aliaburas80@gmail.com. Nous répondrons dans un délai d\'un mois.' },
+        { p: 'Pour exercer vos droits, contactez ali.aburas@deliveryclarity.app. Nous répondrons dans un délai d\'un mois.' },
         { b: 'Droit de réclamation : vous pouvez déposer une réclamation auprès de l\'ICO (ico.org.uk) ou, si vous résidez dans l\'EEE, auprès de votre autorité locale de protection des données.' },
       ]},
       { title: '11. Vos données Jira — engagements spécifiques', blocks: [

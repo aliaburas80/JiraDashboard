@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Delivery forecast engine — TC-FCAST-01 to TC-FCAST-13 (FCAST-19 to FCAST-24)
 // TC-FCAST-01–05 IDs match product/TEST_CASES.md §9.55 (manual scenarios already
 // documented there); TC-FCAST-06 onward are new automated cases for this change.

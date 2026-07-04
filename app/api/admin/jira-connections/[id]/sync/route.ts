@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // POST /api/admin/jira-connections/:id/sync — manual "Sync now" for a specific
 // connection, admin-only. All-or-nothing — see runJiraConnectionSync().
 //

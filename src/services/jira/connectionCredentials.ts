@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Per-connection Jira credential handling. Tokens are stored encrypted on the
 // JiraConnection row so each connection can authenticate as a different account.
 

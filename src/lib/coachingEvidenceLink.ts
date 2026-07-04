@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Maps a coaching evidence item's metricKey to the dashboard route that is the
 // authoritative source for that metric family, so evidence chips can link out.

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // TC-JIRA-29 to TC-JIRA-39 — ARCH-05 Phase 1 (JIRA-07): JQL building +
 // pagination through the Gateway for the manual "Sync now" route.
 

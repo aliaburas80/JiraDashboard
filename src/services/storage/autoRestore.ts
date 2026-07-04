@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Auto-restore from cloud on startup.
 // Called once by instrumentation.ts when the Next.js server starts.
 // If the local database is missing or has no users, finds the latest

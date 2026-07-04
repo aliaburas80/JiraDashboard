@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Member directory tests — TC-MD-05 to TC-MD-08.
 
 import { matchesMemberQuery, contactEmailFor } from '../lib/members';

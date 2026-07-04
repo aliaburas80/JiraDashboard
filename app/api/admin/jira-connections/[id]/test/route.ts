@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // POST /api/admin/jira-connections/:id/test — verify the connection's
 // credentials work by calling GET /rest/api/{2|3}/myself through the
 // Backend Integration Gateway. Never returns the token itself.

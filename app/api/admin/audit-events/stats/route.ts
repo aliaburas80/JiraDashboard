@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET /api/admin/audit-events/stats — chart data for audit analytics page.
 // Returns: totals, events-per-day (30d), events-by-type, journey transitions.
 

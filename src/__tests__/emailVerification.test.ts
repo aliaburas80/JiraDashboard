@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // EP-012 email verification — TC-EV-01 to TC-EV-07
 
 import { generateVerificationToken, EMAIL_VERIFICATION_TTL_HOURS } from '../lib/auth';

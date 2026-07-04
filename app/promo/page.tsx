@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Public marketing page (/promo) — a standalone, animated product showcase
 // distinct from the in-app dashboard look. Server-rendered for SEO; only the
 // motion/interaction pieces (PromoNav, Reveal, CountUp) are client components,
@@ -374,7 +374,7 @@ export default function PromoPage() {
             Delivery Clarity
           </span>
           <p className={styles.footerTag}>From messy boards to measurable delivery confidence.</p>
-          <small className={styles.footerCopy}>© 2026 Ali Abu Ras · aliaburas80@gmail.com</small>
+          <small className={styles.footerCopy}>© 2026 Ali Abu Ras · ali.aburas@deliveryclarity.app</small>
         </div>
       </footer>
     </div>

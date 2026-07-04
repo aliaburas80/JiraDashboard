@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Seed script — creates the first admin user.
 // Run: npx ts-node prisma/seed.ts  OR  npx prisma db seed
 

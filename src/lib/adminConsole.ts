@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Pure helpers for the flat admin-settings console — shared between the page and its tests.
 
 import { ASSIGNABLE_ROLES, type AppRole } from '@/lib/roles';

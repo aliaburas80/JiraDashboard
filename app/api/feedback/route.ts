@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // POST /api/feedback — capture structured user feedback (P0B-09).
 // Auth optional — feedback accepted from logged-in and anonymous users.
 // Rate-limited: 10 submissions per IP per 15 minutes.

@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // First-time onboarding checklist — shown on summary/dashboard for new users.
 // Persists state to localStorage. Auto-detects completed steps on mount.
 'use client';

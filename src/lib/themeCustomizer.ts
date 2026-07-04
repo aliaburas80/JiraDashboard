@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Advanced theme customization — accent colour, border radius, font size, palette.
 // All settings are applied via CSS custom properties on <html> and
 // persisted to localStorage under dc_theme_custom.

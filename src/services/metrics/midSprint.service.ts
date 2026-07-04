@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Mid-sprint delivery analysis.
 // Derives per-sprint mid-point delivery insights from SprintThroughputSummary.

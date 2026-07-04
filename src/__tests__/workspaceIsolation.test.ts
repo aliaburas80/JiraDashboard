@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // EP-008/EP-009: Cross-workspace negative access tests.
 // Proves User A cannot read or delete User B's data even with a valid session.
 // These are security regression tests — any failure is a critical security defect.

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Configurable issue-type hierarchy — types/defaults, storage service, admin
 // route, and the generalized (no-longer-hardcoded) hierarchy.service.ts logic
 // that consumes it. See TODO-List.md Section 19a, "ISSUETYPE" item.

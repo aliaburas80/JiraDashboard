@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // POST /api/admin/storage/auto-restore — manually trigger auto-restore from cloud
 // GET  /api/admin/storage/auto-restore — check local DB health status
 

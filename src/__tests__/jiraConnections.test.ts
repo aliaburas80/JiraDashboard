@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // TC-JIRA-01 to TC-JIRA-28 — ARCH-05 Phase 1: Jira connection admin routes.
 // JIRA-05/05c/06b — see product/JIRA_INTEGRATION_DESIGN.md.
 

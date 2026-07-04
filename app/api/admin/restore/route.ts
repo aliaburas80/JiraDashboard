@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // POST /api/admin/restore — restore from a backup bundle JSON file (admin only)
 
 import { NextRequest, NextResponse } from 'next/server';

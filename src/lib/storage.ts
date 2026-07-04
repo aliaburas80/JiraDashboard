@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 
 const STORAGE_KEY = "dc_metrics_v2";
 const SOURCE_KEY  = "dc_metrics_source_v1";

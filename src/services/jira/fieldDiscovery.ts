@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // ARCH-05 Phase 1 (JIRA-06b) — discovers a Jira instance's actual field ID ->
 // human-readable name mapping (custom field IDs are per-instance, e.g.
 // customfield_10014 might be "Epic Link" on one Jira site and something

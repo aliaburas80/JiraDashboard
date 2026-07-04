@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Dashboard section-trigger status chip tests — TC-CH-01 to TC-CH-03
 
 import { CHIP_CLS, chipClass, mostSevereChipType, type Chip } from '../lib/dashboardChips';

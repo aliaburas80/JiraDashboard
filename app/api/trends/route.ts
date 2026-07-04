@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET /api/trends — returns upload history with metrics for trend analysis.
 
 import { NextResponse } from 'next/server';

@@ -1,5 +1,5 @@
 // Migrated from backend/src/services/metrics.js
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 import { calculateSprintThroughput } from './throughput.service';
 import { calculateMidSprintInsights } from './midSprint.service';
 import { calculateKanbanFlow } from './kanbanFlow.service';

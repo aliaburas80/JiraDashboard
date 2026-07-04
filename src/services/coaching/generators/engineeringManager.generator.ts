@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Engineering Manager insights (RBC-05) — delivery predictability, throughput
 // trend, capacity imbalance, bottlenecks, dependencies, release readiness.

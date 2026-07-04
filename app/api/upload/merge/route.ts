@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // POST /api/upload/merge — accepts multiple Jira export files, merges
 // raw issues by Issue Key, and returns unified DashboardMetrics.
 

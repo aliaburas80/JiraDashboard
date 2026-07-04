@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Backend Integration Gateway — endpoint policy / SSRF protection (GW-05, GW-08–GW-13).
 //
 // validateEndpoint() is the single gate every outbound gateway call passes

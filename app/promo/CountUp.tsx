@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // CountUp — animates a number from 0 to `value` the first time it scrolls into
 // view. Renders the final value immediately when JS is off or reduced-motion
 // is requested, so the real figure is never hidden. Presentation (size/colour)

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // PATCH /api/admin/user-add-requests/:id/accept — admin accepts a user add request.
 // On acceptance: creates the user account (mustChangePassword=true), marks the request accepted,
 // creates a notification for the requester, and writes audit events.

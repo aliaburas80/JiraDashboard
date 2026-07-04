@@ -243,7 +243,7 @@ Each entry includes: what triggers it, root cause, and the exact fix.
 **Sub-cases and fixes:**
 
 1. **Form fields are blank on Render** — SMTP vars were never set on Render. The form loads empty because `getSafeConfig()` falls back to env vars, and no SMTP env vars exist.
-   - Fix: In the Render dashboard → Service → Environment, add: `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USER=aliaburas80@gmail.com`, `SMTP_PASS=<16-char App Password>`, `SMTP_FROM=Delivery Clarity <aliaburas80@gmail.com>`. These are now declared as `sync: false` in `render.yaml` (added 2026-07-01).
+   - Fix: In the Render dashboard → Service → Environment, add: `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USER=ali.aburas@deliveryclarity.app`, `SMTP_PASS=<16-char App Password>`, `SMTP_FROM=Delivery Clarity <ali.aburas@deliveryclarity.app>`. These are now declared as `sync: false` in `render.yaml` (added 2026-07-01).
 
 2. **Gmail 535 — App Password rejected** — The App Password was revoked, contains spaces, or the Google account "Less secure app access" was changed.
    - Fix: Go to Google Account → Security → App Passwords → generate a new 16-character password. Paste it without spaces into `SMTP_PASS` in Render dashboard. Save. Test again.
@@ -611,7 +611,7 @@ Each entry includes: what triggers it, root cause, and the exact fix.
 
 **Cause:** SMTP_HOST, SMTP_USER, or SMTP_PASS not set on the server.
 
-**Fix:** Configure SMTP env vars (see ERR-008). Until then, the 503 response includes `aliaburas80@gmail.com` as the direct contact fallback.
+**Fix:** Configure SMTP env vars (see ERR-008). Until then, the 503 response includes `ali.aburas@deliveryclarity.app` as the direct contact fallback.
 
 **Related:** ERR-008
 

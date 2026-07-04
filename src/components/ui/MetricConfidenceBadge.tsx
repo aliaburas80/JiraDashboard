@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Inline confidence badge — shown next to KPI values.
 // Uses a React portal so the tooltip escapes any overflow:hidden parent.
 'use client';

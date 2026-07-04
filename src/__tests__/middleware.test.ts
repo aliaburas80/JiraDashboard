@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Route-protection middleware tests — TC-PW-07 (forced password-change redirect),
 // TC-A-10 (unauthenticated redirect to /login, added 2026-06-08 to close
 // TRACE-02 / Gaps Summary COVER-11 — see TODO-List.md Section 8 / product/TEST_CASES.md §F3).

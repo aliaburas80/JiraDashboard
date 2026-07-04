@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Retrospective domain types — RETRO-37. Shared by the in-app retro form
 // (single record) and the uploaded retro file flow (one or many records,

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // ARCH-05 Phase 1 (JIRA-07) — fetches issues from a Jira connection via JQL,
 // paginating through the Gateway, ready to be normalized by apiAdapter.ts.
 // See product/JIRA_INTEGRATION_DESIGN.md §3 (API scope) and §5 (refresh).

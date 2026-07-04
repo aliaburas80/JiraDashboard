@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // In-app landing page — product showcase for new and returning users (9.38)
 'use client';
 
@@ -178,7 +178,7 @@ export default function LandingPage() {
             </a>
           </div>
           <p className="text-xs mt-6" style={{ color: 'var(--dc-p3, #505050)' }}>
-            Delivery Clarity v4.1 · © 2026 Ali Abu Ras · aliaburas80@gmail.com
+            Delivery Clarity v4.1 · © 2026 Ali Abu Ras · ali.aburas@deliveryclarity.app
           </p>
         </section>
 

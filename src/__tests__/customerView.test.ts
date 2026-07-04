@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Customer View logic tests — TC-CV-01 to TC-CV-08
 
 // Tests verify the business logic behind what the customer view shows.

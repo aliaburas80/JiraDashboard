@@ -353,7 +353,7 @@ SORT recommendations: Critical → High → Medium → Low
 
 ---
 
-*© 2026 Ali Abu Ras — aburasali80@gmail.com — Delivery Clarity v4.1*
+*© 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app — Delivery Clarity v4.1*
 
 ---
 

@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // HTML export branding test — TC-X-14
 
 import { buildReportHtml } from '../lib/exportUtils';
@@ -27,6 +27,6 @@ test('TC-X-14: exported HTML report carries the Delivery Clarity brand mark, tit
 
   // Footer attribution
   expect(html).toContain('Ali Abu Ras');
-  expect(html).toContain('aliaburas80@gmail.com');
+  expect(html).toContain('ali.aburas@deliveryclarity.app');
   expect(html).toContain('Delivery Clarity v4.1');
 });

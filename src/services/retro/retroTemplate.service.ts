@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Retrospective .xlsx template — RETRO-17, RETRO-19 to RETRO-22. Two sheets:
 // "Retrospective" (header row + example rows) and "Instructions" (how to

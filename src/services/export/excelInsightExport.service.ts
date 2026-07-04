@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Smart Excel export — statistical project insights, not copied HTML.
 // Generates a 17-sheet workbook from DashboardMetrics.
@@ -50,7 +50,7 @@ function sheetExecutiveSummary(m: DashboardMetrics, recs: ReturnType<typeof gene
     ['DELIVERY CLARITY — EXECUTIVE REPORT'],
     ['From messy boards to measurable delivery confidence'],
     ['Generated:', new Date().toLocaleString()],
-    ['Author:', 'Ali Abu Ras · aliaburas80@gmail.com · Delivery Clarity v4.1'],
+    ['Author:', 'Ali Abu Ras · ali.aburas@deliveryclarity.app · Delivery Clarity v4.1'],
     [],
     ['DELIVERY HEALTH'],
     ['Health Score', m.healthScore ?? 0, 'out of 100'],

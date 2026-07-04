@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Configurable issue-type hierarchy — replaces the previously hardcoded
 // IssueNodeType union + TYPE_MAP + LEAF_TYPES allowlist. Admins define which

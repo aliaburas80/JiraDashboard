@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
 // Product Owner insights (RBC-04) — sprint goal clarity, scope change,
 // carryover, orphan ratio, backlog readiness, refinement discipline.

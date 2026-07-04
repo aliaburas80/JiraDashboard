@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // AWS S3 storage provider (also compatible with MinIO, Backblaze B2, Cloudflare R2).
 // Requires: npm install @aws-sdk/client-s3
 // The SDK is loaded dynamically so the app starts without it installed.

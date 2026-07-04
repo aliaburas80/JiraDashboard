@@ -1,4 +1,4 @@
-// © 2026 Ali Abu Ras — aliaburas80@gmail.com. All rights reserved.
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // GET  /api/admin/app-config — return current config (passwords masked)
 // PUT  /api/admin/app-config — save new config (encrypt + upload to cloud)
 // POST /api/admin/app-config?action=test — send a test email to the logged-in admin

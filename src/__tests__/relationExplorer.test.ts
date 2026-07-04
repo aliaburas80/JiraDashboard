@@ -1,4 +1,4 @@
-// © 2025 Ali Abu Ras — aburasali80@gmail.com. All rights reserved.
+// © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Work Item Explorer tests — TC-E-01 to TC-E-08
 
 import { buildRelationGraph } from '../services/relations/relationExplorer.service';
