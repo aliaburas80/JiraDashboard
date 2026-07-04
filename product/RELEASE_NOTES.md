@@ -5,6 +5,12 @@
 
 ---
 
+## Account Menu No Longer Flashes "Sign In" on Route Change (2026-07-05, P2)
+
+**Same-day follow-up**, from a screenshot: the account menu had the exact bug the previous fix just closed for the nav — "the user name hide, and show signin then return the username." `UserMenu.tsx` is also a child of `AppShell`, so it remounts every route change too, and its own independent session fetch started blank each time. Generalized the previous fix instead of duplicating it: `src/lib/currentUser.ts` now caches the whole signed-in identity (not just role), so `UserMenu` renders the real username immediately instead of "Sign in" while it re-confirms in the background. 5 new tests; full suite 866/94 passing.
+
+---
+
 ## Header Nav No Longer Flashes on Route Change (2026-07-05, P2)
 
 **Immediate follow-up**, per explicit request: "don't refresh the header menu... keep the header without change or refresh for each route change." Root cause: `AppShell.tsx` is imported directly by ~28 pages rather than one shared layout, so it fully remounts on every navigation — the role-fetch added in the previous fix re-ran each time, and the nav briefly flashed from unfiltered back to role-filtered. New `src/lib/currentRole.ts` caches the resolved role at module level so every remount starts already-correct instead of waiting on a fresh network round trip. 4 new tests; full suite 865/94 passing.

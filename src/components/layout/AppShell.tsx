@@ -8,7 +8,7 @@ import { initThemeCustom, loadBranding } from '@/lib/themeCustomizer';
 import UserMenu from '@/components/auth/UserMenu';
 import NotificationBell from '@/components/auth/NotificationBell';
 import { DC_NAV_GROUPS, getNavGroupsForRole } from '@/components/dc-shell/navigation';
-import { getCachedRole, fetchCurrentRole } from '@/lib/currentRole';
+import { getCachedRole, fetchCurrentUser } from '@/lib/currentUser';
 import styles from './AppShell.module.scss';
 
 // Single source of truth: DC_NAV_GROUPS from navigation.ts
@@ -50,7 +50,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
 
   // Nav items/groups this role can't open are filtered out below (getNavGroupsForRole).
   useEffect(() => {
-    fetchCurrentRole().then(setRole);
+    fetchCurrentUser().then(user => setRole(user?.role ?? null));
   }, []);
 
   useEffect(() => {
