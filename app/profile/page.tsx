@@ -3,36 +3,21 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
-import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
-import { listLocalImports, removeLocalImport, clearLocalImportHistory } from '@/lib/localImportHistory';
+import { SvgIcon } from '@/components/ui/SvgIcon';
+import ProfileTab, { type ProfileFields } from '@/components/settings/ProfileTab';
+import StorageTab from '@/components/settings/StorageTab';
+import SecurityTab from '@/components/settings/SecurityTab';
+import type { AppRole } from '@/lib/roles';
 
-interface Profile {
-  name: string;
-  email: string;
-  roleLabel: string;
-  avatarUrl: string;
-  position: string;
-  phone: string;
-  contactEmail: string;
-  address: string;
-  certificates: string;
-  bio: string;
+interface Profile extends ProfileFields {
+  role: AppRole;
   dataStorageMode: 'cloud' | 'local';
-}
-
-interface Log {
-  id: string;
-  fileName: string;
-  fileType: string;
-  totalIssues: number;
-  healthScore: number;
-  status: string;
-  uploadedAt: string;
 }
 
 const EMPTY_PROFILE: Profile = {
   name: '',
   email: '',
+  role: 'user',
   roleLabel: '',
   avatarUrl: '',
   position: '',
@@ -44,71 +29,45 @@ const EMPTY_PROFILE: Profile = {
   dataStorageMode: 'cloud',
 };
 
+// Settings side-menu — each entry only shows for roles listed in `roles`; omitting
+// `roles` means visible to everyone. Nothing is currently role-restricted, but the
+// gate is built in from the start so a future role-scoped setting doesn't need a rewrite.
+interface SettingsTab { id: 'profile' | 'storage' | 'security'; label: string; icon: string; roles?: AppRole[] }
+const SETTINGS_TABS: SettingsTab[] = [
+  { id: 'profile',  label: 'Profile',  icon: 'person' },
+  { id: 'storage',  label: 'Storage',  icon: 'cloud' },
+  { id: 'security', label: 'Security', icon: 'lock' },
+];
+
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile>(EMPTY_PROFILE);
-  const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
-  const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [toast, setToast] = useState('');
   const [savingStorageMode, setSavingStorageMode] = useState(false);
+  const [toast, setToast] = useState('');
+  const [activeTab, setActiveTab] = useState<SettingsTab['id']>('profile');
 
   useEffect(() => {
     fetch('/api/profile').then(r => r.ok ? r.json() : null)
-      .then(async profileData => {
+      .then(profileData => {
         if (!profileData?.profile) {
           router.replace('/login');
           return;
         }
         setProfile(profileData.profile);
-        // EP-017: local-mode history lives in this browser only — never fetched from the server.
-        if (profileData.profile.dataStorageMode === 'local') {
-          setLogs(listLocalImports());
-        } else {
-          const importData = await fetch('/api/imports').then(r => r.ok ? r.json() : null).catch(() => null);
-          if (importData?.logs) setLogs(importData.logs.slice(0, 10));
-        }
       })
       .catch(() => router.replace('/login'))
       .finally(() => setLoading(false));
   }, [router]);
-
-  async function updateStorageMode(mode: 'cloud' | 'local') {
-    if (mode === profile.dataStorageMode) return;
-    setSavingStorageMode(true);
-    try {
-      const res = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: profile.name, dataStorageMode: mode }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Could not update storage mode.');
-      setProfile(data.profile);
-      setLogs(mode === 'local' ? listLocalImports() : []);
-      if (mode !== 'local') {
-        const importData = await fetch('/api/imports').then(r => r.ok ? r.json() : null).catch(() => null);
-        if (importData?.logs) setLogs(importData.logs.slice(0, 10));
-      }
-      showToast(`Storage mode switched to "${mode === 'local' ? 'This device only' : 'Cloud storage'}". This only affects new uploads going forward.`);
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Failed to update storage mode.');
-    } finally {
-      setSavingStorageMode(false);
-    }
-  }
 
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
   }
 
-  function updateField(field: keyof Profile, value: string) {
+  function updateField(field: keyof ProfileFields, value: string) {
     setProfile(prev => ({ ...prev, [field]: value }));
   }
 
@@ -157,67 +116,32 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleDeleteOne() {
-    if (!deleteTarget) return;
-    setDeleting(true);
+  async function updateStorageMode(mode: 'cloud' | 'local') {
+    if (mode === profile.dataStorageMode) return;
+    setSavingStorageMode(true);
     try {
-      if (profile.dataStorageMode === 'local') {
-        removeLocalImport(deleteTarget.id);
-      } else {
-        const res = await fetch(`/api/imports/${deleteTarget.id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error();
-      }
-      setLogs(prev => prev.filter(l => l.id !== deleteTarget.id));
-      showToast(`Deleted "${deleteTarget.name}"`);
-    } catch { showToast('Failed to delete.'); }
-    finally { setDeleting(false); setDeleteTarget(null); }
-  }
-
-  async function handleDeleteAll() {
-    setDeleting(true);
-    try {
-      if (profile.dataStorageMode === 'local') {
-        const count = logs.length;
-        clearLocalImportHistory();
-        setLogs([]);
-        showToast(`Deleted ${count} import log${count !== 1 ? 's' : ''}`);
-      } else {
-        const res = await fetch('/api/imports/all', { method: 'DELETE' });
-        const json = await res.json();
-        if (!res.ok) throw new Error();
-        setLogs([]);
-        showToast(`Deleted ${json.deleted} import log${json.deleted !== 1 ? 's' : ''}`);
-      }
-    } catch { showToast('Failed to delete.'); }
-    finally { setDeleting(false); setDeleteAllConfirm(false); }
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: profile.name, dataStorageMode: mode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Could not update storage mode.');
+      setProfile(data.profile);
+      showToast(`Storage mode switched to "${mode === 'local' ? 'This device only' : 'Cloud storage'}". This only affects new uploads going forward.`);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to update storage mode.');
+    } finally {
+      setSavingStorageMode(false);
+    }
   }
 
   if (loading) return <AppShell showNav><div className="flex h-64 items-center justify-center text-slate-400">Loading...</div></AppShell>;
 
-  const initials = profile.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'U';
+  const visibleTabs = SETTINGS_TABS.filter(tab => !tab.roles || tab.roles.includes(profile.role));
 
   return (
     <AppShell showNav>
-      {deleteTarget && (
-        <ConfirmDeleteDialog
-          title="Delete import log?"
-          message={`Permanently remove the log for "${deleteTarget.name}". Your current dashboard data will not be affected.`}
-          onConfirm={handleDeleteOne}
-          onCancel={() => setDeleteTarget(null)}
-          loading={deleting}
-        />
-      )}
-      {deleteAllConfirm && (
-        <ConfirmDeleteDialog
-          title="Delete all import history?"
-          message="This removes all your stored import logs. Your current dashboard data will not be affected. This cannot be undone."
-          confirmLabel="Delete all history"
-          onConfirm={handleDeleteAll}
-          onCancel={() => setDeleteAllConfirm(false)}
-          loading={deleting}
-        />
-      )}
-
       {toast && (
         <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white shadow-lg">
           {toast}
@@ -226,163 +150,51 @@ export default function ProfilePage() {
 
       <div className="mx-auto max-w-5xl py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-black tracking-tight text-slate-950">My Profile</h1>
-          <p className="mt-2 text-sm text-slate-500">Edit the profile details that your teammates can see in Members.</p>
+          <h1 className="text-3xl font-black tracking-tight text-slate-950">Settings</h1>
+          <p className="mt-2 text-sm text-slate-500">Manage your profile, data storage, and account security.</p>
         </div>
 
-        <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex flex-col gap-5 border-b border-slate-100 pb-5 sm:flex-row sm:items-center">
-            {profile.avatarUrl ? (
-              <img src={profile.avatarUrl} alt={profile.name} className="h-20 w-20 rounded-full object-cover ring-4 ring-blue-50" />
-            ) : (
-              <div className="grid h-20 w-20 place-items-center rounded-full bg-blue-600 text-2xl font-black text-white ring-4 ring-blue-50">
-                {initials}
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="text-xl font-black text-slate-950">{profile.name || 'Your name'}</p>
-              <p className="text-sm text-slate-500">{profile.position || profile.roleLabel}</p>
-              <p className="text-xs text-slate-400">{profile.email}</p>
-            </div>
-            <button type="button" onClick={logout} className="btn-outline-danger">
-              Sign out
-            </button>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="grid gap-2 text-xs font-extrabold text-slate-700">
-              Full name
-              <input value={profile.name} onChange={e => updateField('name', e.target.value)}
-                className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
-            </label>
-            <label className="grid gap-2 text-xs font-extrabold text-slate-700">
-              Position
-              <input value={profile.position} onChange={e => updateField('position', e.target.value)} placeholder="Scrum Master, Product Lead..."
-                className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
-            </label>
-            <label className="grid gap-2 text-xs font-extrabold text-slate-700">
-              Profile picture
-              <span className="flex h-11 min-w-0 items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 text-sm">
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  onChange={e => uploadProfileImage(e.target.files?.[0] ?? null)}
-                  disabled={uploadingImage}
-                  className="min-w-0 flex-1 text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-blue-700 disabled:opacity-50"
-                />
-              </span>
-              <span className="text-[11px] font-semibold text-slate-400">
-                {uploadingImage ? 'Uploading to S3...' : 'Stored in S3 under images/profile/.'}
-              </span>
-            </label>
-            <label className="grid gap-2 text-xs font-extrabold text-slate-700">
-              Contact email
-              <input value={profile.contactEmail} onChange={e => updateField('contactEmail', e.target.value)} placeholder={profile.email}
-                className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
-            </label>
-            <label className="grid gap-2 text-xs font-extrabold text-slate-700">
-              Telephone
-              <input value={profile.phone} onChange={e => updateField('phone', e.target.value)} placeholder="+962..."
-                className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
-            </label>
-            <label className="grid gap-2 text-xs font-extrabold text-slate-700">
-              Address
-              <input value={profile.address} onChange={e => updateField('address', e.target.value)}
-                className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
-            </label>
-            <label className="grid gap-2 text-xs font-extrabold text-slate-700 md:col-span-2">
-              Certificates
-              <textarea value={profile.certificates} onChange={e => updateField('certificates', e.target.value)} rows={3} placeholder="CSM, PMP, SAFe..."
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
-            </label>
-            <label className="grid gap-2 text-xs font-extrabold text-slate-700 md:col-span-2">
-              Shared team info
-              <textarea value={profile.bio} onChange={e => updateField('bio', e.target.value)} rows={4} placeholder="What should teammates know when working with you?"
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
-            </label>
-          </div>
-
-          <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
-            <button type="button" onClick={saveProfile} disabled={saving} className="btn-primary px-5 py-2.5 disabled:opacity-50">
-              {saving ? 'Saving...' : 'Save profile'}
-            </button>
-          </div>
-        </section>
-
-        <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-1 text-sm font-black uppercase tracking-wider text-slate-700">Data & Privacy</h2>
-          <p className="mb-4 text-xs text-slate-500">
-            Choose where new Jira uploads and their computed metrics are stored. Switching only affects uploads from now on — existing data stays where it already is.
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <button
-              type="button"
-              disabled={savingStorageMode}
-              onClick={() => updateStorageMode('cloud')}
-              className={`rounded-xl border-2 p-4 text-left transition-colors disabled:opacity-50 ${
-                profile.dataStorageMode === 'cloud' ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <p className="text-sm font-black text-slate-900">Cloud storage <span className="font-semibold text-slate-400">(default)</span></p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                Uploads and metrics are stored on Delivery Clarity's server. Works across devices; admins can support you with your data.
-              </p>
-            </button>
-            <button
-              type="button"
-              disabled={savingStorageMode}
-              onClick={() => updateStorageMode('local')}
-              className={`rounded-xl border-2 p-4 text-left transition-colors disabled:opacity-50 ${
-                profile.dataStorageMode === 'local' ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <p className="text-sm font-black text-slate-900">This device only</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                Uploads are processed entirely in your browser and never sent to the server. No cross-device sync, no admin visibility, and the data is lost if you clear your browser storage.
-              </p>
-            </button>
-          </div>
-        </section>
-
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-            <h2 className="text-sm font-black uppercase tracking-wider text-slate-700">Import History</h2>
-            {logs.length > 0 && (
-              <button type="button" onClick={() => setDeleteAllConfirm(true)} className="btn-outline-danger btn-sm">
-                Delete all history
+        <div className="flex flex-col gap-6 md:flex-row">
+          <nav className="flex shrink-0 gap-2 overflow-x-auto md:w-48 md:flex-col md:overflow-visible" aria-label="Settings">
+            {visibleTabs.map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                aria-current={activeTab === tab.id ? 'page' : undefined}
+                className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-left text-sm font-bold transition-colors ${
+                  activeTab === tab.id ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <SvgIcon name={tab.icon} size={15} />
+                {tab.label}
               </button>
-            )}
-          </div>
+            ))}
+          </nav>
 
-          {logs.length === 0 ? (
-            <p className="py-10 text-center text-sm italic text-slate-400">
-              No import history yet. Upload a Jira export to get started.
-            </p>
-          ) : (
-            <ul className="divide-y divide-slate-100">
-              {logs.map(log => (
-                <li key={log.id} className="group flex items-center gap-3 px-5 py-3 hover:bg-slate-50">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-semibold text-slate-800">{log.fileName}</p>
-                    <p className="mt-0.5 text-[10px] text-slate-400">
-                      {new Date(log.uploadedAt).toLocaleString()} · {log.totalIssues} issues ·{' '}
-                      <span className={`font-bold ${log.healthScore >= 75 ? 'text-green-600' : log.healthScore >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
-                        {log.healthScore}/100
-                      </span>
-                    </p>
-                  </div>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                    log.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>{log.status}</span>
-                  <button type="button" title="Delete this log" onClick={() => setDeleteTarget({ id: log.id, name: log.fileName })}
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-black text-slate-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-600 group-hover:opacity-100">
-                    x
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+          <div className="min-w-0 flex-1">
+            {activeTab === 'profile' && (
+              <ProfileTab
+                profile={profile}
+                onUpdateField={updateField}
+                onSave={saveProfile}
+                saving={saving}
+                uploadingImage={uploadingImage}
+                onUploadImage={uploadProfileImage}
+                onLogout={logout}
+              />
+            )}
+            {activeTab === 'storage' && (
+              <StorageTab
+                dataStorageMode={profile.dataStorageMode}
+                savingStorageMode={savingStorageMode}
+                onUpdateStorageMode={updateStorageMode}
+                onToast={showToast}
+              />
+            )}
+            {activeTab === 'security' && <SecurityTab onToast={showToast} />}
+          </div>
+        </div>
       </div>
     </AppShell>
   );
