@@ -139,6 +139,8 @@ const SECTIONS: GlossarySection[] = [
       { term: 'Prisma',         full: 'Prisma ORM',                        meaning: 'The database library. Handles schema, migrations, and queries.' },
       { term: 'SESSION_SECRET', full: '—',                                 meaning: 'A ≥ 32-character random string used to sign iron-session cookies. Required for production.' },
       { term: 'nginx',          full: '—',                                 meaning: 'Web server used as a reverse proxy. Terminates SSL and forwards requests to the Next.js app on port 3000.' },
+      { term: 'Cloud Storage Mode', full: 'Data Storage Mode: Cloud (default)', meaning: 'Uploaded Jira data and computed metrics are stored on the Delivery Clarity server. Works across devices; admins can see and help with your data. Set per-user in /profile → Data & Privacy.' },
+      { term: 'Local Storage Mode', full: 'Data Storage Mode: This Device Only', meaning: 'Uploaded Jira data is parsed and metrics are calculated entirely in your browser and never sent to the server. No cross-device sync, no admin visibility, lost if you clear your browser storage. Set per-user in /profile → Data & Privacy.' },
     ],
   },
   {

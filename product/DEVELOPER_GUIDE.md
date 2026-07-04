@@ -509,11 +509,17 @@ File: `app/api/imports/route.ts`
 
 Returns `{ logs: ImportLog[] }` — all entries from `data/import-logs.json`, newest first.
 
+### EP-017: Local storage mode (client-side alternative to `POST /api/upload`)
+
+File: `src/lib/localUpload.ts`, invoked from `app/page.tsx`'s `handleFile()`.
+
+When the logged-in user's `dataStorageMode` (see below) is `"local"`, `handleFile()` calls `processFileLocally()` instead of `POST /api/upload` — same `parseJiraFile()` → `validateIssueData()` → `calculateDashboardMetrics()` pipeline, run entirely in the browser, no network request carrying the file. Skips rate limiting, entitlement, `ImportLog`/`DashboardSnapshot` persistence, and `writeLatestMetrics()` entirely, since nothing server-side is touched. `parseJiraFile()` accepts a browser `ArrayBuffer` (via `file.arrayBuffer()`) as well as a Node `Buffer`, auto-detected. Import history for local-mode users comes from `src/lib/localImportHistory.ts` (a validated, capped-at-20 `localStorage` list) rather than `GET/DELETE /api/imports`. Local mode always uses system-default health thresholds/orphan-issue rules — the `fs`-based reads in `readThresholds()`/`readOrphanRules()` fail closed to defaults when `fs` isn't available, which is also why `calculateDashboardMetrics()` already worked client-side before this feature (see `/developer`'s live demo further down this page).
+
 ### `GET/PATCH /api/profile`
 
 File: `app/api/profile/route.ts`
 
-Authenticated profile endpoint. `GET` returns the signed-in user's public member profile. `PATCH` updates editable team-facing fields: `name`, `avatarUrl`, `position`, `phone`, `contactEmail`, `address`, `certificates`, and `bio`, writes a `profile_update` audit event, updates the session display name, and pushes the DB backup to cloud when configured.
+Authenticated profile endpoint. `GET` returns the signed-in user's public member profile, including `dataStorageMode` (`"cloud" | "local"`, default `"cloud"` — EP-017). `PATCH` updates editable team-facing fields: `name`, `avatarUrl`, `position`, `phone`, `contactEmail`, `address`, `certificates`, and `bio`, writes a `profile_update` audit event, updates the session display name, and pushes the DB backup to cloud when configured. It also optionally accepts `dataStorageMode` (`"cloud" | "local"`, 400 on any other value), updates the session and logs a distinct `profile_storage_mode_change` audit event when present — switching only affects future uploads, no data is migrated between modes.
 
 ### `GET/POST /api/profile/image`
 

@@ -288,6 +288,23 @@ User drops file
 
 ---
 
+## Local Storage Mode (EP-017)
+
+**Purpose:** Per-user privacy choice — \`User.dataStorageMode\` (\`"cloud" | "local"\`, default \`"cloud"\`) lets a user opt into keeping uploaded Jira data and computed metrics entirely in their own browser, never sent to this server. Set/read via \`GET\`/\`PATCH /api/profile\` (field \`dataStorageMode\`) and mirrored onto the iron-session (\`SessionData.dataStorageMode\`, set at login in \`app/api/auth/login/route.ts\`, also returned by \`GET /api/auth/me\`).
+
+**Client-side pipeline:** When \`dataStorageMode === "local"\`, \`app/page.tsx\`'s \`handleFile()\` calls \`processFileLocally()\` (\`src/lib/localUpload.ts\`) instead of \`POST /api/upload\` — it runs the *same* \`parseJiraFile()\` → \`validateIssueData()\` → \`calculateDashboardMetrics()\` pipeline directly in the browser and never issues a network request carrying the file's contents. This works because:
+- \`validateIssueData()\` is pure — no changes needed.
+- \`parseJiraFile()\` (\`src/services/jira/parser.ts\`) accepts either a Node \`Buffer\` (server) or a browser \`ArrayBuffer\` (\`file.arrayBuffer()\`) — detected via \`typeof Buffer !== 'undefined' && Buffer.isBuffer(buffer)\`.
+- \`calculateDashboardMetrics()\`'s two \`fs\`-based config reads (\`readThresholds()\`/\`readOrphanRules()\`, in \`src/services/settings/\`) each wrap their \`fs\` call in try/catch — in the browser \`fs\` isn't available so they throw and are silently caught, falling back to \`DEFAULT_THRESHOLDS\`/\`DEFAULT_ORPHAN_RULES\`. **Local mode therefore always uses system-default thresholds/orphan rules, never an admin's custom overrides.**
+
+Entitlement checks, rate limiting, \`ImportLog\`/\`DashboardSnapshot\` writes, and \`writeLatestMetrics()\` are all skipped in local mode — nothing server-side is touched.
+
+**Import history:** local-mode users get an equivalent history list from \`src/lib/localImportHistory.ts\` (\`localStorage\` key \`dc_local_import_history_v1\`, capped at 20 entries, validated on read — malformed entries are dropped rather than thrown) instead of \`GET/DELETE /api/imports\`. Shown on \`/profile\` under Import History; the mode toggle itself lives in \`/profile\`'s "Data & Privacy" section.
+
+**Out of scope (v1):** multi-file merge upload (\`/api/upload/merge\`), Jira API-connection-sourced imports, and named-snapshot trend comparison all remain cloud-only regardless of \`dataStorageMode\`.
+
+---
+
 ## GET /api/imports
 
 Returns full import log history.

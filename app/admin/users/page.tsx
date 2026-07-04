@@ -145,7 +145,7 @@ export default function AdminUsersPage() {
       setSuccessMsg(
         data.emailSent
           ? `✅ ${data.user.name} created — welcome email sent to ${data.user.email}.`
-          : `✅ ${data.user.name} created. No email sent — configure SMTP in Admin → Settings.`,
+          : `✅ ${data.user.name} created. Email not sent — ${data.emailError ?? 'the email provider is not configured.'}`,
       );
     } catch (e: unknown) { setFormErr((e as Error).message); }
     finally { setSaving(false); }

@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import { saveMetrics, clearMetrics } from '@/lib/storage';
 import { hasLocalData, clearLocalData } from '@/lib/clearLocalData';
+import { addLocalImport } from '@/lib/localImportHistory';
+import { processFileLocally, getFileExtension } from '@/lib/localUpload';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import DataQualitySummary from '@/components/upload/DataQualitySummary';
@@ -29,21 +31,45 @@ export default function HomePage() {
   const [storedDataFound, setStoredDataFound] = useState(false);
   const [confirmClear, setConfirmClear]       = useState(false);
   const [clearSuccess, setClearSuccess]       = useState(false);
+  const [dataStorageMode, setDataStorageMode] = useState<'cloud' | 'local'>('cloud');
   const inputRef  = useRef<HTMLInputElement>(null);
   const mergeRef  = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setStoredDataFound(hasLocalData()); }, []);
+
+  // EP-017: local-mode users never POST the file to /api/upload at all.
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.dataStorageMode === 'local') setDataStorageMode('local'); })
+      .catch(() => {}); // default "cloud" — never silently skip the server on a failed check
+  }, []);
 
   // ── Single file upload (existing golden path) ─────────────────────────────
   async function handleFile(file: File) {
     setLoading(true); setError(null); setMergeStats(null);
     setDataQuality(null); setFieldImpacts(null); setColumnMapping(null); setPendingMetrics(null);
     try {
-      const form = new FormData();
-      form.append('file', file);
-      const res  = await fetch('/api/upload', { method: 'POST', body: form });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Upload failed'); return; }
+      let data: { metrics: any; warnings: string[]; columnMapping?: ColumnMappingResult; error?: string; details?: string[] };
+
+      if (dataStorageMode === 'local') {
+        const result = await processFileLocally(file);
+        if ('error' in result) { setError(result.error); return; }
+        data = result;
+        addLocalImport({
+          fileName:      file.name,
+          fileType:      getFileExtension(file.name).replace('.', ''),
+          totalIssues:   result.metrics.totalIssues ?? 0,
+          healthScore:   result.metrics.healthScore ?? 0,
+          status:        'success',
+          warningsCount: result.warnings.length,
+        });
+      } else {
+        const form = new FormData();
+        form.append('file', file);
+        const res  = await fetch('/api/upload', { method: 'POST', body: form });
+        data = await res.json();
+        if (!res.ok) { setError(data.error || 'Upload failed'); return; }
+      }
 
       // Show column mapping preview — user confirms before proceeding
       if (data.columnMapping) {

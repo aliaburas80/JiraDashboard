@@ -21,6 +21,7 @@ const PROFILE_FIELDS = {
   address: true,
   certificates: true,
   bio: true,
+  dataStorageMode: true,
   updatedAt: true,
 };
 
@@ -46,6 +47,8 @@ function safeProfile(user: any) {
     address: user.address ?? '',
     certificates: user.certificates ?? '',
     bio: user.bio ?? '',
+    // EP-017: "cloud" (default, server-side data) or "local" (browser-only, never uploaded).
+    dataStorageMode: user.dataStorageMode === 'local' ? 'local' : 'cloud',
     updatedAt: user.updatedAt?.toISOString?.() ?? null,
   };
 }
@@ -92,6 +95,15 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
   const name = clean(body.name);
   if (typeof name !== 'string') return NextResponse.json({ error: 'Name is required.' }, { status: 400 });
 
+  // EP-017: optional per-user storage-mode change — only "cloud" or "local" accepted.
+  let dataStorageMode: 'cloud' | 'local' | undefined;
+  if (body.dataStorageMode !== undefined) {
+    if (body.dataStorageMode !== 'cloud' && body.dataStorageMode !== 'local') {
+      return NextResponse.json({ error: 'dataStorageMode must be "cloud" or "local".' }, { status: 400 });
+    }
+    dataStorageMode = body.dataStorageMode;
+  }
+
   const data = {
     name,
     avatarUrl: clean(body.avatarUrl),
@@ -101,6 +113,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     address: clean(body.address),
     certificates: clean(body.certificates),
     bio: clean(body.bio),
+    ...(dataStorageMode !== undefined ? { dataStorageMode } : {}),
   };
 
   const user = await prisma.user.update({
@@ -110,6 +123,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
   });
 
   session.name = user.name;
+  if (dataStorageMode !== undefined) session.dataStorageMode = dataStorageMode;
   await session.save();
 
   await prisma.auditEvent.create({ data: {
@@ -119,6 +133,16 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
     userAgent: req.headers.get('user-agent') ?? undefined,
   }}).catch(() => {});
+
+  if (dataStorageMode !== undefined) {
+    await prisma.auditEvent.create({ data: {
+      userId: user.id,
+      eventType: 'profile_storage_mode_change',
+      eventDescription: `${user.email} switched data storage mode to "${dataStorageMode}". This only affects new uploads going forward.`,
+      ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
+      userAgent: req.headers.get('user-agent') ?? undefined,
+    }}).catch(() => {});
+  }
 
   try {
     const { pushToCloud } = await import('@/services/storage/cloudSync');

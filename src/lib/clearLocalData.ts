@@ -13,6 +13,7 @@ export const DC_FIXED_KEYS = [
   'dc_visited_explore',
   'dc_viewed_sprints',
   'dc_explore_recent',
+  'dc_local_import_history_v1',
 ] as const;
 
 /** Dynamic-prefix keys (e.g. dc_col_order_<tableId>). */

@@ -136,6 +136,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     session.role               = isAppRole(user.role) ? user.role : 'user';
     session.mustChangePassword = user.mustChangePassword;
     session.emailVerified      = (user as any).emailVerified ?? true;
+    session.dataStorageMode    = user.dataStorageMode === 'local' ? 'local' : 'cloud';
     session.isLoggedIn         = true;
     await session.save();
 

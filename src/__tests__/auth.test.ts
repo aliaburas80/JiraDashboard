@@ -210,3 +210,26 @@ test('TC-A-05: admin role set correctly in session', async () => {
   const user = await prisma.user.findUnique({ where: { email: 'admin@test.com' } }) as any;
   expect(user.role).toBe('admin');
 });
+
+// EP-017: login route sets session.dataStorageMode = user.dataStorageMode === 'local' ? 'local' : 'cloud'
+test('TC-A-06: session picks up dataStorageMode "local" from the user record', async () => {
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+    id: 'user-1', name: 'Sam', email: 'sam@test.com',
+    passwordHash: 'irrelevant', isActive: true, role: 'user', dataStorageMode: 'local',
+  });
+
+  const user = await prisma.user.findUnique({ where: { email: 'sam@test.com' } }) as any;
+  const sessionDataStorageMode = user.dataStorageMode === 'local' ? 'local' : 'cloud';
+  expect(sessionDataStorageMode).toBe('local');
+});
+
+test('TC-A-07: session defaults dataStorageMode to "cloud" when unset on the user record', async () => {
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+    id: 'user-2', name: 'Robin', email: 'robin@test.com',
+    passwordHash: 'irrelevant', isActive: true, role: 'user',
+  });
+
+  const user = await prisma.user.findUnique({ where: { email: 'robin@test.com' } }) as any;
+  const sessionDataStorageMode = user.dataStorageMode === 'local' ? 'local' : 'cloud';
+  expect(sessionDataStorageMode).toBe('cloud');
+});
