@@ -6,7 +6,9 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { readLatestMetrics } from '@/services/metrics/latestMetricsStorage';
+import fs from 'fs';
+import path from 'path';
+import { listMetricsScopeFiles, metricsScopeFileDir } from '@/services/metrics/latestMetricsStorage';
 import { readStorageSettings, listCloudBackups } from '@/services/storage/storageProvider';
 import { getCacheMeta } from '@/services/storage/cloudSync';
 
@@ -78,9 +80,20 @@ export async function GET() {
   opsScore = Math.max(0, opsScore);
 
   // ── Latest metrics + cloud copy freshness (STORAGE-DEC-10) ─────────────────
-  const latest = readLatestMetrics();
-  const latestAgeMinutes = latest?.savedAt
-    ? Math.round((now.getTime() - new Date(latest.savedAt).getTime()) / 60_000)
+  // EP-020: latest-metrics.json is now one file per workspace/user scope
+  // (data/metrics/<scopeKey>.json) rather than a single shared file — this
+  // is an ops-wide signal, so it reports the most recently written scope
+  // file across the whole deployment rather than any one user's data.
+  const scopeFiles = listMetricsScopeFiles();
+  let mostRecentWriteMs: number | null = null;
+  for (const file of scopeFiles) {
+    try {
+      const mtimeMs = fs.statSync(path.join(metricsScopeFileDir(), file)).mtimeMs;
+      if (mostRecentWriteMs === null || mtimeMs > mostRecentWriteMs) mostRecentWriteMs = mtimeMs;
+    } catch { /* file may have been removed between listing and stat — skip */ }
+  }
+  const latestAgeMinutes = mostRecentWriteMs !== null
+    ? Math.round((now.getTime() - mostRecentWriteMs) / 60_000)
     : null;
 
   const storageSettings = readStorageSettings();
@@ -107,12 +120,14 @@ export async function GET() {
   const cacheMeta = getCacheMeta();
 
   const metricsSync = {
-    available:    !!latest,
-    savedAt:       latest?.savedAt ?? null,
-    ageMinutes:    latestAgeMinutes,
-    source:        latest?.origin?.source ?? null,
-    connectionName: latest?.origin?.connectionName ?? null,
-    cloudProvider: storageSettings.active,
+    // EP-020: metrics are now per-workspace/user (data/metrics/<scopeKey>.json),
+    // so "available"/"age" describe the deployment as a whole, not any one
+    // tenant's data — see scopedFileCount/mostRecentWriteAt.
+    available:        scopeFiles.length > 0,
+    scopedFileCount:  scopeFiles.length,
+    mostRecentWriteAt: mostRecentWriteMs !== null ? new Date(mostRecentWriteMs).toISOString() : null,
+    ageMinutes:        latestAgeMinutes,
+    cloudProvider:     storageSettings.active,
     cloudBackupCount,
     latestCloudBackupAt,
     latestCloudBackupKey,

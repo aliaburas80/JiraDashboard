@@ -253,7 +253,7 @@ User drops file
     calculateDashboardMetrics() → DashboardMetrics
     appendImportLog()      save to data/import-logs.json
     return { metrics, warnings, importLog }
-  writeLatestMetrics(metrics)
+  writeLatestMetrics(scopeKey, metrics) // scopeKey from getMetricsScopeKeyForUser() — EP-020
   saveMetrics(metrics) // browser fallback: dc_metrics_v2
   router.push('/summary')
 \`\`\``,
@@ -585,7 +585,7 @@ it('describes what is being tested', () => {
 
 ## Rule 1 — Cache-First (never re-fetch unnecessarily)
 
-On startup: list bucket → find latest key → compare SHA-256 content hash with \`data/.cloud-cache-meta.json\` → hash match = use local cache (no download); hash differs = download + restore + update cache. Analytics pages then fetch \`/api/metrics/latest\`, which returns \`data/latest-metrics.json\` from the restored/cache-backed server copy before the browser falls back to \`localStorage\`.
+On startup: list bucket → find latest key → compare SHA-256 content hash with \`data/.cloud-cache-meta.json\` → hash match = use local cache (no download); hash differs = download + restore + update cache. Analytics pages then fetch \`/api/metrics/latest\`, which returns the caller's own \`data/metrics/<scopeKey>.json\` (EP-020 — one file per workspace/user, resolved server-side via \`getMetricsScopeKeyForUser()\`, never a single shared file) from the restored/cache-backed server copy before the browser falls back to \`localStorage\`.
 
 **Files:** \`src/services/storage/cloudSync.ts — syncFromCloud()\`
 
@@ -658,7 +658,7 @@ When loading, a blue banner appears below the header: "Loading data from Amazon 
 | File | Contents |
 |------|----------|
 | \`delivery_clarity.db\` | Users, sessions, import logs, snapshots, audit events |
-| \`latest-metrics.json\` | Latest computed DashboardMetrics payload for bucket-first dashboard startup |
+| \`metrics/<scopeKey>.json\` | Latest computed DashboardMetrics payload for bucket-first dashboard startup — one file per workspace/user scope key (EP-020), discovered dynamically at backup time rather than a fixed filename |
 | \`health-thresholds.json\` | Admin health threshold config |
 | \`retention-settings.json\` | Data retention rules |
 | \`orphan-rules.json\` | Orphan detection rules |

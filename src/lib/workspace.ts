@@ -24,6 +24,18 @@ export async function getWorkspaceForUser(userId: string): Promise<WorkspaceSumm
 }
 
 /**
+ * EP-020: the key that scopes a user's live dashboard data (latest-metrics
+ * file, cloud backup entry) so cloud-storage-mode users never see another
+ * user's uploads/syncs. Prefers the user's workspace (shared visibility for
+ * teammates within it); falls back to a per-user key for any account without
+ * one, rather than ever falling back to a single shared/global key.
+ */
+export async function getMetricsScopeKeyForUser(userId: string): Promise<string> {
+  const workspace = await getWorkspaceForUser(userId);
+  return workspace ? `ws:${workspace.id}` : `user:${userId}`;
+}
+
+/**
  * Creates a workspace and workspace-member record for a new user.
  * Must be called inside a Prisma transaction alongside user creation.
  */

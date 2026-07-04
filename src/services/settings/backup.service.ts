@@ -3,21 +3,35 @@
 // Database backup and restore service.
 // Exports the SQLite database + JSON config files into a downloadable
 // backup bundle, and restores from a previously created backup.
+//
+// EP-020: dashboard metrics moved from one shared `latest-metrics.json` file
+// to one file per workspace/user under `data/metrics/` — the fixed file list
+// below can't name those ahead of time, so they're discovered dynamically
+// (see listMetricsScopeFiles()) and included individually in every backup.
 
 import fs   from 'fs';
 import path from 'path';
+import { listMetricsScopeFiles, metricsScopeFileDir } from '@/services/metrics/latestMetricsStorage';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 
-// Files included in every backup
+// Fixed files included in every backup (excludes per-scope metrics files —
+// see METRICS_SCOPE_FILE_PATTERN below).
 const BACKUP_FILES = [
   { name: 'delivery_clarity.db',     label: 'SQLite database'         },
-  { name: 'latest-metrics.json',     label: 'Latest dashboard metrics' },
   { name: 'health-thresholds.json',  label: 'Health threshold config' },
   { name: 'retention-settings.json', label: 'Retention settings'      },
   { name: 'orphan-rules.json',       label: 'Orphan detection rules'  },
   { name: 'import-logs.json',        label: 'File-based import logs'  },
 ];
+
+// Legacy single-file name from before EP-020 — no longer written, but still
+// allowed on restore so a pre-existing backup doesn't fail/skip loudly.
+const LEGACY_LATEST_METRICS_FILE = 'latest-metrics.json';
+
+// Matches `metrics/ws_<id>.json` / `metrics/user_<id>.json` — mirrors the
+// scope-key sanitization in latestMetricsStorage.ts.
+const METRICS_SCOPE_FILE_PATTERN = /^metrics\/(ws|user)_[a-zA-Z0-9_-]+\.json$/;
 
 export interface BackupManifest {
   version:    string;
@@ -52,6 +66,17 @@ export function createBackup(): BackupBundle {
     }
   }
 
+  // EP-020: include every per-workspace/user metrics file individually —
+  // discovered dynamically since the set of workspaces isn't known ahead of time.
+  for (const name of listMetricsScopeFiles()) {
+    const filePath = path.join(metricsScopeFileDir(), name);
+    const buf = fs.readFileSync(filePath);
+    const key = `metrics/${name}`;
+    files[key] = buf.toString('base64');
+    manifestFiles.push({ name: key, label: 'Workspace dashboard metrics', size: buf.length, included: true });
+    totalSize += buf.length;
+  }
+
   const manifest: BackupManifest = {
     version:   '1.0',
     createdAt: new Date().toISOString(),
@@ -82,10 +107,12 @@ export function restoreBackup(bundle: BackupBundle): RestoreResult {
   }
 
   // Only restore files we know about (security: never write arbitrary paths)
-  const allowedNames = new Set(BACKUP_FILES.map(f => f.name));
+  const allowedNames = new Set([...BACKUP_FILES.map(f => f.name), LEGACY_LATEST_METRICS_FILE]);
 
   for (const [filename, b64Content] of Object.entries(bundle.files ?? {})) {
-    if (!allowedNames.has(filename)) {
+    const isFixedFile   = allowedNames.has(filename);
+    const isScopedMetric = METRICS_SCOPE_FILE_PATTERN.test(filename);
+    if (!isFixedFile && !isScopedMetric) {
       skipped.push(`${filename} (not in allowed list)`);
       continue;
     }
@@ -96,7 +123,7 @@ export function restoreBackup(bundle: BackupBundle): RestoreResult {
       if (fs.existsSync(filePath)) {
         fs.copyFileSync(filePath, filePath + '.bak');
       }
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
       fs.writeFileSync(filePath, buf);
       restored.push(filename);
     } catch (err) {
@@ -110,7 +137,7 @@ export function restoreBackup(bundle: BackupBundle): RestoreResult {
 // ── Backup stats (for UI display) ─────────────────────────────────────────────
 
 export function getBackupStats(): BackupManifest['files'] {
-  return BACKUP_FILES.map(f => {
+  const fixed = BACKUP_FILES.map(f => {
     const fp  = path.join(DATA_DIR, f.name);
     const exists = fs.existsSync(fp);
     return {
@@ -120,4 +147,16 @@ export function getBackupStats(): BackupManifest['files'] {
       included: exists,
     };
   });
+
+  const scoped = listMetricsScopeFiles().map(name => {
+    const fp = path.join(metricsScopeFileDir(), name);
+    return {
+      name:     `metrics/${name}`,
+      label:    'Workspace dashboard metrics',
+      size:     fs.statSync(fp).size,
+      included: true,
+    };
+  });
+
+  return [...fixed, ...scoped];
 }

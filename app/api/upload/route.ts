@@ -194,14 +194,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const startTime = Date.now();
     const metrics   = calculateDashboardMetrics(issues);
-    writeLatestMetrics(metrics, { source: 'file' });
+    // EP-020: resolve the caller's workspace/user scope before writing the
+    // live dashboard file — this is what keeps one cloud-mode user's upload
+    // from ever overwriting another's dashboard. Reused below for the
+    // ImportLog's workspaceId, so resolved once rather than via the shared
+    // getMetricsScopeKeyForUser helper (which would re-query it).
+    const workspace = await getWorkspaceForUser(userId).catch(() => null);
+    const scopeKey   = workspace ? `ws:${workspace.id}` : `user:${userId}`;
+    writeLatestMetrics(scopeKey, metrics, { source: 'file' });
     const importLog = appendImportLog(
       buildImportLog({ file: fileArg, parseResult, validation, metrics, status: 'success' }),
     );
 
     // Save to DB if user is logged in — EP-015: consume entitlement atomically with ImportLog
     if (userId) {
-      const workspace = await getWorkspaceForUser(userId).catch(() => null);
       const flow = (metrics.flow ?? {}) as any;
       const releaseConfidenceScore = computeReleaseConfidence({
         completionRate: metrics.completionRate  ?? 0,

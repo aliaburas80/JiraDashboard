@@ -10,6 +10,7 @@ import { parseJiraFile } from '@/services/jira/parser';
 import { validateIssueData } from '@/services/jira/validation';
 import { calculateDashboardMetrics } from '@/services/metrics/metrics.service';
 import { writeLatestMetrics } from '@/services/metrics/latestMetricsStorage';
+import { getMetricsScopeKeyForUser } from '@/lib/workspace';
 import { mergeIssueArrays } from '@/lib/mergeIssues';
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
@@ -76,7 +77,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const { merged, stats } = mergeIssueArrays(allIssueArrays);
     const metrics = calculateDashboardMetrics(merged);
-    writeLatestMetrics(metrics, { source: 'file' });
+    // EP-020: scope the write to the caller's workspace/user — this route
+    // previously wrote the single shared latest-metrics.json file.
+    const scopeKey = await getMetricsScopeKeyForUser(session.userId);
+    writeLatestMetrics(scopeKey, metrics, { source: 'file' });
     import('@/services/storage/cloudSync')
       .then(({ pushToCloud }) => pushToCloud())
       .catch(() => {});
