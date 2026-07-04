@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect, useCallback, type CSSProperties } from 'react';
 import clsx from 'clsx';
 import { DC_NAV_GROUPS, getNavGroupsForRole } from '@/components/dc-shell/navigation';
+import { getCachedRole, fetchCurrentRole } from '@/lib/currentRole';
 import UserMenu from '@/components/auth/UserMenu';
 import NotificationBell from '@/components/auth/NotificationBell';
 import { DataSourceBadge } from '@/components/ui/DataSourceBadge';
@@ -42,14 +43,13 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
   const [dropPos, setDropPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const groupButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const dropMenuRef = useRef<HTMLDivElement>(null);
-  const [role, setRole] = useState<string | null>(null);
+  // Seeded synchronously from the module cache so the nav renders already-filtered
+  // on mount instead of flashing unfiltered/default on every route change.
+  const [role, setRole] = useState<string | null>(getCachedRole);
 
-  // Nav items/groups this role can't open are filtered out below (getNavGroupsForRole) —
-  // previously every menu showed every group to every role regardless of access.
+  // Nav items/groups this role can't open are filtered out below (getNavGroupsForRole).
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.ok ? r.json() : null)
-      .then(data => setRole(data?.role ?? null))
-      .catch(() => setRole(null));
+    fetchCurrentRole().then(setRole);
   }, []);
 
   const [syncing, setSyncing] = useState(false);
