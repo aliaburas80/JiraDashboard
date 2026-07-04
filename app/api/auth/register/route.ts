@@ -11,7 +11,7 @@ import { createWorkspaceForUser } from '@/lib/workspace';
 import { safeAuditEvent } from '@/lib/system-error-logger';
 import { PERSONAS, CURRENT_TERMS_VERSION, type Persona } from '@/lib/personas';
 import { createEntitlementForUser } from '@/lib/entitlement';
-import { getAppConfig } from '@/lib/app-config';
+import { resolveRequestOrigin } from '@/lib/url';
 
 export const dynamic = 'force-dynamic';
 
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // the user can be verified manually by an admin, or the token can be re-sent later.
   try {
     const { sendEmail, buildVerificationEmail } = await import('@/lib/email');
-    const { appUrl } = await getAppConfig();
+    const appUrl = resolveRequestOrigin(req);
     const emailContent = buildVerificationEmail(user.name, user.email, verificationToken, appUrl);
     await sendEmail({ to: user.email, toName: user.name, ...emailContent });
   } catch (err) {

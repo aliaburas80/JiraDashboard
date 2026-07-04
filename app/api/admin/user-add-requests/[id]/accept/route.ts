@@ -9,7 +9,8 @@ import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, validatePasswordStrength } from '@/lib/auth';
 import { sendEmail, buildWelcomeEmail } from '@/lib/email';
-import { getAppConfig, invalidateConfig } from '@/lib/app-config';
+import { invalidateConfig } from '@/lib/app-config';
+import { resolveRequestOrigin } from '@/lib/url';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { isAppRole, roleLabel } from '@/lib/roles';
 import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
@@ -114,7 +115,7 @@ export async function PATCH(
   let emailSent = false;
   try {
     invalidateConfig();
-    const { appUrl } = await getAppConfig();
+    const appUrl = resolveRequestOrigin(req);
     const welcome = buildWelcomeEmail(newUser.name, newUser.email, tempPassword, appUrl);
     emailSent = await sendEmail({ to: newUser.email, toName: newUser.name, ...welcome });
   } catch (err) {
