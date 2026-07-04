@@ -8,7 +8,7 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, validatePasswordStrength } from '@/lib/auth';
-import { sendEmail, buildWelcomeEmail } from '@/lib/email';
+import { sendEmail, buildWelcomeEmail, describeSmtpError } from '@/lib/email';
 import { invalidateConfig } from '@/lib/app-config';
 import { resolveRequestOrigin } from '@/lib/url';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
@@ -113,13 +113,31 @@ export async function PATCH(
   }], 'user_add_request accept notification');
 
   let emailSent = false;
+  let emailError: string | undefined;
   try {
     invalidateConfig();
     const appUrl = resolveRequestOrigin(req);
     const welcome = buildWelcomeEmail(newUser.name, newUser.email, tempPassword, appUrl);
     emailSent = await sendEmail({ to: newUser.email, toName: newUser.name, ...welcome });
+    if (!emailSent) {
+      emailError = 'No email provider is configured (no Resend API key and no SMTP host/username/password set).';
+    }
   } catch (err) {
+    // Distinguish a genuine send failure (Resend/SMTP rejected it, network error, etc.) from
+    // "not configured" above — these used to be indistinguishable to the admin reviewing this.
+    emailError = process.env.RESEND_API_KEY
+      ? `Resend failed: ${err instanceof Error ? err.message : String(err)}`
+      : describeSmtpError(err);
     console.warn('[email] Failed to send welcome email:', err);
+  }
+
+  if (emailError) {
+    await safeAuditEvent({
+      userId: session.userId,
+      eventType: 'user_add_request_welcome_email_failed',
+      eventDescription: `Welcome email failed for ${newUser.email}: ${emailError}`,
+      ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
+    });
   }
 
   await safeAuditEvent({
@@ -133,6 +151,7 @@ export async function PATCH(
   return NextResponse.json({
     ok: true,
     emailSent,
+    emailError,
     createdUser: {
       id: newUser.id,
       name: newUser.name,

@@ -5,6 +5,17 @@
 
 ---
 
+## Accurate Welcome-Email Failure Reporting (2026-07-04, bug fix)
+
+**Found while investigating a real report** of a welcome email not being sent when accepting an add-member request: `UserAddRequestsPanel.tsx` hardcoded "Email not sent — SMTP not configured" whenever `emailSent` was `false`, **regardless of the actual reason**. Since `sendEmail()` only returns `false` (without throwing) when no email provider is configured at all — any *other* failure (a Resend API error, a network timeout, a real SMTP auth failure) throws instead, was caught, `console.warn`'d with no persisted trace, and then shown to the admin under the same misleading "SMTP not configured" message. There was no way to tell these apart from the UI, and no audit trail to check afterward.
+
+- `app/api/admin/user-add-requests/[id]/accept/route.ts` now distinguishes the two cases and returns a real `emailError` string: the genuine "no email provider configured" message when `sendEmail` returns `false`, or the actual thrown error (via the existing `describeSmtpError()` for SMTP, or the raw Resend error message when `RESEND_API_KEY` is set) when it throws. A new `user_add_request_welcome_email_failed` audit event is logged on any failure — previously invisible outside server logs.
+- `UserAddRequestsPanel.tsx` now displays `emailError` instead of a hardcoded guess.
+- **Verified locally that email sending itself works correctly right now** (confirmed via `POST /api/admin/app-config?action=test` — Gmail SMTP fallback succeeds) — the reported failure was not reproducible in the current environment, so this fix is aimed at making the *next* occurrence immediately diagnosable rather than a guess, whichever environment it recurs in.
+- 2 new tests (`TC-REQ-10b`, `TC-REQ-10c`); full suite 824/85 passing, no regressions.
+
+---
+
 ## v4.18.0 — EP-016 Super Admin (2026-07-04, P1)
 
 **Scope:** Requested by the product owner — a protected top-tier admin account that other admins cannot demote, deactivate, or delete. Previously the `admin` role was completely flat: any admin could modify or delete any other admin, including one intended to be the ultimate authority.

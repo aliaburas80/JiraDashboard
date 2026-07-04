@@ -61,6 +61,7 @@ export default function UserAddRequestsPanel() {
   const [acting, setActing]         = useState<string | null>(null);
   const [tempPasswords, setTempPasswords] = useState<Record<string, string>>({});
   const [emailSentMap, setEmailSentMap] = useState<Record<string, boolean>>({});
+  const [emailErrorMap, setEmailErrorMap] = useState<Record<string, string>>({});
   const [copied, setCopied]         = useState<string | null>(null);
   const [decisionNote, setDecisionNote] = useState<Record<string, string>>({});
   const [adminPasswords, setAdminPasswords] = useState<Record<string, string>>({});
@@ -116,6 +117,7 @@ export default function UserAddRequestsPanel() {
         // Use the password already in state — never echo sensitive data from the response
         setTempPasswords(p => ({ ...p, [id]: adminPasswords[id].trim() }));
         setEmailSentMap(m => ({ ...m, [id]: !!data.emailSent }));
+        if (data.emailError) setEmailErrorMap(m => ({ ...m, [id]: data.emailError }));
       }
       setRequests(prev => prev.map(r =>
         r.id === id
@@ -343,7 +345,8 @@ export default function UserAddRequestsPanel() {
                       )}
                       {emailSentMap[req.id] === false && (
                         <p className="text-[11px] font-semibold text-amber-700 flex items-center gap-1">
-                          <SvgIcon name="warning" size={12} /> Email not sent — SMTP not configured. Share the password manually.
+                          <SvgIcon name="warning" size={12} />
+                          Email not sent — {emailErrorMap[req.id] ?? 'the email provider is not configured.'} Share the password manually.
                         </p>
                       )}
                       <p className="text-[11px] text-green-600">

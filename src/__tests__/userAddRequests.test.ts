@@ -24,6 +24,10 @@ jest.mock('@/lib/auth', () => ({
   hashPassword: jest.fn(async () => 'HASHED_PW'),
   validatePasswordStrength: jest.fn(() => null),
 }));
+jest.mock('@/lib/email', () => ({
+  ...jest.requireActual('@/lib/email'),
+  sendEmail: jest.fn(async () => true),
+}));
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     userAddRequest: {
@@ -321,6 +325,54 @@ test('TC-REQ-10: PATCH accept — creates user, marks request accepted, creates 
   );
   expect(prisma.notification.createMany).toHaveBeenCalled();
   expect(prisma.auditEvent.create).toHaveBeenCalled();
+});
+
+test('TC-REQ-10b: PATCH accept — emailSent false with no throw reports "not configured", not a generic SMTP guess', async () => {
+  mockSession.role = 'admin';
+  mockSession.userId = 'admin-1';
+  const { sendEmail } = await import('@/lib/email');
+  (sendEmail as jest.Mock).mockResolvedValueOnce(false);
+  (prisma.userAddRequest.findUnique as jest.Mock).mockResolvedValue(pendingRequest());
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+  (prisma.user.create as jest.Mock).mockResolvedValue(createdUser());
+  (prisma.userAddRequest.update as jest.Mock).mockResolvedValue({ ...pendingRequest(), status: 'accepted' });
+
+  const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
+  const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: { id: 'req-1' } });
+  const body = await res.json();
+
+  expect(body.emailSent).toBe(false);
+  expect(body.emailError).toMatch(/no email provider is configured/i);
+});
+
+test('TC-REQ-10c: PATCH accept — a thrown Resend error is surfaced as its real reason, not a generic SMTP guess', async () => {
+  mockSession.role = 'admin';
+  mockSession.userId = 'admin-1';
+  const previousResendKey = process.env.RESEND_API_KEY;
+  process.env.RESEND_API_KEY = 'test-resend-key';
+  try {
+    const { sendEmail } = await import('@/lib/email');
+    (sendEmail as jest.Mock).mockRejectedValueOnce(new Error('Resend 403: The gmail.com domain is not verified.'));
+    (prisma.userAddRequest.findUnique as jest.Mock).mockResolvedValue(pendingRequest());
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+    (prisma.user.create as jest.Mock).mockResolvedValue(createdUser());
+    (prisma.userAddRequest.update as jest.Mock).mockResolvedValue({ ...pendingRequest(), status: 'accepted' });
+
+    const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
+    const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: { id: 'req-1' } });
+    const body = await res.json();
+
+    expect(body.emailSent).toBe(false);
+    expect(body.emailError).toContain('The gmail.com domain is not verified.');
+    // A distinct audit event records the failure — previously only console.warn, invisible to admins.
+    expect(prisma.auditEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ eventType: 'user_add_request_welcome_email_failed' }),
+      }),
+    );
+  } finally {
+    process.env.RESEND_API_KEY = previousResendKey;
+  }
 });
 
 // ── TC-REQ-11: PATCH accept — 404 when request not found ──────────────────────
