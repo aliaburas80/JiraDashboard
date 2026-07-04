@@ -128,7 +128,7 @@ export default function ProfilePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Could not update storage mode.');
       setProfile(data.profile);
-      showToast(`Storage mode switched to "${mode === 'local' ? 'This device only' : 'Cloud storage'}". This only affects new uploads going forward.`);
+      showToast(`Storage mode switched to "${mode === 'local' ? 'This device only' : 'App storage'}". This only affects new uploads going forward.`);
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Failed to update storage mode.');
     } finally {

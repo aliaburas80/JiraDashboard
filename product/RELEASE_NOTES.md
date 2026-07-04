@@ -5,6 +5,12 @@
 
 ---
 
+## Main Nav Now Role-Filtered + "App Storage" Rename (2026-07-04, P2)
+
+**Immediate follow-up to EP-018 below**, from a screenshot showing the main app navigation still offering every menu item to every role. The new Settings-hub role gate only covered the new tab menu — the actual top nav (`AppShell.tsx`, `DashboardTopbar.tsx`) had a comment literally documenting "no role-based filtering in the nav" as deliberate. Concretely wrong for "Developer," already admin-only at the middleware level — every other role saw a working-looking link that would redirect them away on click. New shared `getNavGroupsForRole(role)` fixes both live nav components (two more, `DCTopbar`/`DCPageSidebar`, turned out to be dead code and were left alone). Also renamed the Storage tab's "Cloud storage" option to **"App storage"** — the old label contradicted its own description ("not a third-party bucket") and risked misleading users on data-residency questions. Display text only; the underlying `dataStorageMode: "cloud"` value is unchanged. 7 new tests; full suite 861/93 passing.
+
+---
+
 ## EP-018 — Settings Hub, Role-Gated Nav, Registration Defaults (2026-07-04, P2)
 
 **8-part request in one message.** Two items needed clarifying questions first: whether "cloud storage should never use my storage" meant fixing wording (today's "cloud mode" is already just Delivery Clarity's own server database, not a 3rd-party bucket) or designing a full "bring your own cloud" feature — user chose wording-only for now, BYOC noted as a future option; and whether the new "local" default should apply to new accounts only, new accounts locked out of cloud, or retroactively to everyone — user chose new accounts only, nothing retroactive.

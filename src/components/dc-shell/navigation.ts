@@ -1,3 +1,5 @@
+import { canAccessRoute } from '@/lib/roles';
+
 export type DCShellNavStatus = 'critical' | 'warning' | 'success' | 'neutral' | 'info';
 
 export type DCShellNavItem = {
@@ -91,6 +93,19 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
 ];
 
 export const DC_NAV_ITEMS = DC_NAV_GROUPS.flatMap(g => g.items);
+
+// Filters the shared nav config down to what the given role can actually open —
+// previously every menu showed every group/item to every role (AppShell.tsx and
+// DashboardTopbar.tsx each had a "no role-based filtering in the nav" comment
+// baked in), so clicking an item a role isn't allowed to open would render
+// nothing useful once canAccessRoute() blocked the destination page. A group
+// left with zero visible items after filtering is dropped entirely rather than
+// rendering an empty dropdown.
+export function getNavGroupsForRole(role: string | null | undefined): DCShellNavGroup[] {
+  return DC_NAV_GROUPS
+    .map(group => ({ ...group, items: group.items.filter(item => canAccessRoute(role, item.href)) }))
+    .filter(group => group.items.length > 0);
+}
 
 export const DC_ADMIN_NAV_ITEMS: DCShellNavItem[] = [
   { id: 'admin-logs',        title: 'Import Logs',  desc: 'All upload history',         href: '/admin/logs',        status: 'neutral' },

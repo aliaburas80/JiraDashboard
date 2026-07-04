@@ -306,6 +306,8 @@ Navigation items are defined in `DC_NAV_GROUPS` (`src/components/dc-shell/naviga
 - **Planning**: `/roadmap`, `/forecast`, `/retro`
 - **Data**: `/snapshots`, `/backend`
 
+**EP-019 note (2026-07-04):** raw `DC_NAV_GROUPS` should not be rendered directly anymore — call `getNavGroupsForRole(role)` (same file) instead, which filters both groups and items through `canAccessRoute()` (`@/lib/roles`) and drops any group left empty. Both `AppShell.tsx` and `DashboardTopbar.tsx` fetch the current role via `GET /api/auth/me` and filter through it before rendering the nav — previously every group/item was shown to every role regardless of access, including `/developer`, which is admin-only at the middleware level. `DCTopbar.tsx`/`DCPageSidebar.tsx` (`src/components/dc-shell/`) also consume `DC_NAV_GROUPS` but are unused dead code (no import anywhere in `app/`) and were not updated.
+
 Mobile: hamburger button opens a 2-column grid panel below the header.
 
 ### Dashboard sub-pages (`/dashboard/*`)
