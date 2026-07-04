@@ -65,19 +65,31 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
   };
 
   // Save SMTP to database (primary store) — does not require cloud storage to be configured.
+  // Bug found 2026-07-04: this used to pass `undefined` whenever the admin left the
+  // password field blank (the normal case when only editing e.g. "From address").
+  // saveSmtpSettings() then had no existing DB row to fall back to (first save ever)
+  // and threw "password required", silently swallowed below — so the DB row was
+  // NEVER created, GET always fell through to the cloud/env config, and any
+  // env-var SMTP_FROM permanently overrode whatever "From address" was saved.
+  // `updated.smtp.pass` already resolves to the currently *effective* password
+  // (existing DB/cloud/env value when the field is left blank), so passing it
+  // here lets the very first save succeed and seeds the DB row correctly.
+  let dbSaveError: string | undefined;
   try {
     const { saveSmtpSettings } = await import('@/services/smtp/smtpSettings.service');
     await saveSmtpSettings({
       host:            updated.smtp.host,
       port:            updated.smtp.port,
       username:        updated.smtp.user,
-      pass:            body.smtp?.pass?.trim() || undefined, // only pass new pass if explicitly provided
+      pass:            updated.smtp.pass || undefined,
       fromAddress:     updated.smtp.from,
       updatedByUserId: (auth as SessionData).userId,
     });
   } catch (err) {
-    // DB save failed — still attempt cloud save below; log but don't abort.
-    console.error('[app-config] DB SMTP save failed:', (err as Error).message);
+    // DB save failed — still attempt cloud save below, but surface the real
+    // reason instead of silently returning { ok: true } as if it persisted.
+    dbSaveError = err instanceof Error ? err.message : 'Could not save SMTP settings to the database.';
+    console.error('[app-config] DB SMTP save failed:', dbSaveError);
   }
 
   // Also save to cloud (S3/Azure/GCP) as a secondary backup, when configured.
@@ -98,7 +110,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
     },
   }).catch(() => {}); // never block the response on audit failure
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, dbSaveError });
 }
 
 interface JiraMyselfResponse {
