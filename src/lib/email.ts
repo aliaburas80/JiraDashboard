@@ -301,3 +301,47 @@ export function buildWelcomeEmail(
 
   return { subject: 'Welcome to Delivery Clarity — Your Account is Ready', text, html };
 }
+
+// EP-012: sent on self-registration. Clicking the link calls POST /api/auth/verify-email,
+// which flips User.emailVerified and clears the token. Uploads are blocked until then.
+export function buildVerificationEmail(
+  name:        string,
+  email:       string,
+  token:       string,
+  appUrl:      string,
+): Pick<EmailOptions, 'subject' | 'text' | 'html'> {
+  const verifyUrl = `${appUrl}/verify-email?token=${token}`;
+
+  const text = [
+    `Hi ${name},`,
+    '',
+    'Thanks for creating a Delivery Clarity account. Please verify your email address to start uploading data:',
+    '',
+    verifyUrl,
+    '',
+    'This link expires in 24 hours. If you did not create this account, you can ignore this email.',
+    '',
+    '— Delivery Clarity',
+  ].join('\n');
+
+  const html = `
+<div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1e293b;background:#ffffff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#2563eb,#0891b2);padding:24px 28px">
+    <h1 style="margin:0;font-size:20px;color:#ffffff;font-weight:800;letter-spacing:-0.3px">Delivery Clarity</h1>
+    <p style="margin:4px 0 0;font-size:13px;color:#bfdbfe">Verify your email address</p>
+  </div>
+  <div style="padding:28px">
+    <p style="margin-top:0">Hi <strong>${name}</strong>,</p>
+    <p>Thanks for creating a Delivery Clarity account for <strong>${email}</strong>. Please verify your email address to start uploading data.</p>
+    <a href="${verifyUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;margin:8px 0 20px">
+      Verify Email →
+    </a>
+    <p style="font-size:13px;color:#475569">This link expires in 24 hours.</p>
+    <p style="font-size:11px;color:#94a3b8;margin-top:28px;padding-top:16px;border-top:1px solid #f1f5f9">
+      If you did not create this account, you can safely ignore this email.
+    </p>
+  </div>
+</div>`.trim();
+
+  return { subject: 'Verify your email — Delivery Clarity', text, html };
+}

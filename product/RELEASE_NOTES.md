@@ -5,6 +5,21 @@
 
 ---
 
+## v4.16.0 — EP-012 Email Verification Completed (2026-07-04, P1 — closes a self-registration gap)
+
+**Scope:** Self-registration (EP-011, `ALLOW_OPEN_REGISTRATION`) has created `emailVerified: false` users since it shipped, and `app/api/upload/route.ts` has always blocked uploads for unverified accounts — but the verification email itself was never implemented. `POST /api/auth/register` called a `buildVerificationEmail` function that did not exist in `src/lib/email.ts`; the `typeof buildVerificationEmail === 'function'` guard silently evaluated to `false` and no email was ever sent. Self-registered users had no way to ever become verified, and therefore no way to ever upload data. This release implements the full flow.
+
+- **Schema**: `User.emailVerificationToken` (`String? @unique`) and `User.emailVerificationExpires` (`DateTime?`) added (migration `20260704073034_add_email_verification_token`).
+- **`src/lib/auth.ts`**: `generateVerificationToken()` (32-byte random hex, i.e. 64 characters) and `EMAIL_VERIFICATION_TTL_HOURS = 24`.
+- **`src/lib/email.ts`**: `buildVerificationEmail(name, email, token, appUrl)` — the function that was missing — builds a branded email linking to `${appUrl}/verify-email?token=...`.
+- **`app/api/auth/register/route.ts`**: generates a token + 24h expiry at signup, stores it on the new `User` row, and sends the real verification email via `sendEmail`. Registration still succeeds even if the email send fails (e.g. no provider configured) — the failure is now recorded via `safeAuditEvent` (`register_verification_email_failed`) instead of being silently swallowed.
+- **New `POST /api/auth/verify-email`**: looks up the user by token, rejects unknown/expired tokens, is idempotent for already-verified users, and on success sets `emailVerified: true` and clears the token (so it cannot be replayed) and logs an `email_verified` audit event.
+- **New `/verify-email` page**: the link destination. Reads `?token=`, calls the endpoint, and renders a loading/success/error state (reuses the `/login` page's animated-background treatment for visual consistency).
+- **Verified**: `tsc` and `eslint` clean on all changed/new files; full Jest suite green (83 suites / 800 tests, no regressions); 10 new tests (`src/__tests__/emailVerification.test.ts`, TC-EV-01–10) covering token generation, email content, and the verify route's valid/expired/unknown/already-verified/missing-token paths; manually exercised end-to-end against the real dev database and a running server — registered a user, confirmed the token was persisted, called the verify endpoint, confirmed `emailVerified` flipped and the token was cleared, and confirmed a replayed token is rejected.
+- **Documentation impact**: RELEASE_NOTES (this entry), SRS (Addendum), TEST_CASES (§ new), DEVELOPER_GUIDE (new section), `/help` (new FAQ entry). Not updated: `/glossary`/APPENDIX — no new user-facing term beyond "email verification," which is self-explanatory in context; BRD/USE_CASES/USER_JOURNEYS/SCENARIOS — this completes a previously-specified flow (EP-011/EP-012) rather than introducing a new one.
+
+---
+
 ## v4.15.0 — Promo Polish + "Request a Demo" (2026-06-28, P2 — promo refinement + new public demo-request feature)
 
 **Scope:** Acts on direct owner feedback on the `/promo` page (logo, colour, centring, marquee, animation) **and** adds a real application feature: a public "Request a demo" form that emails the product owner. The marketing styling is presentation-only; the demo-request flow is a new server feature (API route + email), so it carries the heavier documentation/verification weight.

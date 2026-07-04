@@ -4,6 +4,9 @@
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 
+// EP-012: how long an email verification link stays valid after registration.
+export const EMAIL_VERIFICATION_TTL_HOURS = 24;
+
 const SALT_ROUNDS = 12;
 
 export async function hashPassword(password: string): Promise<string> {
@@ -50,4 +53,9 @@ export function generateTempPassword(): string {
   }
 
   return chars.join('');
+}
+
+// EP-012: opaque, unguessable token embedded in the emailed verification link.
+export function generateVerificationToken(): string {
+  return randomBytes(32).toString('hex');
 }

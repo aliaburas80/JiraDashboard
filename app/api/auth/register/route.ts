@@ -6,11 +6,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { hashPassword, validatePasswordStrength } from '@/lib/auth';
+import { hashPassword, validatePasswordStrength, generateVerificationToken, EMAIL_VERIFICATION_TTL_HOURS } from '@/lib/auth';
 import { createWorkspaceForUser } from '@/lib/workspace';
 import { safeAuditEvent } from '@/lib/system-error-logger';
 import { PERSONAS, CURRENT_TERMS_VERSION, type Persona } from '@/lib/personas';
 import { createEntitlementForUser } from '@/lib/entitlement';
+import { getAppConfig } from '@/lib/app-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,15 +84,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // ── Create user + workspace atomically ─────────────────────────────────────
-  const passwordHash = await hashPassword(password);
+  const passwordHash          = await hashPassword(password);
+  const verificationToken     = generateVerificationToken();
+  const verificationExpiresAt = new Date(Date.now() + EMAIL_VERIFICATION_TTL_HOURS * 60 * 60_000);
   const { user } = await prisma.$transaction(async (tx) => {
     const created = await tx.user.create({
       data: {
         name,
         email,
         passwordHash,
-        role:               'user',
-        emailVerified:      false, // requires EP-012 verification link
+        role:                     'user',
+        emailVerified:            false, // requires EP-012 verification link
+        emailVerificationToken:   verificationToken,
+        emailVerificationExpires: verificationExpiresAt,
         persona,
         isActive:           true,
         mustChangePassword: false,
@@ -111,17 +116,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     ipAddress:        ip,
   });
 
-  // ── Verification email — EP-012 will implement the full token flow.
-  // Silently skip until email provider + token model are ready.
+  // ── Verification email ────────────────────────────────────────────────────
+  // Registration still succeeds if email sending fails (e.g. no provider configured) —
+  // the user can be verified manually by an admin, or the token can be re-sent later.
   try {
-    const { sendEmail } = await import('@/lib/email');
-    const { buildVerificationEmail } = await import('@/lib/email') as any;
-    if (typeof buildVerificationEmail === 'function') {
-      const emailContent = buildVerificationEmail(user.name, user.email, 'PENDING_EP012', '');
-      await sendEmail({ to: user.email, toName: user.name, ...emailContent });
-    }
-  } catch {
-    // Email not configured or buildVerificationEmail not yet implemented — registration succeeds.
+    const { sendEmail, buildVerificationEmail } = await import('@/lib/email');
+    const { appUrl } = await getAppConfig();
+    const emailContent = buildVerificationEmail(user.name, user.email, verificationToken, appUrl);
+    await sendEmail({ to: user.email, toName: user.name, ...emailContent });
+  } catch (err) {
+    await safeAuditEvent({
+      userId:           user.id,
+      eventType:        'register_verification_email_failed',
+      eventDescription: `Verification email failed to send for ${email}: ${err instanceof Error ? err.message : String(err)}`,
+      ipAddress:        ip,
+    });
   }
 
   return NextResponse.json({ ok: true, emailVerified: false });
