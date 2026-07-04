@@ -70,6 +70,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockSession.isLoggedIn = true;
   mockSession.role = 'admin';
+  mockSession.userId = 'admin-1';
 });
 
 test('admin users API blocks non-admin users', async () => {
@@ -113,6 +114,7 @@ test('admin users API creates a role-assigned user without returning password ha
 test('admin users API updates role and active state', async () => {
   const { prisma } = await import('@/lib/prisma');
   const { syncFromCloud, pushToCloud } = await import('@/services/storage/cloudSync');
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user-1', isSuperAdmin: false });
   (prisma.user.update as jest.Mock).mockResolvedValue(user({ role: 'manager', isActive: false }));
   const { PATCH } = await import('../../app/api/admin/users/route');
 
@@ -182,4 +184,62 @@ test('admin users API deletes another user and syncs cloud data', async () => {
   expect(prisma.auditEvent.create).toHaveBeenCalled();
   expect(syncFromCloud).toHaveBeenCalled();
   expect(pushToCloud).toHaveBeenCalled();
+});
+
+// ── EP-016: super-admin protection ──────────────────────────────────────────────
+
+test('admin users API blocks another admin from changing a super-admin\'s role', async () => {
+  const { prisma } = await import('@/lib/prisma');
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'super-1', isSuperAdmin: true });
+  const { PATCH } = await import('../../app/api/admin/users/route');
+
+  const response = await PATCH(request({ id: 'super-1', role: 'manager' }));
+  const body = await response.json();
+
+  expect(response.status).toBe(403);
+  expect(body.error).toBe('Super admin accounts can only be modified by themselves.');
+  expect(prisma.user.update).not.toHaveBeenCalled();
+});
+
+test('admin users API allows a super-admin to modify their own account', async () => {
+  mockSession.userId = 'super-1';
+  const { prisma } = await import('@/lib/prisma');
+  const { syncFromCloud, pushToCloud } = await import('@/services/storage/cloudSync');
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'super-1', isSuperAdmin: true });
+  (prisma.user.update as jest.Mock).mockResolvedValue(user({ id: 'super-1', name: 'Ali Abu Ras', isSuperAdmin: true }));
+  const { PATCH } = await import('../../app/api/admin/users/route');
+
+  const response = await PATCH(request({ id: 'super-1', name: 'Ali Abu Ras' }));
+  const body = await response.json();
+
+  expect(response.status).toBe(200);
+  expect(body.ok).toBe(true);
+  expect(prisma.user.update).toHaveBeenCalled();
+  expect(syncFromCloud).toHaveBeenCalled();
+  expect(pushToCloud).toHaveBeenCalled();
+});
+
+test('admin users API returns 404 when the PATCH target does not exist', async () => {
+  const { prisma } = await import('@/lib/prisma');
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+  const { PATCH } = await import('../../app/api/admin/users/route');
+
+  const response = await PATCH(request({ id: 'ghost', role: 'manager' }));
+  const body = await response.json();
+
+  expect(response.status).toBe(404);
+  expect(body.error).toBe('User not found.');
+});
+
+test('admin users API blocks another admin from deleting a super-admin', async () => {
+  const { prisma } = await import('@/lib/prisma');
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'super-1', isSuperAdmin: true, name: 'Ali', email: 'ali@test.com' });
+  const { DELETE } = await import('../../app/api/admin/users/route');
+
+  const response = await DELETE(request({ id: 'super-1' }));
+  const body = await response.json();
+
+  expect(response.status).toBe(403);
+  expect(body.error).toBe('Super admin accounts cannot be deleted.');
+  expect(prisma.user.delete).not.toHaveBeenCalled();
 });

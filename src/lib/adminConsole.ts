@@ -142,6 +142,7 @@ export interface ManagedUser {
   role: AppRole;
   roleLabel: string;
   isActive: boolean;
+  isSuperAdmin: boolean;
   createdAt: string;
   lastLoginAt: string | null;
   importCount: number;

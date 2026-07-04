@@ -447,6 +447,17 @@
   letter-spacing: 0.05em;
 }
 
+.superAdminBadge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(124, 58, 237, 0.18);
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .userEmail {
   color: var(--dc-p3, #505050);
   margin-top: 1px;

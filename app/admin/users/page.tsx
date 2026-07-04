@@ -329,12 +329,15 @@ export default function AdminUsersPage() {
             )}
             {filtered.map(user => {
               const isSelf = user.id === meId;
+              // A super-admin can only be modified by themselves — anyone else viewing
+              // this row gets the same locked-down controls as viewing their own row.
+              const isLocked = isSelf || user.isSuperAdmin;
               return (
                 // data-role drives --role-color via SCSS (Rule 12 / Rule 8)
                 <tr key={user.id} className={styles.row} data-role={user.role}>
                   {/* Checkbox */}
                   <td className={styles.checkboxCell}>
-                    {!isSelf && (
+                    {!isLocked && (
                       <input
                         type="checkbox"
                         checked={selectedIds.has(user.id)}
@@ -355,6 +358,7 @@ export default function AdminUsersPage() {
                         <div className={styles.userName}>
                           {user.name}
                           {isSelf && <span className={styles.selfBadge}>you</span>}
+                          {user.isSuperAdmin && <span className={styles.superAdminBadge}>Super Admin</span>}
                         </div>
                         <div className={styles.userEmail}>{user.email}</div>
                       </div>
@@ -366,7 +370,7 @@ export default function AdminUsersPage() {
                     <select
                       value={user.role}
                       onChange={e => changeRole(user, e.target.value as AppRole)}
-                      disabled={isSelf}
+                      disabled={isLocked}
                       className={styles.roleDropdown}
                     >
                       {ALL_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
@@ -378,7 +382,7 @@ export default function AdminUsersPage() {
                     <button
                       type="button"
                       onClick={() => toggleActive(user)}
-                      disabled={isSelf}
+                      disabled={isLocked}
                       data-active={String(user.isActive)}
                       className={styles.activeToggle}
                     >
@@ -403,7 +407,7 @@ export default function AdminUsersPage() {
 
                   {/* Delete */}
                   <td className={styles.td}>
-                    {!isSelf && (
+                    {!isLocked && (
                       <button
                         type="button"
                         onClick={() => setConfirmDelete(user)}

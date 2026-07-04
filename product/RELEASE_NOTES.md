@@ -5,6 +5,19 @@
 
 ---
 
+## v4.18.0 — EP-016 Super Admin (2026-07-04, P1)
+
+**Scope:** Requested by the product owner — a protected top-tier admin account that other admins cannot demote, deactivate, or delete. Previously the `admin` role was completely flat: any admin could modify or delete any other admin, including one intended to be the ultimate authority.
+
+- **`User.isSuperAdmin`** (new `Boolean @default(false)` field) — a super-admin still has `role: "admin"` (identical route/nav access), but is protected. There is deliberately no API surface to grant this flag — it can only be set directly against the database, so it cannot be handed out via a compromised admin session.
+- **Enforcement in `app/api/admin/users/route.ts`**: `PATCH` and `DELETE` now look up the target user first; if `target.isSuperAdmin` and the actor is not that same user, the request is rejected (`403 Super admin accounts can only be modified by themselves.` / `403 Super admin accounts cannot be deleted.`). The super-admin can still edit their own account exactly as any admin can.
+- **UI (`app/admin/users/page.tsx`)**: a purple "Super Admin" badge appears next to the name; the role dropdown, active-status toggle, selection checkbox, and Delete button are all disabled/hidden for that row when viewed by anyone other than that account (mirrors the existing "you" self-row treatment).
+- **Account created**: Ali Abu Ras / `admin@deliveryclarity.app`, `role: admin`, `isSuperAdmin: true`, `mustChangePassword: true` (temporary password issued out-of-band, same as any admin-created account).
+- **Verified**: `tsc`/ESLint clean; full suite 822/85 passing (5 new tests). Manually verified end-to-end against the real dev database with a live second admin session: confirmed that account can list the super-admin (flag visible), is blocked (403) from changing its role, deactivating it, or deleting it, while the super-admin can still modify their own account and log in normally through the standard `mustChangePassword` first-login flow. Screenshotted the Admin → User Management page showing the badge and locked-down row.
+- **Documentation impact**: RELEASE_NOTES (this entry), SRS (Addendum M, FR-373–FR-375), TEST_CASES (§9.65), DEVELOPER_GUIDE (new section).
+
+---
+
 ## Contact Email Rebrand (2026-07-04, cosmetic — no functional/credential change)
 
 Every display/cosmetic reference to the author's personal Gmail addresses (`aliaburas80@gmail.com` and the older `aburasali80@gmail.com`) was replaced with `ali.aburas@deliveryclarity.app` across ~420 files: copyright header comments, the Terms of Use / Privacy Policy contact email (all 7 languages), README and product docs author bylines, exported-report footers (`exportUtils.ts`, `executivePdf.ts`, `excelInsightExport.service.ts`), the `/help`/`/developer`/`/privacy`/`/terms` pages, and the `/promo`/`frontend`/`backend` legacy directories. **Deliberately untouched:** `.env`'s `SMTP_USER`/`SMTP_FROM` (the real Gmail account SMTP authenticates as — changing this without a working mailbox at the new address would break all outbound email) and `ADMIN_EMAIL` (the admin login username) — confirmed unchanged by direct inspection after the bulk edit. `tsc` clean; full suite 818/85 passing (no regressions — one test, `exportUtilsHtml.test.ts`, asserts on the exact footer string and was updated automatically since it was in the same bulk edit as the source file it tests).

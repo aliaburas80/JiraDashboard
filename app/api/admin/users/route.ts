@@ -23,7 +23,7 @@ async function requireAdmin(): Promise<SessionData | NextResponse> {
 
 function safeUser(user: {
   id: string; name: string; email: string; role: string; isActive: boolean;
-  mustChangePassword?: boolean;
+  mustChangePassword?: boolean; isSuperAdmin?: boolean;
   createdAt: Date; updatedAt: Date; lastLoginAt: Date | null;
   _count?: { importLogs: number; snapshots: number };
 }) {
@@ -34,6 +34,7 @@ function safeUser(user: {
     role: isAppRole(user.role) ? user.role : 'user',
     roleLabel: roleLabel(user.role),
     isActive: user.isActive,
+    isSuperAdmin: Boolean(user.isSuperAdmin),
     mustChangePassword: Boolean(user.mustChangePassword),
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
@@ -41,6 +42,17 @@ function safeUser(user: {
     importCount: user._count?.importLogs ?? 0,
     snapshotCount: user._count?.snapshots ?? 0,
   };
+}
+
+// EP-016: a super-admin account cannot be modified or deleted by any other admin —
+// only by itself (e.g. via /change-password, /profile self-service). There is no
+// API surface to grant this flag; it is set directly against the database.
+function isProtectedFromActor(
+  target: { isSuperAdmin?: boolean | null },
+  actorUserId: string,
+  targetId: string,
+): boolean {
+  return Boolean(target.isSuperAdmin) && actorUserId !== targetId;
 }
 
 async function syncUsersFromCloudIfConfigured(): Promise<void> {
@@ -164,6 +176,12 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'You cannot disable your own account.' }, { status: 400 });
   }
 
+  const target = await prisma.user.findUnique({ where: { id: body.id }, select: { id: true, isSuperAdmin: true } });
+  if (!target) return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+  if (isProtectedFromActor(target, session.userId, body.id)) {
+    return NextResponse.json({ error: 'Super admin accounts can only be modified by themselves.' }, { status: 403 });
+  }
+
   const data: { name?: string; role?: AppRole; isActive?: boolean } = {};
   if (body.name?.trim()) data.name = body.name.trim();
   if (body.role) data.role = body.role;
@@ -202,9 +220,12 @@ export async function DELETE(req: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { id: body.id },
-    select: { id: true, name: true, email: true },
+    select: { id: true, name: true, email: true, isSuperAdmin: true },
   });
   if (!user) return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+  if (isProtectedFromActor(user, session.userId, body.id)) {
+    return NextResponse.json({ error: 'Super admin accounts cannot be deleted.' }, { status: 403 });
+  }
 
   // Cancel any pending add-requests for the deleted user's email so the email
   // can be re-used and the requests list stays clean.
