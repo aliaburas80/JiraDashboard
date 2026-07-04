@@ -6,21 +6,22 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { roleLabel } from '@/lib/roles';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import { getCachedUser, fetchCurrentUser, clearCachedUser, type CurrentUser } from '@/lib/currentUser';
 import styles from './UserMenu.module.scss';
-
-interface Me { id: string; name: string; email: string; role: string }
 
 export default function UserMenu() {
   const router = useRouter();
-  const [me, setMe]     = useState<Me | null>(null);
+  // Seeded synchronously from the module cache so this never flashes "Sign in"
+  // before the username appears — UserMenu is a child of AppShell, which is
+  // imported directly by ~28 individual pages rather than one shared layout, so
+  // it fully unmounts/remounts (and used to start from a blank, logged-out-looking
+  // state) on every single route change.
+  const [me, setMe]     = useState<CurrentUser | null>(getCachedUser);
   const [open, setOpen] = useState(false);
   const menuRef         = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch('/api/auth/me')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => setMe(data))
-      .catch(() => setMe(null));
+    fetchCurrentUser().then(setMe);
   }, []);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export default function UserMenu() {
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
+    clearCachedUser();
     setMe(null);
     router.push('/login');
     router.refresh();

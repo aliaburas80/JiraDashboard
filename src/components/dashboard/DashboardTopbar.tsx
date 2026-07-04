@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect, useCallback, type CSSProperties } from 'react';
 import clsx from 'clsx';
 import { DC_NAV_GROUPS, getNavGroupsForRole } from '@/components/dc-shell/navigation';
-import { getCachedRole, fetchCurrentRole } from '@/lib/currentRole';
+import { getCachedRole, fetchCurrentUser } from '@/lib/currentUser';
 import UserMenu from '@/components/auth/UserMenu';
 import NotificationBell from '@/components/auth/NotificationBell';
 import { DataSourceBadge } from '@/components/ui/DataSourceBadge';
@@ -49,7 +49,7 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
 
   // Nav items/groups this role can't open are filtered out below (getNavGroupsForRole).
   useEffect(() => {
-    fetchCurrentRole().then(setRole);
+    fetchCurrentUser().then(user => setRole(user?.role ?? null));
   }, []);
 
   const [syncing, setSyncing] = useState(false);
