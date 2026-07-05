@@ -5,6 +5,12 @@
 
 ---
 
+## Landing Page Polish, Round 2 (2026-07-06, P2)
+
+Fixed five issues found from live screenshots of the new landing page: the left progress rail no longer overlaps the hero's floating cards (it now only appears once you scroll past the hero); the three buttons on the final call-to-action now match — same pill shape, properly aligned; the dashboard-preview section's numbers and charts now replay every time you scroll back to it instead of only animating once; the "Everything in one place" feature section is shorter on wide screens; and the product-flow diagram's center circle got a more distinctive look (a soft glow and a slow-spinning ring) instead of a plain flat circle. Nothing about uploading, dashboards, or any existing route changed.
+
+---
+
 ## Landing Page Rebuild, Premium SaaS Direction (2026-07-05, P2)
 
 `/landing` has been rebuilt again, this time to a "dark hero, then clean light pages" direction — a full-screen dark hero at the top with an animated background, floating stat cards, and a live-looking dashboard preview, followed by clean white/light sections for everything else. Two new sections were added: a horizontal "export → engine → decisions" product-flow diagram, and a fuller dashboard preview with animated charts and rings. Numbers count up as you scroll to them, cards reveal in sequence, and a small progress rail on the left (desktop only) shows which section you're in and lets you jump to any of them. The top navigation bar is completely unchanged — this page just sits below it, like every other page. Nothing about uploading, dashboards, or any existing route changed.

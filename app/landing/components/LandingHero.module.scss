@@ -54,6 +54,7 @@
   border: 1px solid rgba(56, 189, 248, 0.3);
   color: #38bdf8;
   margin-block-end: 20px;
+  margin-top: 2.0rem;
 }
 
 .title {
@@ -84,6 +85,7 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
   gap: 12px;
   margin-block-start: 28px;
@@ -97,7 +99,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border-radius: 10px;
+  border-radius: 100px;
   font-weight: 800;
   background: rgba(255, 255, 255, 0.06);
   color: #f8fafc;

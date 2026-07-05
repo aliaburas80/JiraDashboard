@@ -95,7 +95,13 @@ export default function LandingHero() {
 
           <h1 className={clsx(styles.title, 'text-4xl sm:text-5xl leading-tight')}>
             <span ref={line1Ref} className="block">From messy Jira boards to</span>
-            <span ref={line2Ref} className={clsx(styles.highlight, 'block')}>measurable delivery confidence</span>
+            {/* Animating opacity/transform on a wrapper (not the gradient-clip
+                span itself) avoids a rendering artifact some browsers show
+                when a background-clip:text element's own inline style is
+                actively tweened mid-transition. */}
+            <span ref={line2Ref} className="block">
+              <span className={styles.highlight}>measurable delivery confidence</span>
+            </span>
           </h1>
 
           <p ref={subheadRef} className={clsx(styles.subhead, 'text-lg leading-relaxed')}>
