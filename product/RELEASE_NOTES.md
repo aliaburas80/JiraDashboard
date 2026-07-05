@@ -5,6 +5,12 @@
 
 ---
 
+## Home/Upload Page + Landing Page Polish, Round 3 (2026-07-05, P3)
+
+The upload page's dark hero now fills the full width of the browser and runs edge-to-edge from just under the top bar to just above the footer, instead of sitting as a boxed card with visible gaps around it. The "stored local data" notice now appears near the bottom of the page, right before the footer, as one short line instead of at the very top. The `/landing` page got the same attention: a matching animated dark hero banner like the upload/login/registration pages, and every feature card now has a real hover lift (and works with keyboard focus too, not just a mouse). Nothing about uploading, merging, sample data, or any feature link changed — visual only.
+
+---
+
 ## Home/Upload Page Redesign, Round 2 (2026-07-05, P3)
 
 Fixed the wrong logo mark shown in the top bar across the app (it was a placeholder icon, not the real Delivery Clarity brand mark — now fixed everywhere the top bar appears). The upload page's hero now matches the login and registration pages more closely: the same animated dark background, a bouncing drop-zone arrow, and a subtle glowing pulse on the badge and drop zone for a livelier, more energetic first impression. This section no longer changes color with your light/dark theme preference — like login and registration, it's intentionally always dark. Nothing about uploading, merging, or sample data changed — visual only.

@@ -161,32 +161,6 @@ export default function HomePage() {
         <div className={styles.vignette} aria-hidden="true" />
         <div className={clsx(styles.content, 'flex flex-col items-center justify-center gap-7 px-4')}>
 
-        {/* Stored data detection banner */}
-        {clearSuccess && (
-          <div className={clsx(styles.successBanner, 'w-full max-w-md flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold animate-fade-in')}>
-            <SvgIcon name="checkCircle" size={18} />
-            Local data cleared. Upload a new file to start fresh.
-          </div>
-        )}
-        {storedDataFound && !clearSuccess && (
-          <div className={clsx(styles.warningBanner, 'w-full max-w-md flex items-start justify-between gap-3 rounded-xl px-4 py-3 animate-fade-in')}>
-            <div className={clsx(styles.warningText, 'flex items-start gap-2 text-sm')}>
-              <SvgIcon name="warning" size={16} className="shrink-0" />
-              <p className="leading-snug">
-                <strong>Stored Delivery Clarity data was found in this browser.</strong>
-                <br />You can upload a new file or clear the existing data.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setConfirmClear(true)}
-              className="btn-outline-danger btn-sm shrink-0"
-            >
-              Clear Local Data
-            </button>
-          </div>
-        )}
-
         {/* Hero */}
         <div className="text-center max-w-xl animate-fade-in">
           <div className={clsx(styles.badge, 'inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold mb-4')}>
@@ -359,6 +333,29 @@ export default function HomePage() {
         <p className={clsx(styles.tagline, 'text-xs text-center max-w-md')}>
           Sprint health · flow efficiency · risk signals · capacity · epic readiness — and more.
         </p>
+
+        {/* Stored data detection banner — placed last, just above the footer */}
+        {clearSuccess && (
+          <div className={clsx(styles.successBanner, 'w-full max-w-md flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold animate-fade-in')}>
+            <SvgIcon name="checkCircle" size={18} />
+            Local data cleared. Upload a new file to start fresh.
+          </div>
+        )}
+        {storedDataFound && !clearSuccess && (
+          <div className={clsx(styles.warningBanner, 'w-full max-w-md flex items-center justify-between gap-3 rounded-xl px-4 py-3 animate-fade-in')}>
+            <p className={clsx(styles.warningText, 'flex items-center gap-2 text-xs leading-snug')}>
+              <SvgIcon name="warning" size={14} className="shrink-0" />
+              Stored data was found in this browser — upload a new file or clear it.
+            </p>
+            <button
+              type="button"
+              onClick={() => setConfirmClear(true)}
+              className="btn-outline-danger btn-sm shrink-0"
+            >
+              Clear Local Data
+            </button>
+          </div>
+        )}
 
         </div>
       </div>

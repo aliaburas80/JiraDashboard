@@ -1,0 +1,263 @@
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
+// In-app landing page — converted from ad-hoc inline `style={{...}}` objects
+// (one per element, on nearly every line) to design-token-driven classes, and
+// given the same animated hero treatment as / and /login for a consistent
+// first impression across the app's entry points.
+
+.wrapper {
+  max-inline-size: 72rem;
+  margin-inline: auto;
+}
+
+// ── Hero ─────────────────────────────────────────────────────────────────────
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #050b16;
+  margin-block: 24px;
+}
+
+.heroVignette {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(ellipse 80% 70% at 50% 35%, transparent 40%, rgba(5, 5, 8, 0.6) 100%);
+  pointer-events: none;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  padding-block: 56px;
+  padding-inline: 16px;
+  text-align: center;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 100px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(30, 30, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ff8a4c;
+  margin-block-end: 20px;
+  animation: badgeGlow 2.6s ease-out infinite;
+}
+
+@keyframes badgeGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 93, 18, 0.35); }
+  50%      { box-shadow: 0 0 0 7px rgba(232, 93, 18, 0); }
+}
+
+.heroTitle {
+  color: #f5f5f5;
+}
+
+.heroAccent {
+  color: #ff8a4c;
+}
+
+.heroSubhead {
+  color: #a3a3a3;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-block-start: 32px;
+}
+
+// A translucent accent-outline secondary action, for use on the dark hero
+// and CTA sections where the global light `.btn-secondary` would clash.
+.btnOutline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  font-weight: 800;
+  background: rgba(232, 93, 18, 0.09);
+  color: #ff8a4c;
+  border: 1px solid rgba(232, 93, 18, 0.22);
+  transition: background-color 0.2s;
+
+  &:hover { background: rgba(232, 93, 18, 0.16); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroBadge { animation: none; }
+}
+
+// ── Stats strip ──────────────────────────────────────────────────────────────
+
+.statCard {
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+}
+
+.statValue {
+  font-weight: 900;
+  margin-block-end: 4px;
+  font-size: 22px;
+  font-family: var(--font-mono, monospace);
+  color: var(--stat-color, var(--dc-acc2, #ff8a4c));
+}
+
+.statLabel {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 10px;
+  color: var(--dc-p2, #909090);
+}
+
+// ── Section headings ─────────────────────────────────────────────────────────
+
+.sectionTitle {
+  color: var(--dc-p1, #f2f2f2);
+}
+
+.sectionSubtitle {
+  color: var(--dc-p2, #909090);
+}
+
+// ── How it works ─────────────────────────────────────────────────────────────
+
+.stepCard {
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+}
+
+.stepIcon {
+  color: var(--dc-acc2, #ff8a4c);
+}
+
+.stepBadge {
+  display: inline-flex;
+  border-radius: 100px;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  margin-block-end: 8px;
+}
+
+.stepTitle {
+  color: var(--dc-p1, #f2f2f2);
+}
+
+.stepDesc {
+  color: var(--dc-p2, #909090);
+}
+
+// ── Feature grid ─────────────────────────────────────────────────────────────
+
+.featureCard {
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+
+  &:hover, &:focus-visible {
+    border-color: var(--dc-bdr2, rgba(255, 255, 255, 0.13));
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--feature-color, var(--dc-accent));
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+}
+
+.featureIconWrap {
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--feature-color, var(--dc-accent));
+  background: color-mix(in srgb, var(--feature-color, var(--dc-accent)) 13%, transparent);
+}
+
+.featureTitle {
+  font-weight: 900;
+  font-size: 14px;
+  color: var(--dc-p1, #f2f2f2);
+}
+
+.featureDesc {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--dc-p2, #909090);
+}
+
+.featureCta {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--dc-acc2, #ff8a4c);
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  .featureCard:hover &, .featureCard:focus-visible & {
+    opacity: 1;
+  }
+}
+
+// ── CTA footer ───────────────────────────────────────────────────────────────
+
+.ctaSection {
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  margin-block-end: 32px;
+  background: rgba(232, 93, 18, 0.04);
+  border: 1px solid rgba(232, 93, 18, 0.1);
+}
+
+.ctaIconWrap {
+  inline-size: 56px;
+  block-size: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+  margin-block-end: 16px;
+  background: rgba(232, 93, 18, 0.12);
+  color: var(--dc-acc2, #ff8a4c);
+}
+
+.ctaTitle {
+  color: var(--dc-p1, #f2f2f2);
+}
+
+.ctaDesc {
+  color: var(--dc-p2, #909090);
+}
+
+.ctaFooterNote {
+  margin-block-start: 24px;
+  color: var(--dc-p3, #505050);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featureCard { transition: none; }
+}
