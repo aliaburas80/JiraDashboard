@@ -46,9 +46,31 @@ test('TC-NAV-06: a group with zero visible items after filtering is dropped enti
   }
 });
 
-test('TC-NAV-07: admin sees every group and every item — nothing over-filtered for the most privileged role', () => {
-  const groups = getNavGroupsForRole('admin');
+test('TC-NAV-07: a super-admin sees every group and every item — nothing over-filtered for the most privileged account', () => {
+  const groups = getNavGroupsForRole('admin', true);
   const totalItems = groups.flatMap(g => g.items).length;
   const totalSourceItems = DC_NAV_GROUPS.flatMap(g => g.items).length;
   expect(totalItems).toBe(totalSourceItems);
+});
+
+// EP-025: Members directory is gated by isSuperAdmin, not by role — a regular
+// admin (role: 'admin', isSuperAdmin: false/undefined) must not see it either.
+test('TC-NAV-08: a regular admin (not super-admin) does not see the Members link', () => {
+  const groups = getNavGroupsForRole('admin');
+  const allItemIds = groups.flatMap(g => g.items.map(i => i.id));
+  expect(allItemIds).not.toContain('members');
+});
+
+test('TC-NAV-09: no role sees the Members link without isSuperAdmin: true, even admin', () => {
+  for (const role of ['admin', 'scrum_master', 'product_owner', 'manager', 'c_level', 'user', null, undefined]) {
+    const groups = getNavGroupsForRole(role, false);
+    const allItemIds = groups.flatMap(g => g.items.map(i => i.id));
+    expect(allItemIds).not.toContain('members');
+  }
+});
+
+test('TC-NAV-10: isSuperAdmin: true shows the Members link regardless of role', () => {
+  const groups = getNavGroupsForRole('user', true);
+  const allItemIds = groups.flatMap(g => g.items.map(i => i.id));
+  expect(allItemIds).toContain('members');
 });

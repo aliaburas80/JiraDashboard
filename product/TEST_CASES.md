@@ -1809,3 +1809,26 @@ New `src/services/settings/userReset.service.ts` — `previewUserReset(userId)` 
 - Reset on the external account returned `{ importLogsDeleted: 1, snapshotsDeleted: 1, jiraConnectionsDeleted: 0 }`; confirmed directly against the database afterward that both rows were gone, the audit event was logged with the exact expected description, and the account itself was untouched (`isActive: true`, `role: 'user'`, login still worked).
 
 All three throwaway accounts (and their workspaces/data) were deleted after verification. Full suite 882/95 passing, typecheck clean.
+
+## 9.76 — EP-025: Members Directory Restricted to the Super-Admin Account
+
+*(Added 2026-07-05, P1 security fix. From a screenshot showing a regular member's session listing another user's email through the Members directory.)*
+
+New `SessionData.isSuperAdmin` (set at login, returned by `GET /api/auth/me`, carried by `CurrentUser`/`getCachedIsSuperAdmin()`). Distinct from `role: 'admin'` — a regular admin does **not** pass this check.
+
+| ID | Test | Expected | Status |
+|----|------|----------|--------|
+| TC-MD-09 | `GET /api/members` as a regular admin (`role: 'admin'`, `isSuperAdmin: false`) | 403, `prisma.user.findMany` never called | ✅ Automated — `members.test.ts` |
+| TC-MD-10 | `GET /api/members` as the super-admin | 200, real member data returned | ✅ Automated |
+| TC-NAV-07 (corrected) | `getNavGroupsForRole('admin', true)` — super-admin sees every item | All source items visible | ✅ Automated — `navGroupsForRole.test.ts` (previously asserted this for `role: 'admin'` alone, which is no longer sufficient) |
+| TC-NAV-08 | `getNavGroupsForRole('admin')` (no `isSuperAdmin`) | `members` item absent | ✅ Automated |
+| TC-NAV-09 | Every role with `isSuperAdmin: false` | `members` item absent for all of them | ✅ Automated |
+| TC-NAV-10 | `getNavGroupsForRole('user', true)` | `members` item present regardless of role | ✅ Automated |
+
+**API/page:** `GET /api/members` returns 403 for anyone without `isSuperAdmin`. `/members` page redirects to `/dashboard` both from its own `GET /api/auth/me` check and defensively if the members fetch itself returns 403 (defense in depth — the API is the real boundary, the page check is just UX).
+
+**Manual end-to-end verification (real dev database, throwaway accounts):** created a throwaway regular admin (`role: 'admin'`, `isSuperAdmin: false`) and a throwaway super-admin (`role: 'admin'`, `isSuperAdmin: true`). Confirmed `GET /api/auth/me` correctly reports `isSuperAdmin: false` for the regular admin; confirmed `GET /api/members` returns 403 (`"Super admin access required."`) for the regular admin and 200 with real member data for the super-admin. Both throwaway accounts deleted after verification.
+
+**Not verified:** the Members nav link actually disappearing in a rendered browser — the nav dropdown's item list isn't present in the server-rendered HTML (client-side dropdown state), so curl-based smoke checks can't confirm it visually; no browser-automation tool was available this session. The underlying filtering logic (`getNavGroupsForRole`) is fully covered by TC-NAV-07–10 above. **Recommended manual QA:** log in as a regular admin and confirm the "Members" link is absent from both the top nav and mobile nav; log in as the super-admin and confirm it's present and the page loads.
+
+Full suite 887/95 passing, typecheck clean.

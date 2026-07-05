@@ -34,15 +34,22 @@ export default function MembersPage() {
   useEffect(() => {
     fetch('/api/auth/me')
       .then(r => r.ok ? r.json() : null)
-      .then(data => setMyRole(data?.role ?? null))
+      .then(data => {
+        setMyRole(data?.role ?? null);
+        // EP-025: Members directory is restricted to the protected super-admin
+        // account only — distinct from role: 'admin'. Redirect everyone else
+        // away rather than showing an error state on a page they shouldn't see.
+        if (!data?.isSuperAdmin) { router.replace('/dashboard'); return; }
+      })
       .catch(() => setMyRole(null));
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     fetch('/api/members')
       .then(async res => {
         const data = await res.json().catch(() => ({}));
         if (res.status === 401) { router.replace('/login'); return; }
+        if (res.status === 403) { router.replace('/dashboard'); return; }
         if (!res.ok) throw new Error(data.error ?? 'Could not load members.');
         setMembers(data.members ?? []);
       })

@@ -12,6 +12,9 @@ export interface SessionData {
   emailVerified?:      boolean; // EP-011: false until verification link clicked (EP-012)
   // EP-017: "cloud" (default) or "local" — see prisma/schema.prisma User.dataStorageMode.
   dataStorageMode?:    'cloud' | 'local';
+  // EP-025: distinct from role: 'admin' — gates the Members directory to the
+  // single protected super-admin account only. See prisma/schema.prisma User.isSuperAdmin.
+  isSuperAdmin?:       boolean;
   isLoggedIn:          boolean;
 }
 

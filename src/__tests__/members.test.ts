@@ -3,12 +3,17 @@
 
 import { matchesMemberQuery, contactEmailFor } from '../lib/members';
 
-const mockSession: { isLoggedIn: boolean; role: string; userId: string; email: string; name: string } = {
+const mockSession: { isLoggedIn: boolean; role: string; userId: string; email: string; name: string; isSuperAdmin: boolean } = {
   isLoggedIn: true,
   role: 'scrum_master',
   userId: 'user-1',
   email: 'sam@test.com',
   name: 'Sam',
+  // EP-025: the member directory is now restricted to the super-admin account —
+  // most of this file's existing tests exercise the data shape/filtering logic,
+  // not the access gate itself, so they run as the super-admin by default.
+  // The gate itself is covered separately below (TC-MD-09/10).
+  isSuperAdmin: true,
 };
 
 jest.mock('next/headers', () => ({ cookies: jest.fn() }));
@@ -44,6 +49,7 @@ function dbUser(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
   jest.clearAllMocks();
   mockSession.isLoggedIn = true;
+  mockSession.isSuperAdmin = true;
 });
 
 // TC-MD-05 — GET /api/members returns only active users sorted by name
@@ -76,6 +82,33 @@ test('TC-MD-08: members API rejects anonymous requests with 401 (drives client r
   expect(response.status).toBe(401);
   expect(body.error).toBe('Not authenticated.');
   expect(prisma.user.findMany).not.toHaveBeenCalled();
+});
+
+// EP-025 — the member directory previously returned every user's name, email,
+// and contact details to any logged-in account regardless of role.
+
+test('TC-MD-09: members API rejects a regular (non-super-admin) account with 403, including role: admin', async () => {
+  mockSession.isSuperAdmin = false;
+  mockSession.role = 'admin';
+  const { prisma } = await import('@/lib/prisma');
+  const { GET } = await import('../../app/api/members/route');
+
+  const response = await GET();
+  const body = await response.json();
+
+  expect(response.status).toBe(403);
+  expect(body.error).toMatch(/super admin/i);
+  expect(prisma.user.findMany).not.toHaveBeenCalled();
+});
+
+test('TC-MD-10: members API allows the super-admin account through', async () => {
+  mockSession.isSuperAdmin = true;
+  const { prisma } = await import('@/lib/prisma');
+  (prisma.user.findMany as jest.Mock).mockResolvedValue([dbUser()]);
+  const { GET } = await import('../../app/api/members/route');
+
+  const response = await GET();
+  expect(response.status).toBe(200);
 });
 
 // TC-MD-06 / TC-MD-07 — directory page search filter and contact-email fallback

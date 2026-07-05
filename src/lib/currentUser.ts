@@ -19,6 +19,8 @@ export interface CurrentUser {
   mustChangePassword?: boolean;
   emailVerified?: boolean;
   dataStorageMode?: 'cloud' | 'local';
+  // EP-025: gates the Members directory nav item — distinct from role: 'admin'.
+  isSuperAdmin?: boolean;
 }
 
 let cachedUser: CurrentUser | null = null;
@@ -30,6 +32,10 @@ export function getCachedUser(): CurrentUser | null {
 
 export function getCachedRole(): string | null {
   return cachedUser?.role ?? null;
+}
+
+export function getCachedIsSuperAdmin(): boolean {
+  return cachedUser?.isSuperAdmin === true;
 }
 
 export function fetchCurrentUser(): Promise<CurrentUser | null> {

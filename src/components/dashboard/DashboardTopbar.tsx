@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect, useCallback, type CSSProperties } from 'react';
 import clsx from 'clsx';
 import { DC_NAV_GROUPS, getNavGroupsForRole } from '@/components/dc-shell/navigation';
-import { getCachedRole, fetchCurrentUser } from '@/lib/currentUser';
+import { getCachedRole, getCachedIsSuperAdmin, fetchCurrentUser } from '@/lib/currentUser';
 import UserMenu from '@/components/auth/UserMenu';
 import NotificationBell from '@/components/auth/NotificationBell';
 import { DataSourceBadge } from '@/components/ui/DataSourceBadge';
@@ -46,10 +46,14 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
   // Seeded synchronously from the module cache so the nav renders already-filtered
   // on mount instead of flashing unfiltered/default on every route change.
   const [role, setRole] = useState<string | null>(getCachedRole);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(getCachedIsSuperAdmin);
 
   // Nav items/groups this role can't open are filtered out below (getNavGroupsForRole).
   useEffect(() => {
-    fetchCurrentUser().then(user => setRole(user?.role ?? null));
+    fetchCurrentUser().then(user => {
+      setRole(user?.role ?? null);
+      setIsSuperAdmin(user?.isSuperAdmin === true);
+    });
   }, []);
 
   const [syncing, setSyncing] = useState(false);
@@ -105,7 +109,7 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
     };
   }, [openGroup]);
 
-  const visibleGroups = getNavGroupsForRole(role);
+  const visibleGroups = getNavGroupsForRole(role, isSuperAdmin);
   const activeGroup = openGroup ? visibleGroups.find(g => g.id === openGroup) : null;
 
   return (

@@ -101,9 +101,17 @@ export const DC_NAV_ITEMS = DC_NAV_GROUPS.flatMap(g => g.items);
 // nothing useful once canAccessRoute() blocked the destination page. A group
 // left with zero visible items after filtering is dropped entirely rather than
 // rendering an empty dropdown.
-export function getNavGroupsForRole(role: string | null | undefined): DCShellNavGroup[] {
+// EP-025: the 'members' item is a narrow exception on top of the normal
+// role-based filtering above — it's gated by the protected super-admin flag
+// (isSuperAdmin), which is orthogonal to AppRole, rather than by role.
+export function getNavGroupsForRole(role: string | null | undefined, isSuperAdmin?: boolean): DCShellNavGroup[] {
+  function isVisible(item: DCShellNavItem): boolean {
+    if (item.id === 'members') return isSuperAdmin === true;
+    return canAccessRoute(role, item.href);
+  }
+
   return DC_NAV_GROUPS
-    .map(group => ({ ...group, items: group.items.filter(item => canAccessRoute(role, item.href)) }))
+    .map(group => ({ ...group, items: group.items.filter(isVisible) }))
     .filter(group => group.items.length > 0);
 }
 
