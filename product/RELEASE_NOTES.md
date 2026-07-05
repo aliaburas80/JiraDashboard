@@ -5,6 +5,12 @@
 
 ---
 
+## Bring Your Own Cloud Storage, Per User (2026-07-05, P2)
+
+Cloud-mode users can now point their uploads at their own S3, Azure, or Google Cloud bucket instead of Delivery Clarity's own "App storage" — go to Settings → Storage. Your credentials are encrypted and used only for your own uploads, never shared with anyone else. A saved bucket has to pass "Test connection" before it's actually used — until then, uploads are blocked with a clear message rather than silently going somewhere you didn't expect. "App storage" remains available as before if you'd rather not manage your own bucket. Verified end-to-end: uploads work normally with nothing configured, get blocked the moment an unverified bucket is saved, and unblock immediately if you remove it.
+
+---
+
 ## Members Directory Restricted to the Super-Admin Account (2026-07-05, P1 security fix)
 
 From a screenshot showing a regular member could see another user's email through the Members directory. Found `GET /api/members` had no access restriction at all beyond being logged in — any account, any role, could see every active user's name, email, role, position, phone, and address. Now restricted to the protected super-admin account specifically (not just "any admin") — everyone else gets a clear refusal and the "Members" menu link disappears entirely for them. Verified against the real database: a regular admin account is correctly refused; the super-admin account still works normally.

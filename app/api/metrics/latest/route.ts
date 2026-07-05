@@ -5,10 +5,29 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
-import { readLatestMetrics } from '@/services/metrics/latestMetricsStorage';
+import { readLatestMetrics, writeLatestMetrics } from '@/services/metrics/latestMetricsStorage';
 import { getMetricsScopeKeyForUser } from '@/lib/workspace';
+import { getVerifiedUserStorageProviderInstance } from '@/services/storage/userStorageProvider.service';
 
 export const dynamic = 'force-dynamic';
+
+// EP-024: when the local scoped cache file is missing (e.g. wiped, new
+// server instance) and the user has their own verified cloud provider,
+// restore their durable copy from their own bucket before giving up —
+// mirrors the admin-level syncFromCloud() cache-restore, scoped to one
+// user's one object instead of a whole-app backup bundle/manifest.
+async function tryRestoreFromUserBucket(userId: string, scopeKey: string) {
+  const provider = await getVerifiedUserStorageProviderInstance(userId).catch(() => null);
+  if (!provider) return null;
+  try {
+    const content = await provider.download('delivery-clarity-metrics.json');
+    const metrics = JSON.parse(content);
+    writeLatestMetrics(scopeKey, metrics, { source: 'file' });
+    return readLatestMetrics(scopeKey);
+  } catch {
+    return null;
+  }
+}
 
 function sourceFromSync(sync: any): 'bucket' | 'cache' | 'server-local' | 'none' {
   if (!sync) return 'server-local';
@@ -44,7 +63,10 @@ export async function GET() {
   // EP-020: this used to read one flat file shared by every logged-in user —
   // now scoped to the caller's own workspace/user.
   const scopeKey = await getMetricsScopeKeyForUser(session.userId);
-  const latest = readLatestMetrics(scopeKey);
+  let latest = readLatestMetrics(scopeKey);
+  if (!latest) {
+    latest = await tryRestoreFromUserBucket(session.userId, scopeKey);
+  }
   if (!latest) {
     return NextResponse.json({
       available: false,

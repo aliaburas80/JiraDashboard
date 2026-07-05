@@ -10,6 +10,7 @@ import { cookies } from 'next/headers';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { writeLatestMetrics } from '@/services/metrics/latestMetricsStorage';
+import { getUserStorageProviderStatus, getVerifiedUserStorageProviderInstance } from '@/services/storage/userStorageProvider.service';
 import { getServerEnv } from '@/lib/env/server';
 import { getWorkspaceForUser } from '@/lib/workspace';
 import {
@@ -76,6 +77,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
       { error: 'Please verify your email address before uploading. Check your inbox for the verification link.' },
       { status: 403 },
+    );
+  }
+
+  // EP-024: cloud-mode users may optionally point uploads at their own cloud
+  // bucket instead of App storage — a saved-but-unverified provider blocks
+  // uploads rather than silently falling back to App storage, per explicit
+  // product decision (never guess where "cloud" data should land).
+  const storageProviderStatus = await getUserStorageProviderStatus(userId);
+  if (storageProviderStatus === 'unverified') {
+    return NextResponse.json(
+      {
+        error: 'Your cloud storage provider is configured but not yet verified. Go to Settings → Storage and click "Test connection," or remove it to use App storage instead.',
+      },
+      { status: 409 },
     );
   }
 
@@ -202,6 +217,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const workspace = await getWorkspaceForUser(userId).catch(() => null);
     const scopeKey   = workspace ? `ws:${workspace.id}` : `user:${userId}`;
     writeLatestMetrics(scopeKey, metrics, { source: 'file' });
+
+    // EP-024: verified users additionally get a durable copy pushed to their
+    // own bucket — non-blocking, same pattern as the existing pushToCloud()
+    // calls below. Never blocks or fails the upload response.
+    if (storageProviderStatus === 'verified') {
+      getVerifiedUserStorageProviderInstance(userId)
+        .then(provider => provider?.upload('delivery-clarity-metrics.json', JSON.stringify(metrics)))
+        .catch(() => {});
+    }
+
     const importLog = appendImportLog(
       buildImportLog({ file: fileArg, parseResult, validation, metrics, status: 'success' }),
     );

@@ -10,54 +10,55 @@ generator client {
 }
 
 model User {
-  id                 String    @id @default(cuid())
-  name               String
-  email              String    @unique
-  passwordHash       String
-  role               String    @default("user") // "user" | "admin"
+  id                       String    @id @default(cuid())
+  name                     String
+  email                    String    @unique
+  passwordHash             String
+  role                     String    @default("user") // "user" | "admin"
   // EP-016: a super-admin is still role: "admin" (same route/nav access) but is protected
   // from being modified or deleted by any other admin — enforced in app/api/admin/users/route.ts.
-  isSuperAdmin       Boolean   @default(false)
+  isSuperAdmin             Boolean   @default(false)
   // EP-011: public registration fields
-  emailVerified      Boolean   @default(false)  // true once verification link is clicked (EP-012)
+  emailVerified            Boolean   @default(false) // true once verification link is clicked (EP-012)
   // EP-012: email verification link — set at registration, cleared once verified.
   emailVerificationToken   String?   @unique
   emailVerificationExpires DateTime?
   // EP-013: "Forgot your password" — set on request, cleared once used or on successful login.
-  passwordResetToken   String?   @unique
-  passwordResetExpires DateTime?
-  persona            String    @default("")     // primary professional persona chosen at signup
+  passwordResetToken       String?   @unique
+  passwordResetExpires     DateTime?
+  persona                  String    @default("") // primary professional persona chosen at signup
   // EP-014: consent and legal document acceptance
-  termsAcceptedAt    DateTime?                  // when user accepted the Terms of Use + Privacy Policy
-  termsVersion       String    @default("")     // document version accepted e.g. "v1"
-  avatarUrl          String?
-  position           String?
-  phone              String?
-  contactEmail       String?
-  address            String?
-  certificates       String?
-  bio                String?
-  isActive           Boolean   @default(true)
-  mustChangePassword Boolean   @default(false)
+  termsAcceptedAt          DateTime? // when user accepted the Terms of Use + Privacy Policy
+  termsVersion             String    @default("") // document version accepted e.g. "v1"
+  avatarUrl                String?
+  position                 String?
+  phone                    String?
+  contactEmail             String?
+  address                  String?
+  certificates             String?
+  bio                      String?
+  isActive                 Boolean   @default(true)
+  mustChangePassword       Boolean   @default(false)
   // EP-017: per-user privacy choice — "cloud" (default, current behavior) keeps uploaded
   // Jira data + computed metrics server-side; "local" keeps them in the user's own browser
   // only (never uploaded to this server), traded off against no admin visibility, no
   // cross-device sync, and loss on a cleared browser. See app/page.tsx handleFile().
-  dataStorageMode    String    @default("cloud")   // "cloud" | "local"
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  lastLoginAt        DateTime?
+  dataStorageMode          String    @default("cloud") // "cloud" | "local"
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  lastLoginAt              DateTime?
 
   sessions             Session[]
   importLogs           ImportLog[]
   snapshots            DashboardSnapshot[]
   auditEvents          AuditEvent[]
-  userAddRequests      UserAddRequest[]    @relation("UserAddRequestRequester")
-  notifications        Notification[]      @relation("UserNotifications")
+  userAddRequests      UserAddRequest[]     @relation("UserAddRequestRequester")
+  notifications        Notification[]       @relation("UserNotifications")
   jiraConnections      JiraConnection[]
-  ownedWorkspace       Workspace?          @relation("WorkspaceOwner")
+  ownedWorkspace       Workspace?           @relation("WorkspaceOwner")
   workspaceMemberships WorkspaceMember[]
   entitlement          Entitlement?
+  storageProvider      UserStorageProvider?
 }
 
 // ── Trial Entitlement (EP-015) ─────────────────────────────────────────────────
@@ -67,23 +68,23 @@ model User {
 //              consumed/expired → restored (admin action) → eligible
 
 model Entitlement {
-  id          String    @id @default(cuid())
-  userId      String    @unique // one entitlement per user
-  workspaceId String?   // linked to the user's workspace
+  id          String  @id @default(cuid())
+  userId      String  @unique // one entitlement per user
+  workspaceId String? // linked to the user's workspace
 
   // eligible | processing | consumed | expired | suspended | restored
-  status      String    @default("eligible")
+  status String @default("eligible")
 
   consumedAt  DateTime? // when the first successful analysis completed
   expiresAt   DateTime? // consumedAt + 30 days
-  importLogId String?   // the ImportLog that consumed the entitlement
+  importLogId String? // the ImportLog that consumed the entitlement
 
-  restoredBy  String?   // admin userId who manually restored
-  restoredAt  DateTime?
-  restoredNote String?  // reason for restoration
+  restoredBy   String? // admin userId who manually restored
+  restoredAt   DateTime?
+  restoredNote String? // reason for restoration
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   importLog ImportLog? @relation(fields: [importLogId], references: [id], onDelete: SetNull)
@@ -103,11 +104,11 @@ model Workspace {
   name        String
   slug        String   @unique
   status      String   @default("active") // "active" | "suspended" | "deleted"
-  ownerUserId String   @unique             // one workspace per user in MVP
+  ownerUserId String   @unique // one workspace per user in MVP
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  owner           User              @relation("WorkspaceOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  owner           User                @relation("WorkspaceOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
   members         WorkspaceMember[]
   importLogs      ImportLog[]
   snapshots       DashboardSnapshot[]
@@ -168,7 +169,7 @@ model ImportLog {
   processingTimeMs Int      @default(0)
   metadataJson     String?
 
-  workspaceId    String?
+  workspaceId String?
 
   user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   jiraConnection JiraConnection?     @relation(fields: [jiraConnectionId], references: [id], onDelete: SetNull)
@@ -179,7 +180,7 @@ model ImportLog {
   @@index([userId])
   @@index([jiraConnectionId])
   @@index([workspaceId])
-  @@index([status, uploadedAt])  // fast "last successful import" query
+  @@index([status, uploadedAt]) // fast "last successful import" query
 }
 
 model DashboardSnapshot {
@@ -212,7 +213,7 @@ model AuditEvent {
 
   @@index([userId])
   @@index([createdAt])
-  @@index([eventType, createdAt])  // fast admin filtering by event type
+  @@index([eventType, createdAt]) // fast admin filtering by event type
 }
 
 // ── User Add-Member Request Workflow (USERREQ-07–09) ─────────────────────────
@@ -256,6 +257,29 @@ model Notification {
 
   @@index([recipientUserId])
   @@index([readAt])
+}
+
+// ── Per-User "Bring Your Own Cloud" Storage (EP-024) ────────────────────────────
+// One optional cloud-storage provider per user, for cloud-mode users who want
+// their uploads to land in a bucket they own instead of Delivery Clarity's own
+// server-side "App storage". Never trusted until a fresh Test Connection
+// succeeds — any config change resets `verified` to false.
+
+model UserStorageProvider {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  provider       String // "s3" | "azure" | "gcp"
+  configJson     String // non-secret fields (bucket, region, prefix, endpoint, containerName, projectId) as JSON
+  credentialsEnc String? // encryptSecret()'d JSON blob of the secret fields
+  verified       Boolean   @default(false)
+  verifiedAt     DateTime?
+  lastError      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // ── Jira API Read-Only Integration (ARCH-05 — see product/JIRA_INTEGRATION_DESIGN.md) ─
@@ -313,20 +337,20 @@ model SystemErrorLog {
 // Never attaches uploaded Jira data (master plan §4.6 requirement).
 
 model Feedback {
-  id            String    @id @default(cuid())
-  category      String    // Suggestion | Problem/Bug | Feature Request | Complaint | Question | Data/Calculation Concern | Other
+  id            String   @id @default(cuid())
+  category      String // Suggestion | Problem/Bug | Feature Request | Complaint | Question | Data/Calculation Concern | Other
   message       String
-  impactLevel   String    @default("Minor") // Minor | Affects My Work | Blocks Me
-  canContact    Boolean   @default(false)
-  page          String?   // pathname where feedback was submitted
+  impactLevel   String   @default("Minor") // Minor | Affects My Work | Blocks Me
+  canContact    Boolean  @default(false)
+  page          String? // pathname where feedback was submitted
   appVersion    String?
   browserFamily String?
-  status        String    @default("New") // New | Reviewing | Accepted | Planned | In Progress | Released | Rejected
-  statusNote    String?   // admin note on the current status
-  userId        String?   // populated if user was logged in
-  userEmail     String?   // email for contact if canContact = true
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  status        String   @default("New") // New | Reviewing | Accepted | Planned | In Progress | Released | Rejected
+  statusNote    String? // admin note on the current status
+  userId        String? // populated if user was logged in
+  userEmail     String? // email for contact if canContact = true
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([status, createdAt])
   @@index([userId])
@@ -339,21 +363,21 @@ model Feedback {
 // Stack traces are sanitised server-side before storage.
 
 model AppError {
-  id              String    @id @default(cuid())
-  fingerprint     String    // sha256(message+page+component) — dedup key
-  message         String
-  stack           String?   // sanitised stack — no absolute paths or PII
-  severity        String    @default("error") // "error" | "warning" | "critical"
-  page            String?   // pathname where the error occurred
-  component       String?   // React component or handler name
-  userId          String?   // populated if the user was logged in
-  browserFamily   String?   // Chrome, Firefox, Safari …
-  releaseVersion  String?   // package.json version at build time
-  count           Int       @default(1)      // incremented on each occurrence
-  firstSeenAt     DateTime  @default(now())
-  lastSeenAt      DateTime  @default(now())
-  resolvedAt      DateTime?
-  resolutionNote  String?
+  id             String    @id @default(cuid())
+  fingerprint    String // sha256(message+page+component) — dedup key
+  message        String
+  stack          String? // sanitised stack — no absolute paths or PII
+  severity       String    @default("error") // "error" | "warning" | "critical"
+  page           String? // pathname where the error occurred
+  component      String? // React component or handler name
+  userId         String? // populated if the user was logged in
+  browserFamily  String? // Chrome, Firefox, Safari …
+  releaseVersion String? // package.json version at build time
+  count          Int       @default(1) // incremented on each occurrence
+  firstSeenAt    DateTime  @default(now())
+  lastSeenAt     DateTime  @default(now())
+  resolvedAt     DateTime?
+  resolutionNote String?
 
   @@index([fingerprint])
   @@index([severity, lastSeenAt])
@@ -379,15 +403,15 @@ model LoginAttempt {
 // Priority chain at runtime: this table → cloud S3 config → SMTP_* env vars.
 
 model SmtpSettings {
-  id             String   @id @default(cuid())
-  host           String
-  port           Int      @default(587)
-  username       String
-  passEncrypted  String
-  fromAddress    String
+  id              String   @id @default(cuid())
+  host            String
+  port            Int      @default(587)
+  username        String
+  passEncrypted   String
+  fromAddress     String
   updatedByUserId String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([updatedAt])
 }

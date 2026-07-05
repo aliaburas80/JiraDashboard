@@ -43,6 +43,11 @@ jest.mock('iron-session', () => ({
 jest.mock('@/lib/workspace', () => ({
   getMetricsScopeKeyForUser: jest.fn(async () => 'user:test-user'),
 }));
+// EP-024: no per-user cloud storage provider configured for these tests —
+// avoids a real DB call from /api/metrics/latest's restore-from-user-bucket fallback.
+jest.mock('@/services/storage/userStorageProvider.service', () => ({
+  getVerifiedUserStorageProviderInstance: jest.fn(async () => null),
+}));
 
 afterEach(() => {
   jest.dontMock('fs');

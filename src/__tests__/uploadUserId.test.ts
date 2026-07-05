@@ -50,6 +50,11 @@ jest.mock('@/services/metrics/latestMetricsStorage', () => ({
 jest.mock('@/services/storage/cloudSync', () => ({
   pushToCloud: jest.fn(async () => ({ status: 'pushed' })),
 }));
+// EP-024: no per-user cloud storage provider configured — App storage path, unaffected.
+jest.mock('@/services/storage/userStorageProvider.service', () => ({
+  getUserStorageProviderStatus: jest.fn(async () => 'none'),
+  getVerifiedUserStorageProviderInstance: jest.fn(async () => null),
+}));
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     importLog:    { create: jest.fn(async () => ({ id: 'il-1' })) },
