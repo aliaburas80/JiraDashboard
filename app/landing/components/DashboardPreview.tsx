@@ -51,11 +51,16 @@ export default function DashboardPreview() {
   const [active, setActive] = useState(false);
 
   useGsapContext(sectionRef, () => {
+    // Replays every time this section is scrolled into view (either
+    // direction), rather than only ever once, per explicit feedback.
     ScrollTrigger.create({
       trigger: sectionRef.current,
       start: 'top 75%',
-      once: true,
+      end: 'bottom top',
       onEnter: () => setActive(true),
+      onEnterBack: () => setActive(true),
+      onLeave: () => setActive(false),
+      onLeaveBack: () => setActive(false),
     });
 
     gsap.from(kpiGridRef.current?.children ?? [], {
@@ -63,24 +68,40 @@ export default function DashboardPreview() {
       y: 20,
       duration: 0.5,
       stagger: 0.06,
-      scrollTrigger: { trigger: sectionRef.current, start: 'top 75%' },
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: 'top 75%',
+        toggleActions: 'restart none restart none',
+      },
     });
 
-    [lineRef.current, riskLineRef.current, areaLineRef.current].forEach(path => {
-      if (!path) return;
-      const length = path.getTotalLength();
-      gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
-    });
+    const lineLength     = lineRef.current?.getTotalLength() ?? 0;
+    const riskLineLength = riskLineRef.current?.getTotalLength() ?? 0;
+    const areaLineLength = areaLineRef.current?.getTotalLength() ?? 0;
+
+    // strokeDasharray only needs to be set once — it defines the single
+    // continuous dash the offset animation reveals; it never changes.
+    gsap.set(lineRef.current, { strokeDasharray: lineLength });
+    gsap.set(riskLineRef.current, { strokeDasharray: riskLineLength });
+    gsap.set(areaLineRef.current, { strokeDasharray: areaLineLength });
 
     const chartsTl = gsap.timeline({
-      scrollTrigger: { trigger: sectionRef.current, start: 'top 60%' },
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: 'top 60%',
+        toggleActions: 'restart none restart none',
+      },
     });
+    // Each tween restates its own starting dash offset/opacity explicitly
+    // (fromTo, not to) so replaying the timeline redraws from scratch
+    // instead of animating from wherever the previous play left off.
     chartsTl
-      .to(lineRef.current, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut' }, 0)
+      .set(areaFillRef.current, { opacity: 0 })
+      .fromTo(lineRef.current, { strokeDashoffset: lineLength }, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut' }, 0)
       .fromTo(barsRef.current?.children ?? [], { scaleY: 0 }, { scaleY: 1, duration: 0.6, stagger: 0.06, ease: 'power2.out' }, 0.1)
-      .to(areaLineRef.current, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut' }, 0.2)
+      .fromTo(areaLineRef.current, { strokeDashoffset: areaLineLength }, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut' }, 0.2)
       .to(areaFillRef.current, { opacity: 1, duration: 0.6 }, 0.6)
-      .to(riskLineRef.current, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut' }, 0.3);
+      .fromTo(riskLineRef.current, { strokeDashoffset: riskLineLength }, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut' }, 0.3);
   });
 
   return (

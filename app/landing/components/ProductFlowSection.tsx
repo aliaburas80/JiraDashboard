@@ -78,9 +78,16 @@ export default function ProductFlowSection() {
           </div>
         </div>
 
-        <div ref={engineRef} className={styles.engine}>
-          <p className={styles.engineTitle}>Delivery Clarity Intelligence Engine</p>
-          <p className={styles.engineSubtitle}>VALIDATE · CALCULATE · EXPLAIN</p>
+        <div className={styles.engineWrap}>
+          <div className={styles.engineGlow} aria-hidden="true" />
+          <div className={styles.engineRing} aria-hidden="true" />
+          <div ref={engineRef} className={styles.engine}>
+            <div className={styles.engineIconWrap}>
+              <SvgIcon name="workflow" size={18} />
+            </div>
+            <p className={styles.engineTitle}>Delivery Clarity Intelligence Engine</p>
+            <p className={styles.engineSubtitle}>VALIDATE · CALCULATE · EXPLAIN</p>
+          </div>
         </div>
 
         <div className={styles.card}>

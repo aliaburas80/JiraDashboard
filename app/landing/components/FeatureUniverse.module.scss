@@ -6,7 +6,7 @@
 }
 
 .layout {
-  max-inline-size: 68rem;
+  max-inline-size: 78rem;
   margin-inline: auto;
   padding-inline: 24px;
   display: grid;
@@ -52,6 +52,13 @@
 
   @media (min-width: 1280px) {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  // Shortens the section on wide screens — 4 columns means 3 rows of 12
+  // cards instead of 4, so it doesn't run on so much longer than the
+  // sticky title column beside it.
+  @media (min-width: 1536px) {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 

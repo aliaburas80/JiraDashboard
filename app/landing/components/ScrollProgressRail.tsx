@@ -44,8 +44,13 @@ export default function ScrollProgressRail() {
     el?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
   }
 
+  // Hidden while the hero is active — its dark, full-bleed floating cards and
+  // headline live in the same top-left/top-right space the rail occupies, so
+  // showing the rail there causes a visual collision.
+  const overHero = activeId === LANDING_SECTIONS[0].id;
+
   return (
-    <nav className={styles.rail} aria-label="Landing page section progress">
+    <nav className={clsx(styles.rail, { [styles.railHidden]: overHero })} aria-label="Landing page section progress">
       {LANDING_SECTIONS.map(section => (
         <button
           key={section.id}

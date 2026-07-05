@@ -40,11 +40,16 @@ export default function MetricsStrip() {
   const [active, setActive] = useState(false);
 
   useGsapContext(sectionRef, () => {
+    // Replays every time this section is scrolled into view, either
+    // direction, rather than only counting up once.
     ScrollTrigger.create({
       trigger: sectionRef.current,
       start: 'top 80%',
-      once: true,
+      end: 'bottom top',
       onEnter: () => setActive(true),
+      onEnterBack: () => setActive(true),
+      onLeave: () => setActive(false),
+      onLeaveBack: () => setActive(false),
     });
 
     gsap.from(gridRef.current?.children ?? [], {
@@ -52,7 +57,11 @@ export default function MetricsStrip() {
       y: 24,
       duration: 0.5,
       stagger: 0.1,
-      scrollTrigger: { trigger: sectionRef.current, start: 'top 80%' },
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: 'top 80%',
+        toggleActions: 'restart none restart none',
+      },
     });
   });
 
