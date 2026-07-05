@@ -1869,4 +1869,12 @@ Throwaway user, workspace, entitlement, and scoped metrics file all deleted afte
 
 Full suite 905/96 passing, typecheck clean.
 
-Full suite 887/95 passing, typecheck clean.
+## 9.78 — Home/Upload Page Redesign (Dark Theme Consistency)
+
+*(Added 2026-07-05. Visual-only pass on `app/page.tsx` — no state, handler, or existing shared component was changed, so no new automated tests were needed; the existing full suite already covers the untouched upload/merge/sample-data logic.)*
+
+New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/s2/s3`, `--dc-accent`, `--dc-p1/p2/p3`, `--dc-bdr`) — no new colour values introduced. Every inline `style={{...}}` initially written was moved into proper module classes once the local ESLint inline-style rule flagged them (none were genuinely dynamic/data-driven, so none qualified for the CSS-custom-property exception).
+
+**Automated checks:** `npx tsc --noEmit` clean; `npx eslint app/page.tsx --max-warnings=0` clean; `npx stylelint app/page.module.scss --max-warnings=0` clean; full suite unchanged at 905/96 passing (zero logic touched).
+
+**Manual verification (real dev server, throwaway account):** the page requires an authenticated session — confirmed anonymous requests still redirect to `/login` (pre-existing, unchanged). Logged in as a throwaway user and fetched the page: confirmed the new copy ("Drag it in, we'll take it from here," "Try a sample first," "Merge multiple files," "See everything it does") and the new `page_page__*` module class all render correctly. Not independently re-verified: the drop-zone icon's hover/float animation and drag-and-drop interaction visually (no browser-automation tool available this session) — the component logic itself (file handlers, drag/drop event wiring) is unchanged from the working, previously-shipped version.

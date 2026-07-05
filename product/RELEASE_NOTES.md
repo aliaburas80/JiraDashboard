@@ -5,6 +5,12 @@
 
 ---
 
+## Home/Upload Page Redesign (2026-07-05, P3)
+
+The page you land on to upload a Jira export now matches the rest of the app's dark theme instead of standing out as the one plain-light page — the same look already used on the landing, login, and members pages. Simplified the layout too: "Merge multiple files" and "Try a sample" are now one compact row instead of two separate stacked sections, and the long wall of feature-tag pills at the bottom is now a single short line (the full feature list is still one click away on the "See everything it does" link). Nothing about how uploading, merging, or the sample data works has changed — this is a visual pass only.
+
+---
+
 ## Bring Your Own Cloud Storage, Per User (2026-07-05, P2)
 
 Cloud-mode users can now point their uploads at their own S3, Azure, or Google Cloud bucket instead of Delivery Clarity's own "App storage" — go to Settings → Storage. Your credentials are encrypted and used only for your own uploads, never shared with anyone else. A saved bucket has to pass "Test connection" before it's actually used — until then, uploads are blocked with a clear message rather than silently going somewhere you didn't expect. "App storage" remains available as before if you'd rather not manage your own bucket. Verified end-to-end: uploads work normally with nothing configured, get blocked the moment an unverified bucket is saved, and unblock immediately if you remove it.
