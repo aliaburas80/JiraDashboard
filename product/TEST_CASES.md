@@ -1831,4 +1831,42 @@ New `SessionData.isSuperAdmin` (set at login, returned by `GET /api/auth/me`, ca
 
 **Not verified:** the Members nav link actually disappearing in a rendered browser — the nav dropdown's item list isn't present in the server-rendered HTML (client-side dropdown state), so curl-based smoke checks can't confirm it visually; no browser-automation tool was available this session. The underlying filtering logic (`getNavGroupsForRole`) is fully covered by TC-NAV-07–10 above. **Recommended manual QA:** log in as a regular admin and confirm the "Members" link is absent from both the top nav and mobile nav; log in as the super-admin and confirm it's present and the page loads.
 
+## 9.77 — EP-024: Per-User "Bring Your Own Cloud" Storage
+
+*(Added 2026-07-05. From screenshots of the per-user Storage tab and the admin's Cloud Storage Provider picker, with the explicit requirement that every cloud-mode user get their own bucket, never a shared one.)*
+
+New `UserStorageProvider` Prisma model (additive migration `20260705062735_add_user_storage_provider`) and `src/services/storage/userStorageProvider.service.ts`, reusing the existing provider classes/factory (`src/services/storage/{providers,storageProvider}.ts`) and encryption helper (`src/lib/secret-field.ts`) unchanged.
+
+| ID | Test | Expected | Status |
+|----|------|----------|--------|
+| TC-UBYOC-01–03 | Save rejects config missing required fields per provider (S3 bucket; Azure containerName; GCP bucket + projectId) | `{ ok: false, error }`, no DB write | ✅ Automated — `userStorageProvider.test.ts` |
+| TC-UBYOC-04 | Save requires credentials for a brand-new provider (no existing row) | Rejected, no DB write | ✅ Automated |
+| TC-UBYOC-05 | Save encrypts credentials via `encryptSecret()`, never stores them in the non-secret `configJson` column | `credentialsEnc` goes through the encryption function; `configJson` never contains a secret value | ✅ Automated |
+| TC-UBYOC-06 | Save always resets `verified: false`, even overwriting an already-verified provider | `verified: false, verifiedAt: null` after every save | ✅ Automated |
+| TC-UBYOC-07 | Blank credential fields on an *unchanged* provider type keep the existing encrypted blob | Existing `credentialsEnc` preserved | ✅ Automated |
+| TC-UBYOC-08 | Blank credentials when *switching* provider type is rejected | Never silently reuses the old provider's (wrong-shaped) credentials | ✅ Automated |
+| TC-UBYOC-09/10 | `getUserStorageProviderSafe` never exposes `credentialsEnc` or decrypted values; returns `null` when nothing configured | Safe shape only | ✅ Automated |
+| TC-UBYOC-11 | `testUserStorageProvider` sets `verified: true` only on a real provider `.test()` success | — | ✅ Automated |
+| TC-UBYOC-12/13 | Test failure (provider-reported error, or a thrown exception) sets `verified: false` with the error recorded | — | ✅ Automated |
+| TC-UBYOC-14 | Test with nothing configured yet returns a clear error | — | ✅ Automated |
+| TC-UBYOC-15 | Delete removes the row | — | ✅ Automated |
+| TC-UBYOC-16 | `getUserStorageProviderStatus` returns `'none'`/`'unverified'`/`'verified'` correctly | — | ✅ Automated |
+| TC-UBYOC-17/18 | `getVerifiedUserStorageProviderInstance` returns `null` unless `verified: true`; builds a real instance only when verified | Never calls `createProvider` for an unverified row | ✅ Automated |
+
+**Upload pipeline (`app/api/upload/route.ts`, `merge/route.ts`):** no provider configured → unaffected (App storage, unchanged); saved-but-unverified → `409` with a message pointing at Settings → Storage; verified → existing local scoped-file write unchanged, plus a non-blocking push to the user's own bucket under a fixed key (`delivery-clarity-metrics.json`). `GET /api/metrics/latest` attempts one restore from the user's own bucket when the local scoped file is missing, before returning `available: false`.
+
+**Existing tests updated to avoid a real DB dependency:** `uploadUserId.test.ts`, `workspaceIsolation.test.ts`, and `cloudRestoreHardening.test.ts` now mock `@/services/storage/userStorageProvider.service` — without this, the new upload/metrics-route calls would have silently fallen through to a real (unmocked) database connection in those test files rather than failing loudly, since the calls are wrapped in `.catch(() => null)` for production resilience.
+
+**Manual end-to-end verification (real dev database and dev server, throwaway user in cloud mode):**
+1. Baseline: `GET /api/profile/storage-provider` → `config: null`; upload succeeds (`200`) with nothing configured — App storage path unaffected.
+2. Saved an S3 config with fake credentials (`PUT /api/profile/storage-provider`) → confirmed `verified: false` in the response; the very next upload attempt returned `409` with the expected "not yet verified" message.
+3. `POST /api/profile/storage-provider/test` against the fake bucket → failed with a real, specific AWS error ("The AWS Access Key Id you provided does not exist in our records"), `verified` stayed `false`, `lastError` recorded.
+4. `DELETE /api/profile/storage-provider` → the next upload attempt no longer returned the storage-provider `409` — it reached a *different*, unrelated, pre-existing check instead (trial entitlement already consumed, `403`), proving the block was specifically lifted rather than the upload just failing for some other reason.
+
+Throwaway user, workspace, entitlement, and scoped metrics file all deleted after verification.
+
+**Not verified:** an actually-successful `Test connection` against a real S3/Azure/GCP bucket (no real cloud credentials were available this session) — covered instead by TC-UBYOC-11/18's mocked-success unit tests, which exercise the exact same code path (`createProvider()` → `.test()` → `verified: true`) that a real success would. **Recommended manual QA before relying on this in production:** configure a real bucket you control, confirm "Test connection" succeeds, upload a file, and confirm the object actually appears in that bucket under the expected key.
+
+Full suite 905/96 passing, typecheck clean.
+
 Full suite 887/95 passing, typecheck clean.

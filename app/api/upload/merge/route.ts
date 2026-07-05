@@ -12,6 +12,7 @@ import { calculateDashboardMetrics } from '@/services/metrics/metrics.service';
 import { writeLatestMetrics } from '@/services/metrics/latestMetricsStorage';
 import { getMetricsScopeKeyForUser } from '@/lib/workspace';
 import { mergeIssueArrays } from '@/lib/mergeIssues';
+import { getUserStorageProviderStatus, getVerifiedUserStorageProviderInstance } from '@/services/storage/userStorageProvider.service';
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const MAX_FILES     = 10;
@@ -27,6 +28,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
+  // EP-024: same block-if-unverified rule as the single-file upload route.
+  const storageProviderStatus = await getUserStorageProviderStatus(session.userId);
+  if (storageProviderStatus === 'unverified') {
+    return NextResponse.json(
+      {
+        error: 'Your cloud storage provider is configured but not yet verified. Go to Settings → Storage and click "Test connection," or remove it to use App storage instead.',
+      },
+      { status: 409 },
+    );
+  }
+
   let formData: FormData;
   try { formData = await req.formData(); } catch {
     return NextResponse.json({ error: 'Invalid multipart form data.' }, { status: 400 });
@@ -84,6 +96,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     import('@/services/storage/cloudSync')
       .then(({ pushToCloud }) => pushToCloud())
       .catch(() => {});
+
+    // EP-024: verified users additionally get a durable copy pushed to their own bucket.
+    if (storageProviderStatus === 'verified') {
+      getVerifiedUserStorageProviderInstance(session.userId)
+        .then(provider => provider?.upload('delivery-clarity-metrics.json', JSON.stringify(metrics)))
+        .catch(() => {});
+    }
+
     return NextResponse.json({ metrics, warnings: fileWarnings, mergeStats: stats });
   } catch {
     return NextResponse.json({ error: 'Failed to calculate metrics from merged data.' }, { status: 500 });

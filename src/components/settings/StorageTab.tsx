@@ -2,6 +2,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
+import UserCloudProviderForm from '@/components/settings/UserCloudProviderForm';
 import { listLocalImports, removeLocalImport, clearLocalImportHistory } from '@/lib/localImportHistory';
 
 interface Log {
@@ -128,6 +129,12 @@ export default function StorageTab({ dataStorageMode, savingStorageMode, onUpdat
           </button>
         </div>
       </section>
+
+      {dataStorageMode === 'cloud' && (
+        <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <UserCloudProviderForm onToast={onToast} />
+        </section>
+      )}
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">

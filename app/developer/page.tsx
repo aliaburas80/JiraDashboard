@@ -650,6 +650,18 @@ When loading, a blue banner appears below the header: "Loading data from Amazon 
 | \`/api/admin/storage/auto-restore?force=true\` | POST | Force restore latest backup |
 | \`/api/metrics/latest\` | GET | Bucket/server latest metrics; returns \`available:false\` with HTTP 200 when none exist yet |
 | \`/api/profile/image\` | GET/POST | Authenticated S3-backed profile image upload/proxy; stores objects under \`images/profile/\` |
+| \`/api/profile/storage-provider\` | GET/PUT/DELETE | EP-024: per-user "bring your own cloud" config — every user manages only their own, no admin bypass |
+| \`/api/profile/storage-provider/test\` | POST | Tests the caller's own saved provider; only a real success sets \`verified: true\` |
+
+---
+
+## Per-User "Bring Your Own Cloud" Storage (EP-024)
+
+Cloud-mode users may optionally point uploads at their own S3/Azure/GCP bucket instead of App storage. New model \`UserStorageProvider\` (one row per user): \`configJson\` holds non-secret fields (bucket, region, prefix, endpoint, containerName, projectId); \`credentialsEnc\` holds the secret fields (access keys / connection string / service-account JSON) encrypted via the same \`encryptSecret\`/\`decryptSecret\` helper (\`src/lib/secret-field.ts\`) already used for \`JiraConnection.apiTokenEncrypted\`. Reuses the existing provider classes and \`createProvider()\` factory (\`src/services/storage/{providers,storageProvider}.ts\`) unchanged.
+
+**Contract:** a save always resets \`verified: false\`. Only \`POST /api/profile/storage-provider/test\` — which calls the provider's own \`.test()\` method — can set it \`true\`. \`app/api/upload/route.ts\`/\`merge/route.ts\` check \`getUserStorageProviderStatus(userId)\` before processing a file: \`'none'\` → unaffected (App storage); \`'unverified'\` → \`409\`, upload blocked; \`'verified'\` → normal local-scoped-file write, plus a non-blocking push to the user's own bucket under the fixed key \`delivery-clarity-metrics.json\`. \`GET /api/metrics/latest\` attempts one restore from that same key in the user's bucket when the local scoped file is missing, before returning \`available: false\`.
+
+Service: \`src/services/storage/userStorageProvider.service.ts\` — \`getUserStorageProviderSafe\`, \`saveUserStorageProvider\`, \`testUserStorageProvider\`, \`deleteUserStorageProvider\`, \`getUserStorageProviderStatus\`, \`getVerifiedUserStorageProviderInstance\`.
 
 ---
 
