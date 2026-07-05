@@ -1,0 +1,152 @@
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
+// Landing/upload page — brought in line with the dark Theme D surface already
+// used on /landing, /login, /members instead of the previous plain-light page.
+
+.page {
+  min-block-size: calc(100vh - 8rem);
+  background: var(--dc-bg, #0a0a0a);
+  border-radius: 20px;
+  padding-block: 48px;
+}
+
+.badge {
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+  color: var(--dc-acc2, #ff8a4c);
+}
+
+.heading {
+  color: var(--dc-p1, #f2f2f2);
+}
+
+.subhead {
+  color: var(--dc-p2, #909090);
+}
+
+.link {
+  color: var(--dc-acc2, #ff8a4c);
+  &:hover { text-decoration: underline; }
+}
+
+// ── Primary drop zone ──────────────────────────────────────────────────────────
+
+.dropzone {
+  background: var(--dc-s2, #1e1e1e);
+  border: 2px dashed var(--dc-bdr2, rgba(255, 255, 255, 0.13));
+  transition: border-color 0.2s, background-color 0.2s, transform 0.2s;
+
+  &:hover {
+    border-color: var(--dc-accent, #e85d12);
+    background: var(--dc-s3, #282828);
+  }
+}
+
+.dropzoneTitle {
+  color: var(--dc-p1, #f2f2f2);
+}
+
+.dropzoneHint {
+  color: var(--dc-p2, #909090);
+}
+
+// A gentle bob to make the drop icon feel alive without being distracting.
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+.dropIcon {
+  animation: iconFloat 2.4s ease-in-out infinite;
+  color: var(--dc-accent, #e85d12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropIcon { animation: none; }
+}
+
+.spinnerTrack {
+  border: 4px solid var(--dc-s3, #282828);
+  border-top-color: var(--dc-accent, #e85d12);
+}
+
+.spinnerTrackSm {
+  border: 2px solid var(--dc-s3, #282828);
+  border-top-color: var(--dc-accent, #e85d12);
+}
+
+// ── Status banners (success / warning / error) ──────────────────────────────
+
+.successBanner {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: var(--dc-green, #22c55e);
+}
+
+.warningBanner {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.warningText {
+  color: var(--dc-amber, #f59e0b);
+}
+
+.errorBanner {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  color: var(--dc-red, #f87171);
+}
+
+// ── Secondary actions row ────────────────────────────────────────────────────
+
+.secondaryBtn {
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+  color: var(--dc-p1, #f2f2f2);
+  transition: border-color 0.2s, transform 0.2s;
+
+  &:hover {
+    border-color: var(--dc-bdr2, rgba(255, 255, 255, 0.13));
+    transform: translateY(-1px);
+  }
+}
+
+.secondaryBtnIcon {
+  color: var(--dc-acc2, #ff8a4c);
+}
+
+.secondaryBtnHint {
+  color: var(--dc-p3, #505050);
+}
+
+.fileChip {
+  background: var(--dc-s3, #282828);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+  color: var(--dc-p1, #f2f2f2);
+}
+
+.fileChipSize {
+  color: var(--dc-p3, #505050);
+}
+
+.fileChipRemove {
+  color: var(--dc-p3, #505050);
+  &:hover { color: var(--dc-red, #f87171); }
+}
+
+// ── Merge panel ──────────────────────────────────────────────────────────────
+
+.mergePanel {
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+}
+
+.mergeAddFile {
+  border: 1px dashed var(--dc-bdr2, rgba(255, 255, 255, 0.13));
+}
+
+// ── Tagline ──────────────────────────────────────────────────────────────────
+
+.tagline {
+  color: var(--dc-p3, #505050);
+}
