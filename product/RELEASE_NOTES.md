@@ -5,6 +5,12 @@
 
 ---
 
+## Members Directory Restricted to the Super-Admin Account (2026-07-05, P1 security fix)
+
+From a screenshot showing a regular member could see another user's email through the Members directory. Found `GET /api/members` had no access restriction at all beyond being logged in — any account, any role, could see every active user's name, email, role, position, phone, and address. Now restricted to the protected super-admin account specifically (not just "any admin") — everyone else gets a clear refusal and the "Members" menu link disappears entirely for them. Verified against the real database: a regular admin account is correctly refused; the super-admin account still works normally.
+
+---
+
 ## Manual Admin Reset for External Users' Workspace Data (2026-07-05, P2)
 
 **Fourth and final follow-on branch from the same large request (§6).** Per your explicit choice, this is manual-only — nothing runs automatically. Admin → User Management now has a "Reset data" button per non-`deliveryclarity.app` user (and a bulk "Reset external users' data" option) that shows exactly what will be deleted — import logs, dashboard snapshots, Jira connections, their dashboard metrics file — before you confirm. The account, login, and role are never touched, only the uploaded workspace data. Internal `@deliveryclarity.app` accounts are refused both in the UI and on the server, so this can't be pointed at your own team by mistake. Verified end-to-end against the real database with throwaway accounts: an internal account was correctly refused, an external account's data was correctly deleted while the account itself kept working.

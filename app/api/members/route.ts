@@ -22,6 +22,12 @@ export async function GET(): Promise<NextResponse> {
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
+  // EP-025: the member directory previously returned every user's name, email,
+  // and contact details to any logged-in account — restricted to the
+  // protected super-admin account only (distinct from role: 'admin').
+  if (!session.isSuperAdmin) {
+    return NextResponse.json({ error: 'Super admin access required.' }, { status: 403 });
+  }
   await syncUsersFromCloudIfConfigured();
 
   const users = await prisma.user.findMany({
