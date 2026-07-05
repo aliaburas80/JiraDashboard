@@ -2,10 +2,19 @@
 // In-app landing page — product showcase for new and returning users (9.38)
 'use client';
 
+import type { CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
+import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import styles from './page.module.scss';
+
+// DYNAMIC CSS VARIABLE: each feature/stat has its own brand color from data,
+// not a fixed set of variants — passed through as a custom property so SCSS
+// still owns every other visual rule (CLAUDE.md §14.2).
+type CSSVariableProperties = CSSProperties & Record<`--${string}`, string>;
 
 // ── Feature data ──────────────────────────────────────────────────────────────
 
@@ -31,35 +40,27 @@ const HOW_IT_WORKS = [
 ] as const;
 
 const STATS = [
-  { value: '28+',  label: 'Metrics calculated',  color: 'var(--dc-acc2, #FF8A4C)' },
-  { value: '17',   label: 'Excel export sheets',  color: 'var(--dc-green, #22C55E)' },
-  { value: '14',   label: 'Dashboard sections',   color: 'var(--dc-acc2, #FF8A4C)' },
-  { value: '469+', label: 'Automated tests',      color: 'var(--dc-amber, #F59E0B)' },
+  { value: '28+',  label: 'Metrics calculated',  color: '#FF8A4C' },
+  { value: '17',   label: 'Excel export sheets',  color: '#22C55E' },
+  { value: '14',   label: 'Dashboard sections',   color: '#FF8A4C' },
+  { value: '469+', label: 'Automated tests',      color: '#F59E0B' },
 ] as const;
 
 // ── Components ────────────────────────────────────────────────────────────────
 
 function FeatureCard({ icon, title, description, href, color }: typeof FEATURES[number]) {
+  // DYNAMIC CSS VARIABLE: each feature has its own brand color from data.
+  const variables: CSSVariableProperties = { '--feature-color': color };
   return (
-    <a
-      href={href}
-      className="group rounded-2xl p-5 flex flex-col gap-3 cursor-pointer transition-all duration-200"
-      style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
-      onMouseEnter={e => { e.currentTarget.style.border = '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)'; }}
-      onMouseLeave={e => { e.currentTarget.style.border = '1px solid var(--dc-bdr, rgba(255,255,255,0.07))'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-    >
+    <a href={href} className={clsx(styles.featureCard, 'group')} style={variables}>
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-          style={{ background: `${color}22` }}>
-          <SvgIcon name={icon} size={22} style={{ color }} />
+        <div className={styles.featureIconWrap}>
+          <SvgIcon name={icon} size={22} />
         </div>
-        <h3 className="text-sm font-black" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{title}</h3>
+        <h3 className={styles.featureTitle}>{title}</h3>
       </div>
-      <p className="text-xs leading-relaxed" style={{ color: 'var(--dc-p2, #909090)' }}>{description}</p>
-      <span className="text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
-        style={{ color: 'var(--dc-acc2, #FF8A4C)' }}>
-        Open →
-      </span>
+      <p className={styles.featureDesc}>{description}</p>
+      <span className={styles.featureCta}>Open →</span>
     </a>
   );
 }
@@ -71,73 +72,73 @@ export default function LandingPage() {
 
   return (
     <AppShell showNav>
-      <div className="max-w-6xl mx-auto">
+      <div className={styles.wrapper}>
 
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
-        <section className="text-center py-12 px-4">
-          <div className="flex justify-center mb-6">
-            <Image
-              src="/logo/delivery-clarity-logo-horizontal.svg"
-              alt="Delivery Clarity"
-              width={240}
-              height={74}
-              priority
-            />
-          </div>
-          <div className="inline-flex items-center gap-2 mb-5 chip c-acc"
-            style={{ borderRadius: 100, padding: '4px 12px', fontSize: 12 }}>
-            <SvgIcon name="priorityHigh" size={12} />
-            Zero-credential Jira intelligence
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-tight mb-4"
-            style={{ color: 'var(--dc-p1, #F2F2F2)' }}>
-            From messy boards to<br className="hidden sm:block" />
-            <span style={{ color: 'var(--dc-acc2, #FF8A4C)' }}> measurable delivery confidence</span>
-          </h1>
-          <p className="text-lg leading-relaxed max-w-2xl mx-auto mb-8" style={{ color: 'var(--dc-p2, #909090)' }}>
-            Upload any Jira CSV or Excel export. Get sprint health, team comparisons, risk signals,
-            release readiness, and executive reports — in seconds, no API keys needed.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <button type="button" onClick={() => router.push('/')}
-              className="inline-flex items-center gap-2 rounded-[10px] px-7 py-3 text-sm font-extrabold text-white transition hover:opacity-90"
-              style={{ background: 'var(--dc-acc, #E85D12)' }}>
-              <SvgIcon name="upload" size={16} />
-              Upload Jira Export
-            </button>
-            <button type="button" onClick={() => router.push('/dashboard')}
-              className="inline-flex items-center gap-2 rounded-[10px] px-7 py-3 text-sm font-extrabold transition"
-              style={{ background: 'rgba(232,93,18,0.09)', color: 'var(--dc-acc2, #FF8A4C)', border: '1px solid rgba(232,93,18,0.22)' }}>
-              <SvgIcon name="dashboard" size={16} />
-              Open Dashboard
-            </button>
+        <section className={styles.hero}>
+          <AnimatedDataBackground />
+          <div className={styles.heroVignette} aria-hidden="true" />
+          <div className={clsx(styles.heroContent, 'animate-fade-in')}>
+            <div className="flex justify-center mb-6">
+              <Image
+                src="/logo/delivery-clarity-logo-horizontal.svg"
+                alt="Delivery Clarity"
+                width={240}
+                height={74}
+                priority
+              />
+            </div>
+            <div className={styles.heroBadge}>
+              <SvgIcon name="priorityHigh" size={12} />
+              Zero-credential Jira intelligence
+            </div>
+            <h1 className={clsx(styles.heroTitle, 'text-4xl sm:text-5xl font-black tracking-tight leading-tight mb-4')}>
+              From messy boards to<br className="hidden sm:block" />
+              <span className={styles.heroAccent}> measurable delivery confidence</span>
+            </h1>
+            <p className={clsx(styles.heroSubhead, 'text-lg leading-relaxed max-w-2xl mx-auto')}>
+              Upload any Jira CSV or Excel export. Get sprint health, team comparisons, risk signals,
+              release readiness, and executive reports — in seconds, no API keys needed.
+            </p>
+            <div className={styles.heroActions}>
+              <button type="button" onClick={() => router.push('/')} className="btn-primary px-7 py-3 text-sm">
+                <SvgIcon name="upload" size={16} />
+                Upload Jira Export
+              </button>
+              <button type="button" onClick={() => router.push('/dashboard')} className={clsx(styles.btnOutline, 'px-7 py-3 text-sm')}>
+                <SvgIcon name="dashboard" size={16} />
+                Open Dashboard
+              </button>
+            </div>
           </div>
         </section>
 
         {/* ── Stats strip ──────────────────────────────────────────────────── */}
-        <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12">
-          {STATS.map(s => (
-            <div key={s.label} className="rounded-[10px] p-5 text-center"
-              style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-              <p className="font-black mb-1" style={{ color: s.color, fontSize: 22, fontFamily: 'var(--font-mono, monospace)' }}>{s.value}</p>
-              <p className="font-bold uppercase tracking-wide" style={{ fontSize: 10, color: 'var(--dc-p2, #909090)' }}>{s.label}</p>
-            </div>
-          ))}
+        <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12 animate-fade-in">
+          {STATS.map(s => {
+            // DYNAMIC CSS VARIABLE: each stat has its own brand color from data.
+            const variables: CSSVariableProperties = { '--stat-color': s.color };
+            return (
+              <div key={s.label} className={styles.statCard} style={variables}>
+                <p className={styles.statValue}>{s.value}</p>
+                <p className={styles.statLabel}>{s.label}</p>
+              </div>
+            );
+          })}
         </section>
 
         {/* ── How it works ─────────────────────────────────────────────────── */}
         <section className="mb-12">
-          <h2 className="text-2xl font-black text-center mb-8" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>How it works</h2>
+          <h2 className={clsx(styles.sectionTitle, 'text-2xl font-black text-center mb-8')}>How it works</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {HOW_IT_WORKS.map(step => (
-              <div key={step.step} className="rounded-2xl p-6 text-center"
-                style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-                <SvgIcon name={step.icon} size={40} className="mx-auto mb-3" style={{ color: 'var(--dc-acc2, #FF8A4C)' }} />
-                <div className="chip c-acc mb-2" style={{ display: 'inline-flex', borderRadius: 100, fontSize: 9, letterSpacing: '0.08em' }}>
+              <div key={step.step} className={styles.stepCard}>
+                <SvgIcon name={step.icon} size={40} className={clsx(styles.stepIcon, 'mx-auto mb-3')} />
+                <div className={clsx(styles.stepBadge, 'chip c-acc')}>
                   STEP {step.step}
                 </div>
-                <h3 className="text-sm font-black mb-2" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{step.title}</h3>
-                <p className="text-xs leading-relaxed" style={{ color: 'var(--dc-p2, #909090)' }}>{step.description}</p>
+                <h3 className={clsx(styles.stepTitle, 'text-sm font-black mb-2')}>{step.title}</h3>
+                <p className={styles.stepDesc}>{step.description}</p>
               </div>
             ))}
           </div>
@@ -145,39 +146,31 @@ export default function LandingPage() {
 
         {/* ── Feature grid ─────────────────────────────────────────────────── */}
         <section className="mb-12">
-          <h2 className="text-2xl font-black text-center mb-2" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Everything in one place</h2>
-          <p className="text-sm text-center mb-8" style={{ color: 'var(--dc-p2, #909090)' }}>Click any feature to open it directly.</p>
+          <h2 className={clsx(styles.sectionTitle, 'text-2xl font-black text-center mb-2')}>Everything in one place</h2>
+          <p className={clsx(styles.sectionSubtitle, 'text-sm text-center mb-8')}>Click any feature to open it directly.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map(f => <FeatureCard key={f.title} {...f} />)}
           </div>
         </section>
 
         {/* ── CTA footer ───────────────────────────────────────────────────── */}
-        <section className="rounded-2xl p-10 text-center mb-8"
-          style={{ background: 'rgba(232,93,18,0.04)', border: '1px solid rgba(232,93,18,0.10)' }}>
-          <div className="flex justify-center mb-4">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-              style={{ background: 'rgba(232,93,18,0.12)' }}>
-              <SvgIcon name="priorityHigh" size={28} style={{ color: 'var(--dc-acc2, #FF8A4C)' }} />
-            </div>
+        <section className={styles.ctaSection}>
+          <div className={styles.ctaIconWrap}>
+            <SvgIcon name="priorityHigh" size={28} />
           </div>
-          <h2 className="text-2xl font-black mb-2" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Ready to get started?</h2>
-          <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: 'var(--dc-p2, #909090)' }}>
+          <h2 className={clsx(styles.ctaTitle, 'text-2xl font-black mb-2')}>Ready to get started?</h2>
+          <p className={clsx(styles.ctaDesc, 'text-sm mb-6 max-w-md mx-auto')}>
             Upload your Jira export or try the 35-issue sample dataset — no account required for the dashboard.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <button type="button" onClick={() => router.push('/')}
-              className="inline-flex items-center gap-2 rounded-[10px] px-7 py-3 text-sm font-extrabold text-white transition hover:opacity-90"
-              style={{ background: 'var(--dc-acc, #E85D12)' }}>
+            <button type="button" onClick={() => router.push('/')} className="btn-primary px-7 py-3 text-sm">
               Upload Jira Export →
             </button>
-            <a href="/developer"
-              className="inline-flex items-center gap-2 rounded-[10px] px-7 py-3 text-sm font-extrabold transition"
-              style={{ background: 'rgba(232,93,18,0.09)', color: 'var(--dc-acc2, #FF8A4C)', border: '1px solid rgba(232,93,18,0.22)' }}>
+            <a href="/developer" className={clsx(styles.btnOutline, 'px-7 py-3 text-sm')}>
               Developer Portal
             </a>
           </div>
-          <p className="text-xs mt-6" style={{ color: 'var(--dc-p3, #505050)' }}>
+          <p className={clsx(styles.ctaFooterNote, 'text-xs')}>
             Delivery Clarity v4.1 · © 2026 Ali Abu Ras · ali.aburas@deliveryclarity.app
           </p>
         </section>

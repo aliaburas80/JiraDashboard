@@ -2,12 +2,20 @@
 // Landing/upload page — always-dark animated hero matching /login and /register,
 // intentionally not theme-reactive (same precedent those two pages already set).
 
+// Bleeds edge-to-edge, breaking out of the shared AppShell `.main` container's
+// max-width/centering and top/bottom padding (see AppShell.module.scss's .main)
+// so this hero fills the full viewport width and exactly the space between the
+// fixed header and the footer, instead of sitting as a padded, centered card.
+// No other page currently needs this full-bleed treatment.
 .page {
   position: relative;
-  min-block-size: calc(100vh - 8rem);
   overflow: hidden;
-  border-radius: 20px;
   background: #050b16;
+  block-size: 100%;
+  min-block-size: 100%;
+  inline-size: 100vw;
+  margin-inline: calc(50% - 50vw);
+  margin-block: calc(-1 * (var(--header-height, 52px) + var(--space-6, 24px))) calc(-1 * var(--space-6, 24px));
 }
 
 // A subtle vignette darkens the edges so content reads clearly over the canvas —
