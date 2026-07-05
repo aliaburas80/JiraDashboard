@@ -1,6 +1,6 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
@@ -21,6 +21,7 @@ interface MergeStats { fileCount: number; totalBeforeMerge: number; duplicatesRe
 
 export default function HomePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState<string | null>(null);
   const [mergeFiles, setMergeFiles]     = useState<File[]>([]);
@@ -48,7 +49,7 @@ export default function HomePage() {
   }, []);
 
   // ── Single file upload (existing golden path) ─────────────────────────────
-  async function handleFile(file: File) {
+  const handleFile = useCallback(async function handleFile(file: File) {
     setLoading(true); setError(null); setMergeStats(null);
     setDataQuality(null); setFieldImpacts(null); setColumnMapping(null); setPendingMetrics(null);
     try {
@@ -87,10 +88,10 @@ export default function HomePage() {
       }
     } catch { setError('Upload failed. Please check the file and try again.'); }
     finally { setLoading(false); }
-  }
+  }, [dataStorageMode, router]);
 
   // ── Multi-file merge ──────────────────────────────────────────────────────
-  async function handleSampleData() {
+  const handleSampleData = useCallback(async function handleSampleData() {
     setLoadingSample(true); setError(null);
     try {
       const res  = await fetch('/samples/sample-jira-export.csv');
@@ -104,7 +105,13 @@ export default function HomePage() {
     } finally {
       setLoadingSample(false);
     }
-  }
+  }, [handleFile]);
+
+  // Landing page's "Try Sample Dataset" CTA links here with ?sample=1 so the
+  // sample loads immediately instead of requiring an extra click.
+  useEffect(() => {
+    if (searchParams.get('sample') === '1') handleSampleData();
+  }, [searchParams, handleSampleData]);
 
   function handleProceed() {
     if (pendingMetrics) {
