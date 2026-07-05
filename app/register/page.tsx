@@ -8,6 +8,7 @@ import Image from 'next/image';
 import styles from './page.module.scss';
 import { PERSONAS } from '@/lib/personas';
 import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 
 export default function RegisterPage() {
   const [name,     setName]     = useState('');
@@ -118,9 +119,8 @@ export default function RegisterPage() {
               {/* Password */}
               <div className={styles.field}>
                 <label htmlFor="reg-password" className={styles.label}>Password</label>
-                <input
+                <PasswordInput
                   id="reg-password"
-                  type="password"
                   className={styles.input}
                   value={password}
                   onChange={e => setPassword(e.target.value)}

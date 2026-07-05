@@ -6,6 +6,7 @@
 // POST /api/auth/change-password endpoint, which only requires an active session.
 'use client';
 import { useState, type FormEvent } from 'react';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 
 interface SecurityTabProps {
   onToast: (msg: string) => void;
@@ -58,8 +59,7 @@ export default function SecurityTab({ onToast }: SecurityTabProps) {
       <form onSubmit={handleSubmit} className="grid max-w-sm gap-4">
         <label className="grid gap-2 text-xs font-extrabold text-slate-700">
           Current password
-          <input
-            type="password"
+          <PasswordInput
             value={currentPassword}
             onChange={e => setCurrentPassword(e.target.value)}
             required
@@ -68,8 +68,7 @@ export default function SecurityTab({ onToast }: SecurityTabProps) {
         </label>
         <label className="grid gap-2 text-xs font-extrabold text-slate-700">
           New password
-          <input
-            type="password"
+          <PasswordInput
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
             required
@@ -78,8 +77,7 @@ export default function SecurityTab({ onToast }: SecurityTabProps) {
         </label>
         <label className="grid gap-2 text-xs font-extrabold text-slate-700">
           Confirm new password
-          <input
-            type="password"
+          <PasswordInput
             value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
             required

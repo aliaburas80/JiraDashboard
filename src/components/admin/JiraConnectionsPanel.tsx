@@ -4,6 +4,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 
 interface JiraConnection {
   id: string;
@@ -293,8 +294,7 @@ export default function JiraConnectionsPanel() {
               <label className="block text-xs font-black uppercase text-slate-500 mb-1.5">
                 API token / Personal Access Token <span className="text-red-500">*</span>
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 value={apiToken}
                 onChange={e => setApiToken(e.target.value)}
                 placeholder={deploymentType === 'cloud' ? 'Paste the Atlassian token value only' : 'Paste the Jira PAT'}

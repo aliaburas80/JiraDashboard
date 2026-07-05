@@ -4,6 +4,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -86,8 +87,7 @@ export default function ChangePasswordPage() {
 
           <div>
             <label className="mb-1.5 block text-xs font-bold text-slate-700">Temporary password</label>
-            <input
-              type="password"
+            <PasswordInput
               required
               value={currentPassword}
               onChange={e => setCurrentPassword(e.target.value)}
@@ -97,8 +97,7 @@ export default function ChangePasswordPage() {
 
           <div>
             <label className="mb-1.5 block text-xs font-bold text-slate-700">New password</label>
-            <input
-              type="password"
+            <PasswordInput
               required
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
@@ -109,8 +108,7 @@ export default function ChangePasswordPage() {
 
           <div>
             <label className="mb-1.5 block text-xs font-bold text-slate-700">Confirm new password</label>
-            <input
-              type="password"
+            <PasswordInput
               required
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}

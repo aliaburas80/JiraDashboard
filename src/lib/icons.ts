@@ -51,6 +51,7 @@ export const ICONS = {
   email: '0143-email.svg',
   epic: '0149-epic.svg',
   eye: '0153-eye-open.svg',
+  eyeOff: '0155-eye-open-strikethrough.svg',
   field: '0158-field.svg',
   file: '0169-file.svg',
   filter: '0171-filter.svg',

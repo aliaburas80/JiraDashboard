@@ -5,6 +5,12 @@
 
 ---
 
+## Show/Hide Toggle on Every Password and Secret Field (2026-07-05, P2)
+
+**Second follow-on branch from the same large request as the isolation fix below (§4: password visibility).** Every password/token/secret input in the app — login, register, forgot/reset password, change password, admin SMTP password, Jira API token, S3/Azure credentials, admin "Add User" temp password — now has a working eye icon to reveal/hide the value, via one new shared `PasswordInput` component rather than 14 separate implementations. GCP's Service Account JSON field is a separate case (a textarea, already unmasked by default) and is tracked as its own smaller follow-up rather than bundled in here. No automated test coverage (this repo has no component-testing setup); recommended a quick manual click-through before relying on it in production.
+
+---
+
 ## Live Dashboard Data and Jira Connections Are Now Isolated Per Workspace (2026-07-05, P0 security fix)
 
 **From a large request covering data isolation, per-user Jira connections, and several UI items.** Before writing any code, two research passes checked what actually needed fixing — most of the request's assumptions were already correct (registration already offers job titles only, never permission roles; self-registered accounts already default to local-only storage). The real bug was worse than described: for any user in **cloud** storage mode, the live dashboard read from a single file shared by the entire server (`data/latest-metrics.json`) — whoever uploaded or synced most recently determined what every cloud-mode user saw, regardless of workspace. The same was true for "Sync Jira": it auto-picked the most recently synced connection **system-wide**, not the caller's own.

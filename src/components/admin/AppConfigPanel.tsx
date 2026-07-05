@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 
 interface SafeConfig {
   host:    string;
@@ -26,17 +27,29 @@ function Field({
   hint?:       string;
   disabled?:   boolean;
 }) {
+  const inputClassName = "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 transition disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed";
+
   return (
     <div>
       <label className="block text-xs font-bold text-slate-700 mb-1">{label}</label>
-      <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={e => onChange(e.target.value)}
-        disabled={disabled}
-        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 transition disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
-      />
+      {type === 'password' ? (
+        <PasswordInput
+          value={value}
+          placeholder={placeholder}
+          onChange={e => onChange(e.target.value)}
+          disabled={disabled}
+          className={inputClassName}
+        />
+      ) : (
+        <input
+          type={type}
+          value={value}
+          placeholder={placeholder}
+          onChange={e => onChange(e.target.value)}
+          disabled={disabled}
+          className={inputClassName}
+        />
+      )}
       {hint && <p className="mt-1 text-[11px] text-slate-400">{hint}</p>}
     </div>
   );

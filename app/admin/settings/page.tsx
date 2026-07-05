@@ -15,6 +15,7 @@ import AppConfigPanel from '@/components/admin/AppConfigPanel';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { ASSIGNABLE_ROLES, roleLabel, type AppRole } from '@/lib/roles';
 import {
   type Tab, type ManagedUser,
@@ -664,7 +665,7 @@ function CloudStorageSettings() {
           {[['Access Key ID', 'accessKeyId'], ['Secret Access Key', 'secretAccessKey']].map(([label, key]) => (
             <div key={key}>
               <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
-              <input type="password" value={(s3Form as any)[key]} onChange={e => setS3Form(f => ({ ...f, [key]: e.target.value }))}
+              <PasswordInput value={(s3Form as any)[key]} onChange={e => setS3Form(f => ({ ...f, [key]: e.target.value }))}
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
             </div>
           ))}
@@ -691,7 +692,7 @@ function CloudStorageSettings() {
           ))}
           <div>
             <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Connection String (optional)</label>
-            <input type="password" value={azForm.connectionString} onChange={e => setAzForm(f => ({ ...f, connectionString: e.target.value }))}
+            <PasswordInput value={azForm.connectionString} onChange={e => setAzForm(f => ({ ...f, connectionString: e.target.value }))}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
           </div>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
@@ -1059,7 +1060,7 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
           </label>
           <label className={styles.fieldLabel}>
             Temporary Password
-            <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Enter temporary password"
+            <PasswordInput value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Enter temporary password"
               className={styles.formInput} />
           </label>
           <label className={styles.fieldLabel}>

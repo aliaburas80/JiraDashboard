@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
 import styles from './page.module.scss';
 
@@ -99,9 +100,8 @@ export default function ResetPasswordPage() {
 
             <div>
               <label htmlFor="newPassword" className="mb-1.5 block text-xs font-bold text-slate-700">New password</label>
-              <input
+              <PasswordInput
                 id="newPassword"
-                type="password"
                 required
                 autoComplete="new-password"
                 value={newPassword}
@@ -113,9 +113,8 @@ export default function ResetPasswordPage() {
 
             <div>
               <label htmlFor="confirmPassword" className="mb-1.5 block text-xs font-bold text-slate-700">Confirm new password</label>
-              <input
+              <PasswordInput
                 id="confirmPassword"
-                type="password"
                 required
                 autoComplete="new-password"
                 value={confirmPassword}
