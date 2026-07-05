@@ -5,6 +5,12 @@
 
 ---
 
+## Landing Page Redesign (2026-07-05, P2)
+
+`/landing` has been rebuilt into a fuller, more premium product page. The hero now has floating mini-cards (Sprint Health, Release Readiness, Data Quality, Team Capacity, Risk Signals), a two-tone gradient headline, and a small preview panel. Two new sections were added: "Turn Jira exports into delivery decisions" (four concrete ways teams use the product) and a dashboard preview showing what your metrics will look like. The final call-to-action now offers three options — Upload Jira Export, Try Sample Dataset, and Developer Portal — and everything animates in gently as you scroll, with full support for reduced-motion preferences. Nothing about uploading, dashboards, or any existing route changed — this is the landing/marketing page only.
+
+---
+
 ## Home/Upload Page + Landing Page Polish, Round 3 (2026-07-05, P3)
 
 The upload page's dark hero now fills the full width of the browser and runs edge-to-edge from just under the top bar to just above the footer, instead of sitting as a boxed card with visible gaps around it. The "stored local data" notice now appears near the bottom of the page, right before the footer, as one short line instead of at the very top. The `/landing` page got the same attention: a matching animated dark hero banner like the upload/login/registration pages, and every feature card now has a real hover lift (and works with keyboard focus too, not just a mouse). Nothing about uploading, merging, sample data, or any feature link changed — visual only.
