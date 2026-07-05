@@ -38,6 +38,7 @@ export default function HomePage() {
   const [dataStorageMode, setDataStorageMode] = useState<'cloud' | 'local'>('cloud');
   const inputRef  = useRef<HTMLInputElement>(null);
   const mergeRef  = useRef<HTMLInputElement>(null);
+  const autoSampleStartedRef = useRef(false);
 
   useEffect(() => { setStoredDataFound(hasLocalData()); }, []);
 
@@ -110,7 +111,9 @@ export default function HomePage() {
   // Landing page's "Try Sample Dataset" CTA links here with ?sample=1 so the
   // sample loads immediately instead of requiring an extra click.
   useEffect(() => {
-    if (searchParams.get('sample') === '1') handleSampleData();
+    if (searchParams.get('sample') !== '1' || autoSampleStartedRef.current) return;
+    autoSampleStartedRef.current = true;
+    handleSampleData();
   }, [searchParams, handleSampleData]);
 
   function handleProceed() {

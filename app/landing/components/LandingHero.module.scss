@@ -15,7 +15,6 @@
   align-items: center;
 }
 
-
 .inner {
   position: relative;
   z-index: 1;
@@ -31,6 +30,7 @@
 
   @media (min-width: 1024px) {
     grid-template-columns: 1.1fr 0.9fr;
+    min-block-size: calc(100vh - var(--header-height, 52px));
   }
 }
 
@@ -139,6 +139,9 @@
 
 .mockupWrap {
   position: relative;
+  inline-size: 100%;
+  max-inline-size: 560px;
+  margin-inline: auto;
 }
 
 .mockup {
@@ -236,55 +239,4 @@
   border-radius: 3px 3px 0 0;
   background: linear-gradient(180deg, #f97316, #fb923c);
   transform-origin: bottom;
-}
-
-// ── Floating mini-cards ─────────────────────────────────────────────────────
-
-.floats {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  display: none;
-
-  @media (min-width: 1024px) {
-    display: block;
-  }
-}
-
-.floatCard {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  border-radius: 14px;
-  padding: 10px 14px;
-  min-inline-size: 108px;
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  animation: floatDrift 6s ease-in-out infinite;
-  animation-delay: var(--float-delay, 0s);
-}
-
-.floatLabel {
-  font-size: 10px;
-  font-weight: 700;
-  color: #94a3b8;
-}
-
-.floatValue {
-  font-size: 16px;
-  font-weight: 900;
-  color: var(--float-color, #f8fafc);
-}
-
-@keyframes floatDrift {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-12px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .floatCard { animation: none; }
 }
