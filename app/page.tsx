@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
+import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
 import { saveMetrics, clearMetrics } from '@/lib/storage';
 import { hasLocalData, clearLocalData } from '@/lib/clearLocalData';
 import { addLocalImport } from '@/lib/localImportHistory';
@@ -155,7 +156,10 @@ export default function HomePage() {
 
   return (
     <AppShell showNav={false}>
-      <div className={clsx(styles.page, 'flex flex-col items-center justify-center gap-7 px-4')}>
+      <div className={styles.page}>
+        <AnimatedDataBackground />
+        <div className={styles.vignette} aria-hidden="true" />
+        <div className={clsx(styles.content, 'flex flex-col items-center justify-center gap-7 px-4')}>
 
         {/* Stored data detection banner */}
         {clearSuccess && (
@@ -356,6 +360,7 @@ export default function HomePage() {
           Sprint health · flow efficiency · risk signals · capacity · epic readiness — and more.
         </p>
 
+        </div>
       </div>
 
       {confirmClear && (

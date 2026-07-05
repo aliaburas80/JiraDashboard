@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect, useCallback, type CSSProperties } from 'react';
@@ -134,9 +135,7 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
         {/* ── BRAND ── */}
         <Link href="/" className={styles.logo}>
           <div className={styles.logoIcon} aria-hidden="true">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
+            <Image src="/logo/delivery-clarity-logo-icon.svg" alt="" width={28} height={28} />
           </div>
           <span className={styles.logoName}>Delivery Clarity</span>
           <span className={styles.logoVersion}>v4.1</span>

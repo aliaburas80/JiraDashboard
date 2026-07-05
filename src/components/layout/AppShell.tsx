@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
@@ -91,9 +92,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
           <div className={styles.logoArea}>
             <Link href="/" className={styles.logoLink}>
               <div className={styles.logoIcon} aria-hidden="true">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                </svg>
+                <Image src="/logo/delivery-clarity-logo-icon.svg" alt="" width={28} height={28} />
               </div>
               <span className={styles.logoName}>{brandName}</span>
               <span className={styles.logoVersion}>v4.1</span>
