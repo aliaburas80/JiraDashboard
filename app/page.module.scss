@@ -1,77 +1,110 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
-// Landing/upload page — brought in line with the dark Theme D surface already
-// used on /landing, /login, /members instead of the previous plain-light page.
+// Landing/upload page — always-dark animated hero matching /login and /register,
+// intentionally not theme-reactive (same precedent those two pages already set).
 
 .page {
+  position: relative;
   min-block-size: calc(100vh - 8rem);
-  background: var(--dc-bg, #0a0a0a);
+  overflow: hidden;
   border-radius: 20px;
+  background: #050b16;
+}
+
+// A subtle vignette darkens the edges so content reads clearly over the canvas —
+// mirrors login/register's .vignette treatment.
+.vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(ellipse 80% 70% at 50% 40%, transparent 40%, rgba(5, 5, 8, 0.6) 100%);
+  pointer-events: none;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
   padding-block: 48px;
 }
 
 .badge {
-  background: var(--dc-s2, #1e1e1e);
-  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
-  color: var(--dc-acc2, #ff8a4c);
+  background: rgba(30, 30, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ff8a4c;
+  animation: badgeGlow 2.6s ease-out infinite;
+}
+
+@keyframes badgeGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 93, 18, 0.35); }
+  50%      { box-shadow: 0 0 0 7px rgba(232, 93, 18, 0); }
 }
 
 .heading {
-  color: var(--dc-p1, #f2f2f2);
+  color: #f5f5f5;
 }
 
 .subhead {
-  color: var(--dc-p2, #909090);
+  color: #a3a3a3;
 }
 
 .link {
-  color: var(--dc-acc2, #ff8a4c);
+  color: #ff8a4c;
   &:hover { text-decoration: underline; }
 }
 
 // ── Primary drop zone ──────────────────────────────────────────────────────────
 
 .dropzone {
-  background: var(--dc-s2, #1e1e1e);
-  border: 2px dashed var(--dc-bdr2, rgba(255, 255, 255, 0.13));
+  position: relative;
+  background: rgba(30, 30, 30, 0.7);
+  border: 2px dashed rgba(255, 255, 255, 0.15);
   transition: border-color 0.2s, background-color 0.2s, transform 0.2s;
+  animation: dropzonePulse 3.2s ease-in-out infinite;
 
   &:hover {
-    border-color: var(--dc-accent, #e85d12);
-    background: var(--dc-s3, #282828);
+    border-color: #e85d12;
+    background: rgba(40, 40, 40, 0.85);
+    transform: translateY(-2px);
   }
 }
 
+@keyframes dropzonePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 93, 18, 0.12); }
+  50%      { box-shadow: 0 0 0 10px rgba(232, 93, 18, 0); }
+}
+
 .dropzoneTitle {
-  color: var(--dc-p1, #f2f2f2);
+  color: #f5f5f5;
 }
 
 .dropzoneHint {
-  color: var(--dc-p2, #909090);
+  color: #a3a3a3;
 }
 
-// A gentle bob to make the drop icon feel alive without being distracting.
-@keyframes iconFloat {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
+// The arrow travels down then springs back up in a continuous loop —
+// a livelier, more energetic replacement for the earlier gentle float.
+@keyframes arrowBounce {
+  0%   { transform: translateY(-4px); }
+  50%  { transform: translateY(11px); }
+  100% { transform: translateY(-4px); }
 }
 
 .dropIcon {
-  animation: iconFloat 2.4s ease-in-out infinite;
-  color: var(--dc-accent, #e85d12);
+  animation: arrowBounce 1.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  color: #ff7a3d;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dropIcon { animation: none; }
+  .dropIcon, .badge, .dropzone { animation: none; }
 }
 
 .spinnerTrack {
-  border: 4px solid var(--dc-s3, #282828);
-  border-top-color: var(--dc-accent, #e85d12);
+  border: 4px solid #282828;
+  border-top-color: #e85d12;
 }
 
 .spinnerTrackSm {
-  border: 2px solid var(--dc-s3, #282828);
-  border-top-color: var(--dc-accent, #e85d12);
+  border: 2px solid #282828;
+  border-top-color: #e85d12;
 }
 
 // ── Status banners (success / warning / error) ──────────────────────────────
@@ -79,7 +112,7 @@
 .successBanner {
   background: rgba(34, 197, 94, 0.1);
   border: 1px solid rgba(34, 197, 94, 0.25);
-  color: var(--dc-green, #22c55e);
+  color: #22c55e;
 }
 
 .warningBanner {
@@ -88,65 +121,66 @@
 }
 
 .warningText {
-  color: var(--dc-amber, #f59e0b);
+  color: #f59e0b;
 }
 
 .errorBanner {
   background: rgba(248, 113, 113, 0.1);
   border: 1px solid rgba(248, 113, 113, 0.25);
-  color: var(--dc-red, #f87171);
+  color: #f87171;
 }
 
 // ── Secondary actions row ────────────────────────────────────────────────────
 
 .secondaryBtn {
-  background: var(--dc-s2, #1e1e1e);
-  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
-  color: var(--dc-p1, #f2f2f2);
-  transition: border-color 0.2s, transform 0.2s;
+  background: rgba(30, 30, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f5f5f5;
+  transition: border-color 0.2s, transform 0.2s, background-color 0.2s;
 
   &:hover {
-    border-color: var(--dc-bdr2, rgba(255, 255, 255, 0.13));
-    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(40, 40, 40, 0.85);
+    transform: translateY(-2px);
   }
 }
 
 .secondaryBtnIcon {
-  color: var(--dc-acc2, #ff8a4c);
+  color: #ff8a4c;
 }
 
 .secondaryBtnHint {
-  color: var(--dc-p3, #505050);
+  color: #6b6b6b;
 }
 
 .fileChip {
-  background: var(--dc-s3, #282828);
-  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
-  color: var(--dc-p1, #f2f2f2);
+  background: rgba(40, 40, 40, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f5f5f5;
 }
 
 .fileChipSize {
-  color: var(--dc-p3, #505050);
+  color: #6b6b6b;
 }
 
 .fileChipRemove {
-  color: var(--dc-p3, #505050);
-  &:hover { color: var(--dc-red, #f87171); }
+  color: #6b6b6b;
+  &:hover { color: #f87171; }
 }
 
 // ── Merge panel ──────────────────────────────────────────────────────────────
 
 .mergePanel {
-  background: var(--dc-s2, #1e1e1e);
-  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+  background: rgba(30, 30, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .mergeAddFile {
-  border: 1px dashed var(--dc-bdr2, rgba(255, 255, 255, 0.13));
+  border: 1px dashed rgba(255, 255, 255, 0.2);
 }
 
 // ── Tagline ──────────────────────────────────────────────────────────────────
 
 .tagline {
-  color: var(--dc-p3, #505050);
+  color: #6b6b6b;
 }
