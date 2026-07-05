@@ -1,0 +1,168 @@
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
+
+.section {
+  padding-block: 80px;
+  background: #f8fafc;
+}
+
+.header {
+  max-inline-size: 68rem;
+  margin-inline: auto;
+  padding-inline: 24px;
+  margin-block-end: 32px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin-block-start: 8px;
+}
+
+.panel {
+  max-inline-size: 68rem;
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-block-end: 20px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.kpiTile {
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.kpiLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  margin-block-end: 8px;
+}
+
+.kpiValue {
+  font-size: 18px;
+  font-weight: 900;
+  font-family: var(--font-mono, monospace);
+  color: #0f172a;
+}
+
+.ring {
+  inline-size: 52px;
+  block-size: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+  margin-block-end: 8px;
+  font-size: 12px;
+  font-weight: 900;
+  font-family: var(--font-mono, monospace);
+  color: #0f172a;
+  background: conic-gradient(var(--ring-color, #2563eb) var(--ring-percent, 0%), #e2e8f0 0);
+}
+
+.ringInner {
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.chartCard {
+  border-radius: 16px;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.chartLabel {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-block-end: 10px;
+}
+
+.chartSvg {
+  inline-size: 100%;
+  block-size: 80px;
+  overflow: visible;
+}
+
+.linePath {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.riskLinePath {
+  fill: none;
+  stroke: #f97316;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.areaFill {
+  fill: url('#dcAreaGradient');
+  opacity: 0;
+}
+
+.areaLine {
+  fill: none;
+  stroke: #8b5cf6;
+  stroke-width: 2;
+}
+
+.barsRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  block-size: 80px;
+}
+
+.bar {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, #2563eb, #38bdf8);
+  transform-origin: bottom;
+  block-size: var(--bar-height, 0%);
+}

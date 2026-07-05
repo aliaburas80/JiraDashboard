@@ -395,7 +395,7 @@ const SECTIONS: Section[] = [
   {
     id: 'about', icon: 'home', title: 'About / Feature Overview',
     items: [
-      { q: 'What is the About (Landing) page?', a: 'The /landing page is an in-app product showcase. It has an animated hero with quick links to the upload page and dashboard, key product stats, a "How it works" section, all 12 major features as clickable cards, a business-value section, an illustrative dashboard preview, and a branded CTA footer with an option to try the sample dataset. Access it via Reference → About in the nav, or click "See everything it does →" on the upload page.' },
+      { q: 'What is the About (Landing) page?', a: 'The /landing page is an in-app product showcase. It has a full-screen animated hero with quick links to the upload page and dashboard, a diagram of how a Jira export becomes delivery decisions, key product stats, a "How it works" section, all 12 major features as clickable cards, a business-value section, an illustrative dashboard preview, and a branded CTA footer with an option to try the sample dataset. A left-side progress rail (desktop only) lets you jump between sections. Access it via Reference → About in the nav, or click "See everything it does →" on the upload page.' },
       { q: 'Which features are shown on the landing page?', a: 'Sprint Throughput, Work Item Explorer, Upload-to-Upload Trends, Team Health, Portfolio Summary, Release Readiness, Visual Analytics, Customer View, Smart Export Suite, Dashboard Snapshots, Data Quality Score, and Admin Diagnostics.' },
     ],
   },

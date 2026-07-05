@@ -1,0 +1,75 @@
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
+// Fixed on the far left, well below the shared app header, so it never
+// overlaps or competes with the global navigation (see AppShell.module.scss's
+// `.header`, position:fixed, height var(--header-height)).
+
+.rail {
+  display: none;
+  position: fixed;
+  inset-inline-start: 20px;
+  inset-block-start: calc(var(--header-height, 52px) + 64px);
+  z-index: 10;
+  flex-direction: column;
+  gap: 14px;
+
+  @media (min-width: 1280px) {
+    display: flex;
+  }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.dot {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.item:hover .label,
+.item:focus-visible .label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.item:focus-visible {
+  outline: var(--focus-ring-width, 2px) solid #2563eb;
+  outline-offset: 2px;
+}
+
+.itemActive {
+  .dot {
+    background: #2563eb;
+    transform: scale(1.35);
+  }
+
+  .label {
+    opacity: 1;
+    transform: translateX(0);
+    color: #2563eb;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot, .label { transition: none; }
+}

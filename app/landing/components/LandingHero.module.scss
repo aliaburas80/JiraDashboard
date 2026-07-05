@@ -1,0 +1,288 @@
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
+// Full-bleed dark hero — breaks out of AppShell's `.main` centering/padding
+// (same recipe as app/page.module.scss's `.page`) so it starts immediately
+// under the shared nav and spans the full viewport width.
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  inline-size: 100vw;
+  margin-inline: calc(50% - 50vw);
+  margin-block-start: calc(-1 * (var(--header-height, 52px) + var(--space-6, 24px)));
+  min-block-size: calc(100vh - var(--header-height, 52px));
+  background: #020817;
+  display: flex;
+  align-items: center;
+}
+
+
+.inner {
+  position: relative;
+  z-index: 1;
+  inline-size: 100%;
+  max-inline-size: 84rem;
+  margin-inline: auto;
+  padding-inline: 24px;
+  padding-block: 64px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  align-items: center;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+}
+
+.copy {
+  text-align: center;
+
+  @media (min-width: 1024px) {
+    text-align: start;
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 100px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(37, 99, 235, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  margin-block-end: 20px;
+}
+
+.title {
+  color: #f8fafc;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+// Glowing gradient highlight for the emphasized phrase.
+.highlight {
+  background: linear-gradient(90deg, #38bdf8, #f97316);
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 40px rgba(249, 115, 22, 0.25);
+}
+
+.subhead {
+  color: #94a3b8;
+  margin-block-start: 16px;
+  max-inline-size: 40rem;
+  margin-inline: auto;
+
+  @media (min-width: 1024px) {
+    margin-inline: 0;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-block-start: 28px;
+
+  @media (min-width: 1024px) {
+    justify-content: flex-start;
+  }
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: background-color 0.2s;
+
+  &:hover { background: rgba(255, 255, 255, 0.1); }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid #38bdf8;
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+}
+
+.trustChips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-block-start: 24px;
+
+  @media (min-width: 1024px) {
+    justify-content: flex-start;
+  }
+}
+
+.trustChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #86efac;
+}
+
+// ── Dashboard mockup (CSS/HTML, no image) ──────────────────────────────────
+
+.mockupWrap {
+  position: relative;
+}
+
+.mockup {
+  position: relative;
+  border-radius: 20px;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.mockupTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #f8fafc;
+  margin-block-end: 14px;
+}
+
+.mockupKpiGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-block-end: 14px;
+}
+
+.mockupKpi {
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mockupKpiLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.mockupKpiValue {
+  font-size: 17px;
+  font-weight: 900;
+  font-family: var(--font-mono, monospace);
+  color: var(--kpi-color, #f8fafc);
+  margin-block-start: 2px;
+}
+
+.mockupChartsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.mockupChartCard {
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mockupChartLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-block-end: 6px;
+}
+
+.sparkline {
+  inline-size: 100%;
+  block-size: 40px;
+  overflow: visible;
+}
+
+.sparklinePath {
+  fill: none;
+  stroke: #38bdf8;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.barsRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  block-size: 40px;
+}
+
+.bar {
+  flex: 1;
+  block-size: var(--bar-height, 0%);
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, #f97316, #fb923c);
+  transform-origin: bottom;
+}
+
+// ── Floating mini-cards ─────────────────────────────────────────────────────
+
+.floats {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  display: none;
+
+  @media (min-width: 1024px) {
+    display: block;
+  }
+}
+
+.floatCard {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-radius: 14px;
+  padding: 10px 14px;
+  min-inline-size: 108px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  animation: floatDrift 6s ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s);
+}
+
+.floatLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.floatValue {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--float-color, #f8fafc);
+}
+
+@keyframes floatDrift {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floatCard { animation: none; }
+}
