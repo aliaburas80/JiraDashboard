@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { hasMetricsFromAnySource } from '@/lib/storage';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
 import loginStyles from './page.module.scss';
 
@@ -177,8 +178,7 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <input
-              type="password"
+            <PasswordInput
               name="password"
               autoComplete="current-password"
               value={password}
