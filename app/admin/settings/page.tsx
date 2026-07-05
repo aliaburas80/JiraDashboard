@@ -442,6 +442,15 @@ function CloudStorageSettings() {
   const [s3Form,   setS3Form]   = useState({ bucket: '', region: 'us-east-1', prefix: '', endpoint: '', accessKeyId: '', secretAccessKey: '' });
   const [azForm,   setAzForm]   = useState({ containerName: '', connectionString: '', prefix: '' });
   const [gcpForm,  setGcpForm]  = useState({ bucket: '', projectId: '', prefix: '', keyJson: '' });
+  // EP-022: last-known-good state to revert to on Cancel — captured on initial
+  // load and refreshed after every successful save, never on every keystroke.
+  const [formSnapshot, setFormSnapshot] = useState<{
+    active: StorageProviderType;
+    s3Form: typeof s3Form;
+    azForm: typeof azForm;
+    gcpForm: typeof gcpForm;
+  } | null>(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   // The provider that is actually saved server-side
   const savedProvider: StorageProviderType = data?.settings?.active ?? 'local';
@@ -493,6 +502,25 @@ function CloudStorageSettings() {
           prefix: d.settings.gcp.prefix ?? '',
         }));
       }
+      // EP-022: snapshot built directly from the fetched settings (not from
+      // state, which wouldn't be updated yet) so Cancel has something correct
+      // to revert to from the very first render.
+      setFormSnapshot({
+        active: svd,
+        s3Form: {
+          bucket: d.settings?.s3?.bucket ?? '', region: d.settings?.s3?.region ?? 'us-east-1',
+          prefix: d.settings?.s3?.prefix ?? '', endpoint: d.settings?.s3?.endpoint ?? '',
+          accessKeyId: '', secretAccessKey: '',
+        },
+        azForm: {
+          containerName: d.settings?.azure?.containerName ?? '', connectionString: '',
+          prefix: d.settings?.azure?.prefix ?? '',
+        },
+        gcpForm: {
+          bucket: d.settings?.gcp?.bucket ?? '', projectId: d.settings?.gcp?.projectId ?? '',
+          prefix: d.settings?.gcp?.prefix ?? '', keyJson: '',
+        },
+      });
     }).catch(() => setMsg({ text: 'Failed to load storage settings.', ok: false }));
   }, []);
 
@@ -544,12 +572,42 @@ function CloudStorageSettings() {
           },
         }));
         setEditMode(active === 's3' && !s3HasTypedCredentials && !savedS3HasCredentialSource);
+        // EP-022: a successful save becomes the new "last known good" state —
+        // Cancel after this point reverts to what was just saved, not the
+        // page's original load state.
+        setFormSnapshot({ active, s3Form, azForm, gcpForm });
         return true;
       }
       setMsg({ text: `Save failed: ${d.error}`, ok: false });
       return false;
     } catch { setMsg({ text: 'Save failed. Please try again.', ok: false }); return false; }
     finally { setSaving(false); }
+  }
+
+  // ── Cancel — discard in-progress edits, revert to the last-saved state ─────
+
+  const hasUnsavedChanges = !!formSnapshot && (
+    active !== formSnapshot.active ||
+    JSON.stringify(s3Form)  !== JSON.stringify(formSnapshot.s3Form) ||
+    JSON.stringify(azForm)  !== JSON.stringify(formSnapshot.azForm) ||
+    JSON.stringify(gcpForm) !== JSON.stringify(formSnapshot.gcpForm)
+  );
+
+  function revertToSnapshot() {
+    if (formSnapshot) {
+      setActive(formSnapshot.active);
+      setS3Form(formSnapshot.s3Form);
+      setAzForm(formSnapshot.azForm);
+      setGcpForm(formSnapshot.gcpForm);
+    }
+    setMsg(null);
+    setEditMode(false);
+    setShowCancelConfirm(false);
+  }
+
+  function handleCancel() {
+    if (hasUnsavedChanges) { setShowCancelConfirm(true); return; }
+    revertToSnapshot();
   }
 
   // ── Test — saves first, then tests ─────────────────────────────────────────
@@ -752,7 +810,21 @@ function CloudStorageSettings() {
                 className="btn-green px-5 py-2 text-sm">{uploading ? 'Uploading…' : 'Upload backup now'}</button>
             </>
           )}
+          {/* EP-022: exits the change-provider flow without saving anything —
+              reverts every field to the last-saved state. */}
+          <button type="button" onClick={handleCancel} disabled={saving}
+            className="btn-secondary px-5 py-2 text-sm">Cancel</button>
         </div>
+      )}
+      {showCancelConfirm && (
+        <ConfirmDeleteDialog
+          title="Discard unsaved changes?"
+          message="Your provider selection and any credentials you've typed will be discarded and reverted to the last saved settings. This does not affect what's currently saved or synced."
+          confirmLabel="Discard changes"
+          danger={false}
+          onConfirm={revertToSnapshot}
+          onCancel={() => setShowCancelConfirm(false)}
+        />
       )}
       {isLocked && (savedProvider as string) !== 'local' && (
         <div className="flex flex-wrap gap-3">
