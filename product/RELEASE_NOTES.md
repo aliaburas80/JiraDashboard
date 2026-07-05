@@ -5,6 +5,12 @@
 
 ---
 
+## Cancel Button on "Change Provider" (Cloud Storage Settings) (2026-07-05, P2)
+
+**Third follow-on branch from the same large request (§5).** Admin Settings → Cloud Storage → "Change provider" previously had no way out except Save or reloading the page. Added a Cancel button that reverts every field to the last-saved settings and asks for confirmation first if anything was actually changed — nothing is saved when you cancel. Not verified in a live browser this session (no browser-automation tool available for this specific panel); recommended a quick manual pass before relying on it in production.
+
+---
+
 ## Show/Hide Toggle on Every Password and Secret Field (2026-07-05, P2)
 
 **Second follow-on branch from the same large request as the isolation fix below (§4: password visibility).** Every password/token/secret input in the app — login, register, forgot/reset password, change password, admin SMTP password, Jira API token, S3/Azure credentials, admin "Add User" temp password — now has a working eye icon to reveal/hide the value, via one new shared `PasswordInput` component rather than 14 separate implementations. GCP's Service Account JSON field is a separate case (a textarea, already unmasked by default) and is tracked as its own smaller follow-up rather than bundled in here. No automated test coverage (this repo has no component-testing setup); recommended a quick manual click-through before relying on it in production.

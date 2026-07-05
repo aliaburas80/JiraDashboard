@@ -1759,3 +1759,23 @@ New shared `src/components/ui/PasswordInput.tsx` — drop-in replacement for `<i
 **Manual verification performed:** started the dev server and curled `/login` (Tailwind-styled form) and `/register` (SCSS-Module-styled form) — the two different styling systems this component has to work correctly under. Both returned HTTP 200 with the eye icon (`0153-eye-open.svg`) and `aria-label="Show password"` present in the server-rendered HTML, confirming the component mounts and renders without error under both styling conventions.
 
 **Not verified:** the actual click-to-reveal interaction in a live browser — no browser-automation tool was available this session. **Recommended before shipping:** manually click the eye icon on at least one Tailwind field (e.g. `/login`) and one SCSS-Module field (e.g. `/register`) and confirm the password becomes visible as plain text and the icon/aria-label swap to "Hide password"; also spot-check one of the admin secret fields (Jira token or S3 keys) since those sit inside more complex parent layouts.
+
+## 9.74 — EP-022: Cancel Button on Cloud Storage "Change Provider"
+
+*(Added 2026-07-05. Fourth follow-on branch from the same large merged request as §9.72/§9.73 — this section covers §5, the Change Provider Cancel button.)*
+
+`CloudStorageSettings` (`app/admin/settings/page.tsx`) gained a `formSnapshot` state — captured directly from the fetched settings on initial load, and refreshed after every successful save — plus a Cancel button next to Save/Test/Upload:
+
+| Behavior | Expected |
+|---|---|
+| Click Cancel with no unsaved changes | Immediately reverts (no-op since nothing differs) and exits edit mode |
+| Click Cancel with unsaved changes (different provider selected or a credential field typed) | Confirmation dialog appears (`ConfirmDeleteDialog`, `danger={false}`, "Discard unsaved changes?") before anything is reverted |
+| Confirming the discard | Provider selection and all credential fields (S3/Azure/GCP) reset to `formSnapshot`; status message cleared; edit mode closes, returning to the locked view showing the previously-saved provider |
+| Cancel itself | Never calls `handleSave`, never calls `pushToCloud`/persists anything — purely a client-side state revert |
+| After a successful Save | The snapshot updates to the just-saved state, so a subsequent Cancel reverts to that, not the original page-load state |
+
+**Automated coverage:** none (same no-component-testing-infrastructure limitation as §9.73). Full suite unchanged at 872/94 passing; `npx tsc --noEmit` clean.
+
+**Attempted but inconclusive verification:** tried the same curl-smoke-check technique used for §9.73 (create a throwaway admin, log in, curl the page) but `CloudStorageSettings` only renders its real markup after a client-side data fetch resolves, and the tab itself is selected via a `?tab=cloud` query param read client-side — so the pre-hydration HTML curl receives never contains this component's actual content, unlike the standalone `/login`/`/register` pages used for §9.73. This was not swept under the rug — full typecheck and test suite were run instead, and the existing `isLocked`/`editMode`/`savedProvider` state machine this change plugs into was reviewed carefully to confirm Cancel's revert logic is consistent with it.
+
+**Recommended manual QA before shipping:** as an admin, go to Admin Settings → Cloud Storage, click "Change provider," change the provider dropdown and/or type a credential, click Cancel — confirm a confirmation prompt appears, confirm it, and verify (a) the form returns to showing the previously-saved provider as locked/active, (b) reloading the page confirms nothing was actually persisted.
