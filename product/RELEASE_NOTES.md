@@ -5,6 +5,12 @@
 
 ---
 
+## Landing Page Rebuild, Premium SaaS Direction (2026-07-05, P2)
+
+`/landing` has been rebuilt again, this time to a "dark hero, then clean light pages" direction — a full-screen dark hero at the top with an animated background, floating stat cards, and a live-looking dashboard preview, followed by clean white/light sections for everything else. Two new sections were added: a horizontal "export → engine → decisions" product-flow diagram, and a fuller dashboard preview with animated charts and rings. Numbers count up as you scroll to them, cards reveal in sequence, and a small progress rail on the left (desktop only) shows which section you're in and lets you jump to any of them. The top navigation bar is completely unchanged — this page just sits below it, like every other page. Nothing about uploading, dashboards, or any existing route changed.
+
+---
+
 ## Landing Page Redesign (2026-07-05, P2)
 
 `/landing` has been rebuilt into a fuller, more premium product page. The hero now has floating mini-cards (Sprint Health, Release Readiness, Data Quality, Team Capacity, Risk Signals), a two-tone gradient headline, and a small preview panel. Two new sections were added: "Turn Jira exports into delivery decisions" (four concrete ways teams use the product) and a dashboard preview showing what your metrics will look like. The final call-to-action now offers three options — Upload Jira Export, Try Sample Dataset, and Developer Portal — and everything animates in gently as you scroll, with full support for reduced-motion preferences. Nothing about uploading, dashboards, or any existing route changed — this is the landing/marketing page only.

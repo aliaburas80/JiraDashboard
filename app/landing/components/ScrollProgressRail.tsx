@@ -1,0 +1,63 @@
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import clsx from 'clsx';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { prefersReducedMotion, ensureGsapPlugins } from '../hooks/useGsapContext';
+import styles from './ScrollProgressRail.module.scss';
+
+export const LANDING_SECTIONS = [
+  { id: 'landing-hero',      label: '01 Hero' },
+  { id: 'product-flow',      label: '02 Product Flow' },
+  { id: 'how-it-works',      label: '03 How It Works' },
+  { id: 'metrics-strip',     label: '04 Metrics Strip' },
+  { id: 'feature-universe',  label: '05 Feature Universe' },
+  { id: 'dashboard-preview', label: '06 Dashboard Preview' },
+  { id: 'business-value',    label: '07 Business Value' },
+  { id: 'final-cta',         label: '08 Final CTA' },
+] as const;
+
+export default function ScrollProgressRail() {
+  const [activeId, setActiveId] = useState<string>(LANDING_SECTIONS[0].id);
+  const triggersRef = useRef<ScrollTrigger[]>([]);
+
+  useEffect(() => {
+    ensureGsapPlugins();
+    const triggers = LANDING_SECTIONS.map(({ id }) => {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      return ScrollTrigger.create({
+        trigger: el,
+        start: 'top center',
+        end: 'bottom center',
+        onToggle: self => { if (self.isActive) setActiveId(id); },
+      });
+    }).filter((t): t is ScrollTrigger => t !== null);
+    triggersRef.current = triggers;
+
+    return () => triggers.forEach(t => t.kill());
+  }, []);
+
+  function scrollToSection(id: string) {
+    const el = document.getElementById(id);
+    el?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  return (
+    <nav className={styles.rail} aria-label="Landing page section progress">
+      {LANDING_SECTIONS.map(section => (
+        <button
+          key={section.id}
+          type="button"
+          onClick={() => scrollToSection(section.id)}
+          className={clsx(styles.item, { [styles.itemActive]: activeId === section.id })}
+          aria-current={activeId === section.id ? 'true' : undefined}
+        >
+          <span className={styles.dot} aria-hidden="true" />
+          <span className={styles.label}>{section.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
