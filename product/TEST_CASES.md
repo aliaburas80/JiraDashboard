@@ -1779,3 +1779,33 @@ New shared `src/components/ui/PasswordInput.tsx` — drop-in replacement for `<i
 **Attempted but inconclusive verification:** tried the same curl-smoke-check technique used for §9.73 (create a throwaway admin, log in, curl the page) but `CloudStorageSettings` only renders its real markup after a client-side data fetch resolves, and the tab itself is selected via a `?tab=cloud` query param read client-side — so the pre-hydration HTML curl receives never contains this component's actual content, unlike the standalone `/login`/`/register` pages used for §9.73. This was not swept under the rug — full typecheck and test suite were run instead, and the existing `isLocked`/`editMode`/`savedProvider` state machine this change plugs into was reviewed carefully to confirm Cancel's revert logic is consistent with it.
 
 **Recommended manual QA before shipping:** as an admin, go to Admin Settings → Cloud Storage, click "Change provider," change the provider dropdown and/or type a credential, click Cancel — confirm a confirmation prompt appears, confirm it, and verify (a) the form returns to showing the previously-saved provider as locked/active, (b) reloading the page confirms nothing was actually persisted.
+
+## 9.75 — EP-023: Manual Admin Reset for Non-`deliveryclarity.app` Users
+
+*(Added 2026-07-05. Fifth and final follow-on branch from the same large merged request as §9.72–§9.74 — this section covers §6, resetting external users' data. Manual-only per the user's explicit choice when asked how this should run.)*
+
+New `src/services/settings/userReset.service.ts` — `previewUserReset(userId)` (dry-run) and `resetUserData(userId, actorId)` (actual delete + one `user_data_reset` audit event). Both refuse, server-side, any target whose email ends in `@deliveryclarity.app` (case-insensitive).
+
+| ID | Test | Expected | Status |
+|----|------|----------|--------|
+| TC-RESET-01 | `previewUserReset` on an internal `@deliveryclarity.app` account | `blocked: true`, no count queries issued | ✅ Automated — `userReset.test.ts` |
+| TC-RESET-02 | `previewUserReset` on an eligible external user | Correct `importLogs`/`dashboardSnapshots`/`jiraConnections`/`hasScopedMetricsFile` counts | ✅ Automated |
+| TC-RESET-03 | `previewUserReset` on an unknown user id | Throws `User not found.` | ✅ Automated |
+| TC-RESET-04 | `resetUserData` on an internal account | `success: false`, clear error, **zero** `deleteMany` calls issued | ✅ Automated |
+| TC-RESET-05 | `resetUserData` on an external user with data | Deletes the rows, deletes the scoped metrics file, logs `user_data_reset` audit event with counts | ✅ Automated |
+| TC-RESET-06 | `resetUserData` never modifies the `User` row itself | Only `importLog`/`dashboardSnapshot`/`jiraConnection` deletes are called | ✅ Automated |
+| TC-RESET-07 | `resetUserData` when no scoped metrics file exists | Succeeds without calling `fs.unlinkSync` | ✅ Automated |
+| TC-RESET-08 | `listExternalUsersEligibleForReset` query shape | `where.NOT.email.endsWith === '@deliveryclarity.app'` | ✅ Automated |
+| TC-RESET-09 | Scoped-file check prefers the user's workspace scope key | Checks `metrics/ws_<workspaceId>.json`, not a bare user key, when a workspace exists | ✅ Automated |
+| TC-RESET-10 | Internal-domain check is case-insensitive | `Someone@DeliveryClarity.App` is still blocked | ✅ Automated |
+
+**API:** `GET`/`POST /api/admin/users/:id/reset-preview` and `/reset`, admin-only (401/403 otherwise). Reset returns 409 with the blocked reason for internal accounts.
+
+**UI (`app/admin/users/page.tsx`):** per-row "Reset data" button — hidden entirely for `@deliveryclarity.app` accounts — opens a dry-run preview modal before a confirm step. A header-level "Reset external users' data" button opens a bulk flow: select users (only non-internal accounts are ever listed), preview all selected at once, then a single confirmation step listing every selected user's counts before executing sequentially.
+
+**Manual end-to-end verification (real dev database, throwaway accounts):** created a throwaway admin, an external user (`ep023-verify-external@example.com`) seeded with 1 `ImportLog` + 1 `DashboardSnapshot`, and an internal user (`ep023-verify-internal@deliveryclarity.app`). Confirmed:
+- Preview and reset on the internal account both returned a clear refusal (reset: HTTP 409) — no rows touched.
+- Preview on the external account correctly reported 1 import log, 1 snapshot, 0 Jira connections.
+- Reset on the external account returned `{ importLogsDeleted: 1, snapshotsDeleted: 1, jiraConnectionsDeleted: 0 }`; confirmed directly against the database afterward that both rows were gone, the audit event was logged with the exact expected description, and the account itself was untouched (`isActive: true`, `role: 'user'`, login still worked).
+
+All three throwaway accounts (and their workspaces/data) were deleted after verification. Full suite 882/95 passing, typecheck clean.

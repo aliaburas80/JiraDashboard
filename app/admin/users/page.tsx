@@ -17,6 +17,20 @@ const ALL_ROLES: AppRole[] = ['admin', 'scrum_master', 'product_owner', 'manager
 interface CreateForm { name: string; email: string; password: string; role: AppRole }
 const EMPTY_FORM: CreateForm = { name: '', email: '', password: '', role: 'scrum_master' };
 
+// EP-023: internal @deliveryclarity.app accounts are never eligible for the
+// workspace-data reset tool — enforced again server-side in userReset.service.ts,
+// this is just so the button never appears for them in the first place.
+const INTERNAL_EMAIL_DOMAIN = '@deliveryclarity.app';
+function isInternalUser(email: string): boolean {
+  return email.toLowerCase().endsWith(INTERNAL_EMAIL_DOMAIN);
+}
+
+interface ResetPreview {
+  userId: string; email: string;
+  importLogs: number; dashboardSnapshots: number; jiraConnections: number;
+  hasScopedMetricsFile: boolean; blocked: boolean; blockedReason?: string;
+}
+
 export default function AdminUsersPage() {
   const router = useRouter();
   const [users, setUsers]           = useState<ManagedUser[]>([]);
@@ -35,6 +49,22 @@ export default function AdminUsersPage() {
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [bulkRole, setBulkRole]             = useState<AppRole>('scrum_master');
   const [bulkProcessing, setBulkProcessing] = useState(false);
+
+  // EP-023: manual, admin-triggered workspace-data reset for non-internal users.
+  const [resetTarget, setResetTarget]           = useState<ManagedUser | null>(null);
+  const [resetPreview, setResetPreview]         = useState<ResetPreview | null>(null);
+  const [resetPreviewLoading, setResetPreviewLoading] = useState(false);
+  const [resetConfirming, setResetConfirming]   = useState(false);
+  const [resetError, setResetError]             = useState('');
+
+  // Bulk "reset all external users" — separate from the bulk role/delete bar
+  // above since domain-eligibility is the selection criteria here, not role.
+  const [showBulkReset, setShowBulkReset]           = useState(false);
+  const [bulkResetSelected, setBulkResetSelected]   = useState<Set<string>>(new Set());
+  const [bulkResetPreviews, setBulkResetPreviews]   = useState<Record<string, ResetPreview>>({});
+  const [bulkResetLoading, setBulkResetLoading]     = useState(false);
+  const [bulkResetConfirming, setBulkResetConfirming] = useState(false);
+  const [bulkResetConfirmStep, setBulkResetConfirmStep] = useState(false);
 
   const loadUsers = useCallback(async () => {
     const res = await fetch('/api/admin/users');
@@ -135,6 +165,101 @@ export default function AdminUsersPage() {
     finally { setSaving(false); }
   }
 
+  // ── EP-023: single-user workspace-data reset — dry-run, then confirm ───────
+
+  async function openResetPreview(user: ManagedUser) {
+    setResetTarget(user);
+    setResetPreview(null);
+    setResetError('');
+    setResetPreviewLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/reset-preview`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Failed to load reset preview.');
+      setResetPreview(data.preview);
+    } catch (e: unknown) {
+      setResetError((e as Error).message);
+    } finally {
+      setResetPreviewLoading(false);
+    }
+  }
+
+  async function confirmReset() {
+    if (!resetTarget) return;
+    setResetConfirming(true);
+    try {
+      const res = await fetch(`/api/admin/users/${resetTarget.id}/reset`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Reset failed.');
+      setUsers(prev => prev.map(u => u.id === resetTarget.id ? { ...u, importCount: 0 } : u));
+      setSuccessMsg(`✅ Workspace data reset for ${resetTarget.email}: ${data.importLogsDeleted} import logs, ${data.snapshotsDeleted} snapshots, ${data.jiraConnectionsDeleted} Jira connections deleted.`);
+      setResetTarget(null);
+      setResetPreview(null);
+    } catch (e: unknown) {
+      setResetError((e as Error).message);
+    } finally {
+      setResetConfirming(false);
+    }
+  }
+
+  // ── EP-023: bulk "reset all external users" — dry-run every selected user first ──
+
+  const externalUsers = users.filter(u => !isInternalUser(u.email));
+
+  function toggleBulkResetSelect(id: string) {
+    setBulkResetSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function loadBulkResetPreviews() {
+    setBulkResetLoading(true);
+    setResetError('');
+    try {
+      const entries = await Promise.all([...bulkResetSelected].map(async id => {
+        const res = await fetch(`/api/admin/users/${id}/reset-preview`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? `Failed to preview ${id}.`);
+        return [id, data.preview as ResetPreview] as const;
+      }));
+      setBulkResetPreviews(Object.fromEntries(entries));
+      setBulkResetConfirmStep(true);
+    } catch (e: unknown) {
+      setResetError((e as Error).message);
+    } finally {
+      setBulkResetLoading(false);
+    }
+  }
+
+  async function confirmBulkReset() {
+    setBulkResetConfirming(true);
+    const ids = [...bulkResetSelected];
+    let totalLogs = 0, totalSnaps = 0, totalConns = 0, failed = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch(`/api/admin/users/${id}/reset`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) { failed++; continue; }
+        totalLogs += data.importLogsDeleted ?? 0;
+        totalSnaps += data.snapshotsDeleted ?? 0;
+        totalConns += data.jiraConnectionsDeleted ?? 0;
+      } catch { failed++; }
+    }
+    setUsers(prev => prev.map(u => ids.includes(u.id) ? { ...u, importCount: 0 } : u));
+    setSuccessMsg(
+      `✅ Reset ${ids.length - failed} of ${ids.length} user${ids.length !== 1 ? 's' : ''}: `
+      + `${totalLogs} import logs, ${totalSnaps} snapshots, ${totalConns} Jira connections deleted.`
+      + (failed > 0 ? ` ${failed} failed.` : ''),
+    );
+    setBulkResetSelected(new Set());
+    setBulkResetPreviews({});
+    setBulkResetConfirmStep(false);
+    setShowBulkReset(false);
+    setBulkResetConfirming(false);
+  }
+
   async function createUser(e: React.FormEvent) {
     e.preventDefault();
     setFormErr('');
@@ -178,13 +303,24 @@ export default function AdminUsersPage() {
       stats={stats}
       statusLabel={`${active} active`}
       actions={
-        <button
-          type="button"
-          className={styles.addUserBtn}
-          onClick={() => { setShowCreate(true); setFormErr(''); setForm(EMPTY_FORM); }}
-        >
-          + Add User
-        </button>
+        <div className="flex items-center gap-2">
+          {externalUsers.length > 0 && (
+            <button
+              type="button"
+              className="btn-secondary btn-sm"
+              onClick={() => { setShowBulkReset(true); setBulkResetSelected(new Set()); setBulkResetConfirmStep(false); setResetError(''); }}
+            >
+              Reset external users&apos; data
+            </button>
+          )}
+          <button
+            type="button"
+            className={styles.addUserBtn}
+            onClick={() => { setShowCreate(true); setFormErr(''); setForm(EMPTY_FORM); }}
+          >
+            + Add User
+          </button>
+        </div>
       }
     >
       {/* ── Success / error banners ── */}
@@ -410,17 +546,29 @@ export default function AdminUsersPage() {
                     </span>
                   </td>
 
-                  {/* Delete */}
+                  {/* Delete + EP-023 workspace-data reset */}
                   <td className={styles.td}>
-                    {!isLocked && (
-                      <button
-                        type="button"
-                        onClick={() => setConfirmDelete(user)}
-                        className={styles.deleteBtn}
-                      >
-                        Delete
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {!isLocked && (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDelete(user)}
+                          className={styles.deleteBtn}
+                        >
+                          Delete
+                        </button>
+                      )}
+                      {!isInternalUser(user.email) && (
+                        <button
+                          type="button"
+                          onClick={() => openResetPreview(user)}
+                          className="btn-secondary btn-sm"
+                          title="Reset this user's uploaded workspace data — never their account"
+                        >
+                          Reset data
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );
@@ -489,6 +637,135 @@ export default function AdminUsersPage() {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── EP-023: single-user workspace-data reset — dry-run preview, then confirm ── */}
+      {resetTarget && (
+        <div className={styles.confirmOverlay}>
+          <div className={styles.confirmModal}>
+            <p className={styles.confirmTitle}>Reset workspace data?</p>
+            <p className={styles.confirmText}>
+              This resets <strong>{resetTarget.name}</strong> ({resetTarget.email}) back to an
+              empty workspace. Their account, login, and role are not affected — only their
+              uploaded Jira data.
+            </p>
+            {resetPreviewLoading && <p className={styles.confirmText}>Loading preview…</p>}
+            {resetError && <p className="text-sm font-semibold text-red-600 mt-2">{resetError}</p>}
+            {resetPreview && !resetPreview.blocked && (
+              <ul className="text-sm text-slate-600 mt-2 mb-2 list-disc list-inside">
+                <li>{resetPreview.importLogs} import log{resetPreview.importLogs !== 1 ? 's' : ''}</li>
+                <li>{resetPreview.dashboardSnapshots} dashboard snapshot{resetPreview.dashboardSnapshots !== 1 ? 's' : ''}</li>
+                <li>{resetPreview.jiraConnections} Jira connection{resetPreview.jiraConnections !== 1 ? 's' : ''}</li>
+                <li>Dashboard metrics file: {resetPreview.hasScopedMetricsFile ? 'present, will be deleted' : 'none'}</li>
+              </ul>
+            )}
+            {resetPreview?.blocked && (
+              <p className="text-sm font-semibold text-red-600 mt-2 mb-2">{resetPreview.blockedReason}</p>
+            )}
+            <div className={styles.confirmActions}>
+              <button
+                type="button"
+                onClick={confirmReset}
+                disabled={resetConfirming || resetPreviewLoading || resetPreview?.blocked}
+                className={styles.confirmDelete}
+              >
+                {resetConfirming ? 'Resetting…' : 'Yes, reset workspace data'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setResetTarget(null); setResetPreview(null); setResetError(''); }}
+                className={styles.confirmCancel}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── EP-023: bulk "reset all external users" — select, dry-run, then confirm ── */}
+      {showBulkReset && (
+        <div className={styles.confirmOverlay}>
+          <div className={styles.confirmModal}>
+            {!bulkResetConfirmStep ? (
+              <>
+                <p className={styles.confirmTitle}>Reset external users&apos; workspace data</p>
+                <p className={styles.confirmText}>
+                  Select which non-{INTERNAL_EMAIL_DOMAIN} accounts to reset. Internal accounts
+                  are never shown here or eligible for this tool.
+                </p>
+                <div className="max-h-64 overflow-y-auto my-3 border border-slate-200 rounded-lg divide-y divide-slate-100">
+                  {externalUsers.map(u => (
+                    <label key={u.id} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-slate-50">
+                      <input
+                        type="checkbox"
+                        checked={bulkResetSelected.has(u.id)}
+                        onChange={() => toggleBulkResetSelect(u.id)}
+                      />
+                      <span className="font-semibold text-slate-700">{u.name}</span>
+                      <span className="text-slate-400">{u.email}</span>
+                    </label>
+                  ))}
+                </div>
+                {resetError && <p className="text-sm font-semibold text-red-600 mb-2">{resetError}</p>}
+                <div className={styles.confirmActions}>
+                  <button
+                    type="button"
+                    onClick={loadBulkResetPreviews}
+                    disabled={bulkResetSelected.size === 0 || bulkResetLoading}
+                    className={styles.confirmDelete}
+                  >
+                    {bulkResetLoading ? 'Loading preview…' : `Preview ${bulkResetSelected.size || ''} reset${bulkResetSelected.size !== 1 ? 's' : ''}`}
+                  </button>
+                  <button type="button" onClick={() => setShowBulkReset(false)} className={styles.confirmCancel}>
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className={styles.confirmTitle}>
+                  Confirm reset for {bulkResetSelected.size} user{bulkResetSelected.size !== 1 ? 's' : ''}
+                </p>
+                <div className="max-h-64 overflow-y-auto my-3 border border-slate-200 rounded-lg divide-y divide-slate-100">
+                  {[...bulkResetSelected].map(id => {
+                    const p = bulkResetPreviews[id];
+                    if (!p) return null;
+                    return (
+                      <div key={id} className="px-3 py-2 text-sm">
+                        <div className="font-semibold text-slate-700">{p.email}</div>
+                        {p.blocked ? (
+                          <div className="text-red-600 text-xs">{p.blockedReason}</div>
+                        ) : (
+                          <div className="text-slate-500 text-xs">
+                            {p.importLogs} import logs · {p.dashboardSnapshots} snapshots · {p.jiraConnections} Jira connections
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className={styles.confirmActions}>
+                  <button
+                    type="button"
+                    onClick={confirmBulkReset}
+                    disabled={bulkResetConfirming}
+                    className={styles.confirmDelete}
+                  >
+                    {bulkResetConfirming ? 'Resetting…' : `Yes, reset ${bulkResetSelected.size}`}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBulkResetConfirmStep(false)}
+                    className={styles.confirmCancel}
+                  >
+                    Back
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

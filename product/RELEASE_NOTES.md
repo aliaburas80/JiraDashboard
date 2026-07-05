@@ -5,6 +5,18 @@
 
 ---
 
+## Manual Admin Reset for External Users' Workspace Data (2026-07-05, P2)
+
+**Fourth and final follow-on branch from the same large request (§6).** Per your explicit choice, this is manual-only — nothing runs automatically. Admin → User Management now has a "Reset data" button per non-`deliveryclarity.app` user (and a bulk "Reset external users' data" option) that shows exactly what will be deleted — import logs, dashboard snapshots, Jira connections, their dashboard metrics file — before you confirm. The account, login, and role are never touched, only the uploaded workspace data. Internal `@deliveryclarity.app` accounts are refused both in the UI and on the server, so this can't be pointed at your own team by mistake. Verified end-to-end against the real database with throwaway accounts: an internal account was correctly refused, an external account's data was correctly deleted while the account itself kept working.
+
+---
+
+## Registration Persona List Trimmed (2026-07-05, P4)
+
+Removed Agile Coach, Delivery Manager, Team Lead, Jira Administrator, Consultant, and Other from the "Your primary role" dropdown at registration — keeping Scrum Master, Product Owner, Project Manager, Engineering Manager, and Executive. Cosmetic only; this field has never affected permissions.
+
+---
+
 ## Cancel Button on "Change Provider" (Cloud Storage Settings) (2026-07-05, P2)
 
 **Third follow-on branch from the same large request (§5).** Admin Settings → Cloud Storage → "Change provider" previously had no way out except Save or reloading the page. Added a Cancel button that reverts every field to the last-saved settings and asks for confirmation first if anything was actually changed — nothing is saved when you cancel. Not verified in a live browser this session (no browser-automation tool available for this specific panel); recommended a quick manual pass before relying on it in production.

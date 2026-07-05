@@ -372,6 +372,15 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    id: 'workspace-reset', icon: 'delete', title: 'Resetting a User\'s Workspace Data (Admin)',
+    items: [
+      { q: 'What does "Reset data" do on Admin → User Management?', a: 'It clears a user\'s uploaded workspace data — their import logs, dashboard snapshots, Jira connections, and dashboard metrics file — back to an empty state. It never touches the account itself: their login, role, and profile stay exactly as they were, and they can sign in and upload again immediately afterward.' },
+      { q: 'Which users can this be used on?', a: 'Any account whose email does not end in @deliveryclarity.app. Internal @deliveryclarity.app accounts are never shown a "Reset data" button and are refused server-side if attempted anyway — this is not just a UI restriction.' },
+      { q: 'Does it ask for confirmation?', a: 'Yes, always. Clicking "Reset data" first shows exactly what will be deleted (counts of import logs, snapshots, Jira connections, and whether a dashboard metrics file exists) before anything happens. The bulk "Reset external users\' data" option works the same way for multiple accounts at once — select users, review every selected user\'s counts, then confirm.' },
+      { q: 'Is this automatic or scheduled?', a: 'No — this only ever runs when an admin explicitly clicks it. Nothing resets on a timer or automatically for new/existing external users.' },
+    ],
+  },
+  {
     id: 'diagnostics', icon: 'statusInfo', title: 'System Diagnostics',
     items: [
       { q: 'What is the System Diagnostics page?', a: 'The /admin/diagnostics page (admin-only) shows a live system health snapshot including: an Ops Health Score (0–100), database row counts (users, sessions, imports, snapshots), import success rate and average health score, environment variable checks, system info (Node version, uptime), and the last 8 audit events.' },
