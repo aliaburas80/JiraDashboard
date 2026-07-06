@@ -39,7 +39,7 @@ export default function FinalCTA() {
           </p>
 
           <div ref={actionsRef} className={styles.actions}>
-            <button type="button" onClick={() => router.push('/')} className="btn-primary px-7 py-3 text-sm">
+            <button type="button" onClick={() => router.push('/')} className={styles.btnPrimary}>
               Upload Jira Export
             </button>
             {/* Sample-dataset action: home page auto-loads the sample when this query param is present */}
