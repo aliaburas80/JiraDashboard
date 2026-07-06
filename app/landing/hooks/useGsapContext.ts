@@ -7,10 +7,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 let pluginsRegistered = false;
 
-// Exported so components that manage their own ScrollTrigger instances
-// outside useGsapContext (e.g. ScrollProgressRail) can guarantee the plugin
-// is registered before use, regardless of React's effect mount order.
-export function ensureGsapPlugins() {
+function ensureGsapPlugins() {
   if (pluginsRegistered) return;
   gsap.registerPlugin(ScrollTrigger);
   pluginsRegistered = true;

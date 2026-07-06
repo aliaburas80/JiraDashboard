@@ -4,7 +4,6 @@
 import { useRef } from 'react';
 import clsx from 'clsx';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { useGsapContext } from '../hooks/useGsapContext';
 import type { CSSVariableProperties } from '../lib/cssVars';
@@ -32,31 +31,18 @@ export default function ProductFlowSection() {
       gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
     });
 
-    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } })
+    // Plays once when the section scrolls into view — no pin/scrub, matching
+    // /promo's simpler one-shot reveal pattern rather than a scroll-scrubbed
+    // pinned sequence.
+    const tl = gsap.timeline({
+      defaults: { ease: 'power2.out' },
+      scrollTrigger: { trigger: sectionRef.current, start: 'top 75%' },
+    })
       .from(jiraCardRef.current?.querySelectorAll(`.${styles.fileIcon}`) ?? [], { opacity: 0, y: 12, duration: 0.4, stagger: 0.1 })
       .to(lineBlueRef.current, { strokeDashoffset: 0, duration: 0.6 }, '-=0.1')
       .to(engineRef.current, { boxShadow: '0 0 0 14px rgba(37,99,235,0.08)', duration: 0.5, yoyo: true, repeat: 1 }, '-=0.2')
       .to(lineOrangeRef.current, { strokeDashoffset: 0, duration: 0.6 })
       .from(decisionsRef.current?.querySelectorAll(`.${styles.decisionItem}`) ?? [], { opacity: 0, x: 16, duration: 0.35, stagger: 0.1 }, '-=0.3');
-
-    gsap.matchMedia().add('(min-width: 1024px)', () => {
-      ScrollTrigger.create({
-        trigger: sectionRef.current,
-        start: 'top top+=80',
-        end: '+=80%',
-        pin: true,
-        scrub: 1,
-        animation: tl,
-      });
-    });
-
-    gsap.matchMedia().add('(max-width: 1023px)', () => {
-      ScrollTrigger.create({
-        trigger: sectionRef.current,
-        start: 'top 75%',
-        animation: tl,
-      });
-    });
   });
 
   return (
