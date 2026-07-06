@@ -5,6 +5,12 @@
 
 ---
 
+## Product Flow Engine Redesigned as a 3-Gear Mesh (2026-07-06, P3)
+
+Replaced the "Product Flow" section's plain glowing circle with an animated 3-gear mechanism — a left gear and a right gear mesh with a smaller center gear, spinning in alternating directions with a soft pulse at each contact point. A small glowing dot now travels the full path from the Jira Export card, through the gears, to the Delivery Decisions card, visually showing data being processed. Respects your reduced-motion setting like every other animation on this page.
+
+---
+
 ## Landing Page Button Alignment + Chart Animations (2026-07-06, P3)
 
 Fixed the Final CTA's three buttons rendering at slightly different heights — they're now pixel-aligned. Brought animation back to the dashboard-preview section (the numbers, rings, and 4 mini charts now draw in every time you scroll to that section, not just once) and added the same effect to the small dashboard mockup inside the hero. The three "How it works" step cards now have a clearer, replaying spotlight animation that moves from step to step. Nothing about uploading, dashboards, or any existing route changed.
