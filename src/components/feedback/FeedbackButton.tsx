@@ -4,6 +4,7 @@
 // Never attaches uploaded Jira data.
 
 import { useState, useRef, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import styles from './FeedbackButton.module.scss';
 
 const CATEGORIES = [
@@ -30,6 +31,7 @@ function getBrowserFamily(): string {
 }
 
 export function FeedbackButton() {
+  const pathname = usePathname();
   const [open,        setOpen]        = useState(false);
   const [submitted,   setSubmitted]   = useState(false);
   const [submitting,  setSubmitting]  = useState(false);
@@ -40,6 +42,14 @@ export function FeedbackButton() {
   const [canContact,  setCanContact]  = useState(false);
   const firstFieldRef = useRef<HTMLSelectElement>(null);
   const triggerRef    = useRef<HTMLButtonElement>(null);
+  const isAuthPage = [
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/verify-email',
+    '/change-password',
+  ].some(path => pathname === path || pathname.startsWith(`${path}/`));
 
   // Trap focus inside modal when open.
   useEffect(() => {
@@ -98,6 +108,8 @@ export function FeedbackButton() {
       setSubmitting(false);
     }
   }
+
+  if (isAuthPage) return null;
 
   return (
     <>
