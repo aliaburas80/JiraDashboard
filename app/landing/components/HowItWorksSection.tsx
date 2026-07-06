@@ -4,7 +4,6 @@
 import { useRef } from 'react';
 import clsx from 'clsx';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { useGsapContext } from '../hooks/useGsapContext';
 import type { CSSVariableProperties } from '../lib/cssVars';
@@ -32,36 +31,22 @@ export default function HowItWorksSection() {
     const activate = { scale: 1.03, y: -4, boxShadow: ACTIVE_SHADOW, borderColor: '#93c5fd' };
     const rest     = { scale: 1, y: 0, boxShadow: RESTING_SHADOW, borderColor: '#e2e8f0' };
 
-    const tl = gsap.timeline({ defaults: { ease: 'power2.inOut', duration: 0.4 } })
-      .to(card1Ref.current, activate, 0)
-      .to(filesRef.current?.children ?? [], { y: -8, stagger: 0.08, yoyo: true, repeat: 1 }, 0.05)
-      .to(card1Ref.current, rest, 0.33)
-      .to(card2Ref.current, activate, 0.33)
-      .to(progressRef.current, { width: '100%', duration: 0.3 }, 0.36)
-      .to(card2Ref.current, rest, 0.66)
-      .to(card3Ref.current, activate, 0.66)
-      .from(insightsRef.current?.children ?? [], { opacity: 0, x: 12, stagger: 0.08 }, 0.7);
-
-    gsap.matchMedia().add('(min-width: 640px)', () => {
-      ScrollTrigger.create({
-        trigger: sectionRef.current,
-        start: 'top top+=80',
-        end: '+=180%',
-        pin: true,
-        scrub: 1,
-        animation: tl,
-      });
-    });
-
-    gsap.matchMedia().add('(max-width: 639px)', () => {
-      gsap.from([card1Ref.current, card2Ref.current, card3Ref.current], {
-        opacity: 0,
-        y: 24,
-        duration: 0.5,
-        stagger: 0.15,
-        scrollTrigger: { trigger: sectionRef.current, start: 'top 75%' },
-      });
-    });
+    // Plays once when the section scrolls into view — no pin/scrub, matching
+    // /promo's simpler one-shot reveal pattern rather than a scroll-scrubbed
+    // pinned sequence.
+    gsap.timeline({
+      defaults: { ease: 'power2.inOut', duration: 0.4 },
+      scrollTrigger: { trigger: sectionRef.current, start: 'top 75%' },
+    })
+      .from([card1Ref.current, card2Ref.current, card3Ref.current], { opacity: 0, y: 24, duration: 0.5, stagger: 0.15 }, 0)
+      .to(card1Ref.current, activate, 0.5)
+      .to(filesRef.current?.children ?? [], { y: -8, stagger: 0.08, yoyo: true, repeat: 1 }, 0.55)
+      .to(card1Ref.current, rest, 0.85)
+      .to(card2Ref.current, activate, 0.85)
+      .to(progressRef.current, { width: '100%', duration: 0.3 }, 0.9)
+      .to(card2Ref.current, rest, 1.2)
+      .to(card3Ref.current, activate, 1.2)
+      .from(insightsRef.current?.children ?? [], { opacity: 0, x: 12, stagger: 0.08 }, 1.25);
   });
 
   return (

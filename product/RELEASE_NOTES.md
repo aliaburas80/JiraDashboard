@@ -5,6 +5,12 @@
 
 ---
 
+## Landing Page Rail Removed, Simpler Transitions; Login Page Redesign (2026-07-06, P3)
+
+Removed the left-side scroll-progress rail from `/landing` entirely, per direct request. The remaining two sections that still used a more complex "pin the page while scrolling" animation (Product Flow and How It Works) now use the same simpler, one-time reveal-as-you-scroll animation as the rest of the page — lighter and more consistent, closer to `/promo`'s style, while keeping the confirmed blue/white section colors. Also pushed a login-page redesign (now matches the registration page's dark card look) and a fix that hides the floating feedback button on login/registration/password pages.
+
+---
+
 ## Landing Page Order & Rhythm Pass (2026-07-06, P3)
 
 Reordered `/landing`'s sections into a clearer story — the concept, then the concrete steps, then the full feature list, then why it matters, then proof (stats and a live-looking dashboard preview) right before the final call to action, instead of burying the proof points in the middle. Each section now alternates between white and a soft light blue, with a subtle seam between them, so the page has visual rhythm instead of one long stretch of near-identical backgrounds. Reference: `/promo`'s own section rhythm and pacing. Nothing about uploading, dashboards, or any existing route changed.

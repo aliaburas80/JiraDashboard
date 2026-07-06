@@ -21,12 +21,10 @@ import BusinessValueSection from './components/BusinessValueSection';
 import MetricsStrip from './components/MetricsStrip';
 import DashboardPreview from './components/DashboardPreview';
 import FinalCTA from './components/FinalCTA';
-import ScrollProgressRail from './components/ScrollProgressRail';
 
 export default function LandingPage() {
   return (
     <AppShell showNav>
-      <ScrollProgressRail />
       <LandingHero />
       <ProductFlowSection />
       <HowItWorksSection />
