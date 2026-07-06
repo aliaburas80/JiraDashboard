@@ -43,9 +43,7 @@ export default function PromoNav() {
       <div className={styles.inner}>
         <a className={styles.brand} href="#top" onClick={(e) => handleNav(e, '#top')} aria-label="Delivery Clarity — top of page">
           <span className={styles.brandMark} aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
+            <img src="/logo/delivery-clarity-logo-icon.svg" alt="" />
           </span>
           <span className={styles.brandName}>Delivery Clarity</span>
         </a>
