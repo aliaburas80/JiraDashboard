@@ -5,6 +5,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import clsx from 'clsx';
 import { hasMetricsFromAnySource } from '@/lib/storage';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { PasswordInput } from '@/components/ui/PasswordInput';
@@ -93,30 +94,24 @@ export default function LoginPage() {
     <div className={loginStyles.wrapper}>
       <AnimatedDataBackground className={loginStyles.bg} />
       <div className={loginStyles.vignette} aria-hidden="true" />
-      <div className={loginStyles.content}>
-        {/* Brand */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-3">
-            <Image
-              src="/logo/delivery-clarity-logo-horizontal.svg"
-              alt="Delivery Clarity"
-              width={200}
-              height={62}
-              priority
-            />
-          </div>
-          <p className="text-sm text-slate-500">Sign in to your account</p>
+      <div className={loginStyles.card}>
+        <div className={loginStyles.logo}>
+          <Image src="/favicon.svg" alt="" width={28} height={28} aria-hidden="true" priority />
+          <span className={loginStyles.logoText}>Delivery Clarity</span>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-4">
+        <h1 className={loginStyles.title}>Sign in to your account</h1>
+        <p className={loginStyles.subtitle}>Continue to your Jira delivery workspace.</p>
+
+        <form onSubmit={handleSubmit} noValidate>
           {/* Rate-limit countdown banner — shown above any other error */}
           {rateLimitSecs > 0 && (
-            <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 text-sm shadow-sm" role="alert" aria-live="polite">
+            <div className={clsx(loginStyles.notice, loginStyles.warning)} role="alert" aria-live="polite">
               <div className="flex items-center gap-2">
-                <SvgIcon name="warning" size={16} className="text-amber-500 shrink-0" />
+                <SvgIcon name="warning" size={16} className="shrink-0" />
                 <div>
-                  <p className="font-black text-amber-800">Too many login attempts.</p>
-                  <p className="text-amber-700 mt-0.5">
+                  <p className={loginStyles.noticeTitle}>Too many login attempts.</p>
+                  <p className={loginStyles.noticeText}>
                     Try again in{' '}
                     <span className="font-black tabular-nums">
                       {rateLimitSecs >= 60
@@ -130,25 +125,25 @@ export default function LoginPage() {
           )}
 
           {error && rateLimitSecs === 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm shadow-sm" role="alert">
+            <div className={clsx(loginStyles.notice, loginStyles.error)} role="alert">
               <div className="flex items-start gap-2">
-                <SvgIcon name="info" size={16} className="mt-0.5 text-red-400 shrink-0" />
+                <SvgIcon name="info" size={16} className="mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-black text-red-700">{error.message}</p>
+                  <p className={loginStyles.noticeTitle}>{error.message}</p>
                   <button
                     type="button"
                     onClick={() => setShowSolution(v => !v)}
-                    className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-red-500 underline underline-offset-2"
+                    className={loginStyles.solutionToggle}
                     aria-expanded={showSolution}
                   >
                     {showSolution ? 'Hide solution' : 'Show solution'}
                     <SvgIcon name={showSolution ? 'chevronUp' : 'chevronDown'} size={12} />
                   </button>
                   {showSolution && (
-                    <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed">
-                      <p className="text-emerald-800"><span className="font-black">Solution: </span>{error.solution}</p>
+                    <div className={loginStyles.solution}>
+                      <p><span className="font-black">Solution: </span>{error.solution}</p>
                       {error.details && (
-                        <p className="mt-1 text-emerald-700"><span className="font-black">Details: </span>{error.details}</p>
+                        <p className="mt-1"><span className="font-black">Details: </span>{error.details}</p>
                       )}
                     </div>
                   )}
@@ -157,9 +152,10 @@ export default function LoginPage() {
             </div>
           )}
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">Email address</label>
+          <div className={loginStyles.field}>
+            <label htmlFor="login-email" className={loginStyles.label}>Email address</label>
             <input
+              id="login-email"
               type="email"
               name="email"
               autoComplete="email"
@@ -167,32 +163,33 @@ export default function LoginPage() {
               onChange={e => setEmail(e.target.value)}
               placeholder="you@example.com"
               aria-invalid={!!error}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className={loginStyles.input}
             />
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-bold text-slate-700">Password</label>
-              <Link href="/forgot-password" className="text-xs font-bold text-blue-600 underline underline-offset-2">
+          <div className={loginStyles.field}>
+            <div className={loginStyles.labelRow}>
+              <label htmlFor="login-password" className={loginStyles.label}>Password</label>
+              <Link href="/forgot-password" className={loginStyles.inlineLink}>
                 Forgot password?
               </Link>
             </div>
             <PasswordInput
+              id="login-password"
               name="password"
               autoComplete="current-password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
               aria-invalid={!!error}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className={loginStyles.input}
             />
           </div>
 
           <button
             type="submit"
             disabled={loading || rateLimitSecs > 0}
-            className="w-full btn-primary py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={loginStyles.submit}
           >
             {loading
               ? 'Signing in…'
@@ -202,14 +199,14 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-slate-500 mt-6">
+        <p className={loginStyles.registerLink}>
           No account?{' '}
-          <Link href="/register" className="font-semibold text-orange-500 hover:underline">
+          <Link href="/register">
             Create one free →
           </Link>
         </p>
-        <p className="text-center text-xs text-slate-600 mt-2">
-          <Link href="/promo" className="hover:underline">Learn more about Delivery Clarity</Link>
+        <p className={loginStyles.learnLink}>
+          <Link href="/promo">Learn more about Delivery Clarity</Link>
         </p>
       </div>
     </div>
