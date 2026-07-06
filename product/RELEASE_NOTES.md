@@ -5,6 +5,12 @@
 
 ---
 
+## Landing Page Order & Rhythm Pass (2026-07-06, P3)
+
+Reordered `/landing`'s sections into a clearer story — the concept, then the concrete steps, then the full feature list, then why it matters, then proof (stats and a live-looking dashboard preview) right before the final call to action, instead of burying the proof points in the middle. Each section now alternates between white and a soft light blue, with a subtle seam between them, so the page has visual rhythm instead of one long stretch of near-identical backgrounds. Reference: `/promo`'s own section rhythm and pacing. Nothing about uploading, dashboards, or any existing route changed.
+
+---
+
 ## Landing Page Polish, Round 2 (2026-07-06, P2)
 
 Fixed five issues found from live screenshots of the new landing page: the left progress rail no longer overlaps the hero's floating cards (it now only appears once you scroll past the hero); the three buttons on the final call-to-action now match — same pill shape, properly aligned; the dashboard-preview section's numbers and charts now replay every time you scroll back to it instead of only animating once; the "Everything in one place" feature section is shorter on wide screens; and the product-flow diagram's center circle got a more distinctive look (a soft glow and a slow-spinning ring) instead of a plain flat circle. Nothing about uploading, dashboards, or any existing route changed.
