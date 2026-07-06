@@ -42,20 +42,13 @@
 .brandMark {
   inline-size: 30px;
   block-size: 30px;
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-lg, 10px);
-  background: linear-gradient(135deg, var(--p-accent), var(--p-accent-2));
-  color: #0a0b0d;
+  display: inline-flex;
+  flex-shrink: 0;
 
-  svg {
-    inline-size: 22px;
-    block-size: 22px;
-
-    circle,
-    path {
-      fill: currentColor;
-    }
+  img {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
   }
 }
 

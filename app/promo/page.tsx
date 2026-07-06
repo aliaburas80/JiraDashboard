@@ -367,9 +367,7 @@ export default function PromoPage() {
         <div className={styles.footerInner}>
           <span className={styles.footerBrand}>
             <span className={styles.footerMark} aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-              </svg>
+              <img src="/logo/delivery-clarity-logo-icon.svg" alt="" />
             </span>
             Delivery Clarity
           </span>

@@ -948,20 +948,13 @@
 .footerMark {
   inline-size: 28px;
   block-size: 28px;
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-md, 8px);
-  background: linear-gradient(135deg, var(--p-accent), var(--p-accent-2));
-  color: #0a0b0d;
-  box-shadow: 0 6px 18px rgba(232, 93, 18, 0.32);
+  display: inline-flex;
+  flex-shrink: 0;
 
-  svg {
-    inline-size: 18px;
-    block-size: 18px;
-
-    path {
-      fill: currentColor;
-    }
+  img {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
   }
 }
 
