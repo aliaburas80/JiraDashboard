@@ -7,14 +7,16 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { prefersReducedMotion, ensureGsapPlugins } from '../hooks/useGsapContext';
 import styles from './ScrollProgressRail.module.scss';
 
+// Order matches the page's actual visual order (app/landing/page.tsx) —
+// keep these two in sync when either changes.
 export const LANDING_SECTIONS = [
   { id: 'landing-hero',      label: '01 Hero' },
   { id: 'product-flow',      label: '02 Product Flow' },
   { id: 'how-it-works',      label: '03 How It Works' },
-  { id: 'metrics-strip',     label: '04 Metrics Strip' },
-  { id: 'feature-universe',  label: '05 Feature Universe' },
-  { id: 'dashboard-preview', label: '06 Dashboard Preview' },
-  { id: 'business-value',    label: '07 Business Value' },
+  { id: 'feature-universe',  label: '04 Feature Universe' },
+  { id: 'business-value',    label: '05 Business Value' },
+  { id: 'metrics-strip',     label: '06 Metrics Strip' },
+  { id: 'dashboard-preview', label: '07 Dashboard Preview' },
   { id: 'final-cta',         label: '08 Final CTA' },
 ] as const;
 

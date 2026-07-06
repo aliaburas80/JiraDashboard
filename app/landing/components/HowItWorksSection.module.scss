@@ -3,7 +3,8 @@
 .section {
   position: relative;
   padding-block: 80px;
-  background: #f8fafc;
+  background: #fff;
+  border-block-end: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 .title {
