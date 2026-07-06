@@ -5,6 +5,12 @@
 
 ---
 
+## Feedback Submissions Now Email Support (2026-07-06, P2)
+
+Submitting in-app feedback (the floating feedback button) now sends a notification email to support@deliveryclarity.app, in addition to being saved as before. The email includes the category, impact level, page, and browser — plus your email address, but only if you're logged in and checked "you can contact me." If the email fails to send for any reason, your feedback is still saved; nothing about submitting feedback changed from your side.
+
+---
+
 ## Product Flow Engine Redesigned as a 3-Gear Mesh (2026-07-06, P3)
 
 Replaced the "Product Flow" section's plain glowing circle with an animated 3-gear mechanism — a left gear and a right gear mesh with a smaller center gear, spinning in alternating directions with a soft pulse at each contact point. A small glowing dot now travels the full path from the Jira Export card, through the gears, to the Delivery Decisions card, visually showing data being processed. Respects your reduced-motion setting like every other animation on this page.

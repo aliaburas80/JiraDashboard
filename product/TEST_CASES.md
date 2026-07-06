@@ -2047,3 +2047,31 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** `npx tsc --noEmit` clean. `npx eslint app/landing/` clean — same 10 already-documented warnings (the new gear colors are fixed decorative constants, not per-item data, so none use the §14.2 exception). `npx stylelint` clean. Full suite unaffected, 905/96 passing. `npx next build` succeeds; `/landing` unchanged at 54.4 kB / 167 kB first load.
 
 **Manual verification (real dev server):** confirmed via server-rendered HTML that all 5 new gear-related module classes render and the old engine/line classes are completely gone (0 matches); confirmed via the compiled CSS bundle that `offset-path` and all 4 new `@keyframes` names shipped. Not independently verified: whether the gears visually mesh at their tuned contact points, whether the data dot appears to travel correctly end to end, or `offset-path` rendering (well-supported in Chrome/Edge/Safari, only recently in Firefox — a purely decorative `aria-hidden` element, so a static-dot fallback in unsupported browsers is acceptable, matching the reference's own approach) — no browser-automation tool was available this session.
+
+## 9.88 — Feedback Submissions Notify support@deliveryclarity.app by Email
+
+*(Added 2026-07-06. User request: "feedback when added to the system send an email to support@deliveryclarity.app".)*
+
+**TC-FB-01:** A valid feedback submission still creates a `Feedback` row and returns `{ok:true}` (unchanged behavior, verifying the new email step doesn't disturb the existing write path).
+
+**TC-FB-02:** The notification email is sent to the configured recipient, defaulting to `support@deliveryclarity.app` (overridable via `FEEDBACK_NOTIFICATION_TO`).
+
+**TC-FB-03:** The notification's subject and text body reflect the submitted category, impact level, and message.
+
+**TC-FB-04:** A failed/rejected `sendEmail` call does not fail the feedback submission — the response is still `200 {ok:true}` and the `Feedback` row is still created, per the best-effort design.
+
+**TC-FB-05:** When the submitter is logged in and checked `canContact: true`, their email address is included in the notification body.
+
+**TC-FB-06:** When `canContact` is `false` (even if logged in), the submitter's email is omitted from the notification and replaced with "(not provided)" — matching the existing `Feedback.userEmail` visibility rule.
+
+**TC-FB-07:** An invalid submission (message too short) is rejected with `400` before the `Feedback` row is created or any email is attempted — validation happens first.
+
+**TC-FB-08:** `buildFeedbackNotificationEmail`'s HTML body HTML-escapes user-supplied message content (`<script>`, `&`, `"`) to prevent HTML injection into the notification email.
+
+**TC-FB-09:** The email subject includes both the category and impact level.
+
+**TC-FB-10:** The plain-text body includes the raw (unescaped) message, since it's plain text rather than HTML.
+
+**Automated checks:** All 10 tests pass (`src/__tests__/feedbackNotification.test.ts`). `npx tsc --noEmit`, `npx eslint`, `npx stylelint`, `npx next build` all clean. Full suite 97 suites / 915 tests passing (up from 96/905), no regressions.
+
+**Manual verification:** started the dev server and confirmed `POST /api/feedback` is live and correctly wired by submitting an intentionally-invalid payload (`message: "hi"`), which correctly returned `400` before reaching the email-sending code. **Deliberately did not** perform a live successful-submission test in this environment: `.env` has real Gmail SMTP credentials configured, and `getAppConfig()` checks the database `SmtpSettings` table before falling back to env vars — a real successful submission here would send an actual email to `support@deliveryclarity.app`. Recommended before production reliance: one real end-to-end submission against a non-production recipient to visually confirm the delivered email's formatting.

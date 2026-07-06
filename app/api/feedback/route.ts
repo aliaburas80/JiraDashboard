@@ -9,9 +9,14 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
+import { sendEmail, buildFeedbackNotificationEmail } from '@/lib/email';
 import packageJson from '../../../package.json';
 
 export const dynamic = 'force-dynamic';
+
+// Inbox that receives new-feedback notifications. Configurable, with the
+// support address as the documented default.
+const FEEDBACK_NOTIFICATION_TO = process.env.FEEDBACK_NOTIFICATION_TO ?? 'support@deliveryclarity.app';
 
 const VALID_CATEGORIES = [
   'Suggestion',
@@ -94,6 +99,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       status: 'New',
     },
   });
+
+  // Best-effort notification — the feedback is already durably stored above,
+  // so a failed send here must never fail the submission itself.
+  try {
+    const emailContent = buildFeedbackNotificationEmail({
+      category,
+      message,
+      impactLevel,
+      page,
+      browserFamily,
+      userEmail,
+      submittedAt: new Date().toISOString(),
+    });
+    await sendEmail({ to: FEEDBACK_NOTIFICATION_TO, ...emailContent });
+  } catch (err) {
+    console.error('[feedback] Failed to send feedback notification email:', err);
+  }
 
   return NextResponse.json({ ok: true });
 }
