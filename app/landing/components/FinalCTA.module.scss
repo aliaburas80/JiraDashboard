@@ -56,12 +56,21 @@
   z-index: 1;
 }
 
+// Matches the global .btn-primary/.btn-base box model exactly (padding,
+// line-height, font-size, white-space) so it never drifts out of alignment
+// with the primary button next to it, regardless of Tailwind's utility vs
+// component layer ordering.
 .btnOutline {
   position: relative;
   overflow: hidden;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  padding: 12px 28px;
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
   border-radius: 100px;
   font-weight: 800;
   background: #fff;

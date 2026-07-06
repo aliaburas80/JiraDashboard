@@ -31,22 +31,29 @@ export default function HowItWorksSection() {
     const activate = { scale: 1.03, y: -4, boxShadow: ACTIVE_SHADOW, borderColor: '#93c5fd' };
     const rest     = { scale: 1, y: 0, boxShadow: RESTING_SHADOW, borderColor: '#e2e8f0' };
 
-    // Plays once when the section scrolls into view — no pin/scrub, matching
-    // /promo's simpler one-shot reveal pattern rather than a scroll-scrubbed
-    // pinned sequence.
+    // A spotlight moves left-to-right across the 3 steps: reveal, then each
+    // card activates (lifts + glows) in turn while its own mini-visual plays
+    // (files bounce → progress bar fills → insight rows check in), settling
+    // back to resting state before the next step takes focus. Replays every
+    // time the section is scrolled into view, in either direction — no
+    // pin/scrub, matching /promo's simpler reveal pattern.
     gsap.timeline({
       defaults: { ease: 'power2.inOut', duration: 0.4 },
-      scrollTrigger: { trigger: sectionRef.current, start: 'top 75%' },
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: 'top 75%',
+        toggleActions: 'restart none restart none',
+      },
     })
       .from([card1Ref.current, card2Ref.current, card3Ref.current], { opacity: 0, y: 24, duration: 0.5, stagger: 0.15 }, 0)
-      .to(card1Ref.current, activate, 0.5)
-      .to(filesRef.current?.children ?? [], { y: -8, stagger: 0.08, yoyo: true, repeat: 1 }, 0.55)
-      .to(card1Ref.current, rest, 0.85)
-      .to(card2Ref.current, activate, 0.85)
-      .to(progressRef.current, { width: '100%', duration: 0.3 }, 0.9)
-      .to(card2Ref.current, rest, 1.2)
-      .to(card3Ref.current, activate, 1.2)
-      .from(insightsRef.current?.children ?? [], { opacity: 0, x: 12, stagger: 0.08 }, 1.25);
+      .to(card1Ref.current, activate, 0.6)
+      .to(filesRef.current?.children ?? [], { y: -8, stagger: 0.1, yoyo: true, repeat: 1 }, 0.7)
+      .to(card1Ref.current, rest, 1.1)
+      .to(card2Ref.current, activate, 1.1)
+      .to(progressRef.current, { width: '100%', duration: 0.4 }, 1.2)
+      .to(card2Ref.current, rest, 1.7)
+      .to(card3Ref.current, activate, 1.7)
+      .from(insightsRef.current?.children ?? [], { opacity: 0, x: 12, stagger: 0.1 }, 1.8);
   });
 
   return (

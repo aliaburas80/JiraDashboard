@@ -5,6 +5,12 @@
 
 ---
 
+## Landing Page Button Alignment + Chart Animations (2026-07-06, P3)
+
+Fixed the Final CTA's three buttons rendering at slightly different heights — they're now pixel-aligned. Brought animation back to the dashboard-preview section (the numbers, rings, and 4 mini charts now draw in every time you scroll to that section, not just once) and added the same effect to the small dashboard mockup inside the hero. The three "How it works" step cards now have a clearer, replaying spotlight animation that moves from step to step. Nothing about uploading, dashboards, or any existing route changed.
+
+---
+
 ## Landing Page Rail Removed, Simpler Transitions; Login Page Redesign (2026-07-06, P3)
 
 Removed the left-side scroll-progress rail from `/landing` entirely, per direct request. The remaining two sections that still used a more complex "pin the page while scrolling" animation (Product Flow and How It Works) now use the same simpler, one-time reveal-as-you-scroll animation as the rest of the page — lighter and more consistent, closer to `/promo`'s style, while keeping the confirmed blue/white section colors. Also pushed a login-page redesign (now matches the registration page's dark card look) and a fix that hides the floating feedback button on login/registration/password pages.

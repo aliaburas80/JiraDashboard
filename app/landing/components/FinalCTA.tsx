@@ -3,7 +3,6 @@
 
 import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import clsx from 'clsx';
 import gsap from 'gsap';
 import { useGsapContext } from '../hooks/useGsapContext';
 import styles from './FinalCTA.module.scss';
@@ -44,10 +43,10 @@ export default function FinalCTA() {
               Upload Jira Export
             </button>
             {/* Sample-dataset action: home page auto-loads the sample when this query param is present */}
-            <button type="button" onClick={() => router.push('/?sample=1')} className={clsx(styles.btnOutline, 'px-7 py-3 text-sm')}>
+            <button type="button" onClick={() => router.push('/?sample=1')} className={styles.btnOutline}>
               Try Sample Dataset
             </button>
-            <a href="/developer" className={clsx(styles.btnOutline, 'px-7 py-3 text-sm')}>
+            <a href="/developer" className={styles.btnOutline}>
               Developer Portal
             </a>
           </div>

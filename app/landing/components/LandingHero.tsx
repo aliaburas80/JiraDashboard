@@ -32,9 +32,11 @@ export default function LandingHero() {
   const subheadRef = useRef<HTMLParagraphElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
   const chipsRef   = useRef<HTMLDivElement>(null);
+  const sparklineRef = useRef<SVGPolylineElement>(null);
+  const barsRef      = useRef<HTMLDivElement>(null);
 
   useGsapContext(heroRef, () => {
-    // ── Entrance timeline ────────────────────────────────────────────────
+    // ── Entrance timeline (plays once, on mount) ────────────────────────
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
     tl.from(badgeRef.current, { opacity: 0, y: -12, duration: 0.5 })
       .from(line1Ref.current, { opacity: 0, y: 24, duration: 0.6 }, '-=0.2')
@@ -42,6 +44,21 @@ export default function LandingHero() {
       .from(subheadRef.current, { opacity: 0, y: 16, duration: 0.5 }, '-=0.3')
       .from(actionsRef.current?.children ?? [], { opacity: 0, y: 16, duration: 0.4, stagger: 0.1 }, '-=0.2')
       .from(chipsRef.current?.children ?? [], { opacity: 0, y: 10, duration: 0.35, stagger: 0.12 }, '-=0.15');
+
+    // ── Mockup chart draw-in — replays every time the hero is scrolled
+    // back into view, not just once on mount ───────────────────────────
+    const sparklineLength = sparklineRef.current?.getTotalLength() ?? 0;
+    gsap.set(sparklineRef.current, { strokeDasharray: sparklineLength });
+
+    gsap.timeline({
+      scrollTrigger: {
+        trigger: heroRef.current,
+        start: 'top 60%',
+        toggleActions: 'restart none restart none',
+      },
+    })
+      .fromTo(sparklineRef.current, { strokeDashoffset: sparklineLength }, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut' }, 0)
+      .fromTo(barsRef.current?.children ?? [], { scaleY: 0 }, { scaleY: 1, duration: 0.6, stagger: 0.06, ease: 'power2.out' }, 0.15);
   });
 
   return (
@@ -76,7 +93,7 @@ export default function LandingHero() {
               <SvgIcon name="upload" size={16} />
               Upload Jira Export
             </button>
-            <button type="button" onClick={() => router.push('/dashboard')} className={clsx(styles.btnSecondary, 'px-7 py-3 text-sm')}>
+            <button type="button" onClick={() => router.push('/dashboard')} className={styles.btnSecondary}>
               <SvgIcon name="dashboard" size={16} />
               Open Dashboard
             </button>
@@ -116,12 +133,12 @@ export default function LandingHero() {
               <div className={styles.mockupChartCard}>
                 <p className={styles.mockupChartLabel}>Sprint Progress</p>
                 <svg viewBox="0 0 112 40" className={styles.sparkline} preserveAspectRatio="none">
-                  <polyline points={SPARKLINE_POINTS} className={styles.sparklinePath} />
+                  <polyline ref={sparklineRef} points={SPARKLINE_POINTS} className={styles.sparklinePath} />
                 </svg>
               </div>
               <div className={styles.mockupChartCard}>
                 <p className={styles.mockupChartLabel}>Work Item Flow</p>
-                <div className={styles.barsRow}>
+                <div ref={barsRef} className={styles.barsRow}>
                   {BARS.map((h, i) => {
                     // DYNAMIC CSS VARIABLE: each bar's height is a data value.
                     const variables: CSSVariableProperties = { '--bar-height': `${h}%` };
