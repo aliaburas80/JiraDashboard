@@ -5,6 +5,12 @@
 
 ---
 
+## New: Persona Preview Switcher (Soft Launch) (2026-07-08, P3)
+
+A new dropdown in the dashboard's top bar lets you preview which pages are most useful for different roles — Scrum Master, Product Owner, Project Manager, Engineering Manager, or Executive — so you can see what each view is meant for. It's purely a guide: it never changes what data you can see. This is a soft-launch feature — your super-admin controls whether it's visible to everyone, from Admin Settings → Persona Preview.
+
+---
+
 ## Smoother Login/Register Hand-Off + Easier-to-Notice Errors (2026-07-08, P2)
 
 If you try to log in with an email that's not registered, you're taken to the sign-up page as before. If you try to register with an email that's already registered, you're now taken straight to the sign-in page with a friendly "Welcome back!" message and your email already filled in — instead of just seeing an error and having to figure out what to do next. Error and notice messages on the sign-in, registration, forgot-password, reset-password, and change-password pages now automatically scroll into view so you never miss them.

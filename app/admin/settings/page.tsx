@@ -12,6 +12,7 @@ import ClearLocalDataPanel from '@/components/admin/ClearLocalDataPanel';
 import UserAddRequestsPanel from '@/components/admin/UserAddRequestsPanel';
 import JiraConnectionsPanel from '@/components/admin/JiraConnectionsPanel';
 import AppConfigPanel from '@/components/admin/AppConfigPanel';
+import PersonaPreviewPanel from '@/components/admin/PersonaPreviewPanel';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import { SvgIcon } from '@/components/ui/SvgIcon';
@@ -1336,7 +1337,7 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
   );
 }
 
-const VALID_TABS: Tab[] = ['users','requests','config','retention','thresholds','orphan','issueTypes','backup','cloud','jira','browser'];
+const VALID_TABS: Tab[] = ['users','requests','config','retention','thresholds','orphan','issueTypes','backup','cloud','jira','browser','personaPreview'];
 
 export default function AdminSettingsPage() {
   const router = useRouter();
@@ -1361,12 +1362,14 @@ export default function AdminSettingsPage() {
   const [userSummary, setUserSummary]  = useState({ total: 0, active: 0, admins: 0 });
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me')
       .then(r => r.ok ? r.json() : null)
       .then(me => {
         if (!me || me.role !== 'admin') { router.replace('/dashboard'); return; }
+        setIsSuperAdmin(me.isSuperAdmin === true);
         return Promise.all([
           fetch('/api/admin/settings').then(r => r.json()),
           fetch('/api/admin/thresholds').then(r => r.json()),
@@ -1450,13 +1453,15 @@ export default function AdminSettingsPage() {
 
   const selectedTab = activeTabMeta(tab);
   const statsCards = buildSettingsStats({ tab, userSummary, settings, stats, thresholds, orphanRules, issueTypeHierarchy, backupFiles });
-  const settingsNavItems = ADMIN_TABS.map(item => ({
-    id: item.id,
-    label: item.label,
-    icon: item.icon,
-    selected: tab === item.id,
-    onClick: () => setTab(item.id),
-  }));
+  const settingsNavItems = ADMIN_TABS
+    .filter(item => !item.superAdminOnly || isSuperAdmin)
+    .map(item => ({
+      id: item.id,
+      label: item.label,
+      icon: item.icon,
+      selected: tab === item.id,
+      onClick: () => setTab(item.id),
+    }));
 
   return (
     <AdminConsoleLayout
@@ -1495,6 +1500,11 @@ export default function AdminSettingsPage() {
           {tab === 'cloud' && <CloudStorageSettings />}
           {tab === 'browser' && (
             <ClearLocalDataPanel />
+          )}
+          {tab === 'personaPreview' && (
+            isSuperAdmin
+              ? <PersonaPreviewPanel />
+              : <p className="text-sm text-slate-500">Only the super-admin can access this setting.</p>
           )}
         </section>
     </AdminConsoleLayout>

@@ -9,6 +9,7 @@ import { getCachedRole, getCachedIsSuperAdmin, fetchCurrentUser } from '@/lib/cu
 import UserMenu from '@/components/auth/UserMenu';
 import NotificationBell from '@/components/auth/NotificationBell';
 import { DataSourceBadge } from '@/components/ui/DataSourceBadge';
+import { PersonaPreviewSwitcher } from './PersonaPreviewSwitcher';
 import styles from './DashboardTopbar.module.scss';
 
 // Status → dot colour mapping (data-driven, not hardcoded per-item)
@@ -214,6 +215,9 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
 
           {/* Data source badge — shows live Jira sync status or upload origin */}
           <DataSourceBadge compact />
+
+          {/* Persona preview — soft-launch, hidden unless the super-admin enables it */}
+          <PersonaPreviewSwitcher />
 
           {/* Notification bell */}
           <NotificationBell />

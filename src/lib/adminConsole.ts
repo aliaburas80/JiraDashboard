@@ -8,9 +8,9 @@ import type { OrphanRules } from '@/types/orphanRules';
 import type { IssueTypeHierarchyConfig } from '@/types/issueTypeHierarchy';
 import type { AdminConsoleStat } from '@/components/admin/AdminConsoleLayout';
 
-export type Tab = 'users' | 'requests' | 'retention' | 'thresholds' | 'orphan' | 'issueTypes' | 'backup' | 'cloud' | 'browser' | 'config' | 'jira';
+export type Tab = 'users' | 'requests' | 'retention' | 'thresholds' | 'orphan' | 'issueTypes' | 'backup' | 'cloud' | 'browser' | 'config' | 'jira' | 'personaPreview';
 
-export const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; description: string }> = [
+export const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; description: string; superAdminOnly?: boolean }> = [
   { id: 'users',      label: 'User Management',     icon: 'people', description: 'Accounts, roles, access state' },
   { id: 'requests',   label: 'Member Requests',     icon: 'email', description: 'Pending add-member requests' },
   { id: 'config',     label: 'App Config',   icon: 'settings', description: 'SMTP, email, and app-level settings' },
@@ -22,6 +22,7 @@ export const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; descripti
   { id: 'cloud',      label: 'Cloud Storage',       icon: 'cloud', description: 'S3, Azure, GCP, restore' },
   { id: 'jira',       label: 'Jira Integration',    icon: 'link', description: 'Live Jira API connections (read-only, ARCH-05)' },
   { id: 'browser',    label: 'Browser Data',        icon: 'delete', description: 'Client-side cached data' },
+  { id: 'personaPreview', label: 'Persona Preview', icon: 'eye', description: 'Soft-launch role-view switcher (super-admin only)', superAdminOnly: true },
 ];
 
 export function activeTabMeta(tab: Tab) {
