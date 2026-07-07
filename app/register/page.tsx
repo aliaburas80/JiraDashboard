@@ -2,7 +2,8 @@
 // EP-011: Public registration page — name, email, password, primary persona.
 'use client';
 
-import { useEffect, useState, FormEvent } from 'react';
+import { useEffect, useRef, useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './page.module.scss';
@@ -11,20 +12,31 @@ import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 
 export default function RegisterPage() {
-  const [name,     setName]     = useState('');
-  const [email,    setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [persona,  setPersona]  = useState('');
-  const [consent,  setConsent]  = useState(false);
-  const [error,    setError]    = useState('');
-  const [loading,  setLoading]  = useState(false);
-  const [done,     setDone]     = useState(false);
+  const router = useRouter();
+  const [name,        setName]        = useState('');
+  const [email,       setEmail]       = useState('');
+  const [password,    setPassword]    = useState('');
+  const [persona,     setPersona]     = useState('');
+  const [consent,     setConsent]     = useState(false);
+  const [error,       setError]       = useState('');
+  const [loading,     setLoading]     = useState(false);
+  const [done,        setDone]        = useState(false);
+  const [createNotice, setCreateNotice] = useState(false);
+  const noticeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const emailParam = params.get('email')?.trim();
     if (emailParam) setEmail(emailParam);
+    if (params.get('notice') === 'create_account') setCreateNotice(true);
   }, []);
+
+  // Scroll the notice/error into view whenever one appears.
+  useEffect(() => {
+    if (error || createNotice) {
+      noticeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error, createNotice]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -36,9 +48,13 @@ export default function RegisterPage() {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ name, email, password, persona, consentAccepted: consent }),
       });
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json().catch(() => ({})) as { error?: string; code?: string };
       if (!res.ok) {
-        setError((data as { error?: string }).error ?? 'Registration failed. Please try again.');
+        if (data.code === 'ALREADY_REGISTERED') {
+          router.push(`/login?email=${encodeURIComponent(email.trim())}&notice=welcome_back`);
+          return;
+        }
+        setError(data.error ?? 'Registration failed. Please try again.');
         return;
       }
       setDone(true);
@@ -86,7 +102,13 @@ export default function RegisterPage() {
             </p>
 
             {error && (
-              <div className={styles.error} role="alert">{error}</div>
+              <div ref={noticeRef} className={styles.error} role="alert">{error}</div>
+            )}
+
+            {!error && createNotice && (
+              <div ref={noticeRef} className={styles.notice} role="status" aria-live="polite">
+                No Delivery Clarity account exists for that email yet — create one below to get started.
+              </div>
             )}
 
             <form onSubmit={handleSubmit} noValidate>

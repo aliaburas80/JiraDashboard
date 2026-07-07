@@ -5,6 +5,12 @@
 
 ---
 
+## Smoother Login/Register Hand-Off + Easier-to-Notice Errors (2026-07-08, P2)
+
+If you try to log in with an email that's not registered, you're taken to the sign-up page as before. If you try to register with an email that's already registered, you're now taken straight to the sign-in page with a friendly "Welcome back!" message and your email already filled in — instead of just seeing an error and having to figure out what to do next. Error and notice messages on the sign-in, registration, forgot-password, reset-password, and change-password pages now automatically scroll into view so you never miss them.
+
+---
+
 ## Spreadsheet Exports Now Block Formula Injection (2026-07-07, P0 security fix)
 
 CSV and Excel exports now neutralize values that spreadsheet apps could treat as formulas. This protects exported Jira summaries, assignees, labels, import-log metadata, and related fields if someone has entered a malicious-looking value in Jira or an uploaded spreadsheet. Normal export content is unchanged unless a cell begins with a formula trigger such as `=`, `+`, `-`, or `@`.

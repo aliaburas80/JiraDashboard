@@ -1,7 +1,7 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // NOTE: Fully functional after npm install iron-session prisma @prisma/client bcryptjs
 'use client';
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -31,6 +31,8 @@ export default function LoginPage() {
   const [resending, setResending] = useState(false);
   const [resendMessage, setResendMessage] = useState('');
   const [rateLimitSecs, setRateLimitSecs] = useState(0);
+  const [welcomeBack, setWelcomeBack]     = useState(false);
+  const noticeRef = useRef<HTMLDivElement>(null);
 
   // Count down every second until the rate-limit window expires.
   useEffect(() => {
@@ -38,6 +40,25 @@ export default function LoginPage() {
     const timer = setTimeout(() => setRateLimitSecs(s => Math.max(0, s - 1)), 1000);
     return () => clearTimeout(timer);
   }, [rateLimitSecs]);
+
+  // Arriving here from /register after it found an existing account for this
+  // email — prefill the email and greet the returning user instead of making
+  // them retype it.
+  useEffect(() => {
+    const emailParam  = params.get('email')?.trim();
+    const noticeParam = params.get('notice');
+    if (emailParam) setEmail(emailParam);
+    if (noticeParam === 'welcome_back') setWelcomeBack(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- read once on mount from the initial URL
+  }, []);
+
+  // Scroll the notice/error into view whenever one appears, so it's visible
+  // even if the card has scrolled out of the viewport (e.g. long solution text).
+  useEffect(() => {
+    if ((error || welcomeBack) && rateLimitSecs === 0) {
+      noticeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error, welcomeBack, rateLimitSecs]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -62,7 +83,7 @@ export default function LoginPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (data.code === 'USER_NOT_FOUND') {
-          const next = `/register?email=${encodeURIComponent(email.trim())}`;
+          const next = `/register?email=${encodeURIComponent(email.trim())}&notice=create_account`;
           router.push(next);
           return;
         }
@@ -143,7 +164,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} noValidate>
           {/* Rate-limit countdown banner — shown above any other error */}
           {rateLimitSecs > 0 && (
-            <div className={clsx(loginStyles.notice, loginStyles.warning)} role="alert" aria-live="polite">
+            <div ref={noticeRef} className={clsx(loginStyles.notice, loginStyles.warning)} role="alert" aria-live="polite">
               <div className="flex items-center gap-2">
                 <SvgIcon name="warning" size={16} className="shrink-0" />
                 <div>
@@ -161,8 +182,22 @@ export default function LoginPage() {
             </div>
           )}
 
+          {!error && welcomeBack && rateLimitSecs === 0 && (
+            <div ref={noticeRef} className={clsx(loginStyles.notice, loginStyles.success)} role="status" aria-live="polite">
+              <div className="flex items-center gap-2">
+                <SvgIcon name="check" size={16} className="shrink-0" />
+                <div>
+                  <p className={loginStyles.noticeTitle}>Welcome back!</p>
+                  <p className={loginStyles.noticeText}>
+                    This email already has a Delivery Clarity account — sign in below.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {error && rateLimitSecs === 0 && (
-            <div className={clsx(loginStyles.notice, loginStyles.error)} role="alert">
+            <div ref={noticeRef} className={clsx(loginStyles.notice, loginStyles.error)} role="alert">
               <div className="flex items-start gap-2">
                 <SvgIcon name="info" size={16} className="mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">

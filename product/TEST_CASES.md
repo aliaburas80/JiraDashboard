@@ -2153,3 +2153,23 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **TC-SEC-CSV-11:** `exportImportLogsWorkbook()` leaves benign uploaded metadata unchanged.
 
 **TC-SEC-CSV-12:** The retro `.xlsx` template still produces the expected static workbook cells unchanged while routing through the shared spreadsheet safety guard.
+
+## 9.91 — Login/Register Cross-Redirect Notices + Auto-Scroll to Errors
+
+*(Added 2026-07-08. User request: don't dead-end a user who tries to log in without an account or register with an existing one; put errors inside the relevant card and scroll to them.)*
+
+**TC-AUTH-UX-01:** `/login`'s existing `USER_NOT_FOUND` redirect now appends `&notice=create_account` in addition to the pre-existing `?email=`.
+
+**TC-AUTH-UX-02:** `/register` now detects `data.code === 'ALREADY_REGISTERED'` from `POST /api/auth/register` and redirects to `/login?email=<email>&notice=welcome_back` instead of only showing an inline error.
+
+**TC-AUTH-UX-03:** `/login` reads `notice=welcome_back` from the URL and renders a green "Welcome back!" banner (distinct from the existing red error/orange warning banners) instead of a red error, with the email field pre-filled from the `email` param.
+
+**TC-AUTH-UX-04:** `/register` reads `notice=create_account` from the URL and renders an informational banner ("No Delivery Clarity account exists for that email yet — create one below") when arriving from `/login`'s not-found redirect.
+
+**TC-AUTH-UX-05:** On `/login`, `/register`, `/forgot-password`, `/reset-password`, and `/change-password`, the error/notice container has a ref, and a `useEffect` calls `scrollIntoView({behavior:'smooth', block:'center'})` whenever an error or notice becomes visible.
+
+**TC-AUTH-UX-06:** On `/reset-password`, the "missing token" banner and the generic error-state banner are mutually exclusive (guarded so only one renders at a time) so a single shared ref never has to attach to two simultaneously-rendered elements.
+
+**Automated checks:** No new automated tests — this repo has no component-testing infrastructure (no jsdom/RTL in `jest.config.js`); the underlying `USER_NOT_FOUND`/`ALREADY_REGISTERED` API behavior was already covered by existing `loginRoute.test.ts`/`register.test.ts` and is unchanged by this fix. `npx tsc --noEmit` clean. `npx eslint` clean on all 5 touched pages. `npx stylelint` clean on `login/page.module.scss` and `register/page.module.scss`. Full suite 104 suites / 947 tests passing, no regressions. `npx next build` clean.
+
+**Manual verification:** not performed — no browser-automation tool available this session to confirm the redirect round-trip, banner styling, or scroll behavior visually. Recommended before relying on this: manually try logging in with an unregistered email and registering with an already-registered one, confirming both round-trips and banner text/color.
