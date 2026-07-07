@@ -76,11 +76,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // ── Duplicate email check ───────────────────────────────────────────────────
-  // Use a generic message to prevent email enumeration.
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    // Same message as "success" to prevent email enumeration.
-    return NextResponse.json({ ok: true, emailVerified: false });
+    return NextResponse.json(
+      {
+        error: 'Welcome back — this email already has a Delivery Clarity account. Please log in instead.',
+        code: 'ALREADY_REGISTERED',
+        loginPath: '/login',
+      },
+      { status: 409 },
+    );
   }
 
   // ── Create user + workspace atomically ─────────────────────────────────────

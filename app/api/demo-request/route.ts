@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail, buildDemoRequestEmail } from '@/lib/email';
+import { prisma } from '@/lib/prisma';
 
 const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_FIELD = 2000;
@@ -66,6 +67,21 @@ export async function POST(req: NextRequest) {
 
   if (!EMAIL_FORMAT.test(email)) {
     return NextResponse.json({ error: 'Please enter a valid work email address.' }, { status: 400 });
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where:  { email },
+    select: { id: true },
+  });
+  if (existingUser) {
+    return NextResponse.json(
+      {
+        error: 'Welcome back — this email already has a Delivery Clarity account. Please log in instead.',
+        code: 'ALREADY_REGISTERED',
+        loginPath: '/login',
+      },
+      { status: 409 },
+    );
   }
 
   if (justification.length < MIN_JUSTIFICATION) {

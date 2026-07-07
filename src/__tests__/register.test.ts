@@ -7,11 +7,12 @@ export {};
 
 const mockCreatedUser = { id: 'user-1', name: 'Sam', email: 'sam@test.com' };
 const mockCreate = jest.fn(async (args: any) => ({ ...mockCreatedUser, ...args.data }));
+const mockFindUnique = jest.fn(async (_args: unknown) => null as { id: string } | null);
 
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     user: {
-      findUnique: jest.fn(async () => null), // no existing account
+      findUnique: (args: unknown) => mockFindUnique(args),
       create: (args: any) => mockCreate(args),
     },
     loginAttempt: {
@@ -49,6 +50,7 @@ function request(body: unknown) {
   return {
     headers: { get: () => '127.0.0.1' },
     json: jest.fn(async () => body),
+    nextUrl: new URL('http://localhost/api/auth/register'),
   } as any;
 }
 
@@ -60,7 +62,10 @@ const validBody = {
   consentAccepted: true,
 };
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockFindUnique.mockResolvedValue(null);
+});
 
 test('TC-REG-01: self-registration creates the user with dataStorageMode "local"', async () => {
   const { POST } = await import('../../app/api/auth/register/route');
@@ -72,4 +77,23 @@ test('TC-REG-01: self-registration creates the user with dataStorageMode "local"
   expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({
     data: expect.objectContaining({ dataStorageMode: 'local', role: 'user' }),
   }));
+});
+
+test('TC-REG-02: self-registration rejects an email that already has an account', async () => {
+  mockFindUnique.mockResolvedValue({ id: 'existing-user' });
+  const { sendEmail } = await import('@/lib/email');
+  const { POST } = await import('../../app/api/auth/register/route');
+
+  const res = await POST(request(validBody));
+  const body = await res.json();
+
+  expect(res.status).toBe(409);
+  expect(body).toEqual(expect.objectContaining({
+    code: 'ALREADY_REGISTERED',
+    loginPath: '/login',
+  }));
+  expect(body.error).toMatch(/welcome back/i);
+  expect(body.error).toMatch(/log in/i);
+  expect(mockCreate).not.toHaveBeenCalled();
+  expect(sendEmail).not.toHaveBeenCalled();
 });
