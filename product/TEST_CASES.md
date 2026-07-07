@@ -2201,3 +2201,15 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** 9 new tests in `personaPreview.test.ts`, all passing. Full suite 105 suites / 956 tests passing (up from 104/947), no regressions. `npx tsc --noEmit` clean. `npx eslint` clean on all touched/new files. `npx stylelint` clean on the new SCSS module. `npx next build` clean.
 
 **Manual verification:** not performed — no browser-automation tool available this session to confirm the dropdown renders correctly, the trigger button's active state, the admin toggle's live effect across a page reload, or that a regular admin genuinely cannot see the Persona Preview tab in Admin Settings. Recommended before relying on this: enable the switch as the super-admin, confirm it appears for a non-admin user, select a persona, confirm the focus links navigate correctly, then disable it and confirm it disappears everywhere.
+
+## 9.93 — Fix: Persona Preview Tab Was Unreachable (AdminNavSidebar Has Its Own Hardcoded List)
+
+*(Added 2026-07-08. User reported "I cant find it" for the §9.92 Persona Preview tab, testing as the super-admin on both local and production.)*
+
+**Root cause:** §9.92 added the tab to `ADMIN_TABS`/`settingsNavItems`, passed to `AdminConsoleLayout`'s `navItems` prop — which is never rendered in `AdminConsoleLayout.tsx` (a pre-existing dead prop, confirmed true for every other tab too, not a regression). The real settings sub-navigation the user actually clicks comes from a separate, independently-hardcoded `SETTINGS_SUB_ITEMS` list in `AdminNavSidebar.tsx`, which §9.92 didn't know existed.
+
+**TC-PP-10:** `AdminNavSidebar` appends a "Persona Preview" link (`/admin/settings?tab=personaPreview`) to the settings sub-navigation only when the current user's `isSuperAdmin` is true (fetched via the existing `getCachedIsSuperAdmin`/`fetchCurrentUser` pattern, seeded from cache then refreshed) — not shown to a regular admin.
+
+**Automated checks:** No new automated tests — `AdminNavSidebar` has no existing test file and this repo has no component-testing infrastructure. `npx tsc --noEmit` clean, `npx eslint` clean, full suite unchanged at 105 suites / 956 tests (this fix only touched one file, no test-relevant logic), `npx next build` clean.
+
+**Manual verification:** not performed. Recommended: the super-admin re-checks `/admin/settings` after this fix deploys and confirms the "Persona Preview" link now appears in the left sidebar under Settings.

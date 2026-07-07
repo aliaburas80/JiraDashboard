@@ -1,10 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 import styles from './AdminNavSidebar.module.scss';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import { getCachedIsSuperAdmin, fetchCurrentUser } from '@/lib/currentUser';
 
 const SETTINGS_SUB_ITEMS = [
   { id: 'users',      label: 'User Management',     icon: 'people', tab: '' },
@@ -19,6 +20,10 @@ const SETTINGS_SUB_ITEMS = [
   { id: 'jira',       label: 'Jira Integration',    icon: 'link', tab: 'jira' },
   { id: 'browser',    label: 'Browser Data',        icon: 'delete', tab: 'browser' },
 ];
+
+// Super-admin-only — kept separate so a regular admin never sees the link,
+// consistent with the tab being filtered out in ADMIN_TABS/adminConsole.ts.
+const PERSONA_PREVIEW_SUB_ITEM = { id: 'personaPreview', label: 'Persona Preview', icon: 'eye', tab: 'personaPreview' };
 
 type NavItem = { id: string; label: string; href: string; icon: string };
 type NavSection = { label: string; items: NavItem[] };
@@ -57,6 +62,15 @@ export default function AdminNavSidebar() {
   const onSettings = pathname === '/admin/settings';
   const activeTab = searchParams.get('tab') ?? '';
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(getCachedIsSuperAdmin);
+
+  useEffect(() => {
+    fetchCurrentUser().then(user => setIsSuperAdmin(user?.isSuperAdmin === true));
+  }, []);
+
+  const settingsSubItems = isSuperAdmin
+    ? [...SETTINGS_SUB_ITEMS, PERSONA_PREVIEW_SUB_ITEM]
+    : SETTINGS_SUB_ITEMS;
 
   function renderNavItem(item: NavItem, onLinkClick?: () => void) {
     const active = item.href === '/admin/settings'
@@ -76,7 +90,7 @@ export default function AdminNavSidebar() {
 
         {item.id === 'settings' && onSettings && (
           <div className={styles.subNav} role="list" aria-label="Settings sections">
-            {SETTINGS_SUB_ITEMS.map(sub => {
+            {settingsSubItems.map(sub => {
               const subActive = sub.tab === '' ? activeTab === '' : activeTab === sub.tab;
               const href = sub.tab ? `/admin/settings?tab=${sub.tab}` : '/admin/settings';
               return (
