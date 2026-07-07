@@ -1,7 +1,7 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // EP-013: lands here from the password-reset link emailed by /forgot-password.
 'use client';
-import { useState, FormEvent } from 'react';
+import { useEffect, useRef, useState, FormEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -22,6 +22,13 @@ export default function ResetPasswordPage() {
   const [newPassword, setNewPassword]         = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [state, setState] = useState<ResetState>({ status: 'form' });
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (state.status === 'error' || !token) {
+      errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [state, token]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -86,14 +93,14 @@ export default function ResetPasswordPage() {
         ) : (
           <form onSubmit={handleSubmit} noValidate className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-4">
             {!token && (
-              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700" role="alert">
+              <div ref={errorRef} className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700" role="alert">
                 This link is missing its token. Request a new one from{' '}
                 <Link href="/forgot-password" className="underline underline-offset-2">Forgot password</Link>.
               </div>
             )}
 
-            {state.status === 'error' && (
-              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700" role="alert">
+            {state.status === 'error' && token && (
+              <div ref={errorRef} className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700" role="alert">
                 {state.message}
               </div>
             )}

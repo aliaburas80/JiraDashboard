@@ -1,7 +1,7 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // EP-013: "Forgot your password" entry point, linked from /login.
 'use client';
-import { useState, FormEvent } from 'react';
+import { useEffect, useRef, useState, FormEvent } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
@@ -16,6 +16,13 @@ type RequestState =
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [state, setState] = useState<RequestState>({ status: 'idle' });
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (state.status === 'error') {
+      errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [state]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -72,7 +79,7 @@ export default function ForgotPasswordPage() {
             <p className="text-sm text-slate-500">Enter the email address on your account and we&apos;ll send you a link to reset your password.</p>
 
             {state.status === 'error' && (
-              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700" role="alert">
+              <div ref={errorRef} className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700" role="alert">
                 {state.message}
               </div>
             )}
