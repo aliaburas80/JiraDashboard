@@ -1,8 +1,17 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 
+import { setStoredOwner, tagCurrentOwner as tagOwner, isOwnedByCurrentUser } from '@/lib/localDataOwnership';
+
 const STORAGE_KEY = "dc_metrics_v2";
 const SOURCE_KEY  = "dc_metrics_source_v1";
+// P0 fix, 2026-07-08: localStorage is scoped to the BROWSER, not the
+// logged-in account — see src/lib/localDataOwnership.ts. This key tags
+// whichever account's data is currently cached; every read is validated
+// against the live, server-verified session before being trusted.
+const OWNER_KEY   = "dc_metrics_owner_v1";
 const MAX_ITEMS   = 5_000; // hard cap for flow.items before storage
+
+const tagCurrentOwner = () => tagOwner(OWNER_KEY);
 
 export type MetricsDataSource =
   | 'bucket'
@@ -53,6 +62,7 @@ export function saveMetrics(metrics: unknown): void {
   try {
     const json = JSON.stringify(metrics);
     localStorage.setItem(STORAGE_KEY, json);
+    tagCurrentOwner();
     saveSource({ source: 'upload', message: 'Fresh Jira upload saved in this browser.' });
   } catch {
     // QuotaExceededError — try saving a reduced version
@@ -69,6 +79,7 @@ export function saveMetrics(metrics: unknown): void {
           },
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+        tagCurrentOwner();
         saveSource({ source: 'upload', message: 'Fresh Jira upload saved in this browser with capped detail rows.' });
       }
     } catch {
@@ -100,7 +111,10 @@ export async function loadMetricsWithSource(): Promise<LoadMetricsResult> {
     if (res.ok && data?.available === false) {
       cloudError = data?.message ?? 'No bucket/server metrics are available yet.';
     } else if (res.ok && data?.metrics) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data.metrics)); } catch {}
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data.metrics));
+        setStoredOwner(OWNER_KEY, typeof data.userId === 'string' ? data.userId : null);
+      } catch {}
       const info: MetricsSourceInfo = {
         source: data.source ?? 'server-local',
         provider: data.provider ?? data.sync?.provider,
@@ -121,14 +135,26 @@ export async function loadMetricsWithSource(): Promise<LoadMetricsResult> {
 
   const local = loadMetrics();
   if (local) {
-    const info: MetricsSourceInfo = {
-      source: 'localstorage',
-      status: 'fallback',
-      error: cloudError,
-      message: 'Bucket/server metrics were unavailable. Loaded dashboard data from browser localStorage.',
-    };
-    saveSource(info);
-    return { ...info, metrics: local, fallbackUsed: true };
+    // P0 fix: never trust a locally-cached fallback without verifying it
+    // belongs to whoever is actually logged in right now (server-verified,
+    // not client state — the session cookie can't be spoofed). Untagged data
+    // (written before this fix shipped) is treated as untrusted, not as "no
+    // owner recorded, assume it's fine" — a one-time, deliberately safe loss
+    // of stale local caches rather than any risk of leaking them.
+    if (await isOwnedByCurrentUser(OWNER_KEY)) {
+      const info: MetricsSourceInfo = {
+        source: 'localstorage',
+        status: 'fallback',
+        error: cloudError,
+        message: 'Bucket/server metrics were unavailable. Loaded dashboard data from browser localStorage.',
+      };
+      saveSource(info);
+      return { ...info, metrics: local, fallbackUsed: true };
+    }
+
+    // Belongs to a different account (or ownership can't be verified) —
+    // discard it rather than risk showing it to the wrong user.
+    clearMetrics();
   }
 
   const info: MetricsSourceInfo = {
@@ -145,6 +171,7 @@ export function clearMetrics(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(SOURCE_KEY);
+  localStorage.removeItem(OWNER_KEY);
 }
 
 export function hasMetrics(): boolean {

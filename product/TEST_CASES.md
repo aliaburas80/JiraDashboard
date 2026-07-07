@@ -2213,3 +2213,39 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** No new automated tests — `AdminNavSidebar` has no existing test file and this repo has no component-testing infrastructure. `npx tsc --noEmit` clean, `npx eslint` clean, full suite unchanged at 105 suites / 956 tests (this fix only touched one file, no test-relevant logic), `npx next build` clean.
 
 **Manual verification:** not performed. Recommended: the super-admin re-checks `/admin/settings` after this fix deploys and confirms the "Persona Preview" link now appears in the left sidebar under Settings.
+
+## 9.94 — P0 Cross-Account Local Data Leak
+
+*(Added 2026-07-08. User report: "both users in the app access to each other data... must data be private for each one" — confirmed real, two independent root causes, both fixed. See SRS.md Addendum O.)*
+
+**TC-DATAISO-01:** `setStoredOwner`/`getStoredOwner` (shared `src/lib/localDataOwnership.ts` utility) round-trip a tag correctly.
+
+**TC-DATAISO-02:** `isOwnedByCurrentUser` returns `true` only when the stored tag matches the live, server-verified session's `userId`.
+
+**TC-DATAISO-03:** `isOwnedByCurrentUser` returns `false` when the stored tag belongs to a different account than who's currently logged in.
+
+**TC-DATAISO-04:** `isOwnedByCurrentUser` returns `false` for untagged data (e.g. cached before this fix shipped) — treated as untrusted, not "no owner recorded, assume it's fine".
+
+**TC-DATAISO-05:** `isOwnedByCurrentUser` returns `false` when nobody is logged in.
+
+**TC-DATAISO-06:** `loadMetricsWithSource()` refuses a different account's cached `dc_metrics_v2` and clears both the metrics and owner-tag keys rather than returning the data.
+
+**TC-DATAISO-07:** `loadMetricsWithSource()` still correctly serves the *same* account's own cached metrics across a logout/login cycle (same-user continuity is preserved, not broken by this fix).
+
+**TC-DATAISO-08:** A metrics response from `GET /api/metrics/latest` gets tagged in `localStorage` with its real owning `userId` (returned in the API response specifically to support this).
+
+**TC-DATAISO-09:** `clearMetrics()` removes the owner-tag key along with the metrics/source keys.
+
+**TC-DATAISO-10:** `listLocalImportsForCurrentUser()` refuses a different account's cached local import history (filenames, health scores) and clears it.
+
+**TC-DATAISO-11:** `listLocalImportsForCurrentUser()` still serves the same account's own local import history.
+
+**TC-DATAISO-12:** `GET /api/imports` returns `401` for an unauthenticated request — the previous unscoped, unauthenticated file-fallback path no longer exists; the Prisma query is never reached.
+
+**TC-DATAISO-13:** `GET /api/imports` scopes its Prisma query to `where: { userId: session.userId, ... }` for a regular (non-admin, non-`all=true`) request.
+
+**Also fixed:** 1 pre-existing test (`cloudRestoreHardening.test.ts` TC-CS-12) was asserting the old, insecure "always trust local storage regardless of who's logged in" behavior — updated to tag the cache with the test session's own `userId` and mock `GET /api/auth/me`, so it now correctly asserts same-account continuity rather than reverting this fix. Also added `export {};` to both `cloudRestoreHardening.test.ts` and the new `crossAccountDataIsolation.test.ts` to resolve a pre-existing TypeScript "duplicate function implementation" conflict between two same-named, non-exported helpers at global script scope — a `tsc` prerequisite for adding the new test file, unrelated to this fix's actual logic.
+
+**Automated checks:** 13 new tests in `crossAccountDataIsolation.test.ts`, all passing. Full suite 106 suites / 969 tests passing (up from 105/956), no regressions. `npx tsc --noEmit` clean. `npx eslint` clean on all touched/new files. `npx next build` clean.
+
+**Manual verification:** not performed — no browser-automation tool available this session. **This is the most important manual check to run before considering this closed**: log in as account A, upload data, sign out (or don't — either should work), log in as account B on the *same browser*, and confirm the dashboard shows no data belonging to account A.

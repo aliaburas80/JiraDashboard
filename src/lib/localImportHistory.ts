@@ -4,7 +4,14 @@
 // history list already renders — everything here stays in the browser and is
 // never sent to the server, unlike GET/DELETE /api/imports (the cloud-mode path).
 
+import { tagCurrentOwner, isOwnedByCurrentUser } from '@/lib/localDataOwnership';
+
 const STORAGE_KEY = 'dc_local_import_history_v1';
+// P0 fix, 2026-07-08: this history (filenames, health scores of past
+// uploads) is real per-account data, not just a UI preference — see
+// src/lib/localDataOwnership.ts for why it must be owner-tagged like
+// src/lib/storage.ts's metrics cache.
+const OWNER_KEY   = 'dc_local_import_history_owner_v1';
 const MAX_ITEMS   = 20; // bounded to stay well inside typical localStorage quotas
 
 export interface LocalImportRecord {
@@ -47,6 +54,22 @@ export function listLocalImports(): LocalImportRecord[] {
   }
 }
 
+/**
+ * The only safe way for UI to read this history — verifies it belongs to
+ * whoever is actually logged in right now before returning anything. A
+ * mismatch (a different account's history cached in this browser) is
+ * discarded rather than shown. Use this instead of listLocalImports() from
+ * any component; listLocalImports() itself is still used internally by
+ * addLocalImport()/removeLocalImport() for their own read-modify-write.
+ */
+export async function listLocalImportsForCurrentUser(): Promise<LocalImportRecord[]> {
+  if (!(await isOwnedByCurrentUser(OWNER_KEY))) {
+    clearLocalImportHistory();
+    return [];
+  }
+  return listLocalImports();
+}
+
 export interface AddLocalImportResult {
   record: LocalImportRecord;
   quotaExceeded: boolean;
@@ -66,6 +89,7 @@ export function addLocalImport(
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    tagCurrentOwner(OWNER_KEY);
     return { record, quotaExceeded: false };
   } catch {
     // Browser storage is full — the current upload still succeeded and is on
@@ -86,6 +110,7 @@ export function removeLocalImport(id: string): void {
 export function clearLocalImportHistory(): void {
   if (typeof window === 'undefined') return;
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  try { localStorage.removeItem(OWNER_KEY); } catch {}
 }
 
 export { STORAGE_KEY as LOCAL_IMPORT_HISTORY_KEY };

@@ -98,5 +98,9 @@ export async function GET() {
     provider: sync?.provider,
     key: sync?.key,
     message: sync?.reason,
+    // Lets the client tag its localStorage fallback cache with the actual
+    // owning account, so a later read can verify it before trusting it —
+    // see src/lib/storage.ts.
+    userId: session.userId,
   });
 }
