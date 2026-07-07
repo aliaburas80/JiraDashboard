@@ -9,7 +9,8 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { sendEmail, buildFeedbackNotificationEmail } from '@/lib/email';
+import { sendEmail, buildFeedbackNotificationEmail, buildFeedbackReceivedEmail } from '@/lib/email';
+import { resolveRequestOrigin } from '@/lib/url';
 import packageJson from '../../../package.json';
 
 export const dynamic = 'force-dynamic';
@@ -77,11 +78,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // Resolve session — best effort.
   let userId: string | undefined;
   let userEmail: string | undefined;
+  let userName: string | undefined;
   try {
     const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
     if (session.isLoggedIn) {
       userId    = session.userId;
       userEmail = canContact ? session.email : undefined;
+      userName  = canContact ? session.name : undefined;
     }
   } catch { /* session unavailable */ }
 
@@ -115,6 +118,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await sendEmail({ to: FEEDBACK_NOTIFICATION_TO, ...emailContent });
   } catch (err) {
     console.error('[feedback] Failed to send feedback notification email:', err);
+  }
+
+  if (userEmail) {
+    try {
+      const feedbackSummary = message.length > 240 ? `${message.slice(0, 237)}...` : message;
+      const appUrl = resolveRequestOrigin(req);
+      const emailContent = buildFeedbackReceivedEmail({
+        userName: userName ?? 'there',
+        appUrl,
+        feedbackSummary,
+      });
+      await sendEmail({ to: userEmail, toName: userName, ...emailContent });
+    } catch (err) {
+      console.error('[feedback] Failed to send feedback receipt email:', err);
+    }
   }
 
   return NextResponse.json({ ok: true });

@@ -7,6 +7,8 @@ import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, validatePasswordStrength, verifyPassword } from '@/lib/auth';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
+import { sendEmail, buildPasswordChangedEmail } from '@/lib/email';
+import { resolveRequestOrigin } from '@/lib/url';
 
 // Rate limit: 10 password-change attempts per user per 15 minutes.
 // Prevents authenticated brute-forcing of the current-password field (GAP-2, P0A-05).
@@ -99,6 +101,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await pushToCloud();
   } catch {
     // Local password change must not fail just because cloud backup is unreachable.
+  }
+
+  try {
+    const appUrl = resolveRequestOrigin(req);
+    const emailContent = buildPasswordChangedEmail(user.name, appUrl);
+    await sendEmail({ to: user.email, toName: user.name, ...emailContent });
+  } catch (err) {
+    console.error('[auth] Failed to send password changed email:', err);
   }
 
   return NextResponse.json({ ok: true });

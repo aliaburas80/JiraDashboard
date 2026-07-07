@@ -43,6 +43,105 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
+function emailLogoUrl(appUrl: string): string {
+  return `${appUrl.replace(/\/+$/, '')}/logo/delivery_clarity_mark_128.png`;
+}
+
+interface BrandedEmailAction {
+  label: string;
+  href: string;
+}
+
+interface BrandedEmailOptions {
+  appUrl: string;
+  title: string;
+  eyebrow?: string;
+  heading: string;
+  userName: string;
+  body: string[];
+  callout?: { title: string; body: string };
+  primaryAction?: BrandedEmailAction;
+  secondaryAction?: BrandedEmailAction;
+  footerReason?: string;
+}
+
+function buildTextEmail(options: BrandedEmailOptions): string {
+  return [
+    options.title,
+    '',
+    `Hi ${options.userName},`,
+    '',
+    ...options.body.flatMap((paragraph) => [paragraph, '']),
+    ...(options.callout ? [options.callout.title, options.callout.body, ''] : []),
+    ...(options.primaryAction ? [`${options.primaryAction.label}: ${options.primaryAction.href}`, ''] : []),
+    ...(options.secondaryAction ? [`${options.secondaryAction.label}: ${options.secondaryAction.href}`, ''] : []),
+    'Need help? support@deliveryclarity.app',
+    '',
+    '— Delivery Clarity',
+  ].join('\n').trim();
+}
+
+function buildBrandedEmailHtml(options: BrandedEmailOptions): string {
+  const esc = escapeHtml;
+  const logoUrl = emailLogoUrl(options.appUrl);
+  const body = options.body
+    .map((paragraph) => `<p style="margin:18px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:25px;color:#c8cfdd;">${esc(paragraph)}</p>`)
+    .join('');
+  const callout = options.callout
+    ? `
+    <div style="margin:24px 0 0 0;padding:16px 18px;border-radius:16px;background:#111827;border:1px solid #263246;">
+      <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#ffffff;">${esc(options.callout.title)}</p>
+      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#a7adbd;">${esc(options.callout.body)}</p>
+    </div>`
+    : '';
+  const primaryAction = options.primaryAction
+    ? `
+      <a href="${esc(options.primaryAction.href)}" style="display:inline-block;background:linear-gradient(135deg,#ff8a4c,#e85d12);color:#190902;padding:14px 22px;border-radius:999px;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;">
+        ${esc(options.primaryAction.label)}
+      </a>`
+    : '';
+  const secondaryAction = options.secondaryAction
+    ? `<p style="margin:18px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#a7adbd;"><a href="${esc(options.secondaryAction.href)}" style="color:#dce2ff;text-decoration:underline;">${esc(options.secondaryAction.label)}</a></p>`
+    : '';
+
+  return `
+<div style="font-family:Arial,Helvetica,sans-serif;max-width:620px;margin:0 auto;color:#dce2ff;background:#070b16;border-radius:22px;border:1px solid #1f2a44;overflow:hidden">
+  <div style="padding:28px 30px;border-bottom:1px solid #1f2a44;background:#0b1020">
+    <table role="presentation" style="border-collapse:collapse;width:100%">
+      <tr>
+        <td style="width:48px">
+          <img src="${esc(logoUrl)}" width="40" height="40" alt="Delivery Clarity logo" style="display:block;width:40px;height:40px;border:0;outline:none;text-decoration:none;">
+        </td>
+        <td style="font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:800;color:#ffffff;">Delivery Clarity</td>
+      </tr>
+    </table>
+  </div>
+  <div style="padding:34px 30px">
+    <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#ff9a66;">${esc(options.eyebrow ?? 'Jira export analytics')}</p>
+    <h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:32px;line-height:38px;font-weight:800;letter-spacing:-.04em;color:#ffffff;">${esc(options.heading)}</h1>
+    <p style="margin:18px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:25px;color:#c8cfdd;">Hi ${esc(options.userName)},</p>
+    ${body}
+    ${callout}
+    <div style="margin:26px 0 0 0">
+      ${primaryAction}
+      ${secondaryAction}
+    </div>
+  </div>
+  <div style="padding:22px 30px;border-top:1px solid #1f2a44;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:20px;color:#7e879b;background:#070b16">
+    <p style="margin:0 0 8px 0;">${esc(options.footerReason ?? 'You are receiving this email because you are using Delivery Clarity during the controlled soft launch.')}</p>
+    <p style="margin:0;">Need help? <a href="mailto:support@deliveryclarity.app" style="color:#dce2ff;text-decoration:underline;">support@deliveryclarity.app</a></p>
+    <p style="margin:14px 0 0 0;color:#676f82;">© ${new Date().getFullYear()} Delivery Clarity</p>
+  </div>
+</div>`.trim();
+}
+
+function buildBrandedEmail(options: BrandedEmailOptions): Pick<EmailOptions, 'text' | 'html'> {
+  return {
+    text: buildTextEmail(options),
+    html: buildBrandedEmailHtml(options),
+  };
+}
+
 // ── Resend (HTTPS API — primary for production) ───────────────────────────────
 
 interface ResendErrorBody { message?: string; name?: string; }
@@ -464,4 +563,223 @@ export function buildPasswordResetEmail(
 </div>`.trim();
 
   return { subject: 'Reset your password — Delivery Clarity', text, html };
+}
+
+interface UserEmailBase {
+  userName: string;
+  appUrl:   string;
+}
+
+export function buildPasswordChangedEmail(
+  userName: string,
+  appUrl:   string,
+): Pick<EmailOptions, 'subject' | 'text' | 'html'> {
+  const content = buildBrandedEmail({
+    appUrl,
+    title: 'Password changed',
+    eyebrow: 'Account security',
+    heading: 'Your password was changed',
+    userName,
+    body: [
+      'This is a quick confirmation that your Delivery Clarity password was changed successfully.',
+      'If you made this change, no further action is needed.',
+    ],
+    callout: {
+      title: 'Wasn\'t you?',
+      body: 'Contact support right away so we can help protect your account.',
+    },
+    primaryAction: { label: 'Go to login', href: `${appUrl}/login` },
+    secondaryAction: { label: 'Contact support', href: 'mailto:support@deliveryclarity.app' },
+    footerReason: 'You are receiving this email because your Delivery Clarity account password changed.',
+  });
+
+  return { subject: 'Your Delivery Clarity password was changed', ...content };
+}
+
+export interface UploadSuccessEmailDetails extends UserEmailBase {
+  fileName: string;
+}
+
+export function buildUploadSuccessEmail(
+  details: UploadSuccessEmailDetails,
+): Pick<EmailOptions, 'subject' | 'text' | 'html'> {
+  const content = buildBrandedEmail({
+    appUrl: details.appUrl,
+    title: 'Upload complete',
+    heading: 'Your Jira export was uploaded',
+    userName: details.userName,
+    body: [
+      `We received ${details.fileName} and Delivery Clarity is ready to turn it into flow, delivery, and quality signals.`,
+      'You can review the dashboard now or continue with your next export.',
+    ],
+    callout: {
+      title: 'Next step',
+      body: 'Open your workspace to review the latest imported data and analysis views.',
+    },
+    primaryAction: { label: 'Open your workspace', href: details.appUrl },
+    secondaryAction: { label: 'View delivery mix', href: `${details.appUrl}/delivery-mix` },
+  });
+
+  return { subject: 'Your Jira export was uploaded', ...content };
+}
+
+export interface UploadFailedEmailDetails extends UserEmailBase {
+  fileName:      string;
+  errorMessage:  string;
+}
+
+export function buildUploadFailedEmail(
+  details: UploadFailedEmailDetails,
+): Pick<EmailOptions, 'subject' | 'text' | 'html'> {
+  const content = buildBrandedEmail({
+    appUrl: details.appUrl,
+    title: 'Upload needs attention',
+    eyebrow: 'Import status',
+    heading: 'Your Jira export could not be processed',
+    userName: details.userName,
+    body: [
+      `We tried to process ${details.fileName}, but the import did not complete.`,
+      'Please review the file and try the upload again. If the problem repeats, send the file details to support.',
+    ],
+    callout: {
+      title: 'Error details',
+      body: details.errorMessage,
+    },
+    primaryAction: { label: 'Try upload again', href: details.appUrl },
+    secondaryAction: { label: 'Contact support', href: 'mailto:support@deliveryclarity.app' },
+  });
+
+  return { subject: 'Your Jira export upload needs attention', ...content };
+}
+
+export type AnalysisReadyEmailDetails = UserEmailBase;
+
+export function buildAnalysisReadyEmail(
+  details: AnalysisReadyEmailDetails,
+): Pick<EmailOptions, 'subject' | 'text' | 'html'> {
+  const content = buildBrandedEmail({
+    appUrl: details.appUrl,
+    title: 'Analysis ready',
+    heading: 'Your Delivery Clarity analysis is ready',
+    userName: details.userName,
+    body: [
+      'Your Jira export has been processed and the dashboard is ready for review.',
+      'Start with the delivery mix and flow health views to see where work is moving cleanly and where it may need attention.',
+    ],
+    callout: {
+      title: 'Look for',
+      body: 'Cycle time, blocker patterns, delivery mix, and the signals that explain what your Jira export is really telling you.',
+    },
+    primaryAction: { label: 'Open analysis', href: `${details.appUrl}/delivery-mix` },
+    secondaryAction: { label: 'Back to dashboard', href: `${details.appUrl}/dashboard` },
+  });
+
+  return { subject: 'Your Delivery Clarity analysis is ready', ...content };
+}
+
+export interface FeedbackReceivedEmailDetails extends UserEmailBase {
+  feedbackSummary: string;
+}
+
+export function buildFeedbackReceivedEmail(
+  details: FeedbackReceivedEmailDetails,
+): Pick<EmailOptions, 'subject' | 'text' | 'html'> {
+  const content = buildBrandedEmail({
+    appUrl: details.appUrl,
+    title: 'Feedback received',
+    eyebrow: 'Product feedback',
+    heading: 'We received your feedback',
+    userName: details.userName,
+    body: [
+      'Thank you for taking the time to send feedback during the Delivery Clarity soft launch.',
+      'We read every submission and use it to improve the product workflow, analysis, and onboarding.',
+    ],
+    callout: {
+      title: 'Your feedback',
+      body: details.feedbackSummary,
+    },
+    primaryAction: { label: 'Back to dashboard', href: `${details.appUrl}/dashboard` },
+    secondaryAction: { label: 'Contact support', href: 'mailto:support@deliveryclarity.app' },
+  });
+
+  return { subject: 'We received your Delivery Clarity feedback', ...content };
+}
+
+export interface SupportTicketReceivedEmailDetails extends UserEmailBase {
+  supportReference: string;
+}
+
+export function buildSupportTicketReceivedEmail(
+  details: SupportTicketReceivedEmailDetails,
+): Pick<EmailOptions, 'subject' | 'text' | 'html'> {
+  const content = buildBrandedEmail({
+    appUrl: details.appUrl,
+    title: 'Support request received',
+    eyebrow: 'Support',
+    heading: 'Your support request is in',
+    userName: details.userName,
+    body: [
+      'We received your Delivery Clarity support request and will follow up as soon as possible.',
+      'Keep the reference below handy if you reply with more context.',
+    ],
+    callout: {
+      title: 'Support reference',
+      body: details.supportReference,
+    },
+    primaryAction: { label: 'Return to Delivery Clarity', href: details.appUrl },
+    secondaryAction: { label: 'Contact support', href: 'mailto:support@deliveryclarity.app' },
+  });
+
+  return { subject: 'Delivery Clarity support request received', ...content };
+}
+
+export type PrivateTestInviteEmailDetails = UserEmailBase;
+
+export function buildPrivateTestInviteEmail(
+  details: PrivateTestInviteEmailDetails,
+): Pick<EmailOptions, 'subject' | 'text' | 'html'> {
+  const content = buildBrandedEmail({
+    appUrl: details.appUrl,
+    title: 'Private test invitation',
+    eyebrow: 'Soft launch',
+    heading: 'You are invited to test Delivery Clarity',
+    userName: details.userName,
+    body: [
+      'We are opening Delivery Clarity to a small group of testers before the wider launch.',
+      'Your feedback will help shape the Jira export workflow, dashboards, and the analysis language teams see first.',
+    ],
+    callout: {
+      title: 'Private test scope',
+      body: 'Upload a Jira CSV or spreadsheet, review the dashboard, and tell us where the product is clear or confusing.',
+    },
+    primaryAction: { label: 'Open private test', href: `${details.appUrl}/login` },
+    secondaryAction: { label: 'Upload a sheet', href: details.appUrl },
+  });
+
+  return { subject: 'You are invited to test Delivery Clarity', ...content };
+}
+
+export type WorkspaceReadyEmailDetails = UserEmailBase;
+
+export function buildWorkspaceReadyEmail(
+  details: WorkspaceReadyEmailDetails,
+): Pick<EmailOptions, 'subject' | 'text' | 'html'> {
+  const content = buildBrandedEmail({
+    appUrl: details.appUrl,
+    title: 'Workspace ready',
+    heading: 'Your Delivery Clarity workspace is ready',
+    userName: details.userName,
+    body: [
+      'Your workspace is set up and ready for your Jira export.',
+      'Once you upload a CSV or spreadsheet, Delivery Clarity will prepare the dashboard and delivery mix views.',
+    ],
+    callout: {
+      title: 'Recommended first action',
+      body: 'Upload your most recent Jira export so the workspace can show real delivery signals instead of sample data.',
+    },
+    primaryAction: { label: 'Open your workspace', href: details.appUrl },
+    secondaryAction: { label: 'Back to dashboard', href: `${details.appUrl}/dashboard` },
+  });
+
+  return { subject: 'Your Delivery Clarity workspace is ready', ...content };
 }

@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, validatePasswordStrength } from '@/lib/auth';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { sendEmail, buildPasswordChangedEmail } from '@/lib/email';
+import { resolveRequestOrigin } from '@/lib/url';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,6 +57,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     eventDescription: `Password reset via emailed link for ${user.email}`,
     ipAddress:        req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown',
   });
+
+  try {
+    const appUrl = resolveRequestOrigin(req);
+    const emailContent = buildPasswordChangedEmail(user.name, appUrl);
+    await sendEmail({ to: user.email, toName: user.name, ...emailContent });
+  } catch (err) {
+    console.error('[auth] Failed to send password changed email after reset:', err);
+  }
 
   return NextResponse.json({ ok: true });
 }

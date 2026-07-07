@@ -111,7 +111,7 @@ export default function StorageTab({ dataStorageMode, savingStorageMode, onUpdat
           >
             <p className="text-sm font-black text-slate-900">App storage</p>
             <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-              Uploads and metrics are stored in Delivery Clarity's own server database. Not a third-party cloud service — works across devices, and admins can support you with your data.
+              Uploads and metrics are stored in Delivery Clarity&apos;s own server database. Not a third-party cloud service — works across devices, and admins can support you with your data.
             </p>
           </button>
           <button

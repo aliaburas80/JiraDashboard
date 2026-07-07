@@ -6,9 +6,9 @@
 
 export {};
 
-import { buildFeedbackNotificationEmail } from '../lib/email';
+import { buildFeedbackNotificationEmail, buildFeedbackReceivedEmail } from '../lib/email';
 
-let mockSession: { isLoggedIn: boolean; userId?: string; email?: string } = { isLoggedIn: false };
+let mockSession: { isLoggedIn: boolean; userId?: string; email?: string; name?: string } = { isLoggedIn: false };
 
 const mockFeedbackCreate = jest.fn(async (args: any) => ({ id: 'fb-1', ...args.data }));
 const mockSendEmail = jest.fn(async (_opts: any) => true);
@@ -41,6 +41,7 @@ function request(body: unknown) {
   return {
     headers: { get: () => '127.0.0.1' },
     json: jest.fn(async () => body),
+    nextUrl: new URL('http://localhost/api/feedback'),
   } as any;
 }
 
@@ -98,12 +99,19 @@ test('TC-FB-04: a failed notification email does not fail the feedback submissio
 });
 
 test('TC-FB-05: includes the user\'s email in the notification when logged in and canContact is true', async () => {
-  mockSession = { isLoggedIn: true, userId: 'user-1', email: 'sam@test.com' };
+  mockSession = { isLoggedIn: true, userId: 'user-1', email: 'sam@test.com', name: 'Sam' };
   const { POST } = await import('../../app/api/feedback/route');
   await POST(request({ ...validBody, canContact: true }));
 
-  const sentWith = mockSendEmail.mock.calls[0][0];
-  expect(sentWith.text).toContain('sam@test.com');
+  const supportEmail = mockSendEmail.mock.calls[0][0];
+  const receiptEmail = mockSendEmail.mock.calls[1][0];
+  expect(mockSendEmail).toHaveBeenCalledTimes(2);
+  expect(supportEmail.text).toContain('sam@test.com');
+  expect(receiptEmail).toEqual(expect.objectContaining({
+    to: 'sam@test.com',
+    toName: 'Sam',
+    subject: 'We received your Delivery Clarity feedback',
+  }));
 });
 
 test('TC-FB-06: omits the user\'s email from the notification when canContact is false, even if logged in', async () => {
@@ -161,5 +169,21 @@ describe('buildFeedbackNotificationEmail', () => {
     });
 
     expect(result.text).toContain('Plain <text> & stuff');
+  });
+});
+
+describe('new user-facing email templates', () => {
+  test('TC-EMAIL-01: feedback receipt escapes HTML in user-supplied summary', () => {
+    const result = buildFeedbackReceivedEmail({
+      userName: 'Ali',
+      appUrl: 'https://app.example.com',
+      feedbackSummary: '<script>alert(1)</script> & "quotes"',
+    });
+
+    expect(result.subject).toBe('We received your Delivery Clarity feedback');
+    expect(result.html).not.toContain('<script>');
+    expect(result.html).toContain('&lt;script&gt;');
+    expect(result.html).toContain('&amp;');
+    expect(result.text).toContain('<script>alert(1)</script> & "quotes"');
   });
 });

@@ -28,6 +28,7 @@ jest.mock('@/lib/prisma', () => ({
       findUnique: jest.fn(async () => ({
         id: 'user-1',
         email: 'sam@test.com',
+        name: 'Sam',
         passwordHash: 'OLD_HASHED_PASSWORD',
         isActive: true,
       })),
@@ -45,11 +46,16 @@ jest.mock('@/lib/prisma', () => ({
 jest.mock('@/services/storage/cloudSync', () => ({
   pushToCloud: jest.fn(async () => ({ status: 'pushed' })),
 }));
+jest.mock('@/lib/email', () => ({
+  ...jest.requireActual('@/lib/email'),
+  sendEmail: jest.fn(async () => true),
+}));
 
 function request(body: unknown) {
   return {
     json: jest.fn(async () => body),
     headers: { get: jest.fn(() => null) },
+    nextUrl: new URL('http://localhost/api/auth/change-password'),
   } as any;
 }
 
@@ -74,6 +80,7 @@ test('TC-PW-08: change-password rejects a new password identical to the temporar
 test('TC-PW-09: change-password succeeds — clears mustChangePassword, writes audit event, updates session', async () => {
   const { prisma } = await import('@/lib/prisma');
   const { hashPassword } = await import('@/lib/auth');
+  const { sendEmail } = await import('@/lib/email');
   const { pushToCloud } = await import('@/services/storage/cloudSync');
   const { POST } = await import('../../app/api/auth/change-password/route');
 
@@ -93,6 +100,10 @@ test('TC-PW-09: change-password succeeds — clears mustChangePassword, writes a
   expect(mockSession.mustChangePassword).toBe(false);
   expect(mockSession.save).toHaveBeenCalled();
   expect(pushToCloud).toHaveBeenCalled();
+  expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({
+    to: 'sam@test.com',
+    subject: 'Your Delivery Clarity password was changed',
+  }));
 });
 
 test('TC-PW-10: change-password rejects an incorrect current/temporary password and leaves mustChangePassword set', async () => {

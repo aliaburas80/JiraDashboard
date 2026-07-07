@@ -127,7 +127,7 @@ test('TC-PR-08: forgot-password is rate limited after 5 requests from the same I
 test('TC-PR-09: reset-password with a valid, unexpired token sets a new password and clears the token', async () => {
   const future = new Date(Date.now() + 60_000);
   (prisma.user.findUnique as jest.Mock).mockResolvedValue({
-    id: 'u1', email: 'ali@test.com', passwordResetExpires: future,
+    id: 'u1', email: 'ali@test.com', name: 'Ali', passwordResetExpires: future,
   });
 
   const res  = await resetPassword(makeRequest(RESET_URL, { token: 'valid-token', newPassword: 'NewPass1' }) as any);
@@ -141,6 +141,10 @@ test('TC-PR-09: reset-password with a valid, unexpired token sets a new password
   expect(updateCall.data.passwordResetExpires).toBeNull();
   expect(updateCall.data.mustChangePassword).toBe(false);
   expect(typeof updateCall.data.passwordHash).toBe('string');
+  expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({
+    to: 'ali@test.com',
+    subject: 'Your Delivery Clarity password was changed',
+  }));
 });
 
 test('TC-PR-10: reset-password rejects an expired token without changing the password', async () => {

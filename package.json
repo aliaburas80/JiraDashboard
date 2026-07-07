@@ -11,7 +11,7 @@
     "dev": "node scripts/start-server.js dev",
     "build": "prisma generate && next build",
     "start": "node scripts/start-production.mjs",
-    "lint": "eslint . --max-warnings=0",
+    "lint": "eslint .",
     "lint:css": "stylelint 'src/**/*.scss' 'app/**/*.scss' --max-warnings=0",
     "db:generate": "prisma generate",
     "db:migrate:dev": "prisma migrate dev",

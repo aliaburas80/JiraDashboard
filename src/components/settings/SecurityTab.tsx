@@ -54,7 +54,7 @@ export default function SecurityTab({ onToast }: SecurityTabProps) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <h2 className="mb-1 text-sm font-black uppercase tracking-wider text-slate-700">Password</h2>
-      <p className="mb-4 text-xs text-slate-500">Change your account password. You'll stay signed in.</p>
+      <p className="mb-4 text-xs text-slate-500">Change your account password. You&apos;ll stay signed in.</p>
 
       <form onSubmit={handleSubmit} className="grid max-w-sm gap-4">
         <label className="grid gap-2 text-xs font-extrabold text-slate-700">
