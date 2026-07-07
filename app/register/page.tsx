@@ -2,7 +2,7 @@
 // EP-011: Public registration page — name, email, password, primary persona.
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './page.module.scss';
@@ -19,6 +19,12 @@ export default function RegisterPage() {
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
   const [done,     setDone]     = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get('email')?.trim();
+    if (emailParam) setEmail(emailParam);
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -63,7 +69,7 @@ export default function RegisterPage() {
               We&rsquo;ve sent a verification link to <strong>{email}</strong>.
               Click the link to activate your account and start your free analysis.
             </p>
-            <p className={styles.successText} style={{ fontSize: 11 }}>
+            <p className={styles.successHint}>
               No email? Check your spam folder. If email is not yet configured,
               your admin can manually verify the account.
             </p>

@@ -14,8 +14,9 @@ function loginError(
   error: string,
   solution: string,
   details?: string,
+  extra?: Record<string, unknown>,
 ): NextResponse {
-  return NextResponse.json({ error, solution, details }, { status });
+  return NextResponse.json({ error, solution, details, ...extra }, { status });
 }
 
 // Persistent rate limiter backed by PostgreSQL — survives Render cold starts.
@@ -106,9 +107,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     if (!user) {
       return loginError(
-        401,
-        GENERIC,
-        'Check the email spelling and password. If this is a new account, use the temporary password from your welcome email. If you still cannot sign in, ask an admin to reset your password.',
+        404,
+        'No Delivery Clarity account exists for this email.',
+        'Create a free account first, then verify your email before signing in.',
+        undefined,
+        { code: 'USER_NOT_FOUND', registerPath: '/register' },
       );
     }
     if (!user.isActive) {
@@ -125,6 +128,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         401,
         GENERIC,
         'Check for typos, Caps Lock, or an old temporary password. If you were just added by an admin, copy the temporary password exactly from the welcome email.',
+      );
+    }
+
+    if (user.emailVerified === false) {
+      return loginError(
+        403,
+        'Please verify your email before signing in.',
+        'Check your inbox for the Delivery Clarity verification link, or send the verification email again.',
+        undefined,
+        { code: 'EMAIL_NOT_VERIFIED', canResendVerification: true },
       );
     }
 
