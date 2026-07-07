@@ -95,6 +95,13 @@ export async function POST(req: NextRequest) {
 
     // Normal mode — respects existing DB guard
     const result = await autoRestoreFromCloud();
+    if (result.action === 'restored') {
+      await prisma.auditEvent.create({ data: {
+        userId:           session.userId,
+        eventType:        'backup_restored',
+        eventDescription: `Auto-restore from cloud triggered by ${session.email}.`,
+      }}).catch(() => {});
+    }
     return NextResponse.json({ ok: result.action === 'restored', ...result });
   } catch (e: unknown) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });

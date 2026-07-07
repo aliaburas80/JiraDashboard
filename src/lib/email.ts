@@ -32,6 +32,17 @@ interface SmtpErrorDescription {
   details?: string;
 }
 
+// Shared across every build*Email function — any value that did not
+// originate on the server (name, email, free-text message, etc.) must be
+// escaped before interpolation into an HTML email body.
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 // ── Resend (HTTPS API — primary for production) ───────────────────────────────
 
 interface ResendErrorBody { message?: string; name?: string; }
@@ -189,12 +200,7 @@ export interface DemoRequestDetails {
 export function buildDemoRequestEmail(
   details: DemoRequestDetails,
 ): Pick<EmailOptions, 'subject' | 'text' | 'html'> {
-  const esc = (value: string): string =>
-    value
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+  const esc = escapeHtml;
 
   const rows: Array<[string, string]> = [
     ['Name', details.name],
@@ -266,12 +272,7 @@ export interface FeedbackNotificationDetails {
 export function buildFeedbackNotificationEmail(
   details: FeedbackNotificationDetails,
 ): Pick<EmailOptions, 'subject' | 'text' | 'html'> {
-  const esc = (value: string): string =>
-    value
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+  const esc = escapeHtml;
 
   const rows: Array<[string, string]> = [
     ['Category', details.category],
@@ -352,12 +353,12 @@ export function buildWelcomeEmail(
     <p style="margin:4px 0 0;font-size:13px;color:#bfdbfe">Your account is ready</p>
   </div>
   <div style="padding:28px">
-    <p style="margin-top:0">Hi <strong>${name}</strong>,</p>
+    <p style="margin-top:0">Hi <strong>${escapeHtml(name)}</strong>,</p>
     <p>Your account has been created. Use the credentials below to log in for the first time.</p>
     <table style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;width:100%;border-collapse:collapse;margin:16px 0">
       <tr>
         <td style="color:#64748b;padding:10px 14px;font-size:12px;font-weight:600;white-space:nowrap;border-bottom:1px solid #e2e8f0">Email</td>
-        <td style="padding:10px 14px;font-weight:600;border-bottom:1px solid #e2e8f0">${email}</td>
+        <td style="padding:10px 14px;font-weight:600;border-bottom:1px solid #e2e8f0">${escapeHtml(email)}</td>
       </tr>
       <tr>
         <td style="color:#64748b;padding:10px 14px;font-size:12px;font-weight:600;white-space:nowrap">Temporary password</td>
@@ -407,8 +408,8 @@ export function buildVerificationEmail(
     <p style="margin:4px 0 0;font-size:13px;color:#bfdbfe">Verify your email address</p>
   </div>
   <div style="padding:28px">
-    <p style="margin-top:0">Hi <strong>${name}</strong>,</p>
-    <p>Thanks for creating a Delivery Clarity account for <strong>${email}</strong>. Please verify your email address to start uploading data.</p>
+    <p style="margin-top:0">Hi <strong>${escapeHtml(name)}</strong>,</p>
+    <p>Thanks for creating a Delivery Clarity account for <strong>${escapeHtml(email)}</strong>. Please verify your email address to start uploading data.</p>
     <a href="${verifyUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;margin:8px 0 20px">
       Verify Email →
     </a>
@@ -450,7 +451,7 @@ export function buildPasswordResetEmail(
     <p style="margin:4px 0 0;font-size:13px;color:#bfdbfe">Reset your password</p>
   </div>
   <div style="padding:28px">
-    <p style="margin-top:0">Hi <strong>${name}</strong>,</p>
+    <p style="margin-top:0">Hi <strong>${escapeHtml(name)}</strong>,</p>
     <p>We received a request to reset your Delivery Clarity password. Click below to choose a new one.</p>
     <a href="${resetUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;margin:8px 0 20px">
       Reset Password →

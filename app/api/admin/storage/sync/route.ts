@@ -8,6 +8,7 @@ import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { getCacheMeta } from '@/services/storage/cloudSync';
 import { readStorageSettings } from '@/services/storage/storageProvider';
+import { safeAuditEvent } from '@/lib/system-error-logger';
 
 async function requireAdmin(): Promise<{ session: SessionData } | NextResponse> {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
@@ -41,6 +42,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const check = await requireAdmin();
   if (check instanceof NextResponse) return check;
+  const { session } = check;
 
   const action = req.nextUrl.searchParams.get('action') ?? 'fetch';
 
@@ -48,12 +50,22 @@ export async function POST(req: NextRequest) {
     if (action === 'push') {
       const { pushToCloud } = await import('@/services/storage/cloudSync');
       const result = await pushToCloud();
+      await safeAuditEvent({
+        userId: session.userId,
+        eventType: 'admin_storage_push',
+        eventDescription: `${session.email} pushed the local data cache to cloud storage.`,
+      });
       return NextResponse.json(result);
     }
 
     if (action === 'switch') {
       const { switchProvider } = await import('@/services/storage/cloudSync');
       const result = await switchProvider(readStorageSettings().active);
+      await safeAuditEvent({
+        userId: session.userId,
+        eventType: 'admin_storage_provider_switched',
+        eventDescription: `${session.email} switched the active storage provider to ${readStorageSettings().active}.`,
+      });
       return NextResponse.json(result);
     }
 

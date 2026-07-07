@@ -19,6 +19,7 @@ import {
   PROVIDER_INFO,
 } from '@/services/storage/storageProvider';
 import { createBackup } from '@/services/settings/backup.service';
+import { safeAuditEvent } from '@/lib/system-error-logger';
 import type { StorageSettings } from '@/types/storage';
 
 type StorageSettingsUpdate = Partial<StorageSettings> & {
@@ -168,6 +169,11 @@ export async function POST(req: NextRequest) {
       const filename = `delivery-clarity-backup-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
       const provider = await createProvider(settings.active, settings);
       const remoteKey = await provider.upload(filename, content);
+      await safeAuditEvent({
+        userId: session.userId,
+        eventType: 'admin_storage_backup_uploaded',
+        eventDescription: `${session.email} uploaded a manual backup to ${settings.active} (${remoteKey}).`,
+      });
       return NextResponse.json({ ok: true, key: remoteKey, provider: settings.active });
     } catch (e: unknown) {
       return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
@@ -183,6 +189,11 @@ export async function POST(req: NextRequest) {
   const current = readStorageSettings();
   const updated = mergeStorageSettingsUpdate(current, body, session.email ?? 'unknown');
   writeStorageSettings(updated);
+  await safeAuditEvent({
+    userId: session.userId,
+    eventType: 'admin_storage_settings_updated',
+    eventDescription: `${session.email} updated cloud storage settings (active provider: ${updated.active}).`,
+  });
   return NextResponse.json({ ok: true });
 }
 

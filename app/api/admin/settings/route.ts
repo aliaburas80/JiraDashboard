@@ -8,6 +8,7 @@ import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { readSettings, writeSettings } from '@/services/settings/settings.service';
 import { getRetentionStats } from '@/services/settings/dataRetention.service';
+import { safeAuditEvent } from '@/lib/system-error-logger';
 import type { RetentionSettings } from '@/types/settings';
 
 async function requireAdmin(req: NextRequest): Promise<{ session: SessionData } | NextResponse> {
@@ -45,6 +46,13 @@ export async function POST(req: NextRequest) {
   };
 
   writeSettings(updated);
+
+  await safeAuditEvent({
+    userId: session.userId,
+    eventType: 'admin_retention_settings_updated',
+    eventDescription: `${session.email} updated data retention settings.`,
+  });
+
   return NextResponse.json({ ok: true, settings: updated });
 }
 

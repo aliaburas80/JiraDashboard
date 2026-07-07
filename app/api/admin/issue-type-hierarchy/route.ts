@@ -12,6 +12,7 @@ import {
   writeIssueTypeHierarchy,
   invalidateIssueTypeHierarchyCache,
 } from '@/services/settings/issueTypeHierarchy.service';
+import { safeAuditEvent } from '@/lib/system-error-logger';
 import type { IssueTypeDefinition, IssueTypeHierarchyConfig } from '@/types/issueTypeHierarchy';
 
 export async function GET() {
@@ -89,6 +90,12 @@ export async function POST(req: NextRequest) {
 
   writeIssueTypeHierarchy(updated);
   invalidateIssueTypeHierarchyCache();
+
+  await safeAuditEvent({
+    userId: session.userId,
+    eventType: 'admin_issue_type_hierarchy_updated',
+    eventDescription: `${session.email} updated the issue-type hierarchy configuration.`,
+  });
 
   return NextResponse.json({ ok: true, config: updated });
 }

@@ -37,10 +37,39 @@ export const viewport: Viewport = {
   themeColor: '#2563eb',
 };
 
+// Static, server-defined JSON-LD (no user-supplied content) — safe to inline
+// via dangerouslySetInnerHTML per CLAUDE.md §38.3, since nothing here
+// originates from user input or an external source.
+const organizationJsonLd = {
+  '@context':  'https://schema.org',
+  '@type':     'Organization',
+  name:        'Delivery Clarity',
+  url:         appUrl,
+  logo:        `${appUrl}/logo/delivery_clarity_mark_128.png`,
+  description: 'Turn any Jira export into sprint health, flow efficiency, and delivery intelligence.',
+};
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type':    'WebSite',
+  name:       'Delivery Clarity',
+  url:        appUrl,
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="antialiased overflow-x-hidden">
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger -- static, server-defined JSON-LD, no user input
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger -- static, server-defined JSON-LD, no user input
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         <DataSourceProvider>
           <GlobalErrorHandler />
           <CloudLoadingBanner />

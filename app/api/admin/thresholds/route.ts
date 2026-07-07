@@ -7,6 +7,7 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { readThresholds, writeThresholds, invalidateThresholdCache } from '@/services/settings/thresholds.service';
+import { safeAuditEvent } from '@/lib/system-error-logger';
 import type { HealthThresholds } from '@/types/thresholds';
 
 export async function GET() {
@@ -48,6 +49,12 @@ export async function POST(req: NextRequest) {
 
   writeThresholds(updated);
   invalidateThresholdCache();
+
+  await safeAuditEvent({
+    userId: session.userId,
+    eventType: 'admin_thresholds_updated',
+    eventDescription: `${session.email} updated health thresholds.`,
+  });
 
   return NextResponse.json({ ok: true, thresholds: updated });
 }

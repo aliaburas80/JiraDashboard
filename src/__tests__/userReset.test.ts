@@ -186,3 +186,29 @@ test('TC-RESET-10: internal-domain check is case-insensitive', async () => {
   const preview = await previewUserReset('user-int-2');
   expect(preview.blocked).toBe(true);
 });
+
+// TC-RESET-11: super-admin is protected regardless of email domain
+test('TC-RESET-11: previewUserReset blocks the super-admin even with a non-internal email', async () => {
+  mockFindUnique.mockResolvedValue({ id: 'user-super-1', email: 'root@othercompany.com', isSuperAdmin: true });
+  const preview = await previewUserReset('user-super-1');
+  expect(preview.blocked).toBe(true);
+  expect(preview.blockedReason).toContain('super-admin');
+  expect(mockImportLogCount).not.toHaveBeenCalled();
+});
+
+// TC-RESET-12: resetUserData refuses the super-admin and deletes nothing
+test('TC-RESET-12: resetUserData refuses the super-admin account and deletes nothing', async () => {
+  mockFindUnique.mockResolvedValue({ id: 'user-super-1', email: 'root@othercompany.com', isSuperAdmin: true });
+  const result = await resetUserData('user-super-1', 'admin-1');
+  expect(result.success).toBe(false);
+  expect(result.error).toContain('super-admin');
+  expect(mockImportLogDeleteMany).not.toHaveBeenCalled();
+});
+
+// TC-RESET-13: eligible-users list excludes the super-admin via the query itself
+test('TC-RESET-13: listExternalUsersEligibleForReset queries excluding isSuperAdmin', async () => {
+  mockUserFindMany.mockResolvedValue([EXTERNAL_USER]);
+  await listExternalUsersEligibleForReset();
+  const callArg = mockUserFindMany.mock.calls[0][0];
+  expect(callArg.where.isSuperAdmin).toBe(false);
+});

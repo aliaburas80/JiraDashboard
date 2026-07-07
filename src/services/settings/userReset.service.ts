@@ -37,8 +37,20 @@ export interface UserResetPreview {
 
 /** Dry-run — reports what resetUserData() would delete, without deleting anything. */
 export async function previewUserReset(userId: string): Promise<UserResetPreview> {
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true } });
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, isSuperAdmin: true } });
   if (!user) throw new Error('User not found.');
+
+  // The super-admin account is protected regardless of its email domain —
+  // do not rely on isInternalEmail() alone, since a super-admin could exist
+  // with a non-@deliveryclarity.app address.
+  if (user.isSuperAdmin) {
+    return {
+      userId: user.id, email: user.email,
+      importLogs: 0, dashboardSnapshots: 0, jiraConnections: 0, hasScopedMetricsFile: false,
+      blocked: true,
+      blockedReason: `${user.email} is the protected super-admin account and cannot be reset through this tool.`,
+    };
+  }
 
   if (isInternalEmail(user.email)) {
     return {
@@ -109,10 +121,13 @@ export interface ExternalUserSummary {
   name:  string;
 }
 
-/** Users eligible for this tool — everyone except internal @deliveryclarity.app accounts. */
+/** Users eligible for this tool — everyone except internal @deliveryclarity.app accounts and the super-admin. */
 export async function listExternalUsersEligibleForReset(): Promise<ExternalUserSummary[]> {
   return prisma.user.findMany({
-    where:   { NOT: { email: { endsWith: INTERNAL_EMAIL_DOMAIN, mode: 'insensitive' } } },
+    where: {
+      isSuperAdmin: false,
+      NOT: { email: { endsWith: INTERNAL_EMAIL_DOMAIN, mode: 'insensitive' } },
+    },
     select:  { id: true, email: true, name: true },
     orderBy: { email: 'asc' },
   });

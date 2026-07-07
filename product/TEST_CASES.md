@@ -2075,3 +2075,45 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** All 10 tests pass (`src/__tests__/feedbackNotification.test.ts`). `npx tsc --noEmit`, `npx eslint`, `npx stylelint`, `npx next build` all clean. Full suite 97 suites / 915 tests passing (up from 96/905), no regressions.
 
 **Manual verification:** started the dev server and confirmed `POST /api/feedback` is live and correctly wired by submitting an intentionally-invalid payload (`message: "hi"`), which correctly returned `400` before reaching the email-sending code. **Deliberately did not** perform a live successful-submission test in this environment: `.env` has real Gmail SMTP credentials configured, and `getAppConfig()` checks the database `SmtpSettings` table before falling back to env vars — a real successful submission here would send an actual email to `support@deliveryclarity.app`. Recommended before production reliance: one real end-to-end submission against a non-production recipient to visually confirm the delivered email's formatting.
+
+## 9.89 — P0 Audit Follow-Ups: Email Escaping, Super-Admin Reset Protection, Admin Audit Logging, Site SEO
+
+*(Added 2026-07-07. Follow-up work from a 7-area P0 repo audit — see SRS.md Addendum N. Three contained fixes plus a site-wide SEO pass, done together per explicit instruction: "fix them all, and make the html is seo friendly.")*
+
+**Email escaping (FR-389):**
+
+**TC-EMAIL-ESC-01:** `buildWelcomeEmail`'s HTML body HTML-escapes a `name`/`email` containing `<`, `>`, `&`, `"` characters.
+
+**TC-EMAIL-ESC-02:** `buildVerificationEmail`'s HTML body HTML-escapes `name`/`email` the same way.
+
+**TC-EMAIL-ESC-03:** `buildPasswordResetEmail`'s HTML body HTML-escapes `name` the same way.
+
+**TC-EMAIL-ESC-04:** `buildDemoRequestEmail` and `buildFeedbackNotificationEmail` still escape correctly after their local `esc()` definitions were replaced with the shared `escapeHtml()` — no behavior change, verified by the existing TC-FB-08/TC-DR tests still passing unmodified.
+
+**Super-admin reset protection (FR-390) — 3 new tests in `userReset.test.ts`:**
+
+**TC-RESET-11:** `previewUserReset` blocks the super-admin account even when its email is not on the internal `@deliveryclarity.app` domain.
+
+**TC-RESET-12:** `resetUserData` refuses the super-admin account and deletes nothing.
+
+**TC-RESET-13:** `listExternalUsersEligibleForReset` queries with `isSuperAdmin: false`, excluding the super-admin from the eligible list itself, not just at reset-time.
+
+**Admin audit logging (FR-391):** no new automated tests added — each of the ~10 routes touched already had passing route-level tests (retention settings, thresholds, issue-type hierarchy, orphan rules, cleanup, storage, storage sync, auto-restore, Jira connection sync) covering their functional behavior; the added `safeAuditEvent`/`auditEvent` calls are fire-and-forget side effects consistent with the existing pattern used elsewhere (e.g. `admin_user_create` in `adminUsers.test.ts`, which does not assert on the audit call directly either). Manually verified by reading each route's diff and confirming the call sites match the existing established `safeAuditEvent({ userId, eventType, eventDescription })` shape.
+
+**SEO (FR-392):**
+
+**TC-SEO-01:** `public/robots.txt` allows crawling of `/`, `/landing`, `/promo`, `/help`, `/glossary`, `/privacy`, `/terms` and disallows the ~25 authenticated app-surface prefixes (`/dashboard/`, `/admin/`, `/developer/`, `/api/`, etc.) — verified by reading the file content directly (no automated test framework covers static file content in this repo).
+
+**TC-SEO-02:** `public/sitemap.xml` lists exactly the 7 public pages referenced in `robots.txt`'s `Sitemap:` directive.
+
+**TC-SEO-03:** `/landing`, `/privacy`, `/terms`, `/help`, `/glossary` each render a page-specific `<title>` and meta description via a new sibling `layout.tsx`, distinct from the generic root-layout default — verified via `npx next build`'s output confirming each route compiles as a distinct static page; not verified via a live browser fetch (no browser-automation tool available this session).
+
+**TC-SEO-04:** `/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify-email`, `/change-password` each carry `robots: { index: false, follow: true }` metadata.
+
+**TC-SEO-05:** Root layout (`app/layout.tsx`) emits two `<script type="application/ld+json">` blocks (Organization, WebSite) with static, non-user-controlled content — confirmed via `npx next build` succeeding and via direct code review that no interpolated value originates from user input, request data, or an external source.
+
+**Automated checks:** 3 new tests (`userReset.test.ts` TC-RESET-11–13). Full suite 97 suites / 918 tests passing (up from 97/915), no regressions. `npx tsc --noEmit` clean. `npx eslint` clean on all touched files. `npx stylelint` surfaced 2 **pre-existing** warnings in `app/privacy/page.module.scss`/`app/terms/page.module.scss` (vendor-prefixed `-webkit-backdrop-filter`), confirmed via `git status` to be unrelated to this change (those `.scss` files were not touched — only new sibling `layout.tsx` files were added) and left as-is per the Progressive Technical-Debt Rule rather than expanding scope. `npx next build` clean, all routes compile.
+
+**Known deviation from the initial approach:** a dynamic `app/robots.ts`/`app/sitemap.ts` implementation (reading `NEXT_PUBLIC_APP_URL` at request time instead of a hardcoded domain) was attempted first and reverted after hitting a Next.js 14.2.5 webpack loader bug specific to this machine's project path containing an apostrophe (`Ali's MacBook Pro`) — confirmed via `npx next build` failing with "Module parse failed: Unexpected token" inside `next-metadata-route-loader.js`, tracing to the raw file path being embedded unescaped in a generated single-quoted JS string. This is an environment-specific Next.js bug, not a defect in the route code (both files had valid default exports). Reverted to static `public/robots.txt`/`public/sitemap.xml` with the production domain (`deliveryclarity.app`) written directly, which builds cleanly regardless of local path quirks.
+
+**Manual verification:** not performed — no browser-automation tool available this session to visually confirm rendered `<title>` tags, Open Graph previews, or that `robots.txt`/`sitemap.xml` are served correctly at their expected URLs in a running instance. Recommended before relying on this in production: fetch `/robots.txt` and `/sitemap.xml` directly against the deployed instance, and spot-check `/landing`'s rendered `<title>` in a browser's tab/view-source.
