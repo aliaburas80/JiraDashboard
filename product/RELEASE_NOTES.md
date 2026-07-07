@@ -5,6 +5,18 @@
 
 ---
 
+## Public Pages Are Now Actually Findable in Search (2026-07-07, P2)
+
+Fixed a robots.txt bug that told every search engine not to index *any* page on the site — including the public marketing pages. Search engines can now index /landing, /promo, /help, /glossary, /privacy, and /terms, each with its own proper title and description instead of a generic fallback. Login, registration, and password pages are excluded from search results on purpose (they're not useful things to find via Google) but remain normally reachable. Added a sitemap so search engines can discover these pages faster.
+
+---
+
+## Security Hardening: Email Safety, Super-Admin Protection, Audit Trail (2026-07-07, P2)
+
+Three fixes from an internal security review. (1) Account-related emails (welcome, verify-your-email, reset-password) now safely handle unusual characters in a name or email address, matching what other emails already did. (2) The manual "reset a user's workspace data" admin tool now explicitly refuses to touch the protected super-admin account under any email address, closing a narrow edge case. (3) Several admin actions (threshold changes, storage settings, manual cleanup, Jira connection syncs, and more) are now recorded in the audit trail — previously only some admin actions were logged.
+
+---
+
 ## Feedback Submissions Now Email Support (2026-07-06, P2)
 
 Submitting in-app feedback (the floating feedback button) now sends a notification email to support@deliveryclarity.app, in addition to being saved as before. The email includes the category, impact level, page, and browser — plus your email address, but only if you're logged in and checked "you can contact me." If the email fails to send for any reason, your feedback is still saved; nothing about submitting feedback changed from your side.
