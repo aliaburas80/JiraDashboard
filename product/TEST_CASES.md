@@ -2173,3 +2173,31 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** No new automated tests — this repo has no component-testing infrastructure (no jsdom/RTL in `jest.config.js`); the underlying `USER_NOT_FOUND`/`ALREADY_REGISTERED` API behavior was already covered by existing `loginRoute.test.ts`/`register.test.ts` and is unchanged by this fix. `npx tsc --noEmit` clean. `npx eslint` clean on all 5 touched pages. `npx stylelint` clean on `login/page.module.scss` and `register/page.module.scss`. Full suite 104 suites / 947 tests passing, no regressions. `npx next build` clean.
 
 **Manual verification:** not performed — no browser-automation tool available this session to confirm the redirect round-trip, banner styling, or scroll behavior visually. Recommended before relying on this: manually try logging in with an unregistered email and registering with an already-registered one, confirming both round-trips and banner text/color.
+
+## 9.92 — Persona Preview Switcher (Soft Launch)
+
+*(Added 2026-07-08. User request: a dashboard dropdown to preview each professional persona's view, super-admin-controlled visibility, explaining what differs between views, with an "All" option.)*
+
+**TC-PP-01:** `readPersonaPreviewSettings()` defaults to `enabled: false` when no settings file exists yet.
+
+**TC-PP-02:** `writePersonaPreviewSettings()` persists, and a subsequent `readPersonaPreviewSettings()` reflects the write (cache invalidated correctly).
+
+**TC-PP-03:** `GET /api/admin/persona-preview` returns 401 for an unauthenticated request.
+
+**TC-PP-04:** `GET /api/admin/persona-preview` returns the current settings for any logged-in user, including a non-admin — this is a read, not a mutation, so it isn't restricted to admins.
+
+**TC-PP-05:** `POST /api/admin/persona-preview` returns 403 for a logged-in regular admin (`isSuperAdmin: false`), and does not change the stored setting.
+
+**TC-PP-06:** `POST /api/admin/persona-preview` succeeds for the super-admin, persists the change, and logs an `admin_persona_preview_toggled` audit event.
+
+**TC-PP-07:** `POST /api/admin/persona-preview` returns 400 when `enabled` is not a boolean.
+
+**TC-PP-08:** `POST /api/admin/persona-preview` returns 401 for an unauthenticated request.
+
+**TC-PP-09:** `PERSONA_FOCUS` (the config mapping each persona to its highlighted dashboard pages) has a non-empty summary and at least one focus area for every persona in `PERSONAS` — a config-completeness check per CLAUDE.md §45.2.
+
+**Also updated:** `adminSettingsConsole.test.ts`'s exact `ADMIN_TABS` id-list assertion, to include the new `personaPreview` tab — an intentional, expected update, not a regression.
+
+**Automated checks:** 9 new tests in `personaPreview.test.ts`, all passing. Full suite 105 suites / 956 tests passing (up from 104/947), no regressions. `npx tsc --noEmit` clean. `npx eslint` clean on all touched/new files. `npx stylelint` clean on the new SCSS module. `npx next build` clean.
+
+**Manual verification:** not performed — no browser-automation tool available this session to confirm the dropdown renders correctly, the trigger button's active state, the admin toggle's live effect across a page reload, or that a regular admin genuinely cannot see the Persona Preview tab in Admin Settings. Recommended before relying on this: enable the switch as the super-admin, confirm it appears for a non-admin user, select a persona, confirm the focus links navigate correctly, then disable it and confirm it disappears everywhere.
