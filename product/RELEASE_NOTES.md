@@ -5,6 +5,12 @@
 
 ---
 
+## Critical Privacy Fix: Accounts Could See Each Other's Uploaded Data on a Shared Browser (2026-07-08, P0)
+
+Fixed a real, confirmed data-privacy issue: if two different accounts were used on the same browser (a shared computer, or logging into a second account without signing out of the first), the second account could see the first account's uploaded Jira data. This affected local-storage-mode accounts, which is the default for new self-signups. It's now fixed — every cached dashboard is verified against who is actually logged in before it's shown, and any mismatch is discarded rather than displayed. Also closed two related server-side gaps where import history could be read without being properly restricted to your own account. If you tested this on a shared browser before today, we recommend clearing your browser data for this site once as a precaution.
+
+---
+
 ## New: Persona Preview Switcher (Soft Launch) (2026-07-08, P3)
 
 A new dropdown in the dashboard's top bar lets you preview which pages are most useful for different roles — Scrum Master, Product Owner, Project Manager, Engineering Manager, or Executive — so you can see what each view is meant for. It's purely a guide: it never changes what data you can see. This is a soft-launch feature — your super-admin controls whether it's visible to everyone, from Admin Settings → Persona Preview.

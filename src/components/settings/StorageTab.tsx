@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import UserCloudProviderForm from '@/components/settings/UserCloudProviderForm';
-import { listLocalImports, removeLocalImport, clearLocalImportHistory } from '@/lib/localImportHistory';
+import { listLocalImportsForCurrentUser, removeLocalImport, clearLocalImportHistory } from '@/lib/localImportHistory';
 
 interface Log {
   id: string;
@@ -31,7 +31,7 @@ export default function StorageTab({ dataStorageMode, savingStorageMode, onUpdat
   useEffect(() => {
     // EP-017: local-mode history lives in this browser only — never fetched from the server.
     if (dataStorageMode === 'local') {
-      setLogs(listLocalImports());
+      listLocalImportsForCurrentUser().then(setLogs);
     } else {
       fetch('/api/imports').then(r => r.ok ? r.json() : null).catch(() => null)
         .then(importData => { if (importData?.logs) setLogs(importData.logs.slice(0, 10)); });

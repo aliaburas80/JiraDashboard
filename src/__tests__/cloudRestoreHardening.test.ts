@@ -1,6 +1,8 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Cloud restore hardening tests — Jira integration gate.
 
+export {};
+
 const DATA_DIR = `${process.cwd()}/data`;
 const CACHE_FILE = `${DATA_DIR}/.cloud-cache-meta.json`;
 const STORAGE_SETTINGS_FILE = `${DATA_DIR}/storage-settings.json`;
@@ -165,16 +167,25 @@ test('TC-CS-11: syncFromCloud does not overwrite pending local changes with buck
 
 test('TC-CS-12: loadMetricsWithSource falls back to localStorage when bucket/server metrics are unavailable', async () => {
   const localMetrics = { totalIssues: 42, flow: { items: [] } };
+  // P0 fix: the localStorage fallback is only trusted when it's tagged as
+  // belonging to whoever GET /api/auth/me says is currently logged in —
+  // see src/lib/localDataOwnership.ts.
   const store = installBrowserStorage({
     dc_metrics_v2: JSON.stringify(localMetrics),
+    dc_metrics_owner_v1: 'test-user',
   });
-  (global as any).fetch = jest.fn(async () => ({
-    ok: true,
-    json: async () => ({
-      available: false,
-      message: 'No latest metrics file found on the server.',
-    }),
-  }));
+  (global as any).fetch = jest.fn(async (url: string) => {
+    if (url === '/api/auth/me') {
+      return { ok: true, json: async () => ({ userId: 'test-user', email: 'test@test.com', name: 'Test User', role: 'admin' }) };
+    }
+    return {
+      ok: true,
+      json: async () => ({
+        available: false,
+        message: 'No latest metrics file found on the server.',
+      }),
+    };
+  });
 
   const { loadMetricsWithSource, getMetricsSource } = await import('../lib/storage');
   const result = await loadMetricsWithSource();

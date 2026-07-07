@@ -3,6 +3,8 @@
 /** All fixed localStorage / sessionStorage keys owned by Delivery Clarity. */
 export const DC_FIXED_KEYS = [
   'dc_metrics_v2',
+  'dc_metrics_source_v1',
+  'dc_metrics_owner_v1',
   'dc_onboarding_completed',
   'dc_onboarding_dismissed',
   'dc_filter_presets',
@@ -14,6 +16,8 @@ export const DC_FIXED_KEYS = [
   'dc_viewed_sprints',
   'dc_explore_recent',
   'dc_local_import_history_v1',
+  'dc_local_import_history_owner_v1',
+  'dc_persona_preview',
 ] as const;
 
 /** Dynamic-prefix keys (e.g. dc_col_order_<tableId>). */
