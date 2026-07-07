@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { buildSafeCsv } from '@/lib/exportSafety';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
   StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
@@ -52,7 +53,7 @@ export default function PriorityAttentionPage() {
       : quickFilter === 'orphans' ? orphans
       : [...new Set([...blockers, ...overdueItems.slice(0, 20)])];
     const cols = ['key', 'summary', 'status', 'assignee', 'health', 'reason'];
-    const csv = [cols.join(','), ...rows.map(r => cols.map(c => `"${String((r as any)[c] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
+    const csv = buildSafeCsv([cols, ...rows.map(r => cols.map(c => (r as any)[c]))], { alwaysQuote: true });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'priority-attention.csv'; a.click();

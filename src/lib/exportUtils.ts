@@ -1,5 +1,6 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
+import { sanitizeSpreadsheetRows } from './exportSafety';
 import { getHealthBand, HEALTH_COLORS } from './utils';
 
 // ── Executive PDF — one-page print-optimised summary ─────────────────────────
@@ -48,7 +49,7 @@ export async function exportToExcelBasic(metrics: DashboardMetrics, filename = '
     Labels: i.labels,
     Project: i.project,
   }));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(issueRows.length ? issueRows : [{}]), 'All Issues');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sanitizeSpreadsheetRows(issueRows.length ? issueRows : [{}])), 'All Issues');
 
   // Sheet: Summary KPIs
   const sp = metrics.storyPoints ?? ({} as DashboardMetrics['storyPoints']);
@@ -67,7 +68,7 @@ export async function exportToExcelBasic(metrics: DashboardMetrics, filename = '
     { Metric: 'Completed Story Points',      Value: sp.completedStoryPoints ?? 0 },
     { Metric: 'Story Point Completion (%)',  Value: sp.pointCompletionRate ?? 0 },
   ];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'Summary');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sanitizeSpreadsheetRows(summaryRows)), 'Summary');
 
   // Sheet: High Risk
   const riskRows = items
@@ -79,7 +80,7 @@ export async function exportToExcelBasic(metrics: DashboardMetrics, filename = '
     }));
   XLSX.utils.book_append_sheet(
     wb,
-    XLSX.utils.json_to_sheet(riskRows.length ? riskRows : [{ Message: 'No high-risk items' }]),
+    XLSX.utils.json_to_sheet(sanitizeSpreadsheetRows(riskRows.length ? riskRows : [{ Message: 'No high-risk items' }])),
     'High Risk',
   );
 
@@ -94,7 +95,7 @@ export async function exportToExcelBasic(metrics: DashboardMetrics, filename = '
       'Done Story Points': c.doneStoryPoints,
       'Load Share (%)': Math.round(c.loadShare),
     }));
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(capRows), 'Capacity');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sanitizeSpreadsheetRows(capRows)), 'Capacity');
   }
 
   // Sheet: Sprints
@@ -108,7 +109,7 @@ export async function exportToExcelBasic(metrics: DashboardMetrics, filename = '
       'Completed Points': s.completedPoints,
       'Point Completion Rate (%)': s.pointCompletionRate,
     }));
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sprintRows), 'Sprints');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sanitizeSpreadsheetRows(sprintRows)), 'Sprints');
   }
 
   XLSX.writeFile(wb, filename);

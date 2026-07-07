@@ -4,6 +4,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { buildSafeCsv } from '@/lib/exportSafety';
 import type { DashboardMetrics } from '@/types/metrics';
 import {
   StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
@@ -57,7 +58,7 @@ export default function KeyMetricsPage() {
       ['Story Points Total', sp.totalStoryPoints, `${sp.pointCompletionRate}% complete`],
       ['Story Points Done', sp.completedStoryPoints, ''],
     ];
-    const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    const csv = buildSafeCsv(rows, { alwaysQuote: true });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'key-metrics.csv'; a.click();

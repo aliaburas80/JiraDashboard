@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { buildSafeCsv } from '@/lib/exportSafety';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
   StickyToolbar, FilterChip, ToolbarSpacer,
@@ -116,8 +117,8 @@ export default function FlowHealthPage() {
       i.key, i.summary, i.type ?? '', i.status, i.sprint ?? '', i.epic ?? i.parent ?? '',
       i.assignee ?? '', (i as any).labels ?? '', i.leadTimeDays ?? '', i.cycleTimeDays ?? '',
       i.ageDays ?? '', i.health ?? '', i.reason ?? '',
-    ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
-    const csv = [cols.join(','), ...rows].join('\n');
+    ]);
+    const csv = buildSafeCsv([cols, ...rows], { alwaysQuote: true });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'flow-health.csv';

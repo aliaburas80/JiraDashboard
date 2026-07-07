@@ -2,7 +2,7 @@
 // Explorer export tests — TC-EX-01 to TC-EX-08
 
 import * as XLSX from 'xlsx';
-import { buildExplorerWorkbook } from '../services/export/explorerExport.service';
+import { buildExplorerCsv, buildExplorerWorkbook } from '../services/export/explorerExport.service';
 import type { RelationGraph, RelationNode, RelationStats } from '../types/relations';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -182,4 +182,32 @@ test('TC-EX-08: no HTML tags or object literals in any cell', () => {
     expect(csv).not.toContain('[object Object]');
     expect(csv).not.toContain('className');
   });
+});
+
+test('TC-EX-09: Explorer workbook and CSV neutralize formula-like Jira fields', () => {
+  const graph = makeGraph({
+    nodes: [makeNode({ summary: '=cmd|\'/c calc\'!A1', reason: '@HYPERLINK("http://evil.example","click")' })],
+    orphanNodes: [],
+    insights: ['+malicious-looking insight'],
+  });
+
+  const wb = buildExplorerWorkbook(graph);
+  expect(wb.Sheets['02 All Issues'].B2.v).toBe("'=cmd|'/c calc'!A1");
+  expect(wb.Sheets['02 All Issues'].Q2.v).toBe('\'@HYPERLINK("http://evil.example","click")');
+  expect(wb.Sheets['05 Insights'].B2.v).toBe("'+malicious-looking insight");
+
+  const csv = buildExplorerCsv(graph);
+  expect(csv).toContain("PROJ-1,'=cmd|'/c calc'!A1");
+  expect(csv).toContain("'@HYPERLINK(\"\"http://evil.example\"\",\"\"click\"\")");
+});
+
+test('TC-EX-10: Explorer export leaves benign Jira fields unchanged', () => {
+  const graph = makeGraph({
+    nodes: [makeNode({ summary: 'Normal story summary', reason: 'Blocked by dependency' })],
+    orphanNodes: [],
+  });
+
+  const wb = buildExplorerWorkbook(graph);
+  expect(wb.Sheets['02 All Issues'].B2.v).toBe('Normal story summary');
+  expect(wb.Sheets['02 All Issues'].Q2.v).toBe('Blocked by dependency');
 });

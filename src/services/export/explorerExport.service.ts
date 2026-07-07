@@ -4,12 +4,14 @@
 // Input: RelationGraph produced by buildRelationGraph().
 
 import * as XLSX from 'xlsx';
+import { buildSafeCsv, sanitizeSpreadsheetMatrix } from '@/lib/exportSafety';
 import type { RelationGraph, RelationNode } from '@/types/relations';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function makeWs(rows: unknown[][]): XLSX.WorkSheet {
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const safeRows = sanitizeSpreadsheetMatrix(rows);
+  const ws = XLSX.utils.aoa_to_sheet(safeRows);
   if (rows.length > 0) {
     ws['!autofilter'] = {
       ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: 0, c: rows[0].length - 1 } }),
@@ -111,7 +113,7 @@ function sheetSummary(graph: RelationGraph): XLSX.WorkSheet {
     ...graph.insights.map((insight, i) => [`${i + 1}.`, insight]),
   ];
 
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const ws = XLSX.utils.aoa_to_sheet(sanitizeSpreadsheetMatrix(rows));
   ws['!cols'] = colWidths([28, 48]);
   return ws;
 }
@@ -198,20 +200,16 @@ export function exportExplorerToExcel(graph: RelationGraph): void {
 
 // ── Public: download CSV (all issues) ────────────────────────────────────────
 
-export function exportExplorerToCsv(graph: RelationGraph): void {
+export function buildExplorerCsv(graph: RelationGraph): string {
   const allNodes = [...graph.nodes, ...graph.orphanNodes];
-  const csvRows = [
-    ISSUE_HEADER.join(','),
-    ...allNodes.map(n =>
-      nodeToRow(n).map(v => {
-        const s = String(v ?? '');
-        return s.includes(',') || s.includes('"') || s.includes('\n')
-          ? `"${s.replace(/"/g, '""')}"`
-          : s;
-      }).join(',')
-    ),
-  ].join('\n');
+  return buildSafeCsv([
+    ISSUE_HEADER,
+    ...allNodes.map(nodeToRow),
+  ]);
+}
 
+export function exportExplorerToCsv(graph: RelationGraph): void {
+  const csvRows = buildExplorerCsv(graph);
   const blob = new Blob([csvRows], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');

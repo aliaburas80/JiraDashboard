@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import { buildSafeCsv } from '@/lib/exportSafety';
 import { downloadRetroExcelTemplate } from '@/services/retro/retroTemplate.service';
 import { generateRetrospectiveInsight, THEME_LABEL } from '@/services/retro/retroInsights.service';
 import type { RetroRecord, RetrospectiveInsight, RetroDataCorrection } from '@/types/retrospective';
@@ -57,11 +58,12 @@ const EMPTY_FORM: RetroForm = {
 // ── Template download ──────────────────────────────────────────────────────────
 
 function downloadTemplate() {
-  const csv = [
+  const rows = [
     ['Sprint Name','Team Name','Retro Date','Sprint Goal Met (yes/no/partial)','Sprint Goal','What Went Well','What Did Not Go Well','Blocker/Impediment','Action Item','Action Owner','Action Due Date','Action Priority (high/medium/low)'],
     ['Sprint 42','Backend Team','2026-06-10','partial','Ship login redesign','Good team collaboration','Sprint planning was too long','Dependency on infra team blocked 3 stories','Schedule shorter planning sessions','Scrum Master','2026-06-17','high'],
     ['','','','','','Automated tests caught regressions','Story points were underestimated','','Add complexity review to refinement','Tech Lead','2026-06-24','medium'],
-  ].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+  ];
+  const csv = buildSafeCsv(rows, { alwaysQuote: true });
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);

@@ -236,3 +236,40 @@ test('TC-X-13b: exportToExcel honors a custom filename passed from the trigger',
   const [, filename] = writeFileMock.mock.calls[0];
   expect(filename).toBe('my-team-report.xlsx');
 });
+
+test('TC-X-14: Smart Excel workbook neutralizes formula-like Jira fields', () => {
+  const malicious = baseItem('PROJ-1', {
+    health: 'critical',
+    isBlocked: true,
+    summary: '=cmd|\'/c calc\'!A1',
+    assignee: '+HYPERLINK("http://evil.example","click")',
+    sprint: '@SUM(A1)',
+    reason: '-10+20',
+  });
+
+  const wb = buildInsightWorkbook(makeMetrics([malicious]));
+  const riskRows = sheetRows(wb, '07 Risks and Blockers');
+  expect(riskRows[1][1]).toBe("'=cmd|'/c calc'!A1");
+  expect(riskRows[1][4]).toBe('\'+HYPERLINK("http://evil.example","click")');
+  expect(riskRows[1][8]).toBe("'-10+20");
+
+  const rawRows = sheetRows(wb, '17 Raw Data Reference');
+  expect(rawRows[1][4]).toBe("'@SUM(A1)");
+});
+
+test('TC-X-14b: Smart Excel workbook leaves benign Jira fields unchanged', () => {
+  const benign = baseItem('PROJ-1', {
+    health: 'critical',
+    isBlocked: true,
+    summary: 'Normal blocked story',
+    assignee: 'Ali',
+    sprint: 'Sprint 1',
+    reason: 'Blocked by dependency',
+  });
+
+  const wb = buildInsightWorkbook(makeMetrics([benign]));
+  const rows = sheetRows(wb, '07 Risks and Blockers');
+  expect(rows[1][1]).toBe('Normal blocked story');
+  expect(rows[1][4]).toBe('Ali');
+  expect(rows[1][8]).toBe('Blocked by dependency');
+});

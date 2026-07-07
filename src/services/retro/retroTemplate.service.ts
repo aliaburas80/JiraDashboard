@@ -6,6 +6,7 @@
 // Client-side generation — same pattern as exportExplorerToExcel().
 
 import * as XLSX from 'xlsx';
+import { sanitizeSpreadsheetMatrix } from '@/lib/exportSafety';
 
 const HEADERS = [
   'Sprint Name', 'Team Name', 'Retro Date', 'Sprint Goal Met (yes/no/partial)', 'Sprint Goal',
@@ -24,7 +25,7 @@ const EXAMPLE_ROWS: (string | number)[][] = [
 ];
 
 function makeDataSheet(): XLSX.WorkSheet {
-  const ws = XLSX.utils.aoa_to_sheet([HEADERS, ...EXAMPLE_ROWS]);
+  const ws = XLSX.utils.aoa_to_sheet(sanitizeSpreadsheetMatrix([HEADERS, ...EXAMPLE_ROWS]));
   ws['!cols'] = HEADERS.map((h) => ({ wch: Math.max(18, h.length) }));
   ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: 0, c: HEADERS.length - 1 } }) };
   return ws;
@@ -52,7 +53,7 @@ function makeInstructionsSheet(): XLSX.WorkSheet {
     ['Privacy note'],
     ['Retrospective content you upload is processed in memory to generate the preview and insights shown to you. Avoid including names of customers, personal data, or confidential information you would not want visible to your team.'],
   ];
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const ws = XLSX.utils.aoa_to_sheet(sanitizeSpreadsheetMatrix(rows));
   ws['!cols'] = [{ wch: 100 }];
   return ws;
 }

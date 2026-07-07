@@ -5,6 +5,7 @@
 // Every sheet is independently useful without the app open.
 
 import * as XLSX from 'xlsx';
+import { sanitizeSpreadsheetMatrix } from '@/lib/exportSafety';
 import type { DashboardMetrics } from '@/types/metrics';
 import { getHealthBand, HEALTH_COLORS } from '@/lib/utils';
 import { generateRecommendations, generateExecutiveNarrative } from './recommendationEngine';
@@ -12,7 +13,8 @@ import { generateRecommendations, generateExecutiveNarrative } from './recommend
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
 function makeWs(rows: unknown[][]): XLSX.WorkSheet {
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const safeRows = sanitizeSpreadsheetMatrix(rows);
+  const ws = XLSX.utils.aoa_to_sheet(safeRows);
   // Auto-filter on header row
   if (rows.length > 0) {
     ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: 0, c: rows[0].length - 1 } }) };

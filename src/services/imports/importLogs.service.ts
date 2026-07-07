@@ -2,6 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import XLSX from 'xlsx';
+import { sanitizeSpreadsheetRows } from '@/lib/exportSafety';
 
 // ---------------------------------------------------------------------------
 // Path constants
@@ -479,7 +480,7 @@ export function exportImportLogsWorkbook(logs: ImportLog[]): Buffer {
   }));
 
   const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const worksheet = XLSX.utils.json_to_sheet(sanitizeSpreadsheetRows(rows));
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Import Logs');
   return XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' }) as Buffer;
 }

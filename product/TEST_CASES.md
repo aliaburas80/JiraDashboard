@@ -2117,3 +2117,39 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Known deviation from the initial approach:** a dynamic `app/robots.ts`/`app/sitemap.ts` implementation (reading `NEXT_PUBLIC_APP_URL` at request time instead of a hardcoded domain) was attempted first and reverted after hitting a Next.js 14.2.5 webpack loader bug specific to this machine's project path containing an apostrophe (`Ali's MacBook Pro`) — confirmed via `npx next build` failing with "Module parse failed: Unexpected token" inside `next-metadata-route-loader.js`, tracing to the raw file path being embedded unescaped in a generated single-quoted JS string. This is an environment-specific Next.js bug, not a defect in the route code (both files had valid default exports). Reverted to static `public/robots.txt`/`public/sitemap.xml` with the production domain (`deliveryclarity.app`) written directly, which builds cleanly regardless of local path quirks.
 
 **Manual verification:** not performed — no browser-automation tool available this session to visually confirm rendered `<title>` tags, Open Graph previews, or that `robots.txt`/`sitemap.xml` are served correctly at their expected URLs in a running instance. Recommended before relying on this in production: fetch `/robots.txt` and `/sitemap.xml` directly against the deployed instance, and spot-check `/landing`'s rendered `<title>` in a browser's tab/view-source.
+
+## 9.90 — P0 CSV / Spreadsheet Formula-Injection Guard
+
+*(Added 2026-07-07. Security fix for CLAUDE.md §38.5: outbound CSV/XLSX exports must not allow Jira-sourced or uploaded-spreadsheet metadata to become executable spreadsheet formulas.)*
+
+**TC-SEC-CSV-01:** `sanitizeSpreadsheetCell()` prefixes strings whose first character is `=`, `+`, `-`, `@`, tab, or carriage return with a leading apostrophe.
+
+**TC-SEC-CSV-02:** Strings that contain trigger characters away from position zero are left unchanged.
+
+**TC-SEC-CSV-03:** Non-string values (`number`, `boolean`, `null`, `undefined`, `Date`) are returned unchanged, not stringified.
+
+**TC-SEC-CSV-04:** Empty strings are left unchanged.
+
+**TC-SEC-CSV-05:** Strings with leading whitespace before a trigger (for example `" =SUM(A1)"`) are left unchanged because the trigger is not the actual first character.
+
+**TC-SEC-CSV-06:** The object-row and matrix helpers sanitize nested spreadsheet cell values without changing other cells.
+
+**TC-SEC-CSV-07:** `buildSafeCsv()` sanitizes before CSV quoting/escaping.
+
+**TC-EX-09:** Work Item Explorer XLSX and raw CSV exports neutralize malicious-looking Jira `summary`, `reason`, and generated insight values.
+
+**TC-EX-10:** Work Item Explorer exports leave benign `summary` and `reason` values unchanged.
+
+**TC-X-14:** Smart Excel export neutralizes malicious-looking Jira fields across its shared `makeWs()` path, including Risks & Blockers and Raw Data Reference sheets.
+
+**TC-X-14b:** Smart Excel export leaves benign Jira fields unchanged.
+
+**TC-SEC-CSV-08:** Legacy `exportToExcelBasic()` neutralizes malicious-looking Jira `summary`, `assignee`, `sprint`, and `reason` values in the generated workbook.
+
+**TC-SEC-CSV-09:** Legacy `exportToExcelBasic()` leaves benign Jira fields unchanged.
+
+**TC-SEC-CSV-10:** `exportImportLogsWorkbook()` neutralizes malicious-looking uploaded metadata such as file name, sheet name, headers, warnings, validation errors, and count-breakdown labels.
+
+**TC-SEC-CSV-11:** `exportImportLogsWorkbook()` leaves benign uploaded metadata unchanged.
+
+**TC-SEC-CSV-12:** The retro `.xlsx` template still produces the expected static workbook cells unchanged while routing through the shared spreadsheet safety guard.

@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { buildSafeCsv } from '@/lib/exportSafety';
 import type { DashboardMetrics } from '@/types/metrics';
 import {
   StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
@@ -103,7 +104,7 @@ export default function DataQualityPage() {
 
   const exportCSV = () => {
     const cols = ['Field', 'Severity', 'Count', 'Impact'];
-    const csv = [cols.join(','), ...filteredIssues.map(i => [i.field, i.severity, i.count, i.impact].map(c => `"${c}"`).join(','))].join('\n');
+    const csv = buildSafeCsv([cols, ...filteredIssues.map(i => [i.field, i.severity, i.count, i.impact])], { alwaysQuote: true });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'data-quality.csv'; a.click();

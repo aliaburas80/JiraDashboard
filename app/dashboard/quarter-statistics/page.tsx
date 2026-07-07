@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { buildSafeCsv } from '@/lib/exportSafety';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { DashboardMetrics } from '@/types/metrics';
 import {
@@ -40,9 +41,9 @@ export default function QuarterStatisticsPage() {
 
   const exportCSV = () => {
     const cols = ['Quarter', 'Issues', 'Done', 'Completion'];
-    const csv = [cols.join(','), ...quarters.map((q: any) => [
+    const csv = buildSafeCsv([cols, ...quarters.map((q: any) => [
       q.quarter, q.issues, q.done ?? 0, q.issues > 0 ? `${Math.round(((q.done ?? 0) / q.issues) * 100)}%` : '0%',
-    ].map(c => `"${c}"`).join(','))].join('\n');
+    ])], { alwaysQuote: true });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'quarter-statistics.csv'; a.click();

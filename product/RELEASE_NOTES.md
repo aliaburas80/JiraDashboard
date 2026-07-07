@@ -5,6 +5,12 @@
 
 ---
 
+## Spreadsheet Exports Now Block Formula Injection (2026-07-07, P0 security fix)
+
+CSV and Excel exports now neutralize values that spreadsheet apps could treat as formulas. This protects exported Jira summaries, assignees, labels, import-log metadata, and related fields if someone has entered a malicious-looking value in Jira or an uploaded spreadsheet. Normal export content is unchanged unless a cell begins with a formula trigger such as `=`, `+`, `-`, or `@`.
+
+---
+
 ## Public Pages Are Now Actually Findable in Search (2026-07-07, P2)
 
 Fixed a robots.txt bug that told every search engine not to index *any* page on the site — including the public marketing pages. Search engines can now index /landing, /promo, /help, /glossary, /privacy, and /terms, each with its own proper title and description instead of a generic fallback. Login, registration, and password pages are excluded from search results on purpose (they're not useful things to find via Google) but remain normally reachable. Added a sitemap so search engines can discover these pages faster.
