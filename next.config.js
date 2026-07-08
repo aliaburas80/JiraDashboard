@@ -33,6 +33,18 @@ const nextConfig = {
     // Disable the instrumentation hook to avoid generating edge-instrumentation
     // bundles that execute eval() in a sandboxed context (causes EvalError).
     instrumentationHook: false,
+    // Bug fix, 2026-07-08: every /dashboard/* page is a 'use client' page that
+    // loads its data once via useEffect-on-mount (loadMetricsWithSource()).
+    // None of them set `dynamic = 'force-dynamic'`, so the App Router's
+    // client-side Router Cache treated them as static segments and reused the
+    // already-mounted component (with its already-loaded metrics state) for
+    // up to 5 minutes on any soft navigation back to a previously visited
+    // dashboard route — including the redirect straight after a fresh upload.
+    // The mount effect never reran, so the dashboard kept showing whatever
+    // data had loaded the first time, no matter what was just uploaded.
+    // Forcing both stale-time tiers to 0 makes every dashboard navigation
+    // re-fetch a fresh payload and remount, so the load effect always reruns.
+    staleTimes: { dynamic: 0, static: 0 },
   },
   webpack: (config, { isServer }) => {
     // Client: mark Node built-ins as false (not available).

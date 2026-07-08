@@ -2323,3 +2323,15 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** 7 new tests in `cloudSyncPendingPush.test.ts`, all passing. Full suite 108 suites / 989 tests passing (up from 107/982), no regressions. `npx tsc --noEmit` clean. `npx eslint` clean on all touched files. `npx next build` clean.
 
 **Manual verification:** not performed — no browser-automation tool or live cloud-storage credentials available this session. Recommended before relying on this: with a real S3/Azure/GCP bucket configured, upload a Jira export in cloud/App storage mode and immediately check the dashboard reflects the new data (not the previous upload); repeat a few times, since the original bug was timing-dependent and wouldn't reproduce on every attempt.
+
+## 9.98 — P0 Fix: Dashboard Router Cache Kept Showing Data From a Previous Upload
+
+*(Added 2026-07-08. Same-day follow-up user report: "when upload new excel sheet, the defualt data loaded all of the time... when upload new sheet need to be presented and do analysis for it." A distinct root cause from §9.97/Addendum R — reproduces on every re-upload within a multi-minute window, independent of cloud storage being configured at all. See SRS.md Addendum S.)*
+
+**Root cause:** none of the 16 `/dashboard/*` pages export `dynamic = 'force-dynamic'`, so Next.js 14.2's App Router treated them as static segments and reused an already-mounted page instance (Router Cache) for up to 5 minutes on any soft navigation back to a previously visited dashboard route — including the redirect immediately after an upload. The page's mount-only `useEffect` (which calls `loadMetricsWithSource()`) never reran, so whatever data had loaded the first time kept showing regardless of what was just uploaded.
+
+**Fix:** `next.config.js` — `experimental.staleTimes: { dynamic: 0, static: 0 }`, disabling the client Router Cache for both tiers so every dashboard navigation always fetches fresh and remounts.
+
+**Automated checks:** `npx tsc --noEmit` clean. Full suite 108 suites / 989 tests passing, unchanged — this is Next.js client-side navigation-cache behavior with no unit-testable surface (Jest doesn't execute the App Router's browser-side Router Cache). `npx eslint` clean, no new warnings. `npx next build` clean, all 16 dashboard routes still prerender successfully.
+
+**Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: upload a Jira export, view a dashboard page, upload a second (different) export within ~1 minute, and confirm the dashboard now shows the second file's data rather than the first.
