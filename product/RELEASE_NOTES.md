@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: Re-Uploading a Jira Export Could Keep Showing the Old Dashboard (2026-07-08, P0)
+
+Fixed a second, independent cause of the same symptom as the entry below: revisiting a dashboard page you'd already viewed recently (within a few minutes) could show the data from your previous upload instead of your newest one, even though the new data had been saved correctly. The dashboard pages only loaded their data once when first opened; a Next.js navigation-caching behavior was reusing that already-loaded page instead of letting it check for new data. Every dashboard page now always re-checks for the latest data on every visit.
+
+---
+
 ## Fixed: Uploading a New Jira Export Could Show the Previous Dashboard (2026-07-08, P0)
 
 Fixed a timing bug where, in cloud/App storage mode, uploading a fresh Jira export could return success but the dashboard would briefly (or persistently) show the previously uploaded data instead. This happened when the app's background sync-to-cloud-backup step hadn't finished yet by the time the dashboard reloaded — it's now guarded so your freshly uploaded data always wins over an older cloud backup mid-sync.
