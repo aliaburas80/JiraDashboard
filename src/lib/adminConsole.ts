@@ -10,8 +10,13 @@ import type { AdminConsoleStat } from '@/components/admin/AdminConsoleLayout';
 
 export type Tab = 'users' | 'requests' | 'retention' | 'thresholds' | 'orphan' | 'issueTypes' | 'backup' | 'cloud' | 'browser' | 'config' | 'jira' | 'personaPreview';
 
-export const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; description: string; superAdminOnly?: boolean }> = [
-  { id: 'users',      label: 'User Management',     icon: 'people', description: 'Accounts, roles, access state' },
+export const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; description: string; superAdminOnly?: boolean; hiddenFromNav?: boolean }> = [
+  // hiddenFromNav: user management already has its own top-level Admin
+  // sidebar destination (/admin/users) — this tab still works if linked
+  // directly (VALID_TABS/activeTabMeta still recognise 'users'), but is no
+  // longer offered as a duplicate "User Management" entry inside the
+  // Settings sub-nav. See AdminNavSidebar.tsx / navigation.ts.
+  { id: 'users',      label: 'User Management',     icon: 'people', description: 'Accounts, roles, access state', hiddenFromNav: true },
   { id: 'requests',   label: 'Member Requests',     icon: 'email', description: 'Pending add-member requests' },
   { id: 'config',     label: 'App Config',   icon: 'settings', description: 'SMTP, email, and app-level settings' },
   { id: 'retention',  label: 'Privacy & Retention', icon: 'lock', description: 'Data windows and cleanup' },

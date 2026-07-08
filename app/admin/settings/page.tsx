@@ -20,7 +20,7 @@ import { PasswordInput } from '@/components/ui/PasswordInput';
 import { ASSIGNABLE_ROLES, roleLabel, type AppRole } from '@/lib/roles';
 import {
   type Tab, type ManagedUser,
-  ADMIN_TABS, activeTabMeta, buildSettingsStats,
+  activeTabMeta, buildSettingsStats,
   roleOptionsFor, matchesUserFilter,
 } from '@/lib/adminConsole';
 import type { RetentionSettings, RetentionStats } from '@/types/settings';
@@ -1338,19 +1338,23 @@ function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: Mana
 }
 
 const VALID_TABS: Tab[] = ['users','requests','config','retention','thresholds','orphan','issueTypes','backup','cloud','jira','browser','personaPreview'];
+// 'users' is a valid tab (still directly linkable) but is hiddenFromNav —
+// User Management now lives only at /admin/users, so a bare /admin/settings
+// (no ?tab=) resolves to the first tab still offered in the Settings nav.
+const DEFAULT_TAB: Tab = 'requests';
 
 export default function AdminSettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get('tab') as Tab | null);
   const [tab, setTab] = useState<Tab>(
-    initialTab && VALID_TABS.includes(initialTab) ? initialTab : 'users'
+    initialTab && VALID_TABS.includes(initialTab) ? initialTab : DEFAULT_TAB
   );
 
   // Sync tab state when the URL ?tab= param changes (e.g. sidebar link clicks).
   useEffect(() => {
     const urlTab = searchParams.get('tab') as Tab | null;
-    const resolved = urlTab && VALID_TABS.includes(urlTab) ? urlTab : 'users';
+    const resolved = urlTab && VALID_TABS.includes(urlTab) ? urlTab : DEFAULT_TAB;
     setTab(resolved);
   }, [searchParams]);
   const [settings, setSettings]       = useState<RetentionSettings | null>(null);
@@ -1453,21 +1457,11 @@ export default function AdminSettingsPage() {
 
   const selectedTab = activeTabMeta(tab);
   const statsCards = buildSettingsStats({ tab, userSummary, settings, stats, thresholds, orphanRules, issueTypeHierarchy, backupFiles });
-  const settingsNavItems = ADMIN_TABS
-    .filter(item => !item.superAdminOnly || isSuperAdmin)
-    .map(item => ({
-      id: item.id,
-      label: item.label,
-      icon: item.icon,
-      selected: tab === item.id,
-      onClick: () => setTab(item.id),
-    }));
 
   return (
     <AdminConsoleLayout
         title={selectedTab.label}
         description={selectedTab.description}
-        navItems={settingsNavItems}
         stats={statsCards}
         statusLabel="Operational"
       >

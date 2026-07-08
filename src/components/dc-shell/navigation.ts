@@ -14,6 +14,12 @@ export type DCShellNavItem = {
   // rendering (which never showed icons) doesn't need every item touched to
   // stay valid; new items should still set it for a good search result card.
   icon?: IconName;
+  // Sub-grouping within a DCShellNavGroup — currently only used by the
+  // 'administration' group, whose items are rendered as three labelled
+  // sections (Activity / Observability / Configure) inside the admin
+  // sidebar (AdminNavSidebar.tsx), while the topbar dropdown and global
+  // search render the same group as one flat list and ignore this field.
+  section?: string;
 };
 
 export type DCShellNavGroup = {
@@ -72,16 +78,26 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
     ],
   },
   // ── Administration ────────────────────────────────────────────────────────
+  // Single source of truth for every admin-only destination — also drives
+  // AdminNavSidebar.tsx's sectioned rendering (grouped by `section` below,
+  // in array order) so the topbar dropdown, global search, and the admin
+  // sidebar can never drift into three independently-maintained lists again.
   {
     id: 'administration',
     label: 'Administration',
     items: [
-      { id: 'admin-settings',    title: 'Settings',         desc: 'Users, storage, retention',   href: '/admin/settings',    status: 'neutral', icon: 'settings'    },
-      { id: 'admin-theme',       title: 'Theme & Branding', desc: 'Palette, logo, app name',     href: '/admin/theme',        status: 'neutral', icon: 'palette'     },
-      { id: 'admin-users',       title: 'User Management',  desc: 'Accounts & roles',            href: '/admin/users',        status: 'neutral', icon: 'people'      },
-      { id: 'admin-diagnostics', title: 'Diagnostics',      desc: 'System health & admin stats', href: '/admin/diagnostics',  status: 'info',    icon: 'stopwatch'   },
-      { id: 'admin-security',    title: 'Security',         desc: 'Production security checks',  href: '/admin/security',     status: 'warning', icon: 'shield'      },
-      { id: 'admin-logs',        title: 'Import Logs',      desc: 'All user import activity',    href: '/admin/logs',         status: 'neutral', icon: 'clipboard'   },
+      // Activity
+      { id: 'admin-audit',       title: 'Audit Events',     desc: 'Admin action audit trail',    href: '/admin/audit',        status: 'neutral', icon: 'clipboard', section: 'Activity' },
+      { id: 'admin-logs',        title: 'Import Logs',      desc: 'All user import activity',    href: '/admin/logs',         status: 'neutral', icon: 'archive',   section: 'Activity' },
+      { id: 'admin-feedback',    title: 'User Feedback',    desc: 'Submitted feedback & reports', href: '/admin/feedback',    status: 'neutral', icon: 'email',     section: 'Activity' },
+      // Observability
+      { id: 'admin-syserrors',   title: 'System Errors',    desc: 'Logged application errors',   href: '/admin/system-errors', status: 'warning', icon: 'warning',   section: 'Observability' },
+      { id: 'admin-diagnostics', title: 'Diagnostics',      desc: 'System health & admin stats', href: '/admin/diagnostics',  status: 'info',    icon: 'statusInfo', section: 'Observability' },
+      { id: 'admin-security',    title: 'Security',         desc: 'Production security checks',  href: '/admin/security',     status: 'warning', icon: 'shield',    section: 'Observability' },
+      // Configure
+      { id: 'admin-users',       title: 'User Management',  desc: 'Accounts & roles',            href: '/admin/users',        status: 'neutral', icon: 'people',    section: 'Configure' },
+      { id: 'admin-settings',    title: 'Settings',         desc: 'Users, storage, retention',   href: '/admin/settings',     status: 'neutral', icon: 'tools',     section: 'Configure' },
+      { id: 'admin-theme',       title: 'Theme & Branding', desc: 'Palette, logo, app name',     href: '/admin/theme',        status: 'neutral', icon: 'palette',   section: 'Configure' },
     ],
   },
   // ── Reference ─────────────────────────────────────────────────────────────
@@ -121,9 +137,29 @@ export function getNavGroupsForRole(role: string | null | undefined, isSuperAdmi
     .filter(group => group.items.length > 0);
 }
 
-export const DC_ADMIN_NAV_ITEMS: DCShellNavItem[] = [
-  { id: 'admin-logs',        title: 'Import Logs',  desc: 'All upload history',         href: '/admin/logs',        status: 'neutral' },
-  { id: 'admin-settings',    title: 'Settings',     desc: 'Thresholds · data retention', href: '/admin/settings',    status: 'neutral' },
-  { id: 'admin-security',    title: 'Security',     desc: 'Production checklist',        href: '/admin/security',    status: 'neutral' },
-  { id: 'admin-diagnostics', title: 'Diagnostics',  desc: 'Ops health · audit events',   href: '/admin/diagnostics', status: 'neutral' },
-];
+export type DCShellNavSection = { label: string; items: DCShellNavItem[] };
+
+/**
+ * The 'administration' group's items, grouped by `section` and in array
+ * order — this is what AdminNavSidebar.tsx renders as its three labelled
+ * sections (Activity / Observability / Configure). Single source shared
+ * with the topbar dropdown and global search (which render the same group
+ * flat, ignoring `section`) so there is exactly one place that defines what
+ * an admin destination is called, which icon it uses, and where it lives.
+ */
+export function getAdminNavSections(role: string | null | undefined, isSuperAdmin?: boolean): DCShellNavSection[] {
+  const adminGroup = getNavGroupsForRole(role, isSuperAdmin).find(g => g.id === 'administration');
+  if (!adminGroup) return [];
+
+  const sections: DCShellNavSection[] = [];
+  for (const item of adminGroup.items) {
+    const label = item.section ?? 'General';
+    let section = sections.find(s => s.label === label);
+    if (!section) {
+      section = { label, items: [] };
+      sections.push(section);
+    }
+    section.items.push(item);
+  }
+  return sections;
+}

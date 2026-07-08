@@ -435,6 +435,26 @@ set it when adding a new nav item so it renders correctly in search results.
 (work item keys, summaries, assignees) is an intentionally separate, later
 capability — \`pageSearch.ts\` only knows about pages/features.
 
+### Admin navigation — single source of truth
+
+Every admin-only destination (Audit Events, Import Logs, User Feedback,
+System Errors, Diagnostics, Security, User Management, Settings, Theme &
+Branding) is defined exactly once, in \`DC_NAV_GROUPS\`'s \`'administration'\`
+group. Each item's optional \`section\` field (\`'Activity' | 'Observability' |
+'Configure'\`) drives \`getAdminNavSections(role, isSuperAdmin)\`, which
+\`AdminNavSidebar.tsx\` calls to render its three labelled sections — the
+topbar dropdown and global search render the same group flat and ignore
+\`section\`. Do not add a second admin-nav array anywhere; add the item here
+instead, with a \`section\` if it belongs in the admin sidebar.
+
+Settings *tabs* are a separate concern with their own single source:
+\`ADMIN_TABS\` in \`src/lib/adminConsole.ts\` (already consumed by the settings
+page for tab content, title, and description). \`AdminNavSidebar.tsx\`'s
+Settings sub-nav derives from \`ADMIN_TABS\`, filtered for a \`hiddenFromNav\`
+flag (used once, on \`users\`, since User Management already has its own
+top-level Admin sidebar entry) and \`superAdminOnly\`. Add a new settings tab
+here, not as a third hand-maintained list.
+
 ---
 
 ## parser.ts

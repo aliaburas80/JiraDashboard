@@ -83,10 +83,10 @@ export default function UserMenu() {
             )}
           </div>
 
-          {/* My Settings — /profile, now a tabbed Profile/Storage/Security hub.
-              Labeled "My Settings" rather than bare "Settings" to avoid reading as
-              a duplicate of the admin-only "Settings" link (-> /admin/settings)
-              further down this same menu for admin users. */}
+          {/* Account-level actions only — admin/system destinations (User
+              Management, Import Logs, admin Security, admin Settings) live
+              in the Admin sidebar (/admin/*) and the topbar's Administration
+              menu, not here, so nothing is offered in two places at once. */}
           <Link
             href="/profile"
             role="menuitem"
@@ -95,24 +95,14 @@ export default function UserMenu() {
           >
             <SvgIcon name="settings" size={14} /> My Settings
           </Link>
-
-          {/* Admin-only links */}
-          {me.role === 'admin' && (
-            <>
-              <Link href="/admin/users" role="menuitem" onClick={() => setOpen(false)} className={styles.menuItem}>
-                <SvgIcon name="people" size={14} /> User Management
-              </Link>
-              <Link href="/admin/logs" role="menuitem" onClick={() => setOpen(false)} className={styles.menuItem}>
-                <SvgIcon name="folder" size={14} /> Import Logs
-              </Link>
-              <Link href="/admin/security" role="menuitem" onClick={() => setOpen(false)} className={styles.menuItem}>
-                <SvgIcon name="lock" size={14} /> Security
-              </Link>
-              <Link href="/admin/settings" role="menuitem" onClick={() => setOpen(false)} className={styles.menuItem}>
-                <SvgIcon name="settings" size={14} /> Settings
-              </Link>
-            </>
-          )}
+          <Link
+            href="/profile?tab=security"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className={styles.menuItem}
+          >
+            <SvgIcon name="lock" size={14} /> Security
+          </Link>
 
           <hr className={styles.divider} />
 
