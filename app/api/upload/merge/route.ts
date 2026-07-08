@@ -10,6 +10,7 @@ import { parseJiraFile } from '@/services/jira/parser';
 import { validateIssueData } from '@/services/jira/validation';
 import { calculateDashboardMetrics } from '@/services/metrics/metrics.service';
 import { writeLatestMetrics } from '@/services/metrics/latestMetricsStorage';
+import { markPendingPush } from '@/services/storage/cloudSync';
 import { getMetricsScopeKeyForUser } from '@/lib/workspace';
 import { mergeIssueArrays } from '@/lib/mergeIssues';
 import { getUserStorageProviderStatus, getVerifiedUserStorageProviderInstance } from '@/services/storage/userStorageProvider.service';
@@ -93,6 +94,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // previously wrote the single shared latest-metrics.json file.
     const scopeKey = await getMetricsScopeKeyForUser(session.userId);
     writeLatestMetrics(scopeKey, metrics, { source: 'file' });
+    // Mark pending synchronously — see app/api/upload/route.ts for why.
+    markPendingPush();
     import('@/services/storage/cloudSync')
       .then(({ pushToCloud }) => pushToCloud())
       .catch(() => {});

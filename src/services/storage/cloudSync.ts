@@ -73,9 +73,21 @@ function hashContent(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex').slice(0, 16);
 }
 
+// Marks that local data has changed and must not be silently overwritten by
+// a cloud restore until it's been pushed. Must work even before any cache
+// metadata exists yet (e.g. the very first upload on a fresh instance) —
+// previously a no-op in that case, which reopened the exact race this exists
+// to close.
 export function markPendingPush(): void {
   const meta = readCacheMeta();
-  if (meta) writeCacheMeta({ ...meta, pendingPush: true });
+  writeCacheMeta({
+    provider:    meta?.provider ?? '',
+    key:         meta?.key ?? '',
+    contentHash: meta?.contentHash ?? '',
+    fetchedAt:   meta?.fetchedAt ?? '',
+    pushedAt:    meta?.pushedAt,
+    pendingPush: true,
+  });
 }
 
 export function getCacheMeta(): CloudCacheMeta | null {
@@ -206,6 +218,14 @@ export async function pushToCloud(): Promise<CloudSyncResult> {
   if (settings.active === 'local') {
     return { status: 'offline', source: 'local', reason: 'Local storage — nothing to push.' };
   }
+
+  // Mark pending BEFORE the (slow, network-bound) backup/upload starts, not
+  // just on failure. Every caller (upload, merge, profile save, admin user
+  // create, etc.) fires this non-blocking after already writing fresh data
+  // locally — without this, a concurrent/near-simultaneous GET that triggers
+  // syncFromCloud() during the upload window has no way to know a push is in
+  // flight, and can restore an older bucket backup over the fresh write.
+  markPendingPush();
 
   try {
     const { createBackup } = await import('@/services/settings/backup.service');

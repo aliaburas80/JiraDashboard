@@ -49,6 +49,7 @@ jest.mock('@/services/metrics/latestMetricsStorage', () => ({
 }));
 jest.mock('@/services/storage/cloudSync', () => ({
   pushToCloud: jest.fn(async () => ({ status: 'pushed' })),
+  markPendingPush: jest.fn(),
 }));
 // EP-024: no per-user cloud storage provider configured — App storage path, unaffected.
 jest.mock('@/services/storage/userStorageProvider.service', () => ({

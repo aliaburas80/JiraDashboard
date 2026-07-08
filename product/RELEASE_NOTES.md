@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: Uploading a New Jira Export Could Show the Previous Dashboard (2026-07-08, P0)
+
+Fixed a timing bug where, in cloud/App storage mode, uploading a fresh Jira export could return success but the dashboard would briefly (or persistently) show the previously uploaded data instead. This happened when the app's background sync-to-cloud-backup step hadn't finished yet by the time the dashboard reloaded — it's now guarded so your freshly uploaded data always wins over an older cloud backup mid-sync.
+
+---
+
 ## Free Color Picker for Issue Type Hierarchy (2026-07-08, P3)
 
 Admin Settings → Issue Type Hierarchy now has a color-picker swatch next to the existing preset colors, so you can choose any color for a type instead of only the 11 built-in ones. The matching light background and border are generated automatically to keep the same clean look as the presets.
