@@ -144,6 +144,50 @@ describe('storage.ts — cross-account localStorage fallback protection', () => 
     expect(store.dc_metrics_source_v1).toBeUndefined();
     expect(store.dc_metrics_owner_v1).toBeUndefined();
   });
+
+  // P0 fix, 2026-07-08: saveMetrics()'s ownership-tag write used to be
+  // fire-and-forget (tagCurrentOwner() was never awaited). A caller that
+  // saved fresh upload data and immediately navigated could land on a page
+  // whose loadMetricsWithSource() ran isOwnedByCurrentUser() before the tag
+  // write had landed — finding no owner tag yet, it concluded the just-saved
+  // data was unverified and discarded it (clearMetrics()), so the freshly
+  // uploaded sheet vanished and the user was bounced back to '/'. Both tests
+  // below use an artificially delayed /api/auth/me mock to prove the race is
+  // closed: saveMetrics() must not resolve until the tag write has landed.
+  test('TC-DATAISO-14: saveMetrics leaves the ownership tag set before it resolves, even under network latency', async () => {
+    const store = installBrowserStorage();
+    (global as any).fetch = jest.fn(async (url: string) => {
+      if (url === '/api/auth/me') {
+        await new Promise(r => setTimeout(r, 20));
+        return { ok: true, json: async () => ({ userId: 'user-a', email: 'a@test.com', name: 'a', role: 'user' }) };
+      }
+      return { ok: true, json: async () => ({}) };
+    });
+
+    const { saveMetrics } = await import('../lib/storage');
+    await saveMetrics({ totalIssues: 5, flow: { items: [] } });
+
+    expect(store.dc_metrics_owner_v1).toBe('user-a');
+  });
+
+  test('TC-DATAISO-15: a freshly saved upload survives an immediate loadMetricsWithSource call (closes the fire-and-forget tagging race)', async () => {
+    installBrowserStorage();
+    (global as any).fetch = jest.fn(async (url: string) => {
+      if (url === '/api/auth/me') {
+        await new Promise(r => setTimeout(r, 15));
+        return { ok: true, json: async () => ({ userId: 'user-a', email: 'a@test.com', name: 'a', role: 'user' }) };
+      }
+      // No server-side metrics — e.g. local-only storage mode, upload never touched the server.
+      return { ok: true, json: async () => ({ available: false, message: 'No latest metrics file found on the server.' }) };
+    });
+
+    const { saveMetrics, loadMetricsWithSource } = await import('../lib/storage');
+    await saveMetrics({ totalIssues: 42, flow: { items: [] } });
+
+    const result = await loadMetricsWithSource();
+    expect(result.metrics).toEqual({ totalIssues: 42, flow: { items: [] } });
+    expect(result.source).toBe('localstorage');
+  });
 });
 
 describe('localImportHistory.ts — cross-account history protection', () => {

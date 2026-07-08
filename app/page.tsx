@@ -84,7 +84,7 @@ export default function HomePage() {
         setFieldImpacts(data.metrics?.fieldImpacts ?? null);
         // Don't auto-redirect — wait for user to click Proceed
       } else {
-        saveMetrics(data.metrics);
+        await saveMetrics(data.metrics);
         router.push('/dashboard');
       }
     } catch { setError('Upload failed. Please check the file and try again.'); }
@@ -116,10 +116,10 @@ export default function HomePage() {
     handleSampleData();
   }, [searchParams, handleSampleData]);
 
-  function handleProceed() {
+  async function handleProceed() {
     if (pendingMetrics) {
       clearMetrics(); // ensure old data is fully removed before saving new
-      saveMetrics(pendingMetrics);
+      await saveMetrics(pendingMetrics);
       router.push('/dashboard?fresh=1');
     }
   }
@@ -156,7 +156,7 @@ export default function HomePage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Merge failed'); return; }
       setMergeStats(data.mergeStats);
-      saveMetrics(data.metrics);
+      await saveMetrics(data.metrics);
       // Small delay so user sees the merge summary before redirecting
       await new Promise(r => setTimeout(r, 1400));
       router.push('/dashboard');
