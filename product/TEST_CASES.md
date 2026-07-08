@@ -2299,3 +2299,27 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** 6 new tests in `issueTypeColorPicker.test.ts`, all passing. Full suite 107 suites / 982 tests passing (up from 106/976), no regressions. `npx tsc --noEmit` clean. `npx eslint` clean on the new `src/lib/colorSwatch.ts` and test file; the component file's warning count went from 4 (pre-existing) to 5 — the 5th is the new, correctly-documented CLAUDE.md §14.2 CSS-variable exception, not new raw-style debt (confirmed via `git stash` comparison against `main`). `npx stylelint` clean on the new SCSS module. `npx next build` clean.
 
 **Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: open Admin Settings → Issue Type Hierarchy, click the new color swatch next to the presets, pick an arbitrary color, and confirm the type's icon/label color, background, and border all update to a coordinated, readable combination; save and reload to confirm it persists.
+
+## 9.97 — P0 Fix: Upload Success but Dashboard Shows Stale Cached Data
+
+*(Added 2026-07-08. User report: "I cant upload new jira sheet, once return success and open dashboard return the already cashed one." See SRS.md Addendum R for the full root-cause analysis.)*
+
+**TC-PENDPUSH-01:** `markPendingPush()` creates valid cache metadata (with `pendingPush: true`) even when no cache-metadata file exists yet — previously a silent no-op in that case.
+
+**TC-PENDPUSH-02:** `markPendingPush()` preserves existing `provider`/`key`/`contentHash` fields while flipping `pendingPush` to `true`.
+
+**TC-PENDPUSH-03:** `pushToCloud()` marks `pendingPush: true` in the cache file *before* the (slow, network-bound) upload resolves — verified with a deliberately delayed mock upload, proving the flag is set for the entire in-flight duration, not just before/after.
+
+**TC-PENDPUSH-04:** `pushToCloud()` clears `pendingPush` and records the new backup key on success.
+
+**TC-PENDPUSH-05:** `pushToCloud()` does not touch the pending flag at all when storage mode is `local` (nothing to push, so no race is possible).
+
+**TC-PENDPUSH-06:** `pushToCloud()`'s existing on-failure retry-marker behavior (re-marking `pendingPush: true` when the upload throws) is unchanged.
+
+**TC-PENDPUSH-07:** `getCacheMeta()` — the function other code reads for sync status — reflects `pendingPush: true` mid-push and `false` after completion, confirming the guard is visible to callers, not just internal state.
+
+**Also fixed:** 1 pre-existing test (`uploadUserId.test.ts`) whose `cloudSync` mock didn't include the newly-imported `markPendingPush`, causing a `TypeError` (500 response) the moment the real upload route tried to call it — added `markPendingPush: jest.fn()` to the mock. This is exactly the kind of failure a missing mock function produces, distinguishing it from a logic regression.
+
+**Automated checks:** 7 new tests in `cloudSyncPendingPush.test.ts`, all passing. Full suite 108 suites / 989 tests passing (up from 107/982), no regressions. `npx tsc --noEmit` clean. `npx eslint` clean on all touched files. `npx next build` clean.
+
+**Manual verification:** not performed — no browser-automation tool or live cloud-storage credentials available this session. Recommended before relying on this: with a real S3/Azure/GCP bucket configured, upload a Jira export in cloud/App storage mode and immediately check the dashboard reflects the new data (not the previous upload); repeat a few times, since the original bug was timing-dependent and wouldn't reproduce on every attempt.

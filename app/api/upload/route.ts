@@ -10,6 +10,7 @@ import { cookies } from 'next/headers';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { writeLatestMetrics } from '@/services/metrics/latestMetricsStorage';
+import { markPendingPush } from '@/services/storage/cloudSync';
 import { getUserStorageProviderStatus, getVerifiedUserStorageProviderInstance } from '@/services/storage/userStorageProvider.service';
 import { getServerEnv } from '@/lib/env/server';
 import { getWorkspaceForUser } from '@/lib/workspace';
@@ -217,6 +218,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const workspace = await getWorkspaceForUser(userId).catch(() => null);
     const scopeKey   = workspace ? `ws:${workspace.id}` : `user:${userId}`;
     writeLatestMetrics(scopeKey, metrics, { source: 'file' });
+    // Mark pending synchronously, before the response even goes out — closes
+    // the race where a near-immediate GET /api/metrics/latest (the dashboard
+    // reloading right after this upload) could trigger a cloud restore that
+    // overwrites this fresh write with an older bucket backup before the
+    // non-blocking pushToCloud() below has finished pushing it.
+    markPendingPush();
 
     // EP-024: verified users additionally get a durable copy pushed to their
     // own bucket — non-blocking, same pattern as the existing pushToCloud()
