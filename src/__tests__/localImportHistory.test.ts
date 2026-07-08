@@ -23,6 +23,15 @@ const localStorageMock = {
 };
 Object.defineProperty(global, 'localStorage', { value: localStorageMock });
 
+// addLocalImport() is async — it awaits tagCurrentOwner(), which calls
+// fetchCurrentUser() (GET /api/auth/me). Without this mock, fetch is
+// undefined in the Node test environment and tagCurrentOwner() would reject,
+// making every addLocalImport() call here wrongly resolve quotaExceeded:true.
+(global as any).fetch = jest.fn(async () => ({
+  ok: true,
+  json: async () => ({ userId: 'user-a', email: 'a@test.com', name: 'a', role: 'user' }),
+}));
+
 beforeEach(() => localStorageMock.clear());
 
 const baseEntry = { fileName: 'export.xlsx', fileType: 'xlsx', totalIssues: 42, healthScore: 88, status: 'success' as const, warningsCount: 0 };
@@ -31,8 +40,8 @@ test('TC-LIH-01: listLocalImports returns empty array on first visit', () => {
   expect(listLocalImports()).toEqual([]);
 });
 
-test('TC-LIH-02: addLocalImport persists a record retrievable via listLocalImports', () => {
-  const { record, quotaExceeded } = addLocalImport(baseEntry);
+test('TC-LIH-02: addLocalImport persists a record retrievable via listLocalImports', async () => {
+  const { record, quotaExceeded } = await addLocalImport(baseEntry);
   expect(quotaExceeded).toBe(false);
   const listed = listLocalImports();
   expect(listed).toHaveLength(1);
@@ -40,32 +49,32 @@ test('TC-LIH-02: addLocalImport persists a record retrievable via listLocalImpor
   expect(listed[0].fileName).toBe('export.xlsx');
 });
 
-test('TC-LIH-03: addLocalImport prepends newest first', () => {
-  addLocalImport({ ...baseEntry, fileName: 'first.xlsx' });
-  addLocalImport({ ...baseEntry, fileName: 'second.xlsx' });
+test('TC-LIH-03: addLocalImport prepends newest first', async () => {
+  await addLocalImport({ ...baseEntry, fileName: 'first.xlsx' });
+  await addLocalImport({ ...baseEntry, fileName: 'second.xlsx' });
   const listed = listLocalImports();
   expect(listed[0].fileName).toBe('second.xlsx');
   expect(listed[1].fileName).toBe('first.xlsx');
 });
 
-test('TC-LIH-04: history is capped at 20 entries', () => {
-  for (let i = 0; i < 25; i++) addLocalImport({ ...baseEntry, fileName: `file-${i}.xlsx` });
+test('TC-LIH-04: history is capped at 20 entries', async () => {
+  for (let i = 0; i < 25; i++) await addLocalImport({ ...baseEntry, fileName: `file-${i}.xlsx` });
   expect(listLocalImports()).toHaveLength(20);
   // Most recent (file-24) survives; oldest (file-0..4) are dropped.
   expect(listLocalImports()[0].fileName).toBe('file-24.xlsx');
 });
 
-test('TC-LIH-05: removeLocalImport deletes only the targeted record', () => {
-  const { record: first }  = addLocalImport({ ...baseEntry, fileName: 'keep.xlsx' });
-  const { record: second } = addLocalImport({ ...baseEntry, fileName: 'remove.xlsx' });
+test('TC-LIH-05: removeLocalImport deletes only the targeted record', async () => {
+  const { record: first }  = await addLocalImport({ ...baseEntry, fileName: 'keep.xlsx' });
+  const { record: second } = await addLocalImport({ ...baseEntry, fileName: 'remove.xlsx' });
   removeLocalImport(second.id);
   const listed = listLocalImports();
   expect(listed).toHaveLength(1);
   expect(listed[0].id).toBe(first.id);
 });
 
-test('TC-LIH-06: clearLocalImportHistory empties the list', () => {
-  addLocalImport(baseEntry);
+test('TC-LIH-06: clearLocalImportHistory empties the list', async () => {
+  await addLocalImport(baseEntry);
   clearLocalImportHistory();
   expect(listLocalImports()).toEqual([]);
 });
@@ -86,10 +95,29 @@ test('TC-LIH-08: listLocalImports returns empty array on unparsable JSON rather 
   expect(listLocalImports()).toEqual([]);
 });
 
-test('TC-LIH-09: addLocalImport reports quotaExceeded without throwing when storage is full', () => {
+test('TC-LIH-09: addLocalImport reports quotaExceeded without throwing when storage is full', async () => {
   const originalSetItem = localStorageMock.setItem;
   (localStorageMock as any).setItem = () => { throw new DOMException('quota', 'QuotaExceededError'); };
-  const { quotaExceeded } = addLocalImport(baseEntry);
+  const { quotaExceeded } = await addLocalImport(baseEntry);
   expect(quotaExceeded).toBe(true);
   (localStorageMock as any).setItem = originalSetItem;
+});
+
+// P0 fix, 2026-07-08: addLocalImport() used to fire tagCurrentOwner() without
+// awaiting it (same bug class fixed in storage.ts's saveMetrics() — see
+// crossAccountDataIsolation.test.ts TC-DATAISO-14/15). A caller awaiting
+// addLocalImport() must be able to trust the owner tag is written by the
+// time it resolves, even under real network latency.
+test('TC-LIH-10: addLocalImport does not resolve until the ownership tag is written, even under network latency', async () => {
+  (global as any).fetch = jest.fn(async (url: string) => {
+    if (url === '/api/auth/me') {
+      await new Promise(r => setTimeout(r, 20));
+      return { ok: true, json: async () => ({ userId: 'user-a', email: 'a@test.com', name: 'a', role: 'user' }) };
+    }
+    return { ok: true, json: async () => ({}) };
+  });
+
+  await addLocalImport(baseEntry);
+
+  expect(lsStore['dc_local_import_history_owner_v1']).toBe('user-a');
 });

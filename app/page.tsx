@@ -60,7 +60,7 @@ export default function HomePage() {
         const result = await processFileLocally(file);
         if ('error' in result) { setError(result.error); return; }
         data = result;
-        addLocalImport({
+        await addLocalImport({
           fileName:      file.name,
           fileType:      getFileExtension(file.name).replace('.', ''),
           totalIssues:   result.metrics.totalIssues ?? 0,

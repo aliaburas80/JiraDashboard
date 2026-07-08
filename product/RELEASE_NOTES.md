@@ -5,6 +5,12 @@
 
 ---
 
+## Investigated: "Sample Data Keeps Showing Instead of My Upload" (2026-07-08)
+
+Investigated a report that the sample/demo dataset kept appearing instead of newly uploaded files. Verified end-to-end, with a real test account, that a fresh upload correctly and immediately replaces the previous one on the server — confirmed working, repeatedly, with no exceptions found. Also closed one more instance of the same underlying timing gap fixed earlier today (in the "This device only" upload-history tracker, not the dashboard data itself) as a precaution. If you still see this, it's most likely either an old cached page in your browser (try a hard refresh) or your file being missing one of the four required Jira columns (Issue Key, Issue Type, Summary, Status) — watch for a "Column Mapping Preview" screen with a red "Required columns missing" banner right after you select a file.
+
+---
+
 ## New: Global Search (2026-07-08, P3)
 
 Press ⌘K (Mac) or Ctrl+K (Windows/Linux) anywhere in the app, or click the new Search button in the top bar, to open a quick search popup. Type to instantly filter every page and feature you have access to — results appear as a grid of cards with icons, so you can scan and click straight to where you want to go. Use the arrow keys and Enter for a keyboard-only workflow. This first release covers pages and features; searching inside your uploaded Jira data is planned for a future update.

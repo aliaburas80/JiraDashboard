@@ -2381,3 +2381,21 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** 10 new tests in `pageSearch.test.ts`, all passing. Full suite 109 suites / 1001 tests passing (up from 108/991). `npx tsc --noEmit` clean. `npx eslint` clean on every new/touched file (`pageSearch.ts`, `GlobalSearch.tsx`, `GlobalSearch.module.scss`, `navigation.ts`, `DashboardTopbar.tsx`, `AppShell.tsx`). `npx next build` clean.
 
 **Manual verification:** not performed — no browser-automation tool available this session. The ranking logic is fully unit-tested; the DOM/keyboard-event layer (opening via ⌘K/Ctrl+K, typing, arrow-key navigation between result cards, Enter/click to navigate, Escape to close, focus returning to the trigger button on close) has not been exercised in an actual browser. Recommended before relying on this: open the popup via both the button and the keyboard shortcut on a page using each of the two shells (e.g. `/dashboard/priority-attention` for `DashboardTopbar`, `/charts` for `AppShell`), confirm results render with icons, and confirm role-gated pages (e.g. `/admin/*` for a non-admin) never appear in a non-admin's results.
+
+## 9.101 — Investigation: "Sample Data Keeps Showing Instead of My Upload"
+
+*(Added 2026-07-08. Could not be reproduced — see SRS.md Addendum V for the full investigation, including a live end-to-end test against the real dev database with a disposable throwaway account, deleted before this session ended.)*
+
+**Live server-side check (manual, not an automated test — the throwaway account no longer exists):** registered a temporary test account, uploaded a 2-issue CSV, confirmed `GET /api/metrics/latest` returned it; uploaded a different 3-issue CSV over it, confirmed `GET /api/metrics/latest` returned the second file's data on 5 consecutive checks, never the first. Cloud/App-storage-mode upload path confirmed correct.
+
+**TC-DATAISO-16:** saving new metrics over pre-existing cached metrics (simulating old sample data already in `localStorage`) fully replaces them — both via the direct `saveMetrics()`/`loadMetrics()` path and via `loadMetricsWithSource()`, under the same artificial network latency used in TC-DATAISO-14/15.
+
+**TC-DATAISO-17:** the exact sequence `handleProceed()` in `app/page.tsx` uses — `clearMetrics()` immediately followed by `saveMetrics()` — ends with only the new data present, no window where neither old nor new data is readable.
+
+**TC-LIH-10:** `addLocalImport()` does not resolve until its ownership tag is written, verified under the same 20ms artificial `/api/auth/me` latency pattern as TC-DATAISO-14.
+
+**Also fixed:** `addLocalImport()` (`src/lib/localImportHistory.ts`) had the same unawaited `tagCurrentOwner()` fire-and-forget pattern as Addendum T's `saveMetrics()`, in a different file. Made `async`, its one call site (`app/page.tsx`) now awaits it. This function only affects the upload-history list shown on the profile page, not dashboard metrics — fixed as a precaution, not because it was proven to cause the reported symptom. Existing TC-LIH-01–09 updated to `await` the now-async `addLocalImport()` and to mock `fetch` (previously unmocked in this test file, which would have made every call silently report a false `quotaExceeded: true` once the function started awaiting a real network call).
+
+**Automated checks:** 4 new tests, full suite 109 suites / 1004 tests passing (up from 109/1001). `npx tsc --noEmit` clean. `npx eslint` clean on all touched files. `npx next build` clean.
+
+**Outcome:** every layer testable without a browser or the user's actual file (server upload/read round trip, localStorage save/overwrite logic, parser statelessness) is confirmed correct. The two remaining untestable possibilities — the user's file being missing an essential column (which would show a mapping-preview blocking screen, not a silent fallback) and a stale cached browser tab/deployment — are documented in SRS.md Addendum V with a specific ask: watch for the "Column Mapping Preview" screen and a "Required columns missing" banner on the next upload attempt.
