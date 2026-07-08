@@ -20,11 +20,20 @@ export async function GET(): Promise<NextResponse> {
   try {
     const user = await prisma.user.findUnique({
       where:  { id: session.userId },
-      select: { isActive: true, role: true, mustChangePassword: true },
+      select: { isActive: true, role: true, mustChangePassword: true, emailVerified: true },
     });
     if (!user || !user.isActive) {
       session.destroy();
       return NextResponse.json({ error: 'Account is suspended or no longer exists.' }, { status: 401 });
+    }
+    // Verification happens via a token link, not a session — a user who
+    // verifies from a different browser/tab than the one they're logged in
+    // on would otherwise carry a stale session.emailVerified: false until
+    // their next login. Sync it here so the UI's "please verify" reminder
+    // clears as soon as they've actually verified, not on next login.
+    if (session.emailVerified !== user.emailVerified) {
+      session.emailVerified = user.emailVerified;
+      await session.save();
     }
   } catch {
     // DB temporarily unavailable — trust the cookie rather than block all users.

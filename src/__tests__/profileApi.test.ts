@@ -108,3 +108,25 @@ test('TC-PROF-05: PATCH /api/profile without dataStorageMode leaves the field un
   const callArgs = (prisma.user.update as jest.Mock).mock.calls[0][0];
   expect(callArgs.data.dataStorageMode).toBeUndefined();
 });
+
+test('TC-PROF-06: GET /api/profile returns emailVerified', async () => {
+  const { prisma } = jest.requireMock('@/lib/prisma');
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue(user({ emailVerified: false }));
+
+  const { GET } = await import('../../app/api/profile/route');
+  const res = await GET();
+  const body = await res.json();
+
+  expect(body.profile.emailVerified).toBe(false);
+});
+
+test('TC-PROF-07: PATCH /api/profile ignores an emailVerified field in the request body — a user cannot self-verify', async () => {
+  const { prisma } = jest.requireMock('@/lib/prisma');
+  (prisma.user.update as jest.Mock).mockResolvedValue(user({ emailVerified: false }));
+
+  const { PATCH } = await import('../../app/api/profile/route');
+  await PATCH(request({ name: 'Sam', emailVerified: true }));
+
+  const callArgs = (prisma.user.update as jest.Mock).mock.calls[0][0];
+  expect(callArgs.data.emailVerified).toBeUndefined();
+});

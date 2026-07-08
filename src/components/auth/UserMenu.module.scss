@@ -29,6 +29,11 @@
 }
 
 // ── Avatar circle ──────────────────────────────────────────────────────────────
+.avatarWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
 .avatar {
   width: 26px;
   height: 26px;
@@ -41,7 +46,26 @@
   font-size: var(--text-xs, 10px);
   font-weight: 800;
   font-family: var(--font-mono, monospace);
-  flex-shrink: 0;
+}
+
+// Unverified-email indicator — cleared automatically once the account
+// verifies (GET /api/auth/me re-syncs from the DB on every fetch).
+.unverifiedBadge {
+  position: absolute;
+  inset-block-start: -3px;
+  inset-inline-end: -3px;
+  inline-size: 13px;
+  block-size: 13px;
+  border-radius: var(--radius-full, 9999px);
+  background: #d97706;
+  border: 2px solid var(--color-surface, #fff);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 // ── Username label ─────────────────────────────────────────────────────────────
@@ -114,6 +138,13 @@
   border-radius: var(--radius-xs, 3px);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+.verifyNote {
+  margin-block-start: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #d97706;
 }
 
 // ── Menu item ──────────────────────────────────────────────────────────────────

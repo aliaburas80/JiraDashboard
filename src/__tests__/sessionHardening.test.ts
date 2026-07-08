@@ -112,3 +112,31 @@ test('TC-SH-05: GET /api/auth/me returns 401 without DB call when cookie has no 
   expect(mockFindUnique).not.toHaveBeenCalled();
   expect(mockSession.destroy).not.toHaveBeenCalled();
 });
+
+// ── TC-SH-06/07: emailVerified is re-synced from the DB on every call ────────
+// Verification happens via a token link, not a session, so a stale
+// session.emailVerified: false must clear itself here rather than wait for
+// the next login (see P0 email-verification-non-blocking follow-up).
+
+test('TC-SH-06: session.emailVerified is synced and saved when the DB value has changed', async () => {
+  (mockSession as any).emailVerified = false; // stale — set at a login before they verified
+  mockFindUnique.mockResolvedValueOnce({ isActive: true, role: 'user', mustChangePassword: false, emailVerified: true });
+
+  const { GET } = await import('../../app/api/auth/me/route');
+  const res  = await GET();
+  const body = await res.json();
+
+  expect((mockSession as any).emailVerified).toBe(true);
+  expect(mockSession.save).toHaveBeenCalled();
+  expect(body.emailVerified).toBe(true);
+});
+
+test('TC-SH-07: no redundant session.save() call when the DB value already matches the session', async () => {
+  (mockSession as any).emailVerified = true;
+  mockFindUnique.mockResolvedValueOnce({ isActive: true, role: 'user', mustChangePassword: false, emailVerified: true });
+
+  const { GET } = await import('../../app/api/auth/me/route');
+  await GET();
+
+  expect(mockSession.save).not.toHaveBeenCalled();
+});

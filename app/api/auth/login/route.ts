@@ -131,15 +131,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    if (user.emailVerified === false) {
-      return loginError(
-        403,
-        'Please verify your email before signing in.',
-        'Check your inbox for the Delivery Clarity verification link, or send the verification email again.',
-        undefined,
-        { code: 'EMAIL_NOT_VERIFIED', canResendVerification: true },
-      );
-    }
+    // Unverified email no longer blocks sign-in — the user is let in, and the
+    // app shows a persistent "please verify" reminder (EmailVerificationBanner)
+    // plus an indicator on their avatar until they verify. Blocking sign-in
+    // entirely just locked people out of an account they legitimately own.
 
     // Use cookies() from next/headers — correct App Router approach for iron-session v8
     const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);

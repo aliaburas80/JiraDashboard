@@ -50,6 +50,12 @@ jest.mock('../lib/system-error-logger', () => ({
   safeAuditEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
+const mockSendEmail = jest.fn(async (_opts: unknown) => true);
+jest.mock('../lib/email', () => ({
+  ...jest.requireActual('../lib/email'),
+  sendEmail: (opts: unknown) => mockSendEmail(opts),
+}));
+
 import { prisma } from '../lib/prisma';
 import { POST } from '../../app/api/auth/verify-email/route';
 
@@ -60,6 +66,8 @@ function makeRequest(body: unknown): Request {
     body:    JSON.stringify(body),
   });
 }
+
+beforeEach(() => { mockSendEmail.mockClear(); });
 
 test('TC-EV-06: valid, unexpired token verifies the user and clears the token', async () => {
   const future = new Date(Date.now() + 60_000);
@@ -124,4 +132,40 @@ test('TC-EV-10: missing token returns 400', async () => {
 
   expect(res.status).toBe(400);
   expect(data.error).toMatch(/required/i);
+});
+
+test('TC-EV-11: a real (non-replay) verification sends a thank-you email to the user', async () => {
+  const future = new Date(Date.now() + 60_000);
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+    id: 'u1', name: 'Ali', email: 'ali@test.com', emailVerified: false, emailVerificationExpires: future,
+  });
+
+  await POST(makeRequest({ token: 'valid-token' }) as any);
+
+  expect(mockSendEmail).toHaveBeenCalledTimes(1);
+  expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'ali@test.com' }));
+});
+
+test('TC-EV-12: replaying an already-verified token does not resend the thank-you email', async () => {
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+    id: 'u3', name: 'Done', email: 'done@test.com', emailVerified: true, emailVerificationExpires: null,
+  });
+
+  await POST(makeRequest({ token: 'already-used' }) as any);
+
+  expect(mockSendEmail).not.toHaveBeenCalled();
+});
+
+test('TC-EV-13: a failed thank-you email does not fail the verification response', async () => {
+  const future = new Date(Date.now() + 60_000);
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+    id: 'u1', name: 'Ali', email: 'ali@test.com', emailVerified: false, emailVerificationExpires: future,
+  });
+  mockSendEmail.mockRejectedValueOnce(new Error('SMTP down'));
+
+  const res  = await POST(makeRequest({ token: 'valid-token' }) as any);
+  const data = await res.json();
+
+  expect(res.status).toBe(200);
+  expect(data.ok).toBe(true);
 });

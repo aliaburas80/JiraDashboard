@@ -12,6 +12,7 @@ export interface ProfileFields {
   address: string;
   certificates: string;
   bio: string;
+  emailVerified: boolean;
 }
 
 interface ProfileTabProps {
@@ -32,17 +33,31 @@ export default function ProfileTab({
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-6 flex flex-col gap-5 border-b border-slate-100 pb-5 sm:flex-row sm:items-center">
-        {profile.avatarUrl ? (
-          <img src={profile.avatarUrl} alt={profile.name} className="h-20 w-20 rounded-full object-cover ring-4 ring-blue-50" />
-        ) : (
-          <div className="grid h-20 w-20 place-items-center rounded-full bg-blue-600 text-2xl font-black text-white ring-4 ring-blue-50">
-            {initials}
-          </div>
-        )}
+        <div className="relative shrink-0">
+          {profile.avatarUrl ? (
+            <img src={profile.avatarUrl} alt={profile.name} className="h-20 w-20 rounded-full object-cover ring-4 ring-blue-50" />
+          ) : (
+            <div className="grid h-20 w-20 place-items-center rounded-full bg-blue-600 text-2xl font-black text-white ring-4 ring-blue-50">
+              {initials}
+            </div>
+          )}
+          {!profile.emailVerified && (
+            <span
+              title="Email not verified"
+              aria-hidden="true"
+              className="absolute -end-1 -top-1 grid h-6 w-6 place-items-center rounded-full border-2 border-white bg-amber-600 text-sm font-black text-white"
+            >
+              !
+            </span>
+          )}
+        </div>
         <div className="min-w-0 flex-1">
           <p className="text-xl font-black text-slate-950">{profile.name || 'Your name'}</p>
           <p className="text-sm text-slate-500">{profile.position || profile.roleLabel}</p>
           <p className="text-xs text-slate-400">{profile.email}</p>
+          {!profile.emailVerified && (
+            <p className="mt-1 text-xs font-bold text-amber-700">! Email not verified</p>
+          )}
         </div>
         <button type="button" onClick={onLogout} className="btn-outline-danger">
           Sign out

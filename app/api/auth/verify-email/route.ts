@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { sendEmail, buildVerificationThankYouEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +53,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     eventDescription: `Email verified for ${user.email}`,
     ipAddress:        req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown',
   });
+
+  // Best-effort — verification already succeeded and was persisted above;
+  // a failed thank-you email must never turn that into an error response.
+  try {
+    const emailContent = buildVerificationThankYouEmail(user.name);
+    await sendEmail({ to: user.email, toName: user.name, ...emailContent });
+  } catch (err) {
+    await safeAuditEvent({
+      userId:           user.id,
+      eventType:        'verification_thank_you_email_failed',
+      eventDescription: `Thank-you email failed to send for ${user.email}: ${err instanceof Error ? err.message : String(err)}`,
+    });
+  }
 
   return NextResponse.json({ ok: true, alreadyVerified: false });
 }

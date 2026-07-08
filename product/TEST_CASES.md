@@ -2249,3 +2249,31 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** 13 new tests in `crossAccountDataIsolation.test.ts`, all passing. Full suite 106 suites / 969 tests passing (up from 105/956), no regressions. `npx tsc --noEmit` clean. `npx eslint` clean on all touched/new files. `npx next build` clean.
 
 **Manual verification:** not performed — no browser-automation tool available this session. **This is the most important manual check to run before considering this closed**: log in as account A, upload data, sign out (or don't — either should work), log in as account B on the *same browser*, and confirm the dashboard shows no data belonging to account A.
+
+## 9.95 — Email Verification No Longer Blocks Sign-In
+
+*(Added 2026-07-08. Product decision reversing same-day commit f3ba44a's login-gating behavior — see SRS.md Addendum P.)*
+
+**TC-EMVERIFY-01:** `POST /api/auth/login` succeeds (200) for an account with `emailVerified: false` — no 403/`EMAIL_NOT_VERIFIED` block.
+
+**TC-EMVERIFY-02:** The session created on that login carries `emailVerified: false`, so the UI can react to it (`loginRoute.test.ts` TC-LOGIN-02, updated).
+
+**TC-EMVERIFY-03:** `GET /api/profile` returns `emailVerified` in the profile payload.
+
+**TC-EMVERIFY-04:** `PATCH /api/profile` ignores an `emailVerified` field sent in the request body — the update `data` object is built field-by-field, not spread from the body, so a user cannot self-verify.
+
+**TC-EMVERIFY-05:** A real (non-replay) `POST /api/auth/verify-email` sends a thank-you email to the user (`buildVerificationThankYouEmail`).
+
+**TC-EMVERIFY-06:** Replaying an already-verified token (the route's existing `alreadyVerified` short-circuit) does not resend the thank-you email.
+
+**TC-EMVERIFY-07:** A failed thank-you-email send does not turn a successful verification into an error response — the route still returns `{ok:true}`.
+
+**TC-EMVERIFY-08:** `GET /api/auth/me` re-fetches `emailVerified` from the DB (piggybacking on the existing EP-010 suspension check) and syncs + saves the session when it differs from the stored value — so verifying via a token link (no session involved) clears the reminder on the next page load without requiring a fresh login.
+
+**TC-EMVERIFY-09:** `GET /api/auth/me` does not call `session.save()` again when the DB value already matches the session (no redundant writes).
+
+**Not covered by automated tests (no component-testing infrastructure in this repo):** `EmailVerificationBanner` rendering/hiding logic (hidden on auth-flow pages, hidden when verified, session-scoped dismiss via `sessionStorage`); the "!" badge appearing/disappearing on `UserMenu`'s and `ProfileTab`'s avatars; the verification link working correctly when opened in a different browser than the one the account is logged into (confirmed by code review — `POST /api/auth/verify-email` is purely token-based with no session dependency, and `/verify-email` is not in `middleware.ts`'s `PROTECTED` list — but not exercised end-to-end).
+
+**Automated checks:** Updated `loginRoute.test.ts` (TC-LOGIN-02). 2 new tests in `profileApi.test.ts` (TC-PROF-06/07). 3 new tests in `emailVerification.test.ts` (TC-EV-11–13). 2 new tests in `sessionHardening.test.ts` (TC-SH-06/07). Full suite 106 suites / 976 tests passing (up from 106/969), no regressions. `npx tsc --noEmit` clean. `npx eslint` clean on all touched files. `npx stylelint` clean on the new `EmailVerificationBanner.module.scss`. `npx next build` clean.
+
+**Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: (1) register a new account, confirm you can sign in immediately without verifying; (2) confirm the reminder banner and avatar badge appear; (3) click the verification link from a *different* browser than the one you're logged in on, confirm it succeeds; (4) return to the logged-in browser, navigate to a new page, confirm the banner/badge clear without needing to log out and back in; (5) confirm the thank-you email arrives; (6) specifically check the banner's visual stacking on `/dashboard`, `/admin`, and `/developer` (fixed-position topbar pages) for any overlap.

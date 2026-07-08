@@ -27,6 +27,7 @@ const EMPTY_PROFILE: Profile = {
   certificates: '',
   bio: '',
   dataStorageMode: 'cloud',
+  emailVerified: true,
 };
 
 // Settings side-menu — each entry only shows for roles listed in `roles`; omitting

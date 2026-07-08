@@ -522,6 +522,38 @@ export function buildVerificationEmail(
   return { subject: 'Verify your email — Delivery Clarity', text, html };
 }
 
+// Sent once, right after a successful POST /api/auth/verify-email — not on a
+// replay of an already-verified link (see the calling route's alreadyVerified
+// check).
+export function buildVerificationThankYouEmail(
+  name: string,
+): Pick<EmailOptions, 'subject' | 'text' | 'html'> {
+  const text = [
+    `Hi ${name},`,
+    '',
+    'Thanks for verifying your email address — your Delivery Clarity account is fully active now.',
+    '',
+    'You can sign in any time and start uploading data.',
+    '',
+    '— Delivery Clarity',
+  ].join('\n');
+
+  const html = `
+<div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1e293b;background:#ffffff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#2563eb,#0891b2);padding:24px 28px">
+    <h1 style="margin:0;font-size:20px;color:#ffffff;font-weight:800;letter-spacing:-0.3px">Delivery Clarity</h1>
+    <p style="margin:4px 0 0;font-size:13px;color:#bfdbfe">Email verified</p>
+  </div>
+  <div style="padding:28px">
+    <p style="margin-top:0">Hi <strong>${escapeHtml(name)}</strong>,</p>
+    <p>Thanks for verifying your email address — your account is fully active now.</p>
+    <p style="font-size:13px;color:#475569">You can sign in any time and start uploading data.</p>
+  </div>
+</div>`.trim();
+
+  return { subject: 'Email verified — Delivery Clarity', text, html };
+}
+
 // EP-013: sent when a user requests a password reset. Clicking the link lands on
 // /reset-password, which calls POST /api/auth/reset-password to consume the token.
 export function buildPasswordResetEmail(

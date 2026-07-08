@@ -22,6 +22,7 @@ const PROFILE_FIELDS = {
   certificates: true,
   bio: true,
   dataStorageMode: true,
+  emailVerified: true,
   updatedAt: true,
 };
 
@@ -49,6 +50,7 @@ function safeProfile(user: any) {
     bio: user.bio ?? '',
     // EP-017: "cloud" (default, server-side data) or "local" (browser-only, never uploaded).
     dataStorageMode: user.dataStorageMode === 'local' ? 'local' : 'cloud',
+    emailVerified: user.emailVerified !== false,
     updatedAt: user.updatedAt?.toISOString?.() ?? null,
   };
 }
