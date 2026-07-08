@@ -2277,3 +2277,25 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** Updated `loginRoute.test.ts` (TC-LOGIN-02). 2 new tests in `profileApi.test.ts` (TC-PROF-06/07). 3 new tests in `emailVerification.test.ts` (TC-EV-11–13). 2 new tests in `sessionHardening.test.ts` (TC-SH-06/07). Full suite 106 suites / 976 tests passing (up from 106/969), no regressions. `npx tsc --noEmit` clean. `npx eslint` clean on all touched files. `npx stylelint` clean on the new `EmailVerificationBanner.module.scss`. `npx next build` clean.
 
 **Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: (1) register a new account, confirm you can sign in immediately without verifying; (2) confirm the reminder banner and avatar badge appear; (3) click the verification link from a *different* browser than the one you're logged in on, confirm it succeeds; (4) return to the logged-in browser, navigate to a new page, confirm the banner/badge clear without needing to log out and back in; (5) confirm the thank-you email arrives; (6) specifically check the banner's visual stacking on `/dashboard`, `/admin`, and `/developer` (fixed-position topbar pages) for any overlap.
+
+## 9.96 — Free Color Picker for Issue Type Hierarchy
+
+*(Added 2026-07-08. User request: "make a free color palette to select any color not just specific colors" on Admin Settings → Issue Type Hierarchy. See SRS.md Addendum Q.)*
+
+**TC-ITCOLOR-01:** `deriveColorSet(hex)` preserves the exact chosen color unchanged as `color`.
+
+**TC-ITCOLOR-02:** `deriveColorSet(hex)` returns valid 7-character `#rrggbb` hex strings for `bg` and `border`.
+
+**TC-ITCOLOR-03:** For a representative saturated color, the derived `bg` is lighter than `border`, which is lighter than the original `color` — preserving the presets' "vivid color + pale background + soft border" visual pattern.
+
+**TC-ITCOLOR-04:** Works correctly for a fully-saturated primary color (`#ff0000`).
+
+**TC-ITCOLOR-05:** A near-gray input (`#808080`, ~0% saturation) still produces a valid, non-degenerate tint rather than a flat/colorless background (saturation floored at 40% for tint generation).
+
+**TC-ITCOLOR-06:** Two different hues produce visibly distinct `bg`/`border` values.
+
+**Not covered by automated tests (no component-testing infrastructure in this repo):** the `<input type="color">` swatch's rendering/interaction, the CSS-custom-property `--swatch-color` binding actually painting the swatch preview correctly, and the presets remaining unaffected alongside the new picker.
+
+**Automated checks:** 6 new tests in `issueTypeColorPicker.test.ts`, all passing. Full suite 107 suites / 982 tests passing (up from 106/976), no regressions. `npx tsc --noEmit` clean. `npx eslint` clean on the new `src/lib/colorSwatch.ts` and test file; the component file's warning count went from 4 (pre-existing) to 5 — the 5th is the new, correctly-documented CLAUDE.md §14.2 CSS-variable exception, not new raw-style debt (confirmed via `git stash` comparison against `main`). `npx stylelint` clean on the new SCSS module. `npx next build` clean.
+
+**Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: open Admin Settings → Issue Type Hierarchy, click the new color swatch next to the presets, pick an arbitrary color, and confirm the type's icon/label color, background, and border all update to a coordinated, readable combination; save and reload to confirm it persists.

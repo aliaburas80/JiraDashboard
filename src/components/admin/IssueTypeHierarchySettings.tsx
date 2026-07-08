@@ -1,9 +1,13 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 'use client';
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { IssueTypeDefinition, IssueTypeHierarchyConfig } from '@/types/issueTypeHierarchy';
 import { buildIssueTypeId } from '@/types/issueTypeHierarchy';
+import { deriveColorSet } from '@/lib/colorSwatch';
+import styles from './IssueTypeHierarchySettings.module.scss';
+
+type CSSVariableProperties = CSSProperties & Record<`--${string}`, string>;
 
 interface Props {
   config: IssueTypeHierarchyConfig;
@@ -181,6 +185,23 @@ export default function IssueTypeHierarchySettings({ config, onSave }: Props) {
                         style={{ background: preset.color }}
                       />
                     ))}
+                    <span className="w-px h-4 bg-slate-200 mx-0.5" aria-hidden="true" />
+                    <label
+                      title="Choose any color"
+                      className={`relative w-5 h-5 rounded-full border-2 border-white shadow-sm overflow-hidden cursor-pointer shrink-0 ${styles.colorSwatch}`}
+                      // DYNAMIC CSS VARIABLE: swatch shows the admin's freely-chosen
+                      // color, which can't be a predefined class (CLAUDE.md §14.2).
+                      // Always a browser-validated #rrggbb from <input type="color">.
+                      style={{ '--swatch-color': t.color } as CSSVariableProperties}
+                    >
+                      <input
+                        type="color"
+                        value={t.color}
+                        onChange={e => updateType(t.id, deriveColorSet(e.target.value))}
+                        aria-label={`Custom color for ${t.label || 'this type'}`}
+                        className="absolute -inset-2 cursor-pointer opacity-0"
+                      />
+                    </label>
                   </div>
                   {!t.builtIn && (
                     <button type="button" onClick={() => removeType(t.id)} title="Delete custom type"
