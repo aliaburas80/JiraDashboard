@@ -252,6 +252,42 @@ describe('storage.ts — cross-account localStorage fallback protection', () => 
     const result = await loadMetricsWithSource();
     expect(result.metrics).toEqual(realMetrics);
   });
+
+  test('TC-DATAISO-18: local-storage users load their uploaded browser data before stale server/sample metrics', async () => {
+    const realMetrics = { totalIssues: 2, flow: { items: [{ key: 'REAL-1' }, { key: 'REAL-2' }] } };
+    const staleServerMetrics = { totalIssues: 35, flow: { items: [{ key: 'SAMPLE-1' }] } };
+
+    installBrowserStorage({
+      dc_metrics_v2: JSON.stringify(realMetrics),
+      dc_metrics_owner_v1: 'user-a',
+    });
+    (global as any).fetch = jest.fn(async (url: string) => {
+      if (url === '/api/auth/me') {
+        return {
+          ok: true,
+          json: async () => ({
+            userId: 'user-a',
+            email: 'a@test.com',
+            name: 'a',
+            role: 'user',
+            dataStorageMode: 'local',
+          }),
+        };
+      }
+      return {
+        ok: true,
+        json: async () => ({ available: true, metrics: staleServerMetrics, userId: 'user-a', source: 'server-local' }),
+      };
+    });
+
+    const { loadMetricsWithSource } = await import('../lib/storage');
+    const result = await loadMetricsWithSource();
+
+    expect(result.metrics).toEqual(realMetrics);
+    expect(result.source).toBe('localstorage');
+    expect(result.fallbackUsed).toBe(false);
+    expect((global as any).fetch).not.toHaveBeenCalledWith('/api/metrics/latest', { cache: 'no-store' });
+  });
 });
 
 describe('localImportHistory.ts — cross-account history protection', () => {

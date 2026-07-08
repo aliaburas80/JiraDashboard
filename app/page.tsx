@@ -36,18 +36,37 @@ export default function HomePage() {
   const [confirmClear, setConfirmClear]       = useState(false);
   const [clearSuccess, setClearSuccess]       = useState(false);
   const [dataStorageMode, setDataStorageMode] = useState<'cloud' | 'local'>('cloud');
+  const [storageModeReady, setStorageModeReady] = useState(false);
   const inputRef  = useRef<HTMLInputElement>(null);
   const mergeRef  = useRef<HTMLInputElement>(null);
   const autoSampleStartedRef = useRef(false);
+  const storageModeRef = useRef<'cloud' | 'local'>('cloud');
+  const storageModePromiseRef = useRef<Promise<'cloud' | 'local'> | null>(null);
 
   useEffect(() => { setStoredDataFound(hasLocalData()); }, []);
 
   // EP-017: local-mode users never POST the file to /api/upload at all.
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.ok ? r.json() : null)
-      .then(data => { if (data?.dataStorageMode === 'local') setDataStorageMode('local'); })
-      .catch(() => {}); // default "cloud" — never silently skip the server on a failed check
+    const promise = fetch('/api/auth/me').then(r => r.ok ? r.json() : null)
+      .then(data => data?.dataStorageMode === 'local' ? 'local' as const : 'cloud' as const)
+      .catch(() => 'cloud' as const); // default "cloud" — never silently skip the server on a failed check
+
+    storageModePromiseRef.current = promise;
+    promise.then(mode => {
+      storageModeRef.current = mode;
+      setDataStorageMode(mode);
+      setStorageModeReady(true);
+    });
   }, []);
+
+  const resolveDataStorageMode = useCallback(async () => {
+    if (storageModeReady) return dataStorageMode;
+    const mode = storageModePromiseRef.current ? await storageModePromiseRef.current : storageModeRef.current;
+    storageModeRef.current = mode;
+    setDataStorageMode(mode);
+    setStorageModeReady(true);
+    return mode;
+  }, [dataStorageMode, storageModeReady]);
 
   // ── Single file upload (existing golden path) ─────────────────────────────
   const handleFile = useCallback(async function handleFile(file: File) {
@@ -55,8 +74,9 @@ export default function HomePage() {
     setDataQuality(null); setFieldImpacts(null); setColumnMapping(null); setPendingMetrics(null);
     try {
       let data: { metrics: any; warnings: string[]; columnMapping?: ColumnMappingResult; error?: string; details?: string[] };
+      const mode = await resolveDataStorageMode();
 
-      if (dataStorageMode === 'local') {
+      if (mode === 'local') {
         const result = await processFileLocally(file);
         if ('error' in result) { setError(result.error); return; }
         data = result;
@@ -84,12 +104,13 @@ export default function HomePage() {
         setFieldImpacts(data.metrics?.fieldImpacts ?? null);
         // Don't auto-redirect — wait for user to click Proceed
       } else {
+        clearMetrics(); // old sample/import data must not survive a fresh upload
         await saveMetrics(data.metrics);
-        router.push('/dashboard');
+        router.push('/dashboard?fresh=1');
       }
     } catch { setError('Upload failed. Please check the file and try again.'); }
     finally { setLoading(false); }
-  }, [dataStorageMode, router]);
+  }, [resolveDataStorageMode, router]);
 
   // ── Multi-file merge ──────────────────────────────────────────────────────
   const handleSampleData = useCallback(async function handleSampleData() {

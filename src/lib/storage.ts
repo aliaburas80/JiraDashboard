@@ -1,5 +1,6 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 
+import { fetchCurrentUser } from '@/lib/currentUser';
 import { setStoredOwner, tagCurrentOwner as tagOwner, isOwnedByCurrentUser } from '@/lib/localDataOwnership';
 
 const STORAGE_KEY = "dc_metrics_v2";
@@ -108,6 +109,30 @@ export function loadMetrics(): unknown | null {
 
 export async function loadMetricsWithSource(): Promise<LoadMetricsResult> {
   let cloudError = '';
+  const currentUser = await fetchCurrentUser();
+
+  if (currentUser?.dataStorageMode === 'local') {
+    const local = loadMetrics();
+    if (local && await isOwnedByCurrentUser(OWNER_KEY)) {
+      const info: MetricsSourceInfo = {
+        source: 'localstorage',
+        status: 'local',
+        message: 'Loaded dashboard data from this browser.',
+      };
+      saveSource(info);
+      return { ...info, metrics: local, fallbackUsed: false };
+    }
+
+    if (local) clearMetrics();
+
+    const info: MetricsSourceInfo = {
+      source: 'none',
+      status: 'error',
+      message: 'No browser-local dashboard data found for this account. Upload a Jira CSV or Excel export to continue.',
+    };
+    saveSource(info);
+    return { ...info, metrics: null, fallbackUsed: false };
+  }
 
   try {
     const res = await fetch('/api/metrics/latest', { cache: 'no-store' });
