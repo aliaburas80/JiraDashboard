@@ -1,24 +1,25 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
-// GET  /api/admin/issue-type-hierarchy — return current config (any logged-in user can read,
+// GET  /api/admin/issue-type-hierarchy — return this user's config (any logged-in user can read,
 //      since the Explore page needs it for every user, not just admins)
-// POST /api/admin/issue-type-hierarchy — replace config (admin only)
+// POST /api/admin/issue-type-hierarchy — replace this admin user's config
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import {
-  readIssueTypeHierarchy,
-  writeIssueTypeHierarchy,
+  readIssueTypeHierarchyForUser,
+  writeIssueTypeHierarchyForUser,
   invalidateIssueTypeHierarchyCache,
 } from '@/services/settings/issueTypeHierarchy.service';
 import { safeAuditEvent } from '@/lib/system-error-logger';
 import type { IssueTypeDefinition, IssueTypeHierarchyConfig } from '@/types/issueTypeHierarchy';
+import { DEFAULT_ISSUE_TYPES } from '@/types/issueTypeHierarchy';
 
 export async function GET() {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
-  return NextResponse.json({ config: readIssueTypeHierarchy() });
+  return NextResponse.json({ config: await readIssueTypeHierarchyForUser(session.userId) });
 }
 
 function validateTypes(types: unknown): string | null {
@@ -68,8 +69,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
-  const current = readIssueTypeHierarchy();
-  const builtInIds = new Set(current.types.filter(t => t.builtIn).map(t => t.id));
+  const builtInIds = new Set(DEFAULT_ISSUE_TYPES.filter(t => t.builtIn).map(t => t.id));
   const incomingIds = new Set((body.types as IssueTypeDefinition[]).map(t => t.id));
   const removedBuiltIn = [...builtInIds].find(id => !incomingIds.has(id));
   if (removedBuiltIn) {
@@ -88,8 +88,8 @@ export async function POST(req: NextRequest) {
     updatedBy: session.email,
   };
 
-  writeIssueTypeHierarchy(updated);
-  invalidateIssueTypeHierarchyCache();
+  await writeIssueTypeHierarchyForUser(session.userId, updated);
+  invalidateIssueTypeHierarchyCache(session.userId);
 
   await safeAuditEvent({
     userId: session.userId,

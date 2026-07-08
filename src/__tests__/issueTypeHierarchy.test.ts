@@ -9,16 +9,35 @@ const mockSession = {
   isLoggedIn: true,
   role: 'admin' as string,
   email: 'admin@test.com',
+  userId: 'admin-user',
 };
+const mockFindUnique = jest.fn();
+const mockUpsert = jest.fn();
+const mockAuditCreate = jest.fn();
 
 jest.mock('next/headers', () => ({ cookies: jest.fn() }));
 jest.mock('iron-session', () => ({
   getIronSession: jest.fn(async () => mockSession),
 }));
+jest.mock('@/lib/prisma', () => ({
+  prisma: {
+    userIssueTypeHierarchy: {
+      findUnique: (...args: unknown[]) => mockFindUnique(...args),
+      upsert: (...args: unknown[]) => mockUpsert(...args),
+    },
+    auditEvent: {
+      create: (...args: unknown[]) => mockAuditCreate(...args),
+    },
+  },
+}));
 
 afterEach(() => {
   jest.resetModules();
   jest.dontMock('fs');
+  mockFindUnique.mockReset();
+  mockUpsert.mockReset();
+  mockAuditCreate.mockReset();
+  mockSession.userId = 'admin-user';
   mockSession.isLoggedIn = true;
   mockSession.role = 'admin';
 });
@@ -86,6 +105,37 @@ describe('TC-IT-04 to TC-IT-06: issueTypeHierarchy.service.ts', () => {
     const { DEFAULT_ISSUE_TYPES } = await import('../types/issueTypeHierarchy');
     expect(readIssueTypeHierarchy().types).toEqual(DEFAULT_ISSUE_TYPES);
   });
+
+  test('TC-IT-06b: readIssueTypeHierarchyForUser returns the saved DB config for that user', async () => {
+    const customConfig = {
+      types: [{ id: 'widget', label: 'Widget', matchNames: ['widget'], level: 0, icon: 'package', color: '#000', bg: '#fff', border: '#ccc', size: 'md' as const, builtIn: false }],
+      updatedAt: '2026-07-09T00:00:00.000Z',
+      updatedBy: 'admin@test.com',
+    };
+    mockFindUnique.mockResolvedValue({ configJson: JSON.stringify(customConfig) });
+
+    const { readIssueTypeHierarchyForUser } = await import('../services/settings/issueTypeHierarchy.service');
+    await expect(readIssueTypeHierarchyForUser('user-a')).resolves.toEqual(customConfig);
+    expect(mockFindUnique).toHaveBeenCalledWith({ where: { userId: 'user-a' } });
+  });
+
+  test('TC-IT-06c: writeIssueTypeHierarchyForUser upserts one config per user', async () => {
+    mockUpsert.mockResolvedValue({});
+    const customConfig = {
+      types: [{ id: 'widget', label: 'Widget', matchNames: ['widget'], level: 0, icon: 'package', color: '#000', bg: '#fff', border: '#ccc', size: 'md' as const, builtIn: false }],
+      updatedAt: '2026-07-09T00:00:00.000Z',
+      updatedBy: 'admin@test.com',
+    };
+
+    const { writeIssueTypeHierarchyForUser } = await import('../services/settings/issueTypeHierarchy.service');
+    await writeIssueTypeHierarchyForUser('user-a', customConfig);
+
+    expect(mockUpsert).toHaveBeenCalledWith({
+      where: { userId: 'user-a' },
+      create: { userId: 'user-a', configJson: JSON.stringify(customConfig) },
+      update: { configJson: JSON.stringify(customConfig) },
+    });
+  });
 });
 
 // ── Admin API route ────────────────────────────────────────────────────────────
@@ -100,11 +150,13 @@ describe('TC-IT-07 to TC-IT-13: GET/POST /api/admin/issue-type-hierarchy', () =>
 
   test('TC-IT-08: GET returns the config for any logged-in user (not admin-only)', async () => {
     mockSession.role = 'user';
+    mockFindUnique.mockResolvedValue(null);
     const { GET } = await import('../../app/api/admin/issue-type-hierarchy/route');
     const res = await GET();
     const body = await res.json();
     expect(res.status).toBe(200);
     expect(body.config.types.length).toBeGreaterThan(0);
+    expect(mockFindUnique).toHaveBeenCalledWith({ where: { userId: 'admin-user' } });
   });
 
   test('TC-IT-09: POST requires admin role', async () => {
@@ -135,11 +187,6 @@ describe('TC-IT-07 to TC-IT-13: GET/POST /api/admin/issue-type-hierarchy', () =>
   });
 
   test('TC-IT-12: POST rejects deleting a built-in type', async () => {
-    jest.doMock('fs', () => ({
-      existsSync: jest.fn(() => false),
-      mkdirSync: jest.fn(),
-      writeFileSync: jest.fn(),
-    }));
     const { POST } = await import('../../app/api/admin/issue-type-hierarchy/route');
     const req = { json: async () => ({ types: [
       { id: 'custom-only', label: 'Custom', matchNames: ['custom'], level: 0 },
@@ -149,13 +196,7 @@ describe('TC-IT-07 to TC-IT-13: GET/POST /api/admin/issue-type-hierarchy', () =>
   });
 
   test('TC-IT-13: POST accepts a valid custom type and persists it', async () => {
-    const files: Record<string, string> = {};
-    jest.doMock('fs', () => ({
-      existsSync: jest.fn((path: string) => path in files),
-      readFileSync: jest.fn((path: string) => files[path]),
-      mkdirSync: jest.fn(),
-      writeFileSync: jest.fn((path: string, data: string) => { files[path] = data; }),
-    }));
+    mockUpsert.mockResolvedValue({});
     const { DEFAULT_ISSUE_TYPES } = await import('../types/issueTypeHierarchy');
     const { POST } = await import('../../app/api/admin/issue-type-hierarchy/route');
     const types = [
@@ -167,6 +208,35 @@ describe('TC-IT-07 to TC-IT-13: GET/POST /api/admin/issue-type-hierarchy', () =>
     const body = await res.json();
     expect(res.status).toBe(200);
     expect(body.config.types.some((t: any) => t.id === 'theme-custom')).toBe(true);
+    expect(mockUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: 'admin-user' },
+      create: expect.objectContaining({ userId: 'admin-user' }),
+    }));
+  });
+
+  test('TC-IT-13b: GET scopes saved hierarchy by signed-in user profile', async () => {
+    const userAConfig = {
+      types: [{ id: 'alpha', label: 'Alpha', matchNames: ['alpha'], level: 0, icon: 'package', color: '#000', bg: '#fff', border: '#ccc', size: 'md', builtIn: false }],
+      updatedAt: '2026-07-09T00:00:00.000Z',
+      updatedBy: 'a@test.com',
+    };
+    const userBConfig = {
+      types: [{ id: 'beta', label: 'Beta', matchNames: ['beta'], level: 0, icon: 'package', color: '#000', bg: '#fff', border: '#ccc', size: 'md', builtIn: false }],
+      updatedAt: '2026-07-09T00:00:00.000Z',
+      updatedBy: 'b@test.com',
+    };
+    mockFindUnique.mockImplementation(async ({ where }: { where: { userId: string } }) => ({
+      configJson: JSON.stringify(where.userId === 'user-a' ? userAConfig : userBConfig),
+    }));
+
+    const { GET } = await import('../../app/api/admin/issue-type-hierarchy/route');
+    mockSession.userId = 'user-a';
+    const resA = await GET();
+    mockSession.userId = 'user-b';
+    const resB = await GET();
+
+    await expect(resA.json()).resolves.toMatchObject({ config: userAConfig });
+    await expect(resB.json()).resolves.toMatchObject({ config: userBConfig });
   });
 });
 
