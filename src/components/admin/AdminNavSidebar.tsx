@@ -1,60 +1,15 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 import styles from './AdminNavSidebar.module.scss';
 import { SvgIcon } from '@/components/ui/SvgIcon';
-import { getCachedIsSuperAdmin, fetchCurrentUser } from '@/lib/currentUser';
+import { getCachedRole, getCachedIsSuperAdmin, fetchCurrentUser } from '@/lib/currentUser';
+import { getAdminNavSections, type DCShellNavItem } from '@/components/dc-shell/navigation';
+import { ADMIN_TABS } from '@/lib/adminConsole';
 
-const SETTINGS_SUB_ITEMS = [
-  { id: 'users',      label: 'User Management',     icon: 'people', tab: '' },
-  { id: 'requests',   label: 'Member Requests',     icon: 'email', tab: 'requests' },
-  { id: 'config',     label: 'App Config',   icon: 'settings', tab: 'config' },
-  { id: 'retention',  label: 'Privacy & Retention', icon: 'lock', tab: 'retention' },
-  { id: 'thresholds', label: 'Health Thresholds',   icon: 'priorityHigh', tab: 'thresholds' },
-  { id: 'orphan',     label: 'Orphan Rules',        icon: 'link', tab: 'orphan' },
-  { id: 'issueTypes', label: 'Issue Type Hierarchy', icon: 'workItems', tab: 'issueTypes' },
-  { id: 'backup',     label: 'Backup & Restore',    icon: 'archive', tab: 'backup' },
-  { id: 'cloud',      label: 'Cloud Storage',       icon: 'cloud', tab: 'cloud' },
-  { id: 'jira',       label: 'Jira Integration',    icon: 'link', tab: 'jira' },
-  { id: 'browser',    label: 'Browser Data',        icon: 'delete', tab: 'browser' },
-];
-
-// Super-admin-only — kept separate so a regular admin never sees the link,
-// consistent with the tab being filtered out in ADMIN_TABS/adminConsole.ts.
-const PERSONA_PREVIEW_SUB_ITEM = { id: 'personaPreview', label: 'Persona Preview', icon: 'eye', tab: 'personaPreview' };
-
-type NavItem = { id: string; label: string; href: string; icon: string };
-type NavSection = { label: string; items: NavItem[] };
-
-const NAV_SECTIONS: NavSection[] = [
-  {
-    label: 'Activity',
-    items: [
-      { id: 'audit',    label: 'Audit Events',    href: '/admin/audit',         icon: 'clipboard' },
-      { id: 'logs',     label: 'Import Logs',     href: '/admin/logs',          icon: 'archive' },
-      { id: 'feedback', label: 'User Feedback',   href: '/admin/feedback',      icon: 'email' },
-    ],
-  },
-  {
-    label: 'Observability',
-    items: [
-      { id: 'syserrors',   label: 'System Errors', href: '/admin/system-errors', icon: 'warning' },
-      { id: 'diagnostics', label: 'Diagnostics',   href: '/admin/diagnostics',   icon: 'statusInfo' },
-      { id: 'security',    label: 'Security',       href: '/admin/security',      icon: 'shield' },
-    ],
-  },
-  {
-    label: 'Configure',
-    items: [
-      { id: 'users',    label: 'User Management', href: '/admin/users',    icon: 'people' },
-      { id: 'settings', label: 'Settings',        href: '/admin/settings', icon: 'tools' },
-      { id: 'theme',    label: 'Theme & Branding', href: '/admin/theme',   icon: 'palette' },
-    ],
-  },
-];
-
+type SettingsSubItem = { id: string; label: string; icon: string; tab: string };
 
 export default function AdminNavSidebar() {
   const pathname = usePathname();
@@ -62,17 +17,39 @@ export default function AdminNavSidebar() {
   const onSettings = pathname === '/admin/settings';
   const activeTab = searchParams.get('tab') ?? '';
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [role, setRole] = useState<string | null>(getCachedRole);
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(getCachedIsSuperAdmin);
 
   useEffect(() => {
-    fetchCurrentUser().then(user => setIsSuperAdmin(user?.isSuperAdmin === true));
+    fetchCurrentUser().then(user => {
+      setRole(user?.role ?? null);
+      setIsSuperAdmin(user?.isSuperAdmin === true);
+    });
   }, []);
 
-  const settingsSubItems = isSuperAdmin
-    ? [...SETTINGS_SUB_ITEMS, PERSONA_PREVIEW_SUB_ITEM]
-    : SETTINGS_SUB_ITEMS;
+  // Single source of truth: src/components/dc-shell/navigation.ts's
+  // 'administration' group, also shared with the topbar dropdown and global
+  // search — see getAdminNavSections()'s doc comment.
+  const navSections = useMemo(() => getAdminNavSections(role, isSuperAdmin), [role, isSuperAdmin]);
 
-  function renderNavItem(item: NavItem, onLinkClick?: () => void) {
+  // Settings sub-nav — derived from the same ADMIN_TABS the settings page
+  // itself uses for tab content/labels, instead of a second hand-maintained
+  // list that used to drift out of sync with it. 'users' is filtered out via
+  // hiddenFromNav (User Management already has its own top-level sidebar
+  // item, /admin/users — see ADMIN_TABS' comment in adminConsole.ts). The
+  // first item still offered gets tab:'' so it's reachable at the bare
+  // /admin/settings URL, matching the page's own DEFAULT_TAB fallback.
+  const settingsSubItems: SettingsSubItem[] = useMemo(() => {
+    const visible = ADMIN_TABS.filter(item => !item.hiddenFromNav && (!item.superAdminOnly || isSuperAdmin));
+    return visible.map((item, index) => ({
+      id: item.id,
+      label: item.label,
+      icon: item.icon,
+      tab: index === 0 ? '' : item.id,
+    }));
+  }, [isSuperAdmin]);
+
+  function renderNavItem(item: DCShellNavItem, onLinkClick?: () => void) {
     const active = item.href === '/admin/settings'
       ? onSettings
       : pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -84,11 +61,11 @@ export default function AdminNavSidebar() {
           className={clsx(styles.navItem, { [styles.navItemActive]: active })}
           onClick={onLinkClick}
         >
-          <SvgIcon name={item.icon} className={styles.navIcon} />
-          <span className={styles.navLabel}>{item.label}</span>
+          <SvgIcon name={item.icon ?? 'page'} className={styles.navIcon} />
+          <span className={styles.navLabel}>{item.title}</span>
         </Link>
 
-        {item.id === 'settings' && onSettings && (
+        {item.id === 'admin-settings' && onSettings && (
           <div className={styles.subNav} role="list" aria-label="Settings sections">
             {settingsSubItems.map(sub => {
               const subActive = sub.tab === '' ? activeTab === '' : activeTab === sub.tab;
@@ -116,7 +93,7 @@ export default function AdminNavSidebar() {
   function renderNav(onLinkClick?: () => void) {
     return (
       <nav className={styles.nav} aria-label="Administration navigation">
-        {NAV_SECTIONS.map(section => (
+        {navSections.map(section => (
           <div key={section.label} className={styles.navSection}>
             <p className={styles.navSectionLabel}>{section.label}</p>
             {section.items.map(item => renderNavItem(item, onLinkClick))}

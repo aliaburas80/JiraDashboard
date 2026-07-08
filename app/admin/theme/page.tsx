@@ -3,10 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
-import {
-  AdminConsoleLayout,
-  ADMINISTRATION_NAV,
-} from '@/components/admin/AdminConsoleLayout';
+import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import {
   PALETTE_PRESETS,
   FONT_SIZE_PRESETS,

@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: Duplicate and Confusing Menu Items (2026-07-09)
+
+Cleaned up navigation across the app — several menus were independently maintained and had drifted into showing the same destination more than once. Specifically: "User Management" no longer appears both as its own Admin sidebar item and nested inside Settings (it now lives only in the Admin sidebar; Member Requests is the first item under Settings); "Settings" no longer appears in both your account menu and the Admin sidebar; the account (avatar) menu now only shows account-level actions — My Settings and a new direct link to your Security tab — with admin/system links available from the Admin sidebar and topbar instead. Search now also finds three admin pages (Audit Events, User Feedback, System Errors) that weren't searchable before. Nothing was redesigned — this only removes duplicate entries and fixes what feeds each menu.
+
+---
+
 ## Investigated: "Sample Data Keeps Showing Instead of My Upload" (2026-07-08)
 
 Investigated a report that the sample/demo dataset kept appearing instead of newly uploaded files. Verified end-to-end, with a real test account, that a fresh upload correctly and immediately replaces the previous one on the server — confirmed working, repeatedly, with no exceptions found. Also closed one more instance of the same underlying timing gap fixed earlier today (in the "This device only" upload-history tracker, not the dashboard data itself) as a precaution. If you still see this, it's most likely either an old cached page in your browser (try a hard refresh) or your file being missing one of the four required Jira columns (Issue Key, Issue Type, Summary, Status) — watch for a "Column Mapping Preview" screen with a red "Required columns missing" banner right after you select a file.

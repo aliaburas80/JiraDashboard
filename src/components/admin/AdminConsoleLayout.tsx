@@ -14,30 +14,11 @@ export interface AdminConsoleStat {
   toneStyle?: CSSProperties;
 }
 
-export interface AdminConsoleNavItem {
-  id: string;
-  label: string;
-  icon: string;
-  href?: string;
-  selected?: boolean;
-  onClick?: () => void;
-}
-
-export const ADMINISTRATION_NAV: AdminConsoleNavItem[] = [
-  { id: 'users',       label: 'User Management',   icon: 'people', href: '/admin/users' },
-  { id: 'settings',    label: 'Settings',          icon: 'settings', href: '/admin/settings' },
-  { id: 'theme',       label: 'Theme & Branding',  icon: 'palette', href: '/admin/theme' },
-  { id: 'diagnostics', label: 'Diagnostics',       icon: 'statusInfo', href: '/admin/diagnostics' },
-  { id: 'security',    label: 'Security',          icon: 'shield', href: '/admin/security' },
-  { id: 'logs',        label: 'Import Logs',       icon: 'clipboard', href: '/admin/logs' },
-];
-
 export function AdminConsoleLayout({
   title,
   description,
   children,
   stats = [],
-  navItems,
   actions,
   statusLabel = 'Operational',
 }: {
@@ -45,7 +26,6 @@ export function AdminConsoleLayout({
   description: string;
   children: ReactNode;
   stats?: AdminConsoleStat[];
-  navItems?: AdminConsoleNavItem[];
   actions?: ReactNode;
   statusLabel?: string;
 }) {

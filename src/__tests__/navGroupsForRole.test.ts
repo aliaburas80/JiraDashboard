@@ -3,7 +3,7 @@
 // the current role can actually open — found showing everything to every role
 // regardless of access (both had a "no role-based filtering in the nav" comment).
 
-import { getNavGroupsForRole, DC_NAV_GROUPS } from '../components/dc-shell/navigation';
+import { getNavGroupsForRole, getAdminNavSections, DC_NAV_GROUPS } from '../components/dc-shell/navigation';
 
 test('TC-NAV-01: admin sees the Administration group', () => {
   const groups = getNavGroupsForRole('admin');
@@ -73,4 +73,60 @@ test('TC-NAV-10: isSuperAdmin: true shows the Members link regardless of role', 
   const groups = getNavGroupsForRole('user', true);
   const allItemIds = groups.flatMap(g => g.items.map(i => i.id));
   expect(allItemIds).toContain('members');
+});
+
+// ── Navigation duplication cleanup — single-source-of-truth guarantees ──────
+// Fixes duplicate/confusing menu entries reported across the topbar Reference
+// menu, user avatar dropdown, admin sidebar, and Settings nested menu — every
+// surface now derives from DC_NAV_GROUPS (or, for Settings tabs, ADMIN_TABS
+// in adminConsole.ts) instead of independently hand-maintained arrays.
+
+test('TC-NAV-11: no two items anywhere in DC_NAV_GROUPS share an id', () => {
+  const ids = DC_NAV_GROUPS.flatMap(g => g.items.map(i => i.id));
+  expect(new Set(ids).size).toBe(ids.length);
+});
+
+test('TC-NAV-12: no two items anywhere in DC_NAV_GROUPS share an href — every destination appears exactly once', () => {
+  const hrefs = DC_NAV_GROUPS.flatMap(g => g.items.map(i => i.href));
+  expect(new Set(hrefs).size).toBe(hrefs.length);
+});
+
+test('TC-NAV-13: admin sees every Administration destination exactly once, not duplicated across sections', () => {
+  const groups = getNavGroupsForRole('admin');
+  const adminItems = groups.find(g => g.id === 'administration')?.items ?? [];
+  const ids = adminItems.map(i => i.id);
+  expect(new Set(ids).size).toBe(ids.length);
+  expect(adminItems.length).toBe(9);
+});
+
+test('TC-NAV-14: getAdminNavSections groups the Administration items into Activity / Observability / Configure with no cross-section duplicates', () => {
+  const sections = getAdminNavSections('admin');
+  expect(sections.map(s => s.label)).toEqual(['Activity', 'Observability', 'Configure']);
+
+  const allIds = sections.flatMap(s => s.items.map(i => i.id));
+  expect(new Set(allIds).size).toBe(allIds.length);
+
+  const configureIds = sections.find(s => s.label === 'Configure')?.items.map(i => i.id) ?? [];
+  expect(configureIds).toEqual(['admin-users', 'admin-settings', 'admin-theme']);
+});
+
+test('TC-NAV-15: a non-admin role gets no admin sections at all', () => {
+  for (const role of ['scrum_master', 'product_owner', 'manager', 'c_level', 'user', null, undefined]) {
+    expect(getAdminNavSections(role)).toEqual([]);
+  }
+});
+
+test('TC-NAV-16: User Management appears exactly once across the entire nav registry (as its own Admin sidebar item, not also duplicated elsewhere)', () => {
+  const allItems = DC_NAV_GROUPS.flatMap(g => g.items);
+  const userManagementEntries = allItems.filter(i => i.title === 'User Management');
+  expect(userManagementEntries).toHaveLength(1);
+  expect(userManagementEntries[0].href).toBe('/admin/users');
+});
+
+test('TC-NAV-17: the Reference menu contains only non-admin reference/help destinations', () => {
+  const referenceGroup = DC_NAV_GROUPS.find(g => g.id === 'reference');
+  const hrefs = referenceGroup?.items.map(i => i.href) ?? [];
+  for (const href of hrefs) {
+    expect(href.startsWith('/admin')).toBe(false);
+  }
 });

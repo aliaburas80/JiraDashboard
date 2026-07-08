@@ -134,3 +134,38 @@ describe('TC-AC-03: Users tab summary cards and inline role/status editing', () 
     expect(matchesUserFilter(bob, 'bob', 'user')).toBe(true);
   });
 });
+
+// ── Navigation duplication cleanup ──────────────────────────────────────────
+// User Management already has its own top-level Admin sidebar destination
+// (/admin/users, via DC_NAV_GROUPS' 'administration' group) — the Settings
+// sub-nav (AdminNavSidebar.tsx) derives its visible tabs from ADMIN_TABS
+// filtered for hiddenFromNav, so 'users' must never appear there too.
+
+describe('TC-NAV-18: Settings sub-nav does not re-offer User Management', () => {
+  test('the users tab is marked hiddenFromNav', () => {
+    const usersTab = ADMIN_TABS.find(item => item.id === 'users');
+    expect(usersTab?.hiddenFromNav).toBe(true);
+  });
+
+  test('users is still a fully valid, directly-linkable tab (functionality preserved, only the duplicate nav entry removed)', () => {
+    expect(activeTabMeta('users').id).toBe('users');
+    expect(buildSettingsStats({ tab: 'users', ...baseStatsArgs }).length).toBeGreaterThan(0);
+  });
+
+  test('AdminNavSidebar\'s settings-sub-nav derivation (filter hiddenFromNav + superAdminOnly) excludes users for a regular admin', () => {
+    const visibleForAdmin = ADMIN_TABS.filter(item => !item.hiddenFromNav && (!item.superAdminOnly || false));
+    expect(visibleForAdmin.map(i => i.id)).not.toContain('users');
+    expect(visibleForAdmin.map(i => i.id)).not.toContain('personaPreview');
+  });
+
+  test('the same derivation excludes users but includes personaPreview for a super-admin', () => {
+    const visibleForSuperAdmin = ADMIN_TABS.filter(item => !item.hiddenFromNav && (!item.superAdminOnly || true));
+    expect(visibleForSuperAdmin.map(i => i.id)).not.toContain('users');
+    expect(visibleForSuperAdmin.map(i => i.id)).toContain('personaPreview');
+  });
+
+  test('requests (Member Requests) is the first tab still offered in nav, per "keep Member Requests inside Settings"', () => {
+    const visible = ADMIN_TABS.filter(item => !item.hiddenFromNav);
+    expect(visible[0].id).toBe('requests');
+  });
+});

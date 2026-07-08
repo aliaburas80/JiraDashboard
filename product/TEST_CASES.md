@@ -2399,3 +2399,34 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** 4 new tests, full suite 109 suites / 1004 tests passing (up from 109/1001). `npx tsc --noEmit` clean. `npx eslint` clean on all touched files. `npx next build` clean.
 
 **Outcome:** every layer testable without a browser or the user's actual file (server upload/read round trip, localStorage save/overwrite logic, parser statelessness) is confirmed correct. The two remaining untestable possibilities — the user's file being missing an essential column (which would show a mapping-preview blocking screen, not a silent fallback) and a stale cached browser tab/deployment — are documented in SRS.md Addendum V with a specific ask: watch for the "Column Mapping Preview" screen and a "Required columns missing" banner on the next upload attempt.
+
+## 9.102 — Navigation Duplication Cleanup (One Registry Instead of Five)
+
+*(Added 2026-07-09. User report with screenshots: duplicate "User Management"/"Settings" entries across the topbar Reference menu, user avatar dropdown, Admin sidebar, and Settings nested menu. See SRS.md Addendum W for the full five-source audit and consolidation design.)*
+
+**TC-NAV-11:** no two items anywhere in `DC_NAV_GROUPS` share an `id`.
+
+**TC-NAV-12:** no two items anywhere in `DC_NAV_GROUPS` share an `href` — every destination appears exactly once across the entire registry.
+
+**TC-NAV-13:** admin sees every Administration destination exactly once (9 items, no duplicate ids within the group).
+
+**TC-NAV-14:** `getAdminNavSections('admin')` groups the 9 Administration items into Activity / Observability / Configure (in that order) with no item appearing in more than one section; the Configure section is exactly `['admin-users', 'admin-settings', 'admin-theme']`.
+
+**TC-NAV-15:** a non-admin role (including `null`/`undefined`) gets zero admin sections from `getAdminNavSections`.
+
+**TC-NAV-16:** "User Management" (by title) appears exactly once across the entire `DC_NAV_GROUPS` registry, and it points at `/admin/users` — not duplicated as a Settings-tab entry.
+
+**TC-NAV-17:** the Reference group contains no `/admin/*` destinations (About, Glossary, Developer, Help, and the general-team-directory Members link only).
+
+**TC-NAV-18** (in `adminSettingsConsole.test.ts`, 5 sub-tests): the Settings sub-nav's `users` tab is marked `hiddenFromNav: true`; it remains a fully valid, directly-linkable tab with working `activeTabMeta`/`buildSettingsStats` output (functionality preserved — only the duplicate *menu entry* was removed, not the tab itself); the nav-derivation filter that `AdminNavSidebar.tsx` actually uses excludes `users` for both a regular admin and a super-admin; the same filter includes `personaPreview` only for a super-admin; `requests` (Member Requests) is confirmed as the first tab still offered in nav, matching the "keep Member Requests inside Settings" requirement.
+
+**Also fixed, matching the audit:**
+- `AdminNavSidebar.tsx` no longer hardcodes `NAV_SECTIONS`/`SETTINGS_SUB_ITEMS`/`PERSONA_PREVIEW_SUB_ITEM` — derives from `getAdminNavSections()` (navigation.ts) and `ADMIN_TABS` (adminConsole.ts) respectively.
+- `UserMenu.tsx`'s account dropdown no longer duplicates admin links (User Management, Import Logs, Security, Settings) — now shows only "My Settings" and a new "Security" (`/profile?tab=security`) account-level action. Added `?tab=` deep-link support to `app/profile/page.tsx` for this to work.
+- `AdminConsoleLayout.tsx`'s dead `ADMINISTRATION_NAV` export and inert `navItems` prop (accepted but never rendered anywhere in the component) removed, along with the pointless `settingsNavItems` construction in `app/admin/settings/page.tsx` that fed it.
+- `app/admin/settings/page.tsx`'s default tab (bare `/admin/settings`, no `?tab=`) changed from `'users'` to `'requests'`, since `users` is no longer nav-reachable.
+- Global search now surfaces 3 previously-missing admin destinations (Audit Events, User Feedback, System Errors) for free, since it already reads the same registry that gained them.
+
+**Automated checks:** 12 new tests (7 in `navGroupsForRole.test.ts`, 5 in `adminSettingsConsole.test.ts`). Full suite 109 suites / 1020 tests passing (up from 109/1004), no regressions. `npx tsc --noEmit` clean. `npx eslint` — zero new warnings on any touched file. `npx next build` clean; every `href` in the consolidated registry verified against real prerendered routes in the build output (no dead links introduced).
+
+**Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: as an admin, open the Admin sidebar and confirm the same 3 sections/9 items render in the same order as before; open the user avatar dropdown and confirm only My Settings/Security/Sign out appear (no admin links); click "Security" from that dropdown and confirm it lands directly on the Security tab of `/profile`; open global search and confirm Audit Events/User Feedback/System Errors are now findable.

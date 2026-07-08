@@ -1,7 +1,7 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import ProfileTab, { type ProfileFields } from '@/components/settings/ProfileTab';
@@ -39,16 +39,24 @@ const SETTINGS_TABS: SettingsTab[] = [
   { id: 'storage',  label: 'Storage',  icon: 'cloud' },
   { id: 'security', label: 'Security', icon: 'lock' },
 ];
+const VALID_SETTINGS_TABS: SettingsTab['id'][] = SETTINGS_TABS.map(t => t.id);
 
 export default function ProfilePage() {
   const router = useRouter();
+  // ?tab= deep-link support (mirrors /admin/settings) — lets other surfaces,
+  // e.g. UserMenu's "Security" link, open a specific tab directly instead of
+  // always landing on Profile and requiring an extra click.
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') as SettingsTab['id'] | null;
   const [profile, setProfile] = useState<Profile>(EMPTY_PROFILE);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [savingStorageMode, setSavingStorageMode] = useState(false);
   const [toast, setToast] = useState('');
-  const [activeTab, setActiveTab] = useState<SettingsTab['id']>('profile');
+  const [activeTab, setActiveTab] = useState<SettingsTab['id']>(
+    initialTab && VALID_SETTINGS_TABS.includes(initialTab) ? initialTab : 'profile'
+  );
 
   useEffect(() => {
     fetch('/api/profile').then(r => r.ok ? r.json() : null)
