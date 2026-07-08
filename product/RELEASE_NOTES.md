@@ -5,6 +5,12 @@
 
 ---
 
+## Free Color Picker for Issue Type Hierarchy (2026-07-08, P3)
+
+Admin Settings → Issue Type Hierarchy now has a color-picker swatch next to the existing preset colors, so you can choose any color for a type instead of only the 11 built-in ones. The matching light background and border are generated automatically to keep the same clean look as the presets.
+
+---
+
 ## Email Verification No Longer Blocks Sign-In (2026-07-08, P1)
 
 Signing in no longer requires a verified email address — you can now log in and start using Delivery Clarity right away. If your email isn't verified yet, you'll see a reminder banner at the top of the app with a "Resend verification email" button, plus a small "!" badge on your avatar, until you verify. Both clear automatically once you click the link in your verification email — from any browser or device, not just the one you signed up on. You'll also get a short thank-you email once you're verified.

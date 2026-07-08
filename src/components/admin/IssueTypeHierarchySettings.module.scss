@@ -1,0 +1,5 @@
+// Custom color-picker swatch — background is the admin's freely-chosen color,
+// which can't be predefined as a class (CLAUDE.md §14.2 exception).
+.colorSwatch {
+  background: var(--swatch-color, transparent);
+}
