@@ -408,6 +408,35 @@ Score bands: **90-100** Excellent · **75-89** Good · **60-74** Moderate · **4
 
 ---
 
+## pageSearch.ts (Global Search — Phase 1)
+
+Pure, framework-free ranking function powering the ⌘K / Ctrl+K search popup
+(\`src/components/search/GlobalSearch.tsx\`). Searches the existing
+\`DC_NAV_GROUPS\` page/feature registry (\`src/components/dc-shell/navigation.ts\`)
+only — no new data source. Callers must pass already role-filtered groups
+(\`getNavGroupsForRole(role, isSuperAdmin)\`) so a result can never link to a
+route the current user isn't allowed to open.
+
+\`\`\`typescript
+searchPages(query: string, groups: DCShellNavGroup[]): PageSearchResult[]
+\`\`\`
+
+Ranking (highest wins, plain substring matching — never treats the query as a
+regex): exact title match (100) > title starts with query (80) > title
+includes query (60) > description includes query (40) > group label includes
+query (20). An empty/whitespace-only query returns every item in its natural
+group order (the popup's default "browse everything" view).
+
+\`DCShellNavItem\` carries an optional \`icon: IconName\` field (from
+\`src/lib/icons.ts\`'s approved registry) used for each result card's icon —
+set it when adding a new nav item so it renders correctly in search results.
+
+**Phase 2 (not built):** searching inside uploaded Jira issue data itself
+(work item keys, summaries, assignees) is an intentionally separate, later
+capability — \`pageSearch.ts\` only knows about pages/features.
+
+---
+
 ## parser.ts
 
 \`\`\`typescript

@@ -10,6 +10,7 @@ import UserMenu from '@/components/auth/UserMenu';
 import NotificationBell from '@/components/auth/NotificationBell';
 import { DC_NAV_GROUPS, getNavGroupsForRole } from '@/components/dc-shell/navigation';
 import { getCachedRole, getCachedIsSuperAdmin, fetchCurrentUser } from '@/lib/currentUser';
+import GlobalSearch from '@/components/search/GlobalSearch';
 import styles from './AppShell.module.scss';
 
 // Single source of truth: DC_NAV_GROUPS from navigation.ts
@@ -161,6 +162,11 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
 
           {/* ── RIGHT RAIL: upload + user ── */}
           <div className={styles.rightRail}>
+            {/* Global page/feature search — ⌘K / Ctrl+K. Matches the primary-nav
+                gate below (showNav): search over the page registry isn't useful
+                on the pages that hide the nav entirely (e.g. the pre-upload landing). */}
+            {showNav && <GlobalSearch role={role} isSuperAdmin={isSuperAdmin} />}
+
             {/* Mobile hamburger */}
             {showNav && (
               <button

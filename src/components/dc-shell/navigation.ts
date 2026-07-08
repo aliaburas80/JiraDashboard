@@ -1,4 +1,5 @@
 import { canAccessRoute } from '@/lib/roles';
+import type { IconName } from '@/lib/icons';
 
 export type DCShellNavStatus = 'critical' | 'warning' | 'success' | 'neutral' | 'info';
 
@@ -8,6 +9,11 @@ export type DCShellNavItem = {
   desc: string;
   href: string;
   status: DCShellNavStatus;
+  // Semantic icon name from the approved registry (src/lib/icons.ts) — used
+  // by global search result cards. Optional so existing dropdown-menu
+  // rendering (which never showed icons) doesn't need every item touched to
+  // stay valid; new items should still set it for a good search result card.
+  icon?: IconName;
 };
 
 export type DCShellNavGroup = {
@@ -22,12 +28,12 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
     id: 'analytics',
     label: 'Analytics',
     items: [
-      { id: 'overview',   title: 'Overview',     desc: 'Health at a glance',           href: '/summary',    status: 'neutral' },
-      { id: 'dashboard',  title: 'Full Report',  desc: 'All metrics & filters',        href: '/dashboard',  status: 'neutral' },
-      { id: 'charts',     title: 'Charts',       desc: 'Visual breakdowns',            href: '/charts',     status: 'info'    },
-      { id: 'trends',     title: 'Trends',       desc: 'Upload-over-upload change',    href: '/trends',     status: 'info'    },
-      { id: 'teams',      title: 'Teams',        desc: 'Team health comparison',       href: '/teams',      status: 'success' },
-      { id: 'portfolio',  title: 'Portfolio',    desc: 'Cross-team portfolio summary', href: '/portfolio',  status: 'success' },
+      { id: 'overview',   title: 'Overview',     desc: 'Health at a glance',           href: '/summary',    status: 'neutral', icon: 'dashboard'   },
+      { id: 'dashboard',  title: 'Full Report',  desc: 'All metrics & filters',        href: '/dashboard',  status: 'neutral', icon: 'table'       },
+      { id: 'charts',     title: 'Charts',       desc: 'Visual breakdowns',            href: '/charts',     status: 'info',    icon: 'chartBar'    },
+      { id: 'trends',     title: 'Trends',       desc: 'Upload-over-upload change',    href: '/trends',     status: 'info',    icon: 'chartTrendUp' },
+      { id: 'teams',      title: 'Teams',        desc: 'Team health comparison',       href: '/teams',      status: 'success', icon: 'teams'       },
+      { id: 'portfolio',  title: 'Portfolio',    desc: 'Cross-team portfolio summary', href: '/portfolio',  status: 'success', icon: 'briefcase'   },
     ],
   },
   // ── Delivery ──────────────────────────────────────────────────────────────
@@ -35,12 +41,12 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
     id: 'delivery',
     label: 'Delivery',
     items: [
-      { id: 'release-readiness', title: 'Readiness',       desc: 'Go / No-Go per release',    href: '/release-readiness', status: 'warning' },
-      { id: 'flow-health',       title: 'Flow Health',     desc: 'Lead time & blockers',      href: '/flow-health',       status: 'warning' },
-      { id: 'sprint-kanban',     title: 'Sprint & Kanban', desc: 'Velocity & throughput',     href: '/sprint-kanban',     status: 'success' },
-      { id: 'delivery-mix',      title: 'Delivery Mix',    desc: 'Work type & value mix',     href: '/delivery-mix',      status: 'success' },
-      { id: 'explore',           title: 'Explore',         desc: 'Work item dependency graph', href: '/explore',           status: 'neutral' },
-      { id: 'customer',          title: 'Customer',        desc: 'Customer-visible progress', href: '/customer',          status: 'neutral' },
+      { id: 'release-readiness', title: 'Readiness',       desc: 'Go / No-Go per release',    href: '/release-readiness', status: 'warning', icon: 'release'  },
+      { id: 'flow-health',       title: 'Flow Health',     desc: 'Lead time & blockers',      href: '/flow-health',       status: 'warning', icon: 'activity' },
+      { id: 'sprint-kanban',     title: 'Sprint & Kanban', desc: 'Velocity & throughput',     href: '/sprint-kanban',     status: 'success', icon: 'board'    },
+      { id: 'delivery-mix',      title: 'Delivery Mix',    desc: 'Work type & value mix',     href: '/delivery-mix',      status: 'success', icon: 'chartPie' },
+      { id: 'explore',           title: 'Explore',         desc: 'Work item dependency graph', href: '/explore',           status: 'neutral', icon: 'dataFlow' },
+      { id: 'customer',          title: 'Customer',        desc: 'Customer-visible progress', href: '/customer',          status: 'neutral', icon: 'person'   },
     ],
   },
   // ── Planning ──────────────────────────────────────────────────────────────
@@ -48,9 +54,9 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
     id: 'planning',
     label: 'Planning',
     items: [
-      { id: 'roadmap',  title: 'Roadmap',  desc: 'Epic progress & delivery ETA', href: '/roadmap',  status: 'neutral' },
-      { id: 'forecast', title: 'Forecast', desc: 'Velocity & burn-up outlook',   href: '/forecast', status: 'warning' },
-      { id: 'retro',    title: 'Retro',    desc: 'Sprint retrospective tool',    href: '/retro',    status: 'neutral' },
+      { id: 'roadmap',  title: 'Roadmap',  desc: 'Epic progress & delivery ETA', href: '/roadmap',  status: 'neutral', icon: 'roadmap'  },
+      { id: 'forecast', title: 'Forecast', desc: 'Velocity & burn-up outlook',   href: '/forecast', status: 'warning', icon: 'timeline' },
+      { id: 'retro',    title: 'Retro',    desc: 'Sprint retrospective tool',    href: '/retro',    status: 'neutral', icon: 'comment'  },
     ],
   },
   // ── Data ──────────────────────────────────────────────────────────────────
@@ -58,11 +64,11 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
     id: 'data',
     label: 'Data',
     items: [
-      { id: 'work-explorer',  title: 'Work Explorer',  desc: 'Issue table & detail',    href: '/work-explorer',  status: 'neutral' },
-      { id: 'data-quality',   title: 'Data Quality',   desc: 'Field confidence scores', href: '/data-quality',   status: 'success' },
-      { id: 'snapshots',      title: 'Snapshots',      desc: 'Saved metric snapshots',  href: '/snapshots',      status: 'info'    },
-      { id: 'column-mapping', title: 'Column Mapping', desc: 'Field mapping config',    href: '/column-mapping', status: 'neutral' },
-      { id: 'backend',        title: 'Backend',        desc: 'Import logs & raw data',  href: '/backend',        status: 'neutral' },
+      { id: 'work-explorer',  title: 'Work Explorer',  desc: 'Issue table & detail',    href: '/work-explorer',  status: 'neutral', icon: 'workItems'     },
+      { id: 'data-quality',   title: 'Data Quality',   desc: 'Field confidence scores', href: '/data-quality',   status: 'success', icon: 'statusVerified' },
+      { id: 'snapshots',      title: 'Snapshots',      desc: 'Saved metric snapshots',  href: '/snapshots',      status: 'info',    icon: 'camera'        },
+      { id: 'column-mapping', title: 'Column Mapping', desc: 'Field mapping config',    href: '/column-mapping', status: 'neutral', icon: 'field'         },
+      { id: 'backend',        title: 'Backend',        desc: 'Import logs & raw data',  href: '/backend',        status: 'neutral', icon: 'database'      },
     ],
   },
   // ── Administration ────────────────────────────────────────────────────────
@@ -70,12 +76,12 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
     id: 'administration',
     label: 'Administration',
     items: [
-      { id: 'admin-settings',    title: 'Settings',         desc: 'Users, storage, retention',   href: '/admin/settings',    status: 'neutral' },
-      { id: 'admin-theme',       title: 'Theme & Branding', desc: 'Palette, logo, app name',     href: '/admin/theme',        status: 'neutral' },
-      { id: 'admin-users',       title: 'User Management',  desc: 'Accounts & roles',            href: '/admin/users',        status: 'neutral' },
-      { id: 'admin-diagnostics', title: 'Diagnostics',      desc: 'System health & admin stats', href: '/admin/diagnostics',  status: 'info'    },
-      { id: 'admin-security',    title: 'Security',         desc: 'Production security checks',  href: '/admin/security',     status: 'warning' },
-      { id: 'admin-logs',        title: 'Import Logs',      desc: 'All user import activity',    href: '/admin/logs',         status: 'neutral' },
+      { id: 'admin-settings',    title: 'Settings',         desc: 'Users, storage, retention',   href: '/admin/settings',    status: 'neutral', icon: 'settings'    },
+      { id: 'admin-theme',       title: 'Theme & Branding', desc: 'Palette, logo, app name',     href: '/admin/theme',        status: 'neutral', icon: 'palette'     },
+      { id: 'admin-users',       title: 'User Management',  desc: 'Accounts & roles',            href: '/admin/users',        status: 'neutral', icon: 'people'      },
+      { id: 'admin-diagnostics', title: 'Diagnostics',      desc: 'System health & admin stats', href: '/admin/diagnostics',  status: 'info',    icon: 'stopwatch'   },
+      { id: 'admin-security',    title: 'Security',         desc: 'Production security checks',  href: '/admin/security',     status: 'warning', icon: 'shield'      },
+      { id: 'admin-logs',        title: 'Import Logs',      desc: 'All user import activity',    href: '/admin/logs',         status: 'neutral', icon: 'clipboard'   },
     ],
   },
   // ── Reference ─────────────────────────────────────────────────────────────
@@ -83,11 +89,11 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
     id: 'reference',
     label: 'Reference',
     items: [
-      { id: 'members',   title: 'Members',   desc: 'Team directory & contacts',  href: '/members',   status: 'success' },
-      { id: 'landing',   title: 'About',     desc: 'Product overview & features', href: '/landing',   status: 'neutral' },
-      { id: 'glossary',  title: 'Glossary',  desc: 'Term & abbreviation guide',  href: '/glossary',  status: 'neutral' },
-      { id: 'developer', title: 'Developer', desc: 'API & technical docs',       href: '/developer', status: 'neutral' },
-      { id: 'help',      title: 'Help',      desc: 'How to use this app',        href: '/help',      status: 'info'    },
+      { id: 'members',   title: 'Members',   desc: 'Team directory & contacts',  href: '/members',   status: 'success', icon: 'teams'    },
+      { id: 'landing',   title: 'About',     desc: 'Product overview & features', href: '/landing',   status: 'neutral', icon: 'info'     },
+      { id: 'glossary',  title: 'Glossary',  desc: 'Term & abbreviation guide',  href: '/glossary',  status: 'neutral', icon: 'book'     },
+      { id: 'developer', title: 'Developer', desc: 'API & technical docs',       href: '/developer', status: 'neutral', icon: 'terminal' },
+      { id: 'help',      title: 'Help',      desc: 'How to use this app',        href: '/help',      status: 'info',    icon: 'support'  },
     ],
   },
 ];

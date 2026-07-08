@@ -5,6 +5,12 @@
 
 ---
 
+## New: Global Search (2026-07-08, P3)
+
+Press ⌘K (Mac) or Ctrl+K (Windows/Linux) anywhere in the app, or click the new Search button in the top bar, to open a quick search popup. Type to instantly filter every page and feature you have access to — results appear as a grid of cards with icons, so you can scan and click straight to where you want to go. Use the arrow keys and Enter for a keyboard-only workflow. This first release covers pages and features; searching inside your uploaded Jira data is planned for a future update.
+
+---
+
 ## Fixed: Uploaded Sheet Could Disappear Right After Saving, Especially in Local-Only Storage Mode (2026-07-08, P0)
 
 Fixed a bug — introduced by an earlier fix shipped this same day — where uploading a file could appear to succeed and then vanish immediately, bouncing you back to the upload screen instead of showing your data. This mainly affected accounts using "This device only" storage mode, where a background step that tags saved data with your account wasn't reliably finishing before the app checked it, so the app sometimes wrongly treated your own freshly saved upload as unverified and discarded it. That step is now always completed before the app moves on, closing the gap.
