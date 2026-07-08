@@ -24,9 +24,19 @@ export function setStoredOwner(ownerKey: string, userId: string | null): void {
   } catch {}
 }
 
-/** Fire-and-forget — call right after writing per-account data to tag who wrote it. */
-export function tagCurrentOwner(ownerKey: string): void {
-  fetchCurrentUser().then(user => setStoredOwner(ownerKey, user?.userId ?? null)).catch(() => {});
+/**
+ * Call right after writing per-account data to tag who wrote it. Must be
+ * awaited by the caller before anything else reads or navigates away from
+ * that data — this used to be fire-and-forget, which raced the immediate
+ * post-upload redirect: isOwnedByCurrentUser() on the newly-loaded page could
+ * run its own /api/auth/me check and find no owner tag yet (the write here
+ * hadn't landed), concluding the just-saved data was "unverified" and
+ * discarding it — the freshly uploaded sheet would vanish and the user got
+ * bounced back to the upload screen. P0 fix, 2026-07-08.
+ */
+export async function tagCurrentOwner(ownerKey: string): Promise<void> {
+  const user = await fetchCurrentUser().catch(() => null);
+  setStoredOwner(ownerKey, user?.userId ?? null);
 }
 
 /**

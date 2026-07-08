@@ -2335,3 +2335,21 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** `npx tsc --noEmit` clean. Full suite 108 suites / 989 tests passing, unchanged — this is Next.js client-side navigation-cache behavior with no unit-testable surface (Jest doesn't execute the App Router's browser-side Router Cache). `npx eslint` clean, no new warnings. `npx next build` clean, all 16 dashboard routes still prerender successfully.
 
 **Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: upload a Jira export, view a dashboard page, upload a second (different) export within ~1 minute, and confirm the dashboard now shows the second file's data rather than the first.
+
+## 9.99 — P0 Fix: Uploaded Sheet Vanished Immediately After Saving (Ownership-Tag Race)
+
+*(Added 2026-07-08. Urgent same-day user report: "I cant presne [present] the sheet that i uploaded and presented in the app." Diagnosed by querying the live dev database read-only: both real accounts are in local storage mode (EP-017) and `ImportLog` had only one row from an unrelated admin sample-data test — confirming the bug lived entirely client-side. A regression introduced by this same day's cross-account data-leak fix. See SRS.md Addendum T.)*
+
+**Root cause:** `saveMetrics()` wrote fresh upload data to `localStorage` and called `tagCurrentOwner()` to tag it with the current account — but that tag write was fire-and-forget (never awaited). Every upload flow in `app/page.tsx` called `saveMetrics(...)` and immediately `router.push()`'d to the dashboard. The dashboard's `loadMetricsWithSource()` calls `isOwnedByCurrentUser()`, an independent async ownership check, to decide whether to trust the cached data. If that check's own `/api/auth/me` request resolved before the tag-write's request had landed, it found no tag yet, concluded the just-saved data was unverified, and discarded it (`clearMetrics()`) — the exact "untrusted data" safety branch added by the earlier cross-account-leak fix, now misfiring against the *same* account's own fresh upload. The dashboard then found nothing and redirected back to `/`.
+
+**Fix:** `tagCurrentOwner()` (`src/lib/localDataOwnership.ts`) and `saveMetrics()` (`src/lib/storage.ts`) are now both `async` and properly chained — `saveMetrics()` does not resolve until the ownership tag is actually written. All four call sites (`app/page.tsx`'s `handleFile`/`handleProceed`/`handleMerge`, `app/snapshots/page.tsx`'s `handleLoad`) now `await saveMetrics(...)` before navigating.
+
+**TC-DATAISO-14:** `saveMetrics()` does not resolve until the ownership tag is written to `localStorage`, verified under an artificially delayed `/api/auth/me` mock (20ms).
+
+**TC-DATAISO-15:** a freshly saved upload survives an *immediate* subsequent `loadMetricsWithSource()` call — the exact end-to-end scenario that was broken — verified under the same delayed-mock conditions.
+
+**Regression-proven:** both tests were re-run against the pre-fix (fire-and-forget) code by temporarily reverting the fix; both failed, with TC-DATAISO-15 reproducing the reported symptom exactly (`result.metrics` was `null` instead of the just-saved data).
+
+**Automated checks:** 2 new tests, full suite 108 suites / 991 tests passing (up from 108/989). `npx tsc --noEmit` clean. `npx eslint` clean on all touched files. `npx next build` clean.
+
+**Manual verification:** not performed — no browser-automation tool available this session. The live dev database was queried read-only only to diagnose account/storage-mode configuration, not for an end-to-end write test. Recommended before relying on this: as a local-storage-mode account, upload a Jira export and confirm the dashboard shows it immediately without bouncing back to the upload screen; repeat a few times on a throttled/slow network connection, since the original bug was latency-dependent.

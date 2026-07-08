@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: Uploaded Sheet Could Disappear Right After Saving, Especially in Local-Only Storage Mode (2026-07-08, P0)
+
+Fixed a bug — introduced by an earlier fix shipped this same day — where uploading a file could appear to succeed and then vanish immediately, bouncing you back to the upload screen instead of showing your data. This mainly affected accounts using "This device only" storage mode, where a background step that tags saved data with your account wasn't reliably finishing before the app checked it, so the app sometimes wrongly treated your own freshly saved upload as unverified and discarded it. That step is now always completed before the app moves on, closing the gap.
+
+---
+
 ## Fixed: Re-Uploading a Jira Export Could Keep Showing the Old Dashboard (2026-07-08, P0)
 
 Fixed a second, independent cause of the same symptom as the entry below: revisiting a dashboard page you'd already viewed recently (within a few minutes) could show the data from your previous upload instead of your newest one, even though the new data had been saved correctly. The dashboard pages only loaded their data once when first opened; a Next.js navigation-caching behavior was reusing that already-loaded page instead of letting it check for new data. Every dashboard page now always re-checks for the latest data on every visit.

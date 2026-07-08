@@ -57,12 +57,17 @@ export function getMetricsSource(): MetricsSourceInfo | null {
   }
 }
 
-export function saveMetrics(metrics: unknown): void {
+// P0 fix, 2026-07-08: must be awaited by callers before navigating away —
+// the ownership tag write (tagCurrentOwner) is asynchronous, and a caller
+// that fires this and immediately navigates can land on a page whose
+// isOwnedByCurrentUser() check runs before the tag has landed, wrongly
+// concluding the just-saved data is unverified and discarding it.
+export async function saveMetrics(metrics: unknown): Promise<void> {
   if (typeof window === "undefined") return;
   try {
     const json = JSON.stringify(metrics);
     localStorage.setItem(STORAGE_KEY, json);
-    tagCurrentOwner();
+    await tagCurrentOwner();
     saveSource({ source: 'upload', message: 'Fresh Jira upload saved in this browser.' });
   } catch {
     // QuotaExceededError — try saving a reduced version
@@ -79,7 +84,7 @@ export function saveMetrics(metrics: unknown): void {
           },
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
-        tagCurrentOwner();
+        await tagCurrentOwner();
         saveSource({ source: 'upload', message: 'Fresh Jira upload saved in this browser with capped detail rows.' });
       }
     } catch {

@@ -46,7 +46,7 @@ export default function SnapshotsPage() {
       const data = await res.json();
       if (!res.ok) { showToast(data.error ?? 'Load failed.'); return; }
       const metrics = JSON.parse(data.metricsJson);
-      saveMetrics(metrics);
+      await saveMetrics(metrics);
       markMetricsSource({ source: 'snapshot', message: `Loaded snapshot "${snap.snapshotName}".` });
       showToast(`✓ Loaded "${snap.snapshotName}"`);
       await new Promise(r => setTimeout(r, 800));
