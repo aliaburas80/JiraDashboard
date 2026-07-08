@@ -17,7 +17,6 @@ interface LoginErrorState {
   solution: string;
   details?: string;
   code?:    string;
-  canResendVerification?: boolean;
 }
 
 export default function LoginPage() {
@@ -28,8 +27,6 @@ export default function LoginPage() {
   const [error, setError]       = useState<LoginErrorState | null>(null);
   const [showSolution, setShowSolution] = useState(false);
   const [loading, setLoading]   = useState(false);
-  const [resending, setResending] = useState(false);
-  const [resendMessage, setResendMessage] = useState('');
   const [rateLimitSecs, setRateLimitSecs] = useState(0);
   const [welcomeBack, setWelcomeBack]     = useState(false);
   const noticeRef = useRef<HTMLDivElement>(null);
@@ -66,7 +63,6 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     setShowSolution(false);
-    setResendMessage('');
     try {
       if (!email.trim() || !password) {
         setError({
@@ -95,7 +91,6 @@ export default function LoginPage() {
           solution: data.solution ?? 'Check your email and password, then try again.',
           details:  data.details,
           code:     data.code,
-          canResendVerification: data.canResendVerification === true,
         });
         return;
       }
@@ -120,31 +115,6 @@ export default function LoginPage() {
       });
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleResendVerification() {
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) return;
-
-    setResending(true);
-    setResendMessage('');
-    try {
-      const res = await fetch('/api/auth/resend-verification', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email: trimmedEmail }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setResendMessage(data.error ?? 'Could not send the verification email right now.');
-        return;
-      }
-      setResendMessage(data.message ?? 'Verification email sent. Check your inbox and spam folder.');
-    } catch {
-      setResendMessage('Network error. Please try sending the verification email again.');
-    } finally {
-      setResending(false);
     }
   }
 
@@ -216,21 +186,6 @@ export default function LoginPage() {
                       <p><span className="font-black">Solution: </span>{error.solution}</p>
                       {error.details && (
                         <p className="mt-1"><span className="font-black">Details: </span>{error.details}</p>
-                      )}
-                    </div>
-                  )}
-                  {error.canResendVerification && (
-                    <div className={loginStyles.noticeActions}>
-                      <button
-                        type="button"
-                        onClick={handleResendVerification}
-                        disabled={resending}
-                        className={loginStyles.resendButton}
-                      >
-                        {resending ? 'Sending…' : 'Send verification email again'}
-                      </button>
-                      {resendMessage && (
-                        <p className={loginStyles.resendMessage}>{resendMessage}</p>
                       )}
                     </div>
                   )}

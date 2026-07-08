@@ -74,7 +74,7 @@ test('TC-LOGIN-01: unknown email tells the client to register', async () => {
   expect(body.error).toMatch(/no delivery clarity account/i);
 });
 
-test('TC-LOGIN-02: unverified email cannot sign in and can request verification resend', async () => {
+test('TC-LOGIN-02: unverified email can still sign in, and the session records emailVerified: false', async () => {
   (prisma.user.findUnique as jest.Mock).mockResolvedValue({
     id: 'user-1',
     name: 'Sam',
@@ -90,12 +90,8 @@ test('TC-LOGIN-02: unverified email cannot sign in and can request verification 
   const res = await POST(request({ email: 'sam@test.com', password: 'Correct@1' }));
   const body = await res.json();
 
-  expect(res.status).toBe(403);
-  expect(body).toEqual(expect.objectContaining({
-    code: 'EMAIL_NOT_VERIFIED',
-    canResendVerification: true,
-  }));
-  expect(body.error).toMatch(/verify your email/i);
-  expect(mockSession.save).not.toHaveBeenCalled();
-  expect(prisma.user.update).not.toHaveBeenCalled();
+  expect(res.status).toBe(200);
+  expect(body.ok).toBe(true);
+  expect(mockSession.save).toHaveBeenCalled();
+  expect((mockSession as any).emailVerified).toBe(false);
 });

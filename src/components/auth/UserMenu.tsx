@@ -59,9 +59,14 @@ export default function UserMenu() {
         className={clsx(styles.trigger, { [styles.open]: open })}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`User menu for ${me.name}`}
+        aria-label={me.emailVerified === false ? `User menu for ${me.name} — email not verified` : `User menu for ${me.name}`}
       >
-        <span className={styles.avatar} aria-hidden="true">{initials}</span>
+        <span className={styles.avatarWrap}>
+          <span className={styles.avatar} aria-hidden="true">{initials}</span>
+          {me.emailVerified === false && (
+            <span className={styles.unverifiedBadge} title="Email not verified" aria-hidden="true">!</span>
+          )}
+        </span>
         <span className={styles.username}>{me.email.split('@')[0]}</span>
         <SvgIcon name="chevronDown" size={9} className={clsx(styles.chevron, { [styles.open]: open })} />
       </button>
@@ -73,6 +78,9 @@ export default function UserMenu() {
             <p className={styles.identityName}>{me.name}</p>
             <p className={styles.identityEmail}>{me.email}</p>
             <span className={styles.roleBadge}>{roleLabel(me.role)}</span>
+            {me.emailVerified === false && (
+              <p className={styles.verifyNote}>! Email not verified</p>
+            )}
           </div>
 
           {/* My Settings — /profile, now a tabbed Profile/Storage/Security hub.

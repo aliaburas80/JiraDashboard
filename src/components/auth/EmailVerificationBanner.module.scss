@@ -1,0 +1,95 @@
+// ─── EmailVerificationBanner ──────────────────────────────────────────────
+
+// NOTE: some page shells (dashboard/admin/developer) use a position:fixed
+// topbar at top:0. This banner deliberately renders ABOVE it (higher
+// z-index) rather than risk being hidden behind it — the message stays
+// visible everywhere, though the exact stacking hasn't been visually
+// verified across every shell. See product/TEST_CASES.md for the manual
+// check this needs.
+.banner {
+  position: sticky;
+  top: 0;
+  z-index: calc(var(--z-header, 500) + 10);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 16px;
+  background: #fffbeb;
+  border-block-end: 1px solid #fde68a;
+  color: #92400e;
+  font-size: var(--text-xs, 12px);
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-inline-size: 0;
+}
+
+.icon {
+  flex-shrink: 0;
+  color: #d97706;
+}
+
+.text {
+  font-weight: 600;
+}
+
+.sentNote {
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.resendBtn {
+  border: 1px solid #d97706;
+  border-radius: 999px;
+  background: transparent;
+  color: #92400e;
+  padding: 4px 12px;
+  font-size: var(--text-xs, 11px);
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: rgba(217, 119, 6, 0.10);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.dismissBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 20px;
+  block-size: 20px;
+  border: none;
+  background: transparent;
+  color: #92400e;
+  cursor: pointer;
+  border-radius: var(--radius-sm, 4px);
+
+  &:hover {
+    background: rgba(217, 119, 6, 0.14);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid #d97706;
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+}
