@@ -188,6 +188,70 @@ describe('storage.ts — cross-account localStorage fallback protection', () => 
     expect(result.metrics).toEqual({ totalIssues: 42, flow: { items: [] } });
     expect(result.source).toBe('localstorage');
   });
+
+  // User report, 2026-07-08: "sample data keep show all of the time and
+  // whenever I upload new csv/excel the sample data keeps show and what i
+  // uploaded never been shown." TC-DATAISO-14/15 above only proved a *first*
+  // save into empty storage survives an immediate read. This is the actually
+  // reported scenario: the browser already has data cached (e.g. from an
+  // earlier "Try a sample first" click), and the user then uploads their own
+  // real file on top of it — the new save must fully replace the old one,
+  // not merge with or lose to it.
+  test('TC-DATAISO-16: saving new metrics over pre-existing cached metrics (e.g. sample data) fully replaces them, not just on the happy path but under the same tag-write network latency as TC-DATAISO-14/15', async () => {
+    const sampleMetrics = { totalIssues: 35, flow: { items: [{ key: 'SAMPLE-1' }] } };
+    const realMetrics    = { totalIssues: 3,  flow: { items: [{ key: 'REAL-1' }, { key: 'REAL-2' }, { key: 'REAL-3' }] } };
+
+    const store = installBrowserStorage({
+      dc_metrics_v2: JSON.stringify(sampleMetrics),
+      dc_metrics_owner_v1: 'user-a',
+    });
+    (global as any).fetch = jest.fn(async (url: string) => {
+      if (url === '/api/auth/me') {
+        await new Promise(r => setTimeout(r, 15));
+        return { ok: true, json: async () => ({ userId: 'user-a', email: 'a@test.com', name: 'a', role: 'user' }) };
+      }
+      return { ok: true, json: async () => ({ available: false, message: 'No latest metrics file found on the server.' }) };
+    });
+
+    const { saveMetrics, loadMetrics, loadMetricsWithSource } = await import('../lib/storage');
+
+    // Sanity check: the old (sample) data really is there before the new save.
+    expect(loadMetrics()).toEqual(sampleMetrics);
+
+    await saveMetrics(realMetrics);
+
+    // Direct synchronous read — proves the overwrite itself, independent of
+    // the async ownership-check path exercised by loadMetricsWithSource.
+    expect(loadMetrics()).toEqual(realMetrics);
+    expect(store.dc_metrics_v2).toBe(JSON.stringify(realMetrics));
+
+    const result = await loadMetricsWithSource();
+    expect(result.metrics).toEqual(realMetrics);
+    expect(result.source).toBe('localstorage');
+  });
+
+  // Mirrors handleProceed() in app/page.tsx exactly: clearMetrics() is called
+  // immediately before saveMetrics() (not after) — proves that ordering can't
+  // reintroduce a window where a concurrent read sees neither the old nor the
+  // new data and something else papers over it.
+  test('TC-DATAISO-17: the real upload flow\'s clearMetrics() then saveMetrics() sequence ends with only the new data present', async () => {
+    const sampleMetrics = { totalIssues: 35, flow: { items: [{ key: 'SAMPLE-1' }] } };
+    const realMetrics    = { totalIssues: 1,  flow: { items: [{ key: 'REAL-1' }] } };
+
+    installBrowserStorage({
+      dc_metrics_v2: JSON.stringify(sampleMetrics),
+      dc_metrics_owner_v1: 'user-a',
+    });
+    mockFetchAsUser('user-a');
+
+    const { saveMetrics, clearMetrics, loadMetricsWithSource } = await import('../lib/storage');
+
+    clearMetrics();
+    await saveMetrics(realMetrics);
+
+    const result = await loadMetricsWithSource();
+    expect(result.metrics).toEqual(realMetrics);
+  });
 });
 
 describe('localImportHistory.ts — cross-account history protection', () => {

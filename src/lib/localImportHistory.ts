@@ -75,10 +75,17 @@ export interface AddLocalImportResult {
   quotaExceeded: boolean;
 }
 
-/** Prepends a new record, keeping only the most recent MAX_ITEMS. */
-export function addLocalImport(
+/**
+ * Prepends a new record, keeping only the most recent MAX_ITEMS. Async —
+ * awaits the ownership tag write (see saveMetrics()/tagCurrentOwner() in
+ * src/lib/storage.ts and src/lib/localDataOwnership.ts for the fire-and-forget
+ * race this same pattern used to cause) so a caller that awaits this before
+ * navigating never risks a subsequent listLocalImportsForCurrentUser() read
+ * finding no tag yet and discarding the just-written history.
+ */
+export async function addLocalImport(
   entry: Omit<LocalImportRecord, 'id' | 'uploadedAt'>,
-): AddLocalImportResult {
+): Promise<AddLocalImportResult> {
   const record: LocalImportRecord = {
     ...entry,
     id: `local-import-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -89,7 +96,7 @@ export function addLocalImport(
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    tagCurrentOwner(OWNER_KEY);
+    await tagCurrentOwner(OWNER_KEY);
     return { record, quotaExceeded: false };
   } catch {
     // Browser storage is full — the current upload still succeeded and is on
