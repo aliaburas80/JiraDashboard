@@ -21,6 +21,7 @@ const SECTIONS: Section[] = [
       { q: 'Step 6 — Act on your results', a: 'Review high-risk items to identify the worst blockers, export a risk CSV for stakeholder reports, and save your layout view to remember filters for the next session. Use the ? buttons throughout the dashboard for section-specific explanations at any time.' },
       { q: 'How is this Help page organized?', a: 'Help topics are grouped into 9 categories (Getting Started, Dashboard, Planning, Analysis, Export & Data, System, Customization, People, Troubleshooting) shown as pills at the top. Click a category to reveal its sub-section pills below; the active group highlights automatically as you scroll. This replaced an earlier flat list of 34 individual tabs.' },
       { q: 'How is the Glossary page organized?', a: 'The Glossary (/glossary) uses a compact letter-jump row (A–L) instead of a flat tab list — each chip shows a section icon and starting letter; hover for the full section title, click to jump straight to it.' },
+      { q: 'Search (⌘K)', a: 'Press ⌘K (Mac) or Ctrl+K (Windows/Linux), or click the Search button in the topbar, to open a quick search popup. Results appear as a grid of cards — each showing an icon, the page name, and a short description — for every page and feature you have access to. Type to filter, use the arrow keys to move between results, and press Enter (or click a card) to jump straight there. Search currently covers pages and features only; searching inside your uploaded Jira data is a planned future addition.' },
     ],
   },
   {

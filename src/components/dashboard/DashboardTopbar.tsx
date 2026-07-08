@@ -10,6 +10,7 @@ import UserMenu from '@/components/auth/UserMenu';
 import NotificationBell from '@/components/auth/NotificationBell';
 import { DataSourceBadge } from '@/components/ui/DataSourceBadge';
 import { PersonaPreviewSwitcher } from './PersonaPreviewSwitcher';
+import GlobalSearch from '@/components/search/GlobalSearch';
 import styles from './DashboardTopbar.module.scss';
 
 // Status → dot colour mapping (data-driven, not hardcoded per-item)
@@ -180,6 +181,9 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
 
         {/* ── RIGHT RAIL ── */}
         <div className={styles.rightRail}>
+          {/* Global page/feature search — ⌘K / Ctrl+K */}
+          <GlobalSearch role={role} isSuperAdmin={isSuperAdmin} />
+
           {/* Upload button — solid primary blue, white text */}
           <button type="button" onClick={onNewUpload} className={styles.uploadBtn}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">

@@ -2353,3 +2353,31 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** 2 new tests, full suite 108 suites / 991 tests passing (up from 108/989). `npx tsc --noEmit` clean. `npx eslint` clean on all touched files. `npx next build` clean.
 
 **Manual verification:** not performed — no browser-automation tool available this session. The live dev database was queried read-only only to diagnose account/storage-mode configuration, not for an end-to-end write test. Recommended before relying on this: as a local-storage-mode account, upload a Jira export and confirm the dashboard shows it immediately without bouncing back to the upload screen; repeat a few times on a throttled/slow network connection, since the original bug was latency-dependent.
+
+## 9.100 — EP-026 Global Page/Feature Search, Phase 1
+
+*(Added 2026-07-08. See SRS.md Addendum U for full design/scope. `src/lib/pageSearch.ts`.)*
+
+**TC-SEARCH-01:** empty query returns every item in natural group order.
+
+**TC-SEARCH-02:** whitespace-only query is treated as empty (same as TC-SEARCH-01).
+
+**TC-SEARCH-03:** an exact title match ranks above an item that only matches via its description.
+
+**TC-SEARCH-04:** a title `startsWith`/`includes` match ranks above a description-only match.
+
+**TC-SEARCH-05:** matching is case-insensitive.
+
+**TC-SEARCH-06:** matching also checks the item's group label (e.g. searching "delivery" surfaces items in the Delivery group even if the query doesn't appear in their title/description).
+
+**TC-SEARCH-07:** a query with no matches returns `[]`, not `null`/`undefined`.
+
+**TC-SEARCH-08:** every result carries its owning `groupId`/`groupLabel` for display.
+
+**TC-SEARCH-09:** regex-meaningful characters in the query (`.*(`) do not throw — matching is plain substring only, never regex, since the query is untrusted input.
+
+**TC-SEARCH-10:** results only ever come from the groups actually passed in — proves the role-filtering contract (`searchPages` never filters by role itself; the caller must pass already role-filtered groups via `getNavGroupsForRole`).
+
+**Automated checks:** 10 new tests in `pageSearch.test.ts`, all passing. Full suite 109 suites / 1001 tests passing (up from 108/991). `npx tsc --noEmit` clean. `npx eslint` clean on every new/touched file (`pageSearch.ts`, `GlobalSearch.tsx`, `GlobalSearch.module.scss`, `navigation.ts`, `DashboardTopbar.tsx`, `AppShell.tsx`). `npx next build` clean.
+
+**Manual verification:** not performed — no browser-automation tool available this session. The ranking logic is fully unit-tested; the DOM/keyboard-event layer (opening via ⌘K/Ctrl+K, typing, arrow-key navigation between result cards, Enter/click to navigate, Escape to close, focus returning to the trigger button on close) has not been exercised in an actual browser. Recommended before relying on this: open the popup via both the button and the keyboard shortcut on a page using each of the two shells (e.g. `/dashboard/priority-attention` for `DashboardTopbar`, `/charts` for `AppShell`), confirm results render with icons, and confirm role-gated pages (e.g. `/admin/*` for a non-admin) never appear in a non-admin's results.
