@@ -78,7 +78,10 @@ export async function GET() {
   const session = await requireAdmin();
   if (session instanceof NextResponse) return session;
 
-  const connections = await prisma.jiraConnection.findMany({ orderBy: { createdAt: 'desc' } });
+  const connections = await prisma.jiraConnection.findMany({
+    where: session.isSuperAdmin ? undefined : { createdByUserId: session.userId },
+    orderBy: { createdAt: 'desc' },
+  });
   return NextResponse.json({ connections: connections.map(c => serializeConnection(c)) });
 }
 

@@ -4,8 +4,10 @@ import path from 'path';
 import { prisma } from '@/lib/prisma';
 import type { IssueTypeHierarchyConfig } from '@/types/issueTypeHierarchy';
 import { DEFAULT_ISSUE_TYPE_HIERARCHY } from '@/types/issueTypeHierarchy';
+import { readScopedSetting, writeScopedSetting, type SettingsScopeInput } from './scopedAppSettings.service';
 
 const CONFIG_FILE = path.join(process.cwd(), 'data', 'issue-type-hierarchy.json');
+const HIERARCHY_KEY = 'issue-type-hierarchy';
 
 let _cache: IssueTypeHierarchyConfig | null = null;
 const _userCache = new Map<string, IssueTypeHierarchyConfig>();
@@ -50,14 +52,23 @@ export async function readIssueTypeHierarchyForUser(userId: string): Promise<Iss
     // Fall through to the legacy file/default config if the DB is unavailable.
   }
 
-  const fallback = readIssueTypeHierarchy();
+  const fallback = await readScopedSetting(HIERARCHY_KEY, userId, readIssueTypeHierarchy);
   _userCache.set(userId, fallback);
   return fallback;
 }
 
-export async function writeIssueTypeHierarchyForUser(userId: string, config: IssueTypeHierarchyConfig): Promise<void> {
+export async function writeIssueTypeHierarchyForUser(
+  userId: string,
+  config: IssueTypeHierarchyConfig,
+  scope?: SettingsScopeInput & { updatedBy?: string },
+): Promise<void> {
   const normalized = normalizeIssueTypeHierarchy(config);
   _userCache.delete(userId);
+  if (scope?.isSuperAdmin) {
+    await writeScopedSetting(HIERARCHY_KEY, normalized, scope);
+    _userCache.clear();
+    return;
+  }
   await prisma.userIssueTypeHierarchy.upsert({
     where: { userId },
     create: { userId, configJson: JSON.stringify(normalized) },

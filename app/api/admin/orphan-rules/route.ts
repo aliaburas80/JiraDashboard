@@ -6,14 +6,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
-import { readOrphanRules, writeOrphanRules, invalidateOrphanCache } from '@/services/settings/orphanRules.service';
+import { readOrphanRulesForUser, writeOrphanRulesForUser, invalidateOrphanCache } from '@/services/settings/orphanRules.service';
 import { safeAuditEvent } from '@/lib/system-error-logger';
 import type { OrphanRules } from '@/types/orphanRules';
 
 export async function GET() {
   const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
-  return NextResponse.json({ rules: readOrphanRules() });
+  return NextResponse.json({ rules: await readOrphanRulesForUser(session.userId) });
 }
 
 export async function POST(req: NextRequest) {
@@ -31,13 +31,17 @@ export async function POST(req: NextRequest) {
   }
 
   const updated: OrphanRules = {
-    ...readOrphanRules(),
+    ...(await readOrphanRulesForUser(session.userId)),
     ...body,
     updatedAt: new Date().toISOString(),
     updatedBy: session.email,
   };
 
-  writeOrphanRules(updated);
+  await writeOrphanRulesForUser(updated, {
+    userId: session.userId,
+    isSuperAdmin: session.isSuperAdmin === true,
+    updatedBy: session.email,
+  });
   invalidateOrphanCache();
 
   await safeAuditEvent({

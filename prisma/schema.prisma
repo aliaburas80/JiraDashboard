@@ -146,6 +146,20 @@ model UserIssueTypeHierarchy {
   @@index([userId])
 }
 
+model AppSetting {
+  id        String   @id @default(cuid())
+  ownerId   String   @default("global")
+  key       String
+  valueJson String
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ownerId, key])
+  @@index([key])
+  @@index([ownerId])
+}
+
 model Session {
   id               String   @id @default(cuid())
   userId           String

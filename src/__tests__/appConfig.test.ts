@@ -18,6 +18,11 @@ jest.mock('@/services/storage/storageProvider', () => ({
   readStorageSettings: jest.fn(() => ({ active: 's3' })),
   createProvider: jest.fn(async () => ({ download: mockDownload })),
 }));
+jest.mock('@/services/settings/scopedAppSettings.service', () => ({
+  GLOBAL_SETTINGS_OWNER: 'global',
+  readScopedSetting: jest.fn(async (_key: string, _userId: string, fallback: () => string) => fallback()),
+  writeScopedSetting: jest.fn(async () => {}),
+}));
 
 import { encryptConfig, getAppConfig, invalidateConfig, type AppConfig } from '../lib/app-config';
 

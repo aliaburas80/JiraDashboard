@@ -14,6 +14,7 @@ jest.mock('iron-session', () => ({ getIronSession: jest.fn(async () => mockSessi
 jest.mock('@/lib/prisma', () => ({ prisma: { auditEvent: { create: jest.fn(async () => ({})) } } }));
 
 const mockSaveSmtpSettings = jest.fn(async (_input: unknown) => ({}));
+const mockSaveAppUrlSetting = jest.fn(async (_appUrl: string, _scope: unknown) => ({}));
 jest.mock('@/services/smtp/smtpSettings.service', () => ({
   saveSmtpSettings: (arg: unknown) => mockSaveSmtpSettings(arg),
 }));
@@ -24,6 +25,7 @@ jest.mock('@/lib/app-config', () => ({
     jira: { apiToken: '' },
     appUrl: 'https://deliveryclarity.app',
   })),
+  saveAppUrlSetting: (appUrl: string, scope: unknown) => mockSaveAppUrlSetting(appUrl, scope),
   saveToCloud: jest.fn(async () => {}),
   invalidateConfig: jest.fn(),
 }));
@@ -52,10 +54,15 @@ test('TC-CFGR-01: saving with a blank password field passes the effective existi
     pass: 'currently-effective-password',
     fromAddress: 'Delivery Clarity <noreply@deliveryclarity.app>',
   }));
+  expect(mockSaveAppUrlSetting).toHaveBeenCalledWith('https://deliveryclarity.app', expect.objectContaining({
+    userId: 'admin-1',
+    isSuperAdmin: false,
+  }));
 });
 
 test('TC-CFGR-02: a genuine DB save failure is surfaced as dbSaveError instead of a silent { ok: true }', async () => {
   mockSaveSmtpSettings.mockRejectedValueOnce(new Error('Connection to database failed.'));
+  const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
   const { PUT } = await import('../../app/api/admin/app-config/route');
   const res = await PUT(request({
@@ -65,4 +72,5 @@ test('TC-CFGR-02: a genuine DB save failure is surfaced as dbSaveError instead o
 
   expect(body.ok).toBe(true); // cloud save can still have succeeded
   expect(body.dbSaveError).toBe('Connection to database failed.');
+  consoleSpy.mockRestore();
 });

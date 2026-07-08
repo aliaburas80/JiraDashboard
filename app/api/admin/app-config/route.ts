@@ -11,7 +11,7 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { getAppConfig, getSafeConfig, saveToCloud, invalidateConfig, type AppConfig } from '@/lib/app-config';
+import { getAppConfig, getSafeConfig, saveToCloud, invalidateConfig, saveAppUrlSetting, type AppConfig } from '@/lib/app-config';
 import { describeSmtpErrorDetails, sendEmailWith } from '@/lib/email';
 import { callExternal } from '@/server/gateway/externalGateway';
 import { buildJiraAuthHeader, jiraMyselfPath } from '@/services/jira/auth';
@@ -29,7 +29,7 @@ export async function GET(): Promise<NextResponse> {
   try {
     // Bust the module-level cache so the panel always reflects current env state.
     invalidateConfig();
-    const safe = await getSafeConfig();
+    const safe = await getSafeConfig((auth as SessionData).userId);
     const hasEncKey = !!process.env.CONFIG_ENCRYPTION_KEY;
     return NextResponse.json({ config: safe, hasEncKey });
   } catch (err) {
@@ -49,7 +49,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
   }
 
   // Merge with existing config so a missing password/token field doesn't wipe the stored one
-  const existing = await getAppConfig();
+  const existing = await getAppConfig((auth as SessionData).userId);
   const updated: AppConfig = {
     smtp: {
       host: body.smtp?.host?.trim() ?? existing.smtp.host,
@@ -92,6 +92,18 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
     console.error('[app-config] DB SMTP save failed:', dbSaveError);
   }
 
+  let appUrlSaveError: string | undefined;
+  try {
+    await saveAppUrlSetting(updated.appUrl, {
+      userId: (auth as SessionData).userId,
+      isSuperAdmin: (auth as SessionData).isSuperAdmin === true,
+      updatedBy: (auth as SessionData).email,
+    });
+  } catch (err) {
+    appUrlSaveError = err instanceof Error ? err.message : 'Could not save App URL to the database.';
+    console.error('[app-config] DB App URL save failed:', appUrlSaveError);
+  }
+
   // Also save to cloud (S3/Azure/GCP) as a secondary backup, when configured.
   try {
     await saveToCloud(updated);
@@ -110,7 +122,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
     },
   }).catch(() => {}); // never block the response on audit failure
 
-  return NextResponse.json({ ok: true, dbSaveError });
+  return NextResponse.json({ ok: true, dbSaveError: dbSaveError ?? appUrlSaveError });
 }
 
 interface JiraMyselfResponse {
@@ -126,7 +138,7 @@ async function testJiraToken(auth: SessionData, apiToken?: string): Promise<Next
     return NextResponse.json({ ok: false, skipped: true, error: 'No Jira connection exists yet — create one on the Jira Integration tab, then come back to test the token.' });
   }
 
-  const token = apiToken?.trim() || (await getAppConfig()).jira.apiToken;
+  const token = apiToken?.trim() || (await getAppConfig(auth.userId)).jira.apiToken;
   if (!token) {
     return NextResponse.json({ ok: false, skipped: true, error: 'Enter a token above (or save one) before testing.' });
   }
@@ -179,7 +191,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   let smtpToTest: AppConfig['smtp'];
   if (body.smtp?.host && body.smtp?.user) {
     // Inline creds provided — merge pass from stored config if the form left it blank.
-    const stored = await getAppConfig();
+    const stored = await getAppConfig((auth as SessionData).userId);
     smtpToTest = {
       host: body.smtp.host,
       port: body.smtp.port ?? 587,
@@ -188,7 +200,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       from: body.smtp.from ?? stored.smtp.from,
     };
   } else {
-    smtpToTest = (await getAppConfig()).smtp;
+    smtpToTest = (await getAppConfig((auth as SessionData).userId)).smtp;
   }
 
   const usingResend = !!process.env.RESEND_API_KEY;

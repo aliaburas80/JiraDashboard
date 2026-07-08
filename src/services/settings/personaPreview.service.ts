@@ -3,8 +3,10 @@ import fs   from 'fs';
 import path from 'path';
 import type { PersonaPreviewSettings } from '@/types/personaPreview';
 import { DEFAULT_PERSONA_PREVIEW_SETTINGS } from '@/types/personaPreview';
+import { GLOBAL_SETTINGS_OWNER, readScopedSetting, writeScopedSetting } from './scopedAppSettings.service';
 
 const SETTINGS_FILE = path.join(process.cwd(), 'data', 'persona-preview.json');
+const SETTINGS_KEY = 'persona-preview';
 
 let _cache: PersonaPreviewSettings | null = null;
 
@@ -27,3 +29,27 @@ export function writePersonaPreviewSettings(settings: PersonaPreviewSettings): v
 }
 
 export function invalidatePersonaPreviewCache(): void { _cache = null; }
+
+export function readLegacyPersonaPreviewSettings(): PersonaPreviewSettings {
+  return readPersonaPreviewSettings();
+}
+
+export function mergePersonaPreviewSettings(settings: Partial<PersonaPreviewSettings>): PersonaPreviewSettings {
+  return { ...DEFAULT_PERSONA_PREVIEW_SETTINGS, ...settings };
+}
+
+export async function readPersonaPreviewSettingsFromDb(): Promise<PersonaPreviewSettings> {
+  return readScopedSetting(SETTINGS_KEY, GLOBAL_SETTINGS_OWNER, readLegacyPersonaPreviewSettings);
+}
+
+export async function writePersonaPreviewSettingsToDb(
+  settings: PersonaPreviewSettings,
+  updatedBy?: string,
+): Promise<void> {
+  _cache = null;
+  await writeScopedSetting(SETTINGS_KEY, mergePersonaPreviewSettings(settings), {
+    userId: GLOBAL_SETTINGS_OWNER,
+    isSuperAdmin: true,
+    updatedBy,
+  });
+}

@@ -4,6 +4,8 @@
 let mockSession: { isLoggedIn: boolean; userId?: string; email?: string; isSuperAdmin?: boolean } = { isLoggedIn: false };
 
 const mockSafeAuditEvent = jest.fn();
+const mockFindMany = jest.fn(async (_args?: unknown) => []);
+const mockUpsert = jest.fn(async (_args?: unknown) => ({}));
 const files: Record<string, string> = {};
 
 jest.mock('next/headers', () => ({ cookies: jest.fn() }));
@@ -12,6 +14,14 @@ jest.mock('iron-session', () => ({
 }));
 jest.mock('../lib/system-error-logger', () => ({
   safeAuditEvent: (...a: unknown[]) => mockSafeAuditEvent(...a),
+}));
+jest.mock('@/lib/prisma', () => ({
+  prisma: {
+    appSetting: {
+      findMany: (args: unknown) => mockFindMany(args),
+      upsert: (args: unknown) => mockUpsert(args),
+    },
+  },
 }));
 jest.mock('fs', () => ({
   existsSync:   (p: string) => Object.prototype.hasOwnProperty.call(files, p),
@@ -31,6 +41,7 @@ function request(body?: unknown) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockFindMany.mockResolvedValue([]);
   mockSession = { isLoggedIn: false };
   for (const k of Object.keys(files)) delete files[k];
   invalidatePersonaPreviewCache();
@@ -84,7 +95,9 @@ test('TC-PP-06: POST succeeds for the super-admin and logs an audit event', asyn
   const body = await res.json();
   expect(res.status).toBe(200);
   expect(body.settings.enabled).toBe(true);
-  expect(readPersonaPreviewSettings().enabled).toBe(true);
+  expect(mockUpsert).toHaveBeenCalledWith(expect.objectContaining({
+    where: { ownerId_key: { ownerId: 'global', key: 'persona-preview' } },
+  }));
   expect(mockSafeAuditEvent).toHaveBeenCalledWith(expect.objectContaining({
     eventType: 'admin_persona_preview_toggled',
   }));

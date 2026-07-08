@@ -88,7 +88,11 @@ export async function POST(req: NextRequest) {
     updatedBy: session.email,
   };
 
-  await writeIssueTypeHierarchyForUser(session.userId, updated);
+  await writeIssueTypeHierarchyForUser(session.userId, updated, {
+    userId: session.userId,
+    isSuperAdmin: session.isSuperAdmin === true,
+    updatedBy: session.email,
+  });
   invalidateIssueTypeHierarchyCache(session.userId);
 
   await safeAuditEvent({

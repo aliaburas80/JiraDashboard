@@ -3,8 +3,10 @@ import fs   from 'fs';
 import path from 'path';
 import type { OrphanRules } from '@/types/orphanRules';
 import { DEFAULT_ORPHAN_RULES } from '@/types/orphanRules';
+import { readScopedSetting, writeScopedSetting, type SettingsScopeInput } from './scopedAppSettings.service';
 
 const RULES_FILE = path.join(process.cwd(), 'data', 'orphan-rules.json');
+const RULES_KEY = 'orphan-rules';
 
 let _cache: OrphanRules | null = null;
 
@@ -27,6 +29,26 @@ export function writeOrphanRules(rules: OrphanRules): void {
 }
 
 export function invalidateOrphanCache(): void { _cache = null; }
+
+export function readLegacyOrphanRules(): OrphanRules {
+  return readOrphanRules();
+}
+
+export function mergeOrphanRules(rules: Partial<OrphanRules>): OrphanRules {
+  return { ...DEFAULT_ORPHAN_RULES, ...rules };
+}
+
+export async function readOrphanRulesForUser(userId: string): Promise<OrphanRules> {
+  return readScopedSetting(RULES_KEY, userId, readLegacyOrphanRules);
+}
+
+export async function writeOrphanRulesForUser(
+  rules: OrphanRules,
+  scope: SettingsScopeInput & { updatedBy?: string },
+): Promise<void> {
+  _cache = null;
+  await writeScopedSetting(RULES_KEY, mergeOrphanRules(rules), scope);
+}
 
 // Core helper: is this issue an orphan according to the current rules?
 export function isOrphanByRules(issue: Record<string, unknown>, rules: OrphanRules): boolean {

@@ -10,6 +10,7 @@ import { normalizeAppUrl } from '@/lib/url';
 const ALGORITHM  = 'aes-256-gcm';
 const KDF_SALT   = 'dc-app-config-v1';
 const CLOUD_KEY  = 'app-config.json';
+const APP_URL_SETTING_KEY = 'app-url';
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -133,8 +134,26 @@ function buildFromEnv(): AppConfig {
 //   1. Database SmtpSettings table (encrypted, set via Admin UI)
 //   2. Cloud S3/Azure/GCP config (legacy encrypted blob)
 //   3. SMTP_* environment variables (local dev / Render dashboard fallback)
-export async function getAppConfig(): Promise<AppConfig> {
-  if (_cached) return _cached;
+async function readSavedAppUrl(userId?: string): Promise<string> {
+  try {
+    const { readScopedSetting, GLOBAL_SETTINGS_OWNER } = await import('@/services/settings/scopedAppSettings.service');
+    return await readScopedSetting(APP_URL_SETTING_KEY, userId ?? GLOBAL_SETTINGS_OWNER, () => '');
+  } catch {
+    return '';
+  }
+}
+
+export async function saveAppUrlSetting(
+  appUrl: string,
+  scope: { userId: string; isSuperAdmin?: boolean; updatedBy?: string },
+): Promise<void> {
+  const { writeScopedSetting } = await import('@/services/settings/scopedAppSettings.service');
+  await writeScopedSetting(APP_URL_SETTING_KEY, normalizeAppUrl(appUrl), scope);
+}
+
+export async function getAppConfig(userId?: string): Promise<AppConfig> {
+  if (!userId && _cached) return _cached;
+  const savedAppUrl = await readSavedAppUrl(userId);
 
   // 1. Try database first — avoids cloud storage dependency for SMTP.
   try {
@@ -142,13 +161,14 @@ export async function getAppConfig(): Promise<AppConfig> {
     const dbSmtp = await getSmtpConfig();
     if (dbSmtp) {
       const env = buildFromEnv();
-      _cached = {
+      const config = {
         smtp:   dbSmtp,
         jira:   { apiToken: env.jira.apiToken },
-        appUrl: env.appUrl,
+        appUrl: savedAppUrl || env.appUrl,
       };
+      if (!userId) _cached = config;
       _source = 'cloud'; // treat DB as the "cloud" source for the UI badge
-      return _cached;
+      return config;
     }
   } catch {
     // DB unavailable or decryption failed — fall through to cloud config.
@@ -158,6 +178,7 @@ export async function getAppConfig(): Promise<AppConfig> {
   const cloud = await loadFromCloud();
   if (cloud) {
     cloud.jira ??= { apiToken: '' };
+    cloud.appUrl = savedAppUrl || cloud.appUrl;
     const env = buildFromEnv();
     // Env vars are a bootstrap fallback for a config that has never been explicitly
     // saved — NOT a permanent override. Bug found 2026-07-04: this used to apply
@@ -167,15 +188,17 @@ export async function getAppConfig(): Promise<AppConfig> {
     // in when the cloud config genuinely has nothing saved yet.
     if (!cloud.smtp.host && !cloud.smtp.user && env.smtp.user && env.smtp.pass) cloud.smtp = env.smtp;
     if (!cloud.jira.apiToken && env.jira.apiToken)                             cloud.jira = env.jira;
-    _cached = cloud;
+    if (!userId) _cached = cloud;
     _source = 'cloud';
-    return _cached;
+    return cloud;
   }
 
   // 3. Fall back to environment variables.
-  _cached = buildFromEnv();
+  const envConfig = buildFromEnv();
+  const config = { ...envConfig, appUrl: savedAppUrl || envConfig.appUrl };
+  if (!userId) _cached = config;
   _source = 'env';
-  return _cached;
+  return config;
 }
 
 export function invalidateConfig(): void {
@@ -183,8 +206,8 @@ export function invalidateConfig(): void {
   _source = 'env';
 }
 
-export async function getSafeConfig(): Promise<SafeAppConfig> {
-  const cfg = await getAppConfig();
+export async function getSafeConfig(userId?: string): Promise<SafeAppConfig> {
+  const cfg = await getAppConfig(userId);
   return {
     host:    cfg.smtp.host,
     port:    cfg.smtp.port,

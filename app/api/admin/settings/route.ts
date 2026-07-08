@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
-import { readSettings, writeSettings } from '@/services/settings/settings.service';
+import { readSettingsForUser, writeSettingsForUser } from '@/services/settings/settings.service';
 import { getRetentionStats } from '@/services/settings/dataRetention.service';
 import { safeAuditEvent } from '@/lib/system-error-logger';
 import type { RetentionSettings } from '@/types/settings';
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   const check = await requireAdmin(req);
   if (check instanceof NextResponse) return check;
 
-  const settings = readSettings();
+  const settings = await readSettingsForUser(check.session.userId);
   const stats    = await getRetentionStats(settings).catch(() => null);
   return NextResponse.json({ settings, stats });
 }
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
   }
 
-  const current  = readSettings();
+  const current  = await readSettingsForUser(session.userId);
   const updated: RetentionSettings = {
     ...current,
     ...body,
@@ -45,7 +45,11 @@ export async function POST(req: NextRequest) {
     updatedBy: session.email,
   };
 
-  writeSettings(updated);
+  await writeSettingsForUser(updated, {
+    userId: session.userId,
+    isSuperAdmin: session.isSuperAdmin === true,
+    updatedBy: session.email,
+  });
 
   await safeAuditEvent({
     userId: session.userId,
