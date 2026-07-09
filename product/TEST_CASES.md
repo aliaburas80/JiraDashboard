@@ -2450,3 +2450,19 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** full suite 109 suites / 1016 tests passing (down from 1020 — fewer, more accurate tests after consolidation; no lost coverage, since removed cases tested code deleted in the same change). `npx tsc --noEmit` clean. `npx eslint` clean on every touched file. `npx stylelint app/admin/theme/page.module.scss` clean (full rewrite, 802 → ~230 lines). `npx next build` clean; bundle sizes dropped as expected (`/admin/theme` 10.4 kB → 7.54 kB, `/admin/settings` 36.1 kB → 34.9 kB), confirming the removed code was actually excised, not just hidden.
 
 **Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: as an admin, confirm `/admin/settings` no longer shows a "User Management" tab anywhere and defaults to Member Requests when visited with no `?tab=`; confirm `/admin/users` (Admin sidebar) still works exactly as before; open `/admin/theme` (now labelled "Branding" in the sidebar) and confirm only App name / Favicon / Logo controls remain, with Save/Reset both working.
+
+## 9.104 — Admin Sidebar: Settings Sub-Nav Un-Nested Into Its Own Section
+
+*(Added 2026-07-09. Direct user follow-up with screenshot: "need to bring sub-menu out and setting as lable." See SRS.md Addendum Y.)*
+
+**Change:** the 11 Settings tabs (Member Requests, App Config, Privacy & Retention, Health Thresholds, Orphan Rules, Issue Type Hierarchy, Backup & Restore, Cloud Storage, Jira Integration, Browser Data, Persona Preview) moved from an indented sub-list only shown after clicking into a "Settings" nav item, to their own always-visible, top-level-styled "Settings" section — visible from any admin page, not just once already on `/admin/settings`. "Settings" is now a plain section label (like "Activity"/"Observability"/"Configure"), not a clickable link.
+
+**Verified by code inspection (no component-render test harness in this repo — Jest cannot render `.tsx` files here):**
+- Configure section's rendered items exclude `admin-settings` (filtered locally in `AdminNavSidebar.tsx`; the shared `DC_NAV_GROUPS` registry — topbar dropdown, global search — is untouched and still offers "Settings" as one destination there).
+- The new Settings section always renders, not conditionally on `pathname === '/admin/settings'`.
+- Each settings item's `href`/active-state logic is unchanged from before (`/admin/settings?tab=<id>`, bare URL for the first tab) — only the *conditional rendering* and *visual nesting* changed, not the destinations or active-state rules.
+- Confirmed no test file referenced the removed `.subNav`/`.subNavItem`/`.subNavItemActive`/`.subNavIcon` SCSS classes before deleting them.
+
+**Automated checks:** `npx tsc --noEmit` clean. Full suite 109 suites / 1016 tests passing, unchanged (no prior test coverage existed for this component). `npx eslint` and `npx stylelint` both clean, zero warnings. `npx next build` clean.
+
+**Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: as an admin, open any `/admin/*` page and confirm the Settings section (all 11 items) is visible in the sidebar without first clicking into Settings; confirm "Settings" itself is not a clickable link/button; click a settings item and confirm it navigates correctly and highlights as active; confirm Persona Preview only appears for a super-admin account.

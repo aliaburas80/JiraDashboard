@@ -5,6 +5,12 @@
 
 ---
 
+## Improved: Settings Sub-Menu Is Now Always Visible (2026-07-09)
+
+The Admin sidebar's Settings items (Member Requests, App Config, Privacy & Retention, Health Thresholds, Orphan Rules, Issue Type Hierarchy, Backup & Restore, Cloud Storage, Jira Integration, Browser Data, Persona Preview) used to be hidden inside a collapsible "Settings" link — you had to click into Settings first before you could see or reach any of them. They're now shown as their own always-visible section in the sidebar, right alongside Activity, Observability, and Configure, so every settings area is one click away instead of two.
+
+---
+
 ## Simplified: Branding Page, and User Management Now Lives in One Place (2026-07-09)
 
 Two follow-ups to yesterday's navigation cleanup. First, "User Management" was still fully implemented in two places behind the scenes — the Admin sidebar page and a tab inside Settings. The Settings-tab version is now removed entirely; User Management lives only in the Admin sidebar going forward. Second, the "Theme & Branding" admin page has been trimmed down to just what's genuinely useful — app name, favicon, and logo — and renamed "Branding." The colour-palette gallery, font/corner-radius presets, and the technical CSS-token reference table have been removed; they were decorative demo material with no real business value. If you'd previously customized your palette, your browser keeps showing it exactly as before — there just isn't an admin control to change it anymore.
