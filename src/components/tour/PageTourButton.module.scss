@@ -1,0 +1,32 @@
+// PageTourButton — floating per-page trigger, stacked directly above
+// FeedbackButton's floating trigger (which sits at inset-block-end: 24px).
+
+.trigger {
+  position:         fixed;
+  inset-block-end:  76px;
+  inset-inline-end: 24px;
+  z-index:          var(--z-dropdown, 600);
+
+  display:          flex;
+  align-items:      center;
+  gap:              6px;
+
+  padding:          8px 14px;
+  border-radius:    100px;
+  border:           1px solid var(--dc-bdr, rgba(255, 255, 255, 0.1));
+  background:       var(--dc-s2, #1a1a1a);
+  color:            var(--dc-p2, #909090);
+  font-size:        12px;
+  font-weight:      700;
+  cursor:           pointer;
+
+  &:hover {
+    color:      var(--dc-p1, #f2f2f2);
+    border-color: var(--color-primary, #2563eb);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: 2px;
+  }
+}

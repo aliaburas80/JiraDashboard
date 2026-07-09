@@ -69,6 +69,7 @@ export default function EpicReadinessPage() {
       </StickyToolbar>
 
       <PageHeader
+        id="tour-header-epic-readiness"
         title="Epic Readiness"
         badge={criticalEpics > 0 ? `${criticalEpics} critical` : 'Good'}
         subtitle={`${epicReadiness.length} epics tracked · at-risk epics and dependency callouts.`}

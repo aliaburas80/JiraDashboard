@@ -93,6 +93,7 @@ export default function VisualAnalyticsPage() {
       </StickyToolbar>
 
       <PageHeader
+        id="tour-header-visual-analytics"
         title="Visual Analytics"
         subtitle="Charts, distributions, and visual delivery analysis."
       />

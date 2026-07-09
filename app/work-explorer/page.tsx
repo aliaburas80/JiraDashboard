@@ -198,7 +198,7 @@ export default function WorkExplorerPage() {
             <span className={styles.breadcrumbSep}>/</span>
             <span className={styles.breadcrumbCurrent}>Work Explorer</span>
           </div>
-          <h1 className={styles.pageTitle}>Work Explorer</h1>
+          <h1 id="tour-header-work-explorer" className={styles.pageTitle}>Work Explorer</h1>
           <p className={styles.pageMeta}>
             Showing <strong>{filtered.length.toLocaleString()}</strong> of{' '}
             <strong>{items.length.toLocaleString()}</strong> issues — click any row to inspect

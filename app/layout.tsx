@@ -5,6 +5,7 @@ import { GlobalErrorHandler } from '@/components/ui/GlobalErrorHandler';
 import { FeedbackButton } from '@/components/feedback/FeedbackButton';
 import { EmailVerificationBanner } from '@/components/auth/EmailVerificationBanner';
 import ProductTour from '@/components/tour/ProductTour';
+import PageTourButton from '@/components/tour/PageTourButton';
 import { normalizeAppUrl } from '@/lib/url';
 
 const appUrl = normalizeAppUrl(process.env.NEXT_PUBLIC_APP_URL);

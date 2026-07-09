@@ -93,6 +93,7 @@ export default function KeyMetricsPage() {
       </StickyToolbar>
 
       <PageHeader
+        id="tour-header-key-metrics"
         title="Key Metrics"
         badge="6 KPI cards"
         subtitle="Delivery KPIs, lead time, cycle time, throughput, and predictability."

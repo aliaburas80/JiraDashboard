@@ -7,7 +7,6 @@ import AppShell from '@/components/layout/AppShell';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
-  StickyToolbar, ToolbarSpacer, ToolbarButton,
   PageHeader, MiniKpiCard, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
@@ -88,15 +87,8 @@ export default function SummaryPage() {
 
   return (
     <AppShell showNav>
-      <StickyToolbar>
-        <ToolbarSpacer />
-        <ToolbarButton
-          label="Take a tour"
-          onClick={() => window.dispatchEvent(new CustomEvent('dc:start-tour'))}
-        />
-      </StickyToolbar>
-
       <PageHeader
+        id="tour-header-summary"
         title="Delivery Summary"
         badge="Broadcast"
         subtitle={`Live delivery health · ${flowItems.length.toLocaleString()} issues tracked`}

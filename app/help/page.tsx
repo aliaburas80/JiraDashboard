@@ -448,10 +448,10 @@ const SECTIONS: Section[] = [
   {
     id: 'product-tour', icon: 'target', title: 'Product Tour',
     items: [
-      { q: 'How do I start the guided tour?', a: 'Two ways: (1) On the Overview (/summary) page, click "Take a tour" in the toolbar. (2) On any Dashboard (/dashboard/*) page, click the "Tour" button in the top bar. The tour now spans multiple pages — it automatically navigates you to each relevant page as you click "Next →".' },
-      { q: 'What does the tour cover?', a: '8 steps across 4 pages: Welcome → Health Score & Key Metrics (/summary) → Dashboard Navigation (sidebar, /dashboard/priority-attention) → Priority Attention (same page) → Smart Recommendations (/dashboard/actions) → Sprint Throughput (/dashboard/sprint-status) → Work Item Explorer (opens /explore) → Done.' },
-      { q: 'How do I navigate the tour?', a: 'Click "Next →" and "← Back" buttons, or use arrow keys (→ Next, ← Back). Press Esc or click "Skip tour" at any time to exit.' },
-      { q: 'How do I replay the tour after completing it?', a: 'Click "Take a tour" on /summary, or "Tour" on any dashboard page, at any time — it always restarts from Step 1. Or run resetTour() in the browser console to fully clear the completed state.' },
+      { q: 'How do I start a page tour?', a: 'Every major page has its own short tour. Look for the "Page tour" button floating near the bottom-right corner of the screen — it only appears on pages that have a tour, and it always explains what’s on the page you’re currently viewing.' },
+      { q: 'Does the tour cover the whole app?', a: 'Yes — nearly every page (Overview, all Dashboard sections, Explore, Retro, Forecast, Data Quality, admin pages, and more) has its own 1-2 step tour. Unlike before, a page’s tour never navigates you away to another page — it only ever explains what’s in front of you.' },
+      { q: 'How do I navigate a tour?', a: 'Click "Next →" and "← Back", or use arrow keys (→ Next, ← Back). Press Esc or click "Close" at any time to exit.' },
+      { q: 'How do I replay a page’s tour?', a: 'Click "Page tour" again at any time — it always restarts from Step 1. Nothing is remembered between visits, so it’s always available.' },
     ],
   },
   {

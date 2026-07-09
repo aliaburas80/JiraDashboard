@@ -484,7 +484,7 @@ export default function RoadmapPage() {
         <div className={styles.pageHeader}>
           <div>
             <div className={styles.breadcrumb}><SvgIcon name="roadmap" size={14} /> Planning</div>
-            <h1 className={styles.title}>Epic Roadmap</h1>
+            <h1 id="tour-header-roadmap" className={styles.title}>Epic Roadmap</h1>
             <p className={styles.subtitle}>Delivery timeline, forecasts & health — based on your Jira data</p>
           </div>
           <div className={styles.viewToggle} role="group" aria-label="View mode">

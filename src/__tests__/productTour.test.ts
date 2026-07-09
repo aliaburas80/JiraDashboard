@@ -1,100 +1,53 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
-// Product tour tests — TC-PT-01 to TC-PT-10
+// Product tour tests — TC-PT-01 to TC-PT-06
+// P0 fix, 2026-07-09: rewritten for the per-page tour model (PAGE_TOURS,
+// keyed by route) replacing the old single cross-page TOUR_STEPS walkthrough.
 
 import fs from 'fs';
 import path from 'path';
-import {
-  TOUR_STEPS,
-  isTourDismissed,
-  isTourCompleted,
-  dismissTour,
-  completeTour,
-  resetTour,
-} from '../lib/tour';
+import { PAGE_TOURS, getPageTour, type TourStep } from '../lib/tour';
 
-// ── Mock localStorage ─────────────────────────────────────────────────────────
+const ROUTES = Object.keys(PAGE_TOURS);
+const ALL_STEPS: TourStep[] = ROUTES.flatMap(route => PAGE_TOURS[route]);
 
-const store: Record<string, string> = {};
-beforeEach(() => {
-  Object.keys(store).forEach(k => delete store[k]);
-  Object.defineProperty(global, 'localStorage', {
-    value: {
-      getItem:    (k: string) => store[k] ?? null,
-      setItem:    (k: string, v: string) => { store[k] = v; },
-      removeItem: (k: string) => { delete store[k]; },
-    },
-    writable: true,
+// ── TC-PT-01: every route has at least one well-formed step ─────────────────
+
+test('TC-PT-01: PAGE_TOURS covers a broad set of routes, each with well-formed steps', () => {
+  expect(ROUTES.length).toBeGreaterThanOrEqual(40);
+  ROUTES.forEach(route => {
+    const steps = PAGE_TOURS[route];
+    expect(steps.length).toBeGreaterThan(0);
+    steps.forEach(step => {
+      expect(typeof step.id).toBe('string');
+      expect(step.id.length).toBeGreaterThan(0);
+      expect(typeof step.title).toBe('string');
+      expect(step.title.length).toBeGreaterThan(0);
+      expect(typeof step.description).toBe('string');
+      expect(step.description.length).toBeGreaterThan(0);
+    });
   });
 });
 
-// ── TC-PT-01: Tour steps array is non-empty and well-formed ───────────────────
+// ── TC-PT-02: every route key is a real app/ page ────────────────────────────
 
-test('TC-PT-01: TOUR_STEPS has at least 8 steps, each with id and title', () => {
-  expect(TOUR_STEPS.length).toBeGreaterThanOrEqual(8);
-  TOUR_STEPS.forEach(step => {
-    expect(typeof step.id).toBe('string');
-    expect(step.id.length).toBeGreaterThan(0);
-    expect(typeof step.title).toBe('string');
-    expect(step.title.length).toBeGreaterThan(0);
-    expect(typeof step.description).toBe('string');
+test('TC-PT-02: every PAGE_TOURS route corresponds to a real app/<route>/page.tsx', () => {
+  ROUTES.forEach(route => {
+    const pagePath = path.join(process.cwd(), 'app', route, 'page.tsx');
+    expect(fs.existsSync(pagePath)).toBe(true);
   });
 });
 
-// ── TC-PT-02: First step is 'welcome', last is 'done' ────────────────────────
-
-test('TC-PT-02: first step is welcome, last step is done', () => {
-  expect(TOUR_STEPS[0].id).toBe('welcome');
-  expect(TOUR_STEPS[TOUR_STEPS.length - 1].id).toBe('done');
-});
-
-// ── TC-PT-03: isTourDismissed returns false initially ────────────────────────
-
-test('TC-PT-03: isTourDismissed returns false when not dismissed', () => {
-  expect(isTourDismissed()).toBe(false);
-});
-
-// ── TC-PT-04: dismissTour persists and isTourDismissed returns true ──────────
-
-test('TC-PT-04: dismissTour sets dismissed flag', () => {
-  dismissTour();
-  expect(isTourDismissed()).toBe(true);
-});
-
-// ── TC-PT-05: isTourCompleted returns false initially ────────────────────────
-
-test('TC-PT-05: isTourCompleted returns false when not completed', () => {
-  expect(isTourCompleted()).toBe(false);
-});
-
-// ── TC-PT-06: completeTour sets both completed and dismissed flags ────────────
-
-test('TC-PT-06: completeTour sets completed and dismissed flags', () => {
-  completeTour();
-  expect(isTourCompleted()).toBe(true);
-  expect(isTourDismissed()).toBe(true);
-});
-
-// ── TC-PT-07: resetTour clears all flags ─────────────────────────────────────
-
-test('TC-PT-07: resetTour clears both flags', () => {
-  completeTour();
-  resetTour();
-  expect(isTourDismissed()).toBe(false);
-  expect(isTourCompleted()).toBe(false);
-});
-
-// ── TC-PT-08: every targetId is an id actually rendered by the app ──────────
-// P0 fix, 2026-07-09: this test used to check targetId values against a
-// hardcoded "known ids" list that was itself stale (dashboard-sticky-bar,
-// section-overview, etc. — leftovers from before the dashboard was split
-// into separate routed pages) — it always passed without proving anything
-// real. Now greps the actual source tree for `id="<targetId>"` /
-// `id={id}`-style props, so a future rename that forgets to update one side
-// fails this test instead of silently breaking the tour.
+// ── TC-PT-03: every targetId is an id actually rendered by the app ──────────
+// Greps the actual source tree for `id="<targetId>"` so a future rename that
+// forgets to update one side fails this test instead of silently breaking
+// the tour (this pattern predates this rewrite — see git history). Also
+// matches `headerId="<targetId>"` — the 9 admin pages set the anchor via
+// AdminConsoleLayout's `headerId` prop, which the component then renders as
+// `id={headerId}` (not a literal `id="..."` at the call site).
 
 function idExistsInSource(id: string): boolean {
   const roots = ['app', 'src/components'];
-  const pattern = new RegExp(`id=["']${id}["']`);
+  const pattern = new RegExp(`id=["']${id}["']|headerId=["']${id}["']`);
   function search(dir: string): boolean {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
@@ -109,31 +62,39 @@ function idExistsInSource(id: string): boolean {
   return roots.some(root => search(path.join(process.cwd(), root)));
 }
 
-test('TC-PT-08: every targetId is rendered somewhere in the app (not a stale/renamed anchor)', () => {
-  const targetIds = TOUR_STEPS.map(step => step.targetId).filter((id): id is string => !!id);
-  expect(targetIds.length).toBeGreaterThan(0); // sanity: the tour still highlights something
+test('TC-PT-03: every targetId is rendered somewhere in the app (not a stale/renamed anchor)', () => {
+  const targetIds = ALL_STEPS.map(step => step.targetId).filter((id): id is string => !!id);
+  expect(targetIds.length).toBeGreaterThan(0); // sanity: most steps still highlight something
   targetIds.forEach(id => {
     expect(idExistsInSource(id)).toBe(true);
   });
 });
 
-// ── TC-PT-09: every route referenced by a step is a real, existing page ─────
+// ── TC-PT-04: getPageTour looks up by exact pathname ─────────────────────────
 
-test('TC-PT-09: every step route corresponds to a real app/ page.tsx', () => {
-  const routes = TOUR_STEPS.map(step => step.route).filter((r): r is string => !!r);
-  expect(routes.length).toBeGreaterThan(0);
-  routes.forEach(route => {
-    const pagePath = path.join(process.cwd(), 'app', route, 'page.tsx');
-    expect(fs.existsSync(pagePath)).toBe(true);
+test('TC-PT-04: getPageTour returns the registered steps for a known route and null otherwise', () => {
+  expect(getPageTour('/summary')).toBe(PAGE_TOURS['/summary']);
+  expect(getPageTour('/dashboard/priority-attention')).toBe(PAGE_TOURS['/dashboard/priority-attention']);
+  expect(getPageTour('/this-route-does-not-exist')).toBeNull();
+});
+
+// ── TC-PT-05: a step with no targetId is centered (nothing to highlight) ────
+
+test('TC-PT-05: every step without a targetId uses center placement', () => {
+  ALL_STEPS.forEach(step => {
+    if (!step.targetId) {
+      expect(step.placement).toBe('center');
+    }
   });
 });
 
-// ── TC-PT-10: steps with an href (not a `route`) also point at a real page ──
+// ── TC-PT-06: placement, when set, is one of the values ProductTour supports ─
 
-test('TC-PT-10: a step\'s href (CTA-navigates-and-ends-tour) also points at a real page', () => {
-  const hrefs = TOUR_STEPS.map(step => step.href).filter((h): h is string => !!h);
-  hrefs.forEach(href => {
-    const pagePath = path.join(process.cwd(), 'app', href, 'page.tsx');
-    expect(fs.existsSync(pagePath)).toBe(true);
+test('TC-PT-06: every step placement is a supported value', () => {
+  const allowed = new Set(['top', 'bottom', 'left', 'right', 'center']);
+  ALL_STEPS.forEach(step => {
+    if (step.placement) {
+      expect(allowed.has(step.placement)).toBe(true);
+    }
   });
 });

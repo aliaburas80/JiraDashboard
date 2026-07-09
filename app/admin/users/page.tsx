@@ -300,6 +300,7 @@ export default function AdminUsersPage() {
     <AdminConsoleLayout
       title="User Management"
       description="Manage accounts, roles, and access for all users in the system."
+      headerId="tour-header-admin-users"
       stats={stats}
       statusLabel={`${active} active`}
       actions={

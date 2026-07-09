@@ -182,7 +182,7 @@ export default function BackendPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className={styles.pageTitle}>Backend Status</h1>
+          <h1 id="tour-header-backend" className={styles.pageTitle}>Backend Status</h1>
           <p className={styles.pageDesc}>
             Live view of imports, API endpoints, and recent activity.
           </p>

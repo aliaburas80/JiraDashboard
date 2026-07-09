@@ -124,6 +124,7 @@ export default function DataQualityPage() {
       </StickyToolbar>
 
       <PageHeader
+        id="tour-header-dashboard-data-quality"
         title="Data Quality"
         badge={`${displayIssues.length} issues found`}
         subtitle="Field confidence, missing data impact, and remediation guidance."

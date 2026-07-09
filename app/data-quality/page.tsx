@@ -149,7 +149,7 @@ export default function DataQualityPage() {
           <span style={{ width: 20, height: 2, background: 'var(--blue)', display: 'inline-block' }} />
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--blue)', textTransform: 'uppercase' }}>Data</span>
         </div>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--n900)', margin: '0 0 4px', letterSpacing: '-0.02em' }}>Data Quality</h1>
+        <h1 id="tour-header-data-quality" style={{ fontSize: 26, fontWeight: 700, color: 'var(--n900)', margin: '0 0 4px', letterSpacing: '-0.02em' }}>Data Quality</h1>
         <p style={{ fontSize: 13, color: 'var(--n500)', margin: '0 0 16px', maxWidth: 560 }}>{dq.summary}</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <ScoreRing score={dq.score} band={dq.band} />

@@ -2489,4 +2489,29 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 
 **Automated checks:** `npx tsc --noEmit` clean. Full suite 109 suites / 1018 tests passing (up from 1016). `npx eslint` clean except `ProductTour.tsx`'s 2 documented exception warnings (down from 13 raw violations). `npx stylelint` clean on the new module. `npx next build` clean.
 
+## 9.106 — Product Tour Rebuilt: Per-Page Instead of Cross-Page (~49 Routes)
+
+*(Added 2026-07-09. Same-day follow-up to §9.105. User request: "each page has its own tour, so when enter any page toure there for this page to explan what user see." Scope confirmed via `AskUserQuestion`: all major routes, manual-trigger-only, replaces the §9.105 cross-page tour entirely. See SRS.md Addendum AA.)*
+
+**TC-PT-01 (rewritten):** `PAGE_TOURS` covers ≥40 routes, every step has non-empty `id`/`title`/`description`. Replaces the old `TOUR_STEPS.length >= 8` check.
+
+**TC-PT-02 (rewritten):** every `PAGE_TOURS` route key corresponds to a real `app/<route>/page.tsx` on disk — new; the old model had no route keys to validate since there was only ever one flat step array.
+
+**TC-PT-03 (carried over from old TC-PT-08):** every step's `targetId` is rendered somewhere in the source tree — same `idExistsInSource` grep helper from §9.105, re-run against the new per-route step structure.
+
+**TC-PT-04 (new):** `getPageTour('/summary')` returns the exact `PAGE_TOURS['/summary']` array; `getPageTour('/dashboard/priority-attention')` likewise; `getPageTour('/this-route-does-not-exist')` returns `null`.
+
+**TC-PT-05 (new):** every step without a `targetId` declares `placement: 'center'` — a targetless step has no rect to position against, so this ensures the data itself doesn't claim otherwise (e.g. `/developer` and `/help`'s single centered step).
+
+**TC-PT-06 (new):** every step's `placement`, when set, is one of `top`/`bottom`/`left`/`right`/`center` — the full set `ProductTour.tsx`'s positioning logic actually handles.
+
+**Removed without replacement:** the old TC-PT-03–07 (`isTourDismissed`/`isTourCompleted`/`dismissTour`/`completeTour`/`resetTour` localStorage state) and TC-PT-09/10 (`route`/`href` cross-page navigation fields) — all tested mechanisms that no longer exist in the per-page model. Manual-trigger-only means there's no auto-start state to gate, so the dismiss/complete tracking was deleted as dead code rather than kept dormant.
+
+**Design changes exercised by these tests:**
+- `AdminConsoleLayout` gained an optional `headerId?: string` prop (rendered as `id={headerId}` on the section wrapping its `<h1>`/`<p>` — used by all 9 admin pages' tour anchors.
+- `PageTourButton` (new component) is the single trigger for every page's tour — replaces the two Addendum-Z-era buttons ("Take a tour" on `/summary`, "Tour" in `DashboardTopbar.tsx`), both removed.
+- `ProductTour.tsx` no longer navigates between pages — it closes itself on every pathname change instead, since each page's tour is self-contained.
+
+**Automated checks:** `npx tsc --noEmit` clean. `npx eslint` — 0 errors, 0 new warnings on any changed file. `npx stylelint` clean. Full suite 109 suites / 1,014 tests passing (down from 1,018 — 10 obsolete tests removed, 6 new ones added, net -4, expected). `npx next build` clean. One regression caught during verification and fixed: TC-PT-03 initially failed for all 9 admin routes because its grep helper didn't recognize the `headerId="..."` prop pattern those pages use (vs. a literal `id="..."`) — see SRS.md Addendum AA for the fix.
+
 **Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: click "Take a tour" on `/summary`, click through all 8 steps with "Next →", confirm the tour navigates to `/dashboard/priority-attention` → `/dashboard/actions` → `/dashboard/sprint-status` automatically and the highlight ring finds the correct element on each page; confirm the popover never renders off-screen; confirm "Tour" in the dashboard top bar restarts it from Step 1; confirm Esc/"Skip tour" both exit cleanly; confirm keyboard arrow-key navigation works.

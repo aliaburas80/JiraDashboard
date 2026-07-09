@@ -312,7 +312,7 @@ export default function CustomerPage() {
           >
             <div className={styles.heroLeft}>
               <p className={styles.heroEyebrow}>Delivery Status Report</p>
-              <h1 className={styles.heroTitle}>Project Delivery Summary</h1>
+              <h1 id="tour-header-customer" className={styles.heroTitle}>Project Delivery Summary</h1>
               <p className={styles.heroDate}>{today}</p>
               <div
                 className={styles.heroStatusPill}

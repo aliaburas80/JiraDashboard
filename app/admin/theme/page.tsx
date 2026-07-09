@@ -129,6 +129,7 @@ export default function AdminThemePage() {
     <AdminConsoleLayout
       title="Branding"
         description="Customise the app name, logo, and favicon shown across the app. Changes apply instantly and persist for all sessions on this device."
+        headerId="tour-header-admin-theme"
         stats={stats}
         statusLabel="Live preview"
         actions={

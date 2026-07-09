@@ -123,6 +123,7 @@ export default function CoachingPage() {
   return (
     <>
       <PageHeader
+        id="tour-header-coaching"
         title="Role-Based Coaching Insights"
         subtitle={`Evidence-based delivery coaching for the ${CATEGORY_LABELS[active]} view.`}
       />

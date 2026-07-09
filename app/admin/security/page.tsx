@@ -124,6 +124,7 @@ export default function SecurityPage() {
     <AdminConsoleLayout
       title="Security Checklist"
       description="Production security assessment — automated checks and manual review items."
+      headerId="tour-header-admin-security"
       stats={securityStats}
       statusLabel={report?.isProductionReady ? 'Production ready' : 'Review required'}
     >

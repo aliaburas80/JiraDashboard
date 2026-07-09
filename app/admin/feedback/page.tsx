@@ -196,6 +196,7 @@ export default function AdminFeedbackPage() {
     <AdminConsoleLayout
       title="User Feedback"
       description={`${totalCount} total submissions · triage and track user suggestions, bugs, and questions`}
+      headerId="tour-header-admin-feedback"
       stats={statCards}
       statusLabel={newCount > 0 ? `${newCount} New` : 'All clear'}
     >

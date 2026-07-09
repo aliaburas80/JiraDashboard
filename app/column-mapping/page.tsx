@@ -128,7 +128,7 @@ export default function ColumnMappingPage() {
             <span className={styles.breadcrumbSep}>/</span>
             <span className={styles.breadcrumbCurrent}>Column Mapping</span>
           </div>
-          <h1 className={styles.pageTitle}>Column Mapping</h1>
+          <h1 id="tour-header-column-mapping" className={styles.pageTitle}>Column Mapping</h1>
           <p className={styles.pageDesc}>
             Maps your CSV or Jira export columns to Delivery Clarity&apos;s expected fields.
             Matched automatically via fuzzy matching — the more fields present, the richer the analysis.

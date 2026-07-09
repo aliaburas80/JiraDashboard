@@ -68,6 +68,7 @@ export default function KanbanHealthPage() {
       </StickyToolbar>
 
       <PageHeader
+        id="tour-header-kanban-health"
         title="Kanban Health"
         badge={boardHealth}
         subtitle="Board health, WIP, throughput, aging, and flow distribution."
