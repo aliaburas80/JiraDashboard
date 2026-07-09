@@ -5,6 +5,12 @@
 
 ---
 
+## Restored: Guided Product Tour (2026-07-09)
+
+The guided product tour is back — and now actually works. It had been fully built but was never connected to anything, so clicking the buttons the Help page described did nothing. Start it from "Take a tour" on the Overview page, or "Tour" in the top bar of any dashboard page. It now walks you across multiple real pages — Overview's key metrics, the dashboard sidebar, Priority Attention, Smart Actions, Sprint Status, and the Work Item Explorer — highlighting the relevant part of each page as it goes, instead of just describing a layout that no longer exists.
+
+---
+
 ## Improved: Settings Sub-Menu Is Now Always Visible (2026-07-09)
 
 The Admin sidebar's Settings items (Member Requests, App Config, Privacy & Retention, Health Thresholds, Orphan Rules, Issue Type Hierarchy, Backup & Restore, Cloud Storage, Jira Integration, Browser Data, Persona Preview) used to be hidden inside a collapsible "Settings" link — you had to click into Settings first before you could see or reach any of them. They're now shown as their own always-visible section in the sidebar, right alongside Activity, Observability, and Configure, so every settings area is one click away instead of two.

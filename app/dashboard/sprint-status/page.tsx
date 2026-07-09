@@ -68,7 +68,7 @@ export default function SprintStatusPage() {
           <ToolbarSpacer />
 
         </StickyToolbar>
-        <PageHeader title="Sprint Status" subtitle="Sprint health, progress, and delivery patterns." />
+        <PageHeader id="tour-sprint" title="Sprint Status" subtitle="Sprint health, progress, and delivery patterns." />
         <div style={{ padding: '60px 28px', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>
           <div style={{ fontSize: 36, marginBottom: 12 }}>🏃</div>
           No sprint data detected. Upload a file with Sprint field data to see sprint metrics.
@@ -89,6 +89,7 @@ export default function SprintStatusPage() {
       </StickyToolbar>
 
       <PageHeader
+        id="tour-sprint"
         title="Sprint Status"
         badge={sprint ? 'Active' : 'No Sprint'}
         subtitle="Sprint goal, progress, commitment vs completion, blockers, and risks."
