@@ -1,6 +1,6 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 import DataRetentionSettings from '@/components/admin/DataRetentionSettings';
@@ -17,11 +17,9 @@ import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { PasswordInput } from '@/components/ui/PasswordInput';
-import { ASSIGNABLE_ROLES, roleLabel, type AppRole } from '@/lib/roles';
 import {
-  type Tab, type ManagedUser,
+  type Tab,
   activeTabMeta, buildSettingsStats,
-  roleOptionsFor, matchesUserFilter,
 } from '@/lib/adminConsole';
 import type { RetentionSettings, RetentionStats } from '@/types/settings';
 import type { HealthThresholds } from '@/types/thresholds';
@@ -912,435 +910,9 @@ function CloudStorageSettings() {
   );
 }
 
-function UserManagementSettings({ onUsersChange }: { onUsersChange: (users: ManagedUser[]) => void }) {
-  const [users, setUsers] = useState<ManagedUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [query, setQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
-  const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'scrum_master' as AppRole });
-
-  // ── Multi-select state ──────────────────────────────────────────────────────
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [bulkRole, setBulkRole] = useState<AppRole>('scrum_master');
-  const [bulkApplying, setBulkApplying] = useState(false);
-  const [bulkDeleting, setBulkDeleting] = useState(false);
-  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
-  const selectAllRef = useRef<HTMLInputElement>(null);
-
-  async function loadUsers() {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/admin/users');
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Could not load users.');
-      setUsers(data.users ?? []);
-    } catch (error) {
-      setMsg({ ok: false, text: error instanceof Error ? error.message : 'Could not load users.' });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => { loadUsers(); }, []);
-  useEffect(() => { onUsersChange(users); }, [onUsersChange, users]); // keep parent stat cards in sync
-
-  async function createUser() {
-    setSaving(true); setMsg(null);
-    try {
-      const res = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Could not create user.');
-      setUsers(prev => [data.user, ...prev]);
-      setForm({ name: '', email: '', password: '', role: 'scrum_master' });
-      setMsg({ ok: true, text: 'User created.' });
-    } catch (error) {
-      setMsg({ ok: false, text: error instanceof Error ? error.message : 'Could not create user.' });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function updateUser(id: string, patch: Partial<Pick<ManagedUser, 'name' | 'role' | 'isActive'>>) {
-    setMsg(null);
-    try {
-      const res = await fetch('/api/admin/users', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, ...patch }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Could not update user.');
-      setUsers(prev => prev.map(user => user.id === id ? data.user : user));
-      setMsg({ ok: true, text: 'User updated.' });
-    } catch (error) {
-      setMsg({ ok: false, text: error instanceof Error ? error.message : 'Could not update user.' });
-    }
-  }
-
-  async function deleteUser() {
-    if (!deleteTarget) return;
-    setDeleting(true); setMsg(null);
-    try {
-      const res = await fetch('/api/admin/users', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: deleteTarget.id }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Could not delete user.');
-      setUsers(prev => prev.filter(user => user.id !== deleteTarget.id));
-      setDeleteTarget(null);
-      setMsg({ ok: true, text: 'User deleted.' });
-    } catch (error) {
-      setMsg({ ok: false, text: error instanceof Error ? error.message : 'Could not delete user.' });
-    } finally {
-      setDeleting(false);
-    }
-  }
-
-  const filteredUsers = users.filter(user => matchesUserFilter(user, query, roleFilter));
-
-  // Clear selection when filters change
-  useEffect(() => { setSelected(new Set()); }, [query, roleFilter]);
-
-  // Drive the select-all checkbox indeterminate state
-  useEffect(() => {
-    if (!selectAllRef.current || filteredUsers.length === 0) return;
-    const anySelected = filteredUsers.some(u => selected.has(u.id));
-    const allSelected = filteredUsers.every(u => selected.has(u.id));
-    selectAllRef.current.indeterminate = anySelected && !allSelected;
-  }, [selected, filteredUsers]);
-
-  function toggleSelect(id: string) {
-    setSelected(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
-  function toggleSelectAll() {
-    const allSelected = filteredUsers.every(u => selected.has(u.id));
-    setSelected(allSelected ? new Set() : new Set(filteredUsers.map(u => u.id)));
-  }
-
-  async function bulkUpdateRole() {
-    const ids = filteredUsers.filter(u => selected.has(u.id)).map(u => u.id);
-    if (ids.length === 0) return;
-    setBulkApplying(true); setMsg(null);
-    let failed = 0;
-    for (const id of ids) {
-      try {
-        const res = await fetch('/api/admin/users', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, role: bulkRole }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setUsers(prev => prev.map(u => u.id === id ? data.user : u));
-        } else {
-          failed++;
-        }
-      } catch { failed++; }
-    }
-    setBulkApplying(false);
-    setSelected(new Set());
-    setMsg(failed === 0
-      ? { ok: true,  text: `Role updated for ${ids.length} user${ids.length !== 1 ? 's' : ''}.` }
-      : { ok: false, text: `${failed} update${failed !== 1 ? 's' : ''} failed.` });
-  }
-
-  async function bulkDeleteUsers() {
-    const ids = filteredUsers.filter(u => selected.has(u.id)).map(u => u.id);
-    if (ids.length === 0) return;
-    setBulkDeleting(true); setMsg(null);
-    let failed = 0;
-    for (const id of ids) {
-      try {
-        const res = await fetch('/api/admin/users', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id }),
-        });
-        if (res.ok) {
-          setUsers(prev => prev.filter(u => u.id !== id));
-        } else {
-          failed++;
-        }
-      } catch { failed++; }
-    }
-    setBulkDeleting(false);
-    setShowBulkDeleteConfirm(false);
-    setSelected(new Set());
-    setMsg(failed === 0
-      ? { ok: true,  text: `${ids.length} user${ids.length !== 1 ? 's' : ''} deleted.` }
-      : { ok: false, text: `${failed} deletion${failed !== 1 ? 's' : ''} failed.` });
-  }
-
-  return (
-    <div className="space-y-6">
-      {deleteTarget && (
-        <ConfirmDeleteDialog
-          title="Delete user?"
-          message={`This removes ${deleteTarget.name} from the account and their access will stop immediately.`}
-          confirmLabel="Delete user"
-          onConfirm={deleteUser}
-          onCancel={() => setDeleteTarget(null)}
-          loading={deleting}
-        />
-      )}
-
-      {showBulkDeleteConfirm && (
-        <ConfirmDeleteDialog
-          title={`Delete ${selected.size} user${selected.size !== 1 ? 's' : ''}?`}
-          message={`This permanently removes ${selected.size} user${selected.size !== 1 ? 's' : ''} from the account. All their access will stop immediately. This cannot be undone.`}
-          confirmLabel={`Delete ${selected.size} user${selected.size !== 1 ? 's' : ''}`}
-          onConfirm={bulkDeleteUsers}
-          onCancel={() => setShowBulkDeleteConfirm(false)}
-          loading={bulkDeleting}
-        />
-      )}
-
-      {/* ── Add User form ── */}
-      <section className={styles.formSection}>
-        <div className={styles.formSectionHeader}>
-          <span className={styles.formIconWrap}><SvgIcon name="person" size={16} /></span>
-          <div>
-            <h3 className={styles.formTitle}>Add User</h3>
-            <p className={styles.formSubtitle}>Create a new user account and assign a role.</p>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <label className={styles.fieldLabel}>
-            Full Name
-            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Enter full name"
-              className={styles.formInput} />
-          </label>
-          <label className={styles.fieldLabel}>
-            Email Address
-            <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Enter email address"
-              className={styles.formInput} />
-          </label>
-          <label className={styles.fieldLabel}>
-            Temporary Password
-            <PasswordInput value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Enter temporary password"
-              className={styles.formInput} />
-          </label>
-          <label className={styles.fieldLabel}>
-            Role
-            <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
-              className={styles.formInput}>
-              {ASSIGNABLE_ROLES.map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
-            </select>
-          </label>
-        </div>
-
-        <div className={styles.formFooter}>
-          <button type="button" onClick={createUser} disabled={saving} className={styles.createBtn}>
-            {saving ? 'Creating...' : 'Create User'}
-          </button>
-        </div>
-      </section>
-
-      {/* ── Status message ── */}
-      {msg && (
-        <div className={clsx(styles.statusMsg, msg.ok ? styles['statusMsg--ok'] : styles['statusMsg--err'])}>
-          {msg.text}
-        </div>
-      )}
-
-      {/* ── User table ── */}
-      <section className={styles.tableSection}>
-        <div className={styles.tableSectionHeader}>
-          <div>
-            <h3 className={styles.tableTitle}>User Management</h3>
-            <p className={styles.tableSubtitle}>View and manage all users in your account.</p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <label className="relative block">
-              <span className={styles.searchIconWrap}>⌕</span>
-              <input value={query} onChange={e => setQuery(e.target.value)} type="search" placeholder="Search users"
-                className={styles.searchInput} />
-            </label>
-            <select value={roleFilter} onChange={e => setRoleFilter(e.target.value as AppRole | 'all')}
-              className={styles.roleSelect}>
-              <option value="all">All roles</option>
-              {roleOptionsFor().map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
-            </select>
-            <button type="button" onClick={loadUsers} disabled={loading} className={styles.refreshBtn}>
-              {loading ? 'Loading...' : '↻ Refresh'}
-            </button>
-          </div>
-        </div>
-
-        {/* Bulk action bar — visible only when rows are selected */}
-        {selected.size > 0 && (
-          <div className={styles.bulkBar}>
-            <span className={styles.bulkCount}>
-              {selected.size} user{selected.size !== 1 ? 's' : ''} selected
-            </span>
-            <div className={styles.bulkActions}>
-              <select
-                value={bulkRole}
-                onChange={e => setBulkRole(e.target.value as AppRole)}
-                className={styles.bulkRoleSelect}
-              >
-                {ASSIGNABLE_ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
-              </select>
-              <button
-                type="button"
-                onClick={bulkUpdateRole}
-                disabled={bulkApplying}
-                className={styles.bulkRoleBtn}
-              >
-                {bulkApplying ? '...' : '✎'} Change role
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowBulkDeleteConfirm(true)}
-                disabled={bulkDeleting}
-                className={styles.bulkDeleteBtn}
-              >
-                <SvgIcon name="delete" size={14} /> Delete {selected.size}
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelected(new Set())}
-                className={styles.bulkClearBtn}
-              >
-                ✕ Clear
-              </button>
-            </div>
-          </div>
-        )}
-
-        {loading ? (
-          <div className={clsx(styles.loadingRow, 'animate-pulse')}>Loading users...</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className={styles.tableHead}>
-                  <th className="w-10 px-4 py-3">
-                    <input
-                      ref={selectAllRef}
-                      type="checkbox"
-                      checked={filteredUsers.length > 0 && filteredUsers.every(u => selected.has(u.id))}
-                      onChange={toggleSelectAll}
-                      className="h-4 w-4 rounded cursor-pointer accent-[#E85D12]"
-                      aria-label="Select all users"
-                    />
-                  </th>
-                  <th className={clsx(styles.th, 'px-5 py-3 text-left')}>User</th>
-                  <th className={clsx(styles.th, 'w-44 px-5 py-3 text-left')}>Role</th>
-                  <th className={clsx(styles.th, 'w-20 px-5 py-3 text-left')}>Imports</th>
-                  <th className={clsx(styles.th, 'w-24 px-5 py-3 text-left')}>Snapshots</th>
-                  <th className={clsx(styles.th, 'w-48 px-5 py-3 text-left')}>Status &amp; Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user) => {
-                  const initials = user.name
-                    .split(/\s+/)
-                    .filter(Boolean)
-                    .slice(0, 2)
-                    .map(part => part[0]?.toUpperCase())
-                    .join('') || user.email.slice(0, 2).toUpperCase();
-
-                  return (
-                    <tr
-                      key={user.id}
-                      className={styles.tableRow}
-                      data-selected={selected.has(user.id) ? 'true' : 'false'}
-                    >
-                      <td className="px-4 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selected.has(user.id)}
-                          onChange={() => toggleSelect(user.id)}
-                          className="h-4 w-4 rounded cursor-pointer accent-[#E85D12]"
-                          aria-label={`Select ${user.name}`}
-                        />
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex min-w-0 items-center gap-3">
-                          <span className={styles.avatar}>{initials}</span>
-                          <div className="min-w-0">
-                            <input value={user.name} onChange={e => setUsers(prev => prev.map(u => u.id === user.id ? { ...u, name: e.target.value } : u))}
-                              onBlur={e => updateUser(user.id, { name: e.target.value })}
-                              className={styles.nameInput}
-                              aria-label={`Edit name for ${user.name}`}
-                            />
-                            <p className={styles.userEmail}>{user.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <select value={user.role} onChange={e => updateUser(user.id, { role: e.target.value as AppRole })}
-                          className={styles.inlineSelect}
-                          aria-label={`Change role for ${user.name}`}>
-                          {roleOptionsFor(user).map(role => <option key={role} value={role}>{roleLabel(role)}</option>)}
-                        </select>
-                      </td>
-                      <td className={clsx(styles.cellText, 'px-5 py-4')}>{user.importCount}</td>
-                      <td className={clsx(styles.cellText, 'px-5 py-4')}>{user.snapshotCount}</td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2">
-                          <span className={clsx(user.isActive ? 'chip c-gr' : 'chip c-nt', styles.chipPill)}>
-                            <span className={styles.statusDot} data-active={String(user.isActive)} />
-                            {user.isActive ? 'Active' : 'Disabled'}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => updateUser(user.id, { isActive: !user.isActive })}
-                            title={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}
-                            className={styles.toggleBtn}
-                            aria-label={user.isActive ? `Disable ${user.name}` : `Activate ${user.name}`}
-                          >
-                            <SvgIcon name={user.isActive ? 'videoPause' : 'videoPlay'} size={15} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(user)}
-                            title={`Delete ${user.name}`}
-                            className={styles.deleteBtn}
-                            aria-label={`Delete ${user.name}`}
-                          >
-                            <SvgIcon name="delete" size={15} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            {filteredUsers.length === 0 && <div className={styles.emptyMsg}>No users match the current filters.</div>}
-            <div className={styles.tableFooter}>
-              <span>Showing {filteredUsers.length} of {users.length} users</span>
-              <span className={styles.pageBadge}>1</span>
-            </div>
-          </div>
-        )}
-      </section>
-    </div>
-  );
-}
-
-const VALID_TABS: Tab[] = ['users','requests','config','retention','thresholds','orphan','issueTypes','backup','cloud','jira','browser','personaPreview'];
-// 'users' is a valid tab (still directly linkable) but is hiddenFromNav —
-// User Management now lives only at /admin/users, so a bare /admin/settings
-// (no ?tab=) resolves to the first tab still offered in the Settings nav.
+const VALID_TABS: Tab[] = ['requests','config','retention','thresholds','orphan','issueTypes','backup','cloud','jira','browser','personaPreview'];
+// User Management lives only at /admin/users (no Settings tab for it at
+// all — removed, not just hidden, to eliminate the duplicate implementation).
 const DEFAULT_TAB: Tab = 'requests';
 
 export default function AdminSettingsPage() {
@@ -1363,7 +935,6 @@ export default function AdminSettingsPage() {
   const [orphanRules, setOrphanRules]  = useState<OrphanRules | null>(null);
   const [issueTypeHierarchy, setIssueTypeHierarchy] = useState<IssueTypeHierarchyConfig | null>(null);
   const [backupFiles, setBackupFiles]  = useState<any[]>([]);
-  const [userSummary, setUserSummary]  = useState({ total: 0, active: 0, admins: 0 });
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
@@ -1380,25 +951,17 @@ export default function AdminSettingsPage() {
           fetch('/api/admin/orphan-rules').then(r => r.json()),
           fetch('/api/admin/issue-type-hierarchy').then(r => r.json()),
           fetch('/api/admin/backup?info=true').then(r => r.json()),
-          fetch('/api/admin/users').then(r => r.json()),
         ]);
       })
       .then(results => {
         if (!results) return;
-        const [retData, thrData, orphData, issueTypeData, backData, userData] = results;
+        const [retData, thrData, orphData, issueTypeData, backData] = results;
         if (retData?.settings)  setSettings(retData.settings);
         if (retData?.stats)     setStats(retData.stats);
         if (thrData?.thresholds) setThresholds(thrData.thresholds);
         if (orphData?.rules) setOrphanRules(orphData.rules);
         if (issueTypeData?.config) setIssueTypeHierarchy(issueTypeData.config);
         if (backData?.files) setBackupFiles(backData.files);
-        if (Array.isArray(userData?.users)) {
-          setUserSummary({
-            total: userData.users.length,
-            active: userData.users.filter((user: ManagedUser) => user.isActive).length,
-            admins: userData.users.filter((user: ManagedUser) => user.role === 'admin').length,
-          });
-        }
       })
       .catch(() => setError('Failed to load settings.'))
       .finally(() => setLoading(false));
@@ -1445,18 +1008,10 @@ export default function AdminSettingsPage() {
     return data;
   }
 
-  const handleUsersChange = useCallback((users: ManagedUser[]) => {
-    setUserSummary({
-      total:  users.length,
-      active: users.filter(u => u.isActive).length,
-      admins: users.filter(u => u.role === 'admin').length,
-    });
-  }, []);
-
   if (loading) return <div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading settings…</div>;
 
   const selectedTab = activeTabMeta(tab);
-  const statsCards = buildSettingsStats({ tab, userSummary, settings, stats, thresholds, orphanRules, issueTypeHierarchy, backupFiles });
+  const statsCards = buildSettingsStats({ tab, settings, stats, thresholds, orphanRules, issueTypeHierarchy, backupFiles });
 
   return (
     <AdminConsoleLayout
@@ -1468,11 +1023,6 @@ export default function AdminSettingsPage() {
         {error && <div className="mb-6 rounded-[14px] border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div>}
 
         <section>
-          {tab === 'users' && (
-            <UserManagementSettings
-              onUsersChange={handleUsersChange}
-            />
-          )}
           {tab === 'requests' && <UserAddRequestsPanel />}
           {tab === 'jira'     && <JiraConnectionsPanel />}
           {tab === 'config'   && <AppConfigPanel />}

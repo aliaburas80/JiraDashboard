@@ -12,7 +12,6 @@ import {
 } from '../lib/adminConsole';
 
 const baseStatsArgs = {
-  userSummary: { total: 10, active: 8, admins: 2 },
   settings: null,
   stats: null,
   thresholds: null,
@@ -42,9 +41,9 @@ function userFor(overrides: Partial<ManagedUser> = {}): ManagedUser {
 
 describe('TC-AC-01: flat admin console exposes current tab name and status', () => {
   test('activeTabMeta resolves the selected tab to its label and description', () => {
-    const usersTab = activeTabMeta('users');
-    expect(usersTab.label).toBe('User Management');
-    expect(usersTab.description.length).toBeGreaterThan(0);
+    const requestsTab = activeTabMeta('requests');
+    expect(requestsTab.label).toBe('Member Requests');
+    expect(requestsTab.description.length).toBeGreaterThan(0);
 
     const cloudTab = activeTabMeta('cloud');
     expect(cloudTab.id).toBe('cloud');
@@ -55,9 +54,10 @@ describe('TC-AC-01: flat admin console exposes current tab name and status', () 
     expect(activeTabMeta('does-not-exist' as Tab)).toBe(ADMIN_TABS[0]);
   });
 
-  test('ADMIN_TABS lists every console tab with a label and an icon for the sidebar', () => {
+  test('ADMIN_TABS lists every console tab with a label and an icon for the sidebar — no "users" tab (removed, not just hidden; see TC-NAV-18)', () => {
     const ids = ADMIN_TABS.map(item => item.id);
-    expect(ids).toEqual(['users', 'requests', 'config', 'retention', 'thresholds', 'orphan', 'issueTypes', 'backup', 'cloud', 'jira', 'browser', 'personaPreview']);
+    expect(ids).toEqual(['requests', 'config', 'retention', 'thresholds', 'orphan', 'issueTypes', 'backup', 'cloud', 'jira', 'browser', 'personaPreview']);
+    expect(ids).not.toContain('users');
     ADMIN_TABS.forEach(item => {
       expect(item.label.length).toBeGreaterThan(0);
       expect(item.icon.length).toBeGreaterThan(0);
@@ -69,13 +69,13 @@ describe('TC-AC-01: flat admin console exposes current tab name and status', () 
 
 describe('TC-AC-02: switching tabs updates the active tab and its stats in place', () => {
   test('selecting a different tab changes the resolved tab metadata', () => {
-    expect(activeTabMeta('users').id).toBe('users');
+    expect(activeTabMeta('requests').id).toBe('requests');
     expect(activeTabMeta('retention').id).toBe('retention');
-    expect(activeTabMeta('users').id).not.toBe(activeTabMeta('retention').id);
+    expect(activeTabMeta('requests').id).not.toBe(activeTabMeta('retention').id);
   });
 
   test('buildSettingsStats returns tab-specific cards for each tab while keeping the layout contract', () => {
-    const tabs: Tab[] = ['users', 'requests', 'retention', 'thresholds', 'orphan', 'issueTypes', 'backup', 'cloud', 'jira', 'browser'];
+    const tabs: Tab[] = ['requests', 'retention', 'thresholds', 'orphan', 'issueTypes', 'backup', 'cloud', 'jira', 'browser'];
     tabs.forEach(tab => {
       const cards = buildSettingsStats({ tab, ...baseStatsArgs });
       expect(cards.length).toBeGreaterThan(0);
@@ -86,34 +86,25 @@ describe('TC-AC-02: switching tabs updates the active tab and its stats in place
     });
   });
 
-  test('buildSettingsStats reflects the selected tab — users vs. retention produce different cards', () => {
-    const usersCards = buildSettingsStats({ tab: 'users', ...baseStatsArgs });
+  test('buildSettingsStats reflects the selected tab — requests vs. retention produce different cards', () => {
+    const requestsCards = buildSettingsStats({ tab: 'requests', ...baseStatsArgs });
     const retentionCards = buildSettingsStats({ tab: 'retention', ...baseStatsArgs });
-    expect(usersCards.map(c => c.label)).not.toEqual(retentionCards.map(c => c.label));
-    expect(usersCards.find(c => c.label === 'Total Users')?.value).toBe('10');
+    expect(requestsCards.map(c => c.label)).not.toEqual(retentionCards.map(c => c.label));
   });
 
-  test('buildSettingsStats returns no cards for an unrecognised tab', () => {
+  test('buildSettingsStats returns no cards for an unrecognised tab (including the removed "users" tab)', () => {
     expect(buildSettingsStats({ tab: 'unknown' as Tab, ...baseStatsArgs })).toEqual([]);
+    expect(buildSettingsStats({ tab: 'users' as Tab, ...baseStatsArgs })).toEqual([]);
   });
 });
 
-// ── TC-AC-03: Users tab is table-first with inline role/status editing and summary cards ──
+// ── TC-AC-03: user-management helpers used by the standalone /admin/users page ──
+// buildSettingsStats no longer has a 'users' case (that tab was removed
+// entirely — see TC-NAV-18) but roleOptionsFor/matchesUserFilter remain
+// exported for /admin/users/page.tsx, which is now the only place that
+// manages users. Tested here since that's still their home module.
 
-describe('TC-AC-03: Users tab summary cards and inline role/status editing', () => {
-  test('buildSettingsStats summarises the user table — totals, active share, admin share', () => {
-    const cards = buildSettingsStats({ tab: 'users', ...baseStatsArgs, userSummary: { total: 4, active: 2, admins: 1 } });
-    expect(cards.find(c => c.label === 'Total Users')?.value).toBe('4');
-    expect(cards.find(c => c.label === 'Active Users')?.note).toBe('50% of total');
-    expect(cards.find(c => c.label === 'Admin Users')?.note).toBe('25% of total');
-  });
-
-  test('buildSettingsStats avoids divide-by-zero notes when there are no users yet', () => {
-    const cards = buildSettingsStats({ tab: 'users', ...baseStatsArgs, userSummary: { total: 0, active: 0, admins: 0 } });
-    expect(cards.find(c => c.label === 'Active Users')?.note).toBe('No users yet');
-    expect(cards.find(c => c.label === 'Admin Users')?.note).toBe('No users yet');
-  });
-
+describe('TC-AC-03: user-management helpers (roleOptionsFor, matchesUserFilter)', () => {
   test('roleOptionsFor offers the user role plus assignable roles for plain users, and excludes it for elevated roles', () => {
     const plainUserOptions = roleOptionsFor(userFor({ role: 'user' }));
     expect(plainUserOptions[0]).toBe('user');
@@ -136,36 +127,27 @@ describe('TC-AC-03: Users tab summary cards and inline role/status editing', () 
 });
 
 // ── Navigation duplication cleanup ──────────────────────────────────────────
-// User Management already has its own top-level Admin sidebar destination
-// (/admin/users, via DC_NAV_GROUPS' 'administration' group) — the Settings
-// sub-nav (AdminNavSidebar.tsx) derives its visible tabs from ADMIN_TABS
-// filtered for hiddenFromNav, so 'users' must never appear there too.
+// User Management appeared twice: once as its own top-level Admin sidebar
+// item (/admin/users), and again as a "users" tab inside Settings — a full
+// duplicate *implementation*, not just a duplicate menu entry (both hit
+// GET/POST /api/admin/users independently). Per explicit follow-up
+// instruction, the Settings-tab version was removed entirely (not just
+// hidden from nav) — only /admin/users remains.
 
-describe('TC-NAV-18: Settings sub-nav does not re-offer User Management', () => {
-  test('the users tab is marked hiddenFromNav', () => {
-    const usersTab = ADMIN_TABS.find(item => item.id === 'users');
-    expect(usersTab?.hiddenFromNav).toBe(true);
+describe('TC-NAV-18: Settings no longer has a "users" tab at all — User Management exists only at /admin/users', () => {
+  test('ADMIN_TABS contains no "users" entry', () => {
+    const ids: string[] = ADMIN_TABS.map(item => item.id);
+    expect(ids).not.toContain('users');
   });
 
-  test('users is still a fully valid, directly-linkable tab (functionality preserved, only the duplicate nav entry removed)', () => {
-    expect(activeTabMeta('users').id).toBe('users');
-    expect(buildSettingsStats({ tab: 'users', ...baseStatsArgs }).length).toBeGreaterThan(0);
+  test('requests (Member Requests) is the first tab, per "keep Member Requests inside Settings"', () => {
+    expect(ADMIN_TABS[0].id).toBe('requests');
   });
 
-  test('AdminNavSidebar\'s settings-sub-nav derivation (filter hiddenFromNav + superAdminOnly) excludes users for a regular admin', () => {
-    const visibleForAdmin = ADMIN_TABS.filter(item => !item.hiddenFromNav && (!item.superAdminOnly || false));
-    expect(visibleForAdmin.map(i => i.id)).not.toContain('users');
+  test('personaPreview remains superAdminOnly, filtered independently of the users-tab removal', () => {
+    const visibleForAdmin = ADMIN_TABS.filter(item => !item.superAdminOnly);
+    const visibleForSuperAdmin = ADMIN_TABS;
     expect(visibleForAdmin.map(i => i.id)).not.toContain('personaPreview');
-  });
-
-  test('the same derivation excludes users but includes personaPreview for a super-admin', () => {
-    const visibleForSuperAdmin = ADMIN_TABS.filter(item => !item.hiddenFromNav && (!item.superAdminOnly || true));
-    expect(visibleForSuperAdmin.map(i => i.id)).not.toContain('users');
     expect(visibleForSuperAdmin.map(i => i.id)).toContain('personaPreview');
-  });
-
-  test('requests (Member Requests) is the first tab still offered in nav, per "keep Member Requests inside Settings"', () => {
-    const visible = ADMIN_TABS.filter(item => !item.hiddenFromNav);
-    expect(visible[0].id).toBe('requests');
   });
 });

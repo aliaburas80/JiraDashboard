@@ -8,15 +8,13 @@ import type { OrphanRules } from '@/types/orphanRules';
 import type { IssueTypeHierarchyConfig } from '@/types/issueTypeHierarchy';
 import type { AdminConsoleStat } from '@/components/admin/AdminConsoleLayout';
 
-export type Tab = 'users' | 'requests' | 'retention' | 'thresholds' | 'orphan' | 'issueTypes' | 'backup' | 'cloud' | 'browser' | 'config' | 'jira' | 'personaPreview';
+// 'users' was removed as a Settings tab entirely (not just hidden from nav) —
+// it duplicated the standalone /admin/users page's functionality. User
+// Management now lives only there; see DC_NAV_GROUPS' 'administration' group
+// in navigation.ts.
+export type Tab = 'requests' | 'retention' | 'thresholds' | 'orphan' | 'issueTypes' | 'backup' | 'cloud' | 'browser' | 'config' | 'jira' | 'personaPreview';
 
 export const ADMIN_TABS: Array<{ id: Tab; label: string; icon: string; description: string; superAdminOnly?: boolean; hiddenFromNav?: boolean }> = [
-  // hiddenFromNav: user management already has its own top-level Admin
-  // sidebar destination (/admin/users) — this tab still works if linked
-  // directly (VALID_TABS/activeTabMeta still recognise 'users'), but is no
-  // longer offered as a duplicate "User Management" entry inside the
-  // Settings sub-nav. See AdminNavSidebar.tsx / navigation.ts.
-  { id: 'users',      label: 'User Management',     icon: 'people', description: 'Accounts, roles, access state', hiddenFromNav: true },
   { id: 'requests',   label: 'Member Requests',     icon: 'email', description: 'Pending add-member requests' },
   { id: 'config',     label: 'App Config',   icon: 'settings', description: 'SMTP, email, and app-level settings' },
   { id: 'retention',  label: 'Privacy & Retention', icon: 'lock', description: 'Data windows and cleanup' },
@@ -41,7 +39,6 @@ export function retentionLabel(settings: RetentionSettings | null): string {
 
 export function buildSettingsStats({
   tab,
-  userSummary,
   settings,
   stats,
   thresholds,
@@ -50,7 +47,6 @@ export function buildSettingsStats({
   backupFiles,
 }: {
   tab: Tab;
-  userSummary: { total: number; active: number; admins: number };
   settings: RetentionSettings | null;
   stats: RetentionStats | null;
   thresholds: HealthThresholds | null;
@@ -62,13 +58,6 @@ export function buildSettingsStats({
   const includedBackups = backupFiles?.filter(file => file.included).length ?? 0;
 
   switch (tab) {
-    case 'users':
-      return [
-        { icon: 'people', label: 'Total Users', value: String(userSummary.total), note: 'All accounts', color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
-        { icon: 'shield', label: 'Active Users', value: String(userSummary.active), note: userSummary.total ? `${Math.round((userSummary.active / userSummary.total) * 100)}% of total` : 'No users yet', color: '#22C55E', toneStyle: { background: 'rgba(34,197,94,0.12)', color: '#22C55E' } },
-        { icon: 'priorityHigh', label: 'Admin Users', value: String(userSummary.admins), note: userSummary.total ? `${Math.round((userSummary.admins / userSummary.total) * 100)}% of total` : 'No users yet', color: 'var(--dc-acc2, #FF8A4C)', toneStyle: { background: 'rgba(232,93,18,0.12)', color: '#FF8A4C' } },
-        { icon: 'teams', label: 'Role Types', value: String(ASSIGNABLE_ROLES.length), note: 'Assignable roles', color: 'var(--dc-p1, #F2F2F2)', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#F2F2F2' } },
-      ];
     case 'retention':
       return [
         { icon: 'lock', label: 'Retention Window', value: retentionLabel(settings), note: settings?.autoDeleteOldLogs ? 'Auto-delete enabled' : 'Manual cleanup', color: 'var(--dc-acc2, #FF8A4C)', toneStyle: { background: 'rgba(232,93,18,0.12)', color: '#FF8A4C' } },

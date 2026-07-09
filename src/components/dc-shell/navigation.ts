@@ -97,7 +97,7 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
       // Configure
       { id: 'admin-users',       title: 'User Management',  desc: 'Accounts & roles',            href: '/admin/users',        status: 'neutral', icon: 'people',    section: 'Configure' },
       { id: 'admin-settings',    title: 'Settings',         desc: 'Users, storage, retention',   href: '/admin/settings',     status: 'neutral', icon: 'tools',     section: 'Configure' },
-      { id: 'admin-theme',       title: 'Theme & Branding', desc: 'Palette, logo, app name',     href: '/admin/theme',        status: 'neutral', icon: 'palette',   section: 'Configure' },
+      { id: 'admin-theme',       title: 'Branding',         desc: 'Logo, favicon & app name',    href: '/admin/theme',        status: 'neutral', icon: 'tag',       section: 'Configure' },
     ],
   },
   // ── Reference ─────────────────────────────────────────────────────────────
