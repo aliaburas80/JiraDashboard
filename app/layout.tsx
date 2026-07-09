@@ -79,12 +79,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <EmailVerificationBanner />
           {children}
           <FeedbackButton />
-          {/* Mounted once at the root so tour state survives navigating between
-              pages that use different layouts (e.g. /summary's AppShell vs
-              /dashboard/*'s persistent layout) — see ProductTour.tsx. Manual
-              start only (no autoStart) — triggered via the "Take a tour"
-              button on /summary or the "Tour" button in the dashboard topbar. */}
+          {/* Mounted once at the root, alongside PageTourButton (the floating
+              trigger) — each route's tour is self-contained, so ProductTour
+              only needs to read the current pathname, not survive navigating
+              across it. See src/lib/tour.ts (PAGE_TOURS) for the per-route
+              registry both of these read from. */}
           <ProductTour />
+          <PageTourButton />
         </DataSourceProvider>
       </body>
     </html>
