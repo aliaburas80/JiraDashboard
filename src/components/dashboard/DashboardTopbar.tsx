@@ -9,6 +9,7 @@ import { getCachedRole, getCachedIsSuperAdmin, fetchCurrentUser } from '@/lib/cu
 import UserMenu from '@/components/auth/UserMenu';
 import NotificationBell from '@/components/auth/NotificationBell';
 import { DataSourceBadge } from '@/components/ui/DataSourceBadge';
+import { SvgIcon } from '@/components/ui/SvgIcon';
 import { PersonaPreviewSwitcher } from './PersonaPreviewSwitcher';
 import GlobalSearch from '@/components/search/GlobalSearch';
 import styles from './DashboardTopbar.module.scss';
@@ -190,6 +191,18 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
             </svg>
             New Upload
+          </button>
+
+          {/* Tour — replays the guided product tour from wherever the user is now */}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('dc:start-tour'))}
+            className={styles.syncBtn}
+            aria-label="Take the guided product tour"
+            title="Take the guided product tour"
+          >
+            <SvgIcon name="target" size={11} />
+            Tour
           </button>
 
           {/* Sync Jira — any logged-in user can pull fresh data from the live Jira connection */}

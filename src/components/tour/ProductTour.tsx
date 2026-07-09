@@ -2,8 +2,9 @@
 // Product tour — pulsing highlight ring + fixed popover, no external library.
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import clsx from 'clsx';
 import {
   TOUR_STEPS,
   isTourDismissed,
@@ -11,31 +12,24 @@ import {
   completeTour,
   type TourStep,
 } from '@/lib/tour';
+import styles from './ProductTour.module.scss';
 
 // ── Highlight ring ────────────────────────────────────────────────────────────
 
 interface Rect { top: number; left: number; width: number; height: number }
+type CSSVariableProperties = CSSProperties & Record<`--${string}`, string>;
 
 function HighlightRing({ rect }: { rect: Rect }) {
   const PAD = 8;
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        position: 'fixed',
-        top:    rect.top    - PAD,
-        left:   rect.left   - PAD,
-        width:  rect.width  + PAD * 2,
-        height: rect.height + PAD * 2,
-        borderRadius: 12,
-        border: '2px solid #2563eb',
-        boxShadow: '0 0 0 4px rgba(37,99,235,0.18)',
-        pointerEvents: 'none',
-        zIndex: 9998,
-        animation: 'dc-tour-pulse 1.6s ease-in-out infinite',
-      }}
-    />
-  );
+  // DYNAMIC CSS VARIABLE: computed from the target element's live bounding
+  // rect (re-measured every animation frame to track scroll/resize).
+  const vars: CSSVariableProperties = {
+    '--tour-top':    `${rect.top - PAD}px`,
+    '--tour-left':   `${rect.left - PAD}px`,
+    '--tour-width':  `${rect.width + PAD * 2}px`,
+    '--tour-height': `${rect.height + PAD * 2}px`,
+  };
+  return <div aria-hidden="true" className={styles.highlightRing} style={vars} />;
 }
 
 // ── Popover card ──────────────────────────────────────────────────────────────
@@ -56,27 +50,25 @@ function TourPopover({ step, stepIndex, totalSteps, targetRect, onNext, onBack, 
   const isCentre = step.placement === 'center' || !targetRect;
 
   // Position relative to target
-  let style: React.CSSProperties = {};
-  if (isCentre) {
-    style = {
-      position: 'fixed',
-      top: '50%', left: '50%',
-      transform: 'translate(-50%,-50%)',
-    };
-  } else if (targetRect) {
+  let positionClass = styles.popoverCenter;
+  let vars: CSSVariableProperties = {};
+  if (!isCentre && targetRect) {
     const GAP = 16;
     const W   = 300;
+    const clampedLeft = Math.min(Math.max(targetRect.left + targetRect.width / 2 - W / 2, 12), window.innerWidth - W - 12);
     if (step.placement === 'bottom' || (step.placement !== 'top' && targetRect.top < window.innerHeight / 2)) {
-      style = {
-        position: 'fixed',
-        top:  targetRect.top + targetRect.height + GAP,
-        left: Math.min(Math.max(targetRect.left + targetRect.width / 2 - W / 2, 12), window.innerWidth - W - 12),
+      positionClass = styles.popoverBelow;
+      // DYNAMIC CSS VARIABLE: computed from the live target rect, clamped to
+      // stay within the viewport — cannot be expressed as static CSS.
+      vars = {
+        '--tour-popover-top':  `${targetRect.top + targetRect.height + GAP}px`,
+        '--tour-popover-left': `${clampedLeft}px`,
       };
     } else {
-      style = {
-        position: 'fixed',
-        bottom: window.innerHeight - targetRect.top + GAP,
-        left: Math.min(Math.max(targetRect.left + targetRect.width / 2 - W / 2, 12), window.innerWidth - W - 12),
+      positionClass = styles.popoverAbove;
+      vars = {
+        '--tour-popover-bottom': `${window.innerHeight - targetRect.top + GAP}px`,
+        '--tour-popover-left':   `${clampedLeft}px`,
       };
     }
   }
@@ -85,72 +77,44 @@ function TourPopover({ step, stepIndex, totalSteps, targetRect, onNext, onBack, 
     <div
       role="dialog"
       aria-label={`Tour step ${stepIndex + 1} of ${totalSteps}: ${step.title}`}
-      style={{
-        ...style,
-        width: 300,
-        background: '#0f172a',
-        borderRadius: 16,
-        padding: '20px',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-        zIndex: 9999,
-        animation: 'dc-tour-fadein 0.22s ease both',
-        color: '#f1f5f9',
-      }}
+      className={clsx(styles.popover, positionClass)}
+      style={vars}
     >
       {/* Progress dots */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 14 }}>
+      <div className={styles.progressDots}>
         {TOUR_STEPS.map((_, i) => (
-          <div key={i} style={{
-            width: i === stepIndex ? 16 : 6,
-            height: 6,
-            borderRadius: 999,
-            background: i === stepIndex ? '#2563eb' : i < stepIndex ? '#3b82f6' : '#334155',
-            transition: 'width 0.2s ease, background 0.2s ease',
-          }} />
+          <div
+            key={i}
+            className={clsx(styles.progressDot, {
+              [styles['progressDot--current']]: i === stepIndex,
+              [styles['progressDot--done']]:    i < stepIndex,
+            })}
+          />
         ))}
       </div>
 
       {/* Content */}
-      <p style={{ fontSize: 15, fontWeight: 800, color: '#f1f5f9', marginBottom: 6, lineHeight: 1.3 }}>
-        {step.title}
-      </p>
-      <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6, marginBottom: 18 }}>
-        {step.description}
-      </p>
+      <p className={styles.popoverTitle}>{step.title}</p>
+      <p className={styles.popoverDesc}>{step.description}</p>
 
       {/* Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className={styles.actionsRow}>
         {!isFirst && (
-          <button
-            type="button" onClick={onBack}
-            style={{ fontSize: 11, fontWeight: 700, color: '#64748b', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px' }}
-          >
+          <button type="button" onClick={onBack} className={styles.backBtn}>
             ← Back
           </button>
         )}
-        <div style={{ flex: 1 }} />
-        <button
-          type="button" onClick={onSkip}
-          style={{ fontSize: 11, fontWeight: 700, color: '#475569', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 8px' }}
-        >
+        <div className={styles.actionsSpacer} />
+        <button type="button" onClick={onSkip} className={styles.skipBtn}>
           Skip tour
         </button>
-        <button
-          type="button" onClick={onNext}
-          style={{
-            fontSize: 12, fontWeight: 800, color: '#fff',
-            background: 'linear-gradient(135deg,#1455f5,#2563eb)',
-            border: 'none', borderRadius: 10, cursor: 'pointer',
-            padding: '8px 16px',
-            boxShadow: '0 4px 12px rgba(37,99,235,0.35)',
-          }}
-        >
+        <button type="button" onClick={onNext} className={styles.nextBtn}>
           {step.ctaLabel ?? (isLast ? 'Finish' : 'Next →')}
         </button>
       </div>
 
       {/* Step counter */}
-      <p style={{ fontSize: 10, color: '#334155', textAlign: 'center', marginTop: 10, fontWeight: 600 }}>
+      <p className={styles.stepCounter}>
         {stepIndex + 1} / {totalSteps}
       </p>
     </div>
@@ -160,44 +124,7 @@ function TourPopover({ step, stepIndex, totalSteps, targetRect, onNext, onBack, 
 // ── Backdrop (semi-transparent) ───────────────────────────────────────────────
 
 function Backdrop({ onClick }: { onClick: () => void }) {
-  return (
-    <div
-      aria-hidden="true"
-      onClick={onClick}
-      style={{
-        position: 'fixed', inset: 0,
-        background: 'rgba(0,0,0,0.45)',
-        zIndex: 9997,
-        animation: 'dc-tour-fadein 0.2s ease both',
-      }}
-    />
-  );
-}
-
-// ── Global keyframes injected once ────────────────────────────────────────────
-
-function InjectStyles() {
-  useEffect(() => {
-    const id = 'dc-tour-styles';
-    if (document.getElementById(id)) return;
-    const s = document.createElement('style');
-    s.id = id;
-    s.textContent = `
-      @keyframes dc-tour-pulse {
-        0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,0.18);}
-        50%{box-shadow:0 0 0 10px rgba(37,99,235,0.0);}
-      }
-      @keyframes dc-tour-fadein {
-        from{opacity:0;transform:translateY(6px) scale(0.97);}
-        to{opacity:1;transform:none;}
-      }
-      @media(prefers-reduced-motion:reduce){
-        *{animation-duration:0.01ms!important;}
-      }
-    `;
-    document.head.appendChild(s);
-  }, []);
-  return null;
+  return <div aria-hidden="true" onClick={onClick} className={styles.backdrop} />;
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -207,7 +134,8 @@ interface Props {
 }
 
 export default function ProductTour({ autoStart = false }: Props) {
-  const router  = useRouter();
+  const router   = useRouter();
+  const pathname = usePathname();
   const [active,      setActive]      = useState(false);
   const [stepIndex,   setStepIndex]   = useState(0);
   const [targetRect,  setTargetRect]  = useState<Rect | null>(null);
@@ -222,11 +150,27 @@ export default function ProductTour({ autoStart = false }: Props) {
   }, [autoStart]);
 
   // ── Expose start via custom event ─────────────────────────────────────────
+  // ProductTour is mounted once at the root layout (survives navigation
+  // between pages, even across different route layouts) so tour state
+  // (active step) isn't lost when a step needs to move to a different page.
   useEffect(() => {
     function handleStart() { setStepIndex(0); setActive(true); }
     window.addEventListener('dc:start-tour', handleStart);
     return () => window.removeEventListener('dc:start-tour', handleStart);
   }, []);
+
+  // ── Navigate to the current step's page, if it's not the current one ──────
+  // The steps below (target tracking) keep polling every frame regardless of
+  // navigation, so once the destination page mounts and renders its target
+  // element, the highlight ring picks it up automatically — no extra "wait
+  // for navigation to finish" handshake needed.
+  useEffect(() => {
+    if (!active) return;
+    const step = TOUR_STEPS[stepIndex];
+    if (step.route && step.route !== pathname) {
+      router.push(step.route);
+    }
+  }, [active, stepIndex, pathname, router]);
 
   // ── Track target element position ─────────────────────────────────────────
   const trackTarget = useCallback(() => {
@@ -272,13 +216,12 @@ export default function ProductTour({ autoStart = false }: Props) {
   function handleBack()  { setStepIndex(i => Math.max(0, i - 1)); }
   function handleSkip()  { dismissTour(); setActive(false); }
 
-  if (!active) return <InjectStyles />;
+  if (!active) return null;
 
   const step = TOUR_STEPS[stepIndex];
 
   return (
     <>
-      <InjectStyles />
       <Backdrop onClick={handleSkip} />
       {targetRect && <HighlightRing rect={targetRect} />}
       <TourPopover

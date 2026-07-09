@@ -2466,3 +2466,27 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** `npx tsc --noEmit` clean. Full suite 109 suites / 1016 tests passing, unchanged (no prior test coverage existed for this component). `npx eslint` and `npx stylelint` both clean, zero warnings. `npx next build` clean.
 
 **Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: as an admin, open any `/admin/*` page and confirm the Settings section (all 11 items) is visible in the sidebar without first clicking into Settings; confirm "Settings" itself is not a clickable link/button; click a settings item and confirm it navigates correctly and highlights as active; confirm Persona Preview only appears for a super-admin account.
+
+## 9.105 — Product Tour Revived (Multi-Page, Real Anchors, SCSS-Compliant)
+
+*(Added 2026-07-09. User question: "i remamber there were a user guid or toure, what happend to it?" Investigation found it fully built but never mounted, and stale (targeting DOM ids from a dashboard layout that no longer exists). User chose "revive" over remove/docs-only. See SRS.md Addendum Z.)*
+
+**TC-PT-01–07 (unchanged):** `TOUR_STEPS` structure, `isTourDismissed`/`isTourCompleted`/`dismissTour`/`completeTour`/`resetTour` localStorage state — all still passing, logic untouched.
+
+**TC-PT-08 (rewritten):** used to check `targetId` values against a hardcoded "known ids" list that was itself the stale list being tested — always passed without proving anything. Now greps the actual `app/`/`src/components/` source tree for `id="<targetId>"` and fails if any step's `targetId` isn't rendered anywhere. **Proven non-vacuous**: temporarily renamed a real anchor id (`tour-sprint` → `tour-sprint-WRONG`) in `app/dashboard/sprint-status/page.tsx`, reran the suite, confirmed this test failed with the expected assertion; restored the correct id and confirmed it passed again.
+
+**TC-PT-09 (new):** every step's `route` corresponds to a real `app/<route>/page.tsx` on disk.
+
+**TC-PT-10 (new):** every step's `href` (the CTA-navigates-and-ends-tour mechanism, used by the "explore" step) also corresponds to a real page.
+
+**Design changes exercised by these tests, not just described:**
+- `TourStep` gained `route?: string` — steps now specify which page their content lives on; `ProductTour.tsx` navigates there automatically via `router.push()` when advancing to a step on a different page, relying on its pre-existing `requestAnimationFrame` target-tracking loop to pick up the new page's anchor once mounted (no explicit "wait for navigation" step needed).
+- `ProductTour` is now mounted once at `app/layout.tsx` (root layout) rather than per-page, since the app's routes span two different layout systems (`/summary`'s per-page `AppShell`, which unmounts/remounts every navigation, vs. `/dashboard/*`'s persistent `layout.tsx`) — mounting inside either would lose tour state crossing that boundary.
+- New real anchors: `tour-kpi-grid` (`/summary`), `dashboard-nav-sidebar` (a small fixed-height block near the sidebar's top, not the full-height `<aside>` — the popover's positioning only offsets above/below, and a full-viewport-height target would push it off-screen), `tour-priority-attention`/`tour-recommendations`/`tour-sprint` (via `PageHeader`'s new optional `id` prop).
+- Two real trigger points added: "Take a tour" (`/summary` toolbar), "Tour" (`DashboardTopbar.tsx` right rail, visible on every `/dashboard/*` page).
+
+**SCSS compliance:** `ProductTour.tsx` was entirely inline-style JSX before this (13 `react/forbid-dom-props` warnings, dormant since nothing rendered it). Converted to `ProductTour.module.scss` — static values moved to SCSS, only the two genuinely runtime-computed positioning blocks (highlight ring, popover) remain as the documented `--`-prefixed CSS-custom-property exception. Down to 2 justified warnings.
+
+**Automated checks:** `npx tsc --noEmit` clean. Full suite 109 suites / 1018 tests passing (up from 1016). `npx eslint` clean except `ProductTour.tsx`'s 2 documented exception warnings (down from 13 raw violations). `npx stylelint` clean on the new module. `npx next build` clean.
+
+**Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: click "Take a tour" on `/summary`, click through all 8 steps with "Next →", confirm the tour navigates to `/dashboard/priority-attention` → `/dashboard/actions` → `/dashboard/sprint-status` automatically and the highlight ring finds the correct element on each page; confirm the popover never renders off-screen; confirm "Tour" in the dashboard top bar restarts it from Step 1; confirm Esc/"Skip tour" both exit cleanly; confirm keyboard arrow-key navigation works.

@@ -115,6 +115,7 @@ export default function SmartActionsPage() {
       </StickyToolbar>
 
       <PageHeader
+        id="tour-recommendations"
         title="Smart Actions"
         badge={`${actions.length} recommendations`}
         subtitle="Actionable recommendations to improve delivery health."

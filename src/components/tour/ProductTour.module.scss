@@ -1,0 +1,187 @@
+// ─── ProductTour — pulsing highlight ring + fixed popover ────────────────────
+// Dark popover card is intentionally theme-independent (matches the original
+// design) — it overlays arbitrary light/dark pages, so it needs its own
+// fixed, high-contrast palette rather than inheriting page tokens.
+
+// ── Backdrop ───────────────────────────────────────────────────────────────
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9997;
+  animation: dc-tour-fadein 0.2s ease both;
+}
+
+// ── Highlight ring ─────────────────────────────────────────────────────────
+// EXCEPTION (CLAUDE.md Rule 1): top/left/width/height are computed at
+// runtime from the target element's live bounding rect (scroll/resize
+// tracked every frame) and cannot be expressed as static CSS.
+.highlightRing {
+  position: fixed;
+  top: var(--tour-top, 0);
+  left: var(--tour-left, 0);
+  width: var(--tour-width, 0);
+  height: var(--tour-height, 0);
+  border-radius: var(--radius-lg, 12px);
+  border: 2px solid var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18);
+  pointer-events: none;
+  z-index: 9998;
+  animation: dc-tour-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes dc-tour-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18); }
+  50%      { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+}
+
+@keyframes dc-tour-fadein {
+  from { opacity: 0; transform: translateY(6px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .highlightRing, .backdrop, .popover {
+    animation: none;
+  }
+}
+
+// ── Popover card ───────────────────────────────────────────────────────────
+.popover {
+  position: fixed;
+  width: 300px;
+  background: #0f172a;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  animation: dc-tour-fadein 0.22s ease both;
+  color: #f1f5f9;
+}
+
+.popoverCenter {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+// EXCEPTION (CLAUDE.md Rule 1): top/bottom/left are computed from the
+// target's live position, clamped to stay within the viewport.
+.popoverBelow {
+  top: var(--tour-popover-top, 50%);
+  left: var(--tour-popover-left, 50%);
+}
+
+.popoverAbove {
+  bottom: var(--tour-popover-bottom, 50%);
+  left: var(--tour-popover-left, 50%);
+}
+
+.progressDots {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.progressDot {
+  height: 6px;
+  width: 6px;
+  border-radius: 999px;
+  background: #334155;
+  transition: width 0.2s ease, background 0.2s ease;
+
+  &--current {
+    width: 16px;
+    background: var(--color-primary, #2563eb);
+  }
+
+  &--done {
+    background: #3b82f6;
+  }
+}
+
+.popoverTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #f1f5f9;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.popoverDesc {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.actionsRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionsSpacer {
+  flex: 1;
+}
+
+.backBtn {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+
+  &:hover { color: #94a3b8; }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.skipBtn {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+
+  &:hover { color: #64748b; }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.nextBtn {
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #1455f5, #2563eb);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  padding: 8px 16px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+
+  &:hover { opacity: 0.92; }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+}
+
+.stepCounter {
+  font-size: 10px;
+  color: #334155;
+  text-align: center;
+  margin-top: 10px;
+  font-weight: 600;
+}

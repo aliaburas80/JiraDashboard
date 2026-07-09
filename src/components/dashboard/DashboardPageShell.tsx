@@ -73,10 +73,10 @@ export function ToolbarButton({
 
 // ─── Page header ──────────────────────────────────────────────────────────────
 export function PageHeader({
-  title, subtitle, badge,
-}: { title: string; subtitle?: string; badge?: string }) {
+  title, subtitle, badge, id,
+}: { title: string; subtitle?: string; badge?: string; id?: string }) {
   return (
-    <div className={styles.pageHeader}>
+    <div id={id} className={styles.pageHeader}>
       <div className={styles.pageHeaderInner}>
         <h1 className={styles.pageHeaderTitle}>{title}</h1>
         {badge && <span className={styles.pageHeaderBadge}>{badge}</span>}

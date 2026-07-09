@@ -188,7 +188,12 @@ export default function DashboardNavSidebar({ metrics, open, onClose }: Props) {
       )}
 
       {/* ── Health block ── */}
-      <div className={`${styles.healthBlock} ${healthVariantClass}`}>
+      {/* id used as the guided tour's anchor for this sidebar — a small,
+          fixed-height element near the top, so the tour's popover (which
+          only positions above/below a target, not beside a tall one)
+          doesn't end up placed off-screen the way it would if it targeted
+          the full-height <aside> below. */}
+      <div id="dashboard-nav-sidebar" className={`${styles.healthBlock} ${healthVariantClass}`}>
         <div className={styles.healthHeader}>
           <span className={styles.healthLabel}>Health Score</span>
           <span className={styles.healthBand}>{hband}</span>

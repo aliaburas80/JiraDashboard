@@ -80,6 +80,7 @@ export default function PriorityAttentionPage() {
 
       {/* ── Page header ── */}
       <PageHeader
+        id="tour-priority-attention"
         title="Priority Attention"
         badge={`${totalAttention.toLocaleString()} items`}
         subtitle="Items requiring immediate delivery intervention."

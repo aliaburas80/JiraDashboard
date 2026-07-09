@@ -4,6 +4,7 @@ import { DataSourceProvider, CloudLoadingBanner } from '@/components/ui/DataSour
 import { GlobalErrorHandler } from '@/components/ui/GlobalErrorHandler';
 import { FeedbackButton } from '@/components/feedback/FeedbackButton';
 import { EmailVerificationBanner } from '@/components/auth/EmailVerificationBanner';
+import ProductTour from '@/components/tour/ProductTour';
 import { normalizeAppUrl } from '@/lib/url';
 
 const appUrl = normalizeAppUrl(process.env.NEXT_PUBLIC_APP_URL);
@@ -77,6 +78,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <EmailVerificationBanner />
           {children}
           <FeedbackButton />
+          {/* Mounted once at the root so tour state survives navigating between
+              pages that use different layouts (e.g. /summary's AppShell vs
+              /dashboard/*'s persistent layout) — see ProductTour.tsx. Manual
+              start only (no autoStart) — triggered via the "Take a tour"
+              button on /summary or the "Tour" button in the dashboard topbar. */}
+          <ProductTour />
         </DataSourceProvider>
       </body>
     </html>

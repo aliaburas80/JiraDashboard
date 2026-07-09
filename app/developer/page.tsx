@@ -455,6 +455,37 @@ flag (used once, on \`users\`, since User Management already has its own
 top-level Admin sidebar entry) and \`superAdminOnly\`. Add a new settings tab
 here, not as a third hand-maintained list.
 
+### Product tour (multi-page)
+
+\`src/lib/tour.ts\` (\`TOUR_STEPS\`) + \`src/components/tour/ProductTour.tsx\`.
+Revived 2026-07-09 — was fully built but never mounted, and its target ids
+were stale (pointed at a single-page dashboard layout that no longer exists;
+the dashboard is now ~16 separate routed pages). Mounted once at the root
+layout (\`app/layout.tsx\`), not per-page — it must survive navigating between
+pages that use different layouts (e.g. \`/summary\`'s per-page \`AppShell\` vs
+\`/dashboard/*\`'s persistent \`layout.tsx\`), so it can't live inside either.
+
+Each \`TourStep\` may set a \`route\`. When the active step's \`route\` differs
+from the current pathname, \`ProductTour\` calls \`router.push(route)\` — its
+existing \`requestAnimationFrame\` target-tracking loop (already re-running
+continuously to handle scroll/resize) naturally picks up the new page's
+\`targetId\` once it mounts, with no extra "wait for navigation" handshake
+needed. Steps without a \`route\` render wherever the tour was started
+(used for the centered welcome/done steps).
+
+Start it from anywhere with \`window.dispatchEvent(new CustomEvent('dc:start-tour'))\`
+(wired to "Take a tour" on \`/summary\` and "Tour" in \`DashboardTopbar.tsx\`).
+\`TOUR_STEPS\`' \`targetId\`s are real DOM ids added specifically for this:
+\`tour-kpi-grid\` (/summary), \`dashboard-nav-sidebar\` (a small anchor near the
+sidebar's top — not the full-height \`<aside>\`, since the popover only
+positions above/below a target and a full-height target would push it
+off-screen), \`tour-priority-attention\`/\`tour-recommendations\`/\`tour-sprint\`
+(passed via \`PageHeader\`'s optional \`id\` prop). \`productTour.test.ts\`
+(TC-PT-08/09/10) greps the source tree to confirm every \`targetId\`/\`route\`/
+\`href\` a step references is actually rendered/exists — add a step without
+its anchor and the test fails, instead of silently shipping a broken tour
+again.
+
 ---
 
 ## parser.ts
