@@ -70,7 +70,7 @@ export default function MembersPage() {
         {/* Header */}
         <section className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="font-black tracking-tight" style={{ fontSize: 28, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)' }}>Members</h1>
+            <h1 id="tour-header-members" className="font-black tracking-tight" style={{ fontSize: 28, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)' }}>Members</h1>
             <p className="mt-2" style={{ fontSize: 13, color: 'var(--dc-p2, #909090)' }}>Team directory, roles, profile details, and contact info.</p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">

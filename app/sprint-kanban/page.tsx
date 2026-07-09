@@ -446,7 +446,7 @@ export default function SprintKanbanPage() {
             <span className={styles.eyebrowLine} />
             Delivery
           </div>
-          <h1 className={styles.title}>Sprint & Kanban</h1>
+          <h1 id="tour-header-sprint-kanban" className={styles.title}>Sprint & Kanban</h1>
           <p className={styles.subtitle}>
             {hasSprintData
               ? `${sprintCount} sprint${sprintCount !== 1 ? 's' : ''} analysed. Each row shows completion rate, delivery pattern, scope changes, and a plain-English interpretation of what happened.`

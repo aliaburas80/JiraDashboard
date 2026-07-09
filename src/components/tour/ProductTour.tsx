@@ -1,17 +1,14 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Product tour — pulsing highlight ring + fixed popover, no external library.
+// Per-page: each route has its own short, self-contained set of steps (see
+// src/lib/tour.ts). Started only via the PageTourButton on the current page
+// dispatching `dc:start-tour` — never auto-starts, never navigates.
 'use client';
 
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
-import {
-  TOUR_STEPS,
-  isTourDismissed,
-  dismissTour,
-  completeTour,
-  type TourStep,
-} from '@/lib/tour';
+import { getPageTour, type TourStep } from '@/lib/tour';
 import styles from './ProductTour.module.scss';
 
 // ── Highlight ring ────────────────────────────────────────────────────────────
@@ -82,7 +79,7 @@ function TourPopover({ step, stepIndex, totalSteps, targetRect, onNext, onBack, 
     >
       {/* Progress dots */}
       <div className={styles.progressDots}>
-        {TOUR_STEPS.map((_, i) => (
+        {Array.from({ length: totalSteps }).map((_, i) => (
           <div
             key={i}
             className={clsx(styles.progressDot, {
@@ -106,10 +103,10 @@ function TourPopover({ step, stepIndex, totalSteps, targetRect, onNext, onBack, 
         )}
         <div className={styles.actionsSpacer} />
         <button type="button" onClick={onSkip} className={styles.skipBtn}>
-          Skip tour
+          Close
         </button>
         <button type="button" onClick={onNext} className={styles.nextBtn}>
-          {step.ctaLabel ?? (isLast ? 'Finish' : 'Next →')}
+          {isLast ? 'Done' : 'Next →'}
         </button>
       </div>
 
@@ -128,53 +125,37 @@ function Backdrop({ onClick }: { onClick: () => void }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
+// Mounted once at the root layout. Renders nothing until `dc:start-tour` is
+// dispatched (by PageTourButton, or anything else on the current page).
 
-interface Props {
-  autoStart?: boolean;   // start immediately (e.g. on first visit)
-}
-
-export default function ProductTour({ autoStart = false }: Props) {
-  const router   = useRouter();
+export default function ProductTour() {
   const pathname = usePathname();
-  const [active,      setActive]      = useState(false);
-  const [stepIndex,   setStepIndex]   = useState(0);
-  const [targetRect,  setTargetRect]  = useState<Rect | null>(null);
+  const [active,     setActive]     = useState(false);
+  const [stepIndex,  setStepIndex]  = useState(0);
+  const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const rafRef = useRef<number | null>(null);
 
-  // ── Auto-start on first visit ──────────────────────────────────────────────
-  useEffect(() => {
-    if (autoStart && !isTourDismissed()) {
-      const t = setTimeout(() => setActive(true), 800);
-      return () => clearTimeout(t);
-    }
-  }, [autoStart]);
+  const steps = getPageTour(pathname) ?? [];
 
   // ── Expose start via custom event ─────────────────────────────────────────
-  // ProductTour is mounted once at the root layout (survives navigation
-  // between pages, even across different route layouts) so tour state
-  // (active step) isn't lost when a step needs to move to a different page.
   useEffect(() => {
-    function handleStart() { setStepIndex(0); setActive(true); }
+    function handleStart() {
+      if (getPageTour(pathname) === null) return; // nothing to show on this page
+      setStepIndex(0);
+      setActive(true);
+    }
     window.addEventListener('dc:start-tour', handleStart);
     return () => window.removeEventListener('dc:start-tour', handleStart);
-  }, []);
+  }, [pathname]);
 
-  // ── Navigate to the current step's page, if it's not the current one ──────
-  // The steps below (target tracking) keep polling every frame regardless of
-  // navigation, so once the destination page mounts and renders its target
-  // element, the highlight ring picks it up automatically — no extra "wait
-  // for navigation to finish" handshake needed.
+  // ── Close the tour on navigation — a new page has its own, separate tour ──
   useEffect(() => {
-    if (!active) return;
-    const step = TOUR_STEPS[stepIndex];
-    if (step.route && step.route !== pathname) {
-      router.push(step.route);
-    }
-  }, [active, stepIndex, pathname, router]);
+    setActive(false);
+  }, [pathname]);
 
   // ── Track target element position ─────────────────────────────────────────
   const trackTarget = useCallback(() => {
-    const step = TOUR_STEPS[stepIndex];
+    const step = steps[stepIndex];
     if (!step?.targetId) { setTargetRect(null); return; }
     const el = document.getElementById(step.targetId);
     if (!el) { setTargetRect(null); return; }
@@ -183,7 +164,8 @@ export default function ProductTour({ autoStart = false }: Props) {
 
     // Scroll target into view
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [stepIndex]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- steps is derived fresh from pathname each render; stepIndex is the real dependency
+  }, [stepIndex, pathname]);
 
   useEffect(() => {
     if (!active) { setTargetRect(null); return; }
@@ -198,9 +180,9 @@ export default function ProductTour({ autoStart = false }: Props) {
   useEffect(() => {
     if (!active) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape')         { handleSkip(); }
-      if (e.key === 'ArrowRight')     { handleNext(); }
-      if (e.key === 'ArrowLeft')      { handleBack(); }
+      if (e.key === 'Escape')     { handleSkip(); }
+      if (e.key === 'ArrowRight') { handleNext(); }
+      if (e.key === 'ArrowLeft')  { handleBack(); }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -208,17 +190,15 @@ export default function ProductTour({ autoStart = false }: Props) {
 
   // ── Actions ───────────────────────────────────────────────────────────────
   function handleNext() {
-    const step = TOUR_STEPS[stepIndex];
-    if (step.href) { router.push(step.href); handleSkip(); return; }
-    if (stepIndex === TOUR_STEPS.length - 1) { completeTour(); setActive(false); return; }
+    if (stepIndex === steps.length - 1) { setActive(false); return; }
     setStepIndex(i => i + 1);
   }
-  function handleBack()  { setStepIndex(i => Math.max(0, i - 1)); }
-  function handleSkip()  { dismissTour(); setActive(false); }
+  function handleBack() { setStepIndex(i => Math.max(0, i - 1)); }
+  function handleSkip()  { setActive(false); }
 
-  if (!active) return null;
+  if (!active || steps.length === 0) return null;
 
-  const step = TOUR_STEPS[stepIndex];
+  const step = steps[stepIndex];
 
   return (
     <>
@@ -227,7 +207,7 @@ export default function ProductTour({ autoStart = false }: Props) {
       <TourPopover
         step={step}
         stepIndex={stepIndex}
-        totalSteps={TOUR_STEPS.length}
+        totalSteps={steps.length}
         targetRect={targetRect}
         onNext={handleNext}
         onBack={handleBack}

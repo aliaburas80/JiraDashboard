@@ -5,6 +5,12 @@
 
 ---
 
+## Reworked: Every Page Now Has Its Own Guided Tour (2026-07-09)
+
+The guided tour no longer walks you across several pages in one long sequence — instead, nearly every page in the app now has its own short tour that explains just what's on that page. Look for the "Page tour" button that floats near the bottom-right corner of the screen; it only appears on pages that have a tour, and clicking it always explains what you're currently looking at, without navigating you anywhere else. This replaces the previous multi-page tour described below.
+
+---
+
 ## Restored: Guided Product Tour (2026-07-09)
 
 The guided product tour is back — and now actually works. It had been fully built but was never connected to anything, so clicking the buttons the Help page described did nothing. Start it from "Take a tour" on the Overview page, or "Tour" in the top bar of any dashboard page. It now walks you across multiple real pages — Overview's key metrics, the dashboard sidebar, Priority Attention, Smart Actions, Sprint Status, and the Work Item Explorer — highlighting the relevant part of each page as it goes, instead of just describing a layout that no longer exists.

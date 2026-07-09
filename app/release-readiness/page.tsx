@@ -301,7 +301,7 @@ export default function ReleaseReadinessPage() {
               <span className={styles.eyebrowDash} />
               Delivery
             </div>
-            <h1 className={styles.pageTitle}>Release Readiness</h1>
+            <h1 id="tour-header-release-readiness" className={styles.pageTitle}>Release Readiness</h1>
             <p className={styles.pageDesc}>
               A structured Go / Conditional Go / No-Go decision framework that evaluates your Jira data against 7 quality gates before every release.
             </p>

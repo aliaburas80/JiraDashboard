@@ -333,7 +333,7 @@ export default function GlossaryPage() {
               style={{ borderRadius: 100, fontSize: 9, letterSpacing: '0.08em', display: 'inline-flex' }}>
               REFERENCE
             </div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: 8 }}>
+            <h1 id="tour-header-glossary" style={{ fontSize: 28, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: 8 }}>
               Glossary & Appendix
             </h1>
             <p style={{ fontSize: 14, color: 'var(--dc-p2, #909090)', maxWidth: 420, lineHeight: 1.6 }}>

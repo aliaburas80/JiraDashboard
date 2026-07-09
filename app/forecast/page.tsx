@@ -552,7 +552,7 @@ export default function ForecastPage() {
         {/* ── Header ── */}
         <div className={styles.header}>
           <div className={styles.planningBadge}><SvgIcon name="eye" size={14} /> Planning</div>
-          <h1 className={styles.title}>Delivery Forecast</h1>
+          <h1 id="tour-header-forecast" className={styles.title}>Delivery Forecast</h1>
           <p className={styles.desc}>
             Velocity-based delivery outlook — how many sprints remain, when you&apos;ll ship, and what&apos;s putting that date at risk.
           </p>

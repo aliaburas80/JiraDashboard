@@ -21,6 +21,7 @@ export function AdminConsoleLayout({
   stats = [],
   actions,
   statusLabel = 'Operational',
+  headerId,
 }: {
   title: string;
   description: string;
@@ -28,6 +29,7 @@ export function AdminConsoleLayout({
   stats?: AdminConsoleStat[];
   actions?: ReactNode;
   statusLabel?: string;
+  headerId?: string;   // DOM anchor id for this page's PageTourButton, if it has one
 }) {
   return (
     <>
@@ -44,7 +46,7 @@ export function AdminConsoleLayout({
         </div>
       </header>
 
-      <section className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <section id={headerId} className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--color-text-primary, #0f172a)' }}>{title}</h1>
           <p className="mt-2 text-base" style={{ color: 'var(--color-text-secondary, #64748b)' }}>{description}</p>

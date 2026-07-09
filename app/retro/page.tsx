@@ -291,7 +291,7 @@ export default function RetroPage() {
           <span className={clsx('chip c-acc', styles.deliveryChip)}>
             🔄 Delivery
           </span>
-          <h1 className={styles.pageTitle}>Retrospective</h1>
+          <h1 id="tour-header-retro" className={styles.pageTitle}>Retrospective</h1>
           <p className={styles.pageSubtitle}>Capture what happened, what to improve, and generate next-action suggestions.</p>
         </div>
 

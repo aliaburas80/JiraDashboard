@@ -159,7 +159,7 @@ export default function ProfilePage() {
 
       <div className="mx-auto max-w-5xl py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-black tracking-tight text-slate-950">Settings</h1>
+          <h1 id="tour-header-profile" className="text-3xl font-black tracking-tight text-slate-950">Settings</h1>
           <p className="mt-2 text-sm text-slate-500">Manage your profile, data storage, and account security.</p>
         </div>
 

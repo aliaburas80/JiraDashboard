@@ -148,6 +148,7 @@ export default function DiagnosticsPage() {
     <AdminConsoleLayout
       title="System Diagnostics"
         description={`Live system health snapshot. Generated ${ago(data.generatedAt)}.`}
+        headerId="tour-header-admin-diagnostics"
         stats={diagnosticsStats}
         statusLabel={opsBand}
         actions={

@@ -60,6 +60,7 @@ export default function LabelsTypesPage() {
       </StickyToolbar>
 
       <PageHeader
+        id="tour-header-labels"
         title="Labels & Types"
         badge={labelData ? `${labelData.uniqueLabels ?? 0} labels` : undefined}
         subtitle="Label distribution, issue type breakdown, and project classification."

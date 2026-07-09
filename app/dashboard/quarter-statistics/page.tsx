@@ -58,6 +58,7 @@ export default function QuarterStatisticsPage() {
       </StickyToolbar>
 
       <PageHeader
+        id="tour-header-quarter-statistics"
         title="Quarter Statistics"
         badge={`${quarters.length}Q`}
         subtitle="Quarter-over-quarter throughput, completion, and delivery trends."

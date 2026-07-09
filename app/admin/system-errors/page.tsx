@@ -150,6 +150,7 @@ export default function SystemErrorsPage() {
     <AdminConsoleLayout
       title="System Errors"
       description="Database errors, failed operations, and their resolution status. Retry or dismiss entries below."
+      headerId="tour-header-admin-system-errors"
       stats={stats}
       statusLabel={unresolved > 0 ? `${unresolved} unresolved` : 'All resolved'}
       actions={

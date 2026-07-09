@@ -62,6 +62,7 @@ export default function DeliveryControlsPage() {
       </StickyToolbar>
 
       <PageHeader
+        id="tour-header-delivery-controls"
         title="Delivery Controls"
         badge={wipStatus}
         subtitle="WIP, blocked items, aging work, flow efficiency, and risk thresholds."

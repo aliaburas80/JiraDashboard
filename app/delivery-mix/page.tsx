@@ -192,7 +192,7 @@ export default function DeliveryMixPage() {
             <span className={styles.eyebrowLine} />
             Delivery
           </div>
-          <h1 className={styles.title}>Delivery Mix</h1>
+          <h1 id="tour-header-delivery-mix" className={styles.title}>Delivery Mix</h1>
           <p className={styles.subtitle}>{mixSubtitle}</p>
           <div className={styles.chips}>
             <span

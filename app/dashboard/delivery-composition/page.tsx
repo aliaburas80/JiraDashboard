@@ -88,6 +88,7 @@ export default function DeliveryCompositionPage() {
       </StickyToolbar>
 
       <PageHeader
+        id="tour-header-delivery-composition"
         title="Delivery Composition"
         badge={`${metrics.completionRate || 0}% complete`}
         subtitle="Work breakdown by status, type, health, and epic contribution."

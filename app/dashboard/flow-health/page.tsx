@@ -157,6 +157,7 @@ export default function FlowHealthPage() {
       </StickyToolbar>
 
       <PageHeader
+        id="tour-header-dashboard-flow-health"
         title="Flow Health Table"
         badge={`${filtered.length} of ${flowItems.length} items`}
         subtitle="Filter, inspect, and export every item in this delivery."

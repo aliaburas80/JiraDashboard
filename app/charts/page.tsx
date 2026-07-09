@@ -381,7 +381,7 @@ export default function ChartsPage() {
             <button type="button" className={styles.breadcrumb} onClick={() => router.push('/summary')}>
               ← Overview
             </button>
-            <h1 className={styles.pageTitle}>Visual Analytics</h1>
+            <h1 id="tour-header-charts" className={styles.pageTitle}>Visual Analytics</h1>
             <p className={styles.pageSubtitle}>
               Charts and diagrams summarising delivery health, flow, team, and progress — all derived from your Jira export.
             </p>

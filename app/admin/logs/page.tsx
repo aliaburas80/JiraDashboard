@@ -54,6 +54,7 @@ export default function AdminLogsPage() {
     <AdminConsoleLayout
       title="Import Logs"
         description={`${logs.length} total import log${logs.length !== 1 ? 's' : ''} across all users.`}
+        headerId="tour-header-admin-logs"
         stats={logStats}
         statusLabel="Operational"
       >

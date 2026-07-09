@@ -88,7 +88,7 @@ export default function FlowHealthPage() {
           <span style={{ width: 20, height: 2, background: 'var(--blue)', display: 'inline-block' }} />
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--blue)', textTransform: 'uppercase' }}>Delivery</span>
         </div>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--n900)', margin: '0 0 4px', letterSpacing: '-0.02em' }}>Flow Health</h1>
+        <h1 id="tour-header-flow-health" style={{ fontSize: 26, fontWeight: 700, color: 'var(--n900)', margin: '0 0 4px', letterSpacing: '-0.02em' }}>Flow Health</h1>
         <p style={{ fontSize: 13, color: 'var(--n500)', margin: '0 0 12px' }}>
           {flow.critical > 0
             ? `${flow.critical} critical item${flow.critical !== 1 ? 's' : ''} are blocking flow. Address blockers first to restore delivery pace.`

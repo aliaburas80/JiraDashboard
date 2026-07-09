@@ -455,36 +455,37 @@ flag (used once, on \`users\`, since User Management already has its own
 top-level Admin sidebar entry) and \`superAdminOnly\`. Add a new settings tab
 here, not as a third hand-maintained list.
 
-### Product tour (multi-page)
+### Product tour (per-page)
 
-\`src/lib/tour.ts\` (\`TOUR_STEPS\`) + \`src/components/tour/ProductTour.tsx\`.
-Revived 2026-07-09 — was fully built but never mounted, and its target ids
-were stale (pointed at a single-page dashboard layout that no longer exists;
-the dashboard is now ~16 separate routed pages). Mounted once at the root
-layout (\`app/layout.tsx\`), not per-page — it must survive navigating between
-pages that use different layouts (e.g. \`/summary\`'s per-page \`AppShell\` vs
-\`/dashboard/*\`'s persistent \`layout.tsx\`), so it can't live inside either.
+\`src/lib/tour.ts\` (\`PAGE_TOURS\`) + \`src/components/tour/ProductTour.tsx\` +
+\`src/components/tour/PageTourButton.tsx\`. Originally revived 2026-07-09 as a
+single 8-step tour that navigated across 4 pages; rewritten the same day into
+one short, self-contained tour per page (~49 routes covered) after feedback
+that a single long cross-page walkthrough didn't scale as pages were added.
 
-Each \`TourStep\` may set a \`route\`. When the active step's \`route\` differs
-from the current pathname, \`ProductTour\` calls \`router.push(route)\` — its
-existing \`requestAnimationFrame\` target-tracking loop (already re-running
-continuously to handle scroll/resize) naturally picks up the new page's
-\`targetId\` once it mounts, with no extra "wait for navigation" handshake
-needed. Steps without a \`route\` render wherever the tour was started
-(used for the centered welcome/done steps).
+\`PAGE_TOURS\` is a \`Record<pathname, TourStep[]>\` — each route owns its own
+1–2 step tour describing only what's actually on that page. There is no
+cross-page navigation in the tour engine anymore: \`ProductTour\` reads
+\`getPageTour(usePathname())\` and closes itself on every route change (a new
+page has its own, separate tour to start). \`PageTourButton\` is the single,
+consistent trigger — a floating pill mounted once at the root layout
+(\`app/layout.tsx\`, alongside \`ProductTour\` itself) that reads the same
+registry and renders nothing on a route with no entry, so pages never define
+their own bespoke "take a tour" button.
 
-Start it from anywhere with \`window.dispatchEvent(new CustomEvent('dc:start-tour'))\`
-(wired to "Take a tour" on \`/summary\` and "Tour" in \`DashboardTopbar.tsx\`).
-\`TOUR_STEPS\`' \`targetId\`s are real DOM ids added specifically for this:
-\`tour-kpi-grid\` (/summary), \`dashboard-nav-sidebar\` (a small anchor near the
-sidebar's top — not the full-height \`<aside>\`, since the popover only
-positions above/below a target and a full-height target would push it
-off-screen), \`tour-priority-attention\`/\`tour-recommendations\`/\`tour-sprint\`
-(passed via \`PageHeader\`'s optional \`id\` prop). \`productTour.test.ts\`
-(TC-PT-08/09/10) greps the source tree to confirm every \`targetId\`/\`route\`/
-\`href\` a step references is actually rendered/exists — add a step without
-its anchor and the test fails, instead of silently shipping a broken tour
-again.
+Start it with \`window.dispatchEvent(new CustomEvent('dc:start-tour'))\` (what
+\`PageTourButton\` does) — \`ProductTour\` ignores the event if the current route
+has no registered tour. Steps target real DOM ids: most pages use the \`id\`
+already supported by \`PageHeader\` (dashboard sub-pages) or
+\`AdminConsoleLayout\`'s \`headerId\` prop (admin pages), or a plain \`id\` on the
+page's own heading element for everything else. Every \`/dashboard/*\` page
+also gets a second step pointing at \`dashboard-nav-sidebar\` (a small anchor
+near the sidebar's top — not the full-height \`<aside>\`, since the popover
+only positions above/below a target and a full-height target would push it
+off-screen). \`productTour.test.ts\` (TC-PT-02/03) greps the source tree to
+confirm every route key is a real page and every \`targetId\` a step
+references is actually rendered — add a route or anchor without the other
+side and the test fails, instead of silently shipping a broken tour.
 
 ---
 

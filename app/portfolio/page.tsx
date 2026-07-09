@@ -251,7 +251,7 @@ export default function PortfolioPage() {
             <span className={styles.eyebrowLine} />
             Analytics
           </div>
-          <h1 className={styles.title}>Portfolio Overview</h1>
+          <h1 id="tour-header-portfolio" className={styles.title}>Portfolio Overview</h1>
           <p className={styles.subtitle}>
             A cross-team health summary aggregating all epics, projects, sprints, and quarterly throughput
             from your Jira export into a single portfolio score.

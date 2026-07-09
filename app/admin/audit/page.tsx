@@ -339,6 +339,7 @@ export default function AuditEventsPage() {
     <AdminConsoleLayout
       title="Audit Events"
       description={`${total.toLocaleString()} total events · real-time activity and user journey tracking`}
+      headerId="tour-header-admin-audit"
       stats={statCards}
       statusLabel="Live"
     >

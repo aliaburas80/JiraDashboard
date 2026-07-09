@@ -1017,6 +1017,7 @@ export default function AdminSettingsPage() {
     <AdminConsoleLayout
         title={selectedTab.label}
         description={selectedTab.description}
+        headerId="tour-header-admin-settings"
         stats={statsCards}
         statusLabel="Operational"
       >

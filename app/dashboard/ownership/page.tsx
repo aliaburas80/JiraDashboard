@@ -58,6 +58,7 @@ export default function OwnershipCapacityPage() {
       </StickyToolbar>
 
       <PageHeader
+        id="tour-header-ownership"
         title="Ownership & Capacity"
         subtitle="Team load distribution, assignee metrics, and epic performance."
       />
