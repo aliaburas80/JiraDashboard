@@ -2430,3 +2430,23 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **Automated checks:** 12 new tests (7 in `navGroupsForRole.test.ts`, 5 in `adminSettingsConsole.test.ts`). Full suite 109 suites / 1020 tests passing (up from 109/1004), no regressions. `npx tsc --noEmit` clean. `npx eslint` — zero new warnings on any touched file. `npx next build` clean; every `href` in the consolidated registry verified against real prerendered routes in the build output (no dead links introduced).
 
 **Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: as an admin, open the Admin sidebar and confirm the same 3 sections/9 items render in the same order as before; open the user avatar dropdown and confirm only My Settings/Security/Sign out appear (no admin links); click "Security" from that dropdown and confirm it lands directly on the Security tab of `/profile`; open global search and confirm Audit Events/User Feedback/System Errors are now findable.
+
+## 9.103 — User Management Fully Deduplicated + Branding Page Simplified
+
+*(Added 2026-07-09. Direct user follow-up to §9.102: "we still have 2 user managment, keep the one out and remove one iside config", plus a separate request to simplify the Theme & Branding admin page. See SRS.md Addendum X.)*
+
+**TC-AC-01 (updated):** `ADMIN_TABS` lists 11 tabs (down from 12) with no `'users'` entry — `activeTabMeta`/`ADMIN_TABS[0]` examples updated to use `'requests'`/`'cloud'` instead of the removed `'users'` id.
+
+**TC-AC-02 (updated):** `buildSettingsStats` tab-iteration tests use the 9-tab list without `'users'`; the "different tabs produce different cards" comparison uses `requests` vs. `retention`; `buildSettingsStats({ tab: 'users' as Tab, ... })` now returns `[]` (falls through to the `default` case) rather than real stats, since `'users'` is no longer a handled case.
+
+**TC-AC-03 (renamed, scope narrowed):** `roleOptionsFor`/`matchesUserFilter` tests kept as-is (unchanged behavior) — these helpers remain exported from `adminConsole.ts` for `/admin/users/page.tsx`, now the sole consumer and sole user-management implementation.
+
+**TC-NAV-18 (rewritten):** confirms `ADMIN_TABS` contains no `'users'` entry at all (not merely `hiddenFromNav: true` as in §9.102's version of this test — the entry itself is gone); `requests` remains first; `personaPreview`'s `superAdminOnly` filtering is unaffected by the users-tab removal.
+
+**Also verified (compile-time, not just runtime):** `Tab` no longer includes `'users'` in its type union — confirmed via a clean `npx tsc --noEmit` after the type change, meaning any future code that tries to reference a `'users'` tab will fail to compile, not just fail a runtime filter.
+
+**Theme/Branding page:** no new automated tests (the simplified page has no domain logic beyond form state already exercised implicitly by manual QA — same as before this change; the removed palette/font/radius controls also had no prior automated coverage).
+
+**Automated checks:** full suite 109 suites / 1016 tests passing (down from 1020 — fewer, more accurate tests after consolidation; no lost coverage, since removed cases tested code deleted in the same change). `npx tsc --noEmit` clean. `npx eslint` clean on every touched file. `npx stylelint app/admin/theme/page.module.scss` clean (full rewrite, 802 → ~230 lines). `npx next build` clean; bundle sizes dropped as expected (`/admin/theme` 10.4 kB → 7.54 kB, `/admin/settings` 36.1 kB → 34.9 kB), confirming the removed code was actually excised, not just hidden.
+
+**Manual verification:** not performed — no browser-automation tool available this session. Recommended before relying on this: as an admin, confirm `/admin/settings` no longer shows a "User Management" tab anywhere and defaults to Member Requests when visited with no `?tab=`; confirm `/admin/users` (Admin sidebar) still works exactly as before; open `/admin/theme` (now labelled "Branding" in the sidebar) and confirm only App name / Favicon / Logo controls remain, with Save/Reset both working.

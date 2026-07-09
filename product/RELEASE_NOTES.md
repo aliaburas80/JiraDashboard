@@ -5,6 +5,12 @@
 
 ---
 
+## Simplified: Branding Page, and User Management Now Lives in One Place (2026-07-09)
+
+Two follow-ups to yesterday's navigation cleanup. First, "User Management" was still fully implemented in two places behind the scenes — the Admin sidebar page and a tab inside Settings. The Settings-tab version is now removed entirely; User Management lives only in the Admin sidebar going forward. Second, the "Theme & Branding" admin page has been trimmed down to just what's genuinely useful — app name, favicon, and logo — and renamed "Branding." The colour-palette gallery, font/corner-radius presets, and the technical CSS-token reference table have been removed; they were decorative demo material with no real business value. If you'd previously customized your palette, your browser keeps showing it exactly as before — there just isn't an admin control to change it anymore.
+
+---
+
 ## Fixed: Duplicate and Confusing Menu Items (2026-07-09)
 
 Cleaned up navigation across the app — several menus were independently maintained and had drifted into showing the same destination more than once. Specifically: "User Management" no longer appears both as its own Admin sidebar item and nested inside Settings (it now lives only in the Admin sidebar; Member Requests is the first item under Settings); "Settings" no longer appears in both your account menu and the Admin sidebar; the account (avatar) menu now only shows account-level actions — My Settings and a new direct link to your Security tab — with admin/system links available from the Admin sidebar and topbar instead. Search now also finds three admin pages (Audit Events, User Feedback, System Errors) that weren't searchable before. Nothing was redesigned — this only removes duplicate entries and fixes what feeds each menu.
