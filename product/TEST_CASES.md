@@ -2531,3 +2531,15 @@ New `app/page.module.scss` using only existing dark Theme D tokens (`--dc-bg/s1/
 **`/developer` and `/help` gained real anchors**, which §9.106 could not do (their content is a Markdown-to-HTML string with no plain JSX to anchor to). Both pages turned out to have real structural JSX outside that blob — a search box and section nav on `/developer`, a search box and topic pills on `/help` — so both went from 1 centered step to 3.
 
 **Automated checks:** `npx tsc --noEmit` clean. `npx eslint .` — 0 errors, 1,385 warnings, identical to the pre-change total (verified no changed file gained a new warning). `npx stylelint` — 2 pre-existing errors on `app/privacy`/`app/terms`, both untouched by this change. Full suite 109 suites / 1,014 tests passing (unchanged count — no new test files, existing tests cover the expanded data). `npx next build` clean.
+
+## 9.108 — Product Tour Popover Positioning Fix: No Longer Renders Off-Screen
+
+*(Added 2026-07-10. User reported via screenshot that on `/dashboard/flow-health`, the tour backdrop appeared but the popover box was nowhere visible on screen — exactly the risk §9.107 flagged as unverified. See SRS.md Addendum AC.)*
+
+**Root cause:** `ProductTour.tsx`'s "above" placement set `bottom: window.innerHeight - targetRect.top + GAP` with no clamp. A target near the top of the page (like §9.107's new `items-table` step, anchored just below the filter toolbar) makes that `bottom` value large enough to push the popover's top edge above `y = 0` — off-screen. The "below" placement had the same unclamped-math bug in the opposite direction, just not yet hit.
+
+**Fix:** the popover now measures its own real rendered height (via a ref + `useLayoutEffect`, which runs before paint so there's no visible flash) and computes a `top` position for either placement, then clamps it to `[12, window.innerHeight - measuredHeight - 12]` — both edges guaranteed inside the viewport. The two near-duplicate SCSS classes (`.popoverBelow`, `top`-based; `.popoverAbove`, `bottom`-based) collapsed into one `.popoverPositioned` class, since both directions now compute the same `top` property.
+
+**Automated checks:** `npx tsc --noEmit` clean. `npx eslint` — same 2 pre-existing documented exceptions on `ProductTour.tsx`, 0 new warnings. `npx stylelint` clean. Full suite 109 suites / 1,014 tests passing (unchanged — this is a runtime positioning-math fix; `productTour.test.ts` validates step/anchor data, not rendered pixel positions, so it has no new surface to cover here).
+
+**Not independently verified:** no browser-automation tool was available this session, so the fix was verified by tracing the exact math that produced the reported bug and confirming the new formula bounds both edges, not by re-rendering the reported page. Recommended before fully trusting this: reproduce the original screenshot's scenario (open the tour on `/dashboard/flow-health`, advance to the "Flow Items Table" step) and confirm the popover is now visible; also check a page where an anchor sits near the *bottom* of a tall page, since that's the "below" direction of the same bug class and hasn't been directly observed yet.

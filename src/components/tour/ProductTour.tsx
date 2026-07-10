@@ -5,7 +5,7 @@
 // dispatching `dc:start-tour` — never auto-starts, never navigates.
 'use client';
 
-import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, type CSSProperties } from 'react';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { getPageTour, type TourStep } from '@/lib/tour';
@@ -45,36 +45,41 @@ function TourPopover({ step, stepIndex, totalSteps, targetRect, onNext, onBack, 
   const isFirst  = stepIndex === 0;
   const isLast   = stepIndex === totalSteps - 1;
   const isCentre = step.placement === 'center' || !targetRect;
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [vars, setVars] = useState<CSSVariableProperties>({});
 
-  // Position relative to target
-  let positionClass = styles.popoverCenter;
-  let vars: CSSVariableProperties = {};
-  if (!isCentre && targetRect) {
+  // Positioned via a measure-then-clamp pass (not pure CSS) because the
+  // popover's real height depends on how long this step's description is,
+  // and both "below" and "above" placement must stay fully inside the
+  // viewport regardless of where the target sits — a target near the top of
+  // the page previously pushed an "above"-placed popover off-screen entirely
+  // (bottom: window.innerHeight - target.top could exceed the viewport).
+  // useLayoutEffect runs before paint, so this never visibly flashes.
+  useLayoutEffect(() => {
+    if (isCentre || !targetRect) { setVars({}); return; }
     const GAP = 16;
     const W   = 300;
+    const H   = popoverRef.current?.offsetHeight ?? 220; // fallback for the very first measured render
     const clampedLeft = Math.min(Math.max(targetRect.left + targetRect.width / 2 - W / 2, 12), window.innerWidth - W - 12);
-    if (step.placement === 'bottom' || (step.placement !== 'top' && targetRect.top < window.innerHeight / 2)) {
-      positionClass = styles.popoverBelow;
-      // DYNAMIC CSS VARIABLE: computed from the live target rect, clamped to
-      // stay within the viewport — cannot be expressed as static CSS.
-      vars = {
-        '--tour-popover-top':  `${targetRect.top + targetRect.height + GAP}px`,
-        '--tour-popover-left': `${clampedLeft}px`,
-      };
-    } else {
-      positionClass = styles.popoverAbove;
-      vars = {
-        '--tour-popover-bottom': `${window.innerHeight - targetRect.top + GAP}px`,
-        '--tour-popover-left':   `${clampedLeft}px`,
-      };
-    }
-  }
+
+    const preferBelow = step.placement === 'bottom' || (step.placement !== 'top' && targetRect.top < window.innerHeight / 2);
+    const desiredTop  = preferBelow
+      ? targetRect.top + targetRect.height + GAP
+      : targetRect.top - GAP - H;
+    const clampedTop = Math.min(Math.max(desiredTop, 12), window.innerHeight - H - 12);
+
+    setVars({
+      '--tour-popover-top':  `${clampedTop}px`,
+      '--tour-popover-left': `${clampedLeft}px`,
+    });
+  }, [targetRect, step.placement, isCentre]);
 
   return (
     <div
+      ref={popoverRef}
       role="dialog"
       aria-label={`Tour step ${stepIndex + 1} of ${totalSteps}: ${step.title}`}
-      className={clsx(styles.popover, positionClass)}
+      className={clsx(styles.popover, isCentre ? styles.popoverCenter : styles.popoverPositioned)}
       style={vars}
     >
       {/* Progress dots */}
