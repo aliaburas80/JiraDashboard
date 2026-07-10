@@ -65,15 +65,11 @@
   transform: translate(-50%, -50%);
 }
 
-// EXCEPTION (CLAUDE.md Rule 1): top/bottom/left are computed from the
-// target's live position, clamped to stay within the viewport.
-.popoverBelow {
+// EXCEPTION (CLAUDE.md Rule 1): top/left are computed from the target's
+// live position and the popover's own measured height, then clamped to
+// stay fully inside the viewport — see ProductTour.tsx's useLayoutEffect.
+.popoverPositioned {
   top: var(--tour-popover-top, 50%);
-  left: var(--tour-popover-left, 50%);
-}
-
-.popoverAbove {
-  bottom: var(--tour-popover-bottom, 50%);
   left: var(--tour-popover-left, 50%);
 }
 

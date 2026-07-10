@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: Tour Popover No Longer Disappears Off-Screen (2026-07-10)
+
+On some pages, the tour's info box could render above the top of the screen where it couldn't be seen or clicked — only the dimmed background was visible. The box now always measures itself and stays fully within the visible page, no matter where it's pointing.
+
+---
+
 ## Improved: Page Tours Now Explain What's Actually On the Page (2026-07-10)
 
 Each page's guided tour now covers what you actually see there — charts, tables, KPI cards, filter bars — instead of just naming the page and pointing at its sidebar. Nearly all 49 tours grew from 1-2 steps to 3-4, each one anchored to a real part of the page. Also fixed: the "Page tour" button wasn't rendering at all after yesterday's rework — it's now visible on every page that has a tour.
