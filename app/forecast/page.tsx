@@ -572,6 +572,7 @@ export default function ForecastPage() {
           <>
             {/* ── Status Banner ── */}
             <div
+              id="tour-section-forecast-1"
               className={styles.statusBanner}
               style={{ '--banner-bg': meta.bg, '--banner-border': meta.border, '--banner-text': meta.text, '--banner-color': meta.color } as CSSProperties}
             >
@@ -627,7 +628,7 @@ export default function ForecastPage() {
             )}
 
             {/* ── KPI Row ── */}
-            <div className={styles.kpiGrid}>
+            <div id="tour-section-forecast-2" className={styles.kpiGrid}>
               {[
                 { label: 'Total Issues',   value: result.totalIssues,   icon: 'clipboard', color: 'var(--dc-p1, #F2F2F2)',    delay: '0.08s' },
                 { label: `Done (${result.completionPct}%)`, value: result.doneIssues, icon: 'checkCircle', color: 'var(--dc-green, #22C55E)', delay: '0.12s' },

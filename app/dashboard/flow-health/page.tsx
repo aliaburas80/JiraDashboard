@@ -208,7 +208,7 @@ export default function FlowHealthPage() {
           </div>
 
           {/* ── Action row ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 14, marginTop: 14, borderTop: '1px solid #F1F5F9' }}>
+          <div id="tour-section-dashboard-flow-health-1" style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 14, marginTop: 14, borderTop: '1px solid #F1F5F9' }}>
             <button
               type="button"
               onClick={resetAll}
@@ -275,7 +275,7 @@ export default function FlowHealthPage() {
         </div>
 
         {/* ── Items table ── */}
-        <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, overflow: 'hidden' }}>
+        <div id="tour-section-dashboard-flow-health-2" style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
               <thead>

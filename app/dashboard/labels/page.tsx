@@ -76,7 +76,7 @@ export default function LabelsTypesPage() {
               <p style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic' }}>No label data found.</p>
             ) : (
               <>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <div id="tour-section-labels-1" style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                   <span style={{ fontSize: 11, fontWeight: 700, background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: 20, padding: '2px 10px' }}>
                     {labelData.uniqueLabels} unique labels
                   </span>
@@ -122,7 +122,7 @@ export default function LabelsTypesPage() {
         {/* ── Label health table ── */}
         {labelStats.length > 0 && (
           <SectionCard title="Label Health & Completion">
-            <div style={{ overflowX: 'auto' }}>
+            <div id="tour-section-labels-2" style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>{['Label', 'Issues', 'Done', 'Completion', 'Critical', 'Warning', 'Points', 'Avg Lead', 'Avg Cycle'].map(th)}</tr>

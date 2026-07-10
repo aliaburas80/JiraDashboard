@@ -210,7 +210,7 @@ export default function TeamsPage() {
         {/* Team cards grid */}
         {teams.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Member Scorecards</h2>
+            <h2 id="tour-section-teams-1" className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Member Scorecards</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {teams.map(t => <TeamCard key={t.assignee} entry={t} />)}
             </div>
@@ -220,7 +220,7 @@ export default function TeamsPage() {
         {/* Comparison charts */}
         {teams.length > 1 && (
           <section className="mb-8">
-            <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Comparison Charts</h2>
+            <h2 id="tour-section-teams-2" className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Comparison Charts</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
               {/* Health score chart */}

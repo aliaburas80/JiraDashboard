@@ -15,11 +15,13 @@ import styles from './page.module.scss';
 // ── Logo upload ───────────────────────────────────────────────────────────────
 
 function LogoUpload({
+  id,
   label,
   value,
   onChange,
   hint,
 }: {
+  id?: string;
   label: string;
   value: string;
   onChange: (dataUrl: string) => void;
@@ -37,7 +39,7 @@ function LogoUpload({
 
   return (
     <div>
-      <p className={styles.logoLabel}>{label}</p>
+      <p id={id} className={styles.logoLabel}>{label}</p>
       <div className={styles.logoRow}>
         <div
           role="button"
@@ -167,7 +169,7 @@ export default function AdminThemePage() {
           <div className={styles.brandingGrid}>
             {/* App name */}
             <div>
-              <p className={styles.fieldLabel}>App name</p>
+              <p id="tour-section-admin-theme-1" className={styles.fieldLabel}>App name</p>
               <input
                 type="text"
                 value={branding.appName}
@@ -188,6 +190,7 @@ export default function AdminThemePage() {
           </div>
 
           <LogoUpload
+            id="tour-section-admin-theme-2"
             label="Navigation logo (horizontal)"
             value={branding.logoUrl}
             onChange={logoUrl => updateBranding({ logoUrl })}

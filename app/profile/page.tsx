@@ -164,7 +164,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="flex flex-col gap-6 md:flex-row">
-          <nav className="flex shrink-0 gap-2 overflow-x-auto md:w-48 md:flex-col md:overflow-visible" aria-label="Settings">
+          <nav id="tour-section-profile-1" className="flex shrink-0 gap-2 overflow-x-auto md:w-48 md:flex-col md:overflow-visible" aria-label="Settings">
             {visibleTabs.map(tab => (
               <button
                 key={tab.id}
@@ -181,7 +181,7 @@ export default function ProfilePage() {
             ))}
           </nav>
 
-          <div className="min-w-0 flex-1">
+          <div id="tour-section-profile-2" className="min-w-0 flex-1">
             {activeTab === 'profile' && (
               <ProfileTab
                 profile={profile}

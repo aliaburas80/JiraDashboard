@@ -226,7 +226,7 @@ export default function WorkExplorerPage() {
         )}
 
         {/* ── Toolbar ── */}
-        <div className={styles.toolbar} role="search">
+        <div id="tour-section-work-explorer-1" className={styles.toolbar} role="search">
           <div className={styles.searchWrap}>
             <SvgIcon name="search" size={14} className={styles.searchIcon} />
             <input
@@ -279,7 +279,7 @@ export default function WorkExplorerPage() {
               <>
                 <div className={styles.tableWrap}>
                   <table className={styles.table}>
-                    <thead className={styles.tableHead}>
+                    <thead id="tour-section-work-explorer-2" className={styles.tableHead}>
                       <tr>
                         <th scope="col">Key</th>
                         <th scope="col" aria-label="Priority">P</th>

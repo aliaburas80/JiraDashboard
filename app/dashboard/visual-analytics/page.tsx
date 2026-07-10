@@ -101,7 +101,7 @@ export default function VisualAnalyticsPage() {
       <div style={{ padding: '0 28px 48px' }}>
 
         {/* ── Summary strip ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+        <div id="tour-section-visual-analytics-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
           {[
             { label: 'Total Items', value: flowItems.length.toLocaleString(), color: '#2563EB' },
             { label: 'Done', value: flowItems.filter(i => DONE_STATUSES.includes(norm(i.status))).length.toLocaleString(), color: '#059669' },
@@ -119,7 +119,7 @@ export default function VisualAnalyticsPage() {
 
           {/* ── Status distribution ── */}
           <SectionCard title="Work by Status">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div id="tour-section-visual-analytics-2" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {statusDist.map((r, i) => (
                 <CompactBar key={r.name} label={r.name} value={r.count} max={statusMax} color={PALETTE[i % PALETTE.length]} index={i} />
               ))}

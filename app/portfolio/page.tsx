@@ -347,7 +347,7 @@ export default function PortfolioPage() {
           {/* Epics */}
           {summary.epics.length > 0 && (
             <div className={styles.card} style={{ '--card-delay': '80ms' } as CSSProperties}>
-              <div className={styles.cardHead}>
+              <div id="tour-section-portfolio-1" className={styles.cardHead}>
                 <span className={styles.cardTitle}>Epic Progress</span>
                 <span className={styles.cardCount}>{summary.epics.length} epics · {summary.activeEpics} active</span>
               </div>
@@ -375,7 +375,7 @@ export default function PortfolioPage() {
         {/* ── Quarter Throughput ── */}
         {summary.quarters.length > 0 && (
           <div className={clsx(styles.card, styles.quarterSection)}>
-            <div className={styles.cardHead}>
+            <div id="tour-section-portfolio-2" className={styles.cardHead}>
               <span className={styles.cardTitle}>Quarterly Throughput</span>
               <span className={styles.cardCount}>
                 {summary.quarters.length} quarters · solid bar = completed issues

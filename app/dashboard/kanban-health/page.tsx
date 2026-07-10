@@ -77,7 +77,7 @@ export default function KanbanHealthPage() {
       <div style={{ padding: '0 28px 48px' }}>
 
         {/* ── Health gauges ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+        <div id="tour-section-kanban-health-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
           {[
             { label: 'Board Health', value: boardHealth, color: boardHealthColor, bg: '#F8FAFC', border: '#E2E8F0' },
             { label: 'WIP', value: wipItems.length, color: wipItems.length > 20 ? '#DC2626' : '#475569', bg: '#F8FAFC', border: '#E2E8F0' },
@@ -110,7 +110,7 @@ export default function KanbanHealthPage() {
 
         {/* ── Board status distribution ── */}
         <SectionCard title="Work Distribution by Status">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div id="tour-section-kanban-health-2" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {statusCols.map((r, i) => {
               const isDone = DONE_STATUSES.includes(norm(r.name));
               const isActive = ACTIVE_STATUSES.includes(norm(r.name));

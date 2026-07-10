@@ -350,7 +350,7 @@ export default function AuditEventsPage() {
         <div className={styles.chartRow}>
           {/* Bar chart */}
           <div className={styles.card}>
-            <p className={styles.cardTitle}>Events per Day — Last 30 Days</p>
+            <p id="tour-section-admin-audit-1" className={styles.cardTitle}>Events per Day — Last 30 Days</p>
             <BarChart data={stats.byDay} />
           </div>
 
@@ -375,7 +375,7 @@ export default function AuditEventsPage() {
         <p className={styles.cardTitle}>Event Log</p>
 
         {/* Filters */}
-        <div className={styles.filtersBar}>
+        <div id="tour-section-admin-audit-2" className={styles.filtersBar}>
           <select
             className={styles.filterSelect}
             value={filterType}

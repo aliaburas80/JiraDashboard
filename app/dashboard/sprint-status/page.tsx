@@ -98,7 +98,7 @@ export default function SprintStatusPage() {
       <div style={{ padding: '0 28px 48px' }}>
 
         {/* ── Sprint gauges ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+        <div id="tour-section-sprint-status-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
           {[
             { label: 'Sprint Items', value: sprintItems.length, color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
             { label: 'Completed', value: sprintItems.filter(i => DONE_STATUSES.includes(norm(i.status))).length, color: '#059669', bg: '#F0FDF4', border: '#BBF7D0' },
@@ -133,7 +133,7 @@ export default function SprintStatusPage() {
         {/* ── Sprint history ── */}
         {sprintDist.length > 0 && (
           <SectionCard title="Sprint Completion History">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div id="tour-section-sprint-status-2" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {sprintDist.map((s, i) => (
                 <div key={s.name}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12 }}>

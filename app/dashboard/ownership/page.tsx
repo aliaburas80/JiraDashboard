@@ -70,7 +70,7 @@ export default function OwnershipCapacityPage() {
           {capacity.length === 0 ? (
             <p style={{ fontSize: 12, color: '#94A3B8' }}>No assignee data found.</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div id="tour-section-ownership-1" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {capacity.slice(0, 10).map((c: any, idx: number) => {
                 const pct = Math.round(((c.issues ?? 0) / capMax) * 100);
                 const skewed = (c.loadShare ?? 0) > 35;
@@ -117,7 +117,7 @@ export default function OwnershipCapacityPage() {
         {/* ── Epic performance table ── */}
         {epics.length > 0 && (
           <SectionCard title="Epic / Parent Performance">
-            <div style={{ overflowX: 'auto' }}>
+            <div id="tour-section-ownership-2" style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>{['Epic / Parent', 'Issues', 'Done', 'Lead (d)', 'Cycle (d)', 'Critical', 'Warning', 'Progress'].map(th)}</tr>

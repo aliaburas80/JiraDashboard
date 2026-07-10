@@ -127,7 +127,7 @@ export default function KeyMetricsPage() {
 
         {/* ── Story points breakdown ── */}
         <SectionCard title="Story Points Breakdown">
-          <div className={styles.snapshotGrid3}>
+          <div id="tour-section-key-metrics-1" className={styles.snapshotGrid3}>
             {[
               { label: 'Total Points',    value: sp.totalStoryPoints || 0 },
               { label: 'Completed',       value: sp.completedStoryPoints || 0 },
@@ -150,7 +150,7 @@ export default function KeyMetricsPage() {
 
         {/* ── Flow metrics ── */}
         <SectionCard title="Flow Metrics">
-          <div className={styles.statGrid2}>
+          <div id="tour-section-key-metrics-2" className={styles.statGrid2}>
             {[
               { label: 'Average Lead Time',  value: `${flow.averageLeadTimeDays || 0}d`,  sub: `Sample: ${flow.leadTimeSampleSize || 0} items` },
               { label: 'Average Cycle Time', value: `${flow.averageCycleTimeDays || 0}d`, sub: `Sample: ${flow.cycleTimeSampleSize || 0} items` },

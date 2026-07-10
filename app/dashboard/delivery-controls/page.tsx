@@ -71,7 +71,7 @@ export default function DeliveryControlsPage() {
       <div style={{ padding: '0 28px 48px' }}>
 
         {/* ── Control gauges ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+        <div id="tour-section-delivery-controls-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
           {[
             { label: 'WIP', value: wip, status: wipStatus, color: wipColor, bg: wipStatus === 'Degraded' ? '#FEF2F2' : '#F8FAFC', border: wipStatus === 'Degraded' ? '#FECACA' : '#E2E8F0' },
             { label: 'Blocked', value: blockedItems.length, status: blockedItems.length > 20 ? 'Critical' : blockedItems.length > 5 ? 'High' : 'Low', color: blockedItems.length > 0 ? '#DC2626' : '#059669', bg: '#FEF2F2', border: '#FECACA' },
@@ -108,7 +108,7 @@ export default function DeliveryControlsPage() {
           <SectionCard title={`Aging Work (>30d)  ·  ${agingItems.length} items`}>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
-                <thead>
+                <thead id="tour-section-delivery-controls-2">
                   <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
                     {['Key', 'Summary', 'Status', 'Age (d)', 'Assignee'].map(h => (
                       <th key={h} style={{ padding: '6px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94A3B8' }}>{h}</th>

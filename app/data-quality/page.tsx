@@ -175,7 +175,7 @@ export default function DataQualityPage() {
       )}
 
       {/* KPI strip */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }} aria-label="Data quality metrics">
+      <section id="tour-section-data-quality-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }} aria-label="Data quality metrics">
         <DCKpiCard label="Missing Dates" value={missDate} subtitle="In-progress / done dates" tone={missDate > 0 ? 'warning' : 'success'} />
         <DCKpiCard label="Missing Parents" value={missParent} subtitle="Epic / parent links" tone={missParent > 0 ? 'warning' : 'success'} />
         <DCKpiCard label="Missing Statuses" value={missStatus} subtitle="Status field gaps" tone={missStatus > 0 ? 'critical' : 'success'} />
@@ -238,7 +238,7 @@ export default function DataQualityPage() {
 
         {/* Right: Field impact report */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div id="tour-section-data-quality-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <h2 style={{ fontSize: 15, fontWeight: 900, color: 'var(--dc-text)', margin: 0 }}>Field Impact Details</h2>
             <div style={{ display: 'flex', gap: 8 }}>
               {criticalImpacts.length > 0 && <DCStatusChip label={`${criticalImpacts.length} critical`} tone="critical" />}

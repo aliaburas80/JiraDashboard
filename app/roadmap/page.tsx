@@ -487,7 +487,7 @@ export default function RoadmapPage() {
             <h1 id="tour-header-roadmap" className={styles.title}>Epic Roadmap</h1>
             <p className={styles.subtitle}>Delivery timeline, forecasts & health — based on your Jira data</p>
           </div>
-          <div className={styles.viewToggle} role="group" aria-label="View mode">
+          <div id="tour-section-roadmap-1" className={styles.viewToggle} role="group" aria-label="View mode">
             {(['gantt', 'cards'] as const).map(v => (
               <button
                 key={v}
@@ -504,7 +504,7 @@ export default function RoadmapPage() {
         </div>
 
         {/* ── KPI strip ── */}
-        <div className={styles.kpiStrip} role="list" aria-label="Key metrics">
+        <div id="tour-section-roadmap-2" className={styles.kpiStrip} role="list" aria-label="Key metrics">
           {kpis.map(k => (
             <div key={k.label} className={styles.kpiCard} role="listitem">
               {/* EXCEPTION: bg is data-driven from health/status — CSS custom property */}

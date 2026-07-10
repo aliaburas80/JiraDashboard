@@ -309,7 +309,7 @@ export default function ReleaseReadinessPage() {
         </div>
 
         {/* ── Plain-English explanation ── */}
-        <div className={styles.whatIs}>
+        <div id="tour-section-release-readiness-1" className={styles.whatIs}>
           <p className={styles.whatIsTitle}>How this works</p>
           <p className={styles.whatIsText}>
             Each check below tests a specific release risk factor using data from your Jira export.
@@ -337,7 +337,7 @@ export default function ReleaseReadinessPage() {
             </div>
 
             {/* Summary counts */}
-            <div className={styles.verdictStats}>
+            <div id="tour-section-release-readiness-2" className={styles.verdictStats}>
               {[
                 { val: passCount, lbl: 'Passed',   color: '#16a34a' },
                 { val: warnCount, lbl: 'Warnings',  color: '#d97706' },

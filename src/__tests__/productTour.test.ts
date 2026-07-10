@@ -41,13 +41,14 @@ test('TC-PT-02: every PAGE_TOURS route corresponds to a real app/<route>/page.ts
 // Greps the actual source tree for `id="<targetId>"` so a future rename that
 // forgets to update one side fails this test instead of silently breaking
 // the tour (this pattern predates this rewrite — see git history). Also
-// matches `headerId="<targetId>"` — the 9 admin pages set the anchor via
-// AdminConsoleLayout's `headerId` prop, which the component then renders as
-// `id={headerId}` (not a literal `id="..."` at the call site).
+// matches `headerId="<targetId>"` (the 9 admin pages set their anchor via
+// AdminConsoleLayout's `headerId` prop, rendered internally as `id={headerId}`)
+// and `id={condition ? '<targetId>' : undefined}`-style dynamic expressions
+// (used where only the first item in a repeated list should carry the anchor).
 
 function idExistsInSource(id: string): boolean {
   const roots = ['app', 'src/components'];
-  const pattern = new RegExp(`id=["']${id}["']|headerId=["']${id}["']`);
+  const pattern = new RegExp(`id=["']${id}["']|headerId=["']${id}["']|id=\\{[^}]*["']${id}["'][^}]*\\}`);
   function search(dir: string): boolean {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);

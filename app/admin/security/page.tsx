@@ -146,6 +146,7 @@ export default function SecurityPage() {
           <>
             {/* Score banner — bg/border via data-state; score color via score tone class */}
             <div
+              id="tour-section-admin-security-1"
               data-state={bannerState}
               className={clsx(styles.scoreBanner, scoreTone)}
             >
@@ -170,7 +171,7 @@ export default function SecurityPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap gap-2 mb-4 items-center">
+            <div id="tour-section-admin-security-2" className="flex flex-wrap gap-2 mb-4 items-center">
               <select
                 value={catFilter}
                 onChange={e => setCatFilter(e.target.value)}

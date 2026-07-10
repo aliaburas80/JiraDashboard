@@ -129,14 +129,18 @@ export default function CoachingPage() {
       />
       <div className={shellStyles.pageBody}>
         {categories.length > 1 && (
-          <CoachingCategoryTabs
-            categories={categories}
-            active={active}
-            onChange={setActiveCategory}
-            severityByCategory={severityByCategory}
-          />
+          <div id="tour-section-coaching-1">
+            <CoachingCategoryTabs
+              categories={categories}
+              active={active}
+              onChange={setActiveCategory}
+              severityByCategory={severityByCategory}
+            />
+          </div>
         )}
-        <CoachingInsightCard insight={activeInsight} trend={trendByCategory[active]} />
+        <div id="tour-section-coaching-2">
+          <CoachingInsightCard insight={activeInsight} trend={trendByCategory[active]} />
+        </div>
       </div>
     </>
   );

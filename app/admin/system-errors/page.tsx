@@ -218,7 +218,7 @@ export default function SystemErrorsPage() {
                 <div className={styles.panelGrid}>
                   {/* Left — What failed (red) */}
                   <div className={styles.errorPanel}>
-                    <p className={styles.errorPanelLabel}>What failed</p>
+                    <p id="tour-section-admin-system-errors-1" className={styles.errorPanelLabel}>What failed</p>
                     <p className={styles.errorTitle}>{info.title}</p>
                     <p className={styles.errorDetail}>{info.detail}</p>
                     <code className={styles.errorSnippet}>
@@ -228,7 +228,7 @@ export default function SystemErrorsPage() {
 
                   {/* Right — Resolution (green / blue / amber by data-resolution) */}
                   <div className={styles.solutionPanel} data-resolution={log.resolution}>
-                    <div className={styles.solutionPanelHeader}>
+                    <div id="tour-section-admin-system-errors-2" className={styles.solutionPanelHeader}>
                       <p className={styles.solutionPanelLabel}>How it was handled</p>
                       <span data-resolution={log.resolution} className={styles.resolutionChip}>
                         {log.resolution}

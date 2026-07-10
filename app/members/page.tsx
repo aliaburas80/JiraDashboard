@@ -73,7 +73,7 @@ export default function MembersPage() {
             <h1 id="tour-header-members" className="font-black tracking-tight" style={{ fontSize: 28, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)' }}>Members</h1>
             <p className="mt-2" style={{ fontSize: 13, color: 'var(--dc-p2, #909090)' }}>Team directory, roles, profile details, and contact info.</p>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
+          <div id="tour-section-members-1" className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
             <div className="rounded-[100px] px-5 py-3 text-center" style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
               <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: 'var(--dc-p3, #505050)' }}>Members</p>
               <p className="text-2xl font-black" style={{ color: 'var(--dc-acc2, #FF8A4C)' }}>{members.length}</p>
@@ -96,7 +96,7 @@ export default function MembersPage() {
         </section>
 
         {/* Search bar */}
-        <section className="mb-6">
+        <section id="tour-section-members-2" className="mb-6">
           <label className="relative block">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--dc-p3, #505050)' }}>⌕</span>
             <input

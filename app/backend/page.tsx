@@ -228,7 +228,7 @@ export default function BackendPage() {
 
           {/* ── 1. Stats Cards ── */}
           <section>
-            <h2 className={styles.sectionHeading}>Import Statistics</h2>
+            <h2 id="tour-section-backend-1" className={styles.sectionHeading}>Import Statistics</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
 
               {/* Total Imports */}
@@ -283,7 +283,7 @@ export default function BackendPage() {
 
           {/* ── 2. API Endpoints ── */}
           <section>
-            <h2 className={styles.sectionHeading}>API Endpoints</h2>
+            <h2 id="tour-section-backend-2" className={styles.sectionHeading}>API Endpoints</h2>
             <div className={styles.tableCard}>
               {data.endpoints.length === 0 ? (
                 <p className={styles.tableEmpty}>No endpoints registered.</p>

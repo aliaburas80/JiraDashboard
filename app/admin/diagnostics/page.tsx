@@ -166,7 +166,7 @@ export default function DiagnosticsPage() {
       >
 
         {/* Ops score banner */}
-        <div className={`${styles.opsBanner} ${toneClass(opsTone)}`}>
+        <div id="tour-section-admin-diagnostics-1" className={`${styles.opsBanner} ${toneClass(opsTone)}`}>
           <div className="flex items-center gap-4">
             <div className={styles.opsCircle}>
               <span className={`${styles.opsCircleValue} text-xl font-black leading-none`}>{data.opsScore}</span>
@@ -294,7 +294,7 @@ export default function DiagnosticsPage() {
 
           {/* Environment checks */}
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-            <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Environment ({envOkCount}/{envTotal} OK)</h2>
+            <h2 id="tour-section-admin-diagnostics-2" className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Environment ({envOkCount}/{envTotal} OK)</h2>
             <EnvRow label="SESSION_SECRET set (≥ 32 chars)" ok={data.env.sessionSecretSet}  note="Required for secure cookies" />
             <EnvRow label="NODE_ENV = production"            ok={data.env.nodeEnvProduction} note="Enables Next.js production mode" />
             <EnvRow label="DATABASE_URL configured"          ok={data.env.dbUrlSet}          note="SQLite file path" />

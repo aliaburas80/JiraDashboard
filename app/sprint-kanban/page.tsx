@@ -455,7 +455,7 @@ export default function SprintKanbanPage() {
         </div>
 
         {/* ── Mode banner ── */}
-        <div className={styles.modeBanner} data-mode={hasSprintData ? 'sprint' : 'kanban'}>
+        <div id="tour-section-sprint-kanban-1" className={styles.modeBanner} data-mode={hasSprintData ? 'sprint' : 'kanban'}>
           {hasSprintData ? (
             <svg className={styles.modeBannerIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" aria-hidden="true">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -480,7 +480,7 @@ export default function SprintKanbanPage() {
         </div>
 
         {/* ── KPI strip ── */}
-        <div className={styles.kpiStrip}>
+        <div id="tour-section-sprint-kanban-2" className={styles.kpiStrip}>
           {kpis.map(k => (
             <div key={k.label} className={styles.kpiCard} style={{ '--kpi-delay': `${k.delay}ms` } as CSSProperties}>
               <p className={styles.kpiLabel}>{k.label}</p>

@@ -78,7 +78,7 @@ export default function EpicReadinessPage() {
       <div style={{ padding: '0 28px 48px' }}>
 
         {/* ── Epic summary KPIs ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+        <div id="tour-section-epic-readiness-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
           {[
             { label: 'Total Epics', value: epicReadiness.length, color: '#475569', bg: '#F8FAFC', border: '#E2E8F0' },
             { label: 'On Track', value: epicReadiness.filter(e => e.risk === 'good' && e.completion >= 60).length, color: '#059669', bg: '#F0FDF4', border: '#BBF7D0' },
@@ -159,7 +159,7 @@ export default function EpicReadinessPage() {
         {/* ── All epics table ── */}
         {epicReadiness.length > 0 && (
           <SectionCard title={`All Epics  ·  ${epicReadiness.length} total`}>
-            <div style={{ overflowX: 'auto' }}>
+            <div id="tour-section-epic-readiness-2" style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
