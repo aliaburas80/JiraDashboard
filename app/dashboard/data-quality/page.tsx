@@ -133,7 +133,7 @@ export default function DataQualityPage() {
       <div style={{ padding: '0 28px 48px' }}>
 
         {/* ── Score block ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '20px 24px', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, marginBottom: 20 }}>
+        <div id="tour-section-dashboard-data-quality-1" style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '20px 24px', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, marginBottom: 20 }}>
           {/* Circular score */}
           <div style={{ position: 'relative', flexShrink: 0 }}>
             <svg width={72} height={72} viewBox="0 0 18 18">
@@ -184,7 +184,7 @@ export default function DataQualityPage() {
                 const sev = SEVERITY_COLORS[issue.severity] ?? SEVERITY_COLORS.low;
                 const pct = issue.total > 0 ? Math.round((issue.count / issue.total) * 100) : 0;
                 return (
-                  <div key={i} style={{
+                  <div key={i} id={i === 0 ? 'tour-section-dashboard-data-quality-2' : undefined} style={{
                     display: 'flex', alignItems: 'flex-start', gap: 14, padding: '14px 0',
                     borderBottom: i < filteredIssues.length - 1 ? '1px solid #F1F5F9' : 'none',
                   }}>

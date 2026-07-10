@@ -402,7 +402,7 @@ export default function ChartsPage() {
         </div>
 
         {/* ── Tab bar ── */}
-        <div className={styles.tabBar} role="tablist">
+        <div id="tour-section-charts-1" className={styles.tabBar} role="tablist">
           <button
             type="button"
             role="tab"
@@ -454,7 +454,7 @@ export default function ChartsPage() {
                     );
                   })}
                 </div>
-                <div className={styles.legendRow}>
+                <div id="tour-section-charts-2" className={styles.legendRow}>
                   {[['#16a34a','≥80% done'],['#f59e0b','≥60% done'],['#dc2626','<60% done']].map(([c,l]) => (
                     <span key={l} className={styles.legendItem}>
                       <span className={styles.legendDot} style={{ '--dot-color': c } as CSSProperties} />

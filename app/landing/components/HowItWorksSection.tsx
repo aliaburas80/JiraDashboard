@@ -58,7 +58,7 @@ export default function HowItWorksSection() {
 
   return (
     <section ref={sectionRef} id="how-it-works" className={styles.section}>
-      <h2 className={clsx(styles.title, 'text-2xl sm:text-3xl font-black')}>How it works</h2>
+      <h2 id="tour-section-landing-2" className={clsx(styles.title, 'text-2xl sm:text-3xl font-black')}>How it works</h2>
 
       <div className={styles.grid}>
         <SvgIcon name="arrowRight" size={20} className={clsx(styles.arrow, styles.arrow1)} aria-hidden="true" />

@@ -464,8 +464,12 @@ one short, self-contained tour per page (~49 routes covered) after feedback
 that a single long cross-page walkthrough didn't scale as pages were added.
 
 \`PAGE_TOURS\` is a \`Record<pathname, TourStep[]>\` — each route owns its own
-1–2 step tour describing only what's actually on that page. There is no
-cross-page navigation in the tour engine anymore: \`ProductTour\` reads
+short, self-contained tour describing only what's actually on that page.
+Deepened 2026-07-10 (146 total steps across 49 routes, averaging 3 per route,
+up from ~1 each) after feedback that header-only steps named the page without
+explaining what was on it — most routes now have 1 header step plus 1-2 steps
+anchored to real content sections (a chart, table, KPI strip, or filter bar).
+There is no cross-page navigation in the tour engine: \`ProductTour\` reads
 \`getPageTour(usePathname())\` and closes itself on every route change (a new
 page has its own, separate tour to start). \`PageTourButton\` is the single,
 consistent trigger — a floating pill mounted once at the root layout
@@ -477,12 +481,18 @@ Start it with \`window.dispatchEvent(new CustomEvent('dc:start-tour'))\` (what
 \`PageTourButton\` does) — \`ProductTour\` ignores the event if the current route
 has no registered tour. Steps target real DOM ids: most pages use the \`id\`
 already supported by \`PageHeader\` (dashboard sub-pages) or
-\`AdminConsoleLayout\`'s \`headerId\` prop (admin pages), or a plain \`id\` on the
-page's own heading element for everything else. Every \`/dashboard/*\` page
-also gets a second step pointing at \`dashboard-nav-sidebar\` (a small anchor
-near the sidebar's top — not the full-height \`<aside>\`, since the popover
-only positions above/below a target and a full-height target would push it
-off-screen). \`productTour.test.ts\` (TC-PT-02/03) greps the source tree to
+\`AdminConsoleLayout\`'s \`headerId\` prop (admin pages), or a plain \`id\` added
+directly to a content section for everything else — including \`/developer\`
+and \`/help\`, whose search boxes and nav/filter rows got real ids despite
+their main content being a Markdown-to-HTML string with nothing else
+anchorable. Two content steps (\`/dashboard/actions\`, \`/dashboard/data-quality\`)
+anchor to only the first item in a repeated list via
+\`id={i === 0 ? 'tour-section-...' : undefined}\` rather than the whole list,
+to keep the anchor compact. Every \`/dashboard/*\` page's last step points at
+\`dashboard-nav-sidebar\` (a small anchor near the sidebar's top — not the
+full-height \`<aside>\`, since the popover only positions above/below a target
+and a full-height target would push it off-screen). \`productTour.test.ts\`
+(TC-PT-02/03) greps the source tree to
 confirm every route key is a real page and every \`targetId\` a step
 references is actually rendered — add a route or anchor without the other
 side and the test fails, instead of silently shipping a broken tour.
@@ -1459,11 +1469,11 @@ export default function DeveloperPage() {
             navOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           ].join(' ')}
         >
-          <div className="px-3 pb-3 mb-2" style={{ borderBottom: '1px solid var(--color-border, #e2e8f0)' }}>
+          <div id="tour-section-developer-nav" className="px-3 pb-3 mb-2" style={{ borderBottom: '1px solid var(--color-border, #e2e8f0)' }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-p1, #F2F2F2)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Developer Portal</p>
             <p style={{ fontSize: 11, color: 'var(--dc-p2, #909090)', marginTop: 2 }}>Delivery Clarity v4.6</p>
             {/* Global search */}
-            <div className="relative mt-2">
+            <div id="tour-section-developer-search" className="relative mt-2">
               <input
                 type="text"
                 value={globalSearch}

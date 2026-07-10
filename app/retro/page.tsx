@@ -295,7 +295,7 @@ export default function RetroPage() {
           <p className={styles.pageSubtitle}>Capture what happened, what to improve, and generate next-action suggestions.</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div id="tour-section-retro-1" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Fill in App — primary */}
           <button type="button" onClick={() => setView('form')} className={clsx(styles.menuCard, styles.menuCardPrimary)}>
             <div className={styles.menuCardIcon} aria-hidden="true">✍️</div>
@@ -335,7 +335,7 @@ export default function RetroPage() {
         </div>
 
         {/* Info panel */}
-        <div className={styles.infoPanel}>
+        <div id="tour-section-retro-2" className={styles.infoPanel}>
           <p className={styles.infoPanelTitle}>What the retrospective tool does</p>
           <ul className={styles.infoPanelList}>
             {[

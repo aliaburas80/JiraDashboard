@@ -1023,7 +1023,7 @@ export default function AdminSettingsPage() {
       >
         {error && <div className="mb-6 rounded-[14px] border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div>}
 
-        <section>
+        <section id="tour-section-admin-settings-1">
           {tab === 'requests' && <UserAddRequestsPanel />}
           {tab === 'jira'     && <JiraConnectionsPanel />}
           {tab === 'config'   && <AppConfigPanel />}

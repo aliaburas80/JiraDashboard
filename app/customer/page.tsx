@@ -374,7 +374,7 @@ export default function CustomerPage() {
             </div>
 
             {/* ── Key metrics strip ── */}
-            <div className={styles.metricsStrip}>
+            <div id="tour-section-customer-1" className={styles.metricsStrip}>
               {kpis.map(k => (
                 <div
                   key={k.label}
@@ -566,7 +566,7 @@ export default function CustomerPage() {
 
             {/* ── Current risks ── */}
             <div className={styles.section} style={{ '--section-delay': '120ms' } as CSSProperties}>
-              <p className={styles.sectionHead}>Current Risks</p>
+              <p id="tour-section-customer-2" className={styles.sectionHead}>Current Risks</p>
               {riskList.length === 0 ? (
                 <div className={styles.noRiskCard}>
                   ✓ No significant delivery risks identified at this time.

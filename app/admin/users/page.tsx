@@ -385,7 +385,7 @@ export default function AdminUsersPage() {
       )}
 
       {/* ── Filters ── */}
-      <div className={styles.filterRow}>
+      <div id="tour-section-admin-users-1" className={styles.filterRow}>
         <input
           type="search"
           placeholder="Search name or email…"
@@ -447,7 +447,7 @@ export default function AdminUsersPage() {
       <div className={styles.tableCard}>
         <table className={styles.table}>
           <thead>
-            <tr className={styles.theadRow}>
+            <tr id="tour-section-admin-users-2" className={styles.theadRow}>
               <th className={styles.checkboxTh}>
                 <input
                   type="checkbox"

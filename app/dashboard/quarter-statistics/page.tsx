@@ -75,7 +75,7 @@ export default function QuarterStatisticsPage() {
           <>
             {/* ── Quarter chart ── */}
             <SectionCard title="Throughput by Quarter">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div id="tour-section-quarter-statistics-1" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {quarters.map((q: any, i: number) => {
                   const pct = Math.round((q.issues / qMax) * 100);
                   const donePct = q.issues > 0 ? Math.round(((q.done ?? 0) / q.issues) * 100) : 0;
@@ -111,7 +111,7 @@ export default function QuarterStatisticsPage() {
             <SectionCard title="Quarterly Breakdown">
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
-                  <thead>
+                  <thead id="tour-section-quarter-statistics-2">
                     <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
                       {['Quarter', 'Total Issues', 'Completed', 'Completion Rate'].map(h => (
                         <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94A3B8' }}>{h}</th>

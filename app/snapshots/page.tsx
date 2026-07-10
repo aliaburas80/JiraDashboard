@@ -94,7 +94,7 @@ export default function SnapshotsPage() {
               {snapshots.length} snapshot{snapshots.length !== 1 ? 's' : ''} saved · max 20 per account
             </p>
           </div>
-          <div className="flex gap-2">
+          <div id="tour-section-snapshots-1" className="flex gap-2">
             {snapshots.length >= 2 && (
               <button
                 type="button"
@@ -135,7 +135,7 @@ export default function SnapshotsPage() {
             </button>
           </div>
         ) : (
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+          <div id="tour-section-snapshots-2" className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             <ul className="divide-y divide-slate-100">
               {snapshots.map(snap => (
                 <li key={snap.id} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 group">

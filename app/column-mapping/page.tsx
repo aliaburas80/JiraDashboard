@@ -137,7 +137,7 @@ export default function ColumnMappingPage() {
 
         {/* ── Health summary ── */}
         {!loading && (
-          <div className={styles.summaryRow}>
+          <div id="tour-section-column-mapping-1" className={styles.summaryRow}>
             {[
               {
                 val: `${requiredMapped} / ${REQUIRED.length}`,
@@ -231,7 +231,7 @@ export default function ColumnMappingPage() {
           </div>
 
           {/* Required fields section */}
-          <div className={styles.sectionHead}>
+          <div id="tour-section-column-mapping-2" className={styles.sectionHead}>
             <span className={styles.sectionTitle}>
               <span className={styles.sectionDot} data-kind="required" />
               Required fields

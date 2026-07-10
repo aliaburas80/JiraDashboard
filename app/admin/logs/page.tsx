@@ -67,7 +67,7 @@ export default function AdminLogsPage() {
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
             <thead>
-              <tr className={styles.headerRow}>
+              <tr id="tour-section-admin-logs-1" className={styles.headerRow}>
                 {['User', 'File', 'Type', 'Issues', 'Health', 'Status', 'Uploaded'].map(h => (
                   <th key={h} className={styles.headerCell}>{h}</th>
                 ))}

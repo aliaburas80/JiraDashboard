@@ -135,7 +135,7 @@ export default function DeliveryCompositionPage() {
         {/* ── Type breakdown ── */}
         {typeDist.length > 0 && (
           <SectionCard title="Composition by Type">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div id="tour-section-delivery-composition-1" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {typeDist.map((r, i) => (
                 <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ width: 120, fontSize: 12, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name}>{r.name}</span>
@@ -152,7 +152,7 @@ export default function DeliveryCompositionPage() {
         {/* ── Story points composition ── */}
         {storyPoints.totalStoryPoints > 0 && (
           <SectionCard title="Story Points Composition">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 12 }}>
+            <div id="tour-section-delivery-composition-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 12 }}>
               {[
                 { label: 'Total', value: storyPoints.totalStoryPoints, color: '#2563EB' },
                 { label: 'Completed', value: storyPoints.completedStoryPoints || 0, color: '#059669' },

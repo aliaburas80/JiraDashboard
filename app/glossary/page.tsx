@@ -355,7 +355,7 @@ export default function GlossaryPage() {
         </div>
 
         {/* ── Search ── */}
-        <div className="relative mb-6">
+        <div id="tour-section-glossary-1" className="relative mb-6">
           <SvgIcon
             name="search"
             size={16}
@@ -387,7 +387,7 @@ export default function GlossaryPage() {
 
         {/* ── Category filter ── */}
         {!search && (
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div id="tour-section-glossary-2" className="flex flex-wrap gap-2 mb-8">
             {CATS.map(cat => {
               const isActive = activeCat === cat.id;
               return (

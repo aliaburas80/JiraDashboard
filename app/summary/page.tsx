@@ -130,7 +130,7 @@ export default function SummaryPage() {
 
         {/* ── Alert strip ── */}
         {(topBlockers.length > 0 || overdueItems.length > 0 || orphanCount > 0) && (
-          <div className={styles.alertStrip}>
+          <div id="tour-section-summary-1" className={styles.alertStrip}>
             {topBlockers.length > 0 && (
               <div className={`${styles.alertChip} ${styles.alertChipBlocked}`}>
                 <SvgIcon name="priorityBlocker" size={14} /> {topBlockers.length} blocked
@@ -152,7 +152,7 @@ export default function SummaryPage() {
         {/* ── Smart Actions preview ── */}
         {smartActions.length > 0 && (
           <SectionCard title={`Smart Actions  ·  Top ${Math.min(smartActions.length, 3)} recommendations`}>
-            <div className={styles.actionList}>
+            <div id="tour-section-summary-2" className={styles.actionList}>
               {smartActions.slice(0, 3).map((a, i) => {
                 const tok = ACTION_TOKENS[a.type] ?? ACTION_TOKENS.info;
                 return (

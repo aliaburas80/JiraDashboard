@@ -832,7 +832,7 @@ export default function HelpPage() {
         </div>
 
         {/* Search */}
-        <div style={{ position: 'relative', marginBottom: 20 }}>
+        <div id="tour-section-help-search" style={{ position: 'relative', marginBottom: 20 }}>
           <SvgIcon name="search" size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--dc-p3, #505050)', pointerEvents: 'none' }} />
           <input
             type="search"
@@ -893,7 +893,7 @@ export default function HelpPage() {
 
         {/* Group Filter Pills */}
         {!isSearching && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20 }}>
+          <div id="tour-section-help-pills" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20 }}>
             {[{ id: 'all', label: 'All topics', icon: 'book' }, ...SECTION_GROUPS].map(g => {
               const isActive = activeGroupId === g.id;
               return (

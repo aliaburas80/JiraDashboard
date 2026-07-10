@@ -108,7 +108,7 @@ export default function FlowHealthPage() {
       </div>
 
       {/* KPI strip */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }} aria-label="Flow metrics">
+      <section id="tour-section-flow-health-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }} aria-label="Flow metrics">
         <DCKpiCard label="Avg Lead Time"  value={`${flow.averageLeadTimeDays ?? 0}d`}  subtitle={`${flow.leadTimeSampleSize ?? 0} completed`} tone={(flow.averageLeadTimeDays ?? 0) > 20 ? 'warning' : 'success'} />
         <DCKpiCard label="Avg Cycle Time" value={`${flow.averageCycleTimeDays ?? 0}d`} subtitle={`${flow.cycleTimeSampleSize ?? 0} with start`} tone={(flow.averageCycleTimeDays ?? 0) > 10 ? 'warning' : 'success'} />
         <DCKpiCard label="Flow Efficiency" value={`${flowEff}%`} subtitle={`${flow.done} of ${flow.issues} done`} tone={flowEff >= 60 ? 'success' : flowEff >= 30 ? 'warning' : 'critical'} />
@@ -120,7 +120,7 @@ export default function FlowHealthPage() {
 
         {/* Left: Bottleneck map */}
         <div className="dc-card" style={{ padding: 22 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <div id="tour-section-flow-health-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
             <div>
               <h2 style={{ fontSize: 15, fontWeight: 900, color: 'var(--dc-text)', margin: 0 }}>Bottleneck Map</h2>
               <p style={{ fontSize: 12, color: 'var(--dc-text-2)', margin: '3px 0 0' }}>Active work distribution by stage</p>

@@ -204,7 +204,7 @@ export default function AdminFeedbackPage() {
 
       <div className={styles.card}>
         {/* Status filter tabs */}
-        <div className={styles.filterTabs} role="tablist" aria-label="Filter by status">
+        <div id="tour-section-admin-feedback-1" className={styles.filterTabs} role="tablist" aria-label="Filter by status">
           {STATUS_TABS.map(t => {
             const cnt = t === 'All' ? totalCount : (counts[t] ?? 0);
             return (
@@ -230,7 +230,7 @@ export default function AdminFeedbackPage() {
           <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead>
-                <tr>
+                <tr id="tour-section-admin-feedback-2">
                   <th>Category</th>
                   <th>Message</th>
                   <th>Impact</th>

@@ -111,7 +111,7 @@ export default function TrendsPage() {
         {hasData && (
           <>
             {/* Summary row */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+            <div id="tour-section-trends-1" className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
               <StatCard label="Health Score"        first={first.healthScore}             last={last.healthScore}             unit="/100" />
               <StatCard label="Completion"          first={first.completionRate}          last={last.completionRate}          unit="%"    />
               <StatCard label="Blocked Items"       first={first.blockedIssues}           last={last.blockedIssues}           unit=""     higherIsBetter={false} />
@@ -219,7 +219,7 @@ export default function TrendsPage() {
 
             {/* Raw upload log table */}
             <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-100">
+              <div id="tour-section-trends-2" className="px-5 py-4 border-b border-slate-100">
                 <p className="text-sm font-black text-slate-700">Upload Log</p>
               </div>
               <div className="overflow-x-auto">

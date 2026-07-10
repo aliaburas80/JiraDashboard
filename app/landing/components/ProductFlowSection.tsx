@@ -38,7 +38,7 @@ export default function ProductFlowSection() {
 
   return (
     <section ref={sectionRef} id="product-flow" className={styles.section}>
-      <h2 className={clsx(styles.title, 'text-2xl sm:text-3xl font-black')}>From export to decision</h2>
+      <h2 id="tour-section-landing-1" className={clsx(styles.title, 'text-2xl sm:text-3xl font-black')}>From export to decision</h2>
 
       <div className={styles.flow}>
         <div ref={jiraCardRef} className={styles.card}>

@@ -128,7 +128,7 @@ export default function ExplorePage() {
 
         {/* ── Search Bar ── */}
         <form onSubmit={handleSubmit} className="mb-6">
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div id="tour-section-explore-1" className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <input
                 ref={inputRef}
@@ -192,7 +192,7 @@ export default function ExplorePage() {
               const blockedCount = graph.nodes.filter(n => n.isBlocked || n.health === 'critical').length;
               const riskPathCount = graph.nodes.filter(n => n.isOnRiskPath).length;
               return (
-                <div className="flex items-center gap-3 flex-wrap">
+                <div id="tour-section-explore-2" className="flex items-center gap-3 flex-wrap">
                   <span className="font-mono text-lg font-black text-blue-700">{graph.focusKey}</span>
                   <span className="text-sm text-slate-500">·</span>
                   <span className="text-sm font-semibold text-slate-600">{graph.focusType}</span>

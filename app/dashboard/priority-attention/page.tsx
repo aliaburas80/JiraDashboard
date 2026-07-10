@@ -89,7 +89,7 @@ export default function PriorityAttentionPage() {
       <div style={{ padding: '0 28px 48px' }}>
 
         {/* ── Summary row ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+        <div id="tour-section-priority-attention-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
           {[
             { label: 'Blockers', value: blockers.length, color: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
             { label: 'Overdue', value: overdueItems.length, color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
@@ -106,7 +106,7 @@ export default function PriorityAttentionPage() {
         {/* ── Blockers panel ── */}
         {(quickFilter === 'all' || quickFilter === 'blocked') && blockers.length > 0 && (
           <SectionCard title={`🚫 Blockers · ${blockers.length} items`}>
-            <AttentionTable items={blockers} />
+            <AttentionTable items={blockers} headerId="tour-section-priority-attention-2" />
           </SectionCard>
         )}
 
@@ -135,14 +135,14 @@ export default function PriorityAttentionPage() {
   );
 }
 
-function AttentionTable({ items, showAge, showAssignee }: {
-  items: FlowItem[]; showAge?: boolean; showAssignee?: boolean;
+function AttentionTable({ items, showAge, showAssignee, headerId }: {
+  items: FlowItem[]; showAge?: boolean; showAssignee?: boolean; headerId?: string;
 }) {
   const shown = items.slice(0, 50);
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
-        <thead>
+        <thead id={headerId}>
           <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
             {['Key', 'Summary', 'Status', showAssignee && 'Assignee', showAge && 'Age (d)', 'Health'].filter(Boolean).map(h => (
               <th key={h as string} style={{ padding: '6px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94A3B8' }}>{h}</th>

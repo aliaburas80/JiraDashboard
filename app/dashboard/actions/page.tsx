@@ -124,7 +124,7 @@ export default function SmartActionsPage() {
       <div className={shellStyles.pageBody}>
 
         {/* ── Summary count chips ── */}
-        <div className={styles.countStrip}>
+        <div id="tour-section-actions-1" className={styles.countStrip}>
           {(['critical', 'warning', 'info'] as const).map(type => {
             const count = actions.filter(a => a.type === type).length;
             if (!count) return null;
@@ -151,7 +151,7 @@ export default function SmartActionsPage() {
                   style={{ '--action-accent': tok.color } as CSSProperties}>
                   <span className={styles.actionIcon}><SvgIcon name={action.icon} size={18} /></span>
                   <div className={styles.actionBody}>
-                    <div className={styles.actionHeader}>
+                    <div id={i === 0 ? 'tour-section-actions-2' : undefined} className={styles.actionHeader}>
                       <span className={styles.actionTypeBadge}
                         style={{ '--badge-bg': tok.bg, '--badge-color': tok.color } as CSSProperties}>
                         {action.type}

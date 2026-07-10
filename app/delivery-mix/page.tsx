@@ -264,7 +264,7 @@ export default function DeliveryMixPage() {
 
           {/* LEFT: animated donut + rich legend */}
           <div className={styles.card} style={{ '--card-delay': '60ms' } as CSSProperties}>
-            <div className={styles.cardHead}>
+            <div id="tour-section-delivery-mix-1" className={styles.cardHead}>
               <span className={styles.cardTitle}>Issue Type Distribution</span>
               <span className={styles.cardBadge}>{total} issues · {typeEntries.length} types</span>
             </div>
@@ -345,7 +345,7 @@ export default function DeliveryMixPage() {
 
           {/* RIGHT: Work mix analysis */}
           <div className={styles.card} style={{ '--card-delay': '80ms' } as CSSProperties}>
-            <div className={styles.cardHead}>
+            <div id="tour-section-delivery-mix-2" className={styles.cardHead}>
               <span className={styles.cardTitle}>Work Mix Analysis</span>
               <span className={styles.cardBadge}>what your mix says</span>
             </div>
