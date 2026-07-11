@@ -1466,17 +1466,19 @@ Alex's flow (New User — First Login):
 
 *(Renumbered from `SCN-059` 2026-06-28 — both this scenario (RBC-26) and "Multi-Sprint Retro File Upload Surfaces a Repeated Blocker" above (RETRO-39) were independently assigned `SCN-059` on the same day, 2026-06-26. The retro scenario keeps `SCN-059` since it was committed first; this one moves to the next free ID. No other content changed.)*
 
-**Context:** An admin oversees all 7 coaching categories and wants to immediately see what needs attention rather than clicking through every tab — and wants to know if last sprint's fix actually helped.
+**Context:** An admin oversees all 7 coaching categories and wants to immediately see what needs attention rather than opening every category — and wants to know if last sprint's fix actually helped.
+
+*(Steps 2–4 updated 2026-07-12 for the relevance-first redesign — see DEVELOPER_GUIDE.md "Coaching Insights Relevance-First Redesign." The 7 tabs this scenario originally described were replaced by a single primary card plus a collapsed "View other roles" list; the underlying `SEVERITY_RANK` sort and per-category data are unchanged.)*
 
 **Flow:**
 1. The admin opens `/dashboard/coaching` having previously saved two snapshots (a "Sprint 14" and a "Sprint 15" snapshot via the Snapshots feature)
-2. The 7 category tabs are sorted by severity; "Team Lead" is `critical` and is shown first, already active — the admin doesn't need to find it
-3. "Product Owner" shows a small amber nudge dot because its severity is `high`, visible without switching tabs
-4. The admin switches to "Product Owner" and its hero banner shows a small green "improved" badge — `computeSeverityTrend()` compared today's `high` severity against the Sprint 14 snapshot's `critical` severity and confirmed it dropped in urgency
-5. Back on "Team Lead", the hero headline reads "Early signal: ..." because this category's confidence band is `Low` — the admin understands not to over-trust the verdict yet
+2. The 7 categories are sorted by severity; "Team Lead" is `critical` and renders directly in the primary card — the admin doesn't need to find it or open anything first
+3. Expanding "View other roles" shows the remaining 6 categories as a list; "Product Owner" shows an amber warning icon because its severity is `high`, visible without selecting it
+4. The admin clicks "Product Owner" in that list — it swaps into the primary card, and its hero banner shows a small green "improved" badge — `computeSeverityTrend()` compared today's `high` severity against the Sprint 14 snapshot's `critical` severity and confirmed it dropped in urgency
+5. Selecting "Team Lead" again from "View other roles," its hero headline reads "Early signal: ..." because this category's confidence band is `Low` — the admin understands not to over-trust the verdict yet
 6. The admin clicks the "Average Cycle Time" evidence chip and is taken directly to `/dashboard/flow-health` to investigate further
 
-**Outcome:** The admin immediately sees what's most urgent, confirms an earlier fix on another category is trending in the right direction, is warned the most urgent category's data is still thin, and drills into the source dashboard in one click — instead of reading 7 fully-expanded text walls in a fixed order.
+**Outcome:** The admin immediately sees what's most urgent with no extra clicks, confirms an earlier fix on another category is trending in the right direction, is warned the most urgent category's data is still thin, and drills into the source dashboard in one click — instead of reading 7 fully-expanded text walls in a fixed order.
 
 **Related:** UC-114, FR-353, FR-354, TC-RBC-10–13
 

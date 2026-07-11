@@ -3398,9 +3398,9 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 **Main Flow:**
 1. The page loads the current `DashboardMetrics` (via the existing `loadMetricsWithSource()`) and the user's role (via the existing `GET /api/auth/me`)
-2. `visibleCategoriesForRole(role)` resolves which of the 7 coaching categories the user sees: Scrum Master, Product Owner, and C-level roles see exactly one category each; the Manager role sees three (Engineering Manager, Delivery Manager, Team Lead) as tabs; Admin sees all 7 as tabs; the generic User role sees Team Lead
+2. `visibleCategoriesForRole(role)` resolves which of the 7 coaching categories the user sees: Scrum Master, Product Owner, and C-level roles see exactly one category each; the Manager role sees three (Engineering Manager, Delivery Manager, Team Lead); Admin sees all 7; the generic User role sees Team Lead
 3. For each visible category, a dedicated generator (`src/services/coaching/generators/`) produces a `RoleBasedCoachingInsight`: health summary, weak points, focus areas, evidence (each citing a real metric value), recommended actions, prevention advice, ceremony advice, next-sprint suggestions, a severity badge, and a confidence score
-4. The user reviews the active category's card, sorted so the most urgent category is shown first (and is the default-active tab); if more than one category is visible, they can switch tabs without reloading the page
+4. The user reviews the primary card, sorted so the most urgent category renders there by default; if more than one category is visible, the rest collapse under a "View other roles" list below it, and selecting one swaps it into the primary card without reloading the page
 
 **Alternate Flow — Admin role:**
 3a. The page additionally fetches `GET /api/coaching/admin-signals` (unresolved system errors, storage provider, cloud-sync freshness) before generating the Admin category's insight, so it can cite real operational signals in addition to Data Quality

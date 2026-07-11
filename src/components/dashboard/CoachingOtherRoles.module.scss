@@ -1,0 +1,115 @@
+// ─── Coaching — collapsed "other roles" navigator ──────────────────────────────
+.wrapper {
+  max-width: 760px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: 8px 4px;
+  font-size: var(--text-sm, 12px);
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.chevron {
+  transition: transform var(--transition-fast, 120ms);
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  margin-top: var(--space-2, 8px);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  width: 100%;
+  padding: var(--space-3, 12px);
+  border-radius: var(--radius-lg, 10px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background var(--transition-fast, 120ms), border-color var(--transition-fast, 120ms);
+
+  &:hover {
+    background: var(--color-subtle);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.rowIcon {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.rowLabel {
+  flex-shrink: 0;
+  font-size: var(--text-sm, 12px);
+  font-weight: 700;
+  color: var(--color-text);
+  min-inline-size: 130px;
+}
+
+.rowMood {
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+.rowMood--low {
+  color: var(--color-success);
+}
+
+.rowMood--medium {
+  color: var(--color-info);
+}
+
+.rowMood--high {
+  color: var(--color-warning);
+}
+
+.rowMood--critical {
+  color: var(--color-danger-strong);
+}
+
+.rowSummary {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm, 12px);
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowArrow {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}

@@ -1736,7 +1736,7 @@ Pure interpretation layer over the already-computed `DashboardMetrics` — close
 
 **Route:** `app/dashboard/coaching/page.tsx` (Client Component) — fetches `DashboardMetrics` via the existing `loadMetricsWithSource()` and the current role via the existing `GET /api/auth/me`, identical to every other `/dashboard/*` page; additionally fetches `GET /api/coaching/admin-signals` (new, admin-only) only when the resolved role is `admin`. Registered in `DashboardNavSidebar.tsx`'s `ROUTE_ACCESS` map for all 6 roles — category filtering happens inside the page (via `visibleCategoriesForRole()`), not by hiding the nav entry.
 
-**Components:** `src/components/dashboard/CoachingInsightCard.tsx`, `CoachingCategoryTabs.tsx` (tabs render only when a role has >1 visible category — `manager` and `admin`). Severity renders via the existing `Badge` component (`severityToBadgeVariant()` in `src/lib/coachingBadge.ts`), never a raw color.
+**Components:** `src/components/dashboard/CoachingInsightCard.tsx` (renders the active category's full insight — the most urgent one, by `SEVERITY_RANK`, by default), `CoachingOtherRoles.tsx` (renders only when a role has >1 visible category — `manager` and `admin` — a collapsed "View other roles" list of the remaining categories, each row showing a mood icon and one-line `healthSummary`; selecting a row swaps it into the primary card. Replaces the pre-2026-07-12 `CoachingCategoryTabs.tsx` tab strip — see "Coaching Insights Relevance-First Redesign" below). Severity renders via the existing `Badge` component (`severityToBadgeVariant()` in `src/lib/coachingBadge.ts`), never a raw color.
 
 **Testing:** `src/__tests__/roleBasedCoaching.test.ts` — 20 tests (`TC-RBC-01`–`09` + edge cases per CLAUDE.md §45.1: zero issues, empty `sprint.sprints`, confidence threshold boundaries, undefined `relations`). Suite: 689/71 passing.
 
@@ -1756,6 +1756,14 @@ Presentation redesign of the page above plus two small derived-data helpers — 
 - `app/dashboard/coaching/page.tsx` — sorts `bundle.categories` by `SEVERITY_RANK` before rendering tabs/default-active category; computes `trendByCategory` and `severityByCategory` and passes them down; dropped the old non-standard `.page` wrapper for the shared `shellStyles.pageBody` convention used by sibling `/dashboard/*` pages.
 
 **Testing:** `src/__tests__/coachingTrend.test.ts` (3 tests) and `src/__tests__/coachingEvidenceLink.test.ts` (2 tests) — `TC-RBC-10`–`13`. Suite: 694/73 passing.
+
+## Coaching Insights Relevance-First Redesign (Implemented — 2026-07-12)
+
+User feedback on the tab-based layout above: with the Manager role showing 3 tabs and Admin showing all 7, most of the page's content sat behind clicks most viewers never made. Replaced the horizontal `CoachingCategoryTabs` strip with a relevance-first layout: the most urgent category (already sorted by `SEVERITY_RANK`, unchanged from FR-353) renders directly in the primary `CoachingInsightCard` — no extra click required — and any remaining visible categories collapse under a `CoachingOtherRoles` "View other roles" expander below it. Selecting a row in that list swaps it into the primary card and moves the previously-active category back into the list. Roles with exactly one visible category (Scrum Master, Product Owner, C-level, generic `user`) are unaffected — they never rendered a tab strip before this change either, since it was already gated on `categories.length > 1`.
+
+**Files:** `src/components/dashboard/CoachingOtherRoles.tsx` + `.module.scss` (new) replace `CoachingCategoryTabs.tsx` + `.module.scss` (deleted — no other callers). `app/dashboard/coaching/page.tsx` updated: `activeCategory` now defaults to `sortedCategories[0].category` directly instead of via a `useEffect`-set tab selection, and the `otherInsights` list passed to `CoachingOtherRoles` is `sortedCategories` minus the active one. `src/lib/tour.ts`'s `/dashboard/coaching` steps re-ordered and re-copied to describe the new layout (the "other roles" step's target only exists in the DOM when a role has >1 category — the tour engine already handles a missing `targetId` gracefully, same as the old tab step did). `/help`'s Coaching Insights FAQ section rewritten to describe the collapsed list instead of tabs.
+
+**Testing:** No new domain logic was introduced — `visibleCategoriesForRole()`, `generateAllCoachingInsights()`, `SEVERITY_RANK` sorting, and all 7 category generators are unchanged, so `roleBasedCoaching.test.ts`, `coachingTrend.test.ts`, and `coachingEvidenceLink.test.ts` continue to cover the same calculations without modification. This was a presentation-only change to which component renders the category-selection UI.
 
 ## Retrospective Upload, Insights Engine, and `.xlsx` Template (Implemented — v4.7)
 
