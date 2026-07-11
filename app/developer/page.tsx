@@ -164,7 +164,7 @@ npm run lint        # lint check
 | / | Upload page — drag-and-drop Jira file |
 | /summary | Executive summary — health score + KPIs |
 | /charts | Visual analytics — 11 chart widgets |
-| /dashboard | Full delivery report — 3-zone layout (DashboardTopbar + DashboardNavSidebar + 10 routed pages) |
+| /dashboard | Full delivery report — 3-zone layout (DashboardTopbar + DashboardNavSidebar + 9 routed pages) |
 | /roadmap | Roadmap — epic progress + delivery forecasts |
 | /forecast | Forecast — burn-up chart + delivery status |
 | /retro | Retrospective — form, template download, insights |
@@ -207,7 +207,7 @@ app/
   globals.scss            Tailwind base + component layer
   summary/page.tsx        Executive summary
   charts/page.tsx         Visual analytics
-  dashboard/page.tsx      Full delivery report (3-zone: DashboardTopbar + DashboardNavSidebar + 10 routed pages)
+  dashboard/page.tsx      Full delivery report (3-zone: DashboardTopbar + DashboardNavSidebar + 9 routed pages)
   developer/page.tsx      Documentation portal (this page)
   backend/page.tsx        Backend status
   help/page.tsx           User guide

@@ -109,7 +109,7 @@ JiraDashboard/
 │   ├── summary/page.tsx          # /summary — Health overview (AppShell, standalone)
 │   ├── charts/page.tsx           # /charts — Visual analytics
 │   ├── column-mapping/page.tsx   # /column-mapping — Column mapping preview
-│   ├── dashboard/                # /dashboard/* — 10 independent routed pages
+│   ├── dashboard/                # /dashboard/* — 9 independent routed pages
 │   │   ├── layout.tsx            # /dashboard/* layout — DashboardTopbar + DashboardNavSidebar
 │   │   ├── page.tsx              # /dashboard — redirect to /dashboard/priority-attention
 │   │   ├── summary/page.tsx      # redirect to standalone /summary (not a real dashboard page)
@@ -120,12 +120,15 @@ JiraDashboard/
 │   │   ├── key-metrics/          # Key Metrics (KPI cards, canonical flow-efficiency + story points cards)
 │   │   ├── ownership/            # Ownership & Capacity (per-assignee load only; epic table lives on Epic Readiness)
 │   │   ├── trends/               # Trends (Sprints/Quarters toggle — velocity + per-sprint history, or quarterly throughput tables)
-│   │   ├── delivery-composition/ # Delivery Composition (completion-by-status/health donut)
-│   │   ├── data-quality/         # Data Quality Score (10-field check, impact report)
+│   │   ├── data-quality/         # Data Quality Score (10-field check, impact report) + Delivery Composition (completion donut)
 │   │   ├── coaching/             # Coaching Insights (role-based, evidence-linked recommendations)
 │   │   ├── actions/              # redirect to /dashboard/priority-attention (merged 2026-07-11)
 │   │   ├── sprint-status/        # redirect to /dashboard/trends (merged 2026-07-11)
-│   │   └── quarter-statistics/   # redirect to /dashboard/trends (merged 2026-07-11)
+│   │   ├── quarter-statistics/   # redirect to /dashboard/trends (merged 2026-07-11)
+│   │   ├── delivery-composition/ # redirect to /dashboard/data-quality (merged 2026-07-12)
+│   │   ├── delivery-controls/    # redirect to /dashboard/key-metrics (removed 2026-07-11)
+│   │   ├── visual-analytics/     # redirect to /dashboard/data-quality (removed 2026-07-11)
+│   │   └── kanban-health/        # redirect to /dashboard/key-metrics (removed 2026-07-11)
 │   ├── data-quality/page.tsx     # /data-quality — standalone Data Quality page (AppShell)
 │   ├── delivery-mix/page.tsx     # /delivery-mix — standalone Delivery Mix (type/status breakdown)
 │   ├── flow-health/page.tsx      # /flow-health — standalone Flow Health table
@@ -320,9 +323,11 @@ full mapping). Pass 2, per an explicit product-manager-lens follow-up request to
 Smart Actions into Priority Attention (both answered "what needs action right now," one as raw signal
 tables, the other as generated recommendations from those same signals) and merged Sprint Status +
 Quarter Statistics into a new Trends page with a Sprints/Quarters toggle (both answered "how are we
-trending over time," just at different granularity) — 12 pages → 10. All five merged-away routes
-(`/dashboard/actions`, `/dashboard/sprint-status`, `/dashboard/quarter-statistics`, plus the pass-1 three)
-now redirect to their replacement. The remaining 10 routed pages:
+trending over time," just at different granularity) — 12 pages → 10. A third pass on 2026-07-12 merged
+Delivery Composition into Data Quality (both are compact single-widget pages, now two stacked sections
+on one page) — 10 pages → 9. All six merged-away routes (`/dashboard/actions`, `/dashboard/sprint-status`,
+`/dashboard/quarter-statistics`, `/dashboard/delivery-composition`, plus the pass-1 three) now redirect to
+their replacement. The remaining 9 routed pages:
 - `/dashboard/priority-attention` — Priority Attention (blockers, overdue, orphans, plus a Smart Actions section — canonical home for blocked/aging item tables and generated recommendations)
 - `/dashboard/epic-readiness` — Epic Readiness (completion %, forecast, blockers, canonical epic table incl. lead/cycle time)
 - `/dashboard/labels` — Labels & Types (label/type/parent/project distribution + health bands)
@@ -330,8 +335,7 @@ now redirect to their replacement. The remaining 10 routed pages:
 - `/dashboard/key-metrics` — Key Metrics (KPI summary cards, canonical flow-efficiency + story points cards)
 - `/dashboard/ownership` — Ownership & Capacity (per-assignee load and capacity balance only)
 - `/dashboard/trends` — Trends (Sprints/Quarters toggle: velocity + per-sprint completion history, or quarterly throughput tables)
-- `/dashboard/delivery-composition` — Delivery Composition (completion-by-status/health donut)
-- `/dashboard/data-quality` — Data Quality Score (10-field check, impact report)
+- `/dashboard/data-quality` — Data Quality Score (10-field check, impact report) plus a Delivery Composition section (completion-by-status/health donut)
 - `/dashboard/coaching` — Coaching Insights (role-based, evidence-linked recommendations)
 
 ### Standalone analytics pages

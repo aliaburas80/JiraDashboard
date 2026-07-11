@@ -1,6 +1,29 @@
 # Delivery Clarity — Master TODO List
 
-**Last updated:** 2026-07-11 (**v4.19.0 DASHBOARD NAV CONSOLIDATION PASS 2** — Same-day follow-up to
+**Last updated:** 2026-07-12 (**v4.20.0 DASHBOARD NAV CONSOLIDATION PASS 3** — Follow-up to `v4.18.0`/
+`v4.19.0` below, per explicit user request ("merge Data Quality and Delivery Composition... Epic
+Readiness, I don't understand what it does"). Explained Epic Readiness's purpose (per-epic risk/
+completion view — the only page with that lens) rather than changing it. Merged `app/dashboard/
+delivery-composition` into `app/dashboard/data-quality` as a second stacked section (user's explicit
+choice over a Sprints/Quarters-style tab toggle, and over folding the donut into Key Metrics instead) —
+unlike the `v4.19.0` merges, these two pages answer genuinely different questions ("can I trust this
+data" vs. "what does our work mix look like"), so they're presented as two clearly separate sections on
+one page rather than a single blended view. 10 routed pages → 9. `/dashboard/delivery-composition` now
+redirects to `/dashboard/data-quality`; the `/dashboard/visual-analytics` redirect stub (which pointed at
+`delivery-composition`) was repointed to `data-quality` too. Updated the same downstream set as prior
+passes: `DashboardNavSidebar.tsx` (nav item removed, `ROUTE_ACCESS` union — now effectively all 6 roles
+for `data-quality`, dropped now-unused `completionChipType`), `tour.ts` (Delivery Composition's tour entry
+folded into Data Quality's as a third step), `personaFocus.config.ts` (2 links repointed, retitled to
+"Data Quality"), `help`/`developer`/`glossary` pages, and `product/` docs (SRS, APPENDIX, DEVELOPER_GUIDE
+— including two stale entries from *before* this session: `DEVELOPER_GUIDE.md` had never listed the 3
+pass-1-removed pages' redirect stubs in its file tree, and `APPENDIX.md`'s Delivery Composition Page entry
+still described the pre-`v4.18.0` version with a status bar/health distribution/epic table that had
+already been trimmed to just the donut — both corrected while in there). Re-ran the full `eslint . --max-
+warnings=-1 -f json` audit: 1,276 warnings/87 files (down from `v4.19.0`'s 1,279/88). CLAUDE.md §60 and
+TODO-List.md `STYLE-03` refreshed to match. Verification: typecheck clean, build clean. Branch:
+`refactor/dashboard-data-quality-composition-merge`.)
+
+**Previous:** 2026-07-11 (**v4.19.0 DASHBOARD NAV CONSOLIDATION PASS 2** — Same-day follow-up to
 `v4.18.0` below, per explicit product-manager-lens request to compress further rather than stop at 12
 pages. Merged `app/dashboard/actions` (Smart Actions) into `app/dashboard/priority-attention` — both
 answered "what needs action right now," one as raw blocked/overdue/orphan tables, the other as generated

@@ -3282,22 +3282,22 @@ The following legacy areas contain inline styling from before these standards.
 
 Do not add new inline styling to them.
 
-## 60.1 Audited scope (2026-07-11)
+## 60.1 Audited scope (2026-07-12)
 
-The lists below were re-audited on 2026-07-11 via `eslint . --max-warnings=-1 -f json` (direct ESLint
+The lists below were re-audited on 2026-07-12 via `eslint . --max-warnings=-1 -f json` (direct ESLint
 CLI, not `next lint` — `package.json`'s `lint` script still runs the §4.6-prohibited `next lint`; see
 `TODO-List.md` `STYLE-07` for why it can't simply be switched yet). Re-run that command before trusting
 these counts; they drift every time a file is touched.
 
-**Result: 1,279 warnings, 0 errors, across 88 files.** All warnings are `react/forbid-dom-props`
+**Result: 1,276 warnings, 0 errors, across 87 files.** All warnings are `react/forbid-dom-props`
 (this rule's CLAUDE.md Rule 1 message). The drop from the 2026-06-27 count (1,524/86) is only partly
-from the two same-day dashboard nav consolidation passes below (§60.3: 15 routed pages → 10, removing 5
-duplicate-content pages and merging/trimming 5 others) — the rest reflects unrelated fixes landed since
+from the three dashboard nav consolidation passes below (§60.3: 15 routed pages → 9, removing 5
+duplicate-content pages and merging/trimming 6 others) — the rest reflects unrelated fixes landed since
 the last audit (e.g. `app/retro/page.tsx` went from 112 warnings to 0, `ProductTour.tsx` from 13 to 2)
 plus some drift the other direction (a handful of `app/landing/**`, `app/promo/**`, and
-`app/admin/audit/page.tsx` files now carry small counts that weren't present in the last audit). Tiers 1,
-4, and 5 below are refreshed to current reality as an incidental result of this re-audit, not because
-they were remediated.
+`app/admin/audit/page.tsx` files now carry small counts that weren't present in the 2026-06-27 audit).
+Tiers 1, 4, and 5 below are refreshed to current reality as an incidental result of this re-audit, not
+because they were remediated.
 
 Full per-file ticket breakdown is tracked in `TODO-List.md` Section 18f (`STYLE-01`–`08`). This section
 holds the prioritized summary; TODO-List.md holds the working checklist.
@@ -3312,7 +3312,7 @@ holds the prioritized summary; TODO-List.md holds the working checklist.
 4. `app/flow-health/page.tsx` (66)
 5. `app/forecast/page.tsx` (59)
 
-## 60.3 Refactor priority — Tier 2: `app/dashboard/*/page.tsx` (272 warnings, 9 files)
+## 60.3 Refactor priority — Tier 2: `app/dashboard/*/page.tsx` (269 warnings, 8 files)
 
 As of 2026-07-11, `delivery-controls`, `visual-analytics`, and `kanban-health` were **removed** in a nav
 consolidation (see RELEASE_NOTES.md) — every widget on those three pages duplicated a chart, table, or
@@ -3325,17 +3325,20 @@ A second same-day pass merged two more pairs: `actions` (Smart Actions) into `pr
 answered "what needs action right now," one as raw signal tables, the other as generated recommendations
 from the same signals — and `sprint-status` + `quarter-statistics` into a single `trends` page with a
 Sprints/Quarters toggle, since both answered "how are we trending over time" at different granularity.
-12 routed pages are now 10.
+12 routed pages became 10.
+
+A third pass on 2026-07-12 merged `delivery-composition` into `data-quality` as a second section (both
+were compact single-widget pages; `data-quality`'s count absorbed the donut's warnings). 10 routed pages
+became 9.
 
 1. `app/dashboard/flow-health/page.tsx` (52)
 2. `app/dashboard/labels/page.tsx` (49)
-3. `app/dashboard/epic-readiness/page.tsx` (44)
-4. `app/dashboard/trends/page.tsx` (44)
-5. `app/dashboard/data-quality/page.tsx` (27)
-6. `app/dashboard/priority-attention/page.tsx` (23)
-7. `app/dashboard/delivery-composition/page.tsx` (19)
-8. `app/dashboard/ownership/page.tsx` (13)
-9. `app/dashboard/key-metrics/page.tsx` (1)
+3. `app/dashboard/data-quality/page.tsx` (45)
+4. `app/dashboard/epic-readiness/page.tsx` (44)
+5. `app/dashboard/trends/page.tsx` (41)
+6. `app/dashboard/priority-attention/page.tsx` (24)
+7. `app/dashboard/ownership/page.tsx` (13)
+8. `app/dashboard/key-metrics/page.tsx` (1)
 
 ## 60.4 Refactor priority — Tier 3: shared `src/components/dashboard/**` (160 warnings, 14 files)
 
