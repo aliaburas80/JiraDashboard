@@ -1,6 +1,52 @@
 # Delivery Clarity — Master TODO List
 
-**Last updated:** 2026-07-01 (**v4.17.0 SOFT LAUNCH MASTER PLAN + ERROR CATALOG** — Added Section 29 (72 rows): P0-A 10 items / P0-B 15 items / P1 19 items / P2 8 items / Risk register R-01–R-20, all sourced verbatim from `Delivery_Clarity_Soft_Launch_AI_Master_Plan_v1.1.docx` (2026-06-30). P0A-06/07/08 marked partially done (Neon PostgreSQL provisioned, structured startup logging, release notes maintained). Created `product/ERRORS.md` v1.0: 33 error codes across 9 categories — startup/config (ERR-001–010), upload/processing (ERR-021–026), auth (ERR-041–045), authorization (ERR-061–062), database/storage (ERR-071–073), API/client (ERR-091–093), analytics (ERR-111–112), AI service (ERR-121–123), payments P1 (ERR-131–133). Each entry has event name, HTTP status, severity, cause and exact fix. No code changed. Branch: main.)
+**Last updated:** 2026-07-11 (**v4.19.0 DASHBOARD NAV CONSOLIDATION PASS 2** — Same-day follow-up to
+`v4.18.0` below, per explicit product-manager-lens request to compress further rather than stop at 12
+pages. Merged `app/dashboard/actions` (Smart Actions) into `app/dashboard/priority-attention` — both
+answered "what needs action right now," one as raw blocked/overdue/orphan tables, the other as generated
+recommendations from those same signals, so they're now one page (recommendations render as a Smart
+Actions section between the summary row and the Blockers table). Merged `app/dashboard/sprint-status`
+and `app/dashboard/quarter-statistics` into a new `app/dashboard/trends` page with a Sprints/Quarters
+toggle in the toolbar — both answered "how are we trending over time," just at different granularity.
+Both merged-away routes now redirect to their replacement (`/dashboard/actions` → `/dashboard/priority-
+attention`, `/dashboard/sprint-status` and `/dashboard/quarter-statistics` → `/dashboard/trends`),
+matching the existing `/dashboard` and `/dashboard/summary` redirect-stub pattern. 10 routed pages remain
+(down from 12, down from the original 15). Moved `app/dashboard/actions/page.module.scss` to
+`app/dashboard/priority-attention/page.module.scss` and reused its CSS-custom-property-driven action-card
+classes rather than re-inlining them, so the merge didn't regress an already-compliant file back into raw
+inline styles. Updated the same downstream set as `v4.18.0`: `DashboardNavSidebar.tsx` (nav items +
+`ROUTE_ACCESS`, union of the merged pages' role access), `tour.ts` (3 entries removed, 1 new `trends`
+entry added, Priority Attention's tour gained a Smart Actions step), `personaFocus.config.ts` (5 links
+repointed to `trends`), `coachingEvidenceLink.ts` (`throughput.sprint.*` repointed to `/dashboard/trends`)
++ its test, `app/developer/page.tsx` (a stale tour-anchor example naming the now-gone `/dashboard/actions`
+route). Re-ran the full `eslint . --max-warnings=-1 -f json` audit again: 1,279 warnings/88 files (down
+from `v4.18.0`'s 1,281/90) — CLAUDE.md §60 and TODO-List.md `STYLE-03` refreshed to match. Branch:
+`refactor/dashboard-nav-consolidation` (same branch as `v4.18.0`, not yet committed).)
+
+**Previous:** 2026-07-11 (**v4.18.0 DASHBOARD NAV CONSOLIDATION** — Audited all 16 `/dashboard/*`
+pages for duplicated data ahead of reducing the menu; found `delivery-controls`, `visual-analytics`, and
+`kanban-health` each duplicated 100% of their content elsewhere (blocked/aging tables → Priority
+Attention, flow-efficiency cards → Key Metrics, status/type/assignee charts → Delivery
+Composition/Labels/Ownership; `kanban-health`'s one supposedly-unique "Kanban Throughput" card read
+`metrics.kanban.throughput`, a field nothing in the codebase ever sets — dead code, never rendered).
+Removed all three routes (12 pages remain, down from 15). Trimmed 3 more of duplicate widgets:
+`sprint-status` (dropped its blocked-items table, dup of Priority Attention), `ownership` (dropped its
+epic-performance table, dup of `epic-readiness`), `delivery-composition` (dropped its type-breakdown bar
+and story-points card, dups of `labels` and `key-metrics`). `epic-readiness`'s "All Epics" table gained
+Lead(d)/Cycle(d) columns absorbed from the removed `ownership` table so that data wasn't lost. Updated
+every downstream reference: `DashboardNavSidebar.tsx` (nav items + `ROUTE_ACCESS`), `src/lib/tour.ts` (3
+tour entries removed, 2 rewritten), `personaFocus.config.ts` (3 persona focus-area links repointed),
+`coachingEvidenceLink.ts` (4 evidence-chip route mappings repointed to `key-metrics`), `app/help/page.tsx`
+(nav-structure FAQ answer). Re-ran the full `eslint . --max-warnings=-1 -f json` inline-style audit while
+in there (last done 2026-06-27): current true count is 1,281 warnings/90 files, down from 1,524/86 —
+partly from this consolidation (§60.3: −104 net) and partly from unrelated fixes since the last audit
+(`app/retro/page.tsx` 112→0, `ProductTour.tsx` 13→2) plus some new drift (`app/landing/**`, `app/promo/**`
+picked up a handful of new warnings). CLAUDE.md §60 and TODO-List.md `STYLE-03`–`06` refreshed to the
+current numbers. New `ORPHAN-02`: found `DashboardSectionSwitcher.tsx`/`LayoutBuilderPanel.tsx` are not
+mounted anywhere in `app/` — orphaned, unrelated to the routed `/dashboard/*` pages, left undecided like
+`ORPHAN-01`. Branch: `refactor/dashboard-nav-consolidation`.)
+
+**Previous:** 2026-07-01 (**v4.17.0 SOFT LAUNCH MASTER PLAN + ERROR CATALOG** — Added Section 29 (72 rows): P0-A 10 items / P0-B 15 items / P1 19 items / P2 8 items / Risk register R-01–R-20, all sourced verbatim from `Delivery_Clarity_Soft_Launch_AI_Master_Plan_v1.1.docx` (2026-06-30). P0A-06/07/08 marked partially done (Neon PostgreSQL provisioned, structured startup logging, release notes maintained). Created `product/ERRORS.md` v1.0: 33 error codes across 9 categories — startup/config (ERR-001–010), upload/processing (ERR-021–026), auth (ERR-041–045), authorization (ERR-061–062), database/storage (ERR-071–073), API/client (ERR-091–093), analytics (ERR-111–112), AI service (ERR-121–123), payments P1 (ERR-131–133). Each entry has event name, HTTP status, severity, cause and exact fix. No code changed. Branch: main.)
 
 **Previous:** 2026-06-29 (**v4.16.0 MOBILE-01–04 AUDIT + FIXES** 2026-06-29 (**v4.16.0 MOBILE-01–04 AUDIT + FIXES** — `MOBILE-01` full static-code mobile audit (375px reasoning) across every route: 14 issues found, 2 broken/5 cramped/7 minor, repeating shared-component patterns identified. `MOBILE-02` breakpoint-strategy decision: keep existing desktop-first SCSS Modules, standardize a missing `480px` step rather than rewriting to mobile-first. `MOBILE-03` found already done pre-existing (`AppShell` hamburger + dashboard slide-in drawer from the prior session both already keyboard/screen-reader accessible). Fixed the two genuinely-broken findings in code: `work-explorer`'s 380px sidebar now gated to `min-width: 900px`; `sprint-kanban`/`delivery-mix` `.kpiStrip` base corrected from a stuck 4-col mobile default to 2-col with a `480px` step-up. `MOBILE-04` (touch targets): attempted a global fix, reverted as too high-blast-radius without browser verification — left as an open per-component follow-up. `npm run lint:css` clean. Branch: main.)
 
@@ -1137,27 +1183,32 @@ The app today is desktop-first with responsive retrofits. This is a deliberate p
 
 ---
 
-## 18f. P1 — Inline-Style Technical Debt Remediation (Audited 2026-06-27 — Not Started)
+## 18f. P1 — Inline-Style Technical Debt Remediation (Re-audited 2026-07-11 — Not Started)
 
 A full repo-wide ESLint re-audit (`eslint . --max-warnings=-1 -f json`, the direct CLI command CLAUDE.md
-§4.6 mandates, not the prohibited `next lint`) found the inline-style debt is much larger than CLAUDE.md
-§60 previously documented: **1,524 warnings, 0 errors, across 86 files** — every one a
-`react/forbid-dom-props` (CLAUDE.md Rule 1) violation. The two admin pages §60 previously named
-(`app/admin/users/page.tsx`, `app/admin/settings/page.tsx`) are already clean and have been removed from
-the tracked list. This section is documentation-only for now — no remediation code has been written yet;
-see CLAUDE.md §60.1–60.6 for the full prioritized breakdown this table summarizes.
+§4.6 mandates, not the prohibited `next lint`) run alongside the 2026-07-11 dashboard nav consolidation
+(see `v4.18.0` entry above) found **1,281 warnings, 0 errors, across 90 files** — down from the
+2026-06-27 baseline of 1,524/86, every one still a `react/forbid-dom-props` (CLAUDE.md Rule 1) violation.
+The drop isn't purely remediation: removing `app/dashboard/{delivery-controls,visual-analytics,
+kanban-health}` and trimming 3 other dashboard pages accounts for part of it (§60.3), unrelated fixes
+landed since the last audit account for another part (`app/retro/page.tsx` 112→0, `ProductTour.tsx`
+13→2), and a few files not present in the last audit now carry small counts (`app/landing/**`,
+`app/promo/**`, `app/admin/audit/page.tsx`) — genuine new drift, not something this pass introduced.
+This section is still documentation-only — no remediation code has been written yet; see CLAUDE.md
+§60.1–60.6a for the full prioritized breakdown this table summarizes.
 
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
 | STYLE-01 | Baseline audit: full inline-style warning inventory | P1 | ✅ Done (2026-06-27) | Ran `eslint . --max-warnings=-1 -f json` repo-wide via the ESLint JSON formatter (not the truncated default text formatter) to get an exact, file-by-file count. Result recorded in CLAUDE.md §60.1. No code changed. |
 | STYLE-02 | Refactor Tier 1 — highest-volume standalone pages | P1 | 🟡 In progress (2026-06-28) | `app/retro/page.tsx` (112 warnings) — ✅ done: `app/retro/page.module.scss` created, all inline styles replaced with SCSS-module classes and `data-priority`/`data-goal` attribute selectors for semantic states, `eslint app/retro/page.tsx --max-warnings=0` passes. Remaining: `app/help/page.tsx` (98), `app/developer/page.tsx` (80), `app/data-quality/page.tsx` (71), `app/flow-health/page.tsx` (66), `app/forecast/page.tsx` (59) — five files, 374 warnings left in this tier. One file per commit, following CLAUDE.md §60's "When refactoring a page" procedure. |
-| STYLE-03 | Refactor Tier 2 — `app/dashboard/*/page.tsx` | P1 | ❌ Not started | `flow-health` (52), `labels` (49), `epic-readiness` (42), `delivery-controls` (34), `delivery-composition` (30), `sprint-status` (29), `data-quality` (27), `quarter-statistics` (26), `visual-analytics` (23), `ownership` (21), `priority-attention` (21), `kanban-health` (20), `actions` (3), `key-metrics` (1). Continues the priority order already established before this re-audit — do not restart it. |
-| STYLE-04 | Refactor Tier 3 — shared `src/components/dashboard/**` | P1 | ❌ Not started | `SprintComparePanel.tsx` (46), `SprintThroughputPanel.tsx` (33), `KanbanThroughputPanel.tsx` (31), `MidSprintDeliveryPanel.tsx` (21), plus the remaining files in this directory at ≤7 warnings each. Higher leverage than a single page (used across multiple dashboard routes) but needs wider manual regression for the same reason. |
-| STYLE-05 | Refactor Tier 4 — remaining standalone pages | P1 | ❌ Not started | `app/sprint-kanban` (39), `app/members` (32), `app/portfolio` (30), `app/landing` (28), `app/glossary` (26), `app/delivery-mix` (23), `app/customer` (20), `app/charts` (18), `app/roadmap` (16), `app/teams` (14), `app/release-readiness` (13), `app/trends` (6), `app/column-mapping` (2), `app/summary` (2), `app/profile` (1), `app/work-explorer` (1). |
-| STYLE-06 | Refactor Tier 5 — remaining shared components | P1 | ❌ Not started | `src/components/explore/**` (`RelationCharts` 20, `WorkItemGraph` 16, `RelationDetailsTable` 4, `RelationLegend` 2, `RelationStatsCards` 1), `src/components/admin/**` (`DataRetentionSettings` 23, `AdminConsoleLayout` 13, `IssueTypeHierarchySettings` 4), `src/components/dc-shell/**` (`DCTopbar` 13, `DCActionBoard` 6, `DCKpiCard` 6, `DCPageSidebar` 4, `DCStatusChip` 2), `src/components/tour/ProductTour.tsx` (13), and the remaining ~20 files at ≤7 warnings each (full list in the `eslint -f json` audit output, not duplicated here). |
-| STYLE-07 | Switch `npm run lint` to the CLAUDE.md §4.6-mandated command | P0 | 🚫 Blocked | `package.json`'s `lint` script currently runs `next lint`, which §4.6 explicitly prohibits in favor of `eslint . --max-warnings=0`. Blocked on `STYLE-02`–`06`: flipping it today would fail every local/CI lint run immediately on the 1,524 pre-existing warnings. Flip once the count reaches zero, or agree on an interim ratcheting `--max-warnings` ceiling that drops as each tier closes. |
+| STYLE-03 | Refactor Tier 2 — `app/dashboard/*/page.tsx` | P1 | ❌ Not started | `flow-health` (52), `labels` (49), `epic-readiness` (44), `trends` (44), `data-quality` (27), `priority-attention` (23), `delivery-composition` (19), `ownership` (13), `key-metrics` (1) — 272 warnings, 9 files. `delivery-controls`, `visual-analytics`, and `kanban-health` were removed entirely in the 2026-07-11 nav consolidation (100% duplicate content, no remediation needed); a same-day follow-up pass then merged `actions` into `priority-attention` and merged `sprint-status` + `quarter-statistics` into the new `trends` page — those three routes no longer exist as separate files. `epic-readiness`, `delivery-composition`, `ownership`, and `priority-attention` counts reflect trimming/merging, not remediation. Continues the priority order already established — do not restart it. |
+| STYLE-04 | Refactor Tier 3 — shared `src/components/dashboard/**` | P1 | ❌ Not started | `SprintComparePanel.tsx` (46), `SprintThroughputPanel.tsx` (33), `KanbanThroughputPanel.tsx` (31), `MidSprintDeliveryPanel.tsx` (21), plus the remaining files in this directory at ≤7 warnings each (160 warnings, 14 files total) — see CLAUDE.md §60.4 for the full list, which includes the two orphaned files tracked as `ORPHAN-02`. Higher leverage than a single page (used across multiple dashboard routes) but needs wider manual regression for the same reason. |
+| STYLE-05 | Refactor Tier 4 — remaining standalone pages | P1 | ❌ Not started | `app/sprint-kanban` (39), `app/members` (32), `app/portfolio` (30), `app/glossary` (26), `app/delivery-mix` (23), `app/customer` (20), `app/charts` (18), `app/roadmap` (16), `app/teams` (14), `app/release-readiness` (13), `app/trends` (6), `app/admin/audit` (3), `app/column-mapping` (2), `app/summary` (2), `app/promo/page.tsx` (1), `app/work-explorer` (1), plus `app/landing/**` and `app/promo/PromoNav.tsx` at ≤2 warnings each (256 warnings, 23 files total, re-audited 2026-07-11 — `app/profile` is now clean and dropped; `app/admin/audit` and the `app/landing/**`/`app/promo/**` files are new to this list). |
+| STYLE-06 | Refactor Tier 5 — remaining shared components | P1 | ❌ Not started | `src/components/explore/**` (`RelationCharts` 20, `WorkItemGraph` 16, `RelationDetailsTable` 4, `RelationLegend` 2, `RelationStatsCards` 1), `src/components/admin/**` (`DataRetentionSettings` 23, `AdminConsoleLayout` 13, `IssueTypeHierarchySettings` 5), `src/components/dc-shell/**` (`DCTopbar` 13, `DCActionBoard` 6, `DCKpiCard` 6, `DCPageSidebar` 4, `DCStatusChip` 2), `src/components/tour/ProductTour.tsx` (2, down from 13 — mostly fixed by unrelated work), and the remaining ~18 files at ≤7 warnings each (158 warnings, 31 files total, re-audited 2026-07-11; full list in the `eslint -f json` audit output, not duplicated here). |
+| STYLE-07 | Switch `npm run lint` to the CLAUDE.md §4.6-mandated command | P0 | 🚫 Blocked | `package.json`'s `lint` script currently runs `next lint`, which §4.6 explicitly prohibits in favor of `eslint . --max-warnings=0`. Blocked on `STYLE-02`–`06`: flipping it today would fail every local/CI lint run immediately on the 1,281 pre-existing warnings. Flip once the count reaches zero, or agree on an interim ratcheting `--max-warnings` ceiling that drops as each tier closes. |
 | STYLE-08 | Update docs once remediation actually completes | P1 | ❌ Not started | CLAUDE.md §60 (collapse/close finished tiers), RELEASE_NOTES.md, DEVELOPER_GUIDE.md styling section. Do not touch until the underlying refactor work is done — this row exists so doc cleanup isn't forgotten once `STYLE-02`–`07` close. |
-| ORPHAN-01 | Decide the fate of the legacy `frontend/` Create React App | P2 | ❌ Not started | A second, fully standalone CRA project (own `package.json`/`node_modules`/`build`, `react-scripts`) lives at `frontend/`, last touched 2026-05-30, not imported by or referenced from the Next.js app (`app/`, `src/`) anywhere. It contributes 59 of the 1,524 warnings under a lint config that doesn't apply to it (root ESLint currently reaches into it unintentionally) — those 59 are excluded from `STYLE-02`–`06`'s counts since SCSS-Module remediation makes no sense for a project this codebase doesn't build or own. Decide: remove it, or keep it for a documented reason and exclude it from the root ESLint run. CLAUDE.md §5 doesn't permit leaving unowned code undecided indefinitely. |
+| ORPHAN-01 | Decide the fate of the legacy `frontend/` Create React App | P2 | ❌ Not started | A second, fully standalone CRA project (own `package.json`/`node_modules`/`build`, `react-scripts`) lives at `frontend/`, last touched 2026-05-30, not imported by or referenced from the Next.js app (`app/`, `src/`) anywhere. It contributes 59 of the 1,281 warnings under a lint config that doesn't apply to it (root ESLint currently reaches into it unintentionally) — those 59 are excluded from `STYLE-02`–`06`'s counts since SCSS-Module remediation makes no sense for a project this codebase doesn't build or own. Decide: remove it, or keep it for a documented reason and exclude it from the root ESLint run. CLAUDE.md §5 doesn't permit leaving unowned code undecided indefinitely. |
+| ORPHAN-02 | Decide the fate of orphaned `DashboardSectionSwitcher.tsx` / `LayoutBuilderPanel.tsx` / `DashboardSidebarNav.tsx` | P2 | ❌ Not started | Discovered 2026-07-11 while auditing `app/dashboard/*` for the nav consolidation: `src/components/dashboard/DashboardSectionSwitcher.tsx` and `LayoutBuilderPanel.tsx` (7 + 3 warnings, counted in `STYLE-04`'s Tier 3 total) are not imported or mounted by any route under `app/`. They read `src/lib/dashboardSections.ts`'s `section-*` ids, which don't correspond to anything in the routed `/dashboard/*` pages. A third file, `src/components/dashboard/DashboardSidebarNav.tsx`, is also unmounted — it's a superseded predecessor to the live `DashboardNavSidebar.tsx` (note the swapped word order), still describing the old single-page `activeSection`/`setSectionMode` dashboard paradigm that `/dashboard/*` no longer uses. `/developer` and `/glossary` had stale prose describing `DashboardSidebarNav` as if it were the live component — corrected to `DashboardNavSidebar` as part of this pass, but the deeper legacy `activeSection`/"12 existing sections" terminology elsewhere in `/glossary` (e.g. the `activeSection` and `Delivery Summary` entries) documents that same superseded paradigm and needs its own separate cleanup pass. Same §5 "no unowned code" concern as `ORPHAN-01`: decide whether to wire these up, repurpose them, or delete them — don't leave undecided indefinitely. |
 
 ---
 

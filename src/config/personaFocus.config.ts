@@ -23,8 +23,8 @@ export const PERSONA_FOCUS: Record<Persona, PersonaFocusConfig> = {
     persona: 'Scrum Master',
     summary: 'Day-to-day team execution — what’s in flight, what’s blocked, and what needs attention before standup.',
     focusAreas: [
-      { title: 'Sprint Status',        href: '/dashboard/sprint-status' },
-      { title: 'Kanban Health',        href: '/dashboard/kanban-health' },
+      { title: 'Trends',               href: '/dashboard/trends' },
+      { title: 'Ownership',            href: '/dashboard/ownership' },
       { title: 'Priority Attention',   href: '/dashboard/priority-attention' },
       { title: 'Flow Health',          href: '/dashboard/flow-health' },
     ],
@@ -36,15 +36,15 @@ export const PERSONA_FOCUS: Record<Persona, PersonaFocusConfig> = {
       { title: 'Delivery Composition', href: '/dashboard/delivery-composition' },
       { title: 'Epic Readiness',       href: '/dashboard/epic-readiness' },
       { title: 'Priority Attention',   href: '/dashboard/priority-attention' },
-      { title: 'Quarter Statistics',   href: '/dashboard/quarter-statistics' },
+      { title: 'Trends',               href: '/dashboard/trends' },
     ],
   },
   'Project Manager': {
     persona: 'Project Manager',
     summary: 'Timelines and risk — delivery controls, ownership, and where things could slip.',
     focusAreas: [
-      { title: 'Delivery Controls',    href: '/dashboard/delivery-controls' },
-      { title: 'Quarter Statistics',   href: '/dashboard/quarter-statistics' },
+      { title: 'Key Metrics',          href: '/dashboard/key-metrics' },
+      { title: 'Trends',               href: '/dashboard/trends' },
       { title: 'Ownership',            href: '/dashboard/ownership' },
       { title: 'Flow Health',          href: '/dashboard/flow-health' },
     ],
@@ -54,7 +54,7 @@ export const PERSONA_FOCUS: Record<Persona, PersonaFocusConfig> = {
     summary: 'Team capacity and data hygiene — workload balance and where the data itself needs cleanup.',
     focusAreas: [
       { title: 'Ownership',            href: '/dashboard/ownership' },
-      { title: 'Kanban Health',        href: '/dashboard/kanban-health' },
+      { title: 'Flow Health',          href: '/dashboard/flow-health' },
       { title: 'Data Quality',         href: '/dashboard/data-quality' },
       { title: 'Labels',               href: '/dashboard/labels' },
     ],
@@ -64,7 +64,7 @@ export const PERSONA_FOCUS: Record<Persona, PersonaFocusConfig> = {
     summary: 'The high-level picture — overall health, trend direction, and delivery mix at a glance.',
     focusAreas: [
       { title: 'Summary',              href: '/dashboard/summary' },
-      { title: 'Quarter Statistics',   href: '/dashboard/quarter-statistics' },
+      { title: 'Trends',               href: '/dashboard/trends' },
       { title: 'Delivery Composition', href: '/dashboard/delivery-composition' },
     ],
   },

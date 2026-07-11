@@ -163,7 +163,7 @@ export default function EpicReadinessPage() {
               <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
-                    {['Epic / Parent', 'Issues', 'Done', 'Critical', 'Warning', 'Progress', 'Risk'].map(label => (
+                    {['Epic / Parent', 'Issues', 'Done', 'Lead (d)', 'Cycle (d)', 'Critical', 'Warning', 'Progress', 'Risk'].map(label => (
                       <th key={label} style={{ padding: '6px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94A3B8', borderBottom: '1px solid #E2E8F0' }}>
                         {label}
                       </th>
@@ -181,6 +181,8 @@ export default function EpicReadinessPage() {
                         </td>
                         <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11 }}>{e.issues ?? 0}</td>
                         <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: '#059669' }}>{e.completedIssues ?? e.done ?? 0}</td>
+                        <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: '#64748B' }}>{e.averageLeadTimeDays != null ? `${e.averageLeadTimeDays}d` : '—'}</td>
+                        <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: '#64748B' }}>{e.averageCycleTimeDays != null ? `${e.averageCycleTimeDays}d` : '—'}</td>
                         <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: (e.critical ?? 0) > 0 ? '#DC2626' : '#64748B' }}>{e.critical ?? 0}</td>
                         <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: (e.warning ?? 0) > 0 ? '#D97706' : '#64748B' }}>{e.warning ?? 0}</td>
                         <td style={{ padding: '7px 10px' }}>

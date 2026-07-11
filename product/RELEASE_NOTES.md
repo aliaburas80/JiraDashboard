@@ -5,6 +5,26 @@
 
 ---
 
+## Simplified: Dashboard Menu Trimmed Again, 12 Pages to 10 (2026-07-11)
+
+A same-day follow-up to the trim below. Smart Actions is no longer its own page — its recommendation cards (unblock critical items, rebalance capacity, link orphan items to epics, and so on) now show directly on Priority Attention, right below the summary row, since both pages were already answering the same question — "what needs action right now" — just as raw signal tables versus generated advice from those same signals.
+
+Sprint Status and Quarter Statistics are now one page, Trends, with a Sprints/Quarters toggle in the toolbar. Both answered "how are we trending over time," just at different granularity — sprint-by-sprint velocity and completion history, or quarter-by-quarter throughput. Nothing that was on either page is gone; pick the view you want from the toggle instead of two separate sidebar entries.
+
+Old links to Smart Actions, Sprint Status, or Quarter Statistics redirect straight to their replacement, so nothing bookmarked breaks.
+
+---
+
+## Simplified: Dashboard Menu Trimmed From 15 Pages to 12 (2026-07-11)
+
+The dashboard sidebar had grown three pages — Delivery Controls, Visual Analytics, and Kanban Health — whose charts, tables, and KPI cards had all been fully duplicated onto other pages over time (blocked/aging item tables also on Priority Attention, flow-efficiency and story-point cards also on Key Metrics, status/type/assignee charts also on Delivery Composition, Labels, and Ownership). Kanban Health's one seemingly unique card, "Kanban Throughput," never actually appeared for anyone — it depended on a data field the app never populates. All three pages are now removed; nothing they showed is gone, since every number on them already lived elsewhere.
+
+Three more pages were trimmed of duplicate content without being removed: Sprint Status no longer repeats a blocked-items table that's already on Priority Attention, Ownership & Capacity no longer repeats an epic-performance table that's already on Epic Readiness (which now also shows each epic's average lead and cycle time, carried over from Ownership's version so that data isn't lost), and Delivery Composition now shows just its completion ring — its type-breakdown chart and story-points card were exact duplicates of what's on Labels & Types and Key Metrics.
+
+Evidence links from Coaching Insights that used to point at Delivery Controls and Kanban Health now point at Key Metrics instead, and every persona-focus recommendation, guided tour step, and help-page reference that named a removed page was updated to match.
+
+---
+
 ## Fixed: Tour Popover No Longer Disappears Off-Screen (2026-07-10)
 
 On some pages, the tour's info box could render above the top of the screen where it couldn't be seen or clicked — only the dimmed background was visible. The box now always measures itself and stays fully within the visible page, no matter where it's pointing.

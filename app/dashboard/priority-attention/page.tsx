@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { buildSafeCsv } from '@/lib/exportSafety';
@@ -10,9 +10,21 @@ import {
   StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
+import { SvgIcon } from '@/components/ui/SvgIcon';
+import styles from './page.module.scss';
 
 const DONE_STATUSES = ['done', 'closed', 'resolved'];
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
+
+type ActionType = { type: string; icon: string; title: string; detail: string; suggestedOwner: string };
+
+// Data-driven color tokens for each action type.
+// EXCEPTION (CLAUDE.md Rule 1): these are set as CSS custom properties in JSX.
+const TYPE_TOKENS: Record<string, { bg: string; border: string; color: string }> = {
+  critical: { bg: 'var(--color-danger-soft)',  border: 'var(--color-danger-border)',  color: 'var(--color-danger-strong)' },
+  warning:  { bg: 'var(--color-warning-soft)', border: 'var(--color-warning-border)', color: 'var(--color-warning)'       },
+  info:     { bg: 'var(--color-primary-soft)', border: 'var(--color-primary-border)', color: 'var(--color-primary)'       },
+};
 
 export default function PriorityAttentionPage() {
   const router = useRouter();
@@ -46,6 +58,49 @@ export default function PriorityAttentionPage() {
   const overdueItems = useMemo(() => flowItems.filter(i => Number(i.ageDays) > 10 && !DONE_STATUSES.includes(norm(i.status))), [flowItems]);
   const orphans = useMemo(() => flowItems.filter(i => i.isOrphan), [flowItems]);
   const criticalItems = useMemo(() => flowItems.filter(i => i.health === 'critical'), [flowItems]);
+
+  const actions: ActionType[] = useMemo(() => {
+    if (!metrics) return [];
+    const acts: ActionType[] = [];
+    const critBlockers = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('block'));
+    if (critBlockers.length)
+      acts.push({ type: 'critical', icon: 'priorityBlocker',
+        title: `Unblock ${critBlockers.length} critical item${critBlockers.length > 1 ? 's' : ''}`,
+        detail: `${critBlockers[0].key}: ${(critBlockers[0].summary || (critBlockers[0].reason ?? '')).slice(0, 80)}`,
+        suggestedOwner: 'Scrum Master / Delivery Manager' });
+    const staleActive = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('in progress over 14'));
+    if (staleActive.length)
+      acts.push({ type: 'critical', icon: 'clock',
+        title: `${staleActive.length} item${staleActive.length > 1 ? 's' : ''} stalled in progress`,
+        detail: `${staleActive[0].key} has been active for ${Math.round((staleActive[0] as any).activeAgeDays || 0)} days`,
+        suggestedOwner: 'Engineering Manager' });
+    const capacity = ((metrics?.capacity || []) as any[]);
+    const overloaded = capacity.filter((c: any) => c.loadShare > 35);
+    if (overloaded.length && capacity.length > 2)
+      acts.push({ type: 'warning', icon: 'scales',
+        title: 'Team capacity imbalance detected',
+        detail: `${overloaded[0].assignee} carries ${overloaded[0].loadShare}% — consider redistributing`,
+        suggestedOwner: 'Engineering Manager' });
+    if (orphans.length > 0)
+      acts.push({ type: 'info', icon: 'question',
+        title: `Link ${orphans.length} orphan item${orphans.length > 1 ? 's' : ''} to epics`,
+        detail: 'Items without epic reduce scope traceability and epic completion accuracy',
+        suggestedOwner: 'Product Owner' });
+    const epics = (metrics?.epics as any[]) ?? [];
+    const critEpics = epics.filter((e: any) => (e.critical ?? 0) > 0);
+    if (critEpics.length)
+      acts.push({ type: 'warning', icon: 'alert',
+        title: `${critEpics.length} epic${critEpics.length > 1 ? 's' : ''} in critical state`,
+        detail: `${critEpics[0].epic || 'Top epic'}: ${critEpics[0].completion ?? 0}% complete — needs attention`,
+        suggestedOwner: 'Engineering Manager' });
+    const rels = metrics?.relations as any;
+    if (rels?.blockedItems?.length)
+      acts.push({ type: 'critical', icon: 'link',
+        title: `${rels.blockedItems.length} item${rels.blockedItems.length > 1 ? 's' : ''} explicitly blocked`,
+        detail: `${rels.blockedItems[0].key} is blocked by ${rels.blockedItems[0].blockedBy}`,
+        suggestedOwner: 'Scrum Master / Delivery Manager' });
+    return acts;
+  }, [flowItems, metrics, orphans.length]);
 
   const exportCSV = () => {
     const rows = quickFilter === 'blocked' ? blockers
@@ -83,7 +138,7 @@ export default function PriorityAttentionPage() {
         id="tour-header-priority-attention"
         title="Priority Attention"
         badge={`${totalAttention.toLocaleString()} items`}
-        subtitle="Items requiring immediate delivery intervention."
+        subtitle="Items requiring immediate delivery intervention, plus recommended actions."
       />
 
       <div style={{ padding: '0 28px 48px' }}>
@@ -102,6 +157,38 @@ export default function PriorityAttentionPage() {
             </div>
           ))}
         </div>
+
+        {/* ── Smart Actions ── */}
+        {actions.length > 0 && (
+          <SectionCard title={`Smart Actions · ${actions.length} recommendation${actions.length > 1 ? 's' : ''}`}>
+            <div id="tour-section-priority-attention-actions" className={styles.actionList}>
+              {actions.map((action, i) => {
+                const tok = TYPE_TOKENS[action.type] ?? TYPE_TOKENS.info;
+                return (
+                  // --action-accent / --badge-bg / --badge-color are data-driven (action.type).
+                  <div key={i} className={styles.actionCard}
+                    style={{ '--action-accent': tok.color } as CSSProperties}>
+                    <span className={styles.actionIcon}><SvgIcon name={action.icon} size={18} /></span>
+                    <div className={styles.actionBody}>
+                      <div className={styles.actionHeader}>
+                        <span className={styles.actionTypeBadge}
+                          style={{ '--badge-bg': tok.bg, '--badge-color': tok.color } as CSSProperties}>
+                          {action.type}
+                        </span>
+                        <span className={styles.actionTitle}>{action.title}</span>
+                      </div>
+                      <p className={styles.actionDetail}>{action.detail}</p>
+                      <div className={styles.actionOwnerRow}>
+                        <span className={styles.actionOwnerKey}>Suggested owner:</span>
+                        <span className={styles.actionOwnerValue}>{action.suggestedOwner}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </SectionCard>
+        )}
 
         {/* ── Blockers panel ── */}
         {(quickFilter === 'all' || quickFilter === 'blocked') && blockers.length > 0 && (

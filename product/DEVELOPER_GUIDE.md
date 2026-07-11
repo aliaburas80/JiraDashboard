@@ -109,24 +109,23 @@ JiraDashboard/
 │   ├── summary/page.tsx          # /summary — Health overview (AppShell, standalone)
 │   ├── charts/page.tsx           # /charts — Visual analytics
 │   ├── column-mapping/page.tsx   # /column-mapping — Column mapping preview
-│   ├── dashboard/                # /dashboard/* — 15 independent routed pages
-│   │   ├── layout.tsx            # /dashboard/* layout — DashboardTopbar + DashboardSidebarNav
-│   │   ├── page.tsx              # /dashboard — redirect to summary section
-│   │   ├── summary/page.tsx      # Delivery Summary (KPI overview + alert strip)
-│   │   ├── priority-attention/   # Priority Attention (critical/blocked items)
-│   │   ├── sprint-status/        # Sprint Status (velocity, goals, commitment vs completion)
-│   │   ├── epic-readiness/       # Epic Readiness (completion, forecast, blockers)
-│   │   ├── labels/               # Labels (label distribution + health)
-│   │   ├── flow-health/          # Flow Health Table (11 filters, column reorder)
-│   │   ├── key-metrics/          # Key Metrics (KPI summary cards)
-│   │   ├── kanban-health/        # Kanban Health (WIP, cycle time, blocked lanes)
-│   │   ├── visual-analytics/     # Visual Analytics (charts, donuts, distributions)
-│   │   ├── ownership/            # Ownership & Capacity (assignee distribution)
-│   │   ├── quarter-statistics/   # Quarter Statistics (quarterly throughput tables)
-│   │   ├── actions/              # Smart Actions (AI-style suggested actions by severity)
-│   │   ├── delivery-composition/ # Delivery Composition (work breakdown by type/status/epic)
-│   │   ├── delivery-controls/    # Delivery Controls (risk + orphan panels)
-│   │   └── data-quality/         # Data Quality Score (10-field check, impact report)
+│   ├── dashboard/                # /dashboard/* — 10 independent routed pages
+│   │   ├── layout.tsx            # /dashboard/* layout — DashboardTopbar + DashboardNavSidebar
+│   │   ├── page.tsx              # /dashboard — redirect to /dashboard/priority-attention
+│   │   ├── summary/page.tsx      # redirect to standalone /summary (not a real dashboard page)
+│   │   ├── priority-attention/   # Priority Attention (blockers, overdue, orphans, Smart Actions — canonical attention/action page)
+│   │   ├── epic-readiness/       # Epic Readiness (completion, forecast, blockers, canonical epic table incl. lead/cycle time)
+│   │   ├── labels/               # Labels & Types (label/type/parent/project distribution + health)
+│   │   ├── flow-health/          # Flow Health Table (11 filters, column reorder — master raw item table)
+│   │   ├── key-metrics/          # Key Metrics (KPI cards, canonical flow-efficiency + story points cards)
+│   │   ├── ownership/            # Ownership & Capacity (per-assignee load only; epic table lives on Epic Readiness)
+│   │   ├── trends/               # Trends (Sprints/Quarters toggle — velocity + per-sprint history, or quarterly throughput tables)
+│   │   ├── delivery-composition/ # Delivery Composition (completion-by-status/health donut)
+│   │   ├── data-quality/         # Data Quality Score (10-field check, impact report)
+│   │   ├── coaching/             # Coaching Insights (role-based, evidence-linked recommendations)
+│   │   ├── actions/              # redirect to /dashboard/priority-attention (merged 2026-07-11)
+│   │   ├── sprint-status/        # redirect to /dashboard/trends (merged 2026-07-11)
+│   │   └── quarter-statistics/   # redirect to /dashboard/trends (merged 2026-07-11)
 │   ├── data-quality/page.tsx     # /data-quality — standalone Data Quality page (AppShell)
 │   ├── delivery-mix/page.tsx     # /delivery-mix — standalone Delivery Mix (type/status breakdown)
 │   ├── flow-health/page.tsx      # /flow-health — standalone Flow Health table
@@ -312,22 +311,28 @@ Mobile: hamburger button opens a 2-column grid panel below the header.
 
 ### Dashboard sub-pages (`/dashboard/*`)
 
-All dashboard sub-pages share the 3-zone layout injected by `app/dashboard/layout.tsx` (DashboardTopbar + DashboardSidebarNav). Each page calls `loadMetricsWithSource()` and renders its section:
-- `/dashboard/summary` — Delivery Summary (KPI cards + alert strip + top smart actions)
-- `/dashboard/priority-attention` — Priority Attention (critical + blocked items)
-- `/dashboard/sprint-status` — Sprint Status (velocity, goals, commitment vs completion, blockers)
-- `/dashboard/epic-readiness` — Epic Readiness (completion %, forecast, blockers)
-- `/dashboard/labels` — Labels (distribution + health bands)
-- `/dashboard/flow-health` — Flow Health Table (11 filters, column reorder, saved presets)
-- `/dashboard/key-metrics` — Key Metrics (KPI summary cards with trend indicators)
-- `/dashboard/kanban-health` — Kanban Health (WIP limits, cycle time, blocked lanes)
-- `/dashboard/visual-analytics` — Visual Analytics (donuts, bars, heatmaps)
-- `/dashboard/ownership` — Ownership & Capacity (assignee distribution, capacity balance)
-- `/dashboard/quarter-statistics` — Quarter Statistics (quarterly throughput tables)
-- `/dashboard/actions` — Smart Actions (AI-style suggested actions by severity: critical/warning/info)
-- `/dashboard/delivery-composition` — Delivery Composition (work breakdown by type/status/epic)
-- `/dashboard/delivery-controls` — Delivery Controls (risk panels + orphan panels)
+All dashboard sub-pages share the 3-zone layout injected by `app/dashboard/layout.tsx` (DashboardTopbar + DashboardNavSidebar). Each page calls `loadMetricsWithSource()` and renders its section. `/dashboard/summary` is a redirect stub to the standalone `/summary` route, not a real dashboard page.
+
+The 2026-07-11 nav consolidation ran in two same-day passes. Pass 1 removed Kanban Health, Visual
+Analytics, and Delivery Controls outright — every widget they showed duplicated a chart, table, or KPI
+card that already lived natively on a more specific page (15 pages → 12; see RELEASE_NOTES.md for the
+full mapping). Pass 2, per an explicit product-manager-lens follow-up request to compress further, merged
+Smart Actions into Priority Attention (both answered "what needs action right now," one as raw signal
+tables, the other as generated recommendations from those same signals) and merged Sprint Status +
+Quarter Statistics into a new Trends page with a Sprints/Quarters toggle (both answered "how are we
+trending over time," just at different granularity) — 12 pages → 10. All five merged-away routes
+(`/dashboard/actions`, `/dashboard/sprint-status`, `/dashboard/quarter-statistics`, plus the pass-1 three)
+now redirect to their replacement. The remaining 10 routed pages:
+- `/dashboard/priority-attention` — Priority Attention (blockers, overdue, orphans, plus a Smart Actions section — canonical home for blocked/aging item tables and generated recommendations)
+- `/dashboard/epic-readiness` — Epic Readiness (completion %, forecast, blockers, canonical epic table incl. lead/cycle time)
+- `/dashboard/labels` — Labels & Types (label/type/parent/project distribution + health bands)
+- `/dashboard/flow-health` — Flow Health Table (11 filters, column reorder, saved presets — master raw item table)
+- `/dashboard/key-metrics` — Key Metrics (KPI summary cards, canonical flow-efficiency + story points cards)
+- `/dashboard/ownership` — Ownership & Capacity (per-assignee load and capacity balance only)
+- `/dashboard/trends` — Trends (Sprints/Quarters toggle: velocity + per-sprint completion history, or quarterly throughput tables)
+- `/dashboard/delivery-composition` — Delivery Composition (completion-by-status/health donut)
 - `/dashboard/data-quality` — Data Quality Score (10-field check, impact report)
+- `/dashboard/coaching` — Coaching Insights (role-based, evidence-linked recommendations)
 
 ### Standalone analytics pages
 
@@ -1737,7 +1742,7 @@ Presentation redesign of the page above plus two small derived-data helpers — 
 
 **New services:**
 - `src/services/coaching/coachingTrend.service.ts` — `computeSeverityTrend(current, previous): 'improved' | 'worsened' | 'same'` — pure comparison of `SEVERITY_RANK` (now exported from `src/lib/coachingBadge.ts`; critical=0, high=1, medium=2, low=3); lower rank = more urgent, so a current rank higher than the previous rank is `'improved'`.
-- `src/lib/coachingEvidenceLink.ts` — `resolveEvidenceRoute(metricKey): string | null` — static prefix-match table mapping each coaching evidence family to its authoritative `/dashboard/*` route (`flow.*` → flow-health, `throughput.kanban.*` → kanban-health, `throughput.sprint.*` → sprint-status, `relations.*`/`risk.overdueIssues` → priority-attention, `risk.highPriorityOpenIssues`/`prediction.*`/`overallDeliveryConfidence` → delivery-controls, `capacity*` → ownership, `dataQuality.*` → data-quality, `epics[].*` → epic-readiness, `adminSignals.*`/`healthScore`/`completionRate` → summary). No mapping found → `null`, and the evidence chip stays non-interactive.
+- `src/lib/coachingEvidenceLink.ts` — `resolveEvidenceRoute(metricKey): string | null` — static prefix-match table mapping each coaching evidence family to its authoritative `/dashboard/*` route (`flow.*` → flow-health, `throughput.kanban.*` → key-metrics, `throughput.sprint.*` → trends, `relations.*`/`risk.overdueIssues` → priority-attention, `risk.highPriorityOpenIssues`/`prediction.*`/`overallDeliveryConfidence` → key-metrics, `capacity*` → ownership, `dataQuality.*` → data-quality, `epics[].*` → epic-readiness, `adminSignals.*`/`healthScore`/`completionRate` → summary). Repointed off `delivery-controls`/`kanban-health` (pass 1) and `sprint-status` (pass 2) in the 2026-07-11 nav consolidation, since those routes were removed. No mapping found → `null`, and the evidence chip stays non-interactive.
 
 **Trend data source:** `app/dashboard/coaching/page.tsx` fetches `GET /api/snapshots` (existing Snapshots feature endpoint, newest-first) and, when ≥2 exist, `GET /api/snapshots/:id` for the second-most-recent one; its `metricsJson` is parsed and re-run through the existing `generateAllCoachingInsights()` to get each category's previous severity. This intentionally reuses the existing `DashboardSnapshot` Prisma model and Snapshots API — no new persistence was added, and the trend is silently omitted (not faked) when fewer than 2 snapshots exist or either fetch fails.
 

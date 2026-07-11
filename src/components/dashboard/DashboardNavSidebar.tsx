@@ -13,14 +13,9 @@ const ROUTE_ACCESS: Record<string, string[]> = {
   '/dashboard/summary':             ['admin','scrum_master','product_owner','manager','c_level','user'],
   '/dashboard/priority-attention':  ['admin','scrum_master','manager','user'],
   '/dashboard/key-metrics':         ['admin','scrum_master','product_owner','manager','c_level','user'],
-  '/dashboard/actions':             ['admin','scrum_master','manager','user'],
   '/dashboard/data-quality':        ['admin','scrum_master','product_owner','manager','user'],
-  '/dashboard/visual-analytics':    ['admin','scrum_master','manager','user'],
   '/dashboard/delivery-composition':['admin','product_owner','manager','c_level','user'],
-  '/dashboard/delivery-controls':   ['admin','scrum_master','manager','user'],
-  '/dashboard/quarter-statistics':  ['admin','product_owner','manager','c_level','user'],
-  '/dashboard/kanban-health':       ['admin','scrum_master','manager','user'],
-  '/dashboard/sprint-status':       ['admin','scrum_master','manager','user'],
+  '/dashboard/trends':              ['admin','scrum_master','product_owner','manager','c_level','user'],
   '/dashboard/ownership':           ['admin','scrum_master','manager','user'],
   '/dashboard/labels':              ['admin','product_owner','user'],
   '/dashboard/epic-readiness':      ['admin','product_owner','user'],
@@ -142,21 +137,6 @@ export default function DashboardNavSidebar({ metrics, open, onClose }: Props) {
   const quarters = (metrics?.quarters as any[]) ?? [];
   const epics = (metrics?.epics as any[]) ?? [];
   const criticalEpics = epics.filter((e: any) => (e.critical ?? 0) > 0).length;
-  const smartActionsLen = (() => {
-    if (!metrics) return 0;
-    let count = 0;
-    const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
-    const critBlockers = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('block'));
-    if (critBlockers.length) count++;
-    const staleActive = flowItems.filter(i => i.health === 'critical' && norm(i.reason).includes('in progress over 14'));
-    if (staleActive.length) count++;
-    const capacity = ((metrics?.capacity || []) as any[]);
-    const overloaded = capacity.filter((c: any) => c.loadShare > 35);
-    if (overloaded.length && capacity.length > 2) count++;
-    if (orphanCount > 0) count++;
-    if (criticalEpics > 0) count++;
-    return Math.min(count, 5);
-  })();
 
   const totalAttention = overdueCount + orphanCount;
   const hband = healthBandLabel(healthScore);
@@ -171,7 +151,6 @@ export default function DashboardNavSidebar({ metrics, open, onClose }: Props) {
   const attentionChipType: 'cc' | 'cw' | 'cn' = totalAttention > 200 ? 'cc' : totalAttention > 50 ? 'cw' : 'cn';
   const qualityChipType: 'cg' | 'cm' | 'cw' = dataQualityScore >= 80 ? 'cg' : dataQualityScore >= 60 ? 'cm' : 'cw';
   const completionChipType: 'cg' | 'cw' | 'cc' = completionRate >= 70 ? 'cg' : completionRate >= 40 ? 'cw' : 'cc';
-  const kanbanColor: 'cg' | 'cw' | 'cc' = criticalCount < 100 ? 'cg' : criticalCount < 500 ? 'cw' : 'cc';
   const scoreChipType: 'cc' | 'cw' | 'cg' = healthScore < 40 ? 'cc' : healthScore < 60 ? 'cw' : 'cg';
   const epicChipType: 'cc' | 'cw' | 'cg' = criticalEpics > 0 ? 'cc' : epics.length > 0 ? 'cw' : 'cg';
 
@@ -224,18 +203,13 @@ export default function DashboardNavSidebar({ metrics, open, onClose }: Props) {
       {/* ── Navigation ── */}
       <nav className={styles.navSection}>
         <GroupLabel label="Overview" />
-        {see('/dashboard/priority-attention') && <NavItem href="/dashboard/priority-attention"  icon="alertTri" title="Priority Attention"    meta="Blockers · overdue"                          chip={String(totalAttention)}        chipType={attentionChipType} />}
+        {see('/dashboard/priority-attention') && <NavItem href="/dashboard/priority-attention"  icon="alertTri" title="Priority Attention"    meta="Blockers · overdue · actions"                chip={String(totalAttention)}        chipType={attentionChipType} />}
         {see('/dashboard/key-metrics')        && <NavItem href="/dashboard/key-metrics"         icon="monitor"  title="Key Metrics"           meta="6 KPI cards"                                 chip={hband}                         chipType={healthScore < 60 ? 'cw' : 'cg'} />}
-        {see('/dashboard/actions')            && <NavItem href="/dashboard/actions"             icon="clock"    title="Smart Actions"         meta={`${smartActionsLen} recommendations`}        chip={String(smartActionsLen)}       chipType="cn" />}
         {see('/dashboard/data-quality')       && <NavItem href="/dashboard/data-quality"        icon="shield"   title="Data Quality"          meta={`${dataQualityScore}% · field check`}        chip={`${dataQualityScore}%`}        chipType={qualityChipType} />}
 
         <GroupLabel label="Delivery" />
-        {see('/dashboard/visual-analytics')     && <NavItem href="/dashboard/visual-analytics"    icon="barChart" title="Visual Analytics"      meta="Charts · bars"                               chip="—"                             chipType="cn" />}
         {see('/dashboard/delivery-composition') && <NavItem href="/dashboard/delivery-composition" icon="circle"  title="Delivery Composition"  meta="5-segment ring"                              chip={`${completionRate}%`}          chipType={completionChipType} />}
-        {see('/dashboard/delivery-controls')    && <NavItem href="/dashboard/delivery-controls"   icon="activity" title="Delivery Controls"     meta="Flow · points · risk"                        chip={criticalCount > 500 ? 'Degraded' : 'OK'} chipType={criticalCount > 500 ? 'cc' : 'cg'} />}
-        {see('/dashboard/quarter-statistics')   && <NavItem href="/dashboard/quarter-statistics"  icon="calendar" title="Quarter Statistics"    meta={`${quarters.length} quarters`}               chip={`${quarters.length}Q`}         chipType="cn" />}
-        {see('/dashboard/kanban-health')        && <NavItem href="/dashboard/kanban-health"       icon="grid"     title="Kanban Health"         meta="Board statuses"                              chip={kanbanColor === 'cg' ? 'Good' : 'Mixed'} chipType={kanbanColor} />}
-        {see('/dashboard/sprint-status')        && <NavItem href="/dashboard/sprint-status"       icon="zap"      title="Sprint Status"         meta={metrics?.sprint ? 'Sprint data' : 'No sprint'} chip={metrics?.sprint ? 'Active' : 'N/A'} chipType={metrics?.sprint ? 'cg' : 'cn'} />}
+        {see('/dashboard/trends')               && <NavItem href="/dashboard/trends"             icon="calendar" title="Trends"                meta="Sprints · quarters"                          chip={`${quarters.length}Q`}         chipType="cn" />}
 
         <GroupLabel label="Deep Dive" />
         {see('/dashboard/ownership')      && <NavItem href="/dashboard/ownership"       icon="users"  title="Ownership & Capacity" meta="Team load · epics"                              chip={(() => { const cap = (metrics?.capacity as any[]) ?? []; const sk = cap.filter((c: any) => c.loadShare > 35); return sk.length > 0 ? 'Skewed' : 'Even'; })()}  chipType={(() => { const cap = (metrics?.capacity as any[]) ?? []; return cap.some((c: any) => c.loadShare > 35) ? 'cw' : 'cg'; })()} />}

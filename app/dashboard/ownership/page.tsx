@@ -32,7 +32,6 @@ export default function OwnershipCapacityPage() {
   }, [router]);
 
   const capacity = useMemo(() => (metrics?.capacity ?? []) as any[], [metrics]);
-  const epics    = useMemo(() => (metrics?.epics ?? []) as any[], [metrics]);
 
   if (loading) return <PageLoading />;
   if (!metrics) return null;
@@ -60,7 +59,7 @@ export default function OwnershipCapacityPage() {
       <PageHeader
         id="tour-header-ownership"
         title="Ownership & Capacity"
-        subtitle="Team load distribution, assignee metrics, and epic performance."
+        subtitle="Team load distribution and per-assignee metrics. See Epic Readiness for epic-level ownership."
       />
 
       <div style={{ padding: '0 28px 48px' }}>
@@ -108,43 +107,6 @@ export default function OwnershipCapacityPage() {
                       {td(`${c.loadShare ?? 0}%`, { mono: true, color: (c.loadShare ?? 0) > 35 ? '#DC2626' : '#059669' })}
                     </tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </SectionCard>
-        )}
-
-        {/* ── Epic performance table ── */}
-        {epics.length > 0 && (
-          <SectionCard title="Epic / Parent Performance">
-            <div id="tour-section-ownership-2" style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>{['Epic / Parent', 'Issues', 'Done', 'Lead (d)', 'Cycle (d)', 'Critical', 'Warning', 'Progress'].map(th)}</tr>
-                </thead>
-                <tbody>
-                  {epics.map((e: any, i: number) => {
-                    const prog = Math.min(100, e.progress ?? e.completion ?? 0);
-                    return (
-                      <tr key={e.epic ?? e.id ?? i} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                        {td(e.epic ?? e.id ?? '—')}
-                        {td(e.issues ?? 0, { mono: true })}
-                        {td(e.completedIssues ?? e.done ?? 0, { mono: true })}
-                        {td(e.averageLeadTimeDays != null ? `${e.averageLeadTimeDays}d` : '—', { mono: true })}
-                        {td(e.averageCycleTimeDays != null ? `${e.averageCycleTimeDays}d` : '—', { mono: true })}
-                        {td(e.critical ?? 0, { mono: true, color: (e.critical ?? 0) > 0 ? '#DC2626' : '#64748B' })}
-                        {td(e.warning ?? 0, { mono: true, color: (e.warning ?? 0) > 0 ? '#D97706' : '#64748B' })}
-                        <td style={{ padding: '7px 10px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div style={{ width: 72, height: 6, borderRadius: 3, background: '#F1F5F9', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', borderRadius: 3, background: prog >= 70 ? '#059669' : prog >= 40 ? '#D97706' : '#DC2626', width: `${prog}%`, animation: 'barFill 800ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 40}ms` }} />
-                            </div>
-                            <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#64748B' }}>{prog}%</span>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
                 </tbody>
               </table>
             </div>
