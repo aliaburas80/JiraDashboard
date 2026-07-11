@@ -164,7 +164,7 @@ npm run lint        # lint check
 | / | Upload page — drag-and-drop Jira file |
 | /summary | Executive summary — health score + KPIs |
 | /charts | Visual analytics — 11 chart widgets |
-| /dashboard | Full delivery report — 3-zone layout (DashboardTopbar + DashboardSidebarNav + 15 sections) |
+| /dashboard | Full delivery report — 3-zone layout (DashboardTopbar + DashboardNavSidebar + 10 routed pages) |
 | /roadmap | Roadmap — epic progress + delivery forecasts |
 | /forecast | Forecast — burn-up chart + delivery status |
 | /retro | Retrospective — form, template download, insights |
@@ -207,7 +207,7 @@ app/
   globals.scss            Tailwind base + component layer
   summary/page.tsx        Executive summary
   charts/page.tsx         Visual analytics
-  dashboard/page.tsx      Full delivery report (3-zone: DashboardTopbar + DashboardSidebarNav + 15-section main)
+  dashboard/page.tsx      Full delivery report (3-zone: DashboardTopbar + DashboardNavSidebar + 10 routed pages)
   developer/page.tsx      Documentation portal (this page)
   backend/page.tsx        Backend status
   help/page.tsx           User guide
@@ -485,10 +485,11 @@ already supported by \`PageHeader\` (dashboard sub-pages) or
 directly to a content section for everything else — including \`/developer\`
 and \`/help\`, whose search boxes and nav/filter rows got real ids despite
 their main content being a Markdown-to-HTML string with nothing else
-anchorable. Two content steps (\`/dashboard/actions\`, \`/dashboard/data-quality\`)
+anchorable. Some content steps (e.g. \`/dashboard/data-quality\`)
 anchor to only the first item in a repeated list via
 \`id={i === 0 ? 'tour-section-...' : undefined}\` rather than the whole list,
-to keep the anchor compact. Every \`/dashboard/*\` page's last step points at
+to keep the anchor compact; others (e.g. Priority Attention's Smart Actions
+section) anchor to the whole list container instead. Every \`/dashboard/*\` page's last step points at
 \`dashboard-nav-sidebar\` (a small anchor near the sidebar's top — not the
 full-height \`<aside>\`, since the popover only positions above/below a target
 and a full-height target would push it off-screen). \`productTour.test.ts\`

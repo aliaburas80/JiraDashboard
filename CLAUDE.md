@@ -3282,49 +3282,62 @@ The following legacy areas contain inline styling from before these standards.
 
 Do not add new inline styling to them.
 
-## 60.1 Audited scope (2026-06-27)
+## 60.1 Audited scope (2026-07-11)
 
-The lists below were last fully re-audited on 2026-06-27 via `eslint . --max-warnings=-1 -f json`
-(direct ESLint CLI, not `next lint` — `package.json`'s `lint` script still runs the §4.6-prohibited
-`next lint`; see `TODO-List.md` `STYLE-07` for why it can't simply be switched yet). Re-run that
-command before trusting these counts; they drift every time a file is touched.
+The lists below were re-audited on 2026-07-11 via `eslint . --max-warnings=-1 -f json` (direct ESLint
+CLI, not `next lint` — `package.json`'s `lint` script still runs the §4.6-prohibited `next lint`; see
+`TODO-List.md` `STYLE-07` for why it can't simply be switched yet). Re-run that command before trusting
+these counts; they drift every time a file is touched.
 
-**Result: 1,524 warnings, 0 errors, across 86 files.** All warnings are `react/forbid-dom-props`
-(this rule's CLAUDE.md Rule 1 message). This is far larger than this section previously documented —
-the previous version named only three files, two of which (`app/admin/users/page.tsx`,
-`app/admin/settings/page.tsx`) are now actually already clean and have been removed from the list below.
+**Result: 1,279 warnings, 0 errors, across 88 files.** All warnings are `react/forbid-dom-props`
+(this rule's CLAUDE.md Rule 1 message). The drop from the 2026-06-27 count (1,524/86) is only partly
+from the two same-day dashboard nav consolidation passes below (§60.3: 15 routed pages → 10, removing 5
+duplicate-content pages and merging/trimming 5 others) — the rest reflects unrelated fixes landed since
+the last audit (e.g. `app/retro/page.tsx` went from 112 warnings to 0, `ProductTour.tsx` from 13 to 2)
+plus some drift the other direction (a handful of `app/landing/**`, `app/promo/**`, and
+`app/admin/audit/page.tsx` files now carry small counts that weren't present in the last audit). Tiers 1,
+4, and 5 below are refreshed to current reality as an incidental result of this re-audit, not because
+they were remediated.
 
 Full per-file ticket breakdown is tracked in `TODO-List.md` Section 18f (`STYLE-01`–`08`). This section
 holds the prioritized summary; TODO-List.md holds the working checklist.
 
-## 60.2 Refactor priority — Tier 1: highest-volume standalone pages (486 warnings, ~32% of total)
+## 60.2 Refactor priority — Tier 1: highest-volume standalone pages (374 warnings)
 
-1. `app/retro/page.tsx` (112)
-2. `app/help/page.tsx` (98)
-3. `app/developer/page.tsx` (80)
-4. `app/data-quality/page.tsx` (71)
-5. `app/flow-health/page.tsx` (66)
-6. `app/forecast/page.tsx` (59)
+`app/retro/page.tsx` is done (112 → 0) and dropped from this list.
 
-## 60.3 Refactor priority — Tier 2: `app/dashboard/*/page.tsx`
+1. `app/help/page.tsx` (98)
+2. `app/developer/page.tsx` (80)
+3. `app/data-quality/page.tsx` (71)
+4. `app/flow-health/page.tsx` (66)
+5. `app/forecast/page.tsx` (59)
 
-Continues the original priority order from before this re-audit; do not restart it.
+## 60.3 Refactor priority — Tier 2: `app/dashboard/*/page.tsx` (272 warnings, 9 files)
+
+As of 2026-07-11, `delivery-controls`, `visual-analytics`, and `kanban-health` were **removed** in a nav
+consolidation (see RELEASE_NOTES.md) — every widget on those three pages duplicated a chart, table, or
+KPI card already shown on a more specific page, so removing them lost no data. `delivery-composition`
+and `ownership` were trimmed of their duplicate widgets in the same change (their counts below reflect
+that trim, not remediation); `epic-readiness` gained two columns absorbed from `ownership`'s removed
+epic table, so its count rose slightly.
+
+A second same-day pass merged two more pairs: `actions` (Smart Actions) into `priority-attention` — both
+answered "what needs action right now," one as raw signal tables, the other as generated recommendations
+from the same signals — and `sprint-status` + `quarter-statistics` into a single `trends` page with a
+Sprints/Quarters toggle, since both answered "how are we trending over time" at different granularity.
+12 routed pages are now 10.
 
 1. `app/dashboard/flow-health/page.tsx` (52)
 2. `app/dashboard/labels/page.tsx` (49)
-3. `app/dashboard/epic-readiness/page.tsx` (42)
-4. `app/dashboard/delivery-controls/page.tsx` (34)
-5. `app/dashboard/delivery-composition/page.tsx` (30)
-6. `app/dashboard/sprint-status/page.tsx` (29)
-7. `app/dashboard/data-quality/page.tsx` (27)
-8. `app/dashboard/quarter-statistics/page.tsx` (26)
-9. `app/dashboard/visual-analytics/page.tsx` (23)
-10. `app/dashboard/ownership/page.tsx` (21)
-11. `app/dashboard/priority-attention/page.tsx` (21)
-12. `app/dashboard/kanban-health/page.tsx` (20)
-13. Remaining dashboard pages (`actions` 3, `key-metrics` 1)
+3. `app/dashboard/epic-readiness/page.tsx` (44)
+4. `app/dashboard/trends/page.tsx` (44)
+5. `app/dashboard/data-quality/page.tsx` (27)
+6. `app/dashboard/priority-attention/page.tsx` (23)
+7. `app/dashboard/delivery-composition/page.tsx` (19)
+8. `app/dashboard/ownership/page.tsx` (13)
+9. `app/dashboard/key-metrics/page.tsx` (1)
 
-## 60.4 Refactor priority — Tier 3: shared `src/components/dashboard/**`
+## 60.4 Refactor priority — Tier 3: shared `src/components/dashboard/**` (160 warnings, 14 files)
 
 Higher leverage than a single page — these render inside multiple dashboard routes, so one fix
 benefits several pages at once. They also carry broader regression risk for the same reason: changes
@@ -3332,9 +3345,10 @@ here need manual verification across every page that mounts the component, not j
 
 * `SprintComparePanel.tsx` (46), `SprintThroughputPanel.tsx` (33), `KanbanThroughputPanel.tsx` (31),
   `MidSprintDeliveryPanel.tsx` (21)
-* Remaining `src/components/dashboard/**` files at ≤7 warnings each
+* Remaining `src/components/dashboard/**` files at ≤7 warnings each (`DashboardSectionSwitcher.tsx` and
+  `LayoutBuilderPanel.tsx` in this remainder are orphaned — not mounted in any route — see §60.6a)
 
-## 60.5 Refactor priority — Tier 4 and 5: remaining pages and shared components
+## 60.5 Refactor priority — Tier 4 and 5: remaining pages and shared components (256 + 158 warnings)
 
 See `TODO-List.md` `STYLE-05`/`STYLE-06` for the full remaining file list (remaining standalone pages
 under `app/`, plus `src/components/explore/**`, `src/components/admin/**`, `src/components/dc-shell/**`,
@@ -3346,11 +3360,21 @@ under `app/`, plus `src/components/explore/**`, `src/components/admin/**`, `src/
 `build`, `react-scripts`) — not part of the Next.js app, not imported by or referenced from `app/` or
 `src/` anywhere, last touched 2026-05-30. Running ESLint from the repo root currently reaches into it
 anyway (since nothing excludes it) and applies this project's Next.js-oriented rules to a project that
-isn't one — it contributes 59 of the 1,524 warnings counted above under that mismatch. Those 59 are
-**excluded** from the tier counts in §60.2–60.5 since fixing them with SCSS Modules makes no sense for a
-project this codebase doesn't own or build. See `TODO-List.md` `ORPHAN-01`: this needs an explicit
-decision (remove it, or keep it for a documented reason and exclude it from the root ESLint run) rather
-than sitting un-decided, which §5's "no unowned" principle does not allow indefinitely.
+isn't one — it contributes 59 of the 1,281 warnings counted above under that mismatch (unchanged from
+the last audit). Those 59 are **excluded** from the tier counts in §60.2–60.5 since fixing them with
+SCSS Modules makes no sense for a project this codebase doesn't own or build. See `TODO-List.md`
+`ORPHAN-01`: this needs an explicit decision (remove it, or keep it for a documented reason and exclude
+it from the root ESLint run) rather than sitting un-decided, which §5's "no unowned" principle does not
+allow indefinitely.
+
+## 60.6a Out of scope: orphaned `DashboardSectionSwitcher` / `LayoutBuilderPanel`
+
+`src/components/dashboard/DashboardSectionSwitcher.tsx` and `LayoutBuilderPanel.tsx` (and the
+`section-*` ids in `src/lib/dashboardSections.ts` they read) are not imported or mounted by any route
+under `app/` — discovered while auditing `app/dashboard/*` for the 2026-07-11 nav consolidation above.
+They're unrelated to the routed `/dashboard/*` pages this section otherwise tracks. Same §5 "no unowned
+code" concern as `frontend/`: needs an explicit keep-or-remove decision, tracked as `ORPHAN-02` in
+`TODO-List.md` rather than left undecided.
 
 When refactoring a page:
 

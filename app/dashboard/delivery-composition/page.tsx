@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
-  StickyToolbar, ToolbarSpacer, ToolbarButton,
-  PageHeader, SectionCard, PageLoading,
+  StickyToolbar, ToolbarSpacer,
+  PageHeader, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
 
 const DONE_STATUSES = ['done', 'closed', 'resolved'];
@@ -41,17 +41,10 @@ export default function DeliveryCompositionPage() {
     return raw.filter(i => { if (seen.has(i.key)) return false; seen.add(i.key); return true; });
   }, [metrics?.flow?.items]);
 
-  const typeDist = useMemo(() => {
-    const map = new Map<string, number>();
-    flowItems.forEach(i => { const t = String(i.type ?? 'Unknown'); map.set(t, (map.get(t) ?? 0) + 1); });
-    return [...map.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 6);
-  }, [flowItems]);
-
   if (loading) return <PageLoading />;
   if (!metrics) return null;
 
   const totalIssues = Math.max(metrics.totalIssues, 1);
-  const flow = metrics.flow;
   const storyPoints = metrics.storyPoints;
 
   const doneBucket   = flowItems.filter(i => DONE_STATUSES.includes(norm(i.status))).length;
@@ -77,9 +70,6 @@ export default function DeliveryCompositionPage() {
     return `${s.color} ${st}% ${cursor}%`;
   }).join(', ')})`;
 
-  const typeMax = Math.max(...typeDist.map(r => r.count), 1);
-  const TYPE_COLORS = ['#2563EB', '#059669', '#D97706', '#DC2626', '#7C3AED', '#0891B2'];
-
   return (
     <>
       <StickyToolbar>
@@ -91,13 +81,13 @@ export default function DeliveryCompositionPage() {
         id="tour-header-delivery-composition"
         title="Delivery Composition"
         badge={`${metrics.completionRate || 0}% complete`}
-        subtitle="Work breakdown by status, type, health, and epic contribution."
+        subtitle="How the current delivery period breaks down by status and health."
       />
 
       <div style={{ padding: '0 28px 48px' }}>
 
         {/* ── Donut + breakdown ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 40, padding: '24px', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, marginBottom: 20 }}>
+        <div id="tour-section-delivery-composition-1" style={{ display: 'flex', alignItems: 'center', gap: 40, padding: '24px', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, marginBottom: 20 }}>
           {/* Donut */}
           <div style={{ position: 'relative', flexShrink: 0 }}>
             <div style={{ width: 180, height: 180, borderRadius: '50%', background: donutBg, animation: 'donutReveal 700ms ease-out both' }} role="img" aria-label="Delivery composition ring" />
@@ -132,43 +122,6 @@ export default function DeliveryCompositionPage() {
           </div>
         </div>
 
-        {/* ── Type breakdown ── */}
-        {typeDist.length > 0 && (
-          <SectionCard title="Composition by Type">
-            <div id="tour-section-delivery-composition-1" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {typeDist.map((r, i) => (
-                <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ width: 120, fontSize: 12, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name}>{r.name}</span>
-                  <div style={{ flex: 1, height: 8, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', borderRadius: 4, background: TYPE_COLORS[i % TYPE_COLORS.length], width: `${(r.count / typeMax) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 60}ms` }} />
-                  </div>
-                  <strong style={{ fontFamily: 'monospace', fontSize: 11, color: TYPE_COLORS[i % TYPE_COLORS.length], width: 36, textAlign: 'right', flexShrink: 0 }}>{r.count}</strong>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-        )}
-
-        {/* ── Story points composition ── */}
-        {storyPoints.totalStoryPoints > 0 && (
-          <SectionCard title="Story Points Composition">
-            <div id="tour-section-delivery-composition-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 12 }}>
-              {[
-                { label: 'Total', value: storyPoints.totalStoryPoints, color: '#2563EB' },
-                { label: 'Completed', value: storyPoints.completedStoryPoints || 0, color: '#059669' },
-                { label: 'Remaining', value: (storyPoints.totalStoryPoints - (storyPoints.completedStoryPoints || 0)), color: '#D97706' },
-              ].map(({ label, value, color }) => (
-                <div key={label}>
-                  <p style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#94A3B8', marginBottom: 4 }}>{label}</p>
-                  <p style={{ fontSize: 22, fontWeight: 800, fontFamily: 'monospace', color, margin: 0 }}>{value.toLocaleString()}</p>
-                </div>
-              ))}
-            </div>
-            <div style={{ height: 8, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: 4, background: '#059669', width: `${Math.min(100, storyPoints.pointCompletionRate || 0)}%`, animation: 'barFill 900ms ease-out both', transformOrigin: 'left center', animationDelay: '200ms' }} />
-            </div>
-          </SectionCard>
-        )}
       </div>
     </>
   );
