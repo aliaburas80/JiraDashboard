@@ -193,7 +193,7 @@ export default function PriorityAttentionPage() {
         {/* ── Blockers panel ── */}
         {(quickFilter === 'all' || quickFilter === 'blocked') && blockers.length > 0 && (
           <SectionCard title={`🚫 Blockers · ${blockers.length} items`}>
-            <AttentionTable items={blockers} headerId="tour-section-priority-attention-2" />
+            <AttentionTable items={blockers} showSprint headerId="tour-section-priority-attention-2" />
           </SectionCard>
         )}
 
@@ -222,8 +222,8 @@ export default function PriorityAttentionPage() {
   );
 }
 
-function AttentionTable({ items, showAge, showAssignee, headerId }: {
-  items: FlowItem[]; showAge?: boolean; showAssignee?: boolean; headerId?: string;
+function AttentionTable({ items, showAge, showAssignee, showSprint, headerId }: {
+  items: FlowItem[]; showAge?: boolean; showAssignee?: boolean; showSprint?: boolean; headerId?: string;
 }) {
   const shown = items.slice(0, 50);
   return (
@@ -231,7 +231,7 @@ function AttentionTable({ items, showAge, showAssignee, headerId }: {
       <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
         <thead id={headerId}>
           <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
-            {['Key', 'Summary', 'Status', showAssignee && 'Assignee', showAge && 'Age (d)', 'Health'].filter(Boolean).map(h => (
+            {['Key', 'Summary', 'Status', showSprint && 'Sprint', showAssignee && 'Assignee', showAge && 'Age (d)', 'Health'].filter(Boolean).map(h => (
               <th key={h as string} style={{ padding: '6px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94A3B8' }}>{h}</th>
             ))}
           </tr>
@@ -244,6 +244,7 @@ function AttentionTable({ items, showAge, showAssignee, headerId }: {
                 <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.summary}</span>
               </td>
               <td style={{ padding: '7px 10px', color: '#64748B', whiteSpace: 'nowrap' }}>{item.status}</td>
+              {showSprint && <td style={{ padding: '7px 10px', color: '#64748B', whiteSpace: 'nowrap' }}>{item.sprint || '—'}</td>}
               {showAssignee && <td style={{ padding: '7px 10px', color: '#64748B', whiteSpace: 'nowrap' }}>{item.assignee ?? '—'}</td>}
               {showAge && <td style={{ padding: '7px 10px', fontFamily: 'monospace', color: Number(item.ageDays) > 30 ? '#DC2626' : '#D97706', fontWeight: 700, whiteSpace: 'nowrap' }}>{item.ageDays ?? '—'}</td>}
               <td style={{ padding: '7px 10px', whiteSpace: 'nowrap' }}>

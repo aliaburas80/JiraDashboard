@@ -5,11 +5,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { buildSafeCsv } from '@/lib/exportSafety';
-import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
   StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
-  PageHeader, SectionCard, PageLoading,
+  PageHeader, SectionCard, PageLoading, EmptyPage,
 } from '@/components/dashboard/DashboardPageShell';
 
 const DONE_STATUSES = ['done', 'closed', 'resolved'];
@@ -59,11 +58,10 @@ export default function TrendsPage() {
       .slice(0, 10);
   }, [flowItems]);
 
-  const quarters = useMemo(
-    () => ((metrics?.quarters as any[]) ?? []).sort((a, b) => String(b.quarter ?? '').localeCompare(String(a.quarter ?? ''))),
-    [metrics?.quarters]
-  );
-  const qMax = Math.max(...quarters.map((q: any) => q.issues || 0), 1);
+  const { quarters, qMax } = useMemo(() => {
+    const sorted = ((metrics?.quarters as any[]) ?? []).sort((a, b) => String(b.quarter ?? '').localeCompare(String(a.quarter ?? '')));
+    return { quarters: sorted, qMax: Math.max(...sorted.map((q: any) => q.issues || 0), 1) };
+  }, [metrics?.quarters]);
 
   if (loading) return <PageLoading />;
   if (!metrics) return null;
@@ -79,7 +77,7 @@ export default function TrendsPage() {
     ])], { alwaysQuote: true });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = 'quarter-statistics.csv'; a.click();
+    a.download = 'trends-quarterly.csv'; a.click();
   };
 
   return (
@@ -101,10 +99,7 @@ export default function TrendsPage() {
       <div style={{ padding: '0 28px 48px' }} id="tour-section-trends-content">
 
         {view === 'sprint' && (!sprint ? (
-          <div style={{ padding: '60px 0', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>🏃</div>
-            No sprint data detected. Upload a file with Sprint field data to see sprint metrics.
-          </div>
+          <EmptyPage message="No sprint data detected. Upload a file with Sprint field data to see sprint metrics." />
         ) : (
           <>
             {/* ── Sprint gauges ── */}
@@ -129,7 +124,7 @@ export default function TrendsPage() {
                   {[
                     { label: 'Velocity', value: sprint.velocity ?? '—' },
                     { label: 'Avg Velocity', value: sprint.averageVelocity ?? '—' },
-                    { label: 'Predictability', value: sprint.predictability ? `${sprint.predictability}%` : '—' },
+                    { label: 'Predictability', value: sprint.predictability != null ? `${sprint.predictability}%` : '—' },
                   ].map(({ label, value }) => (
                     <div key={label} style={{ padding: '12px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0' }}>
                       <p style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#94A3B8', marginBottom: 4 }}>{label}</p>
@@ -166,10 +161,7 @@ export default function TrendsPage() {
         ))}
 
         {view === 'quarter' && (quarters.length === 0 ? (
-          <div style={{ padding: '60px 0', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>
-            <SvgIcon name="chartBar" size={36} style={{ margin: '0 auto 12px' }} />
-            No quarterly data available. Upload a file with date fields to see trends.
-          </div>
+          <EmptyPage message="No quarterly data available. Upload a file with date fields to see trends." />
         ) : (
           <>
             {/* ── Quarter chart ── */}

@@ -20,8 +20,25 @@ entry added, Priority Attention's tour gained a Smart Actions step), `personaFoc
 repointed to `trends`), `coachingEvidenceLink.ts` (`throughput.sprint.*` repointed to `/dashboard/trends`)
 + its test, `app/developer/page.tsx` (a stale tour-anchor example naming the now-gone `/dashboard/actions`
 route). Re-ran the full `eslint . --max-warnings=-1 -f json` audit again: 1,279 warnings/88 files (down
-from `v4.18.0`'s 1,281/90) — CLAUDE.md §60 and TODO-List.md `STYLE-03` refreshed to match. Branch:
-`refactor/dashboard-nav-consolidation` (same branch as `v4.18.0`, not yet committed).)
+from `v4.18.0`'s 1,281/90) — CLAUDE.md §60 and TODO-List.md `STYLE-03` refreshed to match.
+
+**Pre-commit self-review (4 parallel finder passes + verification) found and fixed 6 real issues before
+this landed:** (1) the 3 fully-removed `v4.18.0` pages (`delivery-controls`, `visual-analytics`,
+`kanban-health`) had no redirect stub, unlike every merged route — old bookmarks would 404 instead of
+landing gracefully; added three matching stubs (→ `key-metrics`, `delivery-composition`, `key-metrics`
+respectively). (2) `trends/page.tsx`'s Trends nav chip only showed quarter count, losing the sprint
+active/inactive at-a-glance signal the old Sprint Status nav item gave Scrum Masters; chip now shows
+'Active' when a sprint exists. (3) Priority Attention's Blockers table lost sprint-scoping when Sprint
+Status's own (sprint-only) blocked table was dropped in `v4.18.0` — added a Sprint column so that
+visibility isn't gone, just relocated. (4) `sprint.predictability ? ... : '—'` (carried over verbatim
+from the deleted sprint-status page) used a truthy check that would hide a legitimate 0% predictability
+value; fixed to `!= null`. (5) Trends' quarterly CSV export still downloaded as `quarter-statistics.csv`;
+renamed to `trends-quarterly.csv`. (6) Trends' two empty states hand-rolled markup instead of reusing
+`EmptyPage` from `DashboardPageShell.tsx` (already used this way on the Coaching page); switched to it.
+Also folded `qMax` into the same `useMemo` as `quarters` (was recomputing on every re-render, including
+on view-toggle clicks that don't touch quarters at all). Full verification re-run after fixes: typecheck
+clean, build clean, full suite 109/109 passing. Branch: `refactor/dashboard-nav-consolidation` (same
+branch as `v4.18.0`, not yet committed).)
 
 **Previous:** 2026-07-11 (**v4.18.0 DASHBOARD NAV CONSOLIDATION** — Audited all 16 `/dashboard/*`
 pages for duplicated data ahead of reducing the menu; found `delivery-controls`, `visual-analytics`, and

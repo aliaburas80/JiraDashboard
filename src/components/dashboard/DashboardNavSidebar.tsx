@@ -209,7 +209,7 @@ export default function DashboardNavSidebar({ metrics, open, onClose }: Props) {
 
         <GroupLabel label="Delivery" />
         {see('/dashboard/delivery-composition') && <NavItem href="/dashboard/delivery-composition" icon="circle"  title="Delivery Composition"  meta="5-segment ring"                              chip={`${completionRate}%`}          chipType={completionChipType} />}
-        {see('/dashboard/trends')               && <NavItem href="/dashboard/trends"             icon="calendar" title="Trends"                meta="Sprints · quarters"                          chip={`${quarters.length}Q`}         chipType="cn" />}
+        {see('/dashboard/trends')               && <NavItem href="/dashboard/trends"             icon="calendar" title="Trends"                meta="Sprints · quarters"                          chip={metrics?.sprint ? 'Active' : `${quarters.length}Q`} chipType={metrics?.sprint ? 'cg' : 'cn'} />}
 
         <GroupLabel label="Deep Dive" />
         {see('/dashboard/ownership')      && <NavItem href="/dashboard/ownership"       icon="users"  title="Ownership & Capacity" meta="Team load · epics"                              chip={(() => { const cap = (metrics?.capacity as any[]) ?? []; const sk = cap.filter((c: any) => c.loadShare > 35); return sk.length > 0 ? 'Skewed' : 'Even'; })()}  chipType={(() => { const cap = (metrics?.capacity as any[]) ?? []; return cap.some((c: any) => c.loadShare > 35) ? 'cw' : 'cg'; })()} />}
