@@ -1,0 +1,50 @@
+// ─── Team Role View — simple header + responsive 3-column role grid ───────────
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4, 16px);
+  flex-wrap: wrap;
+  padding: var(--space-6, 24px) 28px var(--space-5, 20px);
+}
+
+.headerText {
+  max-inline-size: 620px;
+}
+
+.headerTitle {
+  font-size: var(--text-2xl, 20px);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+}
+
+.headerDescription {
+  font-size: var(--text-base, 12px);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.headerMeta {
+  font-size: var(--text-xs, 11px);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5, 20px);
+  max-inline-size: 1500px;
+  margin-inline: auto;
+  padding: 0 28px var(--space-12, 48px);
+
+  @media (max-width: 1099px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 699px) {
+    grid-template-columns: 1fr;
+  }
+}

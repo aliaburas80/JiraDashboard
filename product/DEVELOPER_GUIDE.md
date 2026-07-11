@@ -121,7 +121,7 @@ JiraDashboard/
 │   │   ├── ownership/            # Ownership & Capacity (per-assignee load only; epic table lives on Epic Readiness)
 │   │   ├── trends/               # Trends (Sprints/Quarters toggle — velocity + per-sprint history, or quarterly throughput tables)
 │   │   ├── data-quality/         # Data Quality Score (10-field check, impact report) + Delivery Composition (completion donut)
-│   │   ├── coaching/             # Coaching Insights (role-based, evidence-linked recommendations)
+│   │   ├── coaching/             # Team Role View (fixed 3-column role grid — Scrum Master / Product Owner / Manager)
 │   │   ├── actions/              # redirect to /dashboard/priority-attention (merged 2026-07-11)
 │   │   ├── sprint-status/        # redirect to /dashboard/trends (merged 2026-07-11)
 │   │   ├── quarter-statistics/   # redirect to /dashboard/trends (merged 2026-07-11)
@@ -336,7 +336,7 @@ their replacement. The remaining 9 routed pages:
 - `/dashboard/ownership` — Ownership & Capacity (per-assignee load and capacity balance only)
 - `/dashboard/trends` — Trends (Sprints/Quarters toggle: velocity + per-sprint completion history, or quarterly throughput tables)
 - `/dashboard/data-quality` — Data Quality Score (10-field check, impact report) plus a Delivery Composition section (completion-by-status/health donut)
-- `/dashboard/coaching` — Coaching Insights (role-based, evidence-linked recommendations)
+- `/dashboard/coaching` — Team Role View (fixed 3-column role grid — Scrum Master / Product Owner / Manager, not personalized per viewer)
 
 ### Standalone analytics pages
 
@@ -1736,7 +1736,7 @@ Pure interpretation layer over the already-computed `DashboardMetrics` — close
 
 **Route:** `app/dashboard/coaching/page.tsx` (Client Component) — fetches `DashboardMetrics` via the existing `loadMetricsWithSource()` and the current role via the existing `GET /api/auth/me`, identical to every other `/dashboard/*` page; additionally fetches `GET /api/coaching/admin-signals` (new, admin-only) only when the resolved role is `admin`. Registered in `DashboardNavSidebar.tsx`'s `ROUTE_ACCESS` map for all 6 roles — category filtering happens inside the page (via `visibleCategoriesForRole()`), not by hiding the nav entry.
 
-**Components:** `src/components/dashboard/CoachingInsightCard.tsx` (renders the active category's full insight — the most urgent one, by `SEVERITY_RANK`, by default), `CoachingOtherRoles.tsx` (renders only when a role has >1 visible category — `manager` and `admin` — a collapsed "View other roles" list of the remaining categories, each row showing a mood icon and one-line `healthSummary`; selecting a row swaps it into the primary card. Replaces the pre-2026-07-12 `CoachingCategoryTabs.tsx` tab strip — see "Coaching Insights Relevance-First Redesign" below). Severity renders via the existing `Badge` component (`severityToBadgeVariant()` in `src/lib/coachingBadge.ts`), never a raw color.
+**Components (superseded 2026-07-12 — see "Team Role View Redesign" below):** ~~`src/components/dashboard/CoachingInsightCard.tsx`, `CoachingOtherRoles.tsx`~~. `/dashboard/coaching` is now the fixed 3-column Team Role View and no longer renders any component described in this section.
 
 **Testing:** `src/__tests__/roleBasedCoaching.test.ts` — 20 tests (`TC-RBC-01`–`09` + edge cases per CLAUDE.md §45.1: zero issues, empty `sprint.sprints`, confidence threshold boundaries, undefined `relations`). Suite: 689/71 passing.
 

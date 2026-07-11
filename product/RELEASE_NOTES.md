@@ -5,6 +5,12 @@
 
 ---
 
+## Redesigned: Coaching Page Is Now a Simple Team Role View (2026-07-12)
+
+Role-Based Coaching Insights has been replaced with a new page, Team Role View — a light, simple grid with one column each for Scrum Master, Product Owner, and Manager, shown to everyone at once. No tabs, no hero banners, no confidence scores, no clicking to see another role's view. Each column shows three things: the process rules to keep an eye on (with a status pill — Critical, At risk, Review, or Healthy), the next concrete actions for that role, and a handful of key numbers. Most of the rules and nearly all of the numbers are computed directly from your uploaded Jira data; a small number that the app doesn't track yet (like retrospective action ownership) are clearly placeholder values rather than invented ones. This replaces the tab-based redesign shipped earlier the same day, which this release supersedes rather than builds on.
+
+---
+
 ## Redesigned: Coaching Insights Shows Your View First, Not a Row of Tabs (2026-07-12)
 
 Role-Based Coaching Insights previously led with a row of tabs — up to 7 of them for admins — before showing any actual advice. It now shows your most relevant category's full coaching card immediately, with no tab-clicking required. If your role can see more than one category (Manager sees 3, Admin sees all 7), the rest collapse under a "View other roles" link below the main card, each shown as a compact row with a status icon and one-line summary — expand it only if you want to check another view. Everyone else (Scrum Master, Product Owner, C-level) already saw exactly one category directly and isn't affected by this change. The advice itself, evidence, and confidence scoring are unchanged — this is a layout change only.
