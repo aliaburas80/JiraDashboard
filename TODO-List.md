@@ -1,6 +1,54 @@
 # Delivery Clarity — Master TODO List
 
-**Last updated:** 2026-07-12 (**v4.21.0 COACHING INSIGHTS RELEVANCE-FIRST REDESIGN** — Per explicit
+**Last updated:** 2026-07-12 (**v4.22.0 TEAM ROLE VIEW — FULL COACHING PAGE REPLACEMENT** — Per explicit
+user request ("No I dont like the style totaly") with a full, detailed design brief for a "simple, light,
+role-based grid," delivered minutes after `v4.21.0` below shipped — that relevance-first tab redesign is
+superseded same-day, not iterated on. Replaced the entire per-viewer-role, tab-based coaching page with a
+fixed, non-personalized 3-column CSS Grid (Scrum Master, Product Owner, Manager) shown identically to
+every visitor: `RoleColumn`/`RoleSection`/`RuleItem`/`ActionItem`/`MetricItem`/`StatusBadge` (all new,
+`src/components/dashboard/`), driven by `buildRoleGridView()` (new, `src/services/coaching/
+roleGridView.mapper.ts`) reading `DashboardMetrics` directly — bypasses the old 7-generator/orchestrator/
+confidence/trend/evidence-link subsystem entirely rather than reusing it, since the new page has no
+per-category personalization, evidence chips, or confidence scoring left to drive. 10 of 12 rule statuses
+and all but 1 of 12 key measures are wired to real data or a simple documented derivation (carry-over
+rate, sprint goal coverage, forecast variance — see the mapper's inline comments); exactly one metric
+("Retro actions completed") has no real data anywhere in the app and shows a labeled FALLBACK constant.
+Reused the same numeric thresholds already hardcoded in `scrumMaster`/`engineeringManager`/
+`deliveryManager` generators (>35% capacity, <60% confidence, `'Declining'` trend) rather than inventing
+new policy; the one genuinely new threshold (20% carryover-at-risk) is called out in code and docs as
+having no prior app-wide equivalent. Deleted `CoachingInsightCard.tsx`/`CoachingOtherRoles.tsx` (zero
+remaining callers, direct analog to deleting `CoachingCategoryTabs.tsx` in `v4.21.0` below). New
+`ORPHAN-03` (Section 18f): `coachingOrchestrator.service.ts`, all 7 `generators/*.generator.ts`,
+`ceremonyAdvice.service.ts`, `coachingConfidence.service.ts`, `coachingTrend.service.ts`,
+`coachingEvidenceLink.ts`, `coachingBadge.ts`, `adminSignals.service.ts`, `app/api/coaching/
+admin-signals/route.ts`, and `src/types/roleBasedCoaching.ts` now have zero callers from any page or
+component (confirmed via repo-wide grep, excluding their own test files) — flagged for an explicit
+keep/repurpose/delete decision rather than silently deleted, since they represent real, tested, still-
+plausibly-reusable business logic and deleting ~15 files/several hundred tests was judged a larger,
+more unrelated action than the user's actual request. `DashboardNavSidebar.tsx` nav item renamed
+"Coaching Insights" → "Team Role View" (dropped the now-dead `visibleCategoriesForRole()` meta-count
+call). `tour.ts` and `/help`'s FAQ section rewritten for the new page. `product/` docs: `SRS.md`
+(FR-352–354 marked fully superseded, new FR-411 + Addendum AD), `APPENDIX.md` (Sections Q/R/S marked
+superseded, new Section T), `DEVELOPER_GUIDE.md` (new dated section), `SCENARIOS.md` (SCN-057/058/060
+marked superseded as historical record, new SCN-062), `USE_CASES.md` (UC-114 fully rewritten). Self-review
+agent pass caught 3 real issues before merge, all fixed: the Manager capacity rule/action dropped the
+small-team (`capacity.length > 2`) guard the source generators apply, the "Rebalance N members" action
+read oddly when there was nothing to rebalance (now a distinct action text, gated the same as the rule),
+and tour copy read as if the page were still personalized per viewer (reworded). New test file
+`src/__tests__/roleGridView.test.ts` (8 tests, TC-RGV-01–08) covering the mapper's threshold logic,
+zero-sprint/zero-committed edge cases, the small-team guard, and real-vs-fallback field sourcing.
+Verification: `npx tsc --noEmit` clean, `npx eslint` clean on every new/touched file (project-wide
+inline-style count *dropped* to 1,274/86 files, from 1,276/87 — deleting `CoachingInsightCard.tsx` removed
+its 2 documented warnings with it), `npx stylelint` clean on every new SCSS module, full Jest suite
+110 suites/1,022 tests passing (one unrelated pre-existing Jest-worker SIGSEGV flake on
+`throughput.test.ts` under parallel `--runInBand`-less execution, confirmed passing in isolation — same
+class of pre-existing flake documented for `forecastEngine.test.ts` in earlier entries), `npx next build`
+clean. **Not independently verified:** actual rendered appearance/responsive breakpoints in a browser —
+no browser-automation tool was available this session; verified analytically instead (token-only SCSS,
+exact breakpoint math re-read against the spec's own three-tier requirement). Branch: `refactor/
+coaching-team-role-view`.)
+
+**Previous:** 2026-07-12 (**v4.21.0 COACHING INSIGHTS RELEVANCE-FIRST REDESIGN** — Per explicit
 user request ("redesign Role-Based Coaching Insights... what else design could we used to display the
 page"). Presented 4 layout options via `AskUserQuestion` with ASCII previews (relevance-first/tabs-
 hidden, overview grid of all roles, left-rail navigator, keep-tabs-but-compress); user picked
@@ -1271,6 +1319,7 @@ This section is still documentation-only — no remediation code has been writte
 | STYLE-08 | Update docs once remediation actually completes | P1 | ❌ Not started | CLAUDE.md §60 (collapse/close finished tiers), RELEASE_NOTES.md, DEVELOPER_GUIDE.md styling section. Do not touch until the underlying refactor work is done — this row exists so doc cleanup isn't forgotten once `STYLE-02`–`07` close. |
 | ORPHAN-01 | Decide the fate of the legacy `frontend/` Create React App | P2 | ❌ Not started | A second, fully standalone CRA project (own `package.json`/`node_modules`/`build`, `react-scripts`) lives at `frontend/`, last touched 2026-05-30, not imported by or referenced from the Next.js app (`app/`, `src/`) anywhere. It contributes 59 of the 1,281 warnings under a lint config that doesn't apply to it (root ESLint currently reaches into it unintentionally) — those 59 are excluded from `STYLE-02`–`06`'s counts since SCSS-Module remediation makes no sense for a project this codebase doesn't build or own. Decide: remove it, or keep it for a documented reason and exclude it from the root ESLint run. CLAUDE.md §5 doesn't permit leaving unowned code undecided indefinitely. |
 | ORPHAN-02 | Decide the fate of orphaned `DashboardSectionSwitcher.tsx` / `LayoutBuilderPanel.tsx` / `DashboardSidebarNav.tsx` | P2 | ❌ Not started | Discovered 2026-07-11 while auditing `app/dashboard/*` for the nav consolidation: `src/components/dashboard/DashboardSectionSwitcher.tsx` and `LayoutBuilderPanel.tsx` (7 + 3 warnings, counted in `STYLE-04`'s Tier 3 total) are not imported or mounted by any route under `app/`. They read `src/lib/dashboardSections.ts`'s `section-*` ids, which don't correspond to anything in the routed `/dashboard/*` pages. A third file, `src/components/dashboard/DashboardSidebarNav.tsx`, is also unmounted — it's a superseded predecessor to the live `DashboardNavSidebar.tsx` (note the swapped word order), still describing the old single-page `activeSection`/`setSectionMode` dashboard paradigm that `/dashboard/*` no longer uses. `/developer` and `/glossary` had stale prose describing `DashboardSidebarNav` as if it were the live component — corrected to `DashboardNavSidebar` as part of this pass, but the deeper legacy `activeSection`/"12 existing sections" terminology elsewhere in `/glossary` (e.g. the `activeSection` and `Delivery Summary` entries) documents that same superseded paradigm and needs its own separate cleanup pass. Same §5 "no unowned code" concern as `ORPHAN-01`: decide whether to wire these up, repurpose them, or delete them — don't leave undecided indefinitely. |
+| ORPHAN-03 | Decide the fate of the retired Role-Based Coaching generator/orchestrator subsystem | P2 | ❌ Not started | Discovered 2026-07-12 when `/dashboard/coaching` was replaced by the fixed 3-column Team Role View, which reads `DashboardMetrics` directly instead of going through the old per-category system. Confirmed via repo-wide grep (excluding each file's own test) that none of the following have any remaining app-level caller: `src/services/coaching/coachingOrchestrator.service.ts` (`generateAllCoachingInsights`/`visibleCategoriesForRole`), all 7 files under `src/services/coaching/generators/`, `ceremonyAdvice.service.ts`, `coachingConfidence.service.ts`, `coachingTrend.service.ts`, `coachingEvidenceLink.ts`, `coachingBadge.ts`, `adminSignals.service.ts`, `app/api/coaching/admin-signals/route.ts` (an API route — still technically reachable over HTTP even with no frontend caller), and `src/types/roleBasedCoaching.ts`. Unlike `ORPHAN-01`/`02`, this is real, tested (`roleBasedCoaching.test.ts`, `coachingTrend.test.ts`, `coachingEvidenceLink.test.ts` all still pass — they exercise the code directly, not through a UI), still-plausibly-reusable domain logic (confidence scoring, severity derivation, evidence-to-route mapping) — not dead weight left by an accidental rename. Deleting ~15 files and their tests was judged out of scope for a page-redesign request and not done unilaterally. Decide: repurpose this logic into a future richer view of this same page, keep it as-is for a different future feature, or remove it — don't leave undecided indefinitely. |
 
 ---
 

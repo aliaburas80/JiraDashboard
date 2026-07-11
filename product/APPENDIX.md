@@ -328,24 +328,38 @@
 
 ## Q — v4.10.0 Role-Based Coaching Terms (2026-06-23)
 
+*(All terms in Sections Q, R, and S below are superseded as of 2026-07-12 — the entire per-viewer-role, tab-based coaching model was replaced by the fixed 3-column Team Role View. See Section T. The underlying generator code these terms describe still exists but is no longer called by any page — see Section T's orphan note.)*
+
 | Term | Definition |
 |---|---|
-| **Role-Based Coaching Insights** | The `/dashboard/coaching` feature that turns the already-computed `DashboardMetrics` into role-specific, evidence-cited advice. No new metric calculations — a pure interpretation layer over existing flow/throughput/data-quality signals. |
-| **Coaching Category** | One of 7 content groupings (Scrum Master, Product Owner, Engineering Manager, Delivery Manager, Team Lead, C-level, Admin). Distinct from `AppRole` — the `manager` role sees 3 categories (Engineering Manager, Delivery Manager, Team Lead), with the most urgent shown by default and the rest collapsed under "View other roles" (see Section S). |
-| **Ceremony Advice** | Team-wide cadence recommendations (daily standup, refinement, sprint planning, sprint review, retrospective) computed once per page load and embedded identically into every visible coaching category. Each line only appears when its trigger condition is met in the real data — never a generic placeholder. |
-| **Coaching Confidence Score** | A 0–100 score per coaching category, averaged from the relevant `MetricConfidenceMap` entries and downgraded ×0.75 (Weak) or ×0.5 (Critical) when Data Quality is poor. Shows "Not available" instead of a number when there isn't enough data yet. |
+| **Role-Based Coaching Insights** | *(Superseded — see Section T.)* The `/dashboard/coaching` feature that turns the already-computed `DashboardMetrics` into role-specific, evidence-cited advice. No new metric calculations — a pure interpretation layer over existing flow/throughput/data-quality signals. |
+| **Coaching Category** | *(Superseded — see Section T.)* One of 7 content groupings (Scrum Master, Product Owner, Engineering Manager, Delivery Manager, Team Lead, C-level, Admin). Distinct from `AppRole`. |
+| **Ceremony Advice** | *(Superseded — see Section T.)* Team-wide cadence recommendations (daily standup, refinement, sprint planning, sprint review, retrospective) computed once per page load and embedded identically into every visible coaching category. |
+| **Coaching Confidence Score** | *(Superseded — see Section T.)* A 0–100 score per coaching category, averaged from the relevant `MetricConfidenceMap` entries and downgraded ×0.75 (Weak) or ×0.5 (Critical) when Data Quality is poor. |
 
 ## R — v4.10.1 Coaching Redesign Terms (2026-06-26)
 
 | Term | Definition |
 |---|---|
-| **Severity Trend** | An improved/worsened/unchanged comparison of a coaching category's current severity against its severity in the user's second-most-recent saved snapshot, computed by `computeSeverityTrend()`. Silently omitted when fewer than 2 snapshots exist — never fabricated. |
-| **Quick-Win Celebration** | When a coaching category's severity is `low`, its hero headline cites a specific evidence number (e.g. "92% completion rate") instead of a generic "Looking good" message. |
-| **Cross-Category Nudge** | *(Superseded 2026-07-12 — see Section S.)* A small colored dot shown on any non-active coaching tab whose severity is `high` or `critical`, surfacing urgency without requiring the user to click through every tab. |
-| **Evidence Routing** | The static `metricKey`-prefix lookup (`resolveEvidenceRoute()`) that maps a coaching evidence item to its source `/dashboard/*` page, making the evidence chip clickable when a mapping exists. |
+| **Severity Trend** | *(Superseded — see Section T.)* An improved/worsened/unchanged comparison of a coaching category's current severity against its severity in the user's second-most-recent saved snapshot, computed by `computeSeverityTrend()`. |
+| **Quick-Win Celebration** | *(Superseded — see Section T.)* When a coaching category's severity is `low`, its hero headline cites a specific evidence number (e.g. "92% completion rate") instead of a generic "Looking good" message. |
+| **Cross-Category Nudge** | *(Superseded — see Section T.)* A small colored dot shown on any non-active coaching tab whose severity is `high` or `critical`, surfacing urgency without requiring the user to click through every tab. |
+| **Evidence Routing** | *(Superseded — see Section T.)* The static `metricKey`-prefix lookup (`resolveEvidenceRoute()`) that maps a coaching evidence item to its source `/dashboard/*` page, making the evidence chip clickable when a mapping exists. |
 
-## S — Coaching Relevance-First Redesign Terms (2026-07-12)
+## S — Coaching Relevance-First Redesign Terms (2026-07-12, superseded same day — see Section T)
 
 | Term | Definition |
 |---|---|
-| **View Other Roles** | The collapsed expander (`CoachingOtherRoles.tsx`) shown below the primary coaching card whenever a role has more than one visible category. Each collapsed row shows a mood icon (colored by severity) and a one-line `healthSummary` — clicking a row swaps it into the primary card. Replaces the `CoachingCategoryTabs` tab strip and its per-tab Cross-Category Nudge dot. |
+| **View Other Roles** | *(Superseded within hours of introduction — see Section T.)* The collapsed expander (`CoachingOtherRoles.tsx`) shown below the primary coaching card whenever a role had more than one visible category. Replaced the `CoachingCategoryTabs` tab strip; itself replaced the same day by the Team Role View's fixed 3-column grid, which shows all roles simultaneously with no expander at all. |
+
+## T — Team Role View Terms (2026-07-12)
+
+*(Replaces the entire Q/R/S coaching model above — see `product/DEVELOPER_GUIDE.md` "Team Role View Redesign" for the full technical writeup.)*
+
+| Term | Definition |
+|---|---|
+| **Team Role View** | The current `/dashboard/coaching` page — a fixed, non-personalized 3-column grid (Scrum Master, Product Owner, Manager) shown identically to every viewer, each column built from `buildRoleGridView()` (`src/services/coaching/roleGridView.mapper.ts`) directly against `DashboardMetrics`. |
+| **Role Column** | One of the 3 fixed columns (`RoleColumn.tsx`), each containing a Rules to Monitor section, a Current Actions section, and a Key Measures section. |
+| **Rule to Monitor** | A short, fixed process rule for a role (e.g. "Blocked work must be reviewed daily") paired with a `Status` pill (`critical`/`risk`/`review`/`healthy`) computed from real `DashboardMetrics` fields where a corresponding signal exists, or a static `healthy` default where no tracking data exists yet (see `roleGridView.mapper.ts` FALLBACK comments). |
+| **Current Action** | A curated, role-specific next step. Not computed from a task-assignment system (none exists in the app) — titles interpolate a real count where one is available (e.g. "Review the 4 critical epics"). |
+| **Key Measure** | A `label`/`value` pair shown in each column's Key Measures section — a direct `DashboardMetrics` field, a simple documented derivation (a ratio or linear complement of existing fields), or an explicitly-labeled FALLBACK constant where no real data exists. |

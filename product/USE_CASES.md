@@ -3386,40 +3386,26 @@ Use cases UC-030 (View Import History) and UC-031 (Export Import Logs) are avail
 
 ---
 
-### UC-114 — User Views Role-Based Coaching Insights
+### UC-114 — User Views the Team Role View
 
-*(Added 2026-06-23 to close `RBC-01`–`RBC-20` from TODO-List.md Section 16. Pure interpretation of already-computed `DashboardMetrics` — no new calculations are introduced.)*
+*(Originally added 2026-06-23 as "User Views Role-Based Coaching Insights" to close `RBC-01`–`RBC-20`. Fully rewritten 2026-07-12 for the Team Role View redesign — see FR-411 and DEVELOPER_GUIDE.md "Team Role View Redesign." The prior per-viewer-role/tabs/evidence-chip/confidence-score version of this use case is preserved as history in SCN-057/058/060, which are marked superseded rather than deleted.)*
 
 - **ID:** UC-114
-- **Title:** A Logged-In User Views Coaching Insights for Their Role
-- **Actor:** Any logged-in user (all 6 `AppRole` values; content differs by role)
+- **Title:** A Logged-In User Views the Team Role View
+- **Actor:** Any logged-in user (all 6 `AppRole` values — content is identical for everyone; the page is not personalized per viewer)
 - **Precondition:** Delivery data has been uploaded or synced at least once (a `DashboardMetrics` snapshot exists)
 - **Trigger:** User navigates to `/dashboard/coaching` from the sidebar
 
 **Main Flow:**
-1. The page loads the current `DashboardMetrics` (via the existing `loadMetricsWithSource()`) and the user's role (via the existing `GET /api/auth/me`)
-2. `visibleCategoriesForRole(role)` resolves which of the 7 coaching categories the user sees: Scrum Master, Product Owner, and C-level roles see exactly one category each; the Manager role sees three (Engineering Manager, Delivery Manager, Team Lead); Admin sees all 7; the generic User role sees Team Lead
-3. For each visible category, a dedicated generator (`src/services/coaching/generators/`) produces a `RoleBasedCoachingInsight`: health summary, weak points, focus areas, evidence (each citing a real metric value), recommended actions, prevention advice, ceremony advice, next-sprint suggestions, a severity badge, and a confidence score
-4. The user reviews the primary card, sorted so the most urgent category renders there by default; if more than one category is visible, the rest collapse under a "View other roles" list below it, and selecting one swaps it into the primary card without reloading the page
+1. The page loads the current `DashboardMetrics` (via the existing `loadMetricsWithSource()`) — no role or admin-signals fetch occurs; the page no longer varies by viewer
+2. `buildRoleGridView(metrics)` (`src/services/coaching/roleGridView.mapper.ts`) builds exactly 3 `RoleView` objects — Scrum Master, Product Owner, Manager — directly from `DashboardMetrics`, bypassing the retired per-category generator/orchestrator system entirely
+3. The page renders all 3 as a responsive CSS Grid of `RoleColumn` components, each showing 3 bordered sections: Rules to Monitor (title + one-line description + a `critical`/`risk`/`review`/`healthy` status pill), Current Actions (title + detail), and Key Measures (a 2-column label/value grid)
+4. Rule statuses are computed from real `DashboardMetrics` fields using the same numeric thresholds already used elsewhere in the app (>35% capacity load, <60% delivery confidence, `'Declining'` throughput trend) — see the mapper's inline comments for the exact source field behind every rule and metric
+5. A small number of rules/metrics (retrospective-action ownership, priority-change visibility, "Retro actions completed") have no equivalent tracked data anywhere in the app yet and show an explicitly-commented FALLBACK value rather than a fabricated computed one
 
-**Alternate Flow — Admin role:**
-3a. The page additionally fetches `GET /api/coaching/admin-signals` (unresolved system errors, storage provider, cloud-sync freshness) before generating the Admin category's insight, so it can cite real operational signals in addition to Data Quality
+**Alternate Flow — Responsive layout:**
+3a. At ≤1099px the grid drops to 2 columns; at ≤699px it stacks to 1 column, preserving Scrum Master → Product Owner → Manager order (no explicit CSS `order` override — this is the natural DOM order)
 
-**Alternate Flow — Insufficient data for confidence:**
-3b. When the underlying metrics' sample sizes are all zero for a category's relevant signals, the confidence chip shows "Not available" with a plain-English explanation instead of a fabricated percentage, and the hero headline is prefixed "Early signal:" (added v4.10.1, FR-353)
-
-**Alternate Flow — Trend available (added v4.10.1, FR-353):**
-3c. When the user has at least 2 saved snapshots, the page additionally fetches `GET /api/snapshots` and the second-most-recent snapshot's metrics, re-generates that category's insight against them, and shows an improved/worsened/unchanged badge next to the mood label; with fewer than 2 snapshots the badge is silently omitted
-
-**Alternate Flow — Low-severity category (added v4.10.1, FR-353):**
-3d. When a category's severity is `low`, the hero headline cites the category's first evidence value directly (e.g. "92% completion rate — keep it up.") instead of the generic health summary
-
-**Alternate Flow — Nothing to flag (added v4.10.1, FR-353):**
-3e. When a category has no weak points/focus areas, or no ceremony advice fired, the page shows an explicit positive message instead of omitting the section silently
-
-**Alternate Flow — Evidence chip navigation (added v4.10.1, FR-354):**
-4a. The user clicks an evidence chip whose underlying metric maps to a known dashboard route (e.g. a cycle-time chip → `/dashboard/flow-health`) and is navigated there; chips with no known mapping remain non-interactive (tooltip-only)
-
-**Postcondition:** The user sees evidence-based coaching specific to their role, never generic Agile advice, with an honest confidence signal about how much the recommendations can be trusted, presented in a scannable, encouraging layout that surfaces the most urgent category first
-**Related FR:** FR-346, FR-347, FR-348, FR-349, FR-350, FR-351, FR-352, FR-353, FR-354
-**Related:** TC-RBC-01–09 (`src/__tests__/roleBasedCoaching.test.ts`), TC-RBC-10–13 (`src/__tests__/coachingTrend.test.ts`, `src/__tests__/coachingEvidenceLink.test.ts`)
+**Postcondition:** The user understands, without selecting a role or opening anything, which of the three roles' process rules currently need attention, what to do next, and the underlying numbers — in under five seconds, per the design brief's own success criterion
+**Related FR:** FR-411 (FR-346–FR-354 superseded)
+**Related:** `src/__tests__/roleGridView.test.ts` (TC-RGV-01–06)

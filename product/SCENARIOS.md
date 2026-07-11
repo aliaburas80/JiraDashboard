@@ -1431,6 +1431,8 @@ Alex's flow (New User — First Login):
 
 ### SCN-057 — Scrum Master Sees Evidence-Cited Blocker Coaching
 
+*(Superseded 2026-07-12 — `/dashboard/coaching` is now the fixed Team Role View grid; see SCN-062. This scenario is kept as a historical record of the pre-redesign per-role evidence/confidence model, not a description of current behavior.)*
+
 **Context:** Priya (Scrum Master) suspects the team's flow has degraded but wants concrete evidence before raising it, not a vague feeling.
 
 **Flow:**
@@ -1447,6 +1449,8 @@ Alex's flow (New User — First Login):
 ---
 
 ### SCN-058 — Coaching Confidence Falls Back Safely on Thin Data
+
+*(Superseded 2026-07-12 — the Team Role View has no confidence chip. Kept as a historical record.)*
 
 **Context:** A newly onboarded team has only just started uploading Jira data; most optional fields (Sprint dates, Story Points) are still empty.
 
@@ -1466,9 +1470,7 @@ Alex's flow (New User — First Login):
 
 *(Renumbered from `SCN-059` 2026-06-28 — both this scenario (RBC-26) and "Multi-Sprint Retro File Upload Surfaces a Repeated Blocker" above (RETRO-39) were independently assigned `SCN-059` on the same day, 2026-06-26. The retro scenario keeps `SCN-059` since it was committed first; this one moves to the next free ID. No other content changed.)*
 
-**Context:** An admin oversees all 7 coaching categories and wants to immediately see what needs attention rather than opening every category — and wants to know if last sprint's fix actually helped.
-
-*(Steps 2–4 updated 2026-07-12 for the relevance-first redesign — see DEVELOPER_GUIDE.md "Coaching Insights Relevance-First Redesign." The 7 tabs this scenario originally described were replaced by a single primary card plus a collapsed "View other roles" list; the underlying `SEVERITY_RANK` sort and per-category data are unchanged.)*
+*(Superseded 2026-07-12 — the Team Role View is not personalized per viewer and has no per-category tabs, "View other roles" list, snapshot-trend badge, or evidence chips; see SCN-062. Kept as a historical record — the steps below describe the 2026-07-12-morning "relevance-first" intermediate design, itself replaced the same day.)*
 
 **Flow:**
 1. The admin opens `/dashboard/coaching` having previously saved two snapshots (a "Sprint 14" and a "Sprint 15" snapshot via the Snapshots feature)
@@ -1500,3 +1502,23 @@ Alex's flow (New User — First Login):
 **Outcome:** Marcus gets a specific, fixable reason for the confidence drop instead of an unexplained label, and the diagnosis correctly points him at data hygiene rather than a real delivery risk — preventing a false escalation.
 
 **Related:** UC-102 (extended by FR-359–FR-364), FR-359–FR-364, TC-FCAST-06–13
+
+---
+
+### SCN-062 — Anyone Opens the Team Role View and Sees All Three Roles at a Glance
+
+*(Added 2026-07-12, replacing SCN-057/058/060 — see FR-411 and DEVELOPER_GUIDE.md "Team Role View Redesign." Direct user request: "I dont like the style totaly" plus a full redesign spec calling for a simple, light, role-based grid instead of the tab-based per-viewer-role page.)*
+
+**Context:** Dana (Product Owner) opens `/dashboard/coaching` before a refinement session. Unlike the old page, she doesn't need to know or select her own role first — the page always shows the same three columns to everyone.
+
+**Flow:**
+1. Dana clicks "Team Role View" in the dashboard sidebar
+2. The page shows three columns side by side — Scrum Master, Product Owner, Manager — no login-role detection, no tabs, no clicking to reveal another role
+3. In the Product Owner column, "Overdue target dates must be reviewed" shows a Critical pill, because `metrics.risk.overdueIssues` is greater than zero — she doesn't need to open anything to see it
+4. The Key Measures section shows real counts: Critical epics, Overdue items, Orphan items (all direct `DashboardMetrics` fields), and Sprint goal coverage (a derived percentage of recorded sprints whose goal outcome was "Met")
+5. Dana glances at the Scrum Master column too, in the same view, and sees its "Retro actions completed" measure — this one is a labeled placeholder value, since the app doesn't track retrospective action ownership yet
+6. Under Current Actions, "Review the 4 critical epics" already reflects the real count instead of a stale example number
+
+**Outcome:** Dana understands the page in under five seconds without picking a role first, sees which rules genuinely need attention today versus which are informational placeholders, and never has to click through a tab to check a colleague's column.
+
+**Related:** UC-114, FR-411
