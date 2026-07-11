@@ -13,8 +13,7 @@ const ROUTE_ACCESS: Record<string, string[]> = {
   '/dashboard/summary':             ['admin','scrum_master','product_owner','manager','c_level','user'],
   '/dashboard/priority-attention':  ['admin','scrum_master','manager','user'],
   '/dashboard/key-metrics':         ['admin','scrum_master','product_owner','manager','c_level','user'],
-  '/dashboard/data-quality':        ['admin','scrum_master','product_owner','manager','user'],
-  '/dashboard/delivery-composition':['admin','product_owner','manager','c_level','user'],
+  '/dashboard/data-quality':        ['admin','scrum_master','product_owner','manager','c_level','user'],
   '/dashboard/trends':              ['admin','scrum_master','product_owner','manager','c_level','user'],
   '/dashboard/ownership':           ['admin','scrum_master','manager','user'],
   '/dashboard/labels':              ['admin','product_owner','user'],
@@ -150,7 +149,6 @@ export default function DashboardNavSidebar({ metrics, open, onClose }: Props) {
 
   const attentionChipType: 'cc' | 'cw' | 'cn' = totalAttention > 200 ? 'cc' : totalAttention > 50 ? 'cw' : 'cn';
   const qualityChipType: 'cg' | 'cm' | 'cw' = dataQualityScore >= 80 ? 'cg' : dataQualityScore >= 60 ? 'cm' : 'cw';
-  const completionChipType: 'cg' | 'cw' | 'cc' = completionRate >= 70 ? 'cg' : completionRate >= 40 ? 'cw' : 'cc';
   const scoreChipType: 'cc' | 'cw' | 'cg' = healthScore < 40 ? 'cc' : healthScore < 60 ? 'cw' : 'cg';
   const epicChipType: 'cc' | 'cw' | 'cg' = criticalEpics > 0 ? 'cc' : epics.length > 0 ? 'cw' : 'cg';
 
@@ -205,10 +203,9 @@ export default function DashboardNavSidebar({ metrics, open, onClose }: Props) {
         <GroupLabel label="Overview" />
         {see('/dashboard/priority-attention') && <NavItem href="/dashboard/priority-attention"  icon="alertTri" title="Priority Attention"    meta="Blockers · overdue · actions"                chip={String(totalAttention)}        chipType={attentionChipType} />}
         {see('/dashboard/key-metrics')        && <NavItem href="/dashboard/key-metrics"         icon="monitor"  title="Key Metrics"           meta="6 KPI cards"                                 chip={hband}                         chipType={healthScore < 60 ? 'cw' : 'cg'} />}
-        {see('/dashboard/data-quality')       && <NavItem href="/dashboard/data-quality"        icon="shield"   title="Data Quality"          meta={`${dataQualityScore}% · field check`}        chip={`${dataQualityScore}%`}        chipType={qualityChipType} />}
+        {see('/dashboard/data-quality')       && <NavItem href="/dashboard/data-quality"        icon="shield"   title="Data Quality"          meta={`${dataQualityScore}% quality · ${completionRate}% complete`} chip={`${dataQualityScore}%`}        chipType={qualityChipType} />}
 
         <GroupLabel label="Delivery" />
-        {see('/dashboard/delivery-composition') && <NavItem href="/dashboard/delivery-composition" icon="circle"  title="Delivery Composition"  meta="5-segment ring"                              chip={`${completionRate}%`}          chipType={completionChipType} />}
         {see('/dashboard/trends')               && <NavItem href="/dashboard/trends"             icon="calendar" title="Trends"                meta="Sprints · quarters"                          chip={metrics?.sprint ? 'Active' : `${quarters.length}Q`} chipType={metrics?.sprint ? 'cg' : 'cn'} />}
 
         <GroupLabel label="Deep Dive" />

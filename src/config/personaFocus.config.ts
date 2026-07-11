@@ -33,7 +33,7 @@ export const PERSONA_FOCUS: Record<Persona, PersonaFocusConfig> = {
     persona: 'Product Owner',
     summary: 'Scope and priorities — what’s shipping this quarter and which epics need decisions.',
     focusAreas: [
-      { title: 'Delivery Composition', href: '/dashboard/delivery-composition' },
+      { title: 'Data Quality',         href: '/dashboard/data-quality' },
       { title: 'Epic Readiness',       href: '/dashboard/epic-readiness' },
       { title: 'Priority Attention',   href: '/dashboard/priority-attention' },
       { title: 'Trends',               href: '/dashboard/trends' },
@@ -65,7 +65,7 @@ export const PERSONA_FOCUS: Record<Persona, PersonaFocusConfig> = {
     focusAreas: [
       { title: 'Summary',              href: '/dashboard/summary' },
       { title: 'Trends',               href: '/dashboard/trends' },
-      { title: 'Delivery Composition', href: '/dashboard/delivery-composition' },
+      { title: 'Data Quality',         href: '/dashboard/data-quality' },
     ],
   },
 };

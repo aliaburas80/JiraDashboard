@@ -5,6 +5,12 @@
 
 ---
 
+## Simplified: Data Quality and Delivery Composition Are Now One Page (2026-07-12)
+
+Delivery Composition — the completion donut showing Done/In Progress/At Risk/Critical/Backlog — is now a section on the Data Quality page instead of its own sidebar entry. Both were compact, single-widget pages, so they're now two clearly separate sections on one page rather than forcing a false connection between them: Data Quality still answers "can I trust this data," and the composition donut still answers "what does our work mix look like," just one scroll apart instead of a separate click. Old links to Delivery Composition redirect straight there.
+
+---
+
 ## Simplified: Dashboard Menu Trimmed Again, 12 Pages to 10 (2026-07-11)
 
 A same-day follow-up to the trim below. Smart Actions is no longer its own page — its recommendation cards (unblock critical items, rebalance capacity, link orphan items to epics, and so on) now show directly on Priority Attention, right below the summary row, since both pages were already answering the same question — "what needs action right now" — just as raw signal tables versus generated advice from those same signals.
