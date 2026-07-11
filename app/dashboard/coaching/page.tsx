@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics } from '@/types/metrics';
 import { PageHeader, PageLoading, EmptyPage, shellStyles } from '@/components/dashboard/DashboardPageShell';
-import CoachingCategoryTabs from '@/components/dashboard/CoachingCategoryTabs';
+import CoachingOtherRoles from '@/components/dashboard/CoachingOtherRoles';
 import CoachingInsightCard from '@/components/dashboard/CoachingInsightCard';
 import { generateAllCoachingInsights } from '@/services/coaching/coachingOrchestrator.service';
 import type { AdminCoachingSignals } from '@/services/coaching/adminSignals.service';
@@ -114,11 +114,9 @@ export default function CoachingPage() {
     return <EmptyPage message="No coaching insights available — upload delivery data to get role-based guidance." />;
   }
 
-  const categories = sortedCategories.map((c) => c.category);
-  const active = activeCategory ?? categories[0];
+  const active = activeCategory ?? sortedCategories[0].category;
   const activeInsight = sortedCategories.find((c) => c.category === active) ?? sortedCategories[0];
-  const severityByCategory: Partial<Record<CoachingCategory, CheckSeverity>> = {};
-  for (const c of sortedCategories) severityByCategory[c.category] = c.severity;
+  const otherInsights = sortedCategories.filter((c) => c.category !== active);
 
   return (
     <>
@@ -128,19 +126,14 @@ export default function CoachingPage() {
         subtitle={`Evidence-based delivery coaching for the ${CATEGORY_LABELS[active]} view.`}
       />
       <div className={shellStyles.pageBody}>
-        {categories.length > 1 && (
-          <div id="tour-section-coaching-1">
-            <CoachingCategoryTabs
-              categories={categories}
-              active={active}
-              onChange={setActiveCategory}
-              severityByCategory={severityByCategory}
-            />
-          </div>
-        )}
         <div id="tour-section-coaching-2">
           <CoachingInsightCard insight={activeInsight} trend={trendByCategory[active]} />
         </div>
+        {otherInsights.length > 0 && (
+          <div id="tour-section-coaching-1">
+            <CoachingOtherRoles insights={otherInsights} onSelect={setActiveCategory} />
+          </div>
+        )}
       </div>
     </>
   );

@@ -331,7 +331,7 @@
 | Term | Definition |
 |---|---|
 | **Role-Based Coaching Insights** | The `/dashboard/coaching` feature that turns the already-computed `DashboardMetrics` into role-specific, evidence-cited advice. No new metric calculations — a pure interpretation layer over existing flow/throughput/data-quality signals. |
-| **Coaching Category** | One of 7 content groupings (Scrum Master, Product Owner, Engineering Manager, Delivery Manager, Team Lead, C-level, Admin). Distinct from `AppRole` — the `manager` role sees 3 categories as tabs (Engineering Manager, Delivery Manager, Team Lead). |
+| **Coaching Category** | One of 7 content groupings (Scrum Master, Product Owner, Engineering Manager, Delivery Manager, Team Lead, C-level, Admin). Distinct from `AppRole` — the `manager` role sees 3 categories (Engineering Manager, Delivery Manager, Team Lead), with the most urgent shown by default and the rest collapsed under "View other roles" (see Section S). |
 | **Ceremony Advice** | Team-wide cadence recommendations (daily standup, refinement, sprint planning, sprint review, retrospective) computed once per page load and embedded identically into every visible coaching category. Each line only appears when its trigger condition is met in the real data — never a generic placeholder. |
 | **Coaching Confidence Score** | A 0–100 score per coaching category, averaged from the relevant `MetricConfidenceMap` entries and downgraded ×0.75 (Weak) or ×0.5 (Critical) when Data Quality is poor. Shows "Not available" instead of a number when there isn't enough data yet. |
 
@@ -341,5 +341,11 @@
 |---|---|
 | **Severity Trend** | An improved/worsened/unchanged comparison of a coaching category's current severity against its severity in the user's second-most-recent saved snapshot, computed by `computeSeverityTrend()`. Silently omitted when fewer than 2 snapshots exist — never fabricated. |
 | **Quick-Win Celebration** | When a coaching category's severity is `low`, its hero headline cites a specific evidence number (e.g. "92% completion rate") instead of a generic "Looking good" message. |
-| **Cross-Category Nudge** | A small colored dot shown on any non-active coaching tab whose severity is `high` or `critical`, surfacing urgency without requiring the user to click through every tab. |
+| **Cross-Category Nudge** | *(Superseded 2026-07-12 — see Section S.)* A small colored dot shown on any non-active coaching tab whose severity is `high` or `critical`, surfacing urgency without requiring the user to click through every tab. |
 | **Evidence Routing** | The static `metricKey`-prefix lookup (`resolveEvidenceRoute()`) that maps a coaching evidence item to its source `/dashboard/*` page, making the evidence chip clickable when a mapping exists. |
+
+## S — Coaching Relevance-First Redesign Terms (2026-07-12)
+
+| Term | Definition |
+|---|---|
+| **View Other Roles** | The collapsed expander (`CoachingOtherRoles.tsx`) shown below the primary coaching card whenever a role has more than one visible category. Each collapsed row shows a mood icon (colored by severity) and a one-line `healthSummary` — clicking a row swaps it into the primary card. Replaces the `CoachingCategoryTabs` tab strip and its per-tab Cross-Category Nudge dot. |

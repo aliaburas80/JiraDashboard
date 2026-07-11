@@ -1,6 +1,28 @@
 # Delivery Clarity — Master TODO List
 
-**Last updated:** 2026-07-12 (**v4.20.0 DASHBOARD NAV CONSOLIDATION PASS 3** — Follow-up to `v4.18.0`/
+**Last updated:** 2026-07-12 (**v4.21.0 COACHING INSIGHTS RELEVANCE-FIRST REDESIGN** — Per explicit
+user request ("redesign Role-Based Coaching Insights... what else design could we used to display the
+page"). Presented 4 layout options via `AskUserQuestion` with ASCII previews (relevance-first/tabs-
+hidden, overview grid of all roles, left-rail navigator, keep-tabs-but-compress); user picked
+relevance-first. Replaced the horizontal `CoachingCategoryTabs` strip on `/dashboard/coaching` with:
+the most urgent category (already sorted by `SEVERITY_RANK`, unchanged) renders directly in the primary
+`CoachingInsightCard` with no extra click, and any remaining visible categories (Manager sees 3, Admin
+sees all 7 — everyone else already saw exactly one category and had no tab strip before this change
+either) collapse under a new `CoachingOtherRoles.tsx` "View other roles" expander below it; each
+collapsed row shows a severity-colored mood icon and one-line `healthSummary`, and selecting one swaps
+it into the primary card. `CoachingCategoryTabs.tsx`/`.module.scss` deleted (no other callers).
+`app/dashboard/coaching/page.tsx` simplified — `activeCategory` now defaults to `sortedCategories[0]`
+directly. No coaching generator, confidence formula, or severity rule changed — presentation-only, same
+as the `v4.10.1` redesign this supersedes. Updated: `src/lib/tour.ts` (`/dashboard/coaching` steps
+re-ordered/re-copied), `/help` FAQ (2 entries rewritten, tab language removed), `product/SRS.md`
+(FR-352/FR-353 amended with strikethrough + superseded notes, existing convention), `product/
+DEVELOPER_GUIDE.md` (new dated section + living component list), `product/APPENDIX.md` (new "Section S"
+term + `Cross-Category Nudge` marked superseded), `product/SCENARIOS.md` (SCN-060 flow rewritten to
+match), `product/USE_CASES.md` (UC-114 step 4 rewritten). Verification: `npx tsc --noEmit` clean.
+**Not yet run this pass:** `npm run lint` full-project re-audit (deferred to end of pass per existing
+practice) and `npm run build`. Branch: `refactor/coaching-relevance-first-layout`.)
+
+**Previous:** 2026-07-12 (**v4.20.0 DASHBOARD NAV CONSOLIDATION PASS 3** — Follow-up to `v4.18.0`/
 `v4.19.0` below, per explicit user request ("merge Data Quality and Delivery Composition... Epic
 Readiness, I don't understand what it does"). Explained Epic Readiness's purpose (per-epic risk/
 completion view — the only page with that lens) rather than changing it. Merged `app/dashboard/
