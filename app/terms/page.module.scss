@@ -25,7 +25,6 @@
   // 68% dark + 6px blur: arrows visible through panel, text stays readable
   background:      rgba(3, 6, 16, 0.68);
   backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   border-inline:   1px solid rgba(99, 130, 210, 0.12);
   min-block-size:  100vh;
 

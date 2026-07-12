@@ -1,0 +1,41 @@
+name: Feature request
+description: Propose a user-facing capability or workflow improvement.
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user need, business opportunity, or workflow gap does this address?
+      placeholder: Explain the opportunity without jumping straight to implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-outcome
+    attributes:
+      label: Expected outcome
+      description: What should be true when this is done?
+      placeholder: Describe the user-visible or system-visible outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ] Requirement one
+        - [ ] Requirement two
+        - [ ] Tests added or updated when practical
+        - [ ] Documentation updated when required
+        - [ ] No regression introduced
+    validations:
+      required: true
+  - type: textarea
+    id: technical-considerations
+    attributes:
+      label: Technical considerations
+      description: Describe affected components, dependencies, migrations, compatibility, performance, accessibility, or security concerns.
+    validations:
+      required: true

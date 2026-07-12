@@ -5,10 +5,19 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/delivery_clarity_ci?sslmode=disable
