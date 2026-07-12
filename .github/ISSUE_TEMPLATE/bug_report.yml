@@ -1,0 +1,62 @@
+name: Bug report
+description: Report a reproducible defect or regression.
+title: "fix: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for keeping Delivery Clarity honest. Please include enough detail for a focused fix and validation.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is broken, confusing, or regressed?
+      placeholder: Explain the current behavior and why it is a problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-outcome
+    attributes:
+      label: Expected outcome
+      description: What should the user or system experience instead?
+      placeholder: Describe the desired behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: List the shortest path that reproduces the bug.
+      placeholder: |
+        1. Go to ...
+        2. Upload/select ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ] Defect is fixed for the reported scenario
+        - [ ] Regression coverage added or updated when practical
+        - [ ] Existing automated checks pass
+        - [ ] No unrelated behavior changes introduced
+    validations:
+      required: true
+  - type: textarea
+    id: technical-considerations
+    attributes:
+      label: Technical considerations
+      description: Note affected components, data shape, security, migrations, compatibility, or risk.
+    validations:
+      required: false
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Add logs, screenshots, failing test output, sample files, or browser details when relevant.
+    validations:
+      required: false
