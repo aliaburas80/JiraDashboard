@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
-import { verifyPassword } from '@/lib/auth';
+import { verifyPassword, DUMMY_PASSWORD_HASH } from '@/lib/auth';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { isAppRole } from '@/lib/roles';
 
@@ -104,15 +104,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
     const GENERIC = 'Invalid email or password.';
+    const GENERIC_SOLUTION = 'Check your email and password for typos or Caps Lock. If you don’t have an account yet, register for a free one.';
 
+    // AUDIT-SEC (login enumeration): an unknown email previously returned a
+    // distinct 404 with "no account exists" messaging, letting an attacker
+    // enumerate registered addresses -- every other auth endpoint in this app
+    // (forgot-password, register, resend-verification) already returns an
+    // identical generic response regardless of account existence; login was
+    // the one inconsistent case. Still runs a real bcrypt.compare() against a
+    // fixed dummy hash so the unknown-email path takes the same time as a
+    // real wrong-password check, not just the same status/body.
     if (!user) {
-      return loginError(
-        404,
-        'No Delivery Clarity account exists for this email.',
-        'Create a free account first, then verify your email before signing in.',
-        undefined,
-        { code: 'USER_NOT_FOUND', registerPath: '/register' },
-      );
+      await verifyPassword(password, DUMMY_PASSWORD_HASH);
+      return loginError(401, GENERIC, GENERIC_SOLUTION);
     }
     if (!user.isActive) {
       return loginError(
@@ -124,11 +128,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
-      return loginError(
-        401,
-        GENERIC,
-        'Check for typos, Caps Lock, or an old temporary password. If you were just added by an admin, copy the temporary password exactly from the welcome email.',
-      );
+      return loginError(401, GENERIC, GENERIC_SOLUTION);
     }
 
     // Unverified email no longer blocks sign-in — the user is let in, and the

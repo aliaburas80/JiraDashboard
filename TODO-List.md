@@ -1,5 +1,32 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**v4.23.0 FIX: LOGIN ENUMERATION** — Resolves
+`docs/product-audit/10-technical-cleanup.md` Part 1's login-enumeration finding: `POST /api/auth/login`
+previously returned a distinct 404 (`{ code: 'USER_NOT_FOUND', registerPath: '/register' }`, "No Delivery
+Clarity account exists for this email") for an unregistered email, versus a generic 401 for a wrong
+password on an existing account — letting a caller enumerate registered email addresses, inconsistent
+with every sibling auth endpoint (forgot-password, register, resend-verification), which already return
+identical generic responses regardless of account existence. **Surfaced a real product tradeoff before
+fixing it** rather than resolving it unilaterally: `app/login/page.tsx` actively depended on the
+`USER_NOT_FOUND` code to auto-redirect a user who mistypes their email to `/register` with a pre-filled,
+friendly "create an account" prompt — asked the user how to proceed; confirmed: keep the security fix,
+drop the auto-redirect UX (the "Create one free" link on the login page remains as the normal path to
+registration). Login now returns the same generic 401 (`'Invalid email or password.'`) for both cases.
+Also closed a **timing side-channel** the status-code fix alone wouldn't have: previously an unknown-email
+request returned near-instantly (no bcrypt call), while a known-email request paid the ~12-round bcrypt
+cost — itself an enumeration vector via response latency, independent of status/body. Added
+`DUMMY_PASSWORD_HASH` to `src/lib/auth.ts` (computed once at module load, same cost factor as a real
+hash) so the unknown-email path now runs a real `bcrypt.compare()` against it before returning, keeping
+timing consistent with the wrong-password path. Updated `src/__tests__/loginRoute.test.ts`'s `TC-LOGIN-01`
+(previously asserted the old 404/`USER_NOT_FOUND` behavior directly — this is the test that would have
+caught a future regression back to the old behavior, now asserting the opposite) and added `TC-LOGIN-01b`,
+a direct regression test asserting the unknown-email and wrong-password responses are byte-for-byte
+identical (status + body), the actual anti-enumeration property being fixed. Verified: `npm run typecheck`
+clean; `npm run lint` 1,274 (baseline, 0 new); `npm run build` compiled all routes; `npm run test` 110/110
+suites, 1,023/1,023 tests passing. Branch: `fix/login-enumeration`, based on `main` at commit `de490f4`,
+independent of this session's other parallel fix branches — this changelog header's version number will
+need reconciling at whichever merges last.)
+
 **Last updated:** 2026-07-12 (**v4.22.0 TEAM ROLE VIEW — FULL COACHING PAGE REPLACEMENT** — Per explicit
 user request ("No I dont like the style totaly") with a full, detailed design brief for a "simple, light,
 role-based grid," delivered minutes after `v4.21.0` below shipped — that relevance-first tab redesign is

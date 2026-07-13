@@ -5,6 +5,12 @@
 
 ---
 
+## Changed: Signing In With an Unregistered Email No Longer Reveals That (2026-07-13)
+
+Signing in previously told you directly if an email wasn't registered yet, and automatically sent you to the registration page with your email pre-filled. That was convenient, but it also meant anyone could check whether a given email address had a Delivery Clarity account just by trying to sign in with it — every other part of the app (forgot password, registering, resending a verification email) already deliberately avoids revealing that. Sign-in now shows the same "Invalid email or password" message either way, matching the rest of the app. If you don't have an account yet, use the "Create one free" link on the sign-in page instead of the old auto-redirect. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Redesigned: Coaching Page Is Now a Simple Team Role View (2026-07-12)
 
 Role-Based Coaching Insights has been replaced with a new page, Team Role View — a light, simple grid with one column each for Scrum Master, Product Owner, and Manager, shown to everyone at once. No tabs, no hero banners, no confidence scores, no clicking to see another role's view. Each column shows three things: the process rules to keep an eye on (with a status pill — Critical, At risk, Review, or Healthy), the next concrete actions for that role, and a handful of key numbers. Most of the rules and nearly all of the numbers are computed directly from your uploaded Jira data; a small number that the app doesn't track yet (like retrospective action ownership) are clearly placeholder values rather than invented ones. This replaces the tab-based redesign shipped earlier the same day, which this release supersedes rather than builds on.

@@ -78,11 +78,6 @@ export default function LoginPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        if (data.code === 'USER_NOT_FOUND') {
-          const next = `/register?email=${encodeURIComponent(email.trim())}&notice=create_account`;
-          router.push(next);
-          return;
-        }
         if (res.status === 429 && data.retryAfterSeconds) {
           setRateLimitSecs(data.retryAfterSeconds);
         }

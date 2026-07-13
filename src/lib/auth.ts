@@ -21,6 +21,14 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
+// AUDIT-SEC: computed once at module load (same SALT_ROUNDS cost factor as a
+// real hash) so a login attempt against a non-existent account can still run
+// a real bcrypt.compare() and take the same time as a genuine wrong-password
+// attempt — without this, an unknown-email request returns near-instantly
+// while a known-email request pays the bcrypt cost, which is itself an
+// account-enumeration side channel independent of the response body/status.
+export const DUMMY_PASSWORD_HASH = bcrypt.hashSync('not-a-real-account-password', SALT_ROUNDS);
+
 export function validatePasswordStrength(password: string): string | null {
   if (password.length < 8) return 'Password must be at least 8 characters.';
   if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter.';
