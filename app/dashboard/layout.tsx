@@ -6,6 +6,7 @@ import DashboardTopbar from '@/components/dashboard/DashboardTopbar';
 import DashboardNavSidebar from '@/components/dashboard/DashboardNavSidebar';
 import { DashboardMetricsProvider } from '@/components/dashboard/DashboardMetricsContext';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 import type { DashboardMetrics } from '@/types/metrics';
 import styles from './layout.module.scss';
 
@@ -29,7 +30,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (!data) { router.replace('/'); return; }
         setMetrics(data);
       } catch {
-        if (!cancelled) router.replace('/');
+        if (!cancelled) redirectWithLoadError(router);
       } finally {
         if (!cancelled) setLoading(false);
       }
