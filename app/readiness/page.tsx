@@ -22,7 +22,7 @@ export default function ReadinessPage() {
       if (cancelled) return;
       const metrics = result.metrics as DashboardMetrics | null;
       if (!metrics) { router.replace('/'); return; }
-      const items = (metrics.flow?.items ?? []) as any[];
+      const items = metrics.flow?.items ?? [];
       setSummary(calculateReleaseReadiness(items));
       setLoading(false);
     }

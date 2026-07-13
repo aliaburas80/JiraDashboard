@@ -1,5 +1,35 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**v4.23.0 FIX: RELEASE READINESS NEVER EVALUATED REAL DATA** — Fixes
+`AUDIT-CP3-001`, the first of three P0 findings from the full-application product audit
+(`docs/product-audit/`, Checkpoint 3). Root cause: `calculateReleaseReadiness()`
+(`src/services/metrics/releaseReadiness.service.ts`) read raw Jira export column names
+(`'Fix Version/s'`, `'Status'`, `'Issue Type'`, `'Blocked Flag'`), but both callers
+(`app/readiness/page.tsx`, `app/release-readiness/page.tsx`) pass it `metrics.flow.items` —
+normalized `FlowItem[]`, which never had those keys — so `getVersion()` always returned `''`,
+`versionMap` was always empty, and every user saw "Fix Version / Release column is absent"
+regardless of their actual data. Fix: added `fixVersion`/`blocked` fields to `FlowItem`
+(`src/types/metrics.ts`, populated in `metrics.service.ts`'s `getHealthFromIssue()` from the
+already-locally-computed `isBlocked` value and a new `issue['Fix Version/s']` read), and rewrote
+`releaseReadiness.service.ts`'s helpers (`isDone`/`isBlocked`/`isBug`/`isCritical`/`getVersion`) to
+read the normalized `FlowItem` shape instead of raw columns. Removed the `as any` casts this bug had
+been silently masked behind at both call sites. **Discovered along the way, fixed as a direct
+dependency, not a scope-expanding side quest**: `metrics.service.ts` maintains its own second,
+independently-hand-synced `FlowItem` interface (line ~46) distinct from the shared one in
+`src/types/metrics.ts` — both needed the same two fields added by hand; flagged below as a new
+tracked item (`DUP-FLOWITEM-01`) rather than consolidated now, since merging them is a wider
+refactor than this bug fix's blast radius should cover. Rewrote `releaseReadiness.test.ts`'s
+fixtures from raw-column shape to a `FlowItem` builder (the raw-column fixtures were the reason
+the original bug shipped with a fully green test suite — they matched the function's old signature,
+not what production actually calls it with); added `TC-RR-11`, a regression test asserting a real
+`FlowItem[]` with a populated `fixVersion` produces a non-empty, evaluated result. 4 other test
+files with pre-existing `FlowItem`-typed fixtures (`excelExport.test.ts`, `forecastEngine.test.ts`,
+`roleGridView.test.ts`, `teamHealth.test.ts`, `roleBasedCoaching.test.ts`) needed the two new fields
+added to stay type-valid — no behavior in those tests changed. Verified: `npm run typecheck` clean;
+`npm run lint` unchanged at 1,274 pre-existing warnings (0 new); `npm run test` 1,023/1,023 passing
+(1 pre-existing flaky timeout in `adminUsers.test.ts` confirmed unrelated — passes 11/11 in isolation,
+times out only under full-suite parallel load). Branch: `fix/release-readiness-flowitem-mismatch`.)
+
 **Last updated:** 2026-07-12 (**v4.22.0 TEAM ROLE VIEW — FULL COACHING PAGE REPLACEMENT** — Per explicit
 user request ("No I dont like the style totaly") with a full, detailed design brief for a "simple, light,
 role-based grid," delivered minutes after `v4.21.0` below shipped — that relevance-first tab redesign is
@@ -1320,6 +1350,7 @@ This section is still documentation-only — no remediation code has been writte
 | ORPHAN-01 | Decide the fate of the legacy `frontend/` Create React App | P2 | ❌ Not started | A second, fully standalone CRA project (own `package.json`/`node_modules`/`build`, `react-scripts`) lives at `frontend/`, last touched 2026-05-30, not imported by or referenced from the Next.js app (`app/`, `src/`) anywhere. It contributes 59 of the 1,281 warnings under a lint config that doesn't apply to it (root ESLint currently reaches into it unintentionally) — those 59 are excluded from `STYLE-02`–`06`'s counts since SCSS-Module remediation makes no sense for a project this codebase doesn't build or own. Decide: remove it, or keep it for a documented reason and exclude it from the root ESLint run. CLAUDE.md §5 doesn't permit leaving unowned code undecided indefinitely. |
 | ORPHAN-02 | Decide the fate of orphaned `DashboardSectionSwitcher.tsx` / `LayoutBuilderPanel.tsx` / `DashboardSidebarNav.tsx` | P2 | ❌ Not started | Discovered 2026-07-11 while auditing `app/dashboard/*` for the nav consolidation: `src/components/dashboard/DashboardSectionSwitcher.tsx` and `LayoutBuilderPanel.tsx` (7 + 3 warnings, counted in `STYLE-04`'s Tier 3 total) are not imported or mounted by any route under `app/`. They read `src/lib/dashboardSections.ts`'s `section-*` ids, which don't correspond to anything in the routed `/dashboard/*` pages. A third file, `src/components/dashboard/DashboardSidebarNav.tsx`, is also unmounted — it's a superseded predecessor to the live `DashboardNavSidebar.tsx` (note the swapped word order), still describing the old single-page `activeSection`/`setSectionMode` dashboard paradigm that `/dashboard/*` no longer uses. `/developer` and `/glossary` had stale prose describing `DashboardSidebarNav` as if it were the live component — corrected to `DashboardNavSidebar` as part of this pass, but the deeper legacy `activeSection`/"12 existing sections" terminology elsewhere in `/glossary` (e.g. the `activeSection` and `Delivery Summary` entries) documents that same superseded paradigm and needs its own separate cleanup pass. Same §5 "no unowned code" concern as `ORPHAN-01`: decide whether to wire these up, repurpose them, or delete them — don't leave undecided indefinitely. |
 | ORPHAN-03 | Decide the fate of the retired Role-Based Coaching generator/orchestrator subsystem | P2 | ❌ Not started | Discovered 2026-07-12 when `/dashboard/coaching` was replaced by the fixed 3-column Team Role View, which reads `DashboardMetrics` directly instead of going through the old per-category system. Confirmed via repo-wide grep (excluding each file's own test) that none of the following have any remaining app-level caller: `src/services/coaching/coachingOrchestrator.service.ts` (`generateAllCoachingInsights`/`visibleCategoriesForRole`), all 7 files under `src/services/coaching/generators/`, `ceremonyAdvice.service.ts`, `coachingConfidence.service.ts`, `coachingTrend.service.ts`, `coachingEvidenceLink.ts`, `coachingBadge.ts`, `adminSignals.service.ts`, `app/api/coaching/admin-signals/route.ts` (an API route — still technically reachable over HTTP even with no frontend caller), and `src/types/roleBasedCoaching.ts`. Unlike `ORPHAN-01`/`02`, this is real, tested (`roleBasedCoaching.test.ts`, `coachingTrend.test.ts`, `coachingEvidenceLink.test.ts` all still pass — they exercise the code directly, not through a UI), still-plausibly-reusable domain logic (confidence scoring, severity derivation, evidence-to-route mapping) — not dead weight left by an accidental rename. Deleting ~15 files and their tests was judged out of scope for a page-redesign request and not done unilaterally. Decide: repurpose this logic into a future richer view of this same page, keep it as-is for a different future feature, or remove it — don't leave undecided indefinitely. |
+| DUP-FLOWITEM-01 | Consolidate the two independent `FlowItem` interface definitions | P3 | ❌ Not started | Discovered 2026-07-13 while fixing `AUDIT-CP3-001` (v4.23.0 above): `src/services/metrics/metrics.service.ts` declares its own local `FlowItem`/`HealthStatus`/`JiraIssue` interfaces (~line 46) instead of importing the shared ones from `src/types/metrics.ts`. They're structurally identical today (both needed the same two-field addition by hand this fix), which is exactly the risk — nothing enforces that they stay in sync, and TypeScript's structural typing means a future field added to only one would fail silently at usage sites rather than at the declaration. Consolidating to a single shared import touches the file's internal call signatures broadly enough that it was judged out of scope for a bug-fix branch — tracked here rather than bundled in unrelated work. |
 
 ---
 

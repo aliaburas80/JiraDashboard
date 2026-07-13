@@ -190,7 +190,7 @@ export default function ReleaseReadinessPage() {
         const data   = result.metrics as DashboardMetrics | null;
         if (!data) { router.replace('/'); return; }
         const items = data.flow?.items ?? [];
-        const calc  = calculateReleaseReadiness(items as any);
+        const calc  = calculateReleaseReadiness(items);
         if (!cancelled) { setSummary(calc); setMetrics(data); setSelected(calc.releases[0] ?? null); }
       } catch { router.replace('/'); }
       finally  { if (!cancelled) setLoading(false); }

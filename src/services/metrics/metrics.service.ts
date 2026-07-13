@@ -68,6 +68,8 @@ interface FlowItem {
   health: HealthStatus;
   reason: string;
   linkedTo?: string;
+  fixVersion: string;
+  blocked: boolean;
 }
 
 interface FlowSummary {
@@ -552,6 +554,8 @@ function getHealthFromIssue(issue: JiraIssue, today: Date = new Date()): FlowIte
     project: (issue['Project'] as string) || '',
     health,
     reason: reasons.join(' '),
+    fixVersion: (issue['Fix Version/s'] as string) || '',
+    blocked: isBlocked,
   };
 }
 

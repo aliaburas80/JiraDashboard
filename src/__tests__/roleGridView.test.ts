@@ -32,6 +32,8 @@ function flowItem(key: string, overrides: Partial<FlowItem> = {}): FlowItem {
     project: 'PROJ',
     health: 'good',
     reason: 'Active work is within expected age.',
+    fixVersion: '',
+    blocked: false,
     ...overrides,
   };
 }

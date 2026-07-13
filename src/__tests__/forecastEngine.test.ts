@@ -15,6 +15,7 @@ function flowItem(key: string, overrides: Partial<FlowItem> = {}): FlowItem {
     sprint: 'Sprint 1', epic: 'EPIC-1', isOrphan: false, assignee: 'Ali', priority: 'Medium', storyPoints: 3,
     createdDate: '2026-01-01', startedDate: '2026-01-02', doneDate: '', leadTimeDays: null, cycleTimeDays: null,
     ageDays: 5, activeAgeDays: 5, labels: '', parent: '', project: 'PROJ', health: 'good', reason: '',
+    fixVersion: '', blocked: false,
     ...overrides,
   };
 }

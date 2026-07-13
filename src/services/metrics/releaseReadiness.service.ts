@@ -3,6 +3,7 @@
 // Release Readiness Service — calculates per-version Go/Conditional Go/No-Go
 // assessment with an actionable checklist from Jira export data.
 
+import type { FlowItem } from '@/types/metrics';
 import type {
   ReleaseReadinessSummary,
   ReleaseReadinessResult,
@@ -10,24 +11,27 @@ import type {
   ReleaseVerdict,
 } from '@/types/releaseReadiness';
 
-type JiraIssue = Record<string, unknown>;
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
+//
+// Consumes normalized FlowItem[] (the same domain shape every other metrics
+// consumer reads), not raw Jira export column names. Previously this read
+// raw column keys (e.g. i['Fix Version/s']) against DashboardMetrics.flow.items,
+// which is FlowItem[] and never carried those keys — every version group was
+// silently empty and hasVersionData was always false. See product-audit
+// CP3-001 / TODO-List.md for the fix record.
 
 const DONE_ST = new Set(['done', 'closed', 'resolved']);
 function norm(v: unknown): string { return String(v ?? '').trim().toLowerCase(); }
-function isDone(i: JiraIssue): boolean { return DONE_ST.has(norm(i['Status'])); }
-function isBlocked(i: JiraIssue): boolean {
-  return i['Blocked Flag'] === true || norm(i['Blocked Flag']) === 'true';
+function isDone(i: FlowItem): boolean { return DONE_ST.has(norm(i.status)); }
+function isBlocked(i: FlowItem): boolean { return i.blocked; }
+function isBug(i: FlowItem): boolean {
+  return ['bug', 'defect', 'error'].includes(norm(i.type));
 }
-function isBug(i: JiraIssue): boolean {
-  return ['bug', 'defect', 'error'].includes(norm(i['Issue Type'] ?? ''));
+function isCritical(i: FlowItem): boolean {
+  return i.health === 'critical';
 }
-function isCritical(i: JiraIssue): boolean {
-  return norm(i['health'] ?? '') === 'critical';
-}
-function getVersion(i: JiraIssue): string {
-  return String(i['Fix Version/s'] ?? '').trim();
+function getVersion(i: FlowItem): string {
+  return i.fixVersion.trim();
 }
 
 // ── Verdict logic ─────────────────────────────────────────────────────────────
@@ -83,10 +87,10 @@ function buildChecklist(
   blockers: number,
   openBugs: number,
   criticalItems: number,
-  issues: JiraIssue[],
+  issues: FlowItem[],
 ): ReleaseChecklistItem[] {
   const hasAssignees = issues.filter(i => {
-    const a = norm(i['Assignee'] ?? '');
+    const a = norm(i.assignee);
     return a && a !== 'unassigned';
   }).length;
 
@@ -147,9 +151,9 @@ function buildChecklist(
 
 // ── Main export ───────────────────────────────────────────────────────────────
 
-export function calculateReleaseReadiness(issues: JiraIssue[]): ReleaseReadinessSummary {
+export function calculateReleaseReadiness(issues: FlowItem[]): ReleaseReadinessSummary {
   // Group by Fix Version
-  const versionMap = new Map<string, JiraIssue[]>();
+  const versionMap = new Map<string, FlowItem[]>();
   issues.forEach(i => {
     const v = getVersion(i);
     if (!v) return;
@@ -180,11 +184,11 @@ export function calculateReleaseReadiness(issues: JiraIssue[]): ReleaseReadiness
     const checklist = buildChecklist(scope, completed, completionPct, blockers, openBugs, criticalItems, items);
 
     const issueList = items.slice(0, 20).map(i => ({
-      key:     String(i['Issue Key']  ?? ''),
-      summary: String(i['Summary']    ?? ''),
-      status:  String(i['Status']     ?? 'Unknown'),
-      type:    String(i['Issue Type'] ?? ''),
-      health:  String(i['health']     ?? 'good'),
+      key:     i.key,
+      summary: i.summary,
+      status:  i.status || 'Unknown',
+      type:    i.type,
+      health:  i.health,
     }));
 
     releases.push({ version, scope, completed, open, blockers, openBugs, criticalItems,
