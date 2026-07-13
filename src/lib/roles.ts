@@ -103,7 +103,7 @@ export function allowedRoutePrefixesForRole(role: string | null | undefined): st
       return [
         ...ANALYTICS_ROUTES,
         '/customer',
-        '/release-readiness', '/delivery-mix',
+        '/release-readiness', '/readiness', '/delivery-mix',
         ...PLANNING_ROUTES, ...COMMON_ROUTES,
       ];
     default:

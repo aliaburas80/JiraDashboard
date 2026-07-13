@@ -1249,7 +1249,7 @@ const CALCULATIONS = [
     why:'Reduces manual release readiness reviews. Objective, data-driven criteria per fix version remove subjectivity from Go/No-Go decisions.',
     benefit:'Enables consistent Go/No-Go decisions at the end of each sprint or release cycle, grounded in Jira data rather than gut feel.',
     alternatives:'Manual release checklists are inconsistent across teams and release managers. Objective formula-driven criteria applied to Jira data remove personal bias while remaining auditable.',
-    usedIn:'/readiness page, Excel Release Readiness sheet, dashboard Readiness section',
+    usedIn:'/release-readiness page, Excel Release Readiness sheet, dashboard Readiness section',
     assumptions:'Fix Version is set on all release-scoped items in Jira.',
     limitations:'Cannot assess code quality, automated test coverage, or customer validation — only Jira field state.',
     file:'src/services/metrics/releaseReadiness.service.ts',

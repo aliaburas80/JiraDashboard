@@ -1,5 +1,39 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**v4.23.0 MERGE /readiness INTO /release-readiness** — Resolves
+`docs/product-audit/04-remove-merge-keep.md` R-01, the single highest-confidence duplicate finding in the
+product audit: `/readiness` reproduced zero content beyond what `/release-readiness` already showed (both
+called `calculateReleaseReadiness()` against the same `ReleaseReadinessSummary` type; `/release-readiness`
+additionally computes 7 global quality-gate checks `/readiness` never had). `app/readiness/page.tsx`
+replaced with a `redirect('/release-readiness')` stub, matching the established pattern already used by
+the other 9 retired-route stubs under `app/dashboard/*`. Updated the one confirmed live incoming link
+(`app/landing/components/FeatureUniverse.tsx:18`, now points at `/release-readiness`) and a stale prose
+reference in `app/developer/page.tsx:1252`. Fixed the `c_level` role's `DELIVERY_ROUTES` omission
+flagged in `06-role-based-review.md` (`src/lib/roles.ts` — `c_level` was the only role whose hand-listed
+route allowlist excluded `/readiness`, an inconsistency that only existed because `DELIVERY_ROUTES` is
+hand-copied per role instead of spread from the shared constant in 4 of 5 non-admin branches) — added it
+so every role reaches the redirect cleanly rather than being bounced to a fallback route first.
+`middleware.ts`'s `PROTECTED` entry for `/readiness` was deliberately left unchanged (still session-gated,
+same as every other protected route — an unauthenticated visitor should still hit `/login` before the
+redirect fires). **Also removed** `src/components/readiness/ReleaseReadinessCard.tsx` — its only consumer
+was `/readiness` itself, so retiring that page left it immediately orphaned; removed in this same commit
+rather than left as fresh dead code for a future audit to rediscover. **Incidentally observed, not
+fixed** (out of this change's scope — flagged, not silently ignored): `app/developer/page.tsx:1247`
+documents Release Readiness verdict thresholds as "Go: ≥95%... Conditional Go: ≥80%..." which does not
+match the actual code in `releaseReadiness.service.ts` (`deriveVerdict()`: Go requires ≥90% with no
+blockers/bugs/critical items, Conditional Go covers 70–89% or has bugs/critical items, No-Go is <70% or
+any blocker) — a pre-existing documentation/code mismatch unrelated to this merge, needs its own separate
+fix. **Also noted for environment hygiene, not a code issue**: overwriting `app/readiness/page.tsx` via
+the edit tool caused an untracked `page 2.tsx` sync-conflict artifact to appear in the same directory
+mid-edit — the exact same class of artifact `ORPHAN`-tracked for `app/profile/page 2.tsx` in this same
+session, confirming that hypothesis live rather than just historically. Deleted immediately (it was
+never git-tracked). Verified: `npm run typecheck` clean; `npm run lint` now 1,273 warnings (−1 from the
+1,274 baseline — `ReleaseReadinessCard.tsx`'s removal took one inline-style warning with it), 0 errors;
+`npm run build` compiled all routes, `/readiness` now a 209 B redirect stub; `npm run test` 110/110
+suites, 1,022/1,022 tests passing. Branch: `fix/readiness-redirect-to-release-readiness`, based on `main`
+at commit `de490f4`, independent of this session's other parallel fix branches — this changelog header's
+version number will need reconciling at whichever merges last.)
+
 **Last updated:** 2026-07-12 (**v4.22.0 TEAM ROLE VIEW — FULL COACHING PAGE REPLACEMENT** — Per explicit
 user request ("No I dont like the style totaly") with a full, detailed design brief for a "simple, light,
 role-based grid," delivered minutes after `v4.21.0` below shipped — that relevance-first tab redesign is
