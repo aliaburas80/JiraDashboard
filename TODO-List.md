@@ -1,5 +1,32 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**FIX: `Card.tsx` NON-KEYBOARD-ACCESSIBLE `onClick` (LATENT)** — Resolves a
+P3 Phase 5 finding (`docs/product-audit/09-ux-and-accessibility.md` §6): the shared
+`src/components/ui/Card.tsx` accepted an optional `onClick` prop and rendered a plain `<div>` with
+`cursor-pointer` styling, but added no `role="button"`, `tabIndex`, or `onKeyDown` handler — a mouse-only
+control with no accessible role the moment any page passed `onClick`. The audit confirmed zero current
+call sites pass `onClick` (verified independently here via grep — went further and confirmed zero call
+sites import `<Card>` **at all**, not just zero `onClick` usages; the component is currently fully
+unused). **Chose to fix the gap rather than delete the file**: the audit's own finding explicitly already
+knew about the zero-consumer status and still recommended fixing the prop, not removing it — treating
+this as a landmine to defuse in a likely-to-be-reused generic primitive (unlike the audit's separately-
+tracked, genuinely abandoned single-purpose orphaned components, e.g. `SprintComparePanel.tsx`), not as
+dead code to remove. Fix: added `role="button"`, `tabIndex={0}`, and an `onKeyDown` handler (Enter/Space
+trigger `onClick`, matching the standard WAI-ARIA APG pattern for a non-native clickable container) —
+all three only applied when `onClick` is actually supplied, so the no-`onClick` case is behaviorally
+identical to before. Chose the ARIA-div pattern over swapping to a native `<button>` wrapper (CLAUDE.md
+§26.1's stated preference) specifically because `Card` wraps unconstrained `children: React.ReactNode` —
+a native `<button>` cannot legally contain other interactive elements (nested buttons/links), which a
+generic reusable card is very likely to need (e.g. a "View details" link inside a clickable summary
+card); the ARIA-div pattern is the documented exception for exactly this composability case. Added a
+`focus-visible` ring via Tailwind (`focus-visible:outline-none focus-visible:ring-2
+focus-visible:ring-offset-2`), matching the exact utility combination already used for this purpose
+elsewhere in `src/components/ui/` (`SectionNav.tsx`), per CLAUDE.md §26.2's visible-focus requirement.
+Verified: `npm run typecheck` clean; `npm run lint` unchanged at 1,273 pre-existing warnings (0 new);
+`npm run build` compiled all 64 routes; `npm run test` 111/111 suites, 1,031/1,031 tests passing. No
+manual browser verification needed or performed — zero live pages render this component today, so there
+is no existing UI this change could regress. Branch: `fix/card-clickable-div-keyboard-accessibility`.)
+
 **Last updated:** 2026-07-13 (**FIX: UNIFY ADMIN CONFIRM-DIALOG USAGE** — Resolves a P3 Phase 5 finding
 (`docs/product-audit/10-technical-cleanup.md` Part 4): `app/admin/settings/page.tsx` used the shared,
 accessible `ConfirmDeleteDialog` (focus management, Escape-to-cancel, `role="dialog"`) for one action
