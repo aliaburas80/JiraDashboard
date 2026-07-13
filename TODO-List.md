@@ -1,5 +1,24 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**v4.32.0 DISTINGUISH LOAD ERROR FROM "NO DATA" — DASHBOARD FOLLOW-UP** —
+Closes the direct follow-up left open by `v4.31.0` above: the 9 `app/dashboard/*` sub-pages were
+deliberately excluded from that pass because they were mid-refactor on `fix/metrics-loader-caching`
+(unmerged at the time); that branch has since merged, so the exclusion no longer applies. Since
+`fix/metrics-loader-caching` centralized the actual `loadMetricsWithSource()` fetch into
+`app/dashboard/layout.tsx` (all 9 sub-pages now read from `useDashboardMetrics()` instead of fetching
+independently), the fix is a single-file change rather than 9: `app/dashboard/layout.tsx`'s fetch
+`catch` block now calls `redirectWithLoadError(router)` instead of a bare `router.replace('/')`, so
+every sub-page inherits the fix automatically through the shared context. `app/readiness/page.tsx`,
+the other item excluded from `v4.31.0`, needed no such follow-up — `fix/readiness-redirect-to-release-
+readiness` replaced it with an unconditional `redirect('/release-readiness')` stub with no fetch of its
+own to distinguish. The 9 sub-pages' own `if (!loading && !metrics) router.replace('/')` fallback
+effects (a defense-in-depth net for the null-metrics case) are left as-is and unaffected: they fire
+after the layout's redirect has already begun navigating away, so they remain a harmless duplicate
+no-op `router.replace('/')` to the same destination, never a competing one — this was true before this
+change and is unchanged by it. Verified: `npm run typecheck` clean; `npm run lint` unchanged at 1,273
+pre-existing warnings (0 new); `npm run build` compiled all 64 routes; `npm run test` 111/111 suites,
+1,031/1,031 tests passing. Branch: `fix/dashboard-layout-load-error-signal`.)
+
 **Last updated:** 2026-07-13 (**v4.23.0 FIX: RELEASE READINESS NEVER EVALUATED REAL DATA** — Fixes
 `AUDIT-CP3-001`, the first of three P0 findings from the full-application product audit
 (`docs/product-audit/`, Checkpoint 3). Root cause: `calculateReleaseReadiness()`
