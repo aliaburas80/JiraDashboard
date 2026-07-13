@@ -9,6 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className={styles.shell}>
+      <a href="#main-content" className={styles.skipLink}>Skip to main content</a>
       <DashboardTopbar onNewUpload={() => router.push('/')} />
       <div className={styles.body}>
         <AdminNavSidebar />

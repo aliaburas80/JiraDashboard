@@ -7,8 +7,9 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   return (
     <div className={styles.shell}>
+      <a href="#main-content" className={styles.skipLink}>Skip to main content</a>
       <DashboardTopbar onNewUpload={() => router.push('/')} />
-      <div className={styles.body}>{children}</div>
+      <div id="main-content" className={styles.body}>{children}</div>
     </div>
   );
 }

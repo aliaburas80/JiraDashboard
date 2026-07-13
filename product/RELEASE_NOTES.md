@@ -5,6 +5,12 @@
 
 ---
 
+## Added: "Skip to Main Content" Link for Keyboard and Screen-Reader Users (2026-07-13)
+
+Every authenticated page now offers a "Skip to main content" link as the very first focusable element on the page — invisible until you tab to it, then it lets you jump straight past the navigation bar (and, on Dashboard/Admin/Developer pages, past the sidebar too) to the actual page content. Previously, a keyboard-only or screen-reader user had to tab through the entire navigation on every single page load before reaching anything else. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Improved: Dashboard Pages Load Faster When Navigating Between Them (2026-07-13)
 
 Moving between Priority Attention, Key Metrics, Data Quality, Trends, Ownership & Capacity, Labels & Types, Epic Readiness, Flow Health Table, and Team Role View previously re-fetched and re-processed your full dataset from scratch on every single click — including a redundant fetch the dashboard's own navigation sidebar was already making that never reached any of those pages. All nine now share the one fetch the dashboard already does when you arrive, so switching between them is immediate instead of re-loading each time. This only changes how already-fetched data is shared between pages within a single dashboard visit — nothing about what triggers a fresh fetch (a new upload, leaving and returning to the dashboard) changed, so re-uploaded data still shows up immediately, exactly as before. Found and fixed as part of a full-application product audit (`docs/product-audit/`).

@@ -134,6 +134,29 @@ there's no shared layout wrapping them to hoist the fetch into — a much larger
 root-level provider) than this quick win's scope; tracked in `docs/product-audit/11-prioritized-backlog.md`
 Phase 5.)
 
+**Last updated:** 2026-07-13 (**v4.28.0 ADD SKIP LINK TO ALL 4 APP SHELLS** — Resolves
+`docs/product-audit/09-ux-and-accessibility.md` §6.6 (the one confirmed, unambiguous static
+accessibility gap found in the audit): no "skip to main content" mechanism existed anywhere in the app.
+Discovered while implementing that this app has **4** separate top-level nav shells, not 1 — `AppShell`
+(the ~28 pages that import it directly), `app/dashboard/layout.tsx` (its own topbar + sidebar), `app/admin/
+layout.tsx` (its own topbar + `AdminNavSidebar`), and `app/developer/layout.tsx` (its own topbar, no
+sidebar) — confirmed via `grep` that none of the latter three ever render `AppShell`. A skip link added
+only to `AppShell` would have silently left `/dashboard/*`, `/admin/*`, and `/developer` uncovered, so all
+4 got one: a `.skipLink` class (hidden off-canvas via `top: -100%`, moved on-screen on `:focus-visible`,
+using existing design tokens — `--space-3/4/5`, `--radius-md`, `--shadow-card`, `--z-modal`, matching the
+already-established `focus-ring` mixin's outline treatment) plus an `<a href="#main-content">` as the first
+element in each shell. `AppShell`'s and `app/developer/layout.tsx`'s `<main>`/body wrapper needed a new
+`id="main-content"` added (neither had one before); `app/dashboard/layout.tsx` and `app/admin/layout.tsx`
+already had one. `/promo` and `/customer` were deliberately left out — both are documented (Checkpoint 1)
+as intentionally not using any persistent nav shell (a public marketing page and a print-ready external
+report respectively), so there is no repeated block for a skip link to bypass on either. Verified:
+`npm run typecheck` clean; `npm run lint` unchanged at 1,274 pre-existing warnings (0 new); `npm run
+lint:css` clean, 0 warnings; `npm run build` compiled all 64 routes successfully. No automated test added —
+this codebase has no component-rendering test infrastructure (confirmed repeatedly across the audit), so
+this is verified by typecheck/lint/build only, consistent with how the audit itself could verify
+accessibility claims. Branch: `fix/skip-link-accessibility`, based on `main` at commit `de490f4`,
+independent of this session's other parallel fix branches; renumbered to `v4.28.0` on merge.)
+
 **Last updated:** 2026-07-12 (**v4.22.0 TEAM ROLE VIEW — FULL COACHING PAGE REPLACEMENT** — Per explicit
 user request ("No I dont like the style totaly") with a full, detailed design brief for a "simple, light,
 role-based grid," delivered minutes after `v4.21.0` below shipped — that relevance-first tab redesign is

@@ -86,6 +86,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
 
   return (
     <div className={styles.shell}>
+      <a href="#main-content" className={styles.skipLink}>Skip to main content</a>
       <header ref={navRef} className={styles.header}>
         <div className={styles.headerInner}>
 
@@ -234,7 +235,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
         )}
       </header>
 
-      <main className={styles.main}>{children}</main>
+      <main id="main-content" className={styles.main}>{children}</main>
 
       <footer className={styles.footer}>
         <p className={styles.footerInner}>
