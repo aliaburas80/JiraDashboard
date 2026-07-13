@@ -1,5 +1,14 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**v4.23.0 REMOVE STALE `page 2.tsx` DUPLICATE** — Resolves `04-remove-merge-keep.md`
+R-11 (highest-confidence removal in the product audit): deleted `app/profile/page 2.tsx`, a stale,
+git-tracked duplicate of `app/profile/page.tsx` dated 2025, inert for Next.js routing since the App Router
+only ever serves the exact filename `page.tsx` — confirmed via repo-wide grep for zero references and
+`git log --follow` showing no recent history. `npm run typecheck` and `npm run build` both clean, zero
+routes affected. Branch: `fix/remove-stale-profile-page-duplicate`, based on `main` at commit `de490f4`,
+independent of this session's other parallel fix branches — this changelog header's version number will
+need reconciling at whichever merges last.)
+
 **Last updated:** 2026-07-12 (**v4.22.0 TEAM ROLE VIEW — FULL COACHING PAGE REPLACEMENT** — Per explicit
 user request ("No I dont like the style totaly") with a full, detailed design brief for a "simple, light,
 role-based grid," delivered minutes after `v4.21.0` below shipped — that relevance-first tab redesign is
