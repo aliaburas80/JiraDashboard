@@ -1,5 +1,37 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**NEW FINDING, NO CODE CHANGE: `next/image` IS UNSAFE FOR AVATAR ENDPOINTS**
+— While implementing the audit's Phase 5 "user-uploaded images not using `next/image`" item
+(`docs/product-audit/10-technical-cleanup.md` Part 3), live-tested the actual runtime behavior before
+touching `ProfileTab.tsx`/`app/members/page.tsx` (per the UI-testing requirement — this specific fix
+wasn't the well-trodden "swap `<img>` for `next/image` on a static public asset" pattern the other 4
+call sites in this codebase already use; both remaining candidates route through the authenticated
+`/api/profile/image` endpoint, a materially different case worth verifying rather than assuming). Test
+method: registered a throwaway account against the live dev server + Neon DB, uploaded a real test
+image via the authenticated upload endpoint, then probed Next's built-in `/_next/image` optimizer route
+directly with and without a session cookie. Finding: the optimizer correctly requires authentication on
+a cache-miss (first fetch of a given `url`+`width`+`quality` combination), but its response cache does
+**not** re-check authorization on a cache-hit — once any authenticated request warms the cache (including
+just the image owner's own normal page view), the cached bytes are then served to fully unauthenticated
+requests indefinitely. Combined with `/members` already exposing every other member's exact `avatarUrl`
+(their S3 key) to any logged-in user as plain page data, any authenticated user — including a free
+self-registered account — can trivially make any other user's avatar permanently publicly readable with
+zero authentication, just by requesting it once through `/_next/image`. This is latent today (no code
+path currently invokes `/_next/image` for these URLs), but implementing the audit's literal
+recommendation would make ordinary avatar rendering the trigger, converting a theoretical gap into
+routine exposure — the opposite of a "low-risk P2 cleanup." **Decision (user-confirmed): downgrade this
+finding to "will not fix as originally scoped," make no code change to either avatar call site, and
+document the correction** rather than pick a mitigation unilaterally (options like a custom pre-resize-
+at-upload loader or an explicit `unoptimized` prop remain open for a future pass if wanted). Correction
+notes added to `docs/product-audit/10-technical-cleanup.md` (Part 3, under the original finding) and
+`docs/product-audit/11-prioritized-backlog.md` (Phase 5 technical-debt line). Cleanup: the throwaway test
+user and its DB row were deleted after testing (`perftest-imgcheck@example.com` via `prisma.user.delete`,
+confirmed by re-query); the two tiny (73-byte) test PNGs uploaded to the live S3 bucket during testing
+were **not** individually deleted (no admin S3-browsing tool was used for this — they're orphaned objects
+under a now-deleted user's key prefix, harmless test fixtures, but flagging for transparency rather than
+silently leaving them unmentioned). No `npm run` verification commands apply — no source file under
+`app/`, `src/`, or config changed, only markdown. Branch: `docs/avatar-image-optimizer-cache-finding`.)
+
 **Last updated:** 2026-07-13 (**v4.33.0 PERF: MEMOIZE `/charts` DERIVED DATA** — Resolves a P2 Phase 5
 finding from the product audit (`docs/product-audit/10-technical-cleanup.md` Part 3, secondary
 findings): `app/charts/page.tsx` recomputed ~10 unmemoized `filter`/`reduce`/`map` passes over the full
