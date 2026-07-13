@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: A Failed Data Load No Longer Looks Identical to "No Data Uploaded" (2026-07-13)
+
+Eleven pages (Charts, Customer Report, Data Quality, Delivery Mix, Flow Health, Forecast, Sprint & Kanban, Summary, Work Explorer, Release Readiness, and Column Mapping) previously sent you to the same plain upload screen whether your data genuinely hadn't been uploaded yet or your dashboard data just failed to load due to a real error — with no way to tell which one happened. A real load failure now shows a clear message explaining that something went wrong and suggesting a retry, instead of silently looking like you'd never uploaded anything. Found and fixed as part of a full-application product audit (`docs/product-audit/`) — this was the single most repeated pattern found across the whole audit.
+
+---
+
 ## Changed: Signing In With an Unregistered Email No Longer Reveals That (2026-07-13)
 
 Signing in previously told you directly if an email wasn't registered yet, and automatically sent you to the registration page with your email pre-filled. That was convenient, but it also meant anyone could check whether a given email address had a Delivery Clarity account just by trying to sign in with it — every other part of the app (forgot password, registering, resending a verification email) already deliberately avoids revealing that. Sign-in now shows the same "Invalid email or password" message either way, matching the rest of the app. If you don't have an account yet, use the "Create one free" link on the sign-in page instead of the old auto-redirect. Found and fixed as part of a full-application product audit (`docs/product-audit/`).

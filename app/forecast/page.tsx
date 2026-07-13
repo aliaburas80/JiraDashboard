@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 import { computeForecast } from '@/services/forecast/forecastEngine.service';
 import type { DashboardMetrics } from '@/types/metrics';
 import type { SprintThroughputSummary, SprintThroughput, SprintDeliveryPattern } from '@/types/throughput';
@@ -517,7 +518,7 @@ export default function ForecastPage() {
       setThroughput((m.throughput as any)?.sprint ?? null);
       setLoading(false);
     }
-    load().catch(() => router.replace('/'));
+    load().catch(() => redirectWithLoadError(router));
   }, [router]);
 
   if (loading) return (

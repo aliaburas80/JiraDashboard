@@ -8,6 +8,7 @@ import DCStatusChip from '@/components/dc-shell/DCStatusChip';
 import LoadingState from '@/components/ui/LoadingState';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 
 const DONE = new Set(['done', 'closed', 'resolved']);
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
@@ -35,7 +36,7 @@ export default function FlowHealthPage() {
       const data = r.metrics as DashboardMetrics | null;
       if (!data) { router.replace('/'); return; }
       setMetrics(data);
-    }).catch(() => router.replace('/')).finally(() => { if (!cancelled) setLoading(false); });
+    }).catch(() => redirectWithLoadError(router)).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [router]);
 

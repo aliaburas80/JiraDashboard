@@ -9,6 +9,7 @@ import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { DashboardMetrics } from '@/types/metrics';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 import SprintVelocityChart from '@/components/charts/SprintVelocityChart';
 import ChartCustomizerPanel from '@/components/charts/ChartCustomizerPanel';
 import { getChartPrefs, type ChartPref } from '@/lib/chartCustomizer';
@@ -271,7 +272,7 @@ export default function ChartsPage() {
         if (!data) { router.replace('/'); return; }
         setMetrics(data);
         setChartPrefs(getChartPrefs());
-      } catch { router.replace('/'); }
+      } catch { redirectWithLoadError(router); }
       finally   { if (!cancelled) setLoading(false); }
     }
     load();

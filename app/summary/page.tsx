@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import {
   PageHeader, MiniKpiCard, SectionCard, PageLoading,
@@ -36,7 +37,7 @@ export default function SummaryPage() {
         const data = result.metrics as DashboardMetrics | null;
         if (!data) { router.replace('/'); return; }
         setMetrics(data);
-      } catch { if (!cancelled) router.replace('/'); }
+      } catch { if (!cancelled) redirectWithLoadError(router); }
       finally { if (!cancelled) setLoading(false); }
     }
     load();

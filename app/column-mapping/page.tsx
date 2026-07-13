@@ -72,11 +72,18 @@ export default function ColumnMappingPage() {
   const router = useRouter();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  // AUDIT-09-2 (silent redirect on error, worst case found in the audit): this
+  // page previously used .catch(() => {}) -- a genuine fetch failure and "no
+  // data uploaded yet" both left metrics null with zero distinction, so a real
+  // error rendered the exact same "No data uploaded yet" empty state as a
+  // first-time visit. Tracked separately from the loadErrorSignal-based fix
+  // used on other pages since this one stays on-page rather than redirecting.
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     loadMetricsWithSource()
       .then(r => { setMetrics(r.metrics as DashboardMetrics | null); })
-      .catch(() => {})
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, [router]);
 
@@ -183,17 +190,21 @@ export default function ColumnMappingPage() {
           </div>
         )}
 
-        {/* ── No upload state ── */}
+        {/* ── No upload / load-error state ── */}
         {!hasUpload && !loading && (
           <div className={styles.emptyCard}>
-            <div className={styles.emptyIcon}>📂</div>
-            <p className={styles.emptyTitle}>No data uploaded yet</p>
+            <div className={styles.emptyIcon}>{loadError ? '⚠️' : '📂'}</div>
+            <p className={styles.emptyTitle}>{loadError ? 'Couldn’t check your upload status' : 'No data uploaded yet'}</p>
             <p className={styles.emptyBody}>
-              Upload a Jira CSV or JSON export to see live mapping status.<br />
-              The table below shows all expected fields and what each one unlocks.
+              {loadError ? (
+                <>Something went wrong loading your dashboard data. Try refreshing the page — if this keeps happening, contact your administrator.</>
+              ) : (
+                <>Upload a Jira CSV or JSON export to see live mapping status.<br />
+                The table below shows all expected fields and what each one unlocks.</>
+              )}
             </p>
             <a href="/" className={styles.emptyUploadBtn}>
-              ↑ Upload data
+              {loadError ? 'Go to upload page' : '↑ Upload data'}
             </a>
           </div>
         )}

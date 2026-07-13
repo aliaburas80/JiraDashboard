@@ -7,6 +7,7 @@ import LoadingState from '@/components/ui/LoadingState';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 import styles from './page.module.scss';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -111,7 +112,7 @@ export default function WorkExplorerPage() {
         if (!data) { router.replace('/'); return; }
         setMetrics(data);
       })
-      .catch(() => router.replace('/'))
+      .catch(() => redirectWithLoadError(router))
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [router]);

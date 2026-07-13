@@ -8,6 +8,7 @@ import LoadingState from '@/components/ui/LoadingState';
 import type { DashboardMetrics } from '@/types/metrics';
 import type { DataQualityResult, FieldImpactReport, FieldImpact, CheckSeverity } from '@/types/dataQuality';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 
 type BandTone = 'success' | 'info' | 'warning' | 'critical' | 'neutral';
 
@@ -125,7 +126,7 @@ export default function DataQualityPage() {
       if (!data) { router.replace('/'); return; }
       setDq(data.dataQuality ?? null);
       setFi(data.fieldImpacts ?? null);
-    }).catch(() => router.replace('/')).finally(() => { if (!cancelled) setLoading(false); });
+    }).catch(() => redirectWithLoadError(router)).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [router]);
 
