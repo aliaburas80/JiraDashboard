@@ -1,5 +1,29 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**FIX: UNIFY ADMIN CONFIRM-DIALOG USAGE** — Resolves a P3 Phase 5 finding
+(`docs/product-audit/10-technical-cleanup.md` Part 4): `app/admin/settings/page.tsx` used the shared,
+accessible `ConfirmDeleteDialog` (focus management, Escape-to-cancel, `role="dialog"`) for one action
+("Discard unsaved changes?") but native browser `window.confirm()`/`confirm()` for three other
+destructive actions in the same file — `AutoRestoreSection.handleAutoRestore()` (both the plain and
+`force` variants) and `CloudBackupList.handleRestore()`; `src/components/admin/JiraConnectionsPanel.tsx`
+used only native `confirm()` for its Jira-connection delete. Native `confirm()` blocks the JS event loop,
+can't be styled/themed, and (per CLAUDE.md §26.5) isn't reliably keyboard/focus-consistent with the rest
+of the app's modal pattern. Fix: converted all 4 remaining call sites to the same
+state-flag-plus-conditional-render pattern the file's own "Discard changes" dialog already used —
+each `confirm(...)` check was replaced with a `useState` flag set by the triggering button's `onClick`,
+the actual action body extracted to run unconditionally (called from the dialog's `onConfirm`), and a
+`<ConfirmDeleteDialog>` rendered conditionally with `onCancel` resetting the flag. `AutoRestoreSection`
+maps its existing `force` semantics onto the dialog's `danger` prop (red for the irreversible overwrite,
+amber for the safe empty-DB-only restore) rather than introducing new severity language. Zero behavior
+change to the underlying actions themselves — only the confirmation UI changed. Verified: `npm run
+typecheck` clean; `npm run lint` unchanged at 1,273 pre-existing warnings (0 new); `npm run build`
+compiled all 64 routes; `npm run test` 111/111 suites, 1,031/1,031 tests passing (no dedicated test file
+covers either admin component — pre-existing gap, unchanged by this branch). **Manual verification**:
+confirmed via a throwaway admin test account (created directly via Prisma, deleted after) that
+`/admin/settings` server-renders correctly post-change with no errors; full interactive click-through
+(opening each dialog, confirming/cancelling) was not performed — no browser automation tool is available
+in this environment, only curl/HTML-level checks. Branch: `fix/admin-confirm-dialog-consistency`.)
+
 **Last updated:** 2026-07-13 (**DOCS: FIX WRONG `/api/dashboard` DESCRIPTION IN `product/README.md`** —
 Partial resolution of a Phase 5 P3 finding (`docs/product-audit/10-technical-cleanup.md` Part 4):
 `/api/dashboard` is a static, unused stub route (`app/api/dashboard/route.ts`, returns only

@@ -197,18 +197,13 @@ function AutoRestoreSection({ setMsg }: {
 }) {
   const [restoring, setRestoring] = useState(false);
   const [health,    setHealth]    = useState<any>(null);
+  const [confirmForce, setConfirmForce] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/storage/auto-restore').then(r => r.json()).then(setHealth).catch(() => {});
   }, []);
 
   async function handleAutoRestore(force: boolean) {
-    if (!confirm(
-      force
-        ? 'This will overwrite your current local database with the LATEST backup from the cloud bucket.\n\nAre you sure? This cannot be undone.'
-        : 'Restore latest cloud backup to local database?\n\nOnly runs if local database is missing or empty.'
-    )) return;
-
     setRestoring(true);
     setMsg(null);
     try {
@@ -256,17 +251,17 @@ function AutoRestoreSection({ setMsg }: {
         </div>
         <div className="flex flex-col gap-2 shrink-0">
           {dbMissing ? (
-            <button type="button" onClick={() => handleAutoRestore(true)} disabled={restoring}
+            <button type="button" onClick={() => setConfirmForce(true)} disabled={restoring}
               className="btn-warning px-4 py-2 text-xs font-bold">
               {restoring ? 'Restoring…' : <><SvgIcon name="refresh" size={12} /> Restore from cloud</>}
             </button>
           ) : (
             <>
-              <button type="button" onClick={() => handleAutoRestore(false)} disabled={restoring}
+              <button type="button" onClick={() => setConfirmForce(false)} disabled={restoring}
                 className="btn-secondary px-4 py-2 text-xs">
                 {restoring ? 'Checking…' : <><SvgIcon name="refresh" size={12} /> Auto-restore (if empty DB)</>}
               </button>
-              <button type="button" onClick={() => handleAutoRestore(true)} disabled={restoring}
+              <button type="button" onClick={() => setConfirmForce(true)} disabled={restoring}
                 className="btn-outline-danger px-4 py-2 text-xs">
                 {restoring ? 'Restoring…' : <><SvgIcon name="refresh" size={12} /> Force restore (overwrite)</>}
               </button>
@@ -274,6 +269,18 @@ function AutoRestoreSection({ setMsg }: {
           )}
         </div>
       </div>
+      {confirmForce !== null && (
+        <ConfirmDeleteDialog
+          title={confirmForce ? 'Force restore from cloud?' : 'Auto-restore from cloud?'}
+          message={confirmForce
+            ? 'This will overwrite your current local database with the LATEST backup from the cloud bucket. This cannot be undone.'
+            : 'Restore latest cloud backup to local database? Only runs if the local database is missing or empty.'}
+          confirmLabel={confirmForce ? 'Force restore' : 'Restore'}
+          danger={confirmForce}
+          onConfirm={() => { const force = confirmForce; setConfirmForce(null); handleAutoRestore(force); }}
+          onCancel={() => setConfirmForce(null)}
+        />
+      )}
     </div>
   );
 }
@@ -288,6 +295,7 @@ function CloudBackupList({ savedProvider, setMsg }: {
   const [loading,   setLoading]   = useState(true);
   const [fetchErr,  setFetchErr]  = useState('');
   const [restoring, setRestoring] = useState<string | null>(null);
+  const [confirmRestoreKey, setConfirmRestoreKey] = useState<string | null>(null);
 
   async function loadBackups() {
     setLoading(true); setFetchErr('');
@@ -326,7 +334,6 @@ function CloudBackupList({ savedProvider, setMsg }: {
   }
 
   async function handleRestore(key: string) {
-    if (!confirm(`Restore from "${key.split('/').pop()}"?\n\nThis will overwrite current database and config files. Make a backup first if needed.`)) return;
     setRestoring(key);
     setMsg(null);
     try {
@@ -400,7 +407,7 @@ function CloudBackupList({ savedProvider, setMsg }: {
                           ↓ Download
                         </button>
                         <span className="text-slate-200">|</span>
-                        <button type="button" onClick={() => handleRestore(b.key)} disabled={isRestoring}
+                        <button type="button" onClick={() => setConfirmRestoreKey(b.key)} disabled={isRestoring}
                           className="text-[10px] font-bold text-amber-600 hover:underline disabled:opacity-40 whitespace-nowrap">
                           {isRestoring ? 'Restoring…' : <><SvgIcon name="refresh" size={12} /> Restore</>}
                         </button>
@@ -412,6 +419,15 @@ function CloudBackupList({ savedProvider, setMsg }: {
             </tbody>
           </table>
         </div>
+      )}
+      {confirmRestoreKey && (
+        <ConfirmDeleteDialog
+          title="Restore from backup?"
+          message={`Restore from "${confirmRestoreKey.split('/').pop()}"? This will overwrite the current database and config files. Make a backup first if needed.`}
+          confirmLabel="Restore"
+          onConfirm={() => { const key = confirmRestoreKey; setConfirmRestoreKey(null); handleRestore(key); }}
+          onCancel={() => setConfirmRestoreKey(null)}
+        />
       )}
     </div>
   );
