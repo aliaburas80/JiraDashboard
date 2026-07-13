@@ -5,6 +5,12 @@
 
 ---
 
+## Changed: Signing In With an Unregistered Email No Longer Reveals That (2026-07-13)
+
+Signing in previously told you directly if an email wasn't registered yet, and automatically sent you to the registration page with your email pre-filled. That was convenient, but it also meant anyone could check whether a given email address had a Delivery Clarity account just by trying to sign in with it — every other part of the app (forgot password, registering, resending a verification email) already deliberately avoids revealing that. Sign-in now shows the same "Invalid email or password" message either way, matching the rest of the app. If you don't have an account yet, use the "Create one free" link on the sign-in page instead of the old auto-redirect. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Simplified: One Release Readiness Page Instead of Two (2026-07-13)
 
 There were two separate "Release Readiness" pages showing the same Go/Conditional Go/No-Go assessment — one simpler summary-only version, and a fuller version with additional quality-gate checks. The simpler one never showed anything the fuller page didn't already have, so it's now a redirect to the fuller `/release-readiness` page instead of a separate page. Nothing bookmarked breaks. Found and fixed as part of a full-application product audit (`docs/product-audit/`, `04-remove-merge-keep.md` R-01).
