@@ -5,6 +5,12 @@
 
 ---
 
+## Improved: Dashboard Pages Load Faster When Navigating Between Them (2026-07-13)
+
+Moving between Priority Attention, Key Metrics, Data Quality, Trends, Ownership & Capacity, Labels & Types, Epic Readiness, Flow Health Table, and Team Role View previously re-fetched and re-processed your full dataset from scratch on every single click — including a redundant fetch the dashboard's own navigation sidebar was already making that never reached any of those pages. All nine now share the one fetch the dashboard already does when you arrive, so switching between them is immediate instead of re-loading each time. This only changes how already-fetched data is shared between pages within a single dashboard visit — nothing about what triggers a fresh fetch (a new upload, leaving and returning to the dashboard) changed, so re-uploaded data still shows up immediately, exactly as before. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Fixed: Epic Roadmap Forecasts No Longer Show "Insufficient Data" for Real Sprint History (2026-07-13)
 
 The Epic Roadmap's forecasted completion dates previously showed "Insufficient data" for almost every team, even ones with a full sprint history — the page computed its own average throughput internally and read a field name that only exists on a different, richer data shape than the one it was actually reading from, so the result was always zero. It now shares the same average-throughput calculation `/forecast` already used correctly, so a real sprint history now produces a real forecasted completion estimate. Found and fixed as part of a full-application product audit (`docs/product-audit/`, Checkpoint 3 finding `CP3-008`).

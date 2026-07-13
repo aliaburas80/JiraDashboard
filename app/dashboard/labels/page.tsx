@@ -1,10 +1,9 @@
 // @ts-nocheck
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { loadMetricsWithSource } from '@/lib/storage';
-import type { DashboardMetrics } from '@/types/metrics';
+import { useDashboardMetrics } from '@/components/dashboard/DashboardMetricsContext';
 import {
   StickyToolbar, ToolbarSpacer,
   PageHeader, SectionCard, PageLoading,
@@ -14,24 +13,11 @@ const TYPE_COLORS = ['#2563EB', '#059669', '#D97706', '#DC2626', '#7C3AED', '#08
 
 export default function LabelsTypesPage() {
   const router = useRouter();
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { metrics, loading } = useDashboardMetrics();
 
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const result = await loadMetricsWithSource();
-        if (cancelled) return;
-        const data = result.metrics as DashboardMetrics | null;
-        if (!data) { router.replace('/'); return; }
-        setMetrics(data);
-      } catch { if (!cancelled) router.replace('/'); }
-      finally { if (!cancelled) setLoading(false); }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [router]);
+    if (!loading && !metrics) router.replace('/');
+  }, [loading, metrics, router]);
 
   const labelData = useMemo(() => (metrics?.labels as any) ?? null, [metrics]);
   const types     = useMemo(() => (metrics?.types as any[]) ?? [], [metrics]);
