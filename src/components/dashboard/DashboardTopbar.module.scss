@@ -65,8 +65,8 @@
   display: none;
   align-items: center;
   justify-content: center;
-  inline-size: 36px;
-  block-size: 36px;
+  inline-size: var(--icon-size-lg, 36px);
+  block-size: var(--icon-size-lg, 36px);
   border-radius: var(--radius-md, 8px);
   border: none;
   background: none;
