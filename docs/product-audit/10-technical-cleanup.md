@@ -170,6 +170,34 @@ Severity: P2
 Confidence: High confidence
 ```
 
+```text
+CORRECTION (2026-07-13, discovered during implementation attempt, not part of the original audit pass):
+The admin/theme logo preview is out of scope for this finding entirely — it renders a client-side
+FileReader data: URL, not a network image (already correctly exempted with its own eslint-disable
+comment); only the two S3-backed avatar sites (ProfileTab.tsx, members/page.tsx) apply.
+
+For those two, applying next/image as recommended above is UNSAFE, not merely unimplemented. Live testing
+against the running app (registering a throwaway test account, uploading a real test image, and probing
+`/_next/image` directly with and without a session cookie) confirmed: Next's built-in image optimizer
+correctly requires authentication on the FIRST fetch of a given optimizer URL (matching
+/api/profile/image's own requireUser() check), but its response cache does not re-check authorization on
+subsequent hits — once any authenticated request (including the owner's own normal page view) warms the
+cache for a given url+width+quality combination, the optimized image bytes are then served to fully
+unauthenticated requests indefinitely. Because /members already hands every logged-in user every other
+member's exact avatarUrl (their S3 key) as plain page data, any authenticated user — including a free
+self-registered account — can trivially cause any other user's avatar to become permanently, publicly
+readable with zero authentication, simply by requesting it once through /_next/image.
+
+This exposure is latent today (no code path in the app currently invokes /_next/image for these URLs), but
+adopting next/image for either avatar site as this finding recommends would make ordinary avatar rendering
+the trigger, converting a theoretical gap into routine exposure. Decision: this finding is downgraded from
+"P2, fix via next/image" to "will not fix as originally scoped" — ProfileTab.tsx and members/page.tsx stay
+on plain <img> until a genuinely safe path exists (e.g., a custom loader that pre-resizes at upload time
+server-side rather than relying on the runtime optimizer against an authenticated route, or an explicit
+`unoptimized` prop if the lazy-loading/dimension benefits alone are wanted without touching the optimizer
+at all). No code changed as a result of this correction.
+```
+
 ---
 
 ## Part 4 — Technical cleanup
