@@ -5,6 +5,12 @@
 
 ---
 
+## Simplified: One Release Readiness Page Instead of Two (2026-07-13)
+
+There were two separate "Release Readiness" pages showing the same Go/Conditional Go/No-Go assessment — one simpler summary-only version, and a fuller version with additional quality-gate checks. The simpler one never showed anything the fuller page didn't already have, so it's now a redirect to the fuller `/release-readiness` page instead of a separate page. Nothing bookmarked breaks. Found and fixed as part of a full-application product audit (`docs/product-audit/`, `04-remove-merge-keep.md` R-01).
+
+---
+
 ## Added: "Skip to Main Content" Link for Keyboard and Screen-Reader Users (2026-07-13)
 
 Every authenticated page now offers a "Skip to main content" link as the very first focusable element on the page — invisible until you tab to it, then it lets you jump straight past the navigation bar (and, on Dashboard/Admin/Developer pages, past the sidebar too) to the actual page content. Previously, a keyboard-only or screen-reader user had to tab through the entire navigation on every single page load before reaching anything else. Found and fixed as part of a full-application product audit (`docs/product-audit/`).

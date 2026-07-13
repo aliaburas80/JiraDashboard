@@ -15,7 +15,7 @@ const FEATURES = [
   { icon: 'chartTrendUp',   title: 'Upload-to-Upload Trends', description: 'Track health, completion rate, cycle time, lead time, and release confidence.',            href: '/trends',            color: '#0891b2' },
   { icon: 'people',         title: 'Team Health Comparison',  description: 'Compare completion, cycle time, blocker rate, and workload share.',                       href: '/teams',             color: '#22c55e' },
   { icon: 'folder',         title: 'Portfolio Summary',       description: 'Cross-project metrics, release coverage, performance, and risk rollups.',                 href: '/portfolio',         color: '#f59e0b' },
-  { icon: 'release',        title: 'Release Readiness',       description: 'Risk view, Go / No-Go indicator, and blocker visibility.',                               href: '/readiness',         color: '#22c55e' },
+  { icon: 'release',        title: 'Release Readiness',       description: 'Risk view, Go / No-Go indicator, and blocker visibility.',                               href: '/release-readiness', color: '#22c55e' },
   { icon: 'chartTrendDown', title: 'Visual Analytics',        description: 'Delivery projections, velocity trends, cycle time forecasts, and what-if scenarios.',     href: '/charts',            color: '#ff8a4c' },
   { icon: 'person',         title: 'Customer View',           description: 'Customizable executive view with stakeholder-ready reports.',                            href: '/customer',          color: '#0d9488' },
   { icon: 'download',       title: 'Smart Export Suite',      description: 'Excel workbook, executive PDF, HTML report, and scheduled exports.',                      href: '/summary',           color: '#059669' },
