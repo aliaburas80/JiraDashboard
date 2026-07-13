@@ -35,7 +35,7 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
     label: 'Analytics',
     items: [
       { id: 'overview',   title: 'Overview',     desc: 'Health at a glance',           href: '/summary',    status: 'neutral', icon: 'dashboard'   },
-      { id: 'dashboard',  title: 'Full Report',  desc: 'All metrics & filters',        href: '/dashboard',  status: 'neutral', icon: 'table'       },
+      { id: 'dashboard',  title: 'Full Report',  desc: 'Priority items & full metrics', href: '/dashboard',  status: 'neutral', icon: 'table'       },
       { id: 'charts',     title: 'Charts',       desc: 'Visual breakdowns',            href: '/charts',     status: 'info',    icon: 'chartBar'    },
       { id: 'trends',     title: 'Trends',       desc: 'Upload-over-upload change',    href: '/trends',     status: 'info',    icon: 'chartTrendUp' },
       { id: 'teams',      title: 'Teams',        desc: 'Team health comparison',       href: '/teams',      status: 'success', icon: 'teams'       },
