@@ -3,9 +3,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loadMetricsWithSource } from '@/lib/storage';
+import { useDashboardMetrics } from '@/components/dashboard/DashboardMetricsContext';
 import { buildSafeCsv } from '@/lib/exportSafety';
-import type { DashboardMetrics, FlowItem } from '@/types/metrics';
+import type { FlowItem } from '@/types/metrics';
 import {
   StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
   PageHeader, SectionCard, PageLoading,
@@ -17,26 +17,13 @@ const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
 
 export default function DataQualityPage() {
   const router = useRouter();
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { metrics, loading } = useDashboardMetrics();
   const [severityFilter, setSeverityFilter] = useState<'all' | 'critical' | 'high' | 'medium'>('all');
   const [circleReady, setCircleReady] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const result = await loadMetricsWithSource();
-        if (cancelled) return;
-        const data = result.metrics as DashboardMetrics | null;
-        if (!data) { router.replace('/'); return; }
-        setMetrics(data);
-      } catch { if (!cancelled) router.replace('/'); }
-      finally { if (!cancelled) setLoading(false); }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [router]);
+    if (!loading && !metrics) router.replace('/');
+  }, [loading, metrics, router]);
 
   useEffect(() => {
     if (!metrics) return;

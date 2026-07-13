@@ -3,9 +3,8 @@
 
 import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
-import { loadMetricsWithSource } from '@/lib/storage';
+import { useDashboardMetrics } from '@/components/dashboard/DashboardMetricsContext';
 import { buildSafeCsv } from '@/lib/exportSafety';
-import type { DashboardMetrics } from '@/types/metrics';
 import {
   StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
   PageHeader, MiniKpiCard, SectionCard, PageLoading, shellStyles, barCssVars,
@@ -24,25 +23,12 @@ const KPI_TOKENS = [
 
 export default function KeyMetricsPage() {
   const router = useRouter();
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { metrics, loading } = useDashboardMetrics();
   const [period, setPeriod] = useState<'all' | 'sprint' | 'quarter'>('all');
 
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const result = await loadMetricsWithSource();
-        if (cancelled) return;
-        const data = result.metrics as DashboardMetrics | null;
-        if (!data) { router.replace('/'); return; }
-        setMetrics(data);
-      } catch { if (!cancelled) router.replace('/'); }
-      finally { if (!cancelled) setLoading(false); }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [router]);
+    if (!loading && !metrics) router.replace('/');
+  }, [loading, metrics, router]);
 
   const exportMetrics = () => {
     if (!metrics) return;

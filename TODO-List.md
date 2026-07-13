@@ -1,5 +1,41 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**v4.23.0 DASHBOARD METRICS: SHARE ONE FETCH ACROSS ALL 9 SUB-PAGES** —
+Resolves the product audit's single highest-leverage/lowest-risk finding
+(`docs/product-audit/10-technical-cleanup.md` Part 3): `app/dashboard/layout.tsx` already fetched
+`DashboardMetrics` once via `loadMetricsWithSource()` but only forwarded it to `DashboardNavSidebar` — every
+one of the 9 live `/dashboard/*` child pages (`priority-attention`, `key-metrics`, `data-quality`, `trends`,
+`ownership`, `labels`, `epic-readiness`, `flow-health`, `coaching`) independently re-fetched and re-parsed the
+identical dataset on its own mount, meaning ordinary navigation between dashboard sub-pages was a genuinely
+cold fetch+parse every time (compounded by `next.config.js`'s `staleTimes: {dynamic:0,static:0}`, which
+already disables Next's own router cache app-wide). Added `src/components/dashboard/DashboardMetricsContext.tsx`
+(new) — a `DashboardMetricsProvider`/`useDashboardMetrics()` pair scoped to the dashboard layout's own
+lifetime, deliberately **not** a module-level cache on `loadMetricsWithSource()` itself (that function has its
+own P0 fix history around trusting stale/cross-account cached data — `git log` `fix/dashboard-router-cache-
+stale-data`, `fix/p0-cross-account-local-data-leak` — a global indefinite cache there was judged too risky;
+scoping the cache to the layout's mount lifetime means navigating away from `/dashboard/*` and back always
+re-fetches fresh, same as today). `app/dashboard/layout.tsx` now tracks its own `loading` state and wraps
+`{children}` in the new provider; each of the 9 child pages replaced its own
+`useState`+`useEffect`+`loadMetricsWithSource()` triplet with `const { metrics, loading } =
+useDashboardMetrics()` plus a 3-line redirect-on-null effect — mechanical, byte-identical across all 9 before
+this change (verified via diff before touching any of them), so this was a safe, uniform replacement, not 9
+independent judgment calls. `useState`/`DashboardMetrics` type imports were dropped where they became fully
+unused (`ownership`, `labels`, `epic-readiness`, `coaching`); `FlowItem` type imports were kept where still
+used for other derived values. Caught and fixed two self-introduced copy-paste mistakes during this change
+(stray orphaned `return()`/`}, [router])` fragments left behind in `data-quality` and `ownership` after an
+imprecise first edit) via `npm run typecheck` before they reached commit. Verified: `npm run typecheck` clean
+(note: 8 of the 9 dashboard pages carry pre-existing `// @ts-nocheck`, unrelated to this change — `npm run
+build` was run as the more meaningful check for those files and compiled all 64 routes cleanly); `npm run
+lint` unchanged at 1,274 pre-existing warnings (0 new); `npm run test` 110/110 suites, 1,022/1,022 tests
+passing (one run hit an unrelated Jest worker SIGSEGV, confirmed as infra flake on immediate re-run, not
+caused by this change — this touches no domain-service/test-covered code at all). Branch:
+`fix/metrics-loader-caching`, based on `main` at commit `de490f4`, independent of this session's other
+parallel fix branches — this changelog header's version number will need reconciling at whichever merges
+last. **Explicitly not done**: the ~10 top-level pages (`/charts`, `/teams`, `/portfolio`, etc.) outside
+`/dashboard/*` still each independently fetch, since there's no shared layout wrapping them to hoist the fetch
+into — a much larger architectural change (a root-level provider) than this quick win's scope; tracked in
+`docs/product-audit/11-prioritized-backlog.md` Phase 5.)
+
 **Last updated:** 2026-07-12 (**v4.22.0 TEAM ROLE VIEW — FULL COACHING PAGE REPLACEMENT** — Per explicit
 user request ("No I dont like the style totaly") with a full, detailed design brief for a "simple, light,
 role-based grid," delivered minutes after `v4.21.0` below shipped — that relevance-first tab redesign is
