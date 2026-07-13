@@ -5,6 +5,12 @@
 
 ---
 
+## Changed: Consistent Confirmation Dialogs in Admin Settings (2026-07-13)
+
+A few destructive actions in Admin → Settings — restoring the database from a cloud backup, force-restoring on top of existing data, and deleting a Jira connection — previously popped up your browser's plain native confirmation box instead of the app's own styled dialog used everywhere else. They now all use the same on-brand confirmation dialog, with no change to what any of these actions actually do. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Fixed: A Failed Data Load No Longer Looks Identical to "No Data Uploaded" (2026-07-13)
 
 Eleven pages (Charts, Customer Report, Data Quality, Delivery Mix, Flow Health, Forecast, Sprint & Kanban, Summary, Work Explorer, Release Readiness, and Column Mapping) previously sent you to the same plain upload screen whether your data genuinely hadn't been uploaded yet or your dashboard data just failed to load due to a real error — with no way to tell which one happened. A real load failure now shows a clear message explaining that something went wrong and suggesting a retry, instead of silently looking like you'd never uploaded anything. This now also covers all 9 pages under the Dashboard section (Priority Attention, Key Metrics, Data Quality, Trends, Ownership, Labels, Epic Readiness, Flow Health, and Coaching), which share a single data load and pick up the same fix automatically. Found and fixed as part of a full-application product audit (`docs/product-audit/`) — this was the single most repeated pattern found across the whole audit.

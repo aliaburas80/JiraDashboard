@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { PasswordInput } from '@/components/ui/PasswordInput';
+import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 
 interface JiraConnection {
   id: string;
@@ -90,6 +91,7 @@ export default function JiraConnectionsPanel() {
   const [testing, setTesting]         = useState<string | null>(null);
   const [deleting, setDeleting]       = useState<string | null>(null);
   const [testResult, setTestResult]   = useState<Record<string, { ok: boolean; message: string }>>({});
+  const [confirmDelete, setConfirmDelete] = useState<JiraConnection | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -174,9 +176,6 @@ export default function JiraConnectionsPanel() {
   }
 
   async function handleDelete(conn: JiraConnection) {
-    const confirmed = window.confirm(`Delete Jira connection "${conn.name}"? This cannot be undone.`);
-    if (!confirmed) return;
-
     setDeleting(conn.id);
     setTestResult(r => {
       const next = { ...r };
@@ -391,7 +390,7 @@ export default function JiraConnectionsPanel() {
                   <button
                     type="button"
                     disabled={deleting === conn.id || testing === conn.id}
-                    onClick={() => handleDelete(conn)}
+                    onClick={() => setConfirmDelete(conn)}
                     className="px-3 py-2 rounded-xl text-xs font-bold border border-red-200 text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center gap-1.5"
                   >
                     {deleting === conn.id ? (
@@ -404,6 +403,15 @@ export default function JiraConnectionsPanel() {
             </div>
           ))}
         </div>
+      )}
+      {confirmDelete && (
+        <ConfirmDeleteDialog
+          title="Delete Jira connection?"
+          message={`Delete Jira connection "${confirmDelete.name}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          onConfirm={() => { const conn = confirmDelete; setConfirmDelete(null); handleDelete(conn); }}
+          onCancel={() => setConfirmDelete(null)}
+        />
       )}
     </div>
   );
