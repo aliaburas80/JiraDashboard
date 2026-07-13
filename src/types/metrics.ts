@@ -30,6 +30,8 @@ export interface FlowItem {
   health: HealthStatus;
   reason: string;
   linkedTo?: string;
+  fixVersion: string;
+  blocked: boolean;
 }
 
 export interface FlowSummary {

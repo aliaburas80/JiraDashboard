@@ -28,7 +28,7 @@ function makeItem(overrides: Partial<FlowItem> = {}): FlowItem {
     createdDate: '2025-01-01', startedDate: '2025-01-05', doneDate: '',
     leadTimeDays: null, cycleTimeDays: null, ageDays: 5, activeAgeDays: 5,
     labels: '', parent: '', project: 'PROJ',
-    health: 'good', reason: '', linkedTo: '',
+    health: 'good', reason: '', linkedTo: '', fixVersion: '', blocked: false,
     ...overrides,
   };
 }
