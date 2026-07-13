@@ -8,6 +8,7 @@ import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { computePortfolioSummary, type EpicSummary } from '@/lib/portfolioHealth';
+import { computeAverageThroughput } from '@/services/forecast/forecastEngine.service';
 import type { DashboardMetrics } from '@/types/metrics';
 import styles from './page.module.scss';
 
@@ -403,9 +404,7 @@ export default function RoadmapPage() {
       const metrics = result.metrics as DashboardMetrics | null;
       if (!metrics) { setNoData(true); setLoading(false); return; }
 
-      const sprints       = (metrics.sprint?.sprints ?? []) as any[];
-      const valid         = sprints.filter((s: any) => (s.completedCount ?? 0) > 0);
-      const avgThroughput = valid.length > 0 ? valid.reduce((s: number, x: any) => s + x.completedCount, 0) / valid.length : 0;
+      const avgThroughput = computeAverageThroughput(metrics);
 
       const portfolio = computePortfolioSummary(metrics);
       const forecast  = portfolio.epics.map(e => forecastEpic(e, avgThroughput));

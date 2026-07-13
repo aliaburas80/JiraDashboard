@@ -1,6 +1,13 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Roadmap page epic-forecast logic — TC-ROAD-01 to TC-ROAD-05
 // Mirrors forecastEpic() in app/roadmap/page.tsx (see product/TEST_CASES.md §9.54).
+//
+// forecastEpic() itself was never buggy — only its caller's avgThroughput
+// input was (CP3-008: the page computed it inline against the wrong field
+// name on the wrong sprint source, always producing 0). That call site now
+// uses the shared, tested computeAverageThroughput() from
+// forecastEngine.service.ts instead of a page-local duplicate — see
+// TC-FCAST-07b in forecastEngine.test.ts for the regression coverage.
 
 import type { EpicSummary } from '@/lib/portfolioHealth';
 

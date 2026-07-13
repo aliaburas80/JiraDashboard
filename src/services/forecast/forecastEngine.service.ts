@@ -17,6 +17,30 @@ import type { ForecastResult, ForecastStatus, SprintPoint, WeakestFactor } from 
 const WEAK_DOWNGRADE_MULTIPLIER = 0.75;
 const CRITICAL_DOWNGRADE_MULTIPLIER = 0.5;
 
+// Shared sprint-completion average, used by both this file's own forecast
+// and by /roadmap's per-epic forecast (app/roadmap/page.tsx). Extracted so
+// both callers read the same source-preference and field-name logic instead
+// of each re-deriving it — a previous inline duplicate in app/roadmap/page.tsx
+// used the rich-shape field name (`completedCount`) against the legacy sprint
+// source, which never carries that field, so avgThroughput was always 0 there
+// regardless of real sprint history. See product-audit CP3-008.
+export function computeAverageThroughput(metrics: DashboardMetrics): number {
+  // Prefer throughput.sprint.sprints — it has all sprints and the correct `completedCount` field.
+  // metrics.sprint.sprints is capped at 8 and uses `completedIssues` (legacy field name).
+  const throughputSprints = (metrics.throughput?.sprint?.sprints ?? []) as any[];
+  const legacySprints     = (metrics.sprint?.sprints ?? []) as any[];
+  const useRich           = throughputSprints.length > 0;
+  const sprints           = useRich ? throughputSprints : legacySprints;
+
+  const getCount = (s: any): number =>
+    useRich ? (s.completedCount ?? 0) : (s.completedIssues ?? s.completedCount ?? 0);
+
+  const validSprints = sprints.filter((s: any) => getCount(s) > 0);
+  return validSprints.length > 0
+    ? validSprints.reduce((acc: number, s: any) => acc + getCount(s), 0) / validSprints.length
+    : 0;
+}
+
 export function computeForecast(metrics: DashboardMetrics): ForecastResult {
   const flow = (metrics.flow?.items ?? []) as any[];
 

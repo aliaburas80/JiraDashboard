@@ -30,6 +30,32 @@ added to stay type-valid — no behavior in those tests changed. Verified: `npm 
 (1 pre-existing flaky timeout in `adminUsers.test.ts` confirmed unrelated — passes 11/11 in isolation,
 times out only under full-suite parallel load). Branch: `fix/release-readiness-flowitem-mismatch`.)
 
+**Last updated:** 2026-07-13 (**v4.24.0 FIX: ROADMAP FORECAST ALWAYS SHOWED "INSUFFICIENT DATA"** — Fixes
+`AUDIT-CP3-008`, the second of three P0 findings from the full-application product audit
+(`docs/product-audit/`, Checkpoint 3). Root cause: `app/roadmap/page.tsx` computed its own average
+sprint-completion throughput inline, filtering/reducing `metrics.sprint?.sprints` on `s.completedCount`
+— but that field only exists on the richer `metrics.throughput.sprint.sprints` shape; the legacy
+`metrics.sprint.sprints` array (capped at 8, populated on every upload) uses `completedIssues` instead.
+`avgThroughput` was therefore always `0`, so every epic that wasn't already 100% done fell into the
+"Insufficient data" branch regardless of how much real sprint history existed — silently contradicting
+`/help`'s own documented behavior, since sprint history genuinely was available. The correct
+source-preference/field-name logic already existed, correctly, in
+`src/services/forecast/forecastEngine.service.ts` (built for `/forecast`, unaffected by this bug) — extracted
+it into a new exported `computeAverageThroughput(metrics)` function so both `/forecast` and `/roadmap` share
+one tested calculation instead of `/roadmap` maintaining its own inline duplicate, which is how this class of
+bug happened in the first place. `computeForecast()`'s own existing body/tests were left untouched (zero
+behavior-risk to the already-correct `/forecast` page) — the new function is an additive extraction, not a
+rewrite of tested logic. Added `TC-FCAST-07b` (`forecastEngine.test.ts`) as a direct regression test:
+`computeAverageThroughput()` against a legacy-shaped `metrics.sprint.sprints` fixture (the exact shape that
+triggered the bug) now returns the correct non-zero average. Left a pointer comment in
+`roadmapForecast.test.ts` noting that `forecastEpic()` itself was never the buggy part — only its caller's
+input was — since that file's existing tests (correctly) only ever exercised `forecastEpic()` in isolation
+and could not have caught this integration-level bug. Verified: `npm run typecheck` clean; `npm run lint`
+unchanged at 1,274 pre-existing warnings (0 new); `npm run test` 110/110 suites, 1,023/1,023 tests passing.
+Branch: `fix/roadmap-forecast-field-mismatch`, based on `main` independently of the `v4.23.0`/`AUDIT-CP3-001`
+entry above (both branches were based on `main` at commit `de490f4`; renumbered to `v4.24.0` on merge, per
+that entry's own note that this reconciliation would be needed at merge time).)
+
 **Last updated:** 2026-07-12 (**v4.22.0 TEAM ROLE VIEW — FULL COACHING PAGE REPLACEMENT** — Per explicit
 user request ("No I dont like the style totaly") with a full, detailed design brief for a "simple, light,
 role-based grid," delivered minutes after `v4.21.0` below shipped — that relevance-first tab redesign is

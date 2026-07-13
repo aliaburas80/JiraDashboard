@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: Epic Roadmap Forecasts No Longer Show "Insufficient Data" for Real Sprint History (2026-07-13)
+
+The Epic Roadmap's forecasted completion dates previously showed "Insufficient data" for almost every team, even ones with a full sprint history — the page computed its own average throughput internally and read a field name that only exists on a different, richer data shape than the one it was actually reading from, so the result was always zero. It now shares the same average-throughput calculation `/forecast` already used correctly, so a real sprint history now produces a real forecasted completion estimate. Found and fixed as part of a full-application product audit (`docs/product-audit/`, Checkpoint 3 finding `CP3-008`).
+
+---
+
 ## Fixed: Release Readiness Now Actually Evaluates Your Data (2026-07-13)
 
 Release Readiness (`/release-readiness` and `/readiness`) previously showed "Fix Version / Release column is absent" for every upload, even when the export genuinely had a Fix Version/s column — the per-release Go/Conditional Go/No-Go evaluation never ran on any real dataset. The cause was internal: the two pages pass the calculation a normalized item list that never carried the raw Jira column names the calculation was reading. Both are now aligned to the same normalized data shape used everywhere else in the app, so a real Fix Version/s column now produces real per-release verdicts, blocker counts, and quality-gate checklists. Found and fixed as part of a full-application product audit (`docs/product-audit/`, Checkpoint 3 finding `CP3-001`).
