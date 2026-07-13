@@ -5,6 +5,12 @@
 
 ---
 
+## Added: "Skip to Main Content" Link for Keyboard and Screen-Reader Users (2026-07-13)
+
+Every authenticated page now offers a "Skip to main content" link as the very first focusable element on the page — invisible until you tab to it, then it lets you jump straight past the navigation bar (and, on Dashboard/Admin/Developer pages, past the sidebar too) to the actual page content. Previously, a keyboard-only or screen-reader user had to tab through the entire navigation on every single page load before reaching anything else. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Redesigned: Coaching Page Is Now a Simple Team Role View (2026-07-12)
 
 Role-Based Coaching Insights has been replaced with a new page, Team Role View — a light, simple grid with one column each for Scrum Master, Product Owner, and Manager, shown to everyone at once. No tabs, no hero banners, no confidence scores, no clicking to see another role's view. Each column shows three things: the process rules to keep an eye on (with a status pill — Critical, At risk, Review, or Healthy), the next concrete actions for that role, and a handful of key numbers. Most of the rules and nearly all of the numbers are computed directly from your uploaded Jira data; a small number that the app doesn't track yet (like retrospective action ownership) are clearly placeholder values rather than invented ones. This replaces the tab-based redesign shipped earlier the same day, which this release supersedes rather than builds on.

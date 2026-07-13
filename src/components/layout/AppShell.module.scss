@@ -2,6 +2,33 @@
 // Covers: root shell, sticky header, logo, nav groups, dropdown panel,
 //         mobile nav, footer. All values reference design tokens.
 
+// ── Skip link — hidden until keyboard-focused, then visible above the header ──
+// AUDIT-09-6.6: no bypass-blocks mechanism existed anywhere in the app; a
+// keyboard/screen-reader user had to tab through the full primary nav on
+// every single page load to reach page content.
+.skipLink {
+  position: absolute;
+  top: -100%;
+  left: var(--space-5, 20px);
+  z-index: var(--z-modal, 9999);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  background: var(--color-surface, #fff);
+  color: var(--color-text-primary, #0f172a);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-card, 0 4px 12px rgb(0 0 0 / 12%));
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: top 150ms ease;
+
+  &:focus-visible {
+    top: var(--space-3, 12px);
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #2563eb) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
 // ── Root shell ─────────────────────────────────────────────────────────────────
 .shell {
   min-height: 100vh;
