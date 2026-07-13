@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: "Full Report" Nav Description No Longer Overpromises (2026-07-14)
+
+The "Full Report" item in the top navigation's Analytics group described itself as "All metrics & filters," but clicking it actually takes you to Priority Attention — a focused view of what needs action right now, one of nine views in the full Dashboard section. The description now reads "Priority items & full metrics" to reflect what you actually land on. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Changed: Consistent Confirmation Dialogs in Admin Settings (2026-07-13)
 
 A few destructive actions in Admin → Settings — restoring the database from a cloud backup, force-restoring on top of existing data, and deleting a Jira connection — previously popped up your browser's plain native confirmation box instead of the app's own styled dialog used everywhere else. They now all use the same on-brand confirmation dialog, with no change to what any of these actions actually do. Found and fixed as part of a full-application product audit (`docs/product-audit/`).

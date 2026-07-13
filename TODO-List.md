@@ -1,5 +1,24 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-14 (**DOCS: FIX "FULL REPORT" NAV DESCRIPTION MISMATCH** — Resolves a P3 Phase 5
+finding, restated across two audit checkpoints (`docs/product-audit/01-app-inventory.md` and
+`docs/product-audit/07-information-architecture.md` §D): the Analytics nav group's "Full Report" item
+(`src/components/dc-shell/navigation.ts:38`, `href: '/dashboard'`) had `desc: 'All metrics & filters'`,
+but `/dashboard` is a redirect stub to `/dashboard/priority-attention` — a single action-items/blockers
+view titled "Priority Attention," not an all-metrics landing page. Confirmed by reading both
+`app/dashboard/page.tsx` (the redirect) and `app/dashboard/priority-attention/page.tsx` (the actual
+destination's `<PageHeader title="Priority Attention">`) before changing anything. Fix: changed `desc` to
+`'Priority items & full metrics'` — accurate to what a user actually sees first (priority/action items),
+while still conveying that clicking through leads into the full 9-page dashboard section (Priority
+Attention, Key Metrics, Data Quality, Trends, Ownership, Labels, Epic Readiness, Flow Health, Coaching).
+Left the `title` field ("Full Report") untouched — renaming the nav item itself is a bigger, more visible
+content decision than correcting a factually wrong description, and wasn't what either audit finding
+flagged (both cite the `desc` text specifically as not matching the destination, not the title). Grepped
+for the old string across the codebase first — no other file or test referenced it. Verified: `npm run
+typecheck` clean; `npm run lint` unchanged at 1,273 pre-existing warnings (0 new); `npm run build`
+compiled all 64 routes; `npm run test` 111/111 suites, 1,031/1,031 tests passing (no flake this run).
+Branch: `docs/fix-full-report-nav-description-mismatch`.)
+
 **Last updated:** 2026-07-13 (**FIX: TOKENIZE AVATAR/ICON BOX SIZES** — Resolves a P3 Phase 5 finding
 (`docs/product-audit/10-technical-cleanup.md` Part 3): identical raw pixel literals (32px, 36px) for
 icon/avatar box dimensions were hand-repeated across 3 independent SCSS modules with no shared token —
