@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: Flow Health No Longer Shows "Healthy" Green From Zero Real Data (2026-07-13)
+
+Two related fixes to a pattern where a metric with no real completed work behind it could still render as green/healthy: Flow Health's Lead Time and Cycle Time cards now show a data-reliability badge (High/Medium/Low/Unreliable) next to the value, and no longer color themselves green when the sample size behind them is zero. Sprint & Kanban's "Flow Health" tile — previously defaulting to "Healthy" even with zero completed work to evaluate, unlike its neighboring Cycle Time and Lead Time tiles which already correctly showed "—" at zero — now matches that same pattern. This is a UI-only change: no calculation, threshold, or historical value was altered, only when and how a "healthy" appearance is shown. Found and fixed as part of a full-application product audit (`docs/product-audit/`, Checkpoint 3 findings `CP3-002`, `CP3-004`, `CP3-005`). This fix targets the specific, evidenced instances from the audit rather than every KPI card app-wide — broader rollout is tracked in the audit's prioritized backlog.
+
+---
+
 ## Redesigned: Coaching Page Is Now a Simple Team Role View (2026-07-12)
 
 Role-Based Coaching Insights has been replaced with a new page, Team Role View — a light, simple grid with one column each for Scrum Master, Product Owner, and Manager, shown to everyone at once. No tabs, no hero banners, no confidence scores, no clicking to see another role's view. Each column shows three things: the process rules to keep an eye on (with a status pill — Critical, At risk, Review, or Healthy), the next concrete actions for that role, and a handful of key numbers. Most of the rules and nearly all of the numbers are computed directly from your uploaded Jira data; a small number that the app doesn't track yet (like retrospective action ownership) are clearly placeholder values rather than invented ones. This replaces the tab-based redesign shipped earlier the same day, which this release supersedes rather than builds on.

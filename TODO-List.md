@@ -1,5 +1,39 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**v4.23.0 FIX: FLOW HEALTH COULD SHOW GREEN FROM ZERO REAL DATA** — Fixes
+`AUDIT-CP3-002`/`AUDIT-CP3-004`/`AUDIT-CP3-005`, the third of three P0 findings from the full-application
+product audit (`docs/product-audit/`, Checkpoint 3), scoped narrowly per the audit's own backlog framing
+("wire the already-built metricConfidence.service.ts signal into the primary display components... CP3-004
+and CP3-017 are the same root cause, fold into one fix"). Two changes:
+(1) `src/components/dc-shell/DCKpiCard.tsx` gained an optional `confidence?: MetricConfidence` prop
+rendering the existing `MetricConfidenceBadge` component next to the label — the identical pattern already
+used correctly by `src/components/ui/KpiCard.tsx`, just extended to the second KPI card component that
+lacked it. Wired into `app/flow-health/page.tsx`'s Avg Lead Time / Avg Cycle Time cards (the exact
+`DCKpiCard on /flow-health` citation from `CP3-004`'s evidence), which also had their `tone` changed to
+`'neutral'` instead of `'success'` when the underlying sample size (`leadTimeSampleSize`/`cycleTimeSampleSize`)
+is zero — previously a zero-sample average rendered fully green with no reliability signal at all.
+(2) `app/sprint-kanban/page.tsx`'s "Flow Health" KPI tile — which defaults to `'Healthy'` internally in
+`kanbanFlow.service.ts` when there are zero completed periods to evaluate — now falls back to `'—'` the same
+way its neighboring Cycle Time and Lead Time tiles in the same strip already correctly do at zero, rather
+than showing a green "Healthy" chip with no throughput evidence behind it. This is a display-layer guard
+only; the underlying `overallFlowHealth` calculation in `kanbanFlow.service.ts` was deliberately left
+unchanged to keep this fix's blast radius to the two files actually rendering it, not the shared calculation
+type (`KanbanFlowHealth` has no "insufficient data" member — adding one would ripple into every consumer of
+that type, judged out of scope for this fix).
+**Explicitly not done in this fix, tracked separately**: `CP3-017` (Data Quality score has no sample-size
+awareness) is a scoring-*formula* change in `dataQuality.service.ts`, not a wiring gap — a genuinely different
+and riskier class of change than adding a badge, deliberately left for its own dedicated review rather than
+bundled in here. Broader rollout of the confidence badge to `MiniKpiCard` (`/dashboard/key-metrics`,
+`/summary`) and other KPI cards app-wide was also not attempted — this fix targets the specific, evidenced
+citations from the audit, not an exhaustive sweep; both remain in `docs/product-audit/11-prioritized-backlog.md`
+Phase 5. No component-rendering test infrastructure exists in this codebase (confirmed repeatedly across the
+audit) so this UI-only change could not be given a dedicated automated test beyond typecheck/lint/full-suite
+regression — verified: `npm run typecheck` clean; `npm run lint` unchanged at 1,274 pre-existing warnings
+(0 new); `npm run test` 110/110 suites, 1,022/1,022 tests passing, zero regressions. Branch:
+`fix/metric-confidence-sample-size-gating`, based on `main` independently of the two `v4.23.0` entries below
+in this same session (all three Phase 1 audit fixes branch from `main` at commit `de490f4` in parallel; this
+changelog header's version number will need reconciling at whichever of the three merges last).)
+
 **Last updated:** 2026-07-12 (**v4.22.0 TEAM ROLE VIEW — FULL COACHING PAGE REPLACEMENT** — Per explicit
 user request ("No I dont like the style totaly") with a full, detailed design brief for a "simple, light,
 role-based grid," delivered minutes after `v4.21.0` below shipped — that relevance-first tab redesign is

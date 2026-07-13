@@ -433,7 +433,10 @@ export default function SprintKanbanPage() {
         { label: 'Flow Eff.',     val: `${Math.round(avgFlowEff)}%`, sub: 'flow efficiency',    color: avgFlowEff < 30 ? '#dc2626' : avgFlowEff < 50 ? '#d97706' : '#16a34a', delay: 160 },
         { label: 'Aging WIP',     val: totalAgingWip, sub: 'items > 14 days',             color: totalAgingWip > 0 ? '#d97706' : '#94a3b8', delay: 200 },
         { label: 'Blocked',       val: metrics.blockedIssues ?? 0, sub: 'items blocked',  color: (metrics.blockedIssues ?? 0) > 0 ? '#dc2626' : '#94a3b8', delay: 240 },
-        { label: 'Flow Health',   val: flowHealth,    sub: 'kanban flow status',           color: FLOW_HEALTH_COLORS[flowHealth], delay: 280 },
+        // AUDIT-CP3-005: overallFlowHealth defaults to 'Healthy' when there are zero
+        // completed periods to evaluate — guard on real period data the same way the
+        // Cycle Time / Lead Time tiles above already guard on a zero average.
+        { label: 'Flow Health',   val: kanbanPeriods.length > 0 ? flowHealth : '—', sub: 'kanban flow status', color: kanbanPeriods.length > 0 ? FLOW_HEALTH_COLORS[flowHealth] : '#94a3b8', delay: 280 },
       ];
 
   return (
