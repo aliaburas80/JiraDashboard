@@ -112,7 +112,7 @@ docker-compose up --build
 | `GET` | `/api/members` | Read active members for the logged-in user directory |
 | `POST` | `/api/upload` | Parse Jira file, compute metrics, save ImportLog |
 | `POST` | `/api/upload/merge` | Merge multiple Jira exports (up to 10 files) |
-| `GET` | `/api/dashboard` | Return cached dashboard metrics |
+| `GET` | `/api/dashboard` | Static service status/identity probe — `{ status, service, version }`, no metrics, no caching |
 | `GET` | `/api/metrics` | Return full metrics object |
 | `GET` | `/api/health` | Health check — `{ status: "ok", version }` |
 | `GET` | `/api/imports` | Import log history (user-scoped; admin sees all with `?all=true`) |

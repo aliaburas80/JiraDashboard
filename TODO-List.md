@@ -1,5 +1,27 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**DOCS: FIX WRONG `/api/dashboard` DESCRIPTION IN `product/README.md`** —
+Partial resolution of a Phase 5 P3 finding (`docs/product-audit/10-technical-cleanup.md` Part 4):
+`/api/dashboard` is a static, unused stub route (`app/api/dashboard/route.ts`, returns only
+`{ status: 'ok', service, version }` — no metrics, no caching, zero live frontend callers, confirmed via
+grep) whose name is misleading relative to its content. **Chose documentation correction over deletion**:
+the audit's own reasoning elsewhere (R-10, Phase 4) explicitly cautions that a route with zero in-repo
+callers can still be depended on by an external uptime monitor, load balancer health check, or deployment
+script this audit has no visibility into — the same caveat applies here, and `product/SRS.md` and
+`product/DEVELOPER_GUIDE.md` already independently document it as a deliberate "lightweight
+health/identity probe," so removing it isn't a safe unilateral engineering call the way the finding's
+framing ("just needs a decision") might suggest. What WAS safe to fix directly: of the 5 places this
+route is described (`app/api/backend-view/route.ts`, `app/help/page.tsx`, `product/SRS.md`,
+`product/DEVELOPER_GUIDE.md`, `product/README.md` — the last one not even enumerated in the original
+finding's list of "3 hand-maintained descriptions," which only named backend-view/developer-view/help),
+4 of 5 already correctly describe the static-stub behavior; only `product/README.md`'s API table row was
+factually wrong (previously read "Return cached dashboard metrics" — the route does neither of those
+things). Fixed that one line to match the other 4 sources and the route's actual code. Confirms the
+audit's underlying "nothing enforces consistency across hand-maintained API descriptions" finding is
+real (this is exactly the kind of drift it predicted), without resolving that finding's proposed
+structural fix (a single generated source of truth), which remains open. No source code changed —
+`product/README.md` only. Branch: `docs/fix-wrong-api-dashboard-readme-description`.)
+
 **Last updated:** 2026-07-13 (**NEW FINDING, NO CODE CHANGE: `next/image` IS UNSAFE FOR AVATAR ENDPOINTS**
 — While implementing the audit's Phase 5 "user-uploaded images not using `next/image`" item
 (`docs/product-audit/10-technical-cleanup.md` Part 3), live-tested the actual runtime behavior before
