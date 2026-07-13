@@ -1,3 +1,6 @@
+import type { MetricConfidence } from '@/types/metricConfidence';
+import MetricConfidenceBadge from '@/components/ui/MetricConfidenceBadge';
+
 interface Props {
   label: string;
   value: string | number;
@@ -5,6 +8,7 @@ interface Props {
   tone?: 'critical' | 'warning' | 'success' | 'info' | 'neutral';
   icon?: React.ReactNode;
   onClick?: () => void;
+  confidence?: MetricConfidence;
 }
 
 const TONE_COLORS: Record<string, string> = {
@@ -23,7 +27,7 @@ const TONE_BG: Record<string, string> = {
   neutral:  'var(--dc-surface-blue)',
 };
 
-export default function DCKpiCard({ label, value, subtitle, tone = 'neutral', icon, onClick }: Props) {
+export default function DCKpiCard({ label, value, subtitle, tone = 'neutral', icon, onClick, confidence }: Props) {
   const color = TONE_COLORS[tone];
   const bg    = TONE_BG[tone];
 
@@ -45,6 +49,7 @@ export default function DCKpiCard({ label, value, subtitle, tone = 'neutral', ic
           </div>
         )}
         <p className="dc-kpi-label" style={{ flex: 1 }}>{label}</p>
+        {confidence && <MetricConfidenceBadge confidence={confidence} size="sm" />}
       </div>
       <p className="dc-kpi-value" style={{ color }}>{value}</p>
       {subtitle && <p className="dc-kpi-sub" style={{ marginTop: 6 }}>{subtitle}</p>}

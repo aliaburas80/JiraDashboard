@@ -109,8 +109,11 @@ export default function FlowHealthPage() {
 
       {/* KPI strip */}
       <section id="tour-section-flow-health-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }} aria-label="Flow metrics">
-        <DCKpiCard label="Avg Lead Time"  value={`${flow.averageLeadTimeDays ?? 0}d`}  subtitle={`${flow.leadTimeSampleSize ?? 0} completed`} tone={(flow.averageLeadTimeDays ?? 0) > 20 ? 'warning' : 'success'} />
-        <DCKpiCard label="Avg Cycle Time" value={`${flow.averageCycleTimeDays ?? 0}d`} subtitle={`${flow.cycleTimeSampleSize ?? 0} with start`} tone={(flow.averageCycleTimeDays ?? 0) > 10 ? 'warning' : 'success'} />
+        {/* AUDIT-CP3-002/CP3-004: a zero-sample average previously rendered as
+            a green "success" tone with no reliability signal. Both the tone
+            and an explicit confidence badge now reflect the real sample size. */}
+        <DCKpiCard label="Avg Lead Time"  value={`${flow.averageLeadTimeDays ?? 0}d`}  subtitle={`${flow.leadTimeSampleSize ?? 0} completed`} tone={(flow.leadTimeSampleSize ?? 0) === 0 ? 'neutral' : (flow.averageLeadTimeDays ?? 0) > 20 ? 'warning' : 'success'} confidence={metrics.confidence?.leadTime} />
+        <DCKpiCard label="Avg Cycle Time" value={`${flow.averageCycleTimeDays ?? 0}d`} subtitle={`${flow.cycleTimeSampleSize ?? 0} with start`} tone={(flow.cycleTimeSampleSize ?? 0) === 0 ? 'neutral' : (flow.averageCycleTimeDays ?? 0) > 10 ? 'warning' : 'success'} confidence={metrics.confidence?.cycleTime} />
         <DCKpiCard label="Flow Efficiency" value={`${flowEff}%`} subtitle={`${flow.done} of ${flow.issues} done`} tone={flowEff >= 60 ? 'success' : flowEff >= 30 ? 'warning' : 'critical'} />
         <DCKpiCard label="Aging WIP"  value={oldItems.length} subtitle="Active > 14 days" tone={oldItems.length > 10 ? 'critical' : oldItems.length > 4 ? 'warning' : 'success'} onClick={() => openDrawer('Aging WIP (>14 days)', oldItems)} />
       </section>
