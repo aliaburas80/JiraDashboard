@@ -3,7 +3,7 @@
 // TC-FCAST-01–05 IDs match product/TEST_CASES.md §9.55 (manual scenarios already
 // documented there); TC-FCAST-06 onward are new automated cases for this change.
 
-import { computeForecast } from '@/services/forecast/forecastEngine.service';
+import { computeForecast, computeAverageThroughput } from '@/services/forecast/forecastEngine.service';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import type { MetricConfidence, MetricConfidenceMap } from '@/types/metricConfidence';
 import type { DataQualityResult, DataQualityBand } from '@/types/dataQuality';
@@ -148,6 +148,27 @@ test('TC-FCAST-07: average throughput is computed from throughput.sprint.sprints
   }, [sprint({ sprintName: 'Sprint 1', completedCount: 4 }), sprint({ sprintName: 'Sprint 2', completedCount: 6 })]);
   const result = computeForecast(metrics);
   expect(result.avgThroughput).toBe(5);
+});
+
+// TC-FCAST-07b (regression, CP3-008): computeAverageThroughput must read the
+// legacy metrics.sprint.sprints shape (completedIssues) correctly when no
+// rich throughput.sprint.sprints data exists — this is the exact shape
+// /roadmap's own inline duplicate got wrong (it read `completedCount`, the
+// rich-shape field name, off the legacy source, which never has it, so the
+// average was always 0 regardless of real sprint history).
+test('TC-FCAST-07b: computeAverageThroughput reads legacy sprint.sprints (completedIssues) when throughput.sprint.sprints is empty', () => {
+  const legacySprints = [
+    { name: 'Sprint 1', issues: 5, completedIssues: 4, committedPoints: 0, completedPoints: 0,
+      completionRate: 80, pointCompletionRate: 0, done: 4, good: 4, warning: 0, critical: 0,
+      averageLeadTimeDays: 0, averageCycleTimeDays: 0, leadTimeSampleSize: 4, cycleTimeSampleSize: 4 },
+    { name: 'Sprint 2', issues: 5, completedIssues: 6, committedPoints: 0, completedPoints: 0,
+      completionRate: 100, pointCompletionRate: 0, done: 6, good: 6, warning: 0, critical: 0,
+      averageLeadTimeDays: 0, averageCycleTimeDays: 0, leadTimeSampleSize: 6, cycleTimeSampleSize: 6 },
+  ];
+  const metrics = buildMetrics({
+    sprint: { hasSprintData: true, sprintCount: 2, sprints: legacySprints },
+  }); // no second-arg rich sprints — throughput.sprint.sprints stays []
+  expect(computeAverageThroughput(metrics)).toBe(5);
 });
 
 // TC-FCAST-08 / FCAST-23: Critical Data Quality downgrades confidence and is cited in the reason
