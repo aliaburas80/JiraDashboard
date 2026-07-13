@@ -1,5 +1,28 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**FIX: TOKENIZE AVATAR/ICON BOX SIZES** — Resolves a P3 Phase 5 finding
+(`docs/product-audit/10-technical-cleanup.md` Part 3): identical raw pixel literals (32px, 36px) for
+icon/avatar box dimensions were hand-repeated across 3 independent SCSS modules with no shared token —
+`RoleColumn.module.scss`'s `.initials` avatar circle and `GlobalSearch.module.scss`'s `.resultIcon` box
+(both 32px), and `DashboardTopbar.module.scss`'s `.hamburger` mobile toggle (36px). Per CLAUDE.md §18
+("Do not hardcode in component SCSS or JSX: ...dimensions...icon sizes"), added two new tokens to
+`src/styles/_tokens.scss` — `--icon-size-md: 32px` and `--icon-size-lg: 36px` — in a new "Icon / avatar
+box sizes" section, deliberately separate from the existing `--space-*` spacing scale even though
+`--space-8` numerically equals 32px: spacing tokens mean "gap between elements," these mean "size of an
+element," a different semantic category per §18.1's semantic-token policy, even where the numbers
+coincide. Replaced the 3 raw literals with `var(--icon-size-md, 32px)` / `var(--icon-size-lg, 36px)` —
+kept the original pixel value as the CSS fallback in each case, so even in the hypothetical case the
+custom property fails to resolve, computed output is byte-identical to before. **Left untouched**: 3
+other unrelated `32px` occurrences in `GlobalSearch.module.scss` (padding/max-width values, not
+icon/avatar box dimensions — out of scope for this specific finding, which was about icon/avatar sizing
+literals specifically, not "every 32px in the codebase"). Verified: `npm run typecheck` clean; `npm run
+lint` unchanged at 1,273 pre-existing warnings (0 new); `npx stylelint 'src/**/*.scss' 'app/**/*.scss'
+--max-warnings=0` clean (0 warnings — confirms the new token syntax and `var(..., fallback)` usage are
+Stylelint-compliant); `npm run build` compiled all 64 routes; `npm run test` 111/111 suites, 1,031/1,031
+tests passing. No manual browser verification needed — the `var(--token, <original-literal>)` fallback
+pattern guarantees identical rendered output regardless of whether the token resolves. Branch:
+`fix/tokenize-avatar-icon-box-sizes`.)
+
 **Last updated:** 2026-07-13 (**FIX: `Card.tsx` NON-KEYBOARD-ACCESSIBLE `onClick` (LATENT)** — Resolves a
 P3 Phase 5 finding (`docs/product-audit/09-ux-and-accessibility.md` §6): the shared
 `src/components/ui/Card.tsx` accepted an optional `onClick` prop and rendered a plain `<div>` with
