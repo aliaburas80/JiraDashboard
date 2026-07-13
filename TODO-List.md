@@ -1,5 +1,37 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**v4.33.0 PERF: MEMOIZE `/charts` DERIVED DATA** — Resolves a P2 Phase 5
+finding from the product audit (`docs/product-audit/10-technical-cleanup.md` Part 3, secondary
+findings): `app/charts/page.tsx` recomputed ~10 unmemoized `filter`/`reduce`/`map` passes over the full
+`flow.items` array (and 7 other metric arrays — sprints/capacity/quarters/kanban/labels/epics/relations)
+directly in the component body on every render, including tab switches (`Bar Charts` ↔ `Circles`) and
+chart-visibility-panel toggles — neither of which changes the underlying `metrics`, unlike its sibling
+pages `/work-explorer` and `/dashboard/flow-health`, which already correctly memoize equivalent
+derivations (confirmed pattern match against `app/work-explorer/page.tsx:120-134`, which memoizes each
+derived value keyed on `metrics`). Fix: wrapped the entire derived-data block (delivery/health/type/story-
+point donut segments, sprint/capacity/quarter/kanban/label bar-chart data, epic Gantt rows, KPI pills —
+25 previously separate `const` bindings) into a single `useMemo(() => {...}, [metrics])` returning one
+view-model object, rather than 25 separate `useMemo` calls — the audit's concern was re-computation on
+tab/pref toggle, not per-field granularity, and one memo over one logical unit (all derived from the same
+`metrics` input) matches CLAUDE.md §40.1's "don't memoize by habit" guidance better than fragmenting into
+25 hooks with no independent invalidation need. Required moving the `useMemo` call (and its destructuring)
+above the page's `if (loading) return (...)` / `if (!metrics) return null` early returns — React's rules
+of hooks require unconditional hook calls, and the derivations previously ran after those returns, so
+each internal read was changed to optional-chain off `metrics` (e.g. `metrics.flow` → `metrics?.flow`)
+since `metrics` can legitimately be `null` while this hook body runs, before the early return short-
+circuits rendering. Dropped one intermediate variable (`kanban`, the pre-slice array) that was never
+referenced outside computing `kanbanTop` — confirmed via grep before removing it, not a behavior change.
+Zero output change: every returned value is byte-for-byte the same computation as before, only the
+invalidation trigger changed (every render → only when `metrics` itself changes). No test file exists for
+`/charts` (pre-existing — this branch does not add one, since the audit's own finding was performance-only
+with no behavior to newly assert; existing behavior is unchanged, verified by close comparison against the
+pre-refactor logic rather than a new test). **Manual browser verification not performed** — no
+authenticated session or uploaded dataset available in this environment; verified instead via
+`npm run typecheck` (clean), `npm run build` (all 64 routes compiled), full `npm run test` (111/111
+suites, 1,031/1,031 tests, unaffected since none cover this page), and a manual line-by-line diff
+confirming the memoized block is a pure relocation, not a rewrite. `npm run lint` unchanged at 1,273
+pre-existing warnings (0 new). Branch: `perf/charts-page-memoize-derivations`.)
+
 **Last updated:** 2026-07-13 (**v4.32.0 DISTINGUISH LOAD ERROR FROM "NO DATA" — DASHBOARD FOLLOW-UP** —
 Closes the direct follow-up left open by `v4.31.0` above: the 9 `app/dashboard/*` sub-pages were
 deliberately excluded from that pass because they were mid-refactor on `fix/metrics-loader-caching`

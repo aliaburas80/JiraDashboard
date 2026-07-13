@@ -2,7 +2,7 @@
 // /charts — Visual Analytics: two tabs (bar/line Charts + donut Circles).
 'use client';
 
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
@@ -279,6 +279,96 @@ export default function ChartsPage() {
     return () => { cancelled = true; };
   }, [router]);
 
+  // ── Derived data ────────────────────────────────────────────────────────────
+  // Memoized as one view model: these ~10 filter/reduce/map passes ran over the
+  // full flow.items array on every render, including tab switches and chart-
+  // visibility toggles (neither of which changes `metrics`) before this fix.
+  const derived = useMemo(() => {
+    const flow   = metrics?.flow        || ({} as any);
+    const sp     = metrics?.storyPoints || ({} as any);
+    const items  = (flow.items || [])  as any[];
+    const total  = Math.max(items.length, 1);
+
+    // Delivery composition
+    const doneBucket     = items.filter(i => DONE_ST.includes(norm(i.status))).length;
+    const criticalBucket = items.filter(i => !DONE_ST.includes(norm(i.status)) && norm(i.health) === 'critical').length;
+    const warningBucket  = items.filter(i => !DONE_ST.includes(norm(i.status)) && norm(i.health) === 'warning').length;
+    const activeBucket   = items.filter(i => ACTIVE_ST.includes(norm(i.status)) && !DONE_ST.includes(norm(i.status)) && norm(i.health) !== 'critical' && norm(i.health) !== 'warning').length;
+    const otherBucket    = Math.max(total - doneBucket - criticalBucket - warningBucket - activeBucket, 0);
+
+    const deliverySegs: Seg[] = [
+      { label: 'Done',        value: doneBucket,     color: '#16a34a' },
+      { label: 'In Progress', value: activeBucket,   color: '#2563eb' },
+      { label: 'At Risk',     value: warningBucket,  color: '#f59e0b' },
+      { label: 'Critical',    value: criticalBucket, color: '#dc2626' },
+      { label: 'Backlog',     value: otherBucket,    color: '#cbd5e1' },
+    ].filter(s => s.value > 0);
+
+    const healthSegs: Seg[] = [
+      { label: 'Good',     value: flow.good     || 0, color: '#16a34a' },
+      { label: 'Warning',  value: flow.warning  || 0, color: '#f59e0b' },
+      { label: 'Critical', value: flow.critical || 0, color: '#dc2626' },
+    ].filter(s => s.value > 0);
+
+    const typeList   = ((metrics?.types || []) as any[]).slice(0, 6);
+    const typeTotal  = Math.max(typeList.reduce((s: number, t: any) => s + (t.count || 0), 0), 1);
+    const typeSegs: Seg[] = typeList.map((t: any, i: number) => ({ label: t.type, value: t.count, color: PALETTE[i % PALETTE.length] }));
+
+    const spPct    = sp.pointCompletionRate || 0;
+    const spSegs: Seg[] = sp.totalStoryPoints > 0
+      ? [{ label: 'Completed', value: sp.completedStoryPoints || 0, color: '#16a34a' }, { label: 'Remaining', value: sp.remainingStoryPoints || 0, color: '#e2e8f0' }]
+      : [];
+
+    const sprints    = ((metrics?.sprint?.sprints || []) as any[]).slice(0, 7).reverse();
+    const maxSprint  = Math.max(...sprints.map((s: any) => s.issues || 0), 1);
+
+    const capacity  = ((metrics?.capacity || []) as any[]).slice(0, 8);
+    const maxLoad   = Math.max(...capacity.map((c: any) => c.loadShare || 0), 1);
+
+    const quarters  = ((metrics?.quarters || []) as any[]).filter((q: any) => q.quarter !== 'No date').slice(0, 6).reverse();
+    const maxQ      = Math.max(...quarters.map((q: any) => q.issues || 0), 1);
+
+    const kanbanTop = (((metrics?.kanban as any)?.byStatus || []) as any[]).slice(0, 8);
+    const maxKanban = Math.max(...kanbanTop.map((k: any) => k.count || 0), 1);
+
+    const labelStats  = (((metrics?.labels as any)?.labelStats || []) as any[]).filter((l: any) => l.label !== '(unlabeled)').slice(0, 7);
+    const maxLabel    = Math.max(...labelStats.map((l: any) => l.count || 0), 1);
+
+    const epics = ((metrics?.epics || []) as any[]).slice(0, 10);
+
+    const relations  = (metrics?.relations as any) || {};
+    const linkSegs: Seg[] = relations.hasLinks
+      ? ((relations.linkStats || []) as any[]).slice(0, 5).map((l: any, i: number) => ({ label: l.type, value: l.count, color: PALETTE[i % PALETTE.length] }))
+      : [];
+    const linkTotal = Math.max(linkSegs.reduce((s, l) => s + l.value, 0), 1);
+
+    const healthTotal = Math.max((flow.good || 0) + (flow.warning || 0) + (flow.critical || 0), 1);
+    const spTotal     = sp.totalStoryPoints || 0;
+
+    const KPI_PILLS = [
+      { val: `${metrics?.completionRate || 0}%`, lbl: 'Complete',    grad: 'linear-gradient(135deg,#16a34a,#14b8a6)' },
+      { val: flow.critical || 0,                lbl: 'Critical',    grad: 'linear-gradient(135deg,#dc2626,#f97316)' },
+      { val: metrics?.healthScore || 0,          lbl: 'Health Score', grad: 'linear-gradient(135deg,#2563eb,#7c3aed)' },
+      ...(metrics?.prediction && !metrics.prediction.complete && metrics.prediction.daysRemaining !== null
+        ? [{ val: `~${metrics.prediction.daysRemaining}d`, lbl: 'Est. Done', grad: 'linear-gradient(135deg,#0891b2,#2563eb)' }]
+        : []),
+    ];
+
+    return {
+      total, deliverySegs, healthSegs, typeSegs, typeTotal, spPct, spSegs,
+      sprints, maxSprint, capacity, maxLoad, quarters, maxQ, kanbanTop,
+      maxKanban, labelStats, maxLabel, epics, relations, linkSegs, linkTotal,
+      healthTotal, spTotal, KPI_PILLS,
+    };
+  }, [metrics]);
+
+  const {
+    total, deliverySegs, healthSegs, typeSegs, typeTotal, spPct, spSegs,
+    sprints, maxSprint, capacity, maxLoad, quarters, maxQ, kanbanTop,
+    maxKanban, labelStats, maxLabel, epics, relations, linkSegs, linkTotal,
+    healthTotal, spTotal, KPI_PILLS,
+  } = derived;
+
   if (loading) return (
     <AppShell showNav>
       <div className="flex items-center justify-center h-64 text-slate-400 text-sm animate-pulse">
@@ -299,78 +389,6 @@ export default function ChartsPage() {
     const p = chartPrefs.find(c => c.id === id);
     return (p?.span as 1 | 2 | 3) ?? 1;
   };
-
-  // ── Derived data ────────────────────────────────────────────────────────────
-  const flow   = metrics.flow        || ({} as any);
-  const sp     = metrics.storyPoints || ({} as any);
-  const items  = (flow.items || [])  as any[];
-  const total  = Math.max(items.length, 1);
-
-  // Delivery composition
-  const doneBucket     = items.filter(i => DONE_ST.includes(norm(i.status))).length;
-  const criticalBucket = items.filter(i => !DONE_ST.includes(norm(i.status)) && norm(i.health) === 'critical').length;
-  const warningBucket  = items.filter(i => !DONE_ST.includes(norm(i.status)) && norm(i.health) === 'warning').length;
-  const activeBucket   = items.filter(i => ACTIVE_ST.includes(norm(i.status)) && !DONE_ST.includes(norm(i.status)) && norm(i.health) !== 'critical' && norm(i.health) !== 'warning').length;
-  const otherBucket    = Math.max(total - doneBucket - criticalBucket - warningBucket - activeBucket, 0);
-
-  const deliverySegs: Seg[] = [
-    { label: 'Done',        value: doneBucket,     color: '#16a34a' },
-    { label: 'In Progress', value: activeBucket,   color: '#2563eb' },
-    { label: 'At Risk',     value: warningBucket,  color: '#f59e0b' },
-    { label: 'Critical',    value: criticalBucket, color: '#dc2626' },
-    { label: 'Backlog',     value: otherBucket,    color: '#cbd5e1' },
-  ].filter(s => s.value > 0);
-
-  const healthSegs: Seg[] = [
-    { label: 'Good',     value: flow.good     || 0, color: '#16a34a' },
-    { label: 'Warning',  value: flow.warning  || 0, color: '#f59e0b' },
-    { label: 'Critical', value: flow.critical || 0, color: '#dc2626' },
-  ].filter(s => s.value > 0);
-
-  const typeList   = ((metrics.types || []) as any[]).slice(0, 6);
-  const typeTotal  = Math.max(typeList.reduce((s: number, t: any) => s + (t.count || 0), 0), 1);
-  const typeSegs: Seg[] = typeList.map((t: any, i: number) => ({ label: t.type, value: t.count, color: PALETTE[i % PALETTE.length] }));
-
-  const spPct    = sp.pointCompletionRate || 0;
-  const spSegs: Seg[] = sp.totalStoryPoints > 0
-    ? [{ label: 'Completed', value: sp.completedStoryPoints || 0, color: '#16a34a' }, { label: 'Remaining', value: sp.remainingStoryPoints || 0, color: '#e2e8f0' }]
-    : [];
-
-  const sprints    = ((metrics.sprint?.sprints || []) as any[]).slice(0, 7).reverse();
-  const maxSprint  = Math.max(...sprints.map((s: any) => s.issues || 0), 1);
-
-  const capacity  = ((metrics.capacity || []) as any[]).slice(0, 8);
-  const maxLoad   = Math.max(...capacity.map((c: any) => c.loadShare || 0), 1);
-
-  const quarters  = ((metrics.quarters || []) as any[]).filter((q: any) => q.quarter !== 'No date').slice(0, 6).reverse();
-  const maxQ      = Math.max(...quarters.map((q: any) => q.issues || 0), 1);
-
-  const kanban    = ((metrics.kanban as any)?.byStatus || []) as any[];
-  const kanbanTop = kanban.slice(0, 8);
-  const maxKanban = Math.max(...kanbanTop.map((k: any) => k.count || 0), 1);
-
-  const labelStats  = (((metrics.labels as any)?.labelStats || []) as any[]).filter((l: any) => l.label !== '(unlabeled)').slice(0, 7);
-  const maxLabel    = Math.max(...labelStats.map((l: any) => l.count || 0), 1);
-
-  const epics = ((metrics.epics || []) as any[]).slice(0, 10);
-
-  const relations  = (metrics.relations as any) || {};
-  const linkSegs: Seg[] = relations.hasLinks
-    ? ((relations.linkStats || []) as any[]).slice(0, 5).map((l: any, i: number) => ({ label: l.type, value: l.count, color: PALETTE[i % PALETTE.length] }))
-    : [];
-  const linkTotal = Math.max(linkSegs.reduce((s, l) => s + l.value, 0), 1);
-
-  const healthTotal = Math.max((flow.good || 0) + (flow.warning || 0) + (flow.critical || 0), 1);
-  const spTotal     = sp.totalStoryPoints || 0;
-
-  const KPI_PILLS = [
-    { val: `${metrics.completionRate || 0}%`, lbl: 'Complete',    grad: 'linear-gradient(135deg,#16a34a,#14b8a6)' },
-    { val: flow.critical || 0,                lbl: 'Critical',    grad: 'linear-gradient(135deg,#dc2626,#f97316)' },
-    { val: metrics.healthScore || 0,          lbl: 'Health Score', grad: 'linear-gradient(135deg,#2563eb,#7c3aed)' },
-    ...(metrics.prediction && !metrics.prediction.complete && metrics.prediction.daysRemaining !== null
-      ? [{ val: `~${metrics.prediction.daysRemaining}d`, lbl: 'Est. Done', grad: 'linear-gradient(135deg,#0891b2,#2563eb)' }]
-      : []),
-  ];
 
   return (
     <AppShell showNav>
