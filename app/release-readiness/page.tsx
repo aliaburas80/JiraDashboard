@@ -9,6 +9,7 @@ import AppShell from '@/components/layout/AppShell';
 import DCStatusChip from '@/components/dc-shell/DCStatusChip';
 import LoadingState from '@/components/ui/LoadingState';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 import { calculateReleaseReadiness } from '@/services/metrics/releaseReadiness.service';
 import type { ReleaseReadinessSummary, ReleaseReadinessResult, ReleaseVerdict } from '@/types/releaseReadiness';
 import type { DashboardMetrics } from '@/types/metrics';
@@ -192,7 +193,7 @@ export default function ReleaseReadinessPage() {
         const items = data.flow?.items ?? [];
         const calc  = calculateReleaseReadiness(items as any);
         if (!cancelled) { setSummary(calc); setMetrics(data); setSelected(calc.releases[0] ?? null); }
-      } catch { router.replace('/'); }
+      } catch { redirectWithLoadError(router); }
       finally  { if (!cancelled) setLoading(false); }
     }
     load();

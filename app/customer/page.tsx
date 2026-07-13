@@ -6,6 +6,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 import { getHealthBand, type HealthBand } from '@/lib/utils';
 import type { DashboardMetrics } from '@/types/metrics';
 import styles from './page.module.scss';
@@ -115,7 +116,7 @@ export default function CustomerPage() {
       const data = r.metrics as DashboardMetrics | null;
       if (!data) { router.replace('/'); return; }
       setMetrics(data);
-    }).catch(() => router.replace('/'));
+    }).catch(() => redirectWithLoadError(router));
     return () => { cancelled = true; };
   }, [router]);
 

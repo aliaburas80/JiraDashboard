@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 import type { DashboardMetrics } from '@/types/metrics';
 import styles from './page.module.scss';
 
@@ -94,7 +95,7 @@ export default function DeliveryMixPage() {
       const data = r.metrics as DashboardMetrics | null;
       if (!data) { router.replace('/'); return; }
       setMetrics(data);
-    }).catch(() => router.replace('/'));
+    }).catch(() => redirectWithLoadError(router));
     return () => { cancelled = true; };
   }, [router]);
 

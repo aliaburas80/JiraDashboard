@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: A Failed Data Load No Longer Looks Identical to "No Data Uploaded" (2026-07-13)
+
+Eleven pages (Charts, Customer Report, Data Quality, Delivery Mix, Flow Health, Forecast, Sprint & Kanban, Summary, Work Explorer, Release Readiness, and Column Mapping) previously sent you to the same plain upload screen whether your data genuinely hadn't been uploaded yet or your dashboard data just failed to load due to a real error — with no way to tell which one happened. A real load failure now shows a clear message explaining that something went wrong and suggesting a retry, instead of silently looking like you'd never uploaded anything. Found and fixed as part of a full-application product audit (`docs/product-audit/`) — this was the single most repeated pattern found across the whole audit.
+
+---
+
 ## Redesigned: Coaching Page Is Now a Simple Team Role View (2026-07-12)
 
 Role-Based Coaching Insights has been replaced with a new page, Team Role View — a light, simple grid with one column each for Scrum Master, Product Owner, and Manager, shown to everyone at once. No tabs, no hero banners, no confidence scores, no clicking to see another role's view. Each column shows three things: the process rules to keep an eye on (with a status pill — Critical, At risk, Review, or Healthy), the next concrete actions for that role, and a handful of key numbers. Most of the rules and nearly all of the numbers are computed directly from your uploaded Jira data; a small number that the app doesn't track yet (like retrospective action ownership) are clearly placeholder values rather than invented ones. This replaces the tab-based redesign shipped earlier the same day, which this release supersedes rather than builds on.

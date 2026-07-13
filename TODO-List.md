@@ -1,5 +1,37 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-13 (**v4.23.0 DISTINGUISH LOAD ERROR FROM "NO DATA" (PHASE 3)** — Resolves the
+dominant Checkpoint 2 finding from the product audit (`docs/product-audit/09-ux-and-accessibility.md` §2):
+20+ routes redirected to `/` identically whether `loadMetricsWithSource()` genuinely found no data or the
+fetch itself failed, so a real error was indistinguishable from a first-time visit. Added
+`src/lib/loadErrorSignal.ts` (new, `redirectWithLoadError()` / `consumeLoadErrorSignal()`, sessionStorage-
+backed) — deliberately a signal-and-redirect mechanism rather than a bespoke error-state UI on every
+affected page, since all of them already redirect to `/` on failure; this makes that existing redirect
+land somewhere that can explain what happened instead of adding new UI surface to ~20 files.
+`app/page.tsx` (the upload page) now consumes the signal on mount and shows it via its existing `error`
+banner state — no new UI component needed there either. **Applied to 10 of the ~20 affected routes in
+this pass**: `/charts`, `/customer`, `/data-quality`, `/delivery-mix`, `/flow-health`, `/forecast`,
+`/sprint-kanban`, `/summary`, `/work-explorer`, `/release-readiness` — each had an identical, mechanical
+`catch { router.replace('/') }` / `.catch(() => router.replace('/'))` shape (verified before editing any
+of them), swapped for `redirectWithLoadError(router)`. **Deliberately excluded from this pass**: the 9
+`app/dashboard/*` sub-pages and `app/readiness/page.tsx` — both are mid-refactor on other unmerged
+branches from this same session (`fix/metrics-loader-caching` moved the dashboard pages onto
+`useDashboardMetrics()`; `fix/readiness-redirect-to-release-readiness` replaced `/readiness` with a bare
+redirect stub) — editing their pre-refactor state here would create a guaranteed merge conflict for no
+benefit; tracked as a direct follow-up once whichever of those merges first. **Also fixed, different
+shape**: `app/column-mapping/page.tsx` — the single worst instance found in the audit (`.catch(() => {})`,
+a genuinely empty catch with no redirect and no state change at all, so an error and "no upload" were 100%
+identical with no distinguishing signal whatsoever). This page stays on-page rather than redirecting, so
+the fix is a `loadError` boolean state instead of the signal mechanism — the existing inline empty-state
+card now shows "Couldn't check your upload status" wording and a retry prompt instead of "No data uploaded
+yet" when the load itself failed. Added `src/__tests__/loadErrorSignal.test.ts` (new, 6 tests) covering
+the utility directly, including that a genuine no-data redirect (no signal set) is unaffected — the whole
+point of keeping the signal strictly opt-in. Verified: `npm run typecheck` clean; `npm run lint` 1,274
+(baseline, 0 new); `npm run build` compiled all routes; `npm run test` 111/111 suites (+1 new file),
+1,028/1,028 tests (+6 new) passing. Branch: `fix/distinguish-load-error-from-no-data`, based on `main` at
+commit `de490f4`, independent of this session's other parallel fix branches — this changelog header's
+version number will need reconciling at whichever merges last.)
+
 **Last updated:** 2026-07-12 (**v4.22.0 TEAM ROLE VIEW — FULL COACHING PAGE REPLACEMENT** — Per explicit
 user request ("No I dont like the style totaly") with a full, detailed design brief for a "simple, light,
 role-based grid," delivered minutes after `v4.21.0` below shipped — that relevance-first tab redesign is

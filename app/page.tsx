@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
 import { saveMetrics, clearMetrics } from '@/lib/storage';
+import { consumeLoadErrorSignal } from '@/lib/loadErrorSignal';
 import { hasLocalData, clearLocalData } from '@/lib/clearLocalData';
 import { addLocalImport } from '@/lib/localImportHistory';
 import { processFileLocally, getFileExtension } from '@/lib/localUpload';
@@ -44,6 +45,15 @@ export default function HomePage() {
   const storageModePromiseRef = useRef<Promise<'cloud' | 'local'> | null>(null);
 
   useEffect(() => { setStoredDataFound(hasLocalData()); }, []);
+
+  // AUDIT-09-2 (silent redirect on error): a page whose metrics fetch failed
+  // redirects here via redirectWithLoadError() instead of a bare '/' redirect
+  // -- surface why they landed on the upload screen instead of leaving them
+  // to guess whether they simply never uploaded anything.
+  useEffect(() => {
+    const message = consumeLoadErrorSignal();
+    if (message) setError(message);
+  }, []);
 
   // EP-017: local-mode users never POST the file to /api/upload at all.
   useEffect(() => {
