@@ -139,9 +139,13 @@ These were surfaced as evidence in earlier checkpoints but explicitly not acted 
 
 **Confidence:** High on "currently unreachable" (code-evidenced); explicitly not recommending deletion without a product-side check.
 
+**Resolved (2026-07-14):** Product decision made — not on the roadmap for reactivation; removed. Before deleting, re-traced the live/dead boundary independently (confirmed exactly what `/dashboard/coaching` actually imports) and found 2 more transitively-dead files not named in this finding's own file list — `coachingEvidenceLink.ts` and `coachingBadge.ts` — bringing the total to 16 non-test files + 3 test files. Cross-checked against `product/SRS.md`'s independently-maintained "Orphaned subsystem" note and `TODO-List.md`'s `ORPHAN-03` entry, both of which already listed the identical file set. See `remove/dormant-coaching-bundle-r13-r14`.
+
 ### R-14 — `orphanRelation.service.ts`'s `detectOrphans()` (`CP3-016`)
 
 **Recommendation: Investigate/Remove.** Smaller and lower-risk than R-13 — this is a single dead function (not a whole subsystem), already confirmed to also contain a latent bug (hardcoded type-name sets that ignore the admin-configurable issue-type hierarchy) that would need fixing before any reactivation. Recommend removal unless a specific near-term plan to wire it up exists, in which case the hierarchy-config bug should be fixed first.
+
+**Resolved (2026-07-14):** Removed, bundled into the same disposition as R-13 above per this finding's own instruction. The entire file was dead, not just `detectOrphans()` — its only in-repo reference was an unused import in the live `relationExplorer.service.ts`, removed alongside it.
 
 **Confidence:** High.
 

@@ -8,7 +8,6 @@ import type { RelationGraph, RelationNode, RelationEdge, IssueNodeType, NodeHeal
 import type { IssueTypeDefinition } from '@/types/issueTypeHierarchy';
 import { DEFAULT_ISSUE_TYPES } from '@/types/issueTypeHierarchy';
 import { reconstructHierarchy, getAncestorChain } from './hierarchy.service';
-import { detectOrphans } from './orphanRelation.service';
 
 type JiraIssue = Record<string, unknown>;
 
