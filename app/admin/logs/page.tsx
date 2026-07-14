@@ -3,13 +3,18 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import { getHealthBand, type HealthBand } from '@/lib/utils';
 import styles from './page.module.scss';
 
+// CP3-018: chip color now derives from the shared getHealthBand() cutoffs
+// instead of this page's own divergent >80/60/40 copy (excellent/good both
+// render green — same visible result as before for the two upper bands, but
+// scores 75-80 now correctly get the green "good" chip instead of amber).
+const HEALTH_CHIP_CLASS: Record<HealthBand, string> = {
+  excellent: 'chip c-gr', good: 'chip c-gr', moderate: 'chip c-acc', 'at-risk': 'chip c-am', critical: 'chip c-or',
+};
 function healthChipClass(score: number): string {
-  if (score > 80) return 'chip c-gr';
-  if (score >= 60) return 'chip c-acc';
-  if (score >= 40) return 'chip c-am';
-  return 'chip c-or';
+  return HEALTH_CHIP_CLASS[getHealthBand(score)];
 }
 
 interface Log {

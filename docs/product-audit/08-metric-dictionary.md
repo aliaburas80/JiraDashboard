@@ -218,6 +218,39 @@ Confidence: High confidence
 Validation method: Change a threshold in app/admin/settings and confirm which of the 12 files' displayed bands do (thresholds.service.ts-derived) and don't (hardcoded) change.
 ```
 
+**Resolved for the Health Score band specifically (2026-07-14):** the audit's headline complaint — 7+
+independent hardcoded copies of the 90/75/60/40 Health Score band cutoffs — is fixed. `HealthThresholds`
+(`src/types/thresholds.ts`) gained four new fields (`healthScoreExcellentPct/GoodPct/FairPct/WeakPct`,
+defaults 90/75/60/40), configurable in Admin Settings → "Health Score Bands" (new group in
+`HealthThresholdSettings.tsx`), with server-side validation enforcing strictly-descending order
+(`app/api/admin/thresholds/route.ts`). `getHealthBand()` (`src/lib/utils.ts`) now takes these thresholds
+as an optional parameter (defaulting to `DEFAULT_THRESHOLDS`, so every existing single-argument call site
+kept working). Migrated every duplicate reimplementation onto this one function:
+`excelInsightExport.service.ts` (fixed two separate redundant reimplementations in the same file — one had
+already computed the correct band via `getHealthBand()` four lines above and then re-derived it inline
+anyway; a third, near-identical local `bandLabel` map a few lines further down was also consolidated),
+`recommendationEngine.ts`, and `DashboardNavSidebar.tsx`. `app/admin/logs/page.tsx` and `app/backend/page.tsx`
+had their own divergent `>80/60/40` copy (not `>=90/75/60/40`) — genuinely inconsistent with everywhere
+else in the app; migrating them to the canonical function is a real (minor, admin-only) visible fix: scores
+75-80 now correctly render the "good" green chip instead of an "at-risk" amber one.
+`DashboardSidebarNav.tsx` was intentionally left untouched — confirmed unmounted, dead code (not wired into
+any route), so editing it would add no live-behavior value; flagged for the same orphan-code disposition
+question as `ORPHAN-02` rather than silently fixed or silently left inconsistent-looking.
+
+**Not resolved — scope boundary found during implementation:** every current caller of `getHealthBand()`
+is a client component, and `calculateHealthScore()` itself never classifies a band server-side — it only
+returns a raw 0-100 number. So while the schema and canonical function now genuinely support admin
+configuration, an admin who changes these 4 new fields away from their defaults will **not** yet see that
+reflected in any of the migrated UI, because none of them fetch `GET /api/admin/thresholds` before calling
+`getHealthBand()` — they all use the default cutoffs. Wiring live thresholds into these specific client
+call sites (likely via a shared fetch/hook, since 6+ components would need it — a genuine Rule-of-Three
+case, unlike inventing one for a single caller) is a distinct, larger follow-up, not done here. **Also not
+resolved, and out of scope for this pass:** Portfolio "At Risk" (`portfolioHealth.ts`), sprint-goal outcome
+(`throughput.service.ts`), capacity overload (`roleGridView.mapper.ts`), and the confidence-band family
+(`metricConfidence.service.ts`, and the now-confirmed-dead `releaseConfidence.ts` — see CP3-020) are
+distinct metrics with their own audit findings and were not part of this decision; they remain
+independently hardcoded.
+
 ### CP3-021 — `computeReleaseConfidence` shares CP3-002's sample-blindness pattern and is stored as an unlabeled historical trend point
 ```text
 Finding: computeReleaseConfidence (src/lib/releaseConfidence.ts:21-30) uses the same Math.max(totalIssues,1) guard pattern as Health Score — with totalIssues=1 and clean signals, it scores 100/"High." Unlike Health Score, this value is computed once per upload (app/api/upload/route.ts:244) and persisted as a point on the /trends historical chart (app/trends/page.tsx:119-120,209,246-247), with no sample-size or confidence indicator shown alongside it.

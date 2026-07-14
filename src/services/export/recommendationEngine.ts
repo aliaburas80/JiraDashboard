@@ -5,6 +5,7 @@
 // suggested owner, and suggested action — fully traceable, no black-box output.
 
 import type { DashboardMetrics } from '@/types/metrics';
+import { getHealthBand } from '@/lib/utils';
 
 export type RecommendationPriority = 'Critical' | 'High' | 'Medium' | 'Low';
 export type RecommendationArea =
@@ -262,8 +263,7 @@ export function generateRecommendations(metrics: DashboardMetrics): Recommendati
 export function generateExecutiveNarrative(metrics: DashboardMetrics, recs: Recommendation[]): string {
   const flow   = (metrics.flow ?? {}) as any;
   const sprint = metrics.throughput?.sprint;
-  const band   = metrics.healthScore >= 90 ? 'excellent' : metrics.healthScore >= 75 ? 'good'
-               : metrics.healthScore >= 60 ? 'moderate' : metrics.healthScore >= 40 ? 'at-risk' : 'critical';
+  const band   = getHealthBand(metrics.healthScore ?? 0);
 
   const parts: string[] = [];
 

@@ -88,6 +88,11 @@ export default function HealthThresholdSettings({ thresholds, onSave }: Props) {
       icon: 'priorityBlocker',
       fields: ['blockedRatioWarningPct', 'blockedRatioCriticalPct'] as (keyof typeof THRESHOLD_LABELS)[],
     },
+    {
+      title: 'Health Score Bands',
+      icon: 'activity',
+      fields: ['healthScoreExcellentPct', 'healthScoreGoodPct', 'healthScoreFairPct', 'healthScoreWeakPct'] as (keyof typeof THRESHOLD_LABELS)[],
+    },
   ];
 
   return (

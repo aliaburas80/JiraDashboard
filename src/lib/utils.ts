@@ -1,16 +1,23 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import type { HealthThresholds } from '@/types/thresholds';
+import { DEFAULT_THRESHOLDS } from '@/types/thresholds';
 
 export function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
 export function formatDays(d: number | null | undefined): string { return d == null ? '—' : d + 'd'; }
 export function formatPct(n: number | null | undefined): string { return n == null ? '—' : n + '%'; }
 
 export type HealthBand = 'excellent' | 'good' | 'moderate' | 'at-risk' | 'critical';
-export function getHealthBand(score: number): HealthBand {
-  if (score >= 90) return 'excellent';
-  if (score >= 75) return 'good';
-  if (score >= 60) return 'moderate';
-  if (score >= 40) return 'at-risk';
+
+// CP3-018: single source of truth for Health Score band cutoffs. The four
+// cutoffs come from HealthThresholds (thresholds.service.ts), so an admin's
+// configured values apply anywhere this is called with a live `thresholds`
+// argument; callers with no live thresholds fall back to DEFAULT_THRESHOLDS.
+export function getHealthBand(score: number, thresholds: HealthThresholds = DEFAULT_THRESHOLDS): HealthBand {
+  if (score >= thresholds.healthScoreExcellentPct) return 'excellent';
+  if (score >= thresholds.healthScoreGoodPct)      return 'good';
+  if (score >= thresholds.healthScoreFairPct)      return 'moderate';
+  if (score >= thresholds.healthScoreWeakPct)      return 'at-risk';
   return 'critical';
 }
 

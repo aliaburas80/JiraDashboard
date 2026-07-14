@@ -620,14 +620,26 @@ interface ImportLogEntry {
 \`\`\`typescript
 type HealthBand = 'excellent' | 'good' | 'moderate' | 'at-risk' | 'critical';
 
-function getHealthBand(score: number): HealthBand {
-  if (score >= 90) return 'excellent';
-  if (score >= 75) return 'good';
-  if (score >= 60) return 'moderate';
-  if (score >= 40) return 'at-risk';
+// Cutoffs come from HealthThresholds (thresholds.service.ts) — admin-
+// configurable via Admin Settings → Health Score Bands. Defaults to
+// DEFAULT_THRESHOLDS (90/75/60/40) when no live thresholds are supplied.
+function getHealthBand(score: number, thresholds: HealthThresholds = DEFAULT_THRESHOLDS): HealthBand {
+  if (score >= thresholds.healthScoreExcellentPct) return 'excellent';
+  if (score >= thresholds.healthScoreGoodPct)      return 'good';
+  if (score >= thresholds.healthScoreFairPct)      return 'moderate';
+  if (score >= thresholds.healthScoreWeakPct)      return 'at-risk';
   return 'critical';
 }
-\`\`\``,
+\`\`\`
+
+**Note:** every current caller of \`getHealthBand()\` is a client component
+(there is no server-side band classification today — \`calculateHealthScore()\`
+only returns a raw 0–100 number). Passing a live, admin-configured
+\`thresholds\` object into a client caller requires that caller to fetch
+\`GET /api/admin/thresholds\` itself; none currently do, so all current callers
+use the default cutoffs. The schema and canonical function are unified
+(CP3-018) — wiring live thresholds into these specific client call sites is
+tracked as a follow-up, not yet done.`,
 
   testing: `# Testing
 

@@ -7,8 +7,12 @@
 import * as XLSX from 'xlsx';
 import { sanitizeSpreadsheetMatrix } from '@/lib/exportSafety';
 import type { DashboardMetrics } from '@/types/metrics';
-import { getHealthBand, HEALTH_COLORS } from '@/lib/utils';
+import { getHealthBand, HEALTH_COLORS, type HealthBand } from '@/lib/utils';
 import { generateRecommendations, generateExecutiveNarrative } from './recommendationEngine';
+
+const HEALTH_BAND_INTERPRETATION: Record<HealthBand, string> = {
+  excellent: 'Excellent', good: 'Good', moderate: 'Moderate', 'at-risk': 'At Risk', critical: 'Critical',
+};
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
@@ -42,7 +46,6 @@ function round1(n: number): number {
 
 function sheetExecutiveSummary(m: DashboardMetrics, recs: ReturnType<typeof generateRecommendations>): XLSX.WorkSheet {
   const band      = getHealthBand(m.healthScore ?? 0);
-  const bandLabel = { excellent: 'Excellent', good: 'Good', moderate: 'Moderate', 'at-risk': 'At Risk', critical: 'Critical' };
   const flow      = (m.flow ?? {}) as any;
   const sp        = (m.storyPoints ?? {}) as any;
   const sprint    = m.throughput?.sprint;
@@ -56,7 +59,7 @@ function sheetExecutiveSummary(m: DashboardMetrics, recs: ReturnType<typeof gene
     [],
     ['DELIVERY HEALTH'],
     ['Health Score', m.healthScore ?? 0, 'out of 100'],
-    ['Health Band', bandLabel[band] ?? band],
+    ['Health Band', HEALTH_BAND_INTERPRETATION[band]],
     ['Completion Rate', `${m.completionRate ?? 0}%`],
     ['Total Issues', m.totalIssues ?? 0],
     ['Done Issues', m.doneIssues ?? 0],
@@ -112,7 +115,7 @@ function sheetProjectHealth(m: DashboardMetrics): XLSX.WorkSheet {
 
   const rows: unknown[][] = [
     ['Metric', 'Value', 'Score (0–100)', 'Interpretation'],
-    ['Health Score', m.healthScore ?? 0, m.healthScore ?? 0, m.healthScore >= 90 ? 'Excellent' : m.healthScore >= 75 ? 'Good' : m.healthScore >= 60 ? 'Moderate' : m.healthScore >= 40 ? 'At Risk' : 'Critical'],
+    ['Health Score', m.healthScore ?? 0, m.healthScore ?? 0, HEALTH_BAND_INTERPRETATION[band]],
     ['Completion Rate', `${m.completionRate ?? 0}%`, m.completionRate ?? 0, m.completionRate >= 90 ? 'On track' : m.completionRate >= 60 ? 'Progressing' : 'Behind'],
     ['Critical Ratio', `${pct(flow.critical ?? 0, total)}%`, Math.max(0, 100 - pct(flow.critical ?? 0, total) * 2), flow.critical > 5 ? 'High risk' : 'Manageable'],
     ['Warning Ratio', `${pct(flow.warning ?? 0, total)}%`, Math.max(0, 100 - pct(flow.warning ?? 0, total)), flow.warning > 10 ? 'Watch closely' : 'Acceptable'],

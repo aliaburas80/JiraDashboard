@@ -20,6 +20,14 @@ export interface HealthThresholds {
   blockedRatioWarningPct:  number;   // default: 10  (10% blocked = warning)
   blockedRatioCriticalPct: number;   // default: 20
 
+  // Health Score bands (CP3-018) — the single source of truth for classifying
+  // an overall Health Score (0-100) into excellent/good/moderate/at-risk/critical.
+  // Consumed via src/lib/utils.ts's getHealthBand(score, thresholds).
+  healthScoreExcellentPct: number;   // default: 90
+  healthScoreGoodPct:      number;   // default: 75
+  healthScoreFairPct:      number;   // default: 60  (moderate band starts here)
+  healthScoreWeakPct:      number;   // default: 40  (at-risk band starts here; below is critical)
+
   updatedAt: string;
   updatedBy: string;
 }
@@ -34,6 +42,10 @@ export const DEFAULT_THRESHOLDS: HealthThresholds = {
   openAgeWarningDays:      30,
   blockedRatioWarningPct:  10,
   blockedRatioCriticalPct: 20,
+  healthScoreExcellentPct: 90,
+  healthScoreGoodPct:      75,
+  healthScoreFairPct:      60,
+  healthScoreWeakPct:      40,
   updatedAt: '',
   updatedBy: 'system',
 };
@@ -48,4 +60,8 @@ export const THRESHOLD_LABELS: Record<keyof Omit<HealthThresholds, 'updatedAt' |
   openAgeWarningDays:      { label: 'Open Item Age Warning', unit: 'days', description: 'Backlog items older than this are flagged as warning.',        min: 7,  max: 180 },
   blockedRatioWarningPct:  { label: 'Blocked Ratio Warning', unit: '%',    description: 'If this % of items are blocked, the board is at warning.',     min: 1,  max: 50  },
   blockedRatioCriticalPct: { label: 'Blocked Ratio Critical', unit: '%',   description: 'If this % of items are blocked, the board is critical.',       min: 5,  max: 80  },
+  healthScoreExcellentPct: { label: 'Health Score Excellent', unit: 'pts', description: 'Health Score at or above this is classified Excellent.',       min: 50, max: 100 },
+  healthScoreGoodPct:      { label: 'Health Score Good',      unit: 'pts', description: 'Health Score at or above this is classified Good.',            min: 40, max: 99  },
+  healthScoreFairPct:      { label: 'Health Score Fair',      unit: 'pts', description: 'Health Score at or above this is classified Moderate.',        min: 20, max: 90  },
+  healthScoreWeakPct:      { label: 'Health Score Weak',      unit: 'pts', description: 'Health Score at or above this is classified At-Risk; below is Critical.', min: 0, max: 80 },
 };
