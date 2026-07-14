@@ -1,8 +1,6 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Shared application role definitions for auth, admin user management, and role-scoped views.
 
-import type { ViewId } from '@/types/dashboardView';
-
 export type AppRole =
   | 'admin'
   | 'scrum_master'
@@ -39,26 +37,6 @@ export const HIGH_PRIVILEGE_ROLES: AppRole[] = ['admin', 'c_level'];
 
 export function isHighPrivilegeRole(role: string | null | undefined): boolean {
   return HIGH_PRIVILEGE_ROLES.includes(role as AppRole);
-}
-
-export function defaultDashboardViewForRole(role: string | null | undefined): ViewId {
-  switch (role) {
-    case 'scrum_master':  return 'scrum_master';
-    case 'product_owner': return 'product_owner';
-    case 'manager':       return 'engineering_manager';
-    case 'c_level':       return 'executive';
-    default:              return 'full';
-  }
-}
-
-export function isDashboardViewLockedForRole(role: string | null | undefined): boolean {
-  return role === 'scrum_master' || role === 'product_owner' || role === 'manager' || role === 'c_level';
-}
-
-export function allowedDashboardViewsForRole(role: string | null | undefined): ViewId[] {
-  return isDashboardViewLockedForRole(role)
-    ? [defaultDashboardViewForRole(role)]
-    : ['full', 'executive', 'scrum_master', 'product_owner', 'engineering_manager'];
 }
 
 const COMMON_ROUTES    = ['/profile', '/members', '/help', '/glossary', '/landing', '/change-password'];
