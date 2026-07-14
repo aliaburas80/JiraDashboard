@@ -1,5 +1,33 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-14 (**LEGAL: FIX OVERSTATED SELF-SERVICE ACCOUNT-DELETION CLAIM** — Executes the
+third of six Phase 4 product decisions (`docs/product-audit/11-prioritized-backlog.md`): the audit's
+finding (`10-technical-cleanup.md` Part 4) — "there is no self-service account-deletion feature anywhere
+in the app, despite /terms directing users who disagree with the terms to 'request account deletion' as
+if it were a supported self-service action with an implied SLA" (grep-confirmed: the only code path that
+deletes a User row is the admin-only `DELETE /api/admin/users` route). **Decision: correct the copy, don't
+build the feature** — a real self-service deletion flow (data export, confirmation, cascading S3/DB
+cleanup) is a proper feature project, not a quick fix. Since `/terms` and `/privacy` content lives in
+`src/lib/legal-i18n/{en,ar,fr,ru,ja,ko,nl}.ts` (7 languages, not just the English page — per this repo's
+own established i18n-parity discipline), checked all 7 for the exact claim before fixing anything: found
+it in **`en.ts` (twice — the Terms "Changes to Terms" clause AND the separate Privacy "Changes to this
+policy" clause, both ending "...you must stop using the Service and request account deletion") and
+`ar.ts` (once — only in the Privacy clause; the Arabic Terms clause never had this sentence at all)**.
+The other 5 languages (`fr`/`ru`/`ja`/`ko`/`nl`) never included this sentence in either clause — a
+pre-existing translation-completeness gap between `en.ts` and the others, unrelated to this fix, not
+touched here. Fix: changed "request account deletion" → "contact us to request deletion of your account"
+in all 3 confirmed locations — makes explicit this is a contact-based request, not an automatic/instant
+self-service action, matching the phrasing already correctly used elsewhere in the same policy for GDPR
+Article 17 ("Right to erasure... please contact us... we will respond within one month"). The Arabic
+correction ("والتواصل معنا لطلب حذف حسابك") reuses "التواصل معنا" ("contact us"), the exact phrase already
+used consistently 6 other times throughout `ar.ts`, for terminology consistency rather than introducing a
+new phrasing. **Explicitly out of scope**: `/privacy`'s separate "Data retention" table (12-month/90-day/
+30-day windows) — that's a different, still-undecided Phase 3 finding (whether retention periods are
+enforced by automation vs. corrected as copy), not part of what was approved in this round; not touched.
+Verified: `npm run typecheck` clean; `npm run lint` unchanged at 1,272 (0 new); `npm run build` compiled
+all 64 routes; `npm run test` 110/110 suites, 1,018/1,018 tests (no test covers legal copy content, so no
+test changes needed). Branch: `docs/fix-terms-self-service-deletion-claim`.)
+
 **Last updated:** 2026-07-14 (**DOCS: `/dashboard/*` SIDEBAR ROLE-HIDING IS UI CURATION, NOT ENFORCEMENT
 (§C)** — Executes the second of six Phase 4 product decisions (`docs/product-audit/11-prioritized-
 backlog.md`), user-approved via explicit choice between two options. The audit's dominant Checkpoint 4

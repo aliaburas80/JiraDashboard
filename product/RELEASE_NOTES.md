@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: Terms & Privacy Policy No Longer Imply Instant Self-Service Account Deletion (2026-07-14)
+
+The Terms of Use and Privacy Policy both said that if you disagreed with a change, you should "stop using the Service and request account deletion" — wording that reads like a self-service button exists. It doesn't; account deletion today is a manual, admin-handled request. The wording now says to "contact us to request deletion of your account," matching how every other data-rights request in the policy is already described. Updated in English and Arabic (the two languages where this specific wording appeared). Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Fixed: "Full Report" Nav Description No Longer Overpromises (2026-07-14)
 
 The "Full Report" item in the top navigation's Analytics group described itself as "All metrics & filters," but clicking it actually takes you to Priority Attention — a focused view of what needs action right now, one of nine views in the full Dashboard section. The description now reads "Priority items & full metrics" to reflect what you actually land on. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
