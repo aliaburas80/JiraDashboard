@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: Orphan Count Now Consistent Between Data Quality and Dashboards (2026-07-14)
+
+Configuring custom Orphan Rules in Admin Settings previously changed the orphan count shown on `/dashboard/priority-attention`, `/dashboard/flow-health`, `/summary`, `/customer`, and `/release-readiness` — but had no effect on the Data Quality card, which used its own separate, hardcoded rule. Data Quality's orphan penalty now uses the same admin-configurable rule as everywhere else. Also removed two fields from the Orphan Rules settings screen ("Risk threshold count" and "Risk threshold %") that looked like working controls but were never actually read by any calculation. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Added: Export Import Logs from the Backend Page (2026-07-14)
 
 `/backend`'s Import Logs section now has an "Export logs" button (next to "Delete all my logs") that downloads your import history — or, for admins, every workspace's history — as an Excel workbook. This closed a gap where `/developer` documented an export capability that was never actually reachable from the UI. Found and fixed as part of a full-application product audit (`docs/product-audit/`).

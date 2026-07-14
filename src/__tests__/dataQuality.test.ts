@@ -2,6 +2,8 @@
 // Data Quality Score tests — TC-DQ-01 to TC-DQ-12
 
 import { calculateDataQuality } from '../services/dataQuality/dataQuality.service';
+import type { OrphanRules } from '../types/orphanRules';
+import { DEFAULT_ORPHAN_RULES } from '../types/orphanRules';
 
 function issue(overrides: Record<string, unknown> = {}) {
   return {
@@ -144,4 +146,24 @@ test('TC-DQ-12: Epic issue type excluded from Epic Link missing check', () => {
   // Epic is excluded — only Story counts
   expect(check?.total).toBe(1);
   expect(check?.missing).toBe(0);
+});
+
+// TC-DQ-13: CP3-014 — orphan penalty uses the canonical rules-based definition
+// (isOrphanByRules), so a custom parentLinkFields rule changes the orphan
+// ratio here exactly as it would in the health-score orphan count.
+test('TC-DQ-13: orphan penalty respects a custom orphan-rules parentLinkFields config', () => {
+  const issues = Array(10).fill(null).map((_, i) =>
+    issue({ 'Issue Key': `P-${i}`, 'Epic Link': '', 'Parent Key': '', 'Component/s': 'Auth' })
+  );
+
+  const defaultRules = calculateDataQuality(issues);
+  expect(defaultRules.score).toBeLessThan(
+    calculateDataQuality(issues.map(i => ({ ...i, 'Epic Link': 'EPIC-1' }))).score,
+  );
+
+  const customRules: OrphanRules = { ...DEFAULT_ORPHAN_RULES, parentLinkFields: ['Component/s'] };
+  const withCustomRules = calculateDataQuality(issues, customRules);
+  // Same data, no Epic Link/Parent Key — but Component/s is set, so under the
+  // custom rule these items are no longer orphans and the score is higher.
+  expect(withCustomRules.score).toBeGreaterThan(defaultRules.score);
 });

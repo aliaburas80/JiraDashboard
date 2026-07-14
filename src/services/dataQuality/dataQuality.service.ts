@@ -10,6 +10,9 @@
 //   4. Clamp result to 0–100 and classify into band
 
 import type { DataQualityCheck, DataQualityResult, DataQualityBand } from '@/types/dataQuality';
+import type { OrphanRules } from '@/types/orphanRules';
+import { DEFAULT_ORPHAN_RULES } from '@/types/orphanRules';
+import { isOrphanByRules } from '@/services/settings/orphanRules.service';
 
 type JiraIssue = Record<string, unknown>;
 
@@ -141,7 +144,10 @@ const CHECK_DEFS = [
 
 // ── Main service function ──────────────────────────────────────────────────────
 
-export function calculateDataQuality(issues: JiraIssue[]): DataQualityResult {
+export function calculateDataQuality(
+  issues: JiraIssue[],
+  orphanRules: OrphanRules = DEFAULT_ORPHAN_RULES,
+): DataQualityResult {
   if (!issues.length) {
     return {
       score: 0, band: 'Critical', totalIssues: 0,
@@ -180,9 +186,12 @@ export function calculateDataQuality(issues: JiraIssue[]): DataQualityResult {
     });
   }
 
-  // Orphan penalty: up to 10 pts based on orphan ratio among non-epics
+  // Orphan penalty: up to 10 pts based on orphan ratio among non-epics.
+  // CP3-014: uses the same canonical orphan definition as the health-score
+  // calculation (isOrphanByRules), so this ratio agrees with orphan counts
+  // shown elsewhere in the app instead of an independent hardcoded check.
   const nonEpics    = issues.filter(i => norm(i['Issue Type']) !== 'epic');
-  const orphanCount = nonEpics.filter(i => !hasValue(i['Epic Link']) && !hasValue(i['Parent Key'])).length;
+  const orphanCount = nonEpics.filter(i => isOrphanByRules(i, orphanRules)).length;
   const orphanRatio = nonEpics.length > 0 ? orphanCount / nonEpics.length : 0;
   score -= Math.round(orphanRatio * 10);
 

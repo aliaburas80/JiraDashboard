@@ -77,6 +77,4 @@ test('TC-OR-10: DEFAULT_ORPHAN_RULES defaults are correct', () => {
   expect(DEFAULT_ORPHAN_RULES.parentLinkFields).toContain('Parent Key');
   expect(DEFAULT_ORPHAN_RULES.exemptIssueTypes).toContain('Epic');
   expect(DEFAULT_ORPHAN_RULES.flagSubTasksWithoutParent).toBe(true);
-  expect(DEFAULT_ORPHAN_RULES.riskThresholdCount).toBe(1);
-  expect(DEFAULT_ORPHAN_RULES.riskThresholdPct).toBe(10);
 });

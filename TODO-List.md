@@ -1,5 +1,35 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-14 (**CP3-014/015: UNIFY ORPHAN DEFINITIONS, REMOVE DEAD THRESHOLD FIELDS** —
+Second of four Phase 3 items decided this round (`docs/product-audit/11-prioritized-backlog.md`). Verified
+all three "orphan" definitions the audit named before changing anything: `dataQuality.service.ts:185` used
+a hardcoded `!hasValue('Epic Link') && !hasValue('Parent Key')` check that completely ignored the admin's
+Orphan Rules config; `metrics.service.ts:541` already called the canonical, admin-configurable
+`isOrphanByRules(issue, readOrphanRules())`, feeding `FlowItem.isOrphan` and the health-score orphan ratio
+across 5+ dashboards; `hierarchy.service.ts:158-177` used a third, structural OR-based definition for
+`/explore`'s tree. **Owner decision: unify + remove dead fields.** Traced `hierarchy.service.ts`'s definition
+carefully before deciding whether to collapse it too — confirmed its live caller (`/explore` via
+`relationExplorer.service.ts:312`, fed `metrics.flow.items`) always has the precomputed `isOrphan` flag
+available, but the structural fallback (`!map.parent.has(key) && !map.epic.has(key)`) still serves a real,
+distinct purpose: an issue whose Epic Link points to an epic excluded from the current upload has a field
+value (so `isOrphanByRules` says "not an orphan") but the hierarchy tree still can't connect it to anything,
+so it must render as unlinked. Collapsing this into the rules-based definition would have broken that
+dangling-link case in the tree view — kept it, but added an in-code comment explaining why it deliberately
+diverges (CP3-014 in the comment) instead of leaving it looking like unreconciled duplicate logic. Changed
+`calculateDataQuality()` (`src/services/dataQuality/dataQuality.service.ts`) to take an optional `orphanRules`
+parameter (default `DEFAULT_ORPHAN_RULES`, keeping it a pure, directly-unit-testable function rather than
+giving it its own filesystem read) and call `isOrphanByRules()` for the orphan-ratio numerator;
+`metrics.service.ts`'s one call site now passes `readOrphanRules()` through explicitly. Added
+`TC-DQ-13` demonstrating a custom `parentLinkFields` rule now changes the Data Quality score exactly as it
+already changed the health-score orphan count. **CP3-015**: removed `riskThresholdCount`/`riskThresholdPct`
+entirely — from `OrphanRules` (`src/types/orphanRules.ts`), the "Risk thresholds" input grid in
+`OrphanRulesSettings.tsx`, the display-only tile in `adminConsole.ts` (`case 'orphan'`, 4th tile), and the
+one dead assertion pair in `orphanRules.test.ts`'s `TC-OR-10` — grep confirmed zero calculation ever read
+either field before deleting. Verified: `npm run typecheck` clean; `npm run lint` on changed files 0
+warnings; `npm run build` compiled all 64 routes; `npm run test` 107/107 suites, 996/996 tests passing (995
+baseline + 1 new). `product/RELEASE_NOTES.md` entry added (admin-visible: two settings fields removed,
+orphan count now consistent). Branch: `refactor/cp3-014-015-unify-orphan-definitions`.)
+
 **Last updated:** 2026-07-14 (**MPE-05: WIRE `exportImportLogsWorkbook` TO A REAL BUTTON** — First of
 four Phase 3 items decided this round (`docs/product-audit/11-prioritized-backlog.md`). `/developer`
 documented `exportImportLogsWorkbook(logs)` as a live, callable export, but it had zero call sites outside

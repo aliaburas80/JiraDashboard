@@ -160,6 +160,20 @@ export function reconstructHierarchy(
   // legitimately has no parent). A node that already has children is also
   // exempt regardless of its type — it's a known container. Unrecognized
   // types remain orphan-eligible, matching the original behavior.
+  //
+  // CP3-014: this deliberately stays an OR of two signals rather than
+  // adopting isOrphanByRules() outright (unlike dataQuality.service.ts,
+  // which now does). The canonical rules-based definition asks "does this
+  // issue's data have a parent-link field value?" — a data-completeness
+  // question. This tree needs a structural-connectivity question instead:
+  // "does this issue's parent/epic link actually resolve to a node present
+  // in this hierarchy?" A dangling Epic Link (e.g. pointing to an epic from
+  // a project excluded from the current upload) has a field value, so
+  // isOrphanByRules would say "not an orphan" — but the tree still can't
+  // connect it to anything, so it must render as unlinked. The precomputed
+  // FlowItem.isOrphan flag (rules-based) is honored first; the structural
+  // check is the fallback for both that dangling-link case and for callers
+  // that pass raw issues with no precomputed flag at all.
   for (const issue of issues) {
     const key = getKey(issue);
     if (!key) continue;

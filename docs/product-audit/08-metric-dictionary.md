@@ -111,6 +111,20 @@ Confidence: High confidence
 Validation method: Configure a non-default Orphan Rule in admin settings, re-upload the same dataset, and compare the orphan count shown on /data-quality vs /dashboard/priority-attention vs /explore.
 ```
 
+**Resolved (2026-07-14):** `dataQuality.service.ts`'s orphan penalty now calls `isOrphanByRules()` — the same
+admin-configurable definition `metrics.service.ts` uses — instead of its own hardcoded field check. An
+admin's Orphan Rules configuration now affects `/data-quality`'s orphan count/penalty exactly as it already
+did for the 5+ dashboards. `hierarchy.service.ts`'s `/explore` definition was deliberately **not** collapsed
+into the same call: it answers a structural-connectivity question ("does this issue's parent/epic link
+resolve to a node actually present in this tree?"), not `isOrphanByRules()`'s data-completeness question
+("does a parent-link field have a value?"). A dangling Epic Link pointing to an epic excluded from the
+current upload has a field value — `isOrphanByRules()` would say "not an orphan" — but the tree still can't
+connect it to anything, so it must render as unlinked. The precomputed `FlowItem.isOrphan` (rules-based)
+flag is honored first; the structural check is the deliberate fallback, now documented as such in-code
+(`hierarchy.service.ts`'s Step 3 comment) rather than looking like unreconciled duplicate logic. Net result:
+two of the three original definitions are now one canonical definition; the third remains distinct for a
+documented, still-valid structural reason.
+
 ### CP3-015 — Admin-facing "risk threshold" fields in Orphan Rules settings are stored but never read by any calculation
 ```text
 Finding: OrphanRulesSettings.tsx presents "Min orphan count to show as a risk signal" and "Orphan ratio above which health score is reduced" as functioning controls (riskThresholdCount, riskThresholdPct in src/types/orphanRules.ts:14-17), but neither field is consumed anywhere in calculateHealthScore (metrics.service.ts:1082-1099, fixed continuous-ratio weighting) or dataQuality.service.ts's orphan penalty (lines 183-187, fixed orphanRatio*10).
@@ -121,6 +135,13 @@ Severity: P1
 Confidence: High confidence
 Validation method: Set riskThresholdPct to a high value (e.g. 80%), re-score a dataset with a 10% orphan ratio, and confirm the health-score orphan penalty is unchanged from the default-threshold case.
 ```
+
+**Resolved (2026-07-14):** Removed `riskThresholdCount`/`riskThresholdPct` entirely — from `OrphanRules`
+(`src/types/orphanRules.ts`), the "Risk thresholds" input grid in `OrphanRulesSettings.tsx`, and the
+display-only `adminConsole.ts` tile that rendered `riskThresholdPct`. No calculation ever read either field
+(confirmed by grep before removal); leaving a control in the admin UI that silently does nothing was the
+actual defect, so removing the false promise was preferred over inventing a threshold behavior no one had
+asked for.
 
 ---
 

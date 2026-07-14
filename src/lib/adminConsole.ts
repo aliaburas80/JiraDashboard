@@ -77,7 +77,6 @@ export function buildSettingsStats({
         { icon: 'link', label: 'Parent Fields', value: String(orphanRules?.parentLinkFields?.length ?? 0), note: 'Hierarchy sources', tone: 'bg-blue-50 text-blue-700' },
         { icon: 'workItems', label: 'Exempt Types', value: String(orphanRules?.exemptIssueTypes?.length ?? 0), note: 'Ignored issue types' },
         { icon: 'subtasks', label: 'Sub-task Rule', value: orphanRules?.flagSubTasksWithoutParent ? 'On' : 'Off', note: 'Parent validation' },
-        { icon: 'priorityHigh', label: 'Risk Threshold', value: `${orphanRules?.riskThresholdPct ?? '—'}%`, note: 'Warning threshold' },
       ];
     case 'issueTypes': {
       const types = issueTypeHierarchy?.types ?? [];

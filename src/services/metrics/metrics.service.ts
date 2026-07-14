@@ -1302,7 +1302,7 @@ export function calculateDashboardMetrics(issues: JiraIssue[]): DashboardMetrics
   const sprintThroughput = calculateSprintThroughput(issues);
   const kanbanFlow       = calculateKanbanFlow(issues);
   const midSprintData    = calculateMidSprintInsights(sprintThroughput);
-  const dataQuality    = calculateDataQuality(issues);
+  const dataQuality    = calculateDataQuality(issues, readOrphanRules());
   const fieldImpacts   = calculateFieldImpacts(issues);
   const confidence     = calculateMetricConfidence(issues);
 

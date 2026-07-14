@@ -10,12 +10,6 @@ export interface OrphanRules {
   // Whether Sub-tasks/Subtasks with no Parent Key are flagged as orphans
   flagSubTasksWithoutParent: boolean;  // default: true
 
-  // Minimum number of orphans before it shows as a risk signal on the dashboard
-  riskThresholdCount: number;          // default: 1
-
-  // Orphan ratio above which it affects the health score (0–100)
-  riskThresholdPct: number;            // default: 10
-
   updatedAt: string;
   updatedBy: string;
 }
@@ -24,8 +18,6 @@ export const DEFAULT_ORPHAN_RULES: OrphanRules = {
   parentLinkFields:          ['Epic Link', 'Parent Key'],
   exemptIssueTypes:          ['Epic'],
   flagSubTasksWithoutParent: true,
-  riskThresholdCount:        1,
-  riskThresholdPct:          10,
   updatedAt:                 '',
   updatedBy:                 'system',
 };
