@@ -61,6 +61,15 @@ Severity: P2
 Confidence: High
 ```
 
+**Resolved (2026-07-14):** Wired up rather than removed. `exportImportLogsWorkbook` itself only ever
+handled the nested, file-based fallback log shape (`data/import-logs.json`), which is not what
+`/backend`'s live table renders for authenticated users (that table reads Prisma-backed `ImportLog`
+records via `/api/backend-view`/`/api/imports`, a flatter shape). Added a second function,
+`exportImportLogRecordsWorkbook()`, for that DB-backed shape, plus `GET /api/imports/export` (session-
+scoped identically to `GET /api/imports`, admin `?all=true` supported) and an "Export logs" button in
+`/backend`'s Import Logs section header, next to the existing "Delete all my logs" button. `/developer`'s
+service-function table now documents both functions accurately, including which one is actually live.
+
 ## MPE-06 — `/verify-email`'s "contact support" has no rendered contact method (carried forward, re-confirmed, no new instances found)
 
 ```text

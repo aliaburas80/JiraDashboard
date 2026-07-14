@@ -1,5 +1,35 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-14 (**MPE-05: WIRE `exportImportLogsWorkbook` TO A REAL BUTTON** — First of
+four Phase 3 items decided this round (`docs/product-audit/11-prioritized-backlog.md`). `/developer`
+documented `exportImportLogsWorkbook(logs)` as a live, callable export, but it had zero call sites outside
+its own test — confirmed via `grep -rn "exportImportLogsWorkbook" app src` before touching anything.
+**Owner decision: wire it up rather than remove the doc claim.** Investigation found the existing function
+can't actually serve `/backend`'s live table as-is: it only handles the nested, file-based fallback log
+shape (`data/import-logs.json`, used only when there's no session), while `/backend`'s authenticated table
+reads flat Prisma `ImportLog` records via `/api/backend-view`/`/api/imports` — a genuinely different shape
+(no nested `file`/`extraction`/`statistics`, just `fileName`/`rowCount`/`healthScore`/`totalIssues`).
+Rather than force one function to handle two shapes via `any`, added a second function,
+`exportImportLogRecordsWorkbook()`, alongside the original in
+`src/services/imports/importLogs.service.ts`. Added `GET /api/imports/export`
+(`app/api/imports/export/route.ts`), scoped identically to the existing `GET /api/imports` (same session,
+workspace, and `canViewAllImportData`/`?all=true` admin-bypass logic — copied deliberately rather than
+abstracted, since `/api/imports` already established the correct auth pattern and this is exactly Rule-of-
+Three territory: two call sites sharing scoping logic is not yet a "genuine reuse case" per CLAUDE.md
+§5.4). Added an "Export logs" button in `app/backend/page.tsx`'s Import Logs section header (next to the
+existing "Delete all my logs" button, same download-via-blob pattern already used by
+`BackupRestoreSettings.tsx`'s "Download Backup" button). Corrected `/developer`'s service-function table to
+document both functions accurately, including which one only serves the unauthenticated fallback path.
+Added CSV/formula-injection safety tests (`TC-SEC-CSV-12`/`13`) for the new function in
+`src/__tests__/importLogsExportSafety.test.ts`, mirroring the existing pattern for the original function.
+Verified: `npm run typecheck` clean (one fix needed — `Buffer` isn't directly assignable to `BodyInit`
+under this TS/DOM lib version, resolved with `new Uint8Array(buffer)`); `npm run lint` unchanged at 1,213
+(0 new — all reported warnings are `app/developer/page.tsx`'s pre-existing Tier-1 inline-style tech debt,
+§60.2); `npx stylelint app/backend/page.module.scss` clean; `npm run build` compiled all 64 routes plus the
+new `ƒ /api/imports/export` route; `npm run test` 107/107 suites, 995/995 tests passing (993 baseline + 2
+new). `product/RELEASE_NOTES.md` entry added (user-facing button). Branch:
+`feature/mpe-05-wire-export-import-logs-button`.)
+
 **Last updated:** 2026-07-14 (**LEGAL: FIX UNENFORCED DATA-RETENTION CLAIM; SUB-PROCESSOR DISCLOSURE
 CONFIRMED CURRENT** — First two of Phase 3's remaining product/legal decisions
 (`docs/product-audit/11-prioritized-backlog.md`). **Retention windows**: `/privacy`'s "Data retention"
