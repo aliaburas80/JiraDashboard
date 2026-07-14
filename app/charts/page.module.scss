@@ -608,6 +608,27 @@
   color: var(--color-text-primary, #0f172a);
 }
 
+// ── Widget link-out (e.g. Issue Types → Delivery Mix) ─────────────────────────
+.widgetLinkOut {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary, #2563eb);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--color-primary, #2563eb);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+}
+
 // ── Empty states ─────────────────────────────────────────────────────────────
 .empty {
   font-size: 12px;

@@ -1,5 +1,34 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-14 (**FIX: TRIM `/charts` "ISSUE TYPES" WIDGET, LINK OUT TO `/delivery-mix` (R-06)**
+— Executes the fourth of six Phase 4 product decisions (`docs/product-audit/04-remove-merge-keep.md`
+R-06): `/delivery-mix` is a strict content superset of `/charts`' "Issue Types" widget — confirmed by
+reading both (`/delivery-mix` additionally breaks each type down by Count/Done/Completion/Health
+split/Story Points/Avg Cycle/Avg Lead, none of which `/charts`' plain donut showed). The audit's own
+confidence on this one was only Medium, specifically because it hadn't verified whether trimming the
+widget could break a user's saved widget-visibility/span customization — **did that verification first,
+as instructed**: read `src/lib/chartCustomizer.ts`'s `getChartPrefs()` and confirmed it already handles
+this exact scenario by design — on load, it filters saved preferences against the current
+`CHART_REGISTRY` and silently drops any id no longer present (`saved.filter(p => validIds.has(p.id))`),
+with no error and no orphaned state. Removing or changing a widget's content, unlike removing its
+`CHART_REGISTRY` entry entirely, doesn't even touch this path — the `'types'` id stays registered, only
+its rendered body changed. So this was safe regardless. Fix: replaced the full type-by-type `DonutBlock`
+(the actual duplicated content) with the top 3 types by volume as compact horizontal bars (`HBar`,
+matching the visual language already used by 3 other widgets on this same page — Team Load, Kanban
+Status Flow, Label Distribution — rather than introducing a new visual pattern), plus a
+`View full breakdown on Delivery Mix →` link. Added a new `.widgetLinkOut` class to
+`app/charts/page.module.scss` (token-based colors/focus-ring, no inline styles) since no existing style
+in this module fit an inline text link; used a real `next/link` `<Link>` for the navigation (a genuine
+page transition, not a click-handler-driven `router.push`, per CLAUDE.md §26.1's semantic-element
+preference). Updated the widget's `desc` text to match the new content. `DonutBlock` itself is untouched
+and still used by the other 4 donut widgets on this page. Verified: `npm run typecheck` clean; `npm run
+lint` unchanged at 1,272 (0 new — used a proper SCSS class, no inline styles added); `npx stylelint`
+clean; `npm run build` compiled all 64 routes; `npm run test` 110/110 suites, 1,018/1,018 tests passing
+(no test covers this page's rendered widget content, so nothing needed updating). **Manual browser
+verification not performed** — no browser automation tool available in this environment; this is a real
+rendered-content change on a live page, unlike this session's earlier `/charts` memoization fix (which
+was output-identical by construction). Branch: `fix/charts-issue-types-widget-link-out-r06`.)
+
 **Last updated:** 2026-07-14 (**LEGAL: FIX OVERSTATED SELF-SERVICE ACCOUNT-DELETION CLAIM** — Executes the
 third of six Phase 4 product decisions (`docs/product-audit/11-prioritized-backlog.md`): the audit's
 finding (`10-technical-cleanup.md` Part 4) — "there is no self-service account-deletion feature anywhere

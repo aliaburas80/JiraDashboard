@@ -4,6 +4,7 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
@@ -693,19 +694,27 @@ export default function ChartsPage() {
               <Widget
                 title="Issue Types"
                 icon="📁"
-                desc="Split of work by issue type (Story, Bug, Task, Sub-task, etc.). Helps understand the nature of the backlog."
+                desc="Top issue types by volume. See Delivery Mix for the full categorised breakdown."
                 source="Issue Type field"
                 colSpan={span('types')}
                 delay={120}
               >
-                <DonutBlock
-                  segs={typeSegs}
-                  total={typeTotal}
-                  centerVal={typeTotal}
-                  centerSub="total"
-                  size={150}
-                  delayBase={120}
-                />
+                {[...typeSegs]
+                  .sort((a, b) => b.value - a.value)
+                  .slice(0, 3)
+                  .map((s, i) => (
+                    <HBar
+                      key={s.label}
+                      label={s.label}
+                      pct={Math.max(0, Math.min(100, (s.value / typeTotal) * 100))}
+                      color={s.color}
+                      valLabel={String(s.value)}
+                      delay={i * 50}
+                    />
+                  ))}
+                <Link href="/delivery-mix" className={styles.widgetLinkOut}>
+                  View full breakdown on Delivery Mix →
+                </Link>
               </Widget>
             )}
 

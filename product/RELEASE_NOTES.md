@@ -5,6 +5,12 @@
 
 ---
 
+## Changed: "Issue Types" on Charts Now Links to the Full Breakdown (2026-07-14)
+
+The "Issue Types" chart on the Visual Analytics page showed the same full type-by-type breakdown already available in more detail on Delivery Mix (which also shows completion, health, and story points per type). It now shows your top 3 issue types at a glance, plus a link to Delivery Mix for the full categorized view — same information, less duplication. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Fixed: Terms & Privacy Policy No Longer Imply Instant Self-Service Account Deletion (2026-07-14)
 
 The Terms of Use and Privacy Policy both said that if you disagreed with a change, you should "stop using the Service and request account deletion" — wording that reads like a self-service button exists. It doesn't; account deletion today is a manual, admin-handled request. The wording now says to "contact us to request deletion of your account," matching how every other data-rights request in the policy is already described. Updated in English and Arabic (the two languages where this specific wording appeared). Found and fixed as part of a full-application product audit (`docs/product-audit/`).

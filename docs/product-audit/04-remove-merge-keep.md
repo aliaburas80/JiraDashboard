@@ -83,6 +83,8 @@
 
 **Confidence:** Medium (the widget-level recommendation is a reasonable inference from the content diff, but customization/visibility settings on `/charts` — noted in `01-app-inventory.md` as "per-widget visibility/span customizer" — were not individually checked to confirm removing this specific widget wouldn't affect a saved user configuration; flag for verification before acting).
 
+**Resolved (2026-07-14):** Verification done first, as flagged above — `src/lib/chartCustomizer.ts`'s `getChartPrefs()` already filters saved preferences against the current widget registry on every load and silently drops unknown ids, so no saved configuration could break. Went with the "trim to a simpler summary tile" + link-out combination: replaced the full type-by-type donut with the top 3 types by volume plus a link to `/delivery-mix`. See `fix/charts-issue-types-widget-link-out-r06`.
+
 ---
 
 ## R-07 — `/dashboard/data-quality`'s composition donut: Remove from this page (superseded by R-02's donut-specific note)
