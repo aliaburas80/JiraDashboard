@@ -60,6 +60,8 @@ Confidence: High confidence (code-confirmed: registry exists, enforcement does n
 
 **This does not require a fix framed as "add missing security"** — no sensitive data crosses a role boundary here, since every role already sees the same uploaded dataset elsewhere in the app. The fix, if pursued, is a product decision: either enforce `ROUTE_ACCESS` server-side to match the sidebar's implied promise, or treat the sidebar filtering as pure information-density/relevance curation (in which case its current behavior is arguably fine, and the finding is really about intent not being documented anywhere).
 
+**Resolved (2026-07-14):** Product decision made — the sidebar filtering is intentional relevance curation, not an access boundary; no server-side enforcement will be added. Documented directly in the code (`src/components/dashboard/DashboardNavSidebar.tsx`, comment above `ROUTE_ACCESS`) so a future engineer doesn't mistake the registry for a security control. This closes the "intent not being documented anywhere" half of this finding; the underlying behavior is unchanged.
+
 ---
 
 ## D. Secondary finding: `/members`' three-layer, inconsistent gate

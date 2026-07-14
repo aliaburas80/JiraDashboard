@@ -7,7 +7,14 @@ import styles from './DashboardSidebarNav.module.scss';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 
-// Which roles can see each dashboard sub-route
+// Which roles see each dashboard sub-route in the sidebar. This is relevance
+// curation, not an access boundary: every role sees the same underlying
+// dataset app-wide, so a hidden link is reachable and fully functional by
+// direct URL for any authenticated user, on purpose. Confirmed intentional
+// during the full-application product audit (docs/product-audit/, Checkpoint
+// 4 §C) — do not add server-side enforcement here without a corresponding
+// product decision to actually restrict data access by role, since none
+// exists today.
 const ROUTE_ACCESS: Record<string, string[]> = {
   '/dashboard/summary':             ['admin','scrum_master','product_owner','manager','c_level','user'],
   '/dashboard/priority-attention':  ['admin','scrum_master','manager','user'],

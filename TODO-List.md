@@ -1,5 +1,24 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-14 (**DOCS: `/dashboard/*` SIDEBAR ROLE-HIDING IS UI CURATION, NOT ENFORCEMENT
+(§C)** — Executes the second of six Phase 4 product decisions (`docs/product-audit/11-prioritized-
+backlog.md`), user-approved via explicit choice between two options. The audit's dominant Checkpoint 4
+finding (`06-role-based-review.md` §C): `DashboardNavSidebar.tsx`'s `ROUTE_ACCESS` registry hides sidebar
+links per role, but every one of the 9 gated `/dashboard/*` sub-pages is fully reachable and renders
+identically by direct URL for any authenticated role — confirmed not a security issue (every role already
+sees the same `DashboardMetrics` dataset app-wide; re-verified here by grepping `app/dashboard/labels/
+page.tsx`, one of the more tightly-gated pages, for any role check — found none), but a product-consistency
+question: was the hiding meant to be a real boundary, or pure relevance curation? **Decision: pure UI
+curation — no server-side enforcement will be added.** Added a 7-line comment directly above `ROUTE_ACCESS`
+in `src/components/dashboard/DashboardNavSidebar.tsx` stating this explicitly, so a future engineer
+doesn't mistake the registry for an access control the way this audit initially had to investigate to rule
+out. Added a "Resolved" note to `06-role-based-review.md` §C and struck through the now-decided rows in
+`11-prioritized-backlog.md`'s Phase 4 table (both R-12 from the prior entry and this §C item), rather than
+deleting the original finding text — preserves the audit's evidence trail while making clear these are no
+longer open decisions. Zero behavior change — comment-only. Verified: `npm run typecheck` clean; `npm run
+lint` unchanged at 1,272 (0 new); `npm run build` compiled all 64 routes; `npm run test` 110/110 suites,
+1,018/1,018 tests passing. Branch: `docs/document-dashboard-sidebar-role-hiding-intent`.)
+
 **Last updated:** 2026-07-14 (**REMOVE: DEAD `DashboardViewSelector` FAMILY (R-12)** — Executes the
 Phase 4 decision (`docs/product-audit/04-remove-merge-keep.md` R-12), user-approved after the audit's own
 required final pre-deletion grep check. That check widened the confirmed-dead surface well beyond the
