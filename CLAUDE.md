@@ -3357,18 +3357,19 @@ See `TODO-List.md` `STYLE-05`/`STYLE-06` for the full remaining file list (remai
 under `app/`, plus `src/components/explore/**`, `src/components/admin/**`, `src/components/dc-shell/**`,
 `src/components/tour/**`, and the long tail of files at ≤7 warnings each).
 
-## 60.6 Out of scope: legacy `frontend/` Create React App
+## 60.6 Resolved: legacy `frontend/` Create React App (removed 2026-07-14)
 
-`frontend/` is a second, fully standalone Create React App project (own `package.json`, `node_modules`,
+`frontend/` was a second, fully standalone Create React App project (own `package.json`, `node_modules`,
 `build`, `react-scripts`) — not part of the Next.js app, not imported by or referenced from `app/` or
-`src/` anywhere, last touched 2026-05-30. Running ESLint from the repo root currently reaches into it
-anyway (since nothing excludes it) and applies this project's Next.js-oriented rules to a project that
-isn't one — it contributes 59 of the 1,281 warnings counted above under that mismatch (unchanged from
-the last audit). Those 59 are **excluded** from the tier counts in §60.2–60.5 since fixing them with
-SCSS Modules makes no sense for a project this codebase doesn't own or build. See `TODO-List.md`
-`ORPHAN-01`: this needs an explicit decision (remove it, or keep it for a documented reason and exclude
-it from the root ESLint run) rather than sitting un-decided, which §5's "no unowned" principle does not
-allow indefinitely.
+`src/` anywhere, last touched 2026-05-30. Running ESLint from the repo root reached into it anyway (since
+nothing excluded it) and applied this project's Next.js-oriented rules to a project that wasn't one — it
+contributed 59 of the then-1,281 warnings under that mismatch. **Resolved via `TODO-List.md` `ORPHAN-01`**
+during the full-application product audit (`docs/product-audit/04-remove-merge-keep.md` R-10): explicit
+owner decision made to remove `frontend/`, `backend/` (a second, separate Express API server, discovered
+alongside `frontend/` during the same audit), and `promotion/` (static marketing assets, unrelated to the
+live `app/promo/` route) — all three confirmed unreferenced by the live app, `render.yaml`,
+`docker-compose.yml`, or any CI config before deletion. Removing `frontend/` also resolved the 59-warning
+lint-scope mismatch as a side effect — the §60.1 baseline warning count no longer needs to exclude it.
 
 ## 60.6a Out of scope: orphaned `DashboardSectionSwitcher` / `LayoutBuilderPanel`
 
