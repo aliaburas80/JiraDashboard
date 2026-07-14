@@ -1,5 +1,36 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-14 (**REMOVE: DEAD `DashboardViewSelector` FAMILY (R-12)** — Executes the
+Phase 4 decision (`docs/product-audit/04-remove-merge-keep.md` R-12), user-approved after the audit's own
+required final pre-deletion grep check. That check widened the confirmed-dead surface well beyond the
+audit's original finding (`DashboardViewSelector.tsx` + 3 `roles.ts` functions): tracing every consumer
+transitively revealed the **entire** `dashboardView` feature was dead, not just the selector component —
+`src/lib/dashboardView.ts` (5 exported functions: `getSavedViewId`/`getInitialViewId`/`saveViewId`/
+`getView`/`isTierHidden`) turned out to have **zero non-test importers** either, meaning
+`defaultDashboardViewForRole`/`isDashboardViewLockedForRole` in `roles.ts` were only ever called from
+within that already-dead module — not "used, just not through the selector" as the original finding's
+narrower framing might have implied. Removed: `src/components/dashboard/DashboardViewSelector.tsx`,
+`src/lib/dashboardView.ts`, `src/types/dashboardView.ts` (the `ViewId`/`DashboardView`/`DASHBOARD_VIEWS`/
+`DEFAULT_VIEW_ID` types + the 5-view config data, itself only consumed by the two files above), and
+`src/__tests__/dashboardView.test.ts` (TC-DV-01–10, existed solely to test the now-deleted module — not a
+coverage loss, since the code it covered no longer exists). In `src/lib/roles.ts`: removed
+`defaultDashboardViewForRole`/`isDashboardViewLockedForRole`/`allowedDashboardViewsForRole` and the now-
+unused `import type { ViewId }`. In `src/__tests__/roles.test.ts`: removed the two test blocks exercising
+those three functions and trimmed the import list — the file's other 5 tests (route-matrix, role-labels,
+import-visibility, fallback-route) are untouched. Verified via repo-wide grep for every removed symbol
+name before and after editing — zero remaining references. Verified: `npm run typecheck` clean (after
+retrying past two transient iCloud-Drive file-eviction glitches — `ls` confirmed the flagged files
+genuinely existed on disk both times; this environment's `.next-jira-dashboard` and `node_modules` reads
+have intermittently failed with "file not found"/`ETIMEDOUT` all session, a known characteristic of this
+repo living on iCloud Drive, not a real error — see `next.config.js`'s own `DIST_DIR` comment); `npm run
+lint` **1,272 warnings, 0 errors — down 1** from the 1,273 baseline (the deleted `DashboardViewSelector.tsx`
+carried one inline-style warning); `npx stylelint` clean; `npm run build` compiled all 64 routes (also
+needed one retry past the same iCloud glitch pattern); `npm run test` **110/110 suites (down 1), 1,018/1,018
+tests (down 13)** — both reductions are expected and correct, matching the deleted test file and trimmed
+test blocks, not a coverage regression. No `product/RELEASE_NOTES.md` entry — this was unreachable dead
+code with zero live consumers, so there is no user-facing behavior to describe. Branch:
+`remove/dead-dashboard-view-selector-r12`.)
+
 **Last updated:** 2026-07-14 (**DOCS: FIX "FULL REPORT" NAV DESCRIPTION MISMATCH** — Resolves a P3 Phase 5
 finding, restated across two audit checkpoints (`docs/product-audit/01-app-inventory.md` and
 `docs/product-audit/07-information-architecture.md` §D): the Analytics nav group's "Full Report" item

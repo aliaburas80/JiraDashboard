@@ -3,11 +3,8 @@
 
 import {
   canViewAllImportData,
-  defaultDashboardViewForRole,
-  allowedDashboardViewsForRole,
   canAccessRoute,
   fallbackRouteForRole,
-  isDashboardViewLockedForRole,
   isAppRole,
   roleLabel,
 } from '../lib/roles';
@@ -33,23 +30,6 @@ test('role-scoped import visibility allows admin, manager, and c-level to view a
   expect(canViewAllImportData('c_level')).toBe(true);
   expect(canViewAllImportData('scrum_master')).toBe(false);
   expect(canViewAllImportData('product_owner')).toBe(false);
-});
-
-test('dashboard defaults map roles to curated role views', () => {
-  expect(defaultDashboardViewForRole('scrum_master')).toBe('scrum_master');
-  expect(defaultDashboardViewForRole('product_owner')).toBe('product_owner');
-  expect(defaultDashboardViewForRole('manager')).toBe('engineering_manager');
-  expect(defaultDashboardViewForRole('c_level')).toBe('executive');
-  expect(defaultDashboardViewForRole('admin')).toBe('full');
-});
-
-test('assigned delivery roles are locked to their dashboard view', () => {
-  expect(isDashboardViewLockedForRole('scrum_master')).toBe(true);
-  expect(allowedDashboardViewsForRole('scrum_master')).toEqual(['scrum_master']);
-  expect(allowedDashboardViewsForRole('product_owner')).toEqual(['product_owner']);
-  expect(allowedDashboardViewsForRole('manager')).toEqual(['engineering_manager']);
-  expect(allowedDashboardViewsForRole('c_level')).toEqual(['executive']);
-  expect(isDashboardViewLockedForRole('admin')).toBe(false);
 });
 
 test('role route matrix blocks routes outside assigned role scope', () => {
