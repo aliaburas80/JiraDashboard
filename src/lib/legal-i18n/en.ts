@@ -406,6 +406,7 @@ export const en: LegalTranslation = {
             'Login attempt records: pruned after 1 hour.',
             'Consent records: lifetime of account plus 6 years for legal compliance purposes.',
           ]},
+          { p: 'The categories above are our retention targets. Today, an administrator can clear Jira import data and dashboard snapshots using an in-app cleanup tool, but this does not run on an automatic schedule; the other categories above do not yet have dedicated deletion tooling. We are working towards automated enforcement of these targets.' },
           { p: 'We may retain certain data for longer periods where required by law, regulation, or for the establishment, exercise, or defence of legal claims.' },
         ],
       },

@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: Privacy Policy Now Describes How Data Retention Actually Works (2026-07-14)
+
+The Privacy Policy's data retention section listed specific windows (e.g. "audit events: 12 months") that read as automatically enforced. In reality, only Jira import data and dashboard snapshots have any deletion tooling today, and it's admin-triggered rather than scheduled — other categories don't yet have dedicated deletion tooling. Added a clear note explaining this so the policy describes what actually happens rather than an aspirational target. Updated in all 7 supported languages. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Changed: "Issue Types" on Charts Now Links to the Full Breakdown (2026-07-14)
 
 The "Issue Types" chart on the Visual Analytics page showed the same full type-by-type breakdown already available in more detail on Delivery Mix (which also shows completion, health, and story points per type). It now shows your top 3 issue types at a glance, plus a link to Delivery Mix for the full categorized view — same information, less duplication. Found and fixed as part of a full-application product audit (`docs/product-audit/`).

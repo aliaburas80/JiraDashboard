@@ -1,5 +1,35 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-14 (**LEGAL: FIX UNENFORCED DATA-RETENTION CLAIM; SUB-PROCESSOR DISCLOSURE
+CONFIRMED CURRENT** — First two of Phase 3's remaining product/legal decisions
+(`docs/product-audit/11-prioritized-backlog.md`). **Retention windows**: `/privacy`'s "Data retention"
+section states specific windows (e.g. "audit events: 12 months," "error records: 90 days") as if
+systematically enforced. Verified the underlying code before touching the copy:
+`src/services/settings/dataRetention.service.ts`'s `applyRetentionPolicy()` only handles `ImportLog` and
+`DashboardSnapshot` — nothing for `AuditEvent`/`SystemErrorLog`/`AppError`/login attempts/consent
+records — and its only caller, `app/api/admin/cleanup/route.ts`, is a manual admin-triggered endpoint;
+confirmed no cron/scheduler exists anywhere in the repo (`securityCheck.service.ts`'s one "cron" mention
+is just backup advice text, not an actual scheduler). **Owner decision: correct the copy, don't build
+enforcement.** Added one new disclosure paragraph after the retention list, in **all 7 languages**
+(`en`/`ar`/`fr`/`ru`/`ja`/`ko`/`nl` — this section previously read identically across all 7, so this
+wasn't a partial-language fix like the earlier self-service-deletion claim): states the listed periods
+are targets, that only Jira import data and dashboard snapshots have any deletion tooling today (and it's
+admin-triggered, not scheduled), and that the other categories don't yet have dedicated deletion tooling.
+Each translation reused established terminology already present in that language's file (e.g. Japanese
+uses "システム管理者," system administrator, deliberately distinct from the existing GDPR "データ管理者,"
+data controller, term used elsewhere in the same document, to avoid conflating two different meanings of
+"administrator"). **Sub-processor disclosure**: `/privacy` names only AWS S3 as a cloud sub-processor,
+but the codebase fully implements Azure and GCP storage providers usable for the same purpose — a gap
+this audit flagged as urgent *if* either is actually enabled for a live deployment, which code alone
+couldn't determine. **Owner confirmed: S3-only in practice today.** No disclosure gap exists currently,
+so no policy text was changed — documented the confirmation directly in
+`docs/product-audit/10-technical-cleanup.md`'s finding, with an explicit note that `/privacy` must be
+updated if Azure or GCP is ever actually enabled, not after the fact. Verified: `npm run typecheck`
+clean; `npm run lint` unchanged at 1,213 (0 new); `npm run build` compiled all 64 routes; `npm run test`
+107/107 suites, 993/993 tests passing (no test covers legal copy content). No `product/RELEASE_NOTES.md`
+entry for the sub-processor item (no change made); a brief entry added for the retention-copy fix since
+it's user-visible policy text. Branch: `docs/fix-privacy-retention-window-claims`.)
+
 **Last updated:** 2026-07-14 (**REMOVE: NON-NEXT.JS ORPHAN TREES `frontend/`/`backend/`/`promotion/`
 (`ORPHAN-01`, R-10)** — Executes the sixth and final of six Phase 4 product decisions
 (`docs/product-audit/11-prioritized-backlog.md`): three git-tracked, non-Next.js directory trees, all

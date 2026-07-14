@@ -278,6 +278,7 @@ export const fr: LegalTranslation = {
           'Tentatives de connexion : supprimées automatiquement après 1 heure.',
           'Enregistrements de consentement : durée de vie du compte plus 6 ans pour des raisons de conformité légale.',
         ]},
+        { p: 'Les catégories ci-dessus correspondent à nos objectifs de conservation. Aujourd\'hui, un administrateur peut effacer les données d\'import Jira et les instantanés de tableau de bord à l\'aide d\'un outil de nettoyage intégré à l\'application, mais cela ne s\'exécute pas selon un calendrier automatique ; les autres catégories ci-dessus ne disposent pas encore d\'outils de suppression dédiés. Nous travaillons à la mise en place d\'une application automatisée de ces objectifs.' },
       ]},
       { title: '7. Cookies et données de session', blocks: [
         { p: 'Nous utilisons un seul cookie de session propriétaire :' },
