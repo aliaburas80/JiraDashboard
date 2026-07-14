@@ -119,27 +119,6 @@ export default function OrphanRulesSettings({ rules, onSave }: Props) {
           checked={form.flagSubTasksWithoutParent}
           onChange={v => setForm(f => ({ ...f, flagSubTasksWithoutParent: v }))}
         />
-
-        {/* Risk thresholds */}
-        <div className="py-3 grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-slate-800 mb-1">Risk threshold count</label>
-            <p className="text-xs text-slate-500 mb-2">Min orphan count to show as a risk signal.</p>
-            <input type="number" min={1} max={100} value={form.riskThresholdCount}
-              onChange={e => setForm(f => ({ ...f, riskThresholdCount: Math.max(1, Number(e.target.value)) }))}
-              className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-slate-800 mb-1">Risk threshold %</label>
-            <p className="text-xs text-slate-500 mb-2">Orphan ratio above which health score is reduced.</p>
-            <div className="flex items-center gap-2">
-              <input type="number" min={1} max={100} value={form.riskThresholdPct}
-                onChange={e => setForm(f => ({ ...f, riskThresholdPct: Math.max(1, Math.min(100, Number(e.target.value))) }))}
-                className="flex-1 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
-              <span className="text-xs text-slate-400">%</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Actions */}
