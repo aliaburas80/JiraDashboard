@@ -1,5 +1,37 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-15 (**09-ux §4: CLOSE OUT THE SILENT-REDIRECT / CONFLATED-ERROR FINDING** — the
+last remaining item from the previous round's Phase 3 sweep; wasn't decided alongside the other four
+because the "next" prompt moved on before I'd cross-checked the full backlog table against it. Investigated
+before writing any code: found this finding was already **partially** fixed on 2026-07-13
+(`fix(ux): distinguish a failed data load from "no data uploaded"`, predating this session's visibility) —
+`src/lib/loadErrorSignal.ts`'s `redirectWithLoadError()`/`consumeLoadErrorSignal()` pair was already wired
+into 11 routes plus all 9 `/dashboard/*` children via `app/dashboard/layout.tsx`'s shared
+`DashboardMetricsContext`, and `/column-mapping` (the audit's cited worst case) already had its own distinct
+on-page `loadError` state. Also confirmed, while verifying this, that the separate Phase 2 `PERF` caching
+finding (`loadMetricsWithSource()` not shared across `/dashboard/*`'s 9 children) was resolved as a side
+effect of that same context — and that all 5 Phase 2 items are in fact already done (`R-11`'s stale
+`page 2.tsx`, the skip-link, the `/readiness` redirect, and the login-enumeration fix all confirmed present
+in current code) — `11-prioritized-backlog.md`'s Phase 2 table had never been struck through to reflect
+this, corrected it as part of this pass. Cross-referenced all 16 routes calling `loadMetricsWithSource()`
+directly against the `redirectWithLoadError()` caller list and found exactly 3 gaps: `app/teams/page.tsx`,
+`app/portfolio/page.tsx`, `app/roadmap/page.tsx` — all three still had `.catch(() => setNoData(true))`,
+conflating a fetch failure with the genuine empty state. `app/roadmap/page.tsx` was worse than the audit's
+own cited worst case: on a real fetch error it actively told the user "No data uploaded yet," sending them
+toward re-uploading when that wouldn't fix anything. Fixed all three following `/column-mapping`'s
+established pattern — a distinct `loadError` boolean, its own on-page message/icon, no redirect (matching
+each page's existing behavior of staying on-page rather than navigating away on empty data). `/explore` was
+independently confirmed to already handle this correctly (per the audit's own note) and needed no change.
+Also found and removed `src/__tests__/getHealthBand.test 2.ts`, a byte-identical stray file from this
+session's known iCloud Drive sync-conflict behavior — confirmed identical via `diff` before deleting.
+Verified: `npm run typecheck` clean; `npx eslint` on the 3 changed files unchanged at 60 warnings (0 new,
+confirmed via `git stash` comparison against the pre-edit baseline — all pre-existing inline-style tech
+debt); `npm run build` compiled all 64 routes; `npm run test` 108/108 suites, 1004/1004 tests passing (one
+earlier run showed a 1-test failure in `adminUsers.test.ts`, immediately re-ran clean — the same pre-existing
+worker-flakiness class documented earlier in this file, not caused by this change). `product/RELEASE_NOTES.md`
+entry added (user-visible: distinct error message on 3 pages). Branch:
+`fix/09-ux-silent-redirect-teams-portfolio-roadmap`.)
+
 **Last updated:** 2026-07-14 (**CP3-018: EXTEND `thresholds.service.ts` FOR HEALTH SCORE BANDS (PARTIAL —
 SCOPE BOUNDARY DOCUMENTED)** — Third of four Phase 3 items decided this round
 (`docs/product-audit/11-prioritized-backlog.md`). Owner picked the full-migration option ("extend

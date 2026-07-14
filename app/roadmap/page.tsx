@@ -394,6 +394,11 @@ export default function RoadmapPage() {
   const [throughput, setThroughput] = useState(0);
   const [loading,    setLoading]    = useState(true);
   const [noData,     setNoData]     = useState(false);
+  // 09-ux §4 (silent redirect / conflated error state, worst case in the
+  // audit): a genuine fetch failure previously set the same noData flag as a
+  // real empty state, so a fetch failure actively told the user "No data
+  // uploaded yet" — which isn't true and won't fix their actual problem.
+  const [loadError,  setLoadError]  = useState(false);
   const [view,       setView]       = useState<'gantt' | 'cards'>('gantt');
   const [filter,     setFilter]     = useState<'all' | 'active' | 'critical' | 'done'>('active');
   const [sort,       setSort]       = useState<'progress' | 'name' | 'forecast'>('forecast');
@@ -415,7 +420,7 @@ export default function RoadmapPage() {
       setThroughput(parseFloat(avgThroughput.toFixed(1)));
       setLoading(false);
     }
-    load().catch(() => { setNoData(true); setLoading(false); });
+    load().catch(() => { setLoadError(true); setLoading(false); });
   }, [router]);
 
   // ── Loading state ──────────────────────────────────────────────────────────
@@ -423,6 +428,20 @@ export default function RoadmapPage() {
     <AppShell showNav>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 320, color: 'var(--color-text-muted)', fontSize: 13, fontWeight: 600 } as CSSProperties}>
         Building roadmap…
+      </div>
+    </AppShell>
+  );
+
+  // ── Load-error state ──────────────────────────────────────────────────────
+  if (loadError) return (
+    <AppShell showNav>
+      <div className={styles.page}>
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}><SvgIcon name="warning" size={40} /></div>
+          <p className={styles.emptyTitle}>Couldn&apos;t load your roadmap</p>
+          <p className={styles.emptyText}>Something went wrong loading your dashboard data. Try refreshing the page — if this keeps happening, contact your administrator.</p>
+          <button onClick={() => router.push('/')} className={styles.uploadBtn}>Go to upload page</button>
+        </div>
       </div>
     </AppShell>
   );

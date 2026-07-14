@@ -137,6 +137,30 @@ Confidence: Confirmed — same exact code shape independently found by 3 separat
 Validation method: Simulate a network failure (e.g. via dev-tools request blocking once rendering is available) on any of the listed routes; expect a silent redirect with no visible error message.
 ```
 
+**Resolved (2026-07-15):** Fully closed via the recommended shared-fix shape, in two waves. **Wave 1
+(2026-07-13, `fix(ux): distinguish a failed data load from "no data uploaded"`, predates this session)**
+added `src/lib/loadErrorSignal.ts` — a `redirectWithLoadError()`/`consumeLoadErrorSignal()` pair used by
+pages that redirect to `/` on failure, so the redirect lands on a page that can say what happened instead
+of landing silently. Migrated `app/forecast`, `/work-explorer`, `/data-quality`, `/charts`,
+`/dashboard/layout.tsx` (covering all 9 `/dashboard/*` child routes via the shared
+`DashboardMetricsContext`, which — found while verifying this — also already resolved the separate Phase 2
+`loadMetricsWithSource()` caching finding as a side effect), `/delivery-mix`, `/release-readiness`,
+`/sprint-kanban`, `/flow-health`, `/summary`, `/customer`; and gave `/column-mapping` (the audit's "single
+worst case," a full `.catch(() => {})` swallow) its own distinct on-page `loadError` state instead of
+redirecting, since that page stays on-page rather than navigating away on empty data. `/readiness` was
+separately retired to a server redirect (R-01) and no longer has client-side data loading at all.
+
+**Wave 2 (2026-07-15, this session)** found and fixed the three routes wave 1 missed —
+`app/teams/page.tsx`, `app/portfolio/page.tsx`, and `app/roadmap/page.tsx` — all three still had
+`.catch(() => setNoData(true))` conflating a fetch failure with the genuine empty state.
+`app/roadmap/page.tsx` was the one case worse than the audit's own worst-case citation: it didn't just fail
+to distinguish the two, it *actively told the user* "No data uploaded yet" on a real fetch error, which
+isn't true and sends them toward a fix (re-upload) that won't resolve their actual problem. Followed
+`/column-mapping`'s established pattern (a distinct `loadError` boolean, own on-page message, no redirect)
+rather than `redirectWithLoadError()`, since none of these three pages navigate away on empty data either.
+Cross-referenced every route calling `loadMetricsWithSource()` directly (16 total) plus `/explore`
+(confirmed already correct, per this finding's own "positively breaks the pattern" note) to verify no
+further instances remain.
 **Pages confirmed to break this pattern positively** (worth using as the reference implementation): `/explore`, `/backend`, and most of `/admin/*` (`/admin/audit`, `/admin/logs`, `/admin/diagnostics`, `/admin/security`, `/admin/users`) all show a distinct, worded error banner separate from their empty state. `/retro` and the 8 auth-flow pages (`/login`, `/register`, etc.) also consistently show worded, specific error text rather than silent failure.
 
 ### Secondary, lower-severity state findings

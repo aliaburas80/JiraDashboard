@@ -188,6 +188,10 @@ export default function PortfolioPage() {
   const router = useRouter();
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
   const [noData,  setNoData]  = useState(false);
+  // 09-ux §4 (silent redirect / conflated error state): a genuine fetch
+  // failure previously rendered the identical "No portfolio data available"
+  // empty state as a real empty state, with no way to tell them apart.
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -198,10 +202,20 @@ export default function PortfolioPage() {
       if (!metrics) { setNoData(true); return; }
       setSummary(computePortfolioSummary(metrics));
     }
-    load().catch(() => { if (!cancelled) setNoData(true); });
+    load().catch(() => { if (!cancelled) setLoadError(true); });
     return () => { cancelled = true; };
   }, []);
 
+  if (loadError) return (
+    <AppShell showNav>
+      <div className="max-w-5xl mx-auto py-24 text-center">
+        <p className="text-base font-black text-slate-700 mb-2">Couldn&apos;t load portfolio data</p>
+        <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
+          Something went wrong loading your dashboard data. Try refreshing the page — if this keeps happening, contact your administrator.
+        </p>
+      </div>
+    </AppShell>
+  );
   if (noData) return (
     <AppShell showNav>
       <div className="max-w-5xl mx-auto py-24 text-center">
