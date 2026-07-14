@@ -307,6 +307,7 @@ export const nl: LegalTranslation = {
           'Inlogpogingen: na 1 uur automatisch verwijderd.',
           'Toestemmingsrecords: levensduur van het account plus 6 jaar voor wettelijke naleving.',
         ]},
+        { p: 'De bovenstaande categorieën zijn onze bewaardoelen. Op dit moment kan een beheerder Jira-importgegevens en dashboard-snapshots wissen met een opschoontool in de app, maar dit gebeurt niet volgens een automatisch schema; de overige bovenstaande categorieën beschikken nog niet over speciale verwijderingstools. Wij werken aan geautomatiseerde handhaving van deze doelen.' },
       ]},
       { title: '7. Cookies en sessiegegevens', blocks: [
         { p: 'Wij gebruiken één first-party sessiecookie:' },

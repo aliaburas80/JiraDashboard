@@ -89,6 +89,8 @@ Severity: P1
 Confidence: High confidence
 ```
 
+**Resolved (2026-07-14):** Owner decision — correct the policy copy rather than build automated enforcement. Added a disclosure paragraph to the "Data retention" section in all 7 languages, stating plainly that the listed periods are targets, that only Jira import data and dashboard snapshots have any deletion tooling today (admin-triggered, not scheduled), and that the other categories don't yet have dedicated deletion tooling. No code changed. See `docs/fix-privacy-retention-window-claims`.
+
 ```
 Finding: /privacy names only AWS S3 as a cloud sub-processor, but the codebase implements three full cloud storage providers (S3, Azure, GCP) usable both for admin-level cloud backup and a per-user "bring your own cloud" feature.
 Evidence: src/services/storage/userStorageProvider.service.ts (type 's3' | 'azure' | 'gcp'); src/services/storage/providers/{azure,gcp}Provider.ts (full implementations).
@@ -96,6 +98,8 @@ Why it matters: if Azure or GCP is enabled for any deployment or user, Jira-deri
 Severity: P1 (P0 if Azure/GCP storage is presently enabled for any live account — this audit could not determine live configuration state from code alone)
 Confidence: High confidence on the code capability; Medium on live severity (deployment configuration is outside this audit's visibility)
 ```
+
+**Resolved (2026-07-14):** Owner confirmed: Azure/GCP storage is implemented in code but not enabled for any live deployment today — S3-only in practice. No disclosure gap currently exists, so no policy change was made. This is a live-configuration fact this audit could not determine from code alone (as flagged above); if Azure or GCP is ever enabled for a live account, `/privacy` must be updated before or at that time, not after.
 
 ```
 Finding: There is no self-service account-deletion feature anywhere in the app, despite /terms directing users who disagree with the terms to "request account deletion" as if it were a supported self-service action with an implied SLA.
