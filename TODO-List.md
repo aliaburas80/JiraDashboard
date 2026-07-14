@@ -1,5 +1,47 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-14 (**CP3-018: EXTEND `thresholds.service.ts` FOR HEALTH SCORE BANDS (PARTIAL —
+SCOPE BOUNDARY DOCUMENTED)** — Third of four Phase 3 items decided this round
+(`docs/product-audit/11-prioritized-backlog.md`). Owner picked the full-migration option ("extend
+thresholds.service.ts to be genuinely the source of truth... migrate the 12 hardcoded spots"). Investigated
+all ~14 sites the audit named (research surfaced one more than the audit's original 12) before writing any
+code, which surfaced two things that changed the shape of this fix: (1) the sites split into 5 genuinely
+distinct metric families — Health Score band (7+ sites, the dominant duplication), Portfolio "At Risk,"
+sprint-goal outcome, capacity overload, and a confidence-band family — not one duplicated concept; (2) every
+current consumer of the Health Score band is a **client component**; `calculateHealthScore()` itself never
+classifies a band server-side, it only returns a raw 0-100 number, so "wire live admin thresholds all the
+way through" would mean adding a new client-side fetch to 6+ components (dashboard chrome, admin pages,
+browser-side xlsx/PDF export generators that run via dynamic `import()`, not a server route) — a materially
+bigger and riskier change than a single schema extension. **Scoped this pass to the Health Score band** (the
+audit's own headline complaint and the largest chunk of the 12 sites); the other 4 families are separate,
+already-tracked audit findings (Portfolio band, CP3-021/releaseConfidence, throughput.service.ts,
+roleGridView.mapper.ts) not decided this round, left untouched. Added `healthScoreExcellentPct/GoodPct/
+FairPct/WeakPct` (defaults 90/75/60/40) to `HealthThresholds` (`src/types/thresholds.ts`) + a new "Health
+Score Bands" group in `HealthThresholdSettings.tsx` + strictly-descending-order validation in
+`app/api/admin/thresholds/route.ts` (mirroring the existing warning-must-be-less-than-critical pattern for
+the other 5 field groups). Parameterized `getHealthBand(score, thresholds?)` in `src/lib/utils.ts` with a
+default of `DEFAULT_THRESHOLDS`, keeping every existing single-argument call site working unchanged.
+Migrated every duplicate reimplementation found onto this one function: `DashboardNavSidebar.tsx`,
+`recommendationEngine.ts`, and `excelInsightExport.service.ts` — the last of these had not one but **three**
+separate local reimplementations of the identical band logic in one file (a `getHealthBand()` call whose
+result was ignored four lines later by a re-derived inline ternary, plus a third near-identical local
+`bandLabel` map further down — all three consolidated to one call + one shared `HEALTH_BAND_INTERPRETATION`
+map). `app/admin/logs/page.tsx` and `app/backend/page.tsx` had their own divergent `>80/60/40` cutoff
+(instead of the standard `>=90/75/60/40` used everywhere else) — migrating them is a genuine, minor,
+admin-visible bug fix: scores 75-80 now correctly render the "good" green chip instead of an "at-risk" amber
+one, consistent with the rest of the app. `DashboardSidebarNav.tsx` was confirmed unmounted dead code
+(zero route imports it) and deliberately left untouched rather than "fixed" for no live benefit — flagged
+alongside the existing `ORPHAN-02` disposition question rather than silently edited or silently ignored.
+Updated `/developer`'s `HealthBand` doc sample and `/glossary`'s Health band table description to state the
+cutoffs are defaults, admin-configurable in Settings. Added `src/__tests__/getHealthBand.test.ts` (8 new
+tests, default + custom-threshold reclassification cases) and extended `thresholds.test.ts` for the 4 new
+fields (field count 9→13). Verified: `npm run typecheck` clean; `npm run lint` on all changed files 0
+warnings (one pre-existing unrelated warning in `DashboardNavSidebar.tsx` confirmed present on `main` before
+this change, at the same relative position, via `git stash`); `npm run build` compiled all 64 routes; `npm
+run test` 108/108 suites, 1004/1004 tests passing (996 baseline + 8 new). `product/RELEASE_NOTES.md` entry
+added (admin-visible: new settings section + the chip-color fix). Branch:
+`refactor/cp3-018-health-score-band-thresholds`.)
+
 **Last updated:** 2026-07-14 (**CP3-014/015: UNIFY ORPHAN DEFINITIONS, REMOVE DEAD THRESHOLD FIELDS** —
 Second of four Phase 3 items decided this round (`docs/product-audit/11-prioritized-backlog.md`). Verified
 all three "orphan" definitions the audit named before changing anything: `dataQuality.service.ts:185` used

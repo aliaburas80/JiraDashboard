@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import styles from './DashboardSidebarNav.module.scss';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import { getHealthBand, type HealthBand } from '@/lib/utils';
 
 // Which roles see each dashboard sub-route in the sidebar. This is relevance
 // curation, not an access boundary: every role sees the same underlying
@@ -40,12 +41,13 @@ function Chip({ type, label }: { type: 'cc' | 'cw' | 'cg' | 'cm' | 'cn'; label: 
 }
 
 // ─── Health helpers ───────────────────────────────────────────────────────────
+// CP3-018: label text kept identical to the original hardcoded copy ("At-Risk"
+// hyphenated); only the band cutoffs now come from the shared getHealthBand().
+const HEALTH_BAND_LABELS: Record<HealthBand, string> = {
+  excellent: 'Excellent', good: 'Good', moderate: 'Moderate', 'at-risk': 'At-Risk', critical: 'Critical',
+};
 function healthBandLabel(score: number): string {
-  if (score >= 90) return 'Excellent';
-  if (score >= 75) return 'Good';
-  if (score >= 60) return 'Moderate';
-  if (score >= 40) return 'At-Risk';
-  return 'Critical';
+  return HEALTH_BAND_LABELS[getHealthBand(score)];
 }
 
 const NAV_ICONS: Record<string, string> = {

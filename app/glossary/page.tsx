@@ -55,7 +55,7 @@ const SECTIONS: GlossarySection[] = [
   },
   {
     id: 'health', title: 'D — Health & Status', icon: 'heart', category: 'delivery',
-    description: 'How Delivery Clarity classifies the health of your delivery.',
+    description: 'How Delivery Clarity classifies the health of your delivery. These are the default cutoffs — an admin can change them in Settings → Thresholds → Health Score Bands.',
     rows: [
       { term: 'Excellent',              full: 'Health ≥ 90',    meaning: 'Delivery is on track with very low risk.' },
       { term: 'Good',                   full: 'Health ≥ 75',    meaning: 'Progressing well with minor risks.' },

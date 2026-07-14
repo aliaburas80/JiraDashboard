@@ -40,8 +40,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Blocked ratio warning must be less than critical.' }, { status: 400 });
   }
 
+  const current = await readThresholdsForUser(session.userId);
+
+  const excellent = body.healthScoreExcellentPct ?? current.healthScoreExcellentPct;
+  const good      = body.healthScoreGoodPct      ?? current.healthScoreGoodPct;
+  const fair      = body.healthScoreFairPct      ?? current.healthScoreFairPct;
+  const weak      = body.healthScoreWeakPct      ?? current.healthScoreWeakPct;
+  if (!(excellent > good && good > fair && fair > weak)) {
+    return NextResponse.json({ error: 'Health Score bands must be strictly descending: Excellent > Good > Fair > Weak.' }, { status: 400 });
+  }
+
   const updated: HealthThresholds = {
-    ...(await readThresholdsForUser(session.userId)),
+    ...current,
     ...body,
     updatedAt: new Date().toISOString(),
     updatedBy: session.email,

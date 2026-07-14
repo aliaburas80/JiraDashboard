@@ -42,6 +42,10 @@ test('TC-TH-01: DEFAULT_THRESHOLDS has expected values', () => {
   expect(DEFAULT_THRESHOLDS.openAgeWarningDays).toBe(30);
   expect(DEFAULT_THRESHOLDS.blockedRatioWarningPct).toBe(10);
   expect(DEFAULT_THRESHOLDS.blockedRatioCriticalPct).toBe(20);
+  expect(DEFAULT_THRESHOLDS.healthScoreExcellentPct).toBe(90);
+  expect(DEFAULT_THRESHOLDS.healthScoreGoodPct).toBe(75);
+  expect(DEFAULT_THRESHOLDS.healthScoreFairPct).toBe(60);
+  expect(DEFAULT_THRESHOLDS.healthScoreWeakPct).toBe(40);
 });
 
 // TC-TH-02: Cycle time above critical threshold → critical health
@@ -89,11 +93,13 @@ test('TC-TH-08: active age thresholds work correctly', () => {
 });
 
 // TC-TH-09: THRESHOLD_LABELS covers all configurable fields
-test('TC-TH-09: THRESHOLD_LABELS covers all 9 configurable threshold fields', () => {
+test('TC-TH-09: THRESHOLD_LABELS covers all 13 configurable threshold fields', () => {
   const keys = Object.keys(THRESHOLD_LABELS);
-  expect(keys).toHaveLength(9);
+  expect(keys).toHaveLength(13);
   expect(keys).toContain('cycleTimeWarningDays');
   expect(keys).toContain('blockedRatioCriticalPct');
+  expect(keys).toContain('healthScoreExcellentPct');
+  expect(keys).toContain('healthScoreWeakPct');
 });
 
 // TC-TH-10: Each threshold label has min/max/unit/description

@@ -5,6 +5,12 @@
 
 ---
 
+## Added: Health Score Bands Are Now Admin-Configurable (2026-07-14)
+
+Admin Settings → Thresholds now has a "Health Score Bands" section for the Excellent/Good/Fair/Weak cutoffs (defaults 90/75/60/40) that classify an overall Health Score. Previously these cutoffs were compiled into 7+ separate files with no way to change them. As part of unifying these, fixed a minor inconsistency: the health-score chips on `/admin/logs` and `/backend` used a slightly different cutoff (score > 80) than everywhere else in the app — scores of 75-80 now correctly show the same "good" chip color they show elsewhere. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Fixed: Orphan Count Now Consistent Between Data Quality and Dashboards (2026-07-14)
 
 Configuring custom Orphan Rules in Admin Settings previously changed the orphan count shown on `/dashboard/priority-attention`, `/dashboard/flow-health`, `/summary`, `/customer`, and `/release-readiness` — but had no effect on the Data Quality card, which used its own separate, hardcoded rule. Data Quality's orphan penalty now uses the same admin-configurable rule as everywhere else. Also removed two fields from the Orphan Rules settings screen ("Risk threshold count" and "Risk threshold %") that looked like working controls but were never actually read by any calculation. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
