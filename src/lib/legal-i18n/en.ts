@@ -319,7 +319,7 @@ export const en: LegalTranslation = {
           { b: 'Assignment.' },
           { p: 'You may not assign or transfer your rights or obligations under these Terms without our prior written consent. We may assign our rights and obligations without restriction.' },
           { b: 'Changes to Terms.' },
-          { p: 'We may update these Terms at any time. Material changes will be communicated by updating the effective date above and, where possible, by email notification. Your continued use of the Service after the effective date of any change constitutes acceptance of the updated Terms. If you do not agree, you must stop using the Service and request account deletion.' },
+          { p: 'We may update these Terms at any time. Material changes will be communicated by updating the effective date above and, where possible, by email notification. Your continued use of the Service after the effective date of any change constitutes acceptance of the updated Terms. If you do not agree, you must stop using the Service and contact us to request deletion of your account.' },
           { b: 'Language.' },
           { p: 'These Terms are drafted in English. Any translations are provided for convenience only. In the event of any conflict, the English version shall prevail.' },
         ],
@@ -481,7 +481,7 @@ export const en: LegalTranslation = {
         blocks: [
           { p: 'We may update this Privacy Policy from time to time. The current version and effective date are always displayed at the top of this page.' },
           { p: 'For material changes — such as new categories of data, new third-party processors, new purposes, or changes to your rights — we will provide prominent notice within the Service and, where appropriate, by email.' },
-          { p: 'If changes require fresh consent under applicable law, we will obtain that consent before the changes take effect. If you do not agree with a material change, you must stop using the Service and request account deletion.' },
+          { p: 'If changes require fresh consent under applicable law, we will obtain that consent before the changes take effect. If you do not agree with a material change, you must stop using the Service and contact us to request deletion of your account.' },
         ],
       },
       {
