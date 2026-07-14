@@ -444,6 +444,43 @@ export function renderImportLogView(logs: ImportLog[]): string {
 // exportImportLogsWorkbook
 // ---------------------------------------------------------------------------
 
+// Flat shape used by the database-backed import log records (Prisma
+// `ImportLog`, surfaced through /api/imports and /api/backend-view) — distinct
+// from the nested `ImportLog` above, which only describes the file-based
+// fallback log (data/import-logs.json) used when there is no session.
+export interface ImportLogRecord {
+  id: string;
+  timestamp: string | null;
+  filename: string | null;
+  rowCount: number | null;
+  status: string;
+  filesize?: number | null;
+  healthScore?: number | null;
+  totalIssues?: number | null;
+  userName?: string | null;
+  userEmail?: string | null;
+}
+
+export function exportImportLogRecordsWorkbook(logs: ImportLogRecord[]): Buffer {
+  const rows = logs.map((log) => ({
+    'Import ID': log.id,
+    'Uploaded At': log.timestamp ?? '',
+    Status: log.status,
+    'File Name': log.filename ?? '',
+    'File Size Bytes': log.filesize ?? '',
+    Rows: log.rowCount ?? '',
+    'Total Issues': log.totalIssues ?? '',
+    'Health Score': log.healthScore ?? '',
+    'Uploaded By': log.userName ?? '',
+    'Uploader Email': log.userEmail ?? '',
+  }));
+
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.json_to_sheet(sanitizeSpreadsheetRows(rows));
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Import Logs');
+  return XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' }) as Buffer;
+}
+
 export function exportImportLogsWorkbook(logs: ImportLog[]): Buffer {
   const rows = logs.map((log) => ({
     'Import ID': log.id,

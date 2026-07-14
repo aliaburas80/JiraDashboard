@@ -5,6 +5,12 @@
 
 ---
 
+## Added: Export Import Logs from the Backend Page (2026-07-14)
+
+`/backend`'s Import Logs section now has an "Export logs" button (next to "Delete all my logs") that downloads your import history — or, for admins, every workspace's history — as an Excel workbook. This closed a gap where `/developer` documented an export capability that was never actually reachable from the UI. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Fixed: Privacy Policy Now Describes How Data Retention Actually Works (2026-07-14)
 
 The Privacy Policy's data retention section listed specific windows (e.g. "audit events: 12 months") that read as automatically enforced. In reality, only Jira import data and dashboard snapshots have any deletion tooling today, and it's admin-triggered rather than scheduled — other categories don't yet have dedicated deletion tooling. Added a clear note explaining this so the policy describes what actually happens rather than an aspirational target. Updated in all 7 supported languages. Found and fixed as part of a full-application product audit (`docs/product-audit/`).

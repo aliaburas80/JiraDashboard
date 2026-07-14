@@ -54,7 +54,7 @@ These need more care than Phase 2 (copy review, legal input, or careful threshol
 | CP3-014 / CP3-015 | Three non-synced "orphan" definitions; two admin threshold fields silently do nothing | Reconcile to one definition (or explicitly document why 3 exist) and either wire up or remove the dead threshold fields — needs a product decision on target behavior, not just a bug fix |
 | 03-clarity §A | "Confidence" (5 meanings), "At Risk" (6 meanings), "Health Score" (2 meanings), "Readiness" (2 meanings) — all undisambiguated on-page | Rename/relabel campaign — low technical risk, needs product/content sign-off on the actual replacement labels |
 | CP3-018 | Score-band thresholds hardcoded/duplicated across 12 files, admin Thresholds screen doesn't actually govern most of them | Either extend `thresholds.service.ts` to be genuinely the source of truth, or relabel the admin screen to reflect its narrower real scope |
-| MPE-05 | `exportImportLogsWorkbook` documented in `/developer` as live but never wired to a button | Either wire it to `/backend`'s UI or remove the documentation claim — cheap either way, just needs a decision |
+| ~~MPE-05~~ | ~~`exportImportLogsWorkbook` documented in `/developer` as live but never wired to a button~~ **Decided 2026-07-14: wired it up** | Added `exportImportLogRecordsWorkbook()` + `GET /api/imports/export` + an "Export logs" button on `/backend` — see `05-missing-product-elements.md`'s resolution note |
 
 ---
 

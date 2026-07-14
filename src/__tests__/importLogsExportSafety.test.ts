@@ -2,7 +2,12 @@
 // Import-log workbook export safety tests — TC-SEC-CSV-10 to TC-SEC-CSV-11
 
 import XLSX from 'xlsx';
-import { exportImportLogsWorkbook, type ImportLog } from '../services/imports/importLogs.service';
+import {
+  exportImportLogsWorkbook,
+  exportImportLogRecordsWorkbook,
+  type ImportLog,
+  type ImportLogRecord,
+} from '../services/imports/importLogs.service';
 
 function makeLog(overrides: Partial<ImportLog> = {}): ImportLog {
   return {
@@ -75,4 +80,46 @@ test('TC-SEC-CSV-11: import-log workbook leaves benign uploaded metadata unchang
   expect(ws.G2.v).toBe('Issues');
   expect(ws.J2.v).toBe('Summary, Status');
   expect(ws.V2.v).toBe('Open: 1');
+});
+
+function makeRecord(overrides: Partial<ImportLogRecord> = {}): ImportLogRecord {
+  return {
+    id: 'log-1',
+    timestamp: '2026-07-14T00:00:00.000Z',
+    filename: 'jira-export.xlsx',
+    rowCount: 10,
+    status: 'success',
+    filesize: 100,
+    healthScore: 82,
+    totalIssues: 10,
+    userName: 'Ali Abu Ras',
+    userEmail: 'ali@example.com',
+    ...overrides,
+  };
+}
+
+function recordWorkbookFrom(log: ImportLogRecord): XLSX.WorkBook {
+  return XLSX.read(exportImportLogRecordsWorkbook([log]), { type: 'buffer' });
+}
+
+test('TC-SEC-CSV-12: database-backed import-log workbook neutralizes formula-like metadata', () => {
+  const ws = recordWorkbookFrom(makeRecord({
+    filename: '=cmd|\'/c calc\'!A1',
+    status: '+success',
+    userName: '@Ali Abu Ras',
+    userEmail: '-ali@example.com',
+  })).Sheets['Import Logs'];
+
+  expect(ws.D2.v).toBe("'=cmd|'/c calc'!A1");
+  expect(ws.C2.v).toBe("'+success");
+  expect(ws.I2.v).toBe("'@Ali Abu Ras");
+  expect(ws.J2.v).toBe("'-ali@example.com");
+});
+
+test('TC-SEC-CSV-13: database-backed import-log workbook leaves benign metadata unchanged', () => {
+  const ws = recordWorkbookFrom(makeRecord()).Sheets['Import Logs'];
+  expect(ws.D2.v).toBe('jira-export.xlsx');
+  expect(ws.C2.v).toBe('success');
+  expect(ws.I2.v).toBe('Ali Abu Ras');
+  expect(ws.J2.v).toBe('ali@example.com');
 });

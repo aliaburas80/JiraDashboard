@@ -313,6 +313,17 @@ Returns full import log history.
 
 ---
 
+## GET /api/imports/export
+
+Downloads the current user's import logs (admins: \`?all=true\` for every
+workspace) as an \`.xlsx\` workbook via \`exportImportLogRecordsWorkbook()\`.
+Session-scoped identically to \`GET /api/imports\`.
+
+**Response:** \`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\`
+attachment. **401** if not authenticated.
+
+---
+
 ## GET /api/metrics
 
 Returns the last successful metrics payload.
@@ -539,7 +550,8 @@ Returns \`{ isValid, errors }\`
 | readImportLogs() | Read data/import-logs.json; return [] if missing |
 | appendImportLog(entry) | Prepend + trim to 200 entries |
 | buildImportLog(params) | Build ImportLogEntry from upload params |
-| exportImportLogsWorkbook(logs) | Generate Excel workbook |`,
+| exportImportLogsWorkbook(logs) | Generate Excel workbook from the file-based fallback log shape (unauthenticated path only) |
+| exportImportLogRecordsWorkbook(logs) | Generate Excel workbook from database-backed \`ImportLog\` records; used by \`GET /api/imports/export\` and the "Export logs" button on \`/backend\` |`,
 
   types: `# TypeScript Types
 

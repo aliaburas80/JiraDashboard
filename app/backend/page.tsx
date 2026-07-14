@@ -103,6 +103,7 @@ export default function BackendPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; filename: string } | null>(null);
   const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [toast, setToast]       = useState('');
 
   const fetchData = useCallback(async () => {
@@ -149,6 +150,25 @@ export default function BackendPage() {
       showToast(`✓ Deleted ${json.deleted} import log${json.deleted !== 1 ? 's' : ''}`);
     } catch { showToast('Failed to delete logs.'); }
     finally { setDeleting(false); setDeleteAllConfirm(false); }
+  }
+
+  async function handleExportLogs() {
+    setExporting(true);
+    try {
+      const url = data?.isAdmin ? '/api/imports/export?all=true' : '/api/imports/export';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = res.headers.get('Content-Disposition')?.match(/filename="(.+)"/)?.[1]
+        ?? `import-logs-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      showToast('✓ Import logs exported');
+    } catch { showToast('Failed to export logs.'); }
+    finally { setExporting(false); }
   }
 
   return (
@@ -327,6 +347,16 @@ export default function BackendPage() {
                 {data.isAdmin ? 'All Import Logs' : 'My Import Logs'}
               </h2>
               <div className="flex items-center gap-3 flex-wrap">
+                {data.logs.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleExportLogs}
+                    disabled={exporting}
+                    className={styles.exportLogsBtn}
+                  >
+                    {exporting ? 'Exporting…' : 'Export logs'}
+                  </button>
+                )}
                 {!data.isAdmin && data.logs.length > 0 && (
                   <button
                     type="button"
