@@ -5,6 +5,12 @@
 
 ---
 
+## Fixed: Team, Portfolio, and Roadmap Pages Now Distinguish a Real Error from "No Data" (2026-07-15)
+
+`/teams`, `/portfolio`, and `/roadmap` previously showed the exact same "no data" screen whether you genuinely hadn't uploaded anything yet, or the page just failed to load your data due to a real problem. `/roadmap` was the worst case — it would actively tell you "No data uploaded yet" even when your data was already uploaded and the page simply failed to load it, sending you toward a fix (re-uploading) that wouldn't have helped. All three now show a distinct "couldn't load your data — try refreshing" message when something actually goes wrong. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Added: Health Score Bands Are Now Admin-Configurable (2026-07-14)
 
 Admin Settings → Thresholds now has a "Health Score Bands" section for the Excellent/Good/Fair/Weak cutoffs (defaults 90/75/60/40) that classify an overall Health Score. Previously these cutoffs were compiled into 7+ separate files with no way to change them. As part of unifying these, fixed a minor inconsistency: the health-score chips on `/admin/logs` and `/backend` used a slightly different cutoff (score > 80) than everywhere else in the app — scores of 75-80 now correctly show the same "good" chip color they show elsewhere. Found and fixed as part of a full-application product audit (`docs/product-audit/`).

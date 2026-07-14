@@ -136,6 +136,10 @@ export default function TeamsPage() {
   const router = useRouter();
   const [teams, setTeams]     = useState<TeamHealthEntry[]>([]);
   const [noData, setNoData]   = useState(false);
+  // 09-ux §4 (silent redirect / conflated error state): a genuine fetch
+  // failure previously rendered the identical "No team data available"
+  // empty state as a real empty state, with no way to tell them apart.
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -151,7 +155,7 @@ export default function TeamsPage() {
     if (!capacity.length) { setNoData(true); return; }
     setTeams(computeTeamHealth(capacity, flowItems));
     }
-    load().catch(() => { if (!cancelled) setNoData(true); });
+    load().catch(() => { if (!cancelled) setLoadError(true); });
     return () => { cancelled = true; };
   }, []);
 
@@ -164,6 +168,20 @@ export default function TeamsPage() {
   const criticalCount   = teams.filter(t => t.band === 'Critical').length;
 
   const avgColor = avgHealth >= 70 ? '#16a34a' : avgHealth >= 40 ? '#f59e0b' : '#dc2626';
+
+  if (loadError) {
+    return (
+      <AppShell showNav>
+        <div className="max-w-5xl mx-auto py-20 text-center">
+          <SvgIcon name="warning" size={48} className="mx-auto mb-4 text-slate-400" />
+          <p className="text-base font-black text-slate-700 mb-2">Couldn&apos;t load team data</p>
+          <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
+            Something went wrong loading your dashboard data. Try refreshing the page — if this keeps happening, contact your administrator.
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (noData) {
     return (
