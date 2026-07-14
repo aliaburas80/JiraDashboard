@@ -66,9 +66,9 @@ The audit's own rules prohibit recommending removal without this input — these
 |---|---|---|
 | R-10 | Keep or remove `frontend/`, `backend/`, `promotion/` (non-Next.js trees) | Could be referenced by external docs/deployments this audit has no visibility into |
 | R-13 / TECH (coaching helpers) | Reactivate or remove the dormant Role-Based Coaching bundle (~1,300 lines + 2 more transitively-dead helper files found in Checkpoint 5) | It was live and working days before this audit began — may be on a near-term roadmap |
-| R-12 | Remove `DashboardViewSelector`/`allowedDashboardViewsForRole` family | High confidence it's dead, but needs a final pre-deletion grep pass immediately before acting, per the audit's own caveat |
+| ~~R-12~~ | ~~Remove `DashboardViewSelector`/`allowedDashboardViewsForRole` family~~ **Done 2026-07-14** | Final pre-deletion grep pass found the dead surface was wider than scoped here (the whole `dashboardView` feature, not just the selector) — see `remove/dead-dashboard-view-selector-r12` |
 | PRIV (self-service deletion) | Build self-service account/data deletion, or correct `/terms`' copy that implies it already exists | Product-scope decision (build a feature vs. change legal copy) |
-| 06-role-based-review §C | Enforce `/dashboard/*` sidebar role-gating server-side, or treat it as pure UI curation with no security intent | Product decision on intent — not a security fix (no data crosses a role boundary today) since every role already sees the same dataset |
+| ~~06-role-based-review §C~~ | ~~Enforce `/dashboard/*` sidebar role-gating server-side, or treat it as pure UI curation with no security intent~~ **Decided 2026-07-14: pure UI curation** | Documented directly in `DashboardNavSidebar.tsx` — see `docs/product-audit/06-role-based-review.md` §C's resolution note |
 | R-06 | Trim `/charts`' "Issue Types" widget in favor of linking to `/delivery-mix` | Depends on whether removing it would break any user's saved widget-visibility configuration (flagged, not verified, in Checkpoint 4) |
 
 ---
