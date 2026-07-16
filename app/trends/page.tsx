@@ -6,7 +6,14 @@ import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import TrendChart, { type TrendDataPoint } from '@/components/trends/TrendChart';
+import { releaseConfidenceBand } from '@/lib/releaseConfidence';
 import type { TrendPoint } from '@/types/trends';
+
+// CP3-020: color derived from the canonical releaseConfidenceBand() instead
+// of an inline re-derivation of the same 80/60 cutoffs.
+const RELEASE_CONFIDENCE_COLOR: Record<ReturnType<typeof releaseConfidenceBand>, string> = {
+  High: '#16a34a', Medium: '#f59e0b', Low: '#dc2626', Critical: '#dc2626',
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -243,7 +250,7 @@ export default function TrendsPage() {
                         <td className="py-2 px-3 text-slate-600">{p.avgLeadTimeDays > 0 ? `${p.avgLeadTimeDays}d` : '—'}</td>
                         <td className="py-2 px-3 text-slate-600">{p.avgCycleTimeDays > 0 ? `${p.avgCycleTimeDays}d` : '—'}</td>
                         <td className="py-2 px-3 text-slate-600">{p.dataQualityScore != null ? `${p.dataQualityScore}%` : '—'}</td>
-                        <td className="py-2 px-3 font-semibold" style={{ color: p.releaseConfidenceScore == null ? '#94a3b8' : p.releaseConfidenceScore >= 80 ? '#16a34a' : p.releaseConfidenceScore >= 60 ? '#f59e0b' : '#dc2626' }}>
+                        <td className="py-2 px-3 font-semibold" style={{ color: p.releaseConfidenceScore == null ? '#94a3b8' : RELEASE_CONFIDENCE_COLOR[releaseConfidenceBand(p.releaseConfidenceScore)] }}>
                           {p.releaseConfidenceScore != null ? `${p.releaseConfidenceScore}%` : '—'}
                         </td>
                       </tr>

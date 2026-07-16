@@ -5,6 +5,12 @@
 
 ---
 
+## Added: Confirmation Step Before Dismissing a System Error, and a Contact Link for Expired Verification Links (2026-07-17)
+
+`/admin/system-errors`'s "Dismiss" action now asks for confirmation first, matching how every other state-changing admin action in the app already works. Separately, `/verify-email`'s "your link expired" message now includes a working contact link instead of unclickable text. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Fixed: Team, Portfolio, and Roadmap Pages Now Distinguish a Real Error from "No Data" (2026-07-15)
 
 `/teams`, `/portfolio`, and `/roadmap` previously showed the exact same "no data" screen whether you genuinely hadn't uploaded anything yet, or the page just failed to load your data due to a real problem. `/roadmap` was the worst case — it would actively tell you "No data uploaded yet" even when your data was already uploaded and the page simply failed to load it, sending you toward a fix (re-uploading) that wouldn't have helped. All three now show a distinct "couldn't load your data — try refreshing" message when something actually goes wrong. Found and fixed as part of a full-application product audit (`docs/product-audit/`).

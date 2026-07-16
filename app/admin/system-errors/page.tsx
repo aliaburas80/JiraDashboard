@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import styles from './page.module.scss';
 
 interface ErrorLog {
@@ -67,6 +68,10 @@ export default function SystemErrorsPage() {
   const [filter,    setFilter]    = useState<string>('all');
   const [actionId,  setActionId]  = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState('');
+  // MPE-04: Dismiss previously fired immediately, unlike every other
+  // destructive/state-changing action in the app (/snapshots, /backend
+  // delete).
+  const [dismissTarget, setDismissTarget] = useState<string | null>(null);
 
   const load = useCallback(async (res?: string) => {
     const url = res && res !== 'all'
@@ -115,7 +120,7 @@ export default function SystemErrorsPage() {
         body: JSON.stringify({ id }),
       });
       await load(filter);
-    } finally { setActionId(null); }
+    } finally { setActionId(null); setDismissTarget(null); }
   }
 
   async function markAllResolved() {
@@ -147,7 +152,19 @@ export default function SystemErrorsPage() {
   );
 
   return (
-    <AdminConsoleLayout
+    <>
+      {dismissTarget && (
+        <ConfirmDeleteDialog
+          title="Dismiss this error?"
+          message="This marks the error as resolved. It stays in the log but will no longer count toward unresolved errors."
+          confirmLabel="Dismiss"
+          danger={false}
+          loading={actionId === dismissTarget}
+          onConfirm={() => markResolved(dismissTarget)}
+          onCancel={() => setDismissTarget(null)}
+        />
+      )}
+      <AdminConsoleLayout
       title="System Errors"
       description="Database errors, failed operations, and their resolution status. Retry or dismiss entries below."
       headerId="tour-header-admin-system-errors"
@@ -267,7 +284,7 @@ export default function SystemErrorsPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => markResolved(log.id)}
+                          onClick={() => setDismissTarget(log.id)}
                           disabled={actionId === log.id}
                           className={styles.btnDismiss}
                         >
@@ -282,6 +299,7 @@ export default function SystemErrorsPage() {
           })}
         </div>
       )}
-    </AdminConsoleLayout>
+      </AdminConsoleLayout>
+    </>
   );
 }
