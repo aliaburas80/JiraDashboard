@@ -50,6 +50,13 @@ Severity: P3
 Confidence: Medium (did not verify whether "resolved" errors remain visible/reversible elsewhere in the admin/system-errors UI, which would fully explain why no confirm step was thought necessary here)
 ```
 
+**Resolved (2026-07-17):** `app/admin/system-errors/page.tsx` now gates "Dismiss" behind the same
+`ConfirmDeleteDialog` component `/snapshots` and `/backend` already use, matching this checkpoint's own
+"comparable pages" precedent. Used `danger={false}` (amber, not the red/trash delete styling) since marking
+an error resolved isn't destructive — the record stays in the log, just no longer counted as unresolved —
+and the dialog's own message states that explicitly, resolving this finding's noted confidence gap about
+reversibility.
+
 ## MPE-05 — A documented export capability is fully unwired (referenced but missing)
 
 ```text
@@ -79,6 +86,12 @@ Why it matters: unchanged from Checkpoint 1's original finding — a user locked
 Severity: P2 (restated from Checkpoint 1, not a new finding — included here because this checkpoint's "referenced-but-missing" pass is the correct place to confirm it's not part of a larger pattern, which it is not)
 Confidence: High
 ```
+
+**Resolved (2026-07-17):** `app/verify-email/page.tsx`'s error-state message now includes a
+`mailto:ali.aburas@deliveryclarity.app` link (pre-filled subject "Verification link expired"), matching the
+support-contact email address already used consistently throughout the legal content
+(`src/lib/legal-i18n/en.ts`). No new contact channel was invented — this reuses the one address the app
+already directs users to elsewhere.
 
 ---
 

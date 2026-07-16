@@ -306,6 +306,13 @@ Confidence: High confidence
 Validation method: grep confirms releaseConfidenceBand has zero call sites outside its own file.
 ```
 
+**Resolved (2026-07-17):** `app/trends/page.tsx` now calls `releaseConfidenceBand()` and maps its band
+result (High/Medium/Low/Critical) to a color via a small local `RELEASE_CONFIDENCE_COLOR` lookup, replacing
+the inline `>= 80 ... >= 60 ...` ternary. `releaseConfidenceBand()` now has a real caller. Visual output is
+byte-identical to before (High→green, Medium→amber, Low and Critical both→red, same as the original 3-color
+ternary) — this closes the duplication risk without changing anything a user sees. Existing test coverage
+(`src/__tests__/releaseConfidenceTrend.test.ts`) already asserted the exact 80/60/40 cutoffs this reuses.
+
 ---
 
 ## E. Clean / well-guarded calculations (checked, no defect found)

@@ -97,7 +97,9 @@ export default function VerifyEmailPage() {
               </div>
               <p className="font-black text-red-700">{state.message}</p>
               <p className="text-sm text-slate-500">
-                If your link expired, contact support to request a new one, or try{' '}
+                If your link expired,{' '}
+                <a href="mailto:ali.aburas@deliveryclarity.app?subject=Verification%20link%20expired" className="text-blue-600 underline underline-offset-2">contact support</a>{' '}
+                to request a new one, or try{' '}
                 <Link href="/login" className="text-blue-600 underline underline-offset-2">signing in</Link>{' '}
                 — you may already be verified.
               </p>

@@ -1,5 +1,40 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-17 (**PHASE 5 VERIFICATION SWEEP + THREE QUICK WINS (MPE-04, MPE-06, CP3-020)** —
+User said "do next" with no specific item named, moving into the Phase 5 P2/P3 polish backlog (no forced
+order, per `11-prioritized-backlog.md`). Given the previous round's discovery that documented "still open"
+findings had actually been silently fixed before this session's visibility (Card.tsx, the two dead coaching
+services), ran a full `Explore` agent verification pass across **every** Phase 5 item before picking
+anything to work on, rather than guessing item-by-item again. Result: **8 more items were already done**
+(never struck through in the backlog doc) — "Full Report" nav description (commit `c5c2506`), admin
+confirm-dialog consistency (commit `1089f26`), avatar-size tokenization (commit `3b4c75b`),
+`orphanRelation.service.ts` deletion (commit `80b3c2a`), CP3-013's ceremony-caveat finding resolved by
+outright file deletion rather than staying "moot," plus Phase 2's caching fix and 4 other Phase 2 items that
+had never been struck through at all despite being done. Corrected all of this in
+`11-prioritized-backlog.md` (Phase 2 table + Phase 5 paragraphs) so the doc reflects 2026-07-17 reality, not
+just the original audit date. **Then executed three of the genuinely-still-open items:** (1) **MPE-06** —
+`app/verify-email/page.tsx`'s "contact support" text is now a real `mailto:ali.aburas@deliveryclarity.app`
+link (pre-filled subject), reusing the support address already used consistently across
+`src/lib/legal-i18n/en.ts`, not inventing a new contact channel. (2) **MPE-04** —
+`app/admin/system-errors/page.tsx`'s "Dismiss" action now goes through `ConfirmDeleteDialog` (`danger={false}`,
+since marking an error resolved isn't destructive — the record stays in the log), matching the pattern
+`/snapshots` and `/backend` already use; this closes the exact inconsistency the finding named. (3)
+**CP3-020** — `app/trends/page.tsx` now calls the previously-dead `releaseConfidenceBand()` instead of
+reimplementing its 80/60/40 cutoffs inline as a color ternary; mapped the returned band to the same 3 colors
+via a small local lookup, so the visual output is byte-identical to before — pure dead-code elimination, zero
+user-visible change. **Process note:** ran `npx prettier --write` on the three changed files mid-task to fix
+minor indentation from the `ConfirmDeleteDialog` JSX insertion — this project has no `prettier` devDependency,
+no config, and no `format:check` script, so `npx` silently fetched an unpinned latest version and reformatted
+each file to its own defaults (double quotes, full-file re-wrap), producing a huge unwanted diff against the
+project's actual single-quote style. Caught it before committing, `git checkout --` the three files, and
+redid all three edits by hand instead — do not run `prettier` in this repo again unless it's added as a real,
+pinned devDependency with a project `.prettierrc` first. Verified (after the redo): `npm run typecheck`
+clean; `npx eslint` on the 3 changed files unchanged at 6 warnings (0 new, confirmed via `git stash`
+comparison); `npm run build` compiled all 64 routes; `npm run test` 108/108 suites, 1004/1004 tests passing
+(one interim run showed 3 failures in `adminUsers.test.ts`, immediately re-ran clean — same pre-existing
+worker-flakiness class documented earlier in this file). `product/RELEASE_NOTES.md` entry added for MPE-04 +
+MPE-06 (user-visible); no entry for CP3-020 (no visible change). Branch: `fix/phase5-mpe04-mpe06-cp3-020`.)
+
 **Last updated:** 2026-07-15 (**09-ux §4: CLOSE OUT THE SILENT-REDIRECT / CONFLATED-ERROR FINDING** — the
 last remaining item from the previous round's Phase 3 sweep; wasn't decided alongside the other four
 because the "next" prompt moved on before I'd cross-checked the full backlog table against it. Investigated
