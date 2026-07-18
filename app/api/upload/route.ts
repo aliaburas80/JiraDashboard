@@ -14,6 +14,7 @@ import { markPendingPush } from '@/services/storage/cloudSync';
 import { getUserStorageProviderStatus, getVerifiedUserStorageProviderInstance } from '@/services/storage/userStorageProvider.service';
 import { getServerEnv } from '@/lib/env/server';
 import { getWorkspaceForUser } from '@/lib/workspace';
+import { validateFileSignature } from '@/lib/fileSignature';
 import {
   checkUploadEntitlement,
   beginUploadEntitlement,
@@ -172,6 +173,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
   const fileArg = { buffer, originalname };
+
+  // --- Content-signature sanity check (SEC, 2026-07-18) ---
+  // Defense-in-depth ahead of parseJiraFile()'s own XLSX.read() content
+  // sniffing (docs/product-audit/10-technical-cleanup.md Part 1 finding 3):
+  // catches an obviously-spoofed extension (e.g. a binary/garbage file
+  // renamed to .xlsx) with a clear message here, before it reaches the
+  // parser. Deliberately lenient for .xls/.csv — see src/lib/fileSignature.ts
+  // for why a strict OLE-only .xls check would reject real Jira exports.
+  const signatureError = validateFileSignature(buffer, ext);
+  if (signatureError) {
+    if (!isAdmin) await revertEntitlement(userId);
+    return NextResponse.json({ error: signatureError }, { status: 400 });
+  }
 
   // --- Parse ---
   let parseResult: ReturnType<typeof parseJiraFile>;

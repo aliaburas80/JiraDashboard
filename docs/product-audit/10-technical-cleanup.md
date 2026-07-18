@@ -32,6 +32,33 @@ Severity: P2 (architectural risk, not a current exploit)
 Confidence: High confidence
 ```
 
+**Resolved (2026-07-18):** Added a `/api/*` defense-in-depth backstop to `middleware.ts` — `config.matcher`
+now includes `/api/:path*`, and the middleware function gates every `/api/*` request against an explicit
+`PUBLIC_API` allow-list before falling through to a session check. Non-public routes with no valid session
+now get a `401 { error: 'Not authenticated.' }` from the middleware layer itself, before the route handler
+ever runs. Scoped deliberately narrow: this checks only *authentication* ("is there a valid session"),
+never *authorization* (role/ownership) — every route's own more granular check (e.g. all 24 `admin/*`
+routes' `requireAdmin()`) still runs afterward, unaffected, so the backstop cannot conflict with or weaken
+an existing check, only catch the case where a route has none at all. `PUBLIC_API` was built by grepping
+every `app/api/**/route.ts` for `isLoggedIn`/`requireAdmin`/`requireUser`/`requireAuth` (see
+`grep -c` sweep across all 73 route files) to separate three buckets: routes that already enforce a
+check (left untouched, backstop is redundant-but-harmless there), routes that are genuinely meant to be
+public (`/api/auth/{login,logout,register,forgot-password,resend-verification,reset-password,
+verify-email}`, `/api/health`, `/api/ready`, `/api/demo-request`, `/api/events/error` — all individually
+read and confirmed, matching this file's own "Checked and confirmed clean" notes), and the one route with
+**zero** auth check that turned out not to be intentionally public: `GET /api/docs` (serves
+`product/{BRD,SRS,USE_CASES,...}.md` — only ever called from `app/developer/page.tsx`, which is itself in
+`PROTECTED`, so this was a real, previously-unguarded gap; anyone could `curl` internal product docs
+directly without logging in). `/api/dashboard` (a static `{status:'ok'}` stub with zero sensitive content)
+and `/api/backend-view` (which does its own session-aware branching and must stay reachable
+unauthenticated for its documented API-index purpose) were kept public deliberately, not because they
+lacked a check — see the finding immediately below for what changed in `backend-view`'s own fallback.
+Full blast-radius re-check performed against the final diff (see `TODO-List.md`'s dated entry for this
+change): every currently-public page route (`/login`, `/register`, `/forgot-password`, `/reset-password`,
+`/verify-email`, `/promo`) and every API endpoint those pages call were individually confirmed to remain
+reachable with no session. Tests added in `src/__tests__/middleware.test.ts`. Branch:
+`fix/security-hardening-nonurgent-audit-p1`.
+
 ```
 Finding: GET /api/backend-view has an intentional unauthenticated fallback that returns recent import filenames/row counts/status when there's no session.
 Evidence: app/api/backend-view/route.ts (unauthenticated branch returns data rather than 401).
@@ -39,6 +66,24 @@ Why it matters: reachable directly by URL even though the /backend page itself i
 Severity: P2
 Confidence: High confidence
 ```
+
+**Resolved (2026-07-18):** This finding's own "lower-sensitivity" framing undersold it — investigation
+found the unauthenticated fallback called `readImportLogs()`, reading `data/import-logs.json`: the
+**exact same** single flat file, shared globally across every user with zero per-user scoping, that
+`GET /api/imports`'s 2026-07-08 P0 fix (`fix(P0): stop cross-account data leakage on shared browsers`,
+commit `8f5af96`) removed entirely from *that* route's unauthenticated path for the documented reason
+"no legitimate case where this route should ever answer without a valid session or with unscoped data."
+That file is still actively written on every upload (`app/api/upload/route.ts`'s `appendImportLog()`
+call), so this fallback was serving real cross-account filenames, row counts, statuses, and file sizes to
+any unauthenticated caller — `userName`/`userEmail` were nulled out (matching the route's "no user data"
+doc comment), but filename/rowCount/status/filesize were not, and a filename alone can be sensitive
+(client/project names, confidential markers). Fixed by applying the same fail-closed principle as the
+`/api/imports` P0 fix, but narrower: unlike `/api/imports`, this route's purpose also includes doubling as
+a public, unauthenticated API index (the `endpoints` list, referenced from `/help` and kept in
+`middleware.ts`'s `PUBLIC_API`), so the fix drops the real import data from the unauthenticated path
+instead of 401-ing the whole route — it now returns the static endpoint index with `logs: []` and null
+stats when there's no session, never falling back to the unscoped file. Tests added in
+`src/__tests__/backendViewFallback.test.ts`. Branch: `fix/security-hardening-nonurgent-audit-p1`.
 
 ```
 Finding: POST /api/auth/login returns a distinct 404 "USER_NOT_FOUND" for unknown emails vs. a generic 401 for a wrong password on a known account — inconsistent with every other auth endpoint's anti-enumeration pattern.
@@ -56,12 +101,45 @@ Severity: P3
 Confidence: High confidence
 ```
 
+**Resolved (2026-07-18):** Added `src/lib/fileSignature.ts` — a dependency-free content-signature gate run
+in both named routes, right after the buffer is read and before the real parser. `.xlsx` (whose
+`ALLOWED_EXTENSIONS` in `upload/route.ts` is `['.csv', '.xlsx', '.xls']`; `retro/parse/route.ts` adds
+`.md`/`.txt`) gets a strict check — a real `.xlsx` is always a ZIP/OOXML archive (`PK\x03\x04` et al.), so
+content not matching that signature is rejected outright. `.xls`/`.csv`/`.md`/`.txt` get a deliberately
+lenient text-sanity check (no NUL bytes, low ratio of non-printable control bytes) rather than a strict
+binary-format check: real-world Jira "Excel" exports are sometimes actually tab- or HTML-formatted text
+saved with a `.xls` extension (a long-standing Jira export quirk that `XLSX.read()` already tolerates
+downstream), and a strict OLE-only signature check would have rejected those legitimate files — this was
+a deliberate correctness-over-security tradeoff per this task's own instruction to be conservative rather
+than risk a functional regression. This is explicitly defense-in-depth ahead of `XLSX.read()`'s own content
+sniffing (already noted above as "Checked and confirmed clean"), not a replacement for it — existing parser
+logic downstream is unchanged. `app/api/upload/merge/route.ts` has the identical extension-only pattern
+(`ALLOWED_EXT`) but was **not** in scope for this fix (not named in the task) and was left untouched;
+flagged here as a follow-up candidate for the same treatment. Tests added in
+`src/__tests__/fileSignature.test.ts` (domain-level), `src/__tests__/uploadUserId.test.ts`, and
+`src/__tests__/retroParseSignature.test.ts`. Branch: `fix/security-hardening-nonurgent-audit-p1`.
+
 ```
 Finding: Profile image upload trusts the client-declared Content-Type with no server-side image content verification (though image/svg+xml is correctly excluded, preventing stored-SVG-XSS).
 Evidence: profile image upload route (src/services/storage/profileImages.ts consumer).
 Severity: P3
 Confidence: Medium confidence
 ```
+
+**Resolved (2026-07-18):** `app/api/profile/image/route.ts` no longer trusts `file.type` (client-declared,
+trivially spoofable via `FormData`) for either the accept/reject decision or the S3 `contentType`. Added
+`detectImageContentType()` to `src/lib/fileSignature.ts` — checks the real magic bytes for PNG
+(`\x89PNG\r\n\x1a\n`), JPEG (`\xFF\xD8\xFF`), GIF (`GIF87a`/`GIF89a`), and WebP (`RIFF....WEBP`) — and the
+route now uses the server-detected type for the S3 upload call, not the client's claim. A file whose
+declared type disagrees with its real content is now accepted or rejected based on the real content (e.g.
+a JPEG mislabeled `image/png` is accepted and stored with the correct `image/jpeg` contentType); content
+matching none of the four supported formats is rejected regardless of what the client claims. `image/svg+xml`
+remains excluded exactly as before (no SVG branch was added to the detector, and it was never in
+`ALLOWED_TYPES`) — the existing stored-SVG-XSS protection is unchanged. No new dependency added. Tests
+added/updated in `src/__tests__/profileImage.test.ts` (existing fixtures updated to use real magic bytes
+instead of placeholder strings like `'png'`, which never matched real PNG content and only happened to
+pass because the old check trusted `file.type`) and `src/__tests__/fileSignature.test.ts`. Branch:
+`fix/security-hardening-nonurgent-audit-p1`.
 
 ---
 

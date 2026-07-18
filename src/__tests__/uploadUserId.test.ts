@@ -94,11 +94,17 @@ beforeEach(() => {
 });
 
 // The route checks `file instanceof Blob` — give our fake file object that prototype.
-function blobFile(name = 'export.csv', size = 1024) {
+// SEC (2026-07-18): the route now runs validateFileSignature() on the real
+// buffer before parsing (see src/lib/fileSignature.ts) — the fixture must
+// contain plausible CSV text (not an all-zero ArrayBuffer, which fails the
+// new sanity check as binary-looking content) for the "happy path" tests to
+// still exercise the route past that gate.
+function blobFile(name = 'export.csv', content = 'Issue Key,Issue Type,Summary,Status\nPROJ-1,Story,Test,Done\n') {
+  const buf = Buffer.from(content, 'utf8');
   const f = {
     name,
-    size,
-    arrayBuffer: jest.fn(async () => new ArrayBuffer(size)),
+    size: buf.byteLength,
+    arrayBuffer: jest.fn(async () => buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)),
   };
   Object.setPrototypeOf(f, Blob.prototype);
   return f;
@@ -132,4 +138,40 @@ test('TC-A-14b: anonymous upload (no session) is rejected with 401', async () =>
   expect(response.status).toBe(401);
 
   expect(prisma.importLog.create).not.toHaveBeenCalled();
+});
+
+// SEC (2026-07-18, docs/product-audit/10-technical-cleanup.md Part 1 finding 3):
+// the route now runs validateFileSignature() ahead of parseJiraFile() — a file
+// with a spoofed .xlsx extension whose actual bytes are not a ZIP/OOXML
+// archive must be rejected here, with a clear 400, before ever reaching the
+// parser. Real .xlsx content is always a ZIP archive (no legitimate
+// exception), so this extension gets a strict check — see
+// src/lib/fileSignature.ts for why .csv/.xls are deliberately lenient.
+test('SEC-2026-07-18a: upload rejects a .xlsx file whose content is not a real Excel archive', async () => {
+  const { POST } = await import('../../app/api/upload/route');
+
+  const spoofed = blobFile('export.xlsx', 'this is plain text pretending to be an .xlsx file');
+  const response = await POST(request(spoofed));
+  const body = await response.json();
+
+  expect(response.status).toBe(400);
+  expect(body.error).toContain('.xlsx');
+});
+
+test('SEC-2026-07-18b: upload accepts a real .xlsx (ZIP/OOXML signature) past the content-signature gate', async () => {
+  const { POST } = await import('../../app/api/upload/route');
+
+  // Real .xlsx files are ZIP archives — a genuine local-file-header signature
+  // is enough to pass the gate; downstream parseJiraFile() (mocked in this
+  // file) is what would validate the actual sheet contents in production.
+  const zipSignature = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x00, 0x00, 0x00, 0x00]);
+  const f = {
+    name: 'export.xlsx',
+    size: zipSignature.byteLength,
+    arrayBuffer: jest.fn(async () => zipSignature.buffer.slice(zipSignature.byteOffset, zipSignature.byteOffset + zipSignature.byteLength)),
+  };
+  Object.setPrototypeOf(f, Blob.prototype);
+
+  const response = await POST(request(f));
+  expect(response.status).toBe(200);
 });
