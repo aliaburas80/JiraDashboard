@@ -5,6 +5,28 @@
 
 ---
 
+## Fixed: Four Non-Urgent Security Hardening Findings (2026-07-18)
+
+Defense-in-depth improvements, none tied to a known exploit — found and fixed as part of a full-application
+product audit (`docs/product-audit/`):
+
+- **Every `/api/*` route now requires a valid session by default**, closing a gap where one route
+  (`GET /api/docs`, which serves internal product documentation) had no authentication check at all and
+  was reachable by anyone. A small, explicit list of intentionally public routes (login, registration,
+  password reset, health checks, the promo lead-gen form, and a couple of others) is unaffected; every
+  route's own more specific admin/role checks are unchanged and still run.
+- **The unauthenticated view of `/backend` no longer returns real import data** (filenames, row counts,
+  status, file size) from a shared, unscoped log file — it now returns only the page's static endpoint
+  index, matching the same fix already applied to the main imports API.
+- **Uploading a Jira export or retro file now gets a basic content sanity check** before parsing, catching
+  an obviously-mislabeled or corrupted file (e.g. a `.xlsx` extension on non-Excel content) with a clear
+  error message, as a defense-in-depth layer ahead of the existing parser.
+- **Profile image uploads are now verified by their actual file content**, not just the browser-reported
+  file type, before being accepted and stored — closing a gap where a mislabeled file could bypass the
+  intended JPG/PNG/WebP/GIF restriction.
+
+---
+
 ## Added: Pagination and Search on Admin and List Pages (2026-07-17)
 
 `/admin/logs`, `/admin/users`, `/members`, `/backend`'s Import Logs section, and `/snapshots` previously rendered their entire list on one page with no way to page through it — fine with a handful of rows, but it would only get slower and harder to scan as an account's history or team grew. All five now page their results (25 rows at a time on the admin pages, 10 on Snapshots, 24 on Members). `/snapshots`, `/admin/logs`, `/backend`, and `/admin/audit` also gained a free-text search box — search by filename or uploader on the logs pages, by snapshot name on Snapshots, and by event description or user on the Audit Events log. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
