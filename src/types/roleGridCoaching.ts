@@ -23,6 +23,12 @@ export interface RoleAction {
 export interface RoleMetric {
   label: string;
   value: string | number;
+  // CP3-012: true when `value` is a fixed placeholder constant (no real data
+  // exists behind it yet — see RETRO_ACTIONS_COMPLETED_FALLBACK_PCT in
+  // roleGridView.mapper.ts) rather than a genuine calculation from the
+  // uploaded data. Rendered with a visible qualifier by MetricItem so it
+  // can't be mistaken for a real number. Omitted/false for real metrics.
+  isEstimate?: boolean;
 }
 
 export type RoleTone = 'blue' | 'purple' | 'green';
