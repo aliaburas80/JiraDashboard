@@ -1,5 +1,36 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-18 (**MPE-02 FULLY CLOSED + UPLOAD/MERGE FILE-SIGNATURE FOLLOW-UP** — picked up
+the last two explicitly-flagged "left out of scope" leftovers from two already-completed Phase 5 items,
+both small and low-risk, matching existing patterns exactly. (1) **`/admin/system-errors` pagination** —
+the 6th page named in MPE-02's evidence (`05-missing-product-elements.md`) but excluded from the
+2026-07-17 pagination pass ("wasn't part of the requested scope"). Added the same shared `paginate()`
+helper (`src/lib/pagination.ts`) at 25 rows/page, matching `admin/logs`/`admin/users`/`backend`'s
+`AdminConsoleLayout` + `page.module.scss` pattern exactly (new `.pagination`/`.pageBtn`/`.pageInfo` classes
+added to `app/admin/system-errors/page.module.scss`, copied from `admin/logs`'s). Status filter now resets
+to page 1 on change. Summary stat cards (Total Logged, Unresolved, Auto-Fixed, Retried) still derive from
+the full fetched array, not the paginated slice. MPE-02 is now closed on all 6 originally-named pages.
+(2) **`upload/merge/route.ts` content-signature gate** — flagged as a follow-up candidate in the
+2026-07-18 security-hardening resolution note (`10-technical-cleanup.md` Part 1) when `upload/route.ts`
+and `retro/parse/route.ts` got `validateFileSignature()` but this route, sharing the identical
+extension-only `ALLOWED_EXT` pattern, was left untouched. Wired the same gate into the per-file loop
+(reuses the loop's existing `ext(name)`), rejecting with the same per-file `"File \"<name>\": ..."` message
+shape this route already uses for its other per-file validation errors, so a multi-file merge upload still
+identifies which specific file failed the check. No behavior change to the signature-check logic itself
+(`src/lib/fileSignature.ts` untouched) — only a new call site. **Tests:** new
+`src/__tests__/uploadMergeSignature.test.ts` (4 tests — binary-garbage `.csv` rejection, spoofed `.xlsx`
+rejection, legitimate multi-file pass-through, correct per-file name attribution when only one of several
+files fails). **Docs:** dated follow-up resolution notes added under both original findings in
+`05-missing-product-elements.md` (MPE-02) and `10-technical-cleanup.md` Part 1 (file-signature); both
+corresponding Phase 5 lines in `11-prioritized-backlog.md` updated to drop their "left out of scope"/"not
+fixed" caveats. No `product/RELEASE_NOTES.md` entry — both changes are internal
+hardening/completeness with no visible product behavior change beyond an admin page gaining pagination
+controls once it exceeds 25 rows, which didn't warrant a standalone release note given the five sibling
+pages already shipped identical pagination on 2026-07-17. **Verified:** `npm run typecheck` clean; `npx
+eslint` on all changed `.ts`/`.tsx` files 0 warnings; `npx stylelint` on the changed `.scss` file 0
+warnings; `npm test` 113/113 suites, 1,075/1,075 tests passing; `npm run build` compiled all routes
+clean. Branch: `fix/upload-merge-file-signature-mpe-tail`.)
+
 **Last updated:** 2026-07-18 (**07-IA THREE NAMING/GROUPING FINDINGS CLOSED (DATA QUALITY COLLISION,
 REFERENCE GROUP SPLIT, TRENDS AMBIGUITY)** — picked up the three remaining open items under Phase 5's
 "IA/naming" line in `11-prioritized-backlog.md`, all from `07-information-architecture.md`. (1)

@@ -14,6 +14,7 @@ import { markPendingPush } from '@/services/storage/cloudSync';
 import { getMetricsScopeKeyForUser } from '@/lib/workspace';
 import { mergeIssueArrays } from '@/lib/mergeIssues';
 import { getUserStorageProviderStatus, getVerifiedUserStorageProviderInstance } from '@/services/storage/userStorageProvider.service';
+import { validateFileSignature } from '@/lib/fileSignature';
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const MAX_FILES     = 10;
@@ -73,6 +74,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     const buffer = Buffer.from(await blob.arrayBuffer());
+
+    // Content-signature sanity check (SEC, 2026-07-18) — same defense-in-depth
+    // gate as the single-file upload route (app/api/upload/route.ts); this
+    // route was left out of that pass. See src/lib/fileSignature.ts for why
+    // it's deliberately lenient for .xls/.csv.
+    const signatureError = validateFileSignature(buffer, ext(name));
+    if (signatureError) {
+      return NextResponse.json({ error: `File "${name}": ${signatureError}` }, { status: 400 });
+    }
+
     try {
       const { issues, warnings } = parseJiraFile({ buffer, originalname: name });
       const validation = validateIssueData(issues);
