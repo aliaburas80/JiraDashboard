@@ -9,6 +9,7 @@ import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { parseRetroFile } from '@/services/retro/retroFileParser.service';
 import { generateInsightsForRecords } from '@/services/retro/retroInsights.service';
+import { validateFileSignature } from '@/lib/fileSignature';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB — retro files are small, text-based
 const ALLOWED_EXTENSIONS = ['.csv', '.xlsx', '.xls', '.md', '.txt'];
@@ -53,6 +54,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     buffer = Buffer.from(await file.arrayBuffer());
   } catch {
     return NextResponse.json({ error: 'Could not read the uploaded file.' }, { status: 400 });
+  }
+
+  // --- Content-signature sanity check (SEC, 2026-07-18) ---
+  // See app/api/upload/route.ts's identical gate + src/lib/fileSignature.ts
+  // for the full rationale (docs/product-audit/10-technical-cleanup.md
+  // Part 1 finding 3).
+  const signatureError = validateFileSignature(buffer, ext);
+  if (signatureError) {
+    return NextResponse.json({ error: signatureError }, { status: 400 });
   }
 
   let parsed: ReturnType<typeof parseRetroFile>;
