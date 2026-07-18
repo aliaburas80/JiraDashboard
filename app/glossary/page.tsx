@@ -174,6 +174,9 @@ const SECTIONS: GlossarySection[] = [
       { term: 'activeSection',         full: 'Dashboard Active Section State',     meaning: 'React state in dashboard/page.tsx controlling which section is shown. Default: \'summary\' (Delivery Summary). Maps to setSectionMode for 12 existing sections; \'flow\' opens the flow panel; \'summary\' renders the summary KPI+alert+actions view.' },
       { term: 'Delivery Summary',      full: 'Dashboard Default Section',          meaning: 'New section shown when activeSection===\'summary\'. Displays: title + Broadcast chip, 4 KPI mini-cards (Completion, Critical, Avg Cycle, Est. Completion), alert strip (blocked/overdue/orphans), top 3 smart actions.' },
       { term: 'Ops Score',         full: 'Operational Health Score',         meaning: '0-100 admin metric on /admin/diagnostics. Penalties: missing SESSION_SECRET (-30), non-production NODE_ENV (-10), open registration (-10), failed imports (-1 each).' },
+      { term: 'Carry-over Threshold',       full: 'Team Role View — Scrum Master', meaning: '20% of committed sprint items carried over triggers the "Carry-over must remain below the agreed threshold" rule\'s At risk status on /dashboard/coaching. Placeholder default, not yet a team-configurable setting.' },
+      { term: 'Capacity Overload Threshold', full: 'Team Role View — Manager',     meaning: '35% load share for one assignee (only counted once the team has more than 2 members) triggers the "Capacity overload must be corrected" rule\'s Risk status on /dashboard/coaching. Same threshold the coaching insight generators use elsewhere.' },
+      { term: 'Low Delivery Confidence Threshold', full: 'Team Role View — Manager', meaning: 'Below 60% overall delivery confidence triggers the "Delivery forecasts must be credible" rule\'s Critical status on /dashboard/coaching.' },
     ],
   },
   {

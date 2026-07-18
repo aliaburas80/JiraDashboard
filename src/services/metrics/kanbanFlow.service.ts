@@ -10,6 +10,7 @@ import type {
   KanbanFlowSummary,
   KanbanBottleneckStatus,
   KanbanFlowHealth,
+  KanbanTypeFlowBreakdown,
 } from '@/types/throughput';
 
 type JiraIssue = Record<string, unknown>;
@@ -87,6 +88,10 @@ function getTeam(issue: JiraIssue): string {
   return (issue['Team'] as string) || 'Kanban';
 }
 
+function getIssueType(issue: JiraIssue): string {
+  return (issue['Issue Type'] as string) || 'Unknown';
+}
+
 // ── Period label helpers ──────────────────────────────────────────────────────
 
 function periodKey(date: Date): string {
@@ -143,6 +148,44 @@ function avg(nums: number[]): number {
   return Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10;
 }
 
+// CP3-006: per-issue-type cycle/lead time breakdown for Kanban issues,
+// computed over the same "done" population as the overall avgCycleTimeDays/
+// avgLeadTimeDays aggregate below, just split by Issue Type instead of
+// blended — so an Epic-heavy backlog's naturally longer cycle time isn't
+// averaged together with a quick Sub-task's. Additional data alongside, not
+// a replacement for, the blended aggregate. See docs/product-audit/08-
+// metric-dictionary.md CP3-006.
+function buildCycleTimeByType(doneKanbanIssues: JiraIssue[]): KanbanTypeFlowBreakdown[] {
+  const byType = new Map<string, JiraIssue[]>();
+  for (const issue of doneKanbanIssues) {
+    const type = getIssueType(issue);
+    if (!byType.has(type)) byType.set(type, []);
+    byType.get(type)!.push(issue);
+  }
+
+  return [...byType.entries()]
+    .map(([type, items]) => {
+      const cycleTimes: number[] = [];
+      const leadTimes: number[] = [];
+      for (const issue of items) {
+        const created = getCreatedDate(issue);
+        const started = getStartedDate(issue);
+        const done = getDoneDate(issue);
+        if (created && done) leadTimes.push(Math.round((done.getTime() - created.getTime()) / 86_400_000));
+        if (started && done) cycleTimes.push(Math.round((done.getTime() - started.getTime()) / 86_400_000));
+      }
+      return {
+        type,
+        count: items.length,
+        avgCycleTimeDays: avg(cycleTimes),
+        avgLeadTimeDays: avg(leadTimes),
+        cycleTimeSampleSize: cycleTimes.length,
+        leadTimeSampleSize: leadTimes.length,
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export function calculateKanbanFlow(issues: JiraIssue[]): KanbanFlowSummary {
@@ -156,7 +199,7 @@ export function calculateKanbanFlow(issues: JiraIssue[]): KanbanFlowSummary {
   if (!kanbanIssues.length) {
     return { hasKanbanData: false, periods: [], avgThroughputPerPeriod: 0,
              avgCycleTimeDays: 0, avgLeadTimeDays: 0, avgFlowEfficiencyPct: 0,
-             totalAgingWip: 0, overallFlowHealth: 'Healthy' };
+             totalAgingWip: 0, overallFlowHealth: 'Healthy', cycleTimeByType: [] };
   }
 
   // Group done issues by the month they were completed
@@ -247,14 +290,19 @@ export function calculateKanbanFlow(issues: JiraIssue[]): KanbanFlowSummary {
   // Overall aggregates
   const allCycleTimes: number[] = [];
   const allLeadTimes:  number[] = [];
+  const doneKanbanIssues: JiraIssue[] = [];
   for (const issue of kanbanIssues) {
     const created = getCreatedDate(issue);
     const started = getStartedDate(issue);
     const done    = getDoneDate(issue);
     if (!isDone(issue)) continue;
+    doneKanbanIssues.push(issue);
     if (created && done) allLeadTimes.push(Math.round((done.getTime() - created.getTime()) / 86_400_000));
     if (started && done) allCycleTimes.push(Math.round((done.getTime() - started.getTime()) / 86_400_000));
   }
+  // CP3-006: same "done Kanban issues" population as allCycleTimes/allLeadTimes
+  // above, split per Issue Type instead of blended.
+  const cycleTimeByType = buildCycleTimeByType(doneKanbanIssues);
 
   const avgCycle = avg(allCycleTimes);
   const avgLead  = avg(allLeadTimes);
@@ -275,5 +323,6 @@ export function calculateKanbanFlow(issues: JiraIssue[]): KanbanFlowSummary {
     avgFlowEfficiencyPct:   avgEff,
     totalAgingWip,
     overallFlowHealth:      overallHealth,
+    cycleTimeByType,
   };
 }

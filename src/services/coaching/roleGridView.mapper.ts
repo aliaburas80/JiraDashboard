@@ -62,7 +62,7 @@ function buildScrumMasterRole(metrics: DashboardMetrics): RoleView {
     },
     {
       title: 'Carry-over must remain below the agreed threshold',
-      description: 'Review unfinished work and identify the system cause.',
+      description: `Review unfinished work and identify the system cause. Threshold: carry-over above ${CARRYOVER_AT_RISK_THRESHOLD_PCT}% of committed items.`,
       status: carryoverRatePct > CARRYOVER_AT_RISK_THRESHOLD_PCT ? 'risk' : 'healthy',
     },
     {
@@ -87,7 +87,11 @@ function buildScrumMasterRole(metrics: DashboardMetrics): RoleView {
     { label: 'Blocked items', value: blockedItems.length },
     { label: 'Carry-over', value: `${carryoverRatePct}%` },
     { label: 'Cycle time', value: cycleTime > 0 ? `${cycleTime.toFixed(1)} days` : '—' },
-    { label: 'Retro actions completed', value: `${RETRO_ACTIONS_COMPLETED_FALLBACK_PCT}%` }, // FALLBACK
+    // CP3-012: isEstimate flags this to MetricItem so it renders a visible
+    // "(estimated)" qualifier — this value never changes across uploads
+    // because it's a fixed placeholder, not a real calculation (see FALLBACK
+    // constant above).
+    { label: 'Retro actions completed', value: `${RETRO_ACTIONS_COMPLETED_FALLBACK_PCT}%`, isEstimate: true }, // FALLBACK
   ];
 
   return {
@@ -176,12 +180,12 @@ function buildManagerRole(metrics: DashboardMetrics): RoleView {
   const rules: RoleRule[] = [
     {
       title: 'Capacity overload must be corrected',
-      description: 'Rebalance ownership when teams exceed the agreed threshold.',
+      description: `Rebalance ownership when a team member's load share exceeds ${CAPACITY_OVERLOAD_LOAD_SHARE_PCT}% (teams larger than 2).`,
       status: overloaded.length > 0 && capacitySignalMeaningful ? 'risk' : 'healthy',
     },
     {
       title: 'Delivery forecasts must be credible',
-      description: 'Review forecast variance and remove unsupported commitments.',
+      description: `Review forecast variance and remove unsupported commitments. Threshold: delivery confidence below ${LOW_DELIVERY_CONFIDENCE_PCT}%.`,
       status: deliveryConfidence > 0 && deliveryConfidence < LOW_DELIVERY_CONFIDENCE_PCT ? 'critical' : 'healthy',
     },
     {

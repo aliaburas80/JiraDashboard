@@ -4,9 +4,18 @@
 import * as XLSX from 'xlsx';
 import { buildInsightWorkbook } from '../services/export/excelInsightExport.service';
 import { generateRecommendations, generateExecutiveNarrative } from '../services/export/recommendationEngine';
-import type { DashboardMetrics } from '../types/metrics';
+import type { DashboardMetrics, TypeEntry } from '../types/metrics';
 
 // ── Minimal valid metrics fixture ─────────────────────────────────────────────
+
+function typeEntry(type: string, count: number): TypeEntry {
+  return {
+    type, count, done: count, completionRate: 100, storyPoints: 0,
+    issues: count, good: count, warning: 0, critical: 0,
+    averageLeadTimeDays: 0, averageCycleTimeDays: 0,
+    leadTimeSampleSize: 0, cycleTimeSampleSize: 0,
+  };
+}
 
 function makeMetrics(overrides: Partial<DashboardMetrics> = {}): DashboardMetrics {
   const base: DashboardMetrics = {
@@ -67,7 +76,7 @@ function makeMetrics(overrides: Partial<DashboardMetrics> = {}): DashboardMetric
     capacity: [{ assignee: 'Ali', issues: 10, activeIssues: 4, doneIssues: 6, storyPoints: 20, doneStoryPoints: 14, loadShare: 50 }],
     epics: [],
     labels: {},
-    types: [{ type: 'Story', count: 12 }, { type: 'Task', count: 5 }, { type: 'Bug', count: 3 }],
+    types: [typeEntry('Story', 12), typeEntry('Task', 5), typeEntry('Bug', 3)],
     projects: [],
     parents: [],
     relations: { hasLinks: false, totalLinks: 0, itemsWithLinks: 0, linkTypes: 0, linkStats: [] },
