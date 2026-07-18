@@ -3346,10 +3346,10 @@ Higher leverage than a single page — these render inside multiple dashboard ro
 benefits several pages at once. They also carry broader regression risk for the same reason: changes
 here need manual verification across every page that mounts the component, not just one route.
 
-* `SprintComparePanel.tsx` (46), `SprintThroughputPanel.tsx` (33), `KanbanThroughputPanel.tsx` (31),
-  `MidSprintDeliveryPanel.tsx` (21)
-* Remaining `src/components/dashboard/**` files at ≤7 warnings each (`DashboardSectionSwitcher.tsx` and
-  `LayoutBuilderPanel.tsx` in this remainder are orphaned — not mounted in any route — see §60.6a)
+* `SprintThroughputPanel.tsx` (33), `KanbanThroughputPanel.tsx` (31), `MidSprintDeliveryPanel.tsx` (21)
+* Remaining `src/components/dashboard/**` files at ≤7 warnings each. `SprintComparePanel.tsx` (46) and
+  the two files formerly tracked here as orphaned (`DashboardSectionSwitcher.tsx`, `LayoutBuilderPanel.tsx`)
+  dropped out of this tier on 2026-07-18 — deleted as dead code, not refactored — see §60.6a
 
 ## 60.5 Refactor priority — Tier 4 and 5: remaining pages and shared components (256 + 158 warnings)
 
@@ -3371,14 +3371,21 @@ live `app/promo/` route) — all three confirmed unreferenced by the live app, `
 `docker-compose.yml`, or any CI config before deletion. Removing `frontend/` also resolved the 59-warning
 lint-scope mismatch as a side effect — the §60.1 baseline warning count no longer needs to exclude it.
 
-## 60.6a Out of scope: orphaned `DashboardSectionSwitcher` / `LayoutBuilderPanel`
+## 60.6a Resolved: orphaned dashboard components deleted (2026-07-18)
 
 `src/components/dashboard/DashboardSectionSwitcher.tsx` and `LayoutBuilderPanel.tsx` (and the
-`section-*` ids in `src/lib/dashboardSections.ts` they read) are not imported or mounted by any route
+`section-*` ids in `src/lib/dashboardSections.ts` they read) were not imported or mounted by any route
 under `app/` — discovered while auditing `app/dashboard/*` for the 2026-07-11 nav consolidation above.
-They're unrelated to the routed `/dashboard/*` pages this section otherwise tracks. Same §5 "no unowned
-code" concern as `frontend/`: needs an explicit keep-or-remove decision, tracked as `ORPHAN-02` in
-`TODO-List.md` rather than left undecided.
+A later pass found four more files in the same directory with zero live callers:
+`DraggableMetricTable.tsx`, `SaveSnapshotButton.tsx`, `SprintComparePanel.tsx`, `WhatChangedPanel.tsx`.
+**Resolved 2026-07-18**: explicit owner decision made to delete all six (1,118 lines), plus
+`src/lib/dashboardSections.ts` and `src/lib/layoutBuilder.ts` (fully orphaned once their only two
+consumers were gone) and their 2 dedicated test files — re-verified zero references before deleting.
+See `TODO-List.md` `ORPHAN-02` for full detail and the branch name.
+`src/components/dashboard/DashboardSidebarNav.tsx` was deliberately left untouched — it was never part
+of this finding's scope, and its SCSS module turned out to still be live (imported by the current
+`DashboardNavSidebar.tsx` under the old filename) — that `.tsx`-only orphan question remains open,
+tracked separately in `ORPHAN-02`.
 
 When refactoring a page:
 

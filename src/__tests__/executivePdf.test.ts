@@ -2,9 +2,18 @@
 // Executive PDF export tests — TC-EP-01 to TC-EP-08
 
 import { buildExecutivePdfHtml } from '../lib/executivePdf';
-import type { DashboardMetrics } from '../types/metrics';
+import type { DashboardMetrics, TypeEntry } from '../types/metrics';
 
 // ── Fixture ───────────────────────────────────────────────────────────────────
+
+function typeEntry(type: string, count: number): TypeEntry {
+  return {
+    type, count, done: count, completionRate: 100, storyPoints: 0,
+    issues: count, good: count, warning: 0, critical: 0,
+    averageLeadTimeDays: 0, averageCycleTimeDays: 0,
+    leadTimeSampleSize: 0, cycleTimeSampleSize: 0,
+  };
+}
 
 function makeMetrics(overrides: Partial<DashboardMetrics> = {}): DashboardMetrics {
   return {
@@ -36,7 +45,7 @@ function makeMetrics(overrides: Partial<DashboardMetrics> = {}): DashboardMetric
       { epic: 'Auth Revamp', issues: 10, completedIssues: 4, progress: 40, pointProgress: 40, storyPoints: 10, doneStoryPoints: 4,  critical: 2, warning: 0, good: 1 },
     ],
     labels: {},
-    types: [{ type: 'Story', count: 12 }, { type: 'Bug', count: 3 }],
+    types: [typeEntry('Story', 12), typeEntry('Bug', 3)],
     projects: [],
     parents: [],
     relations: { hasLinks: false, totalLinks: 0, itemsWithLinks: 0, linkTypes: 0, linkStats: [] },

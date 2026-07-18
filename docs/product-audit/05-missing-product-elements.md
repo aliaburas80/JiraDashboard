@@ -17,6 +17,17 @@ Severity: P2
 Confidence: High (direct grep, zero matches confirmed per file)
 ```
 
+**Resolved (2026-07-18):** Added CSV export to all 7 pages. `/work-explorer`, `/teams`, `/portfolio`,
+`/delivery-mix`, `/roadmap`, and `/customer` each export their currently-filtered/visible data via a
+per-page `src/services/export/*.service.ts` module built on the existing `buildSafeCsv` helper.
+`/charts` (a grid of independent chart widgets, not one primary table) uses a new `buildSectionedCsv`
+helper instead — one labeled section per currently-visible widget — and also gained a second "Export
+full report (.xlsx)" option that reuses the existing `exportToExcel` function already used elsewhere in
+the app, rather than duplicating Excel-generation logic. Every new CSV-building function is covered by
+`src/__tests__/missingExportsCsvSafety.test.ts`, asserting formula-injection characters (`=`, `+`, `-`,
+`@`) are neutralized per CLAUDE.md §38.5 and that benign values pass through unchanged. Branch:
+`feature/mpe-01-export-parity`.
+
 ## MPE-02 — Pagination is inconsistent across list-heavy pages, several with no cap at all
 
 ```text

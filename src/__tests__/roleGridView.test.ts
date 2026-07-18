@@ -225,6 +225,26 @@ describe('buildRoleGridView', () => {
     expect(manager.metrics.find((m) => m.label === 'Overloaded members')!.value).toBe(1);
   });
 
+  it('CP3-011: embeds the carry-over, capacity, and delivery-confidence thresholds in each rule\'s own description', () => {
+    const [scrumMaster, , manager] = buildRoleGridView(buildMetrics());
+    const carryoverRule = scrumMaster.rules.find((r) => r.title.startsWith('Carry-over'))!;
+    const capacityRule = manager.rules.find((r) => r.title.startsWith('Capacity overload'))!;
+    const forecastRule = manager.rules.find((r) => r.title.startsWith('Delivery forecasts'))!;
+    expect(carryoverRule.description).toContain('20%');
+    expect(capacityRule.description).toContain('35%');
+    expect(forecastRule.description).toContain('60%');
+  });
+
+  it('CP3-012: flags "Retro actions completed" as isEstimate, since no ownership/completion tracking exists', () => {
+    const [scrumMaster] = buildRoleGridView(buildMetrics());
+    const metric = scrumMaster.metrics.find((m) => m.label === 'Retro actions completed')!;
+    expect(metric.isEstimate).toBe(true);
+    // Every other Scrum Master metric is a real computed value, not a placeholder.
+    for (const other of scrumMaster.metrics.filter((m) => m.label !== 'Retro actions completed')) {
+      expect(other.isEstimate).toBeUndefined();
+    }
+  });
+
   it('does not flag capacity overload for a team of 2 or fewer, even if one member is over 35% load share', () => {
     // Same small-team guard as scrumMaster.generator.ts / engineeringManager.generator.ts —
     // a 1-2 person team trivially has someone over 35% load share, which isn't meaningful.

@@ -15,6 +15,7 @@ import {
   type ProjectSummary,
   type QuarterSummary,
 } from '@/lib/portfolioHealth';
+import { exportPortfolioEpicsToCsv } from '@/services/export/portfolioExport.service';
 import type { DashboardMetrics } from '@/types/metrics';
 import styles from './page.module.scss';
 
@@ -405,8 +406,17 @@ export default function PortfolioPage() {
         {summary.epics.length > 0 && (
           <div className={clsx(styles.card, styles.tableCard)}>
             <div className={styles.cardHead}>
-              <span className={styles.cardTitle}>Epic Detail Table</span>
-              <span className={styles.cardCount}>Full breakdown — scroll right on small screens</span>
+              <div className="flex items-center gap-2">
+                <span className={styles.cardTitle}>Epic Detail Table</span>
+                <span className={styles.cardCount}>Full breakdown — scroll right on small screens</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => exportPortfolioEpicsToCsv(summary.epics)}
+                className="btn-secondary btn-sm"
+              >
+                ↓ Export CSV
+              </button>
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table className={styles.table}>
