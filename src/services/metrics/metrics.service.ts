@@ -1,5 +1,6 @@
 // Migrated from backend/src/services/metrics.js
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
+import type { FlowItem, HealthStatus } from '@/types/metrics';
 import { calculateSprintThroughput } from './throughput.service';
 import { calculateMidSprintInsights } from './midSprint.service';
 import { calculateKanbanFlow } from './kanbanFlow.service';
@@ -36,40 +37,16 @@ const MONTHS: Record<string, number> = {
 // ---------------------------------------------------------------------------
 // Inline types
 // ---------------------------------------------------------------------------
-
-type HealthStatus = 'good' | 'warning' | 'critical';
+// DUP-FLOWITEM-01 (resolved 2026-07-18): FlowItem/HealthStatus used to be
+// redeclared here as a hand-synced copy of src/types/metrics.ts's exported
+// versions — nothing enforced they stayed identical, and CP3-001's fix
+// (2026-07-13) needed the same two fields added by hand in both places.
+// Now imported from the shared source instead; every other type below is
+// local-only (no external consumer needs them) and is intentionally left as
+// is.
 
 interface JiraIssue {
   [key: string]: unknown;
-}
-
-interface FlowItem {
-  key: string;
-  summary: string;
-  type: string;
-  status: string;
-  highLevelStatus: string;
-  sprint: string;
-  epic: string;
-  isOrphan: boolean;
-  assignee: string;
-  priority: string;
-  storyPoints: number;
-  createdDate: string;
-  startedDate: string;
-  doneDate: string;
-  leadTimeDays: number | null;
-  cycleTimeDays: number | null;
-  ageDays: number | null;
-  activeAgeDays: number | null;
-  labels: string;
-  parent: string;
-  project: string;
-  health: HealthStatus;
-  reason: string;
-  linkedTo?: string;
-  fixVersion: string;
-  blocked: boolean;
 }
 
 interface FlowSummary {

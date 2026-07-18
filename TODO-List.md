@@ -1,5 +1,31 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-18 (**DUP-FLOWITEM-01 RESOLVED: CONSOLIDATED THE DUPLICATE `FlowItem` TYPE** —
+picked up the one remaining self-contained item from Phase 5 tracking after the backlog-accuracy pass
+above closed out everything else reachable without a bigger dedicated review (`CP3-017`, a Data Quality
+scoring-formula change, was deliberately left open — same reasoning as when it was first deferred).
+`src/services/metrics/metrics.service.ts` had its own private `interface FlowItem { ... }` and
+`type HealthStatus = ...`, hand-synced against the real, exported versions in `src/types/metrics.ts` since
+nothing enforced they matched — discovered 2026-07-13 while fixing `CP3-001`, when both needed the same
+two-field addition (`fixVersion`/`blocked`) by hand. Diffed both interfaces field-by-field before touching
+anything — confirmed byte-for-byte structurally identical (same 26 fields, same types, same optional
+marker on `linkedTo`) — then deleted the local copy and replaced it with `import type { FlowItem,
+HealthStatus } from '@/types/metrics'`. Scope was deliberately narrow: the ~15 other locally-declared
+interfaces in the same file (`FlowSummary`, `SprintEntry`, `EpicEntry`, `QuarterEntry`, etc.) were left
+untouched — `DUP-FLOWITEM-01` only ever named `FlowItem`, and auditing whether any of those other types
+are *also* duplicated elsewhere is a different, larger investigation this task didn't do. **Verified:**
+`npm run typecheck` passed with zero errors on the very first attempt after the change — meaningful
+confirmation, not just a formality, since it means every one of the ~15 functions in this file that
+build or consume `FlowItem` values (`getHealthFromIssue`, `summarizeFlowItems`, `buildFlowMetrics`,
+`buildSprintMetrics`, `buildEpicMetrics`, etc.) was already producing values fully compatible with the
+shared type; `npx eslint` on the changed file 0 warnings; `npm test` 113/113 suites, 1,075/1,075 tests
+passing (same counts as before the change — as expected for a type-only edit); `npm run build` compiled
+all routes clean. No behavior change, no test added (nothing to test — the runtime code is byte-identical,
+only the type declaration's source moved). **Docs:** `11-prioritized-backlog.md`'s Phase 5 "Technical
+debt" line updated with a strikethrough resolution note. No `product/RELEASE_NOTES.md` entry — purely an
+internal type-safety fix with zero visible or computable behavior change. Branch:
+`refactor/dup-flowitem-01-consolidate-flowitem-type`.)
+
 **Last updated:** 2026-07-18 (**BACKLOG DOC ACCURACY FIX + MINIKPICARD CONFIDENCE ROLLOUT** — while
 picking "next" work from `11-prioritized-backlog.md`, found Phase 1's table (the audit's 3 P0 correctness
 findings — the highest severity in the whole document) had never been struck through, unlike every other
