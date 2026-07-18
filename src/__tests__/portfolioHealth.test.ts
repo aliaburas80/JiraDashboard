@@ -173,12 +173,12 @@ test('TC-PF-10: portfolioBand thresholds and colors are correct', () => {
   expect(portfolioBand(70)).toBe('Good');
   expect(portfolioBand(69)).toBe('Moderate');
   expect(portfolioBand(55)).toBe('Moderate');
-  expect(portfolioBand(54)).toBe('At Risk');
-  expect(portfolioBand(35)).toBe('At Risk');
+  expect(portfolioBand(54)).toBe('Portfolio At Risk');
+  expect(portfolioBand(35)).toBe('Portfolio At Risk');
   expect(portfolioBand(34)).toBe('Critical');
   expect(portfolioBand(0)).toBe('Critical');
 
   expect(portfolioBandColor('Excellent')).toBe('#16a34a');
   expect(portfolioBandColor('Critical')).toBe('#dc2626');
-  expect(portfolioBandColor('At Risk')).toBe('#ea580c');
+  expect(portfolioBandColor('Portfolio At Risk')).toBe('#ea580c');
 });

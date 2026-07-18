@@ -69,7 +69,7 @@ export default function EpicReadinessPage() {
           {[
             { label: 'Total Epics', value: epicReadiness.length, color: '#475569', bg: '#F8FAFC', border: '#E2E8F0' },
             { label: 'On Track', value: epicReadiness.filter(e => e.risk === 'good' && e.completion >= 60).length, color: '#059669', bg: '#F0FDF4', border: '#BBF7D0' },
-            { label: 'At Risk', value: epicReadiness.filter(e => e.risk === 'warning').length, color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
+            { label: 'Epics Needing Attention', value: epicReadiness.filter(e => e.risk === 'warning').length, color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
             { label: 'Critical', value: criticalEpics, color: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
           ].map(({ label, value, color, bg, border }) => (
             <div key={label} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: '14px 16px' }}>

@@ -145,9 +145,9 @@ test('TC-TH-09: healthScore is always 0–100', () => {
 
 test('TC-TH-10: teamBandColor and teamBandBg return correct values per band', () => {
   expect(teamBandColor('Healthy')).toBe('#16a34a');
-  expect(teamBandColor('At Risk')).toBe('#f59e0b');
+  expect(teamBandColor('Team At Risk')).toBe('#f59e0b');
   expect(teamBandColor('Critical')).toBe('#dc2626');
   expect(teamBandBg('Healthy')).toBe('#f0fdf4');
-  expect(teamBandBg('At Risk')).toBe('#fffbeb');
+  expect(teamBandBg('Team At Risk')).toBe('#fffbeb');
   expect(teamBandBg('Critical')).toBe('#fef2f2');
 });

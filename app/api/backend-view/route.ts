@@ -2,14 +2,14 @@
 // GET /api/backend-view — session-aware import log overview.
 // - Authenticated user  → only their own logs
 // - Admin               → all users' logs with name and email
-// - Unauthenticated     → file-based fallback (no user data)
+// - Unauthenticated     → static endpoint index only, no import data (see
+//   2026-07-18 note below)
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { readImportLogs } from '@/services/imports/importLogs.service';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,40 +85,36 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     // Prisma unavailable or session error — fall through
   }
 
-  // ── Fallback: file-based logs (unauthenticated) ───────────────────────────
-  try {
-    const logs     = readImportLogs();
-    const total      = logs.length;
-    const successful = logs.filter((l) => l.status === 'success').length;
-    const failed     = logs.filter((l) => ['failed', 'validation_failed'].includes(l.status)).length;
-    const last = (logs[0] ?? null) as any;
-
-    const stats = {
-      totalImports:      total,
-      successfulImports: successful,
-      failedImports:     failed,
-      lastImport:        last ? (last.importedAt ?? last.timestamp ?? null) : null,
-      lastFilename:      last ? (last.file?.name ?? last.filename ?? null)  : null,
-      lastRowCount:      last ? (last.extraction?.rowCount ?? last.rowCount ?? null) : null,
-    };
-
-    const normalisedLogs = logs.slice(0, 20).map((log: any) => ({
-      timestamp:   log.importedAt ?? log.timestamp ?? null,
-      filename:    log.file?.name ?? log.filename  ?? null,
-      rowCount:    log.extraction?.rowCount ?? log.rowCount ?? null,
-      status:      log.status    ?? 'unknown',
-      filesize:    log.file?.sizeBytes ?? log.filesize ?? null,
-      healthScore: null,
-      totalIssues: null,
-      userName:    null,
-      userEmail:   null,
-    }));
-
-    return NextResponse.json({
-      stats, logs: normalisedLogs, endpoints: ENDPOINTS,
-      isAdmin: false, currentUser: null,
-    });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to build backend view', details: String(error) }, { status: 500 });
-  }
+  // ── Fallback: unauthenticated — static endpoint index only ────────────────
+  //
+  // SEC (2026-07-18, docs/product-audit/10-technical-cleanup.md Part 1
+  // finding 2): this used to call readImportLogs(), reading
+  // data/import-logs.json — the SAME single flat file, shared globally by
+  // every user with no per-user scoping whatsoever, that GET /api/imports'
+  // 2026-07-08 P0 fix (see that route's own comment) removed entirely from
+  // ITS unauthenticated path for exactly this reason: "no legitimate case
+  // where this route should ever answer without a valid session or with
+  // unscoped data." That file is still actively written on every upload
+  // (app/api/upload/route.ts's appendImportLog() call) — so this fallback
+  // was serving real cross-account filenames, row counts, statuses, and file
+  // sizes to any unauthenticated caller, unlike the route's own doc comment
+  // claimed ("no user data"): userName/userEmail were nulled out, but
+  // filename/rowCount/status/filesize were not, and a filename alone can be
+  // sensitive (client/project names, confidential markers). Unlike
+  // /api/imports, this route's whole purpose also includes doubling as a
+  // public, unauthenticated API index (see the "endpoints" list returned
+  // below and its inclusion in PUBLIC_API in middleware.ts), so the fix here
+  // is narrower than that route's outright 401: keep the endpoint index
+  // public, drop the real import data instead of substituting a different
+  // unscoped source.
+  return NextResponse.json({
+    stats: {
+      totalImports: null, successfulImports: null, failedImports: null,
+      lastImport: null, lastFilename: null, lastRowCount: null,
+    },
+    logs: [],
+    endpoints: ENDPOINTS,
+    isAdmin: false,
+    currentUser: null,
+  });
 }

@@ -171,7 +171,7 @@ export default function DataQualityPage() {
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>Data Quality</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>Data Quality Score</span>
               <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 5, background: classification.bg, color: classification.color, border: `1px solid ${classification.border}` }}>
                 {classification.label}
               </span>

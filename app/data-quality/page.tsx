@@ -194,7 +194,7 @@ export default function DataQualityPage() {
             {/* Score bar */}
             <div style={{ marginBottom: 18 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--dc-text)' }}>Data confidence</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--dc-text)' }}>Data Quality Score</span>
                 <span style={{ fontSize: 14, fontWeight: 900, color: BAND_COLOR[dq.band] ?? 'var(--dc-text)' }}>{dq.score}%</span>
               </div>
               <div style={{ height: 10, background: 'var(--dc-line)', borderRadius: 5 }}>

@@ -9,6 +9,7 @@ import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { computePortfolioSummary, type EpicSummary } from '@/lib/portfolioHealth';
 import { computeAverageThroughput } from '@/services/forecast/forecastEngine.service';
+import { exportRoadmapToCsv } from '@/services/export/roadmapExport.service';
 import type { DashboardMetrics } from '@/types/metrics';
 import styles from './page.module.scss';
 
@@ -243,7 +244,7 @@ function GanttTimeline({ timelines }: { timelines: EpicTimeline[] }) {
           <span className={styles.forecastColLabel}>Progress</span>
           <span className={styles.forecastColLabel}>Done</span>
           <span className={styles.forecastColLabel}>Est. date</span>
-          <span className={styles.forecastColLabel}>Confidence</span>
+          <span className={styles.forecastColLabel}>Epic Timeline Confidence</span>
         </div>
 
         {/* Data rows — ALL epics sorted by forecast date */}
@@ -475,7 +476,7 @@ export default function RoadmapPage() {
     { icon: 'clipboard', label: 'Total Epics',  value: totalEpics,        sub: `${doneEpics} complete`,      color: 'var(--color-text-primary)',        bg: 'var(--color-muted, #e2e8f0)' },
     { icon: 'checkCircle', label: 'Done',         value: doneEpics,         sub: `${Math.round(doneEpics / Math.max(1, totalEpics) * 100)}% of total`, color: 'var(--color-success, #22c55e)',    bg: '#dcfce7' },
     { icon: 'release', label: 'In Progress',  value: activeEpics,       sub: `${onTrack} on track`,        color: 'var(--color-primary, #2563eb)',    bg: '#dbeafe' },
-    { icon: 'warning', label: 'At Risk',      value: atRisk,            sub: atRisk > 0 ? 'Needs attention' : 'All clear', color: atRisk > 0 ? 'var(--color-warning, #f59e0b)' : 'var(--color-text-muted)', bg: atRisk > 0 ? '#fef9c3' : 'var(--color-muted)' },
+    { icon: 'warning', label: 'Epics Needing Attention', value: atRisk,            sub: atRisk > 0 ? 'Needs attention' : 'All clear', color: atRisk > 0 ? 'var(--color-warning, #f59e0b)' : 'var(--color-text-muted)', bg: atRisk > 0 ? '#fef9c3' : 'var(--color-muted)' },
     { icon: 'statusError', label: 'Critical',     value: critEpics,         sub: critEpics > 0 ? 'Immediate action' : 'None critical', color: critEpics > 0 ? 'var(--color-danger, #f87171)' : 'var(--color-text-muted)', bg: critEpics > 0 ? '#fee2e2' : 'var(--color-muted)' },
     { icon: 'chartBar', label: 'Issues Done',  value: `${doneIssues}/${totalIssues}`, sub: `${Math.round(doneIssues / Math.max(1, totalIssues) * 100)}% complete`, color: 'var(--color-text-primary)', bg: 'var(--color-muted, #e2e8f0)' },
   ];
@@ -505,19 +506,29 @@ export default function RoadmapPage() {
             <h1 id="tour-header-roadmap" className={styles.title}>Epic Roadmap</h1>
             <p className={styles.subtitle}>Delivery timeline, forecasts & health — based on your Jira data</p>
           </div>
-          <div id="tour-section-roadmap-1" className={styles.viewToggle} role="group" aria-label="View mode">
-            {(['gantt', 'cards'] as const).map(v => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setView(v)}
-                className={clsx(styles.viewBtn, { [styles.active]: view === v })}
-                aria-pressed={view === v}
-              >
-                <SvgIcon name={v === 'gantt' ? 'chartBar' : 'clipboard'} size={14} />
-                {v === 'gantt' ? 'Timeline' : 'Cards'}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <div id="tour-section-roadmap-1" className={styles.viewToggle} role="group" aria-label="View mode">
+              {(['gantt', 'cards'] as const).map(v => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setView(v)}
+                  className={clsx(styles.viewBtn, { [styles.active]: view === v })}
+                  aria-pressed={view === v}
+                >
+                  <SvgIcon name={v === 'gantt' ? 'chartBar' : 'clipboard'} size={14} />
+                  {v === 'gantt' ? 'Timeline' : 'Cards'}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => exportRoadmapToCsv(sorted)}
+              className="btn-secondary btn-sm"
+              disabled={sorted.length === 0}
+            >
+              ↓ Export CSV
+            </button>
           </div>
         </div>
 

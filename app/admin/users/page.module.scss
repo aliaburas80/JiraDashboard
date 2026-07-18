@@ -564,6 +564,42 @@
   font-style: italic;
 }
 
+// ── Pagination (MPE-02) ───────────────────────────────────────────────────────
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 14px;
+  border-top: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.08));
+}
+
+.pageBtn {
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.08));
+  background: var(--dc-s2, #1e1e1e);
+  color: var(--dc-p2, #909090);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover:not(:disabled) { background: var(--dc-s3, #282828); }
+  &:disabled { opacity: 0.4; cursor: default; }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-acc) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.pageInfo {
+  font-size: 12px;
+  color: var(--dc-p3, #505050);
+  white-space: nowrap;
+}
+
 // ── Confirm modals ────────────────────────────────────────────────────────────
 .confirmOverlay {
   position: fixed;

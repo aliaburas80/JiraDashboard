@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 import { getHealthBand, type HealthBand } from '@/lib/utils';
+import { exportCustomerReportToCsv } from '@/services/export/customerReportExport.service';
 import type { DashboardMetrics } from '@/types/metrics';
 import styles from './page.module.scss';
 
@@ -91,9 +92,9 @@ function speedColor(days: number, goodMax: number, warnMax: number): string {
 }
 
 function confLabel(conf: number): string {
-  if (conf >= 80) return 'High confidence';
-  if (conf >= 50) return 'Medium confidence';
-  return 'Low confidence';
+  if (conf >= 80) return 'High Delivery Confidence';
+  if (conf >= 50) return 'Medium Delivery Confidence';
+  return 'Low Delivery Confidence';
 }
 
 function epicHealthColors(critical: number, warning: number): {
@@ -278,6 +279,20 @@ export default function CustomerPage() {
     },
   ];
 
+  const exportData = {
+    kpis: kpis.map(k => ({ label: k.label, val: k.val, sub: k.sub })),
+    statusDistribution: distData,
+    epics: epicList.map((epic: any) => ({
+      epic: epic.epic,
+      healthLabel: epicHealthColors(epic.critical ?? 0, epic.warning ?? 0).label,
+      progress: Math.max(0, Math.min(100, epic.progress ?? 0)),
+      completedIssues: epic.completedIssues ?? 0,
+      issues: epic.issues ?? 0,
+      critical: epic.critical ?? 0,
+    })),
+    risks: riskList.map(r => ({ level: r.level, text: r.text })),
+  };
+
   return (
     <div className={styles.page}>
 
@@ -288,6 +303,13 @@ export default function CustomerPage() {
         </Link>
         <div className={styles.toolbarRight}>
           <span className={styles.toolbarTag}>Stakeholder Report · External</span>
+          <button
+            type="button"
+            className={styles.exportBtn}
+            onClick={() => exportCustomerReportToCsv(exportData)}
+          >
+            Export CSV
+          </button>
           <button
             type="button"
             className={styles.printBtn}
@@ -356,7 +378,7 @@ export default function CustomerPage() {
               {confidence > 0 && (
                 <div className={styles.confidenceWrap}>
                   <p className={styles.confidenceVal}>{Math.round(confidence)}%</p>
-                  <p className={styles.confidenceLabel}>Confidence</p>
+                  <p className={styles.confidenceLabel}>Delivery Confidence</p>
                 </div>
               )}
             </div>

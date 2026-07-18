@@ -6,7 +6,12 @@ import AppShell from '@/components/layout/AppShell';
 import LoadingState from '@/components/ui/LoadingState';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import { getHealthBand, type HealthBand } from '@/lib/utils';
+import { paginate } from '@/lib/pagination';
 import styles from './page.module.scss';
+
+// MPE-02: /api/backend-view already caps logs at 50 rows server-side —
+// bounded enough for client-side pagination rather than adding page/limit to the API.
+const PAGE_SIZE = 25;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -110,6 +115,8 @@ export default function BackendPage() {
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [toast, setToast]       = useState('');
+  const [query, setQuery]       = useState('');
+  const [page, setPage]         = useState(1);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -127,6 +134,13 @@ export default function BackendPage() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // MPE-03: search import logs by filename or uploader name/email.
+  const q = query.trim().toLowerCase();
+  const filteredLogs = data
+    ? (q ? data.logs.filter(log => [log.filename, log.userName, log.userEmail].some(v => v?.toLowerCase().includes(q))) : data.logs)
+    : [];
+  const { items: pageLogs, page: safePage, totalPages } = paginate(filteredLogs, page, PAGE_SIZE);
 
   function showToast(msg: string) {
     setToast(msg);
@@ -381,9 +395,26 @@ export default function BackendPage() {
                 )}
               </div>
             </div>
+
+            {data.logs.length > 0 && (
+              <label className={styles.searchWrap}>
+                <span className="sr-only">Search import logs by filename or uploader</span>
+                <input
+                  type="search"
+                  value={query}
+                  onChange={e => { setQuery(e.target.value); setPage(1); }}
+                  placeholder="Search by filename, uploader name, or email…"
+                  className={styles.searchInput}
+                />
+                <span className={styles.searchCount}>{filteredLogs.length} of {data.logs.length} logs</span>
+              </label>
+            )}
+
             <div className={styles.tableCard}>
               {data.logs.length === 0 ? (
                 <p className={styles.tableEmpty}>No import logs found.</p>
+              ) : filteredLogs.length === 0 ? (
+                <p className={styles.tableEmpty}>No logs match your search.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -402,7 +433,7 @@ export default function BackendPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {data.logs.map((log, i) => (
+                      {pageLogs.map((log, i) => (
                         <tr key={i} className={styles.tableRow}>
                           <td className={`px-4 py-3 whitespace-nowrap ${styles.cellTimestamp}`}>
                             {formatTimestamp(log.timestamp)}
@@ -453,6 +484,14 @@ export default function BackendPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {totalPages > 1 && (
+                <div className={styles.pagination}>
+                  <button type="button" className={styles.pageBtn} onClick={() => setPage(safePage - 1)} disabled={safePage <= 1}>← Prev</button>
+                  <span className={styles.pageInfo}>Page {safePage} of {totalPages}</span>
+                  <button type="button" className={styles.pageBtn} onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages}>Next →</button>
                 </div>
               )}
             </div>

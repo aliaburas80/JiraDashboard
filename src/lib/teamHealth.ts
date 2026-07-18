@@ -10,7 +10,7 @@
 
 import type { CapacityEntry, FlowItem } from '@/types/metrics';
 
-export type TeamHealthBand = 'Healthy' | 'At Risk' | 'Critical';
+export type TeamHealthBand = 'Healthy' | 'Team At Risk' | 'Critical';
 
 export interface TeamHealthEntry {
   assignee:       string;
@@ -72,7 +72,7 @@ export function computeTeamHealth(
 
     const band: TeamHealthBand =
       healthScore >= 70 ? 'Healthy' :
-      healthScore >= 40 ? 'At Risk' :
+      healthScore >= 40 ? 'Team At Risk' :
       'Critical';
 
     return {
@@ -96,9 +96,9 @@ export function computeTeamHealth(
 }
 
 export function teamBandColor(band: TeamHealthBand): string {
-  return band === 'Healthy' ? '#16a34a' : band === 'At Risk' ? '#f59e0b' : '#dc2626';
+  return band === 'Healthy' ? '#16a34a' : band === 'Team At Risk' ? '#f59e0b' : '#dc2626';
 }
 
 export function teamBandBg(band: TeamHealthBand): string {
-  return band === 'Healthy' ? '#f0fdf4' : band === 'At Risk' ? '#fffbeb' : '#fef2f2';
+  return band === 'Healthy' ? '#f0fdf4' : band === 'Team At Risk' ? '#fffbeb' : '#fef2f2';
 }

@@ -160,7 +160,7 @@ function goalOutcome(
 ): SprintGoalOutcome {
   const today = new Date();
   const isActive = sprintEnd ? sprintEnd > today : false;
-  if (isActive && completionPct < 60) return 'At Risk';
+  if (isActive && completionPct < 60) return 'Behind Pace';
   if (completionPct >= 90) return 'Met';
   if (completionPct >= 60) return 'Partially Met';
   return 'Missed';

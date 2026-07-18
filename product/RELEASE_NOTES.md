@@ -11,6 +11,76 @@ The dashboard's "Data Quality" sub-page is now labeled "Data Quality & Compositi
 
 ---
 
+## Changed: Clearer Labels for "Confidence," "At Risk," "Health Score," and "Readiness" (2026-07-18)
+
+Several words were reused across the app for genuinely different things, which made it easy to misread one page's number using another page's meaning. None of the underlying calculations changed — only the on-screen wording, so the numbers you already trust are unaffected.
+
+"Confidence" meant four different things depending on the page: the per-KPI reliability badge next to dashboard metrics now reads "KPI Reliability" instead of bare "Confidence"; the sprint-throughput reliability percentage on `/sprint-kanban` and `/customer` now reads "Delivery Confidence," matching what `/forecast` already showed; `/roadmap`'s per-epic forecast badge column now reads "Epic Timeline Confidence"; and `/forecast`'s overall reliability chip now reads "High/Medium/Low Forecast Reliability" instead of "…confidence." Separately, `/data-quality` and `/dashboard/data-quality` had mislabeled their Data Quality Score as "Data confidence" — corrected to "Data Quality Score" to match every other place in the app that already used the right name.
+
+"At Risk" was used for six unrelated thresholds. The sidebar's general health band (the one most people see every day) keeps the plain "At Risk" label — it only had a small spelling fix (a stray hyphen). The other five now have their own names: `/teams`' band is "Team At Risk," `/portfolio`'s band is "Portfolio At Risk," the active-sprint-behind-pace flag on `/sprint-kanban` is now "Behind Pace," `/forecast`'s delivery-timeline status is "Timeline At Risk," and `/admin/diagnostics`'s operational health status is "Ops At Risk." The epic count on `/roadmap` and `/dashboard/epic-readiness` that flags epics with a struggling child issue is now called "Epics Needing Attention" rather than reusing "At Risk" for yet another meaning.
+
+`/teams`' health chart now reads "Team Health Score" instead of bare "Health Score," since it's a different formula from the overall project Health Score shown elsewhere. And the Help Center's "Readiness" topic — which mixed the Epic Readiness score (a 0–100 number) and the Release Readiness verdict (a Go/Conditional Go/No-Go decision) under one heading — is now split into "Epic Readiness" and "Release Readiness" sections.
+
+Found and fixed as part of a full-application product audit (`docs/product-audit/03-clarity-and-misleading-data.md` §A).
+
+---
+
+## Fixed: Four Non-Urgent Security Hardening Findings (2026-07-18)
+
+Defense-in-depth improvements, none tied to a known exploit — found and fixed as part of a full-application
+product audit (`docs/product-audit/`):
+
+- **Every `/api/*` route now requires a valid session by default**, closing a gap where one route
+  (`GET /api/docs`, which serves internal product documentation) had no authentication check at all and
+  was reachable by anyone. A small, explicit list of intentionally public routes (login, registration,
+  password reset, health checks, the promo lead-gen form, and a couple of others) is unaffected; every
+  route's own more specific admin/role checks are unchanged and still run.
+- **The unauthenticated view of `/backend` no longer returns real import data** (filenames, row counts,
+  status, file size) from a shared, unscoped log file — it now returns only the page's static endpoint
+  index, matching the same fix already applied to the main imports API.
+- **Uploading a Jira export or retro file now gets a basic content sanity check** before parsing, catching
+  an obviously-mislabeled or corrupted file (e.g. a `.xlsx` extension on non-Excel content) with a clear
+  error message, as a defense-in-depth layer ahead of the existing parser.
+- **Profile image uploads are now verified by their actual file content**, not just the browser-reported
+  file type, before being accepted and stored — closing a gap where a mislabeled file could bypass the
+  intended JPG/PNG/WebP/GIF restriction.
+
+---
+
+## Added: Pagination and Search on Admin and List Pages (2026-07-17)
+
+`/admin/logs`, `/admin/users`, `/members`, `/backend`'s Import Logs section, and `/snapshots` previously rendered their entire list on one page with no way to page through it — fine with a handful of rows, but it would only get slower and harder to scan as an account's history or team grew. All five now page their results (25 rows at a time on the admin pages, 10 on Snapshots, 24 on Members). `/snapshots`, `/admin/logs`, `/backend`, and `/admin/audit` also gained a free-text search box — search by filename or uploader on the logs pages, by snapshot name on Snapshots, and by event description or user on the Audit Events log. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
+## Added: CSV Export on 7 Pages That Previously Had None (2026-07-18)
+
+`/work-explorer`, `/teams`, `/portfolio`, `/delivery-mix`, `/roadmap`, and `/customer` each now have an
+"Export CSV" button that downloads the page's currently-filtered/visible data — closing a gap where a
+narrower feature (`/explore`) and 5 of 9 `/dashboard/*` pages already had export, but these larger,
+data-heavy pages didn't. `/customer`'s "Stakeholder Report," in particular, previously only offered
+print/Save-PDF with no way to take the underlying data out of the app. `/charts` (a grid of independent
+widgets rather than one table) gained both a "Export visible charts (.csv)" option — one labeled section
+per widget currently shown — and a second "Export full report (.xlsx)" option reusing the existing
+full-workbook export already available elsewhere. Found and fixed as part of a full-application product
+audit (`docs/product-audit/`).
+
+---
+
+## Fixed: Coaching Grid Thresholds Made Visible, Placeholder Metric Labeled, Per-Type Cycle Time Added, Team Comparison Caveat, Upload-Score Wording (2026-07-18)
+
+Five calculation-clarity findings from the product audit's checkpoint 3 (`docs/product-audit/08-metric-dictionary.md`), all in the "Calculation refinement" section of the Phase 5 backlog:
+
+- **`/dashboard/coaching`'s three rule thresholds are now visible.** The Team Role View grid has always compared real numbers against fixed thresholds (20% carry-over, 35% capacity load share, 60% delivery confidence) to decide a rule's status, but the thresholds themselves were never shown anywhere — a viewer could see an "At risk" badge with no way to tell what number caused it. Each rule's description now states its own threshold, and the Glossary and Help FAQ document all three (CP3-011).
+- **The Scrum Master column's "Retro actions completed" value is now labeled as an estimate.** This metric has always been a fixed 71% placeholder (retrospective action ownership isn't tracked anywhere in the app yet) shown identically to genuinely computed metrics next to it. It now renders with a visible "(estimated)" qualifier and an explanatory tooltip (CP3-012).
+- **Kanban flow metrics gained a per-issue-type cycle/lead time breakdown**, matching the breakdown Scrum-side flow metrics already had. The existing blended averages (used by `/flow-health`, `/sprint-kanban`, and the Health Score) are unchanged — this is additional detail, not a replacement, so an Epic-heavy backlog's naturally longer cycle time is no longer invisible inside one blended number (CP3-006).
+- **`/teams`' "Team Health Comparison" now carries a caveat** that it ranks individuals, not normalized teams — someone who estimates story points more conservatively, or takes on larger/harder tickets, can show a lower score without that reflecting their actual performance (CP3-007).
+- **The upload column-mapping score's labels no longer collide with the Data Quality score's labels.** Both used to show "Excellent/Good/Fair/Weak" at different cutoffs for two genuinely different metrics — a user could see "Good" during upload and "Fair" for a different score moments later on `/data-quality`. The upload score now reads "Strong/Good/Partial/Weak Match" instead; neither score's underlying cutoffs changed (CP3-019).
+
+Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Added: Confirmation Step Before Dismissing a System Error, and a Contact Link for Expired Verification Links (2026-07-17)
 
 `/admin/system-errors`'s "Dismiss" action now asks for confirmation first, matching how every other state-changing admin action in the app already works. Separately, `/verify-email`'s "your link expired" message now includes a working contact link instead of unclickable text. Found and fixed as part of a full-application product audit (`docs/product-audit/`).

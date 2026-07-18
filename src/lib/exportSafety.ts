@@ -36,3 +36,26 @@ export function buildSafeCsv(rows: unknown[][], options: { alwaysQuote?: boolean
     .map(row => row.map(cell => encodeSafeCsvCell(cell, options.alwaysQuote)).join(','))
     .join('\n');
 }
+
+// A single labeled block within a "sectioned" CSV — used by pages that have
+// no single primary table (e.g. a grid of independent chart widgets or a
+// stakeholder report made of several distinct blocks) but still need a
+// baseline CSV export (MPE-01). Each section renders as a title row, a
+// header row, then its data rows, separated from the next section by a
+// blank row.
+export interface CsvExportSection {
+  title: string;
+  header: string[];
+  rows: unknown[][];
+}
+
+export function buildSectionedCsv(sections: CsvExportSection[]): string {
+  const matrix: unknown[][] = [];
+  sections.forEach((section, i) => {
+    if (i > 0) matrix.push([]);
+    matrix.push([section.title]);
+    matrix.push(section.header);
+    matrix.push(...section.rows);
+  });
+  return buildSafeCsv(matrix, { alwaysQuote: true });
+}

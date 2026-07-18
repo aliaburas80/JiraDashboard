@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import { ASSIGNABLE_ROLES, roleLabel, type AppRole } from '@/lib/roles';
 import type { ManagedUser } from '@/lib/adminConsole';
+import { paginate } from '@/lib/pagination';
 import styles from './page.module.scss';
+
+// MPE-02: /api/admin/users returns the full user list with no server-side
+// limit — realistically bounded by organization headcount, so a client-side
+// page slice resolves the missing-pagination finding without a riskier API change.
+const PAGE_SIZE = 25;
 
 // Includes 'user' — needed for the role FILTER dropdown and each row's role
 // select, which must be able to represent existing self-registered accounts
@@ -38,6 +44,7 @@ export default function AdminUsersPage() {
   const [error, setError]           = useState('');
   const [query, setQuery]           = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
+  const [page, setPage]             = useState(1);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm]             = useState<CreateForm>(EMPTY_FORM);
   const [formErr, setFormErr]       = useState('');
@@ -91,6 +98,11 @@ export default function AdminUsersPage() {
     const matchR = roleFilter === 'all' || u.role === roleFilter;
     return matchQ && matchR;
   });
+
+  // MPE-02: bulk selection ("select all") still operates on every filtered
+  // user, not just the visible page — an admin bulk-changing roles across a
+  // large filtered set shouldn't have to revisit every page to select them all.
+  const { items: pageUsers, page: safePage, totalPages } = paginate(filtered, page, PAGE_SIZE);
 
   const selectableFiltered = filtered.filter(u => u.id !== meId);
   const allSelected = selectableFiltered.length > 0 && selectableFiltered.every(u => selectedIds.has(u.id));
@@ -389,13 +401,15 @@ export default function AdminUsersPage() {
         <input
           type="search"
           placeholder="Search name or email…"
+          aria-label="Search users by name or email"
           value={query}
-          onChange={e => setQuery(e.target.value)}
+          onChange={e => { setQuery(e.target.value); setPage(1); }}
           className={styles.searchInput}
         />
         <select
           value={roleFilter}
-          onChange={e => setRoleFilter(e.target.value as AppRole | 'all')}
+          onChange={e => { setRoleFilter(e.target.value as AppRole | 'all'); setPage(1); }}
+          aria-label="Filter users by role"
           className={styles.roleSelect}
         >
           <option value="all">All Roles</option>
@@ -469,7 +483,7 @@ export default function AdminUsersPage() {
                 <td colSpan={7} className={styles.noResults}>No users found.</td>
               </tr>
             )}
-            {filtered.map(user => {
+            {pageUsers.map(user => {
               const isSelf = user.id === meId;
               // A super-admin can only be modified by themselves — anyone else viewing
               // this row gets the same locked-down controls as viewing their own row.
@@ -576,6 +590,14 @@ export default function AdminUsersPage() {
             })}
           </tbody>
         </table>
+
+        {totalPages > 1 && (
+          <div className={styles.pagination}>
+            <button type="button" className={styles.pageBtn} onClick={() => setPage(safePage - 1)} disabled={safePage <= 1}>← Prev</button>
+            <span className={styles.pageInfo}>Page {safePage} of {totalPages}</span>
+            <button type="button" className={styles.pageBtn} onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages}>Next →</button>
+          </div>
+        )}
       </div>
 
       {/* ── Bulk delete confirmation modal ── */}

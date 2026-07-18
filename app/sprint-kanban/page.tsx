@@ -27,7 +27,7 @@ const GOAL_COLORS: Record<SprintGoalOutcome, { bg: string; fg: string }> = {
   'Met':           { bg: 'color-mix(in srgb,#22c55e 12%,transparent)', fg: '#15803d' },
   'Partially Met': { bg: 'color-mix(in srgb,#f59e0b 12%,transparent)', fg: '#92400e' },
   'Missed':        { bg: 'color-mix(in srgb,#dc2626 10%,transparent)', fg: '#b91c1c' },
-  'At Risk':       { bg: 'color-mix(in srgb,#ea580c 10%,transparent)', fg: '#9a3412' },
+  'Behind Pace':   { bg: 'color-mix(in srgb,#ea580c 10%,transparent)', fg: '#9a3412' },
   'Unknown':       { bg: 'color-mix(in srgb,#94a3b8 10%,transparent)', fg: '#64748b' },
 };
 
@@ -421,7 +421,7 @@ export default function SprintKanbanPage() {
         { label: 'Avg Complete', val: `${Math.round(avgCompletion)}%`, sub: 'avg sprint completion', color: pctColor(avgCompletion), delay: 40  },
         { label: 'Avg Velocity', val: Math.round(avgThroughput),      sub: 'issues per sprint',     color: 'var(--color-text-primary,#0f172a)', delay: 80  },
         { label: 'Trend',        val: trendDirection,                  sub: 'delivery direction',    color: trendColor,              delay: 120 },
-        { label: 'Confidence',   val: `${Math.round(confidence)}%`,   sub: 'delivery confidence',  color: pctColor(confidence),    delay: 160 },
+        { label: 'Delivery Confidence', val: `${Math.round(confidence)}%`,   sub: 'delivery confidence',  color: pctColor(confidence),    delay: 160 },
         { label: 'End-Loaded',   val: endLoaded,     sub: 'sprints end-loaded',           color: endLoaded  > 0 ? '#d97706' : '#94a3b8', delay: 200 },
         { label: 'Blocked',      val: blockedSprints, sub: 'sprints had blockers',         color: blockedSprints > 0 ? '#dc2626' : '#94a3b8', delay: 240 },
         { label: 'Active WIP',   val: metrics.activeIssues ?? 0, sub: 'in progress now',  color: (metrics.activeIssues ?? 0) > 15 ? '#dc2626' : 'var(--color-primary,#2563eb)', delay: 280 },

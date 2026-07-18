@@ -8,6 +8,7 @@ import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { computeTeamHealth, teamBandColor, teamBandBg, type TeamHealthEntry } from '@/lib/teamHealth';
+import { exportTeamsToCsv } from '@/services/export/teamsExport.service';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -164,7 +165,7 @@ export default function TeamsPage() {
   const avgHealth       = totalMembers > 0 ? Math.round(teams.reduce((s, t) => s + t.healthScore, 0) / totalMembers) : 0;
   const totalAtRisk     = teams.reduce((s, t) => s + t.criticalCount + t.blockedCount, 0);
   const healthyCount    = teams.filter(t => t.band === 'Healthy').length;
-  const atRiskCount     = teams.filter(t => t.band === 'At Risk').length;
+  const atRiskCount     = teams.filter(t => t.band === 'Team At Risk').length;
   const criticalCount   = teams.filter(t => t.band === 'Critical').length;
 
   const avgColor = avgHealth >= 70 ? '#16a34a' : avgHealth >= 40 ? '#f59e0b' : '#dc2626';
@@ -202,11 +203,31 @@ export default function TeamsPage() {
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
-        <div className="mb-6">
-          <h1 id="tour-header-teams" className="text-2xl font-black text-slate-900 tracking-tight">Team Health Comparison</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Side-by-side health scores, workload, and risk signals per team member.
-          </p>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 id="tour-header-teams" className="text-2xl font-black text-slate-900 tracking-tight">Team Health Comparison</h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Side-by-side health scores, workload, and risk signals per team member.
+            </p>
+            {/* CP3-007: this ranks individuals, not normalized teams — a member who
+                estimates story points more conservatively, or takes on larger/harder
+                tickets, can show a lower score or higher load without that reflecting
+                their actual performance. See docs/product-audit/08-metric-dictionary.md
+                CP3-007 for why an automated normalization fix wasn't attempted. */}
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3 max-w-2xl">
+              <strong className="font-black">Note:</strong> this compares individuals, not normalized for
+              different story-point estimation habits between team members. A member who estimates more
+              conservatively, or takes on larger or harder tickets, may show a lower score without that
+              reflecting their actual performance — use this as a conversation starter, not a ranking.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => exportTeamsToCsv(teams)}
+            className="btn-secondary btn-sm shrink-0"
+          >
+            ↓ Export CSV
+          </button>
         </div>
 
         {/* Summary KPI strip */}
@@ -215,7 +236,7 @@ export default function TeamsPage() {
             { label: 'Team Members',   value: totalMembers,               unit: '',     color: '#2563eb' },
             { label: 'Avg Health',     value: `${avgHealth}/100`,         unit: '',     color: avgColor   },
             { label: 'Healthy',        value: healthyCount,               unit: '',     color: '#16a34a' },
-            { label: 'At Risk',        value: atRiskCount,                unit: '',     color: '#f59e0b' },
+            { label: 'Team At Risk',   value: atRiskCount,                unit: '',     color: '#f59e0b' },
             { label: 'Critical Items', value: totalAtRisk,                unit: '',     color: totalAtRisk > 0 ? '#dc2626' : '#94a3b8' },
           ].map(k => (
             <div key={k.label} className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
@@ -243,7 +264,7 @@ export default function TeamsPage() {
 
               {/* Health score chart */}
               <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-                <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Health Score</p>
+                <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Team Health Score</p>
                 {teams.map(t => (
                   <CompareBar
                     key={t.assignee}

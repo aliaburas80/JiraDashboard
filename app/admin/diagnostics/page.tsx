@@ -134,7 +134,7 @@ export default function DiagnosticsPage() {
   );
 
   const opsTone: Tone = data.opsScore >= 80 ? 'green' : data.opsScore >= 60 ? 'amber' : 'red';
-  const opsBand  = data.opsScore >= 80 ? 'Healthy'  : data.opsScore >= 60 ? 'Degraded' : 'At Risk';
+  const opsBand  = data.opsScore >= 80 ? 'Healthy'  : data.opsScore >= 60 ? 'Degraded' : 'Ops At Risk';
   const envOkCount = Object.values(data.env).filter(Boolean).length;
   const envTotal   = Object.keys(data.env).length;
   const diagnosticsStats = [

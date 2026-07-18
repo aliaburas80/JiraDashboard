@@ -1,6 +1,6 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 
-export type SprintGoalOutcome = 'Met' | 'Partially Met' | 'Missed' | 'At Risk' | 'Unknown';
+export type SprintGoalOutcome = 'Met' | 'Partially Met' | 'Missed' | 'Behind Pace' | 'Unknown';
 
 export type SprintDeliveryPattern =
   | 'Healthy Early Progress'
@@ -98,6 +98,21 @@ export interface KanbanPeriod {
   flowHealth: KanbanFlowHealth;
 }
 
+// CP3-006: per-issue-type breakdown of Kanban cycle/lead time. Kanban had no
+// per-type breakdown at all before this (unlike the Scrum-side flow metrics,
+// which already had one via buildTypeMetrics in metrics.service.ts) — this is
+// additional data alongside, not a replacement for, KanbanFlowSummary's
+// blended avgCycleTimeDays/avgLeadTimeDays, which are unchanged. See
+// docs/product-audit/08-metric-dictionary.md CP3-006 for the full finding.
+export interface KanbanTypeFlowBreakdown {
+  type: string;
+  count: number;
+  avgCycleTimeDays: number;
+  avgLeadTimeDays: number;
+  cycleTimeSampleSize: number;
+  leadTimeSampleSize: number;
+}
+
 // ── Kanban summary across all periods ─────────────────────────────────────────
 export interface KanbanFlowSummary {
   hasKanbanData: boolean;
@@ -108,6 +123,10 @@ export interface KanbanFlowSummary {
   avgFlowEfficiencyPct: number;
   totalAgingWip: number;
   overallFlowHealth: KanbanFlowHealth;
+  // Optional (rather than required) so the many existing test fixtures that
+  // construct a KanbanFlowSummary literal without this new field keep
+  // type-checking — calculateKanbanFlow always populates it in practice.
+  cycleTimeByType?: KanbanTypeFlowBreakdown[];
 }
 
 // ── Mid-sprint per-sprint insight ─────────────────────────────────────────────
