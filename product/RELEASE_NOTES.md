@@ -5,6 +5,18 @@
 
 ---
 
+## Added: Reliability Badges on Two More Pages (2026-07-18)
+
+`/summary`'s Avg Cycle Time card and `/dashboard/key-metrics`'s Lead Time and Cycle Time cards now show
+the same small reliability badge (High/Medium/Low/Unreliable) that `/flow-health`'s equivalent cards
+already had — hover it for a plain-language reason (e.g. "based on only 2 completed items"). This makes it
+clear when a fast-looking cycle time is backed by a lot of completed work versus almost none. No
+calculation changed — this only makes an existing reliability signal visible in two more places it was
+already being computed but not shown. Found and fixed as part of a full-application product audit
+(`docs/product-audit/08-metric-dictionary.md` CP3-002/CP3-004).
+
+---
+
 ## Changed: Clearer Navigation Labels and Groups (2026-07-18)
 
 The dashboard's "Data Quality" sub-page is now labeled "Data Quality & Composition" in the sidebar and page header, so it reads distinctly from the top-nav "Data Quality" page rather than sharing an identical name. The top-nav "Trends" item's description now reads "Cross-upload history, not current data" so it's distinguishable from the dashboard's own "Trends" page before you click either one. The "Reference" navigation group — which previously mixed the Members directory, the About page, self-serve Help/Glossary docs, and admin-only Developer tooling under one label — is now split into "Directory," "Developer Tools," and a trimmed "Reference" (About, Glossary, Help). No page moved, was removed, or changed what it shows — this is a labeling and grouping clarity fix only. Found and fixed as part of a full-application product audit (`docs/product-audit/`).

@@ -1,5 +1,44 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-18 (**BACKLOG DOC ACCURACY FIX + MINIKPICARD CONFIDENCE ROLLOUT** — while
+picking "next" work from `11-prioritized-backlog.md`, found Phase 1's table (the audit's 3 P0 correctness
+findings — the highest severity in the whole document) had never been struck through, unlike every other
+phase, even though all 3 were actually fixed and merged back on 2026-07-13 (`v4.23.0`–`v4.25.0`).
+Independently re-verified each against current code before trusting the old TODO-List.md entries: `FlowItem`
+has `fixVersion`/`blocked` (`CP3-001`), `computeAverageThroughput()` is shared between `/roadmap` and
+`/forecast` (`CP3-008`), `DCKpiCard` has a `confidence` prop wired into `/flow-health` (`CP3-002`) — all
+confirmed present. Fixed the table to match every other phase's strikethrough format. **While reading
+`CP3-002`'s own original fix note, found two more promises that were never kept**: it explicitly said two
+follow-up items would be added to Phase 5 ("both remain in `11-prioritized-backlog.md` Phase 5") but neither
+`CP3-017` (Data Quality score sample-size awareness) nor the `MiniKpiCard` confidence-badge rollout was ever
+actually added there — confirmed via grep, zero mentions of either. Also found `DUP-FLOWITEM-01` (the
+duplicate `FlowItem` interface discovered during the `CP3-001` fix) was tracked only in this file's own
+table further down, never surfaced in the backlog doc at all. Fixed all three: added `DUP-FLOWITEM-01` and
+`CP3-017` to Phase 5 as genuinely-still-open items (no code change for either — `CP3-017` is a scoring-
+formula change that needs its own dedicated review per the original note's own reasoning, not a unilateral
+call), and **implemented** the `MiniKpiCard` rollout since that one was pure additive wiring, the same
+low-risk pattern already proven safe by `DCKpiCard`'s 2026-07-13 fix. `MiniKpiCard`
+(`src/components/dashboard/DashboardPageShell.tsx`) gained an optional `confidence?: MetricConfidence` prop
+rendering the existing `MetricConfidenceBadge` next to the label (new `.miniKpiHeader` flex-row class in
+`DashboardPageShell.module.scss`, no new inline styles — the component's existing `--kpi-bg`/`--kpi-border`/
+`--kpi-color` CSS-variable exception was left untouched). Wired into `/summary`'s Avg Cycle Time card
+(`metrics.confidence?.cycleTime`) and `/dashboard/key-metrics`'s Lead Time/Cycle Time cards
+(`metrics.confidence?.leadTime`/`.cycleTime`, added via a `kpiConfidences` array aligned by index to the
+page's existing `KPI_TOKENS`/`kpiValues` arrays). The other 4 KPIs on each page (Completion, Critical
+Issues, Health Alerts, Active Work, Story Points, Est. Completion) were deliberately left unbadged —
+`calculateMetricConfidence()` has no computed signal for those specific metrics, so badging them would mean
+fabricating a value rather than surfacing a real one; this mirrors the same "only badge what has a real
+signal" boundary the original `DCKpiCard` fix drew on `/flow-health`. **Docs:** dated resolution/tracking
+notes added to `08-metric-dictionary.md` (`CP3-004`, listing exactly which pages/KPIs are now covered and
+which aren't) and `11-prioritized-backlog.md` (Phase 1 strikethrough correction, Phase 5 additions for all
+three items). **Verified:** `npm run typecheck` clean; `npx eslint` on all 4 changed `.tsx` files — 4
+pre-existing inline-style warnings confirmed unchanged by diffing against a `git stash` baseline (0 new);
+`npx stylelint` on the changed `.scss` file 0 warnings; `npm test` 113/113 suites, 1,075/1,075 tests
+passing; `npm run build` compiled all routes clean. No dedicated new test added — this is a pure
+presentational prop addition to an already-tested-elsewhere badge component, consistent with the original
+`DCKpiCard` fix's own note that "no component-rendering test infrastructure exists in this codebase."
+Branch: `docs/fix-phase1-strikethrough-and-minikpicard-confidence-rollout`.)
+
 **Last updated:** 2026-07-18 (**MPE-02 FULLY CLOSED + UPLOAD/MERGE FILE-SIGNATURE FOLLOW-UP** — picked up
 the last two explicitly-flagged "left out of scope" leftovers from two already-completed Phase 5 items,
 both small and low-risk, matching existing patterns exactly. (1) **`/admin/system-errors` pagination** —

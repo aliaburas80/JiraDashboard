@@ -3,6 +3,8 @@
 import { type ReactNode, type CSSProperties } from 'react';
 import clsx from 'clsx';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import type { MetricConfidence } from '@/types/metricConfidence';
+import MetricConfidenceBadge from '@/components/ui/MetricConfidenceBadge';
 import styles from './DashboardPageShell.module.scss';
 
 // ─── Bar animation CSS-custom-property helpers ────────────────────────────────
@@ -89,15 +91,23 @@ export function PageHeader({
 // ─── Mini KPI card ────────────────────────────────────────────────────────────
 // EXCEPTION (CLAUDE.md Rule 1): bg, border, and color come from data; passed
 // as CSS custom properties. The animation delay is a computed stagger index.
+//
+// CP3-004/CP3-002 follow-up (2026-07-18): optional confidence badge, same
+// MetricConfidenceBadge already wired into DCKpiCard on /flow-health — this
+// was explicitly deferred to Phase 5 when that fix landed (metrics.confidence
+// was already computed and available, just not passed to this component).
 export function MiniKpiCard({
-  label, value, color, bg, border, index = 0,
-}: { label: string; value: string; color: string; bg: string; border: string; index?: number }) {
+  label, value, color, bg, border, index = 0, confidence,
+}: { label: string; value: string; color: string; bg: string; border: string; index?: number; confidence?: MetricConfidence }) {
   return (
     <div
       className={styles.miniKpiCard}
       style={{ '--kpi-bg': bg, '--kpi-border': border, '--kpi-color': color, '--delay': `${index * 70}ms` } as CSSProperties}
     >
-      <p className={styles.miniKpiLabel}>{label}</p>
+      <div className={styles.miniKpiHeader}>
+        <p className={styles.miniKpiLabel}>{label}</p>
+        {confidence && <MetricConfidenceBadge confidence={confidence} size="sm" />}
+      </div>
       <p className={styles.miniKpiValue}>{value}</p>
     </div>
   );
