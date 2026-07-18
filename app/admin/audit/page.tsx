@@ -275,13 +275,18 @@ export default function AuditEventsPage() {
   const [filterType, setFilterType] = useState('');
   const [filterFrom, setFilterFrom] = useState('');
   const [filterTo,   setFilterTo]   = useState('');
-  const [applied,    setApplied]    = useState({ type: '', from: '', to: '' });
+  const [filterQuery, setFilterQuery] = useState('');
+  const [applied,    setApplied]    = useState({ type: '', from: '', to: '', q: '' });
 
+  // MPE-03: the event log paginates server-side, so search must run through
+  // the API too (?q=) — filtering only the current page would silently miss
+  // matches on every other page. See /api/admin/audit-events.
   const fetchEvents = useCallback((p: number, f: typeof applied) => {
     const sp = new URLSearchParams({ page: String(p), limit: '50' });
     if (f.type) sp.set('eventType', f.type);
     if (f.from) sp.set('from', f.from);
     if (f.to)   sp.set('to',   f.to);
+    if (f.q)    sp.set('q',    f.q);
     return fetch(`/api/admin/audit-events?${sp}`)
       .then(r => r.json())
       .then(d => { setEvents(d.events ?? []); setTotal(d.total ?? 0); setPages(d.pages ?? 1); });
@@ -303,15 +308,15 @@ export default function AuditEventsPage() {
   }, [router]);
 
   function applyFilters() {
-    const f = { type: filterType, from: filterFrom, to: filterTo };
+    const f = { type: filterType, from: filterFrom, to: filterTo, q: filterQuery.trim() };
     setApplied(f);
     setPage(1);
     fetchEvents(1, f);
   }
 
   function resetFilters() {
-    setFilterType(''); setFilterFrom(''); setFilterTo('');
-    const f = { type: '', from: '', to: '' };
+    setFilterType(''); setFilterFrom(''); setFilterTo(''); setFilterQuery('');
+    const f = { type: '', from: '', to: '', q: '' };
     setApplied(f);
     setPage(1);
     fetchEvents(1, f);
@@ -376,6 +381,16 @@ export default function AuditEventsPage() {
 
         {/* Filters */}
         <div id="tour-section-admin-audit-2" className={styles.filtersBar}>
+          <input
+            type="search"
+            className={`${styles.filterInput} ${styles.searchInput}`}
+            value={filterQuery}
+            onChange={e => setFilterQuery(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') applyFilters(); }}
+            placeholder="Search description or user…"
+            aria-label="Search event descriptions or user"
+          />
+
           <select
             className={styles.filterSelect}
             value={filterType}

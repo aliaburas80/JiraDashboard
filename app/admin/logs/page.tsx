@@ -4,7 +4,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import { getHealthBand, type HealthBand } from '@/lib/utils';
+import { paginate } from '@/lib/pagination';
 import styles from './page.module.scss';
+
+// MPE-02: /api/imports?all=true already caps at 100 rows server-side — bounded
+// enough for client-side pagination rather than adding page/limit to the API.
+const PAGE_SIZE = 25;
 
 // CP3-018: chip color now derives from the shared getHealthBand() cutoffs
 // instead of this page's own divergent >80/60/40 copy (excellent/good both
@@ -28,6 +33,8 @@ export default function AdminLogsPage() {
   const [logs, setLogs]       = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
+  const [query, setQuery]     = useState('');
+  const [page, setPage]       = useState(1);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -42,6 +49,14 @@ export default function AdminLogsPage() {
   }, [router]);
 
   if (loading) return <div className="flex items-center justify-center h-64 animate-pulse text-slate-400">Loading logs…</div>;
+
+  // MPE-03: search by filename or uploader name/email (case-insensitive substring).
+  const q = query.trim().toLowerCase();
+  const filteredLogs = q
+    ? logs.filter(log => [log.fileName, log.user?.name, log.user?.email].some(v => v?.toLowerCase().includes(q)))
+    : logs;
+  const { items: pageLogs, page: safePage, totalPages } = paginate(filteredLogs, page, PAGE_SIZE);
+
   const successfulLogs = logs.filter(log => log.status === 'success').length;
   const failedLogs = logs.length - successfulLogs;
   const uniqueUsers = new Set(logs.map(log => log.user?.email).filter(Boolean)).size;
@@ -68,6 +83,21 @@ export default function AdminLogsPage() {
         <div className={styles.errorBanner}>{error}</div>
       )}
 
+      <div className={styles.filterRow}>
+        <label className={styles.searchLabel} htmlFor="admin-logs-search">
+          Search logs
+        </label>
+        <input
+          id="admin-logs-search"
+          type="search"
+          placeholder="Search by filename, uploader name, or email…"
+          value={query}
+          onChange={e => { setQuery(e.target.value); setPage(1); }}
+          className={styles.searchInput}
+        />
+        <span className={styles.countLabel}>{filteredLogs.length} of {logs.length} logs</span>
+      </div>
+
       <div className={styles.tableCard}>
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
@@ -79,7 +109,7 @@ export default function AdminLogsPage() {
               </tr>
             </thead>
             <tbody>
-              {logs.map(log => (
+              {pageLogs.map(log => (
                 <tr key={log.id} className={styles.row}>
                   <td className={styles.userCell}>
                     <div className={styles.userName}>{log.user?.name ?? '—'}</div>
@@ -103,12 +133,20 @@ export default function AdminLogsPage() {
                   <td className={styles.uploadedCell}>{new Date(log.uploadedAt).toLocaleString()}</td>
                 </tr>
               ))}
-              {!logs.length && (
-                <tr><td colSpan={7} className={styles.noLogsCell}>No import logs yet.</td></tr>
+              {!filteredLogs.length && (
+                <tr><td colSpan={7} className={styles.noLogsCell}>{query ? 'No logs match your search.' : 'No import logs yet.'}</td></tr>
               )}
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className={styles.pagination}>
+            <button type="button" className={styles.pageBtn} onClick={() => setPage(safePage - 1)} disabled={safePage <= 1}>← Prev</button>
+            <span className={styles.pageInfo}>Page {safePage} of {totalPages}</span>
+            <button type="button" className={styles.pageBtn} onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages}>Next →</button>
+          </div>
+        )}
       </div>
     </AdminConsoleLayout>
   );

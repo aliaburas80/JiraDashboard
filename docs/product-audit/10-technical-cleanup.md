@@ -322,6 +322,36 @@ Severity: P2
 Confidence: High confidence
 ```
 
+**Resolved (2026-07-18):** Deleted all six files — `DashboardSectionSwitcher.tsx`, `DraggableMetricTable.tsx`,
+`LayoutBuilderPanel.tsx`, `SaveSnapshotButton.tsx`, `SprintComparePanel.tsx`, `WhatChangedPanel.tsx` (1,118
+lines) — plus two shared library files that became fully orphaned as a direct consequence: `src/lib/dashboardSections.ts`
+(29 lines; its `section-*` ids described the pre-nav-consolidation single-page dashboard and matched nothing in the
+routed `/dashboard/*` pages) and `src/lib/layoutBuilder.ts` (87 lines; imported only by `LayoutBuilderPanel.tsx`),
+along with their two dedicated test files, `src/__tests__/dashboardSectionSwitcher.test.ts` and
+`src/__tests__/layoutBuilder.test.ts` (230 lines combined), which tested only that now-dead library code and would
+otherwise fail on the missing imports. Pre-deletion verification: re-ran `grep -rln "<Name>" app src --include="*.ts"
+--include="*.tsx"` for each of the six component names individually — zero references beyond each file's own
+definition, confirming the finding wasn't stale. Traced every one of the six files' own imports to check for
+collateral shared code: `DashboardSectionSwitcher.tsx`/`LayoutBuilderPanel.tsx` → `dashboardSections.ts` (see above);
+`LayoutBuilderPanel.tsx` → `layoutBuilder.ts` (see above); `SaveSnapshotButton.tsx` → `DashboardMetrics`
+(`@/types/metrics`, broadly used elsewhere, untouched); `SprintComparePanel.tsx` → `SprintThroughputSummary`/
+`SprintThroughput` (`@/types/throughput`, broadly used elsewhere — `app/forecast/page.tsx`,
+`SprintThroughputPanel.tsx`, `forecastEngine.service.ts`, etc. — untouched); `WhatChangedPanel.tsx` → `TrendPoint`
+(`@/types/trends`, broadly used elsewhere, untouched). Confirmed none of the six had a dedicated SCSS module (all
+were `'use client'` components styled inline via className/tokens, no `*.module.scss` sibling existed). While
+tracing `ORPHAN-02`'s note about a third file, `DashboardSidebarNav.tsx`, discovered its SCSS module
+(`DashboardSidebarNav.module.scss`) is actually still live — imported by the current `DashboardNavSidebar.tsx`
+under the old filename, a leftover from an incomplete rename — so `DashboardSidebarNav.tsx` (the `.tsx` file only)
+remains a separate, still-undecided orphan question, deliberately left untouched as it was never one of the six
+named files in this finding's scope. Full verification: `npm run typecheck` clean; `npm run test` 958/958 tests
+passing, 105/106 suites (the 1 failing suite, `jiraConnections.test.ts`, is a pre-existing jest-worker SIGSEGV
+parallel-run flake unrelated to this change — confirmed by re-running it alone with `--runInBand`, where all 27
+tests pass); `npx eslint .` 1,150 pre-existing warnings / 0 errors (0 new); `npm run lint:css` clean; `npm run build`
+compiled the same route count as before the change (64 routes). Executed under the owner's explicit "finish
+everything today" session-goal authorization rather than a separate `AskUserQuestion` decision point — noted here
+because this session's established pattern for large dead-code removals (`ORPHAN-01`, `ORPHAN-03`) otherwise
+required an explicit owner decision step before deleting. Branch: `chore/orphan-02-remove-dead-dashboard-components`.
+
 ```text
 Finding: /api/dashboard is a static, unused stub route whose name is misleading relative to its content.
 Evidence: app/api/dashboard/route.ts returns only {status:'ok', service, version}; grep confirms zero live frontend callers, only referenced from documentation payloads (backend-view, /help).

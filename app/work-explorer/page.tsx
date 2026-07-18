@@ -8,6 +8,7 @@ import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { redirectWithLoadError } from '@/lib/loadErrorSignal';
+import { exportWorkExplorerToCsv } from '@/services/export/workExplorerListExport.service';
 import styles from './page.module.scss';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -263,6 +264,15 @@ export default function WorkExplorerPage() {
               ✕ Clear
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => exportWorkExplorerToCsv(filtered)}
+            className={styles.exportBtn}
+            disabled={filtered.length === 0}
+          >
+            ↓ Export CSV
+          </button>
         </div>
 
         {/* ── Content ── */}

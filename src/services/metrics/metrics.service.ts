@@ -843,6 +843,12 @@ function buildLabelMetrics(issues: JiraIssue[], flowItemByKey: Map<string, FlowI
   };
 }
 
+// CP3-006: this is the per-issue-type lead/cycle-time breakdown — each
+// entry's averageCycleTimeDays/averageLeadTimeDays (via summarizeFlowItems)
+// is scoped to one Issue Type, unlike the blended flow.averageCycleTimeDays/
+// averageLeadTimeDays headline figures. Returned on DashboardMetrics.types
+// (now typed as TypeEntry[] in src/types/metrics.ts — previously unknown[]).
+// Already consumed by app/delivery-mix/page.tsx's per-type table.
 function buildTypeMetrics(issues: JiraIssue[], flowItemByKey: Map<string, FlowItem>): TypeEntry[] {
   return Object.entries(groupBy(issues, (i) => (i['Issue Type'] as string) || 'Unknown'))
     .map(([type, items]) => {
@@ -1088,6 +1094,11 @@ function calculateHealthScore({
   const orphanCount = (flow.items || []).filter((i) => i.isOrphan).length;
   const orphanRatio = orphanCount / total;
   const latestSprintRate = sprint.sprints?.[0]?.completionRate ?? completionRate;
+  // CP3-006: deliberately still uses the blended average across all issue
+  // types, not the per-type breakdown in `types` (buildTypeMetrics below) —
+  // changing the Health Score formula's inputs is a business-formula change
+  // outside this finding's conservative scope. See docs/product-audit/08-
+  // metric-dictionary.md CP3-006 resolution note.
   const avgCycle = flow.averageCycleTimeDays || 0;
   const cycleScore = avgCycle === 0 ? 100 : Math.max(0, 100 - (avgCycle - 3) * 8);
 

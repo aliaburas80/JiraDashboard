@@ -14,13 +14,27 @@ const STATUS_CONFIG: Record<ColumnStatus, { label: string; chip: string; icon: s
   missing:      { label: 'Missing',       chip: 'bg-red-100 text-red-800 border-red-200',       icon: 'cross' },
 };
 
+// CP3-019: this is a column-NAME-matching score (mapping.mappingScore, from
+// src/services/jira/parser.ts's essentialScore + importantScore +
+// recognitionScore), a different metric from the data-COMPLETENESS score
+// shown later on /data-quality (dataQuality.service.ts's band()). The two
+// used to share the exact label vocabulary (Excellent/Good/Fair/Weak) at
+// different cutoffs (80/60/40 here vs 90/75/60/40 there) — a user could see
+// "Good" here and "Fair" on /data-quality for an unrelated score moments
+// later. Cutover to a single canonical band() was considered and rejected:
+// unlike CP3-018's Health Score (one metric duplicated in many places), these
+// are two genuinely different metrics with no reason their tier boundaries
+// should match — forcing this score onto dataQuality's cutoffs would be a
+// real, unjustified behavior change. Renaming to a distinct "Match" label
+// removes the vocabulary collision without touching either score's values.
+// See docs/product-audit/08-metric-dictionary.md CP3-019.
 function ScoreBadge({ score }: { score: number }) {
   const color = score >= 80 ? '#16a34a' : score >= 60 ? '#d97706' : '#dc2626';
-  const label = score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : score >= 40 ? 'Fair' : 'Weak';
+  const label = score >= 80 ? 'Strong Match' : score >= 60 ? 'Good Match' : score >= 40 ? 'Partial Match' : 'Weak Match';
   return (
     <div className="flex flex-col items-center justify-center w-16 h-16 rounded-full border-4 shrink-0" style={{ borderColor: color }}>
       <span className="text-lg font-black leading-none" style={{ color }}>{score}</span>
-      <span className="text-[9px] font-bold text-slate-400">{label}</span>
+      <span className="text-[9px] font-bold text-slate-400 text-center leading-tight">{label}</span>
     </div>
   );
 }
