@@ -6,6 +6,13 @@ import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import RequestAddMemberModal from '@/components/admin/RequestAddMemberModal';
 import { type Member, initialsFor, contactEmailFor, matchesMemberQuery } from '@/lib/members';
+import { paginate } from '@/lib/pagination';
+
+// MPE-02: /api/members returns every active member with no server-side limit —
+// bounded by organization headcount, so a client-side page slice resolves the
+// missing-pagination finding without a riskier API change. 24 fits the 2- and
+// 3-column responsive grid below evenly.
+const PAGE_SIZE = 24;
 
 function roleBadgeCls(role: string): string {
   if (role === 'admin') return 'chip c-acc';
@@ -26,6 +33,7 @@ export default function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [selected, setSelected] = useState<Member | null>(null);
   const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [myRole, setMyRole] = useState<string | null>(null);
@@ -60,6 +68,8 @@ export default function MembersPage() {
   const filteredMembers = useMemo(() => (
     members.filter(member => matchesMemberQuery(member, query))
   ), [members, query]);
+
+  const { items: pageMembers, page: safePage, totalPages } = paginate(filteredMembers, page, PAGE_SIZE);
 
   const roleCount = new Set(members.map(m => m.role)).size;
 
@@ -98,10 +108,11 @@ export default function MembersPage() {
         {/* Search bar */}
         <section id="tour-section-members-2" className="mb-6">
           <label className="relative block">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--dc-p3, #505050)' }}>⌕</span>
+            <span className="sr-only">Search members, roles, positions, or shared info</span>
+            <span aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--dc-p3, #505050)' }}>⌕</span>
             <input
               value={query}
-              onChange={e => setQuery(e.target.value)}
+              onChange={e => { setQuery(e.target.value); setPage(1); }}
               type="search"
               placeholder="Search members, roles, positions, or shared info"
               className="h-12 w-full pl-11 pr-4 text-base outline-none transition focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
@@ -126,7 +137,7 @@ export default function MembersPage() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filteredMembers.map((member, index) => (
+            {pageMembers.map((member, index) => (
               <button
                 key={member.id}
                 type="button"
@@ -166,6 +177,32 @@ export default function MembersPage() {
           <div className="rounded-[14px] p-8 text-center text-sm font-bold"
             style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p3, #505050)' }}>
             No members match the current search.
+          </div>
+        )}
+
+        {/* MPE-02: pagination — plain Tailwind (remapped to design tokens via the
+            html[data-palette] override in globals.scss), no inline style. */}
+        {!loading && totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => setPage(safePage - 1)}
+              disabled={safePage <= 1}
+              className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-default disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+            >
+              ← Prev
+            </button>
+            <span className="text-xs font-semibold text-slate-400">
+              Page {safePage} of {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage(safePage + 1)}
+              disabled={safePage >= totalPages}
+              className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-default disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+            >
+              Next →
+            </button>
           </div>
         )}
 

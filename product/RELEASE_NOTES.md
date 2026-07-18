@@ -5,6 +5,12 @@
 
 ---
 
+## Added: Pagination and Search on Admin and List Pages (2026-07-17)
+
+`/admin/logs`, `/admin/users`, `/members`, `/backend`'s Import Logs section, and `/snapshots` previously rendered their entire list on one page with no way to page through it — fine with a handful of rows, but it would only get slower and harder to scan as an account's history or team grew. All five now page their results (25 rows at a time on the admin pages, 10 on Snapshots, 24 on Members). `/snapshots`, `/admin/logs`, `/backend`, and `/admin/audit` also gained a free-text search box — search by filename or uploader on the logs pages, by snapshot name on Snapshots, and by event description or user on the Audit Events log. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Added: CSV Export on 7 Pages That Previously Had None (2026-07-18)
 
 `/work-explorer`, `/teams`, `/portfolio`, `/delivery-mix`, `/roadmap`, and `/customer` each now have an

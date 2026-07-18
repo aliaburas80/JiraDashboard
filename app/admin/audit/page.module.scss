@@ -199,6 +199,12 @@
   }
 }
 
+// MPE-03: wider than the date/select filters so the placeholder text fits.
+.searchInput {
+  min-inline-size: 220px;
+  flex:            1 1 220px;
+}
+
 .filterBtn {
   padding:       6px 14px;
   border-radius: 8px;
