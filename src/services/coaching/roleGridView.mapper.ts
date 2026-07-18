@@ -87,7 +87,11 @@ function buildScrumMasterRole(metrics: DashboardMetrics): RoleView {
     { label: 'Blocked items', value: blockedItems.length },
     { label: 'Carry-over', value: `${carryoverRatePct}%` },
     { label: 'Cycle time', value: cycleTime > 0 ? `${cycleTime.toFixed(1)} days` : '—' },
-    { label: 'Retro actions completed', value: `${RETRO_ACTIONS_COMPLETED_FALLBACK_PCT}%` }, // FALLBACK
+    // CP3-012: isEstimate flags this to MetricItem so it renders a visible
+    // "(estimated)" qualifier — this value never changes across uploads
+    // because it's a fixed placeholder, not a real calculation (see FALLBACK
+    // constant above).
+    { label: 'Retro actions completed', value: `${RETRO_ACTIONS_COMPLETED_FALLBACK_PCT}%`, isEstimate: true }, // FALLBACK
   ];
 
   return {

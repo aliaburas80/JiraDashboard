@@ -207,6 +207,17 @@ export default function TeamsPage() {
           <p className="text-sm text-slate-500 mt-1">
             Side-by-side health scores, workload, and risk signals per team member.
           </p>
+          {/* CP3-007: this ranks individuals, not normalized teams — a member who
+              estimates story points more conservatively, or takes on larger/harder
+              tickets, can show a lower score or higher load without that reflecting
+              their actual performance. See docs/product-audit/08-metric-dictionary.md
+              CP3-007 for why an automated normalization fix wasn't attempted. */}
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3 max-w-2xl">
+            <strong className="font-black">Note:</strong> this compares individuals, not normalized for
+            different story-point estimation habits between team members. A member who estimates more
+            conservatively, or takes on larger or harder tickets, may show a lower score without that
+            reflecting their actual performance — use this as a conversation starter, not a ranking.
+          </p>
         </div>
 
         {/* Summary KPI strip */}
