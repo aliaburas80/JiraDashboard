@@ -377,6 +377,42 @@ Severity: P3
 Confidence: Medium confidence
 ```
 
+**Resolved 2026-07-19 — content corrected, structural risk still open by design (see below):** Before
+fixing anything, checked how far each of the three had actually drifted rather than assuming "Medium
+confidence" meant minor — it did not:
+
+- **`backend-view`'s `ENDPOINTS` array** listed 17 routes. The app has **72** real `app/api/**/route.ts`
+  files today — most of `/api/admin/*`, `/api/snapshots`, `/api/trends`, `/api/notifications`, and more
+  were simply missing. Rebuilt the array from scratch by walking every route file's real exported HTTP
+  methods and leading doc comment; verified programmatically (path-set diff and method-set diff against
+  the live file tree) that all 72 entries now match exactly, not just spot-checked.
+- **`developer-view`'s architecture block** claimed `"Next.js 14"` (real baseline is 16.2.9 per this
+  document's own §4.1), listed all four service file paths under a `lib/` prefix that hasn't existed since
+  before this audit (real paths are `src/services/metrics/`, `src/services/jira/`, `src/services/imports/`),
+  and described Health Score bands as a stale 3-tier scale (critical/warning/good at 50/75) that predates
+  the `CP3-018` unification onto the real 5-tier, admin-configurable scale (excellent/good/moderate/at-risk/
+  critical at 90/75/60/40, `src/types/thresholds.ts` `DEFAULT_THRESHOLDS`). Only `healthScoreWeights` was
+  still accurate (verified against `metrics.service.ts`'s real `calculateHealthScore()` formula) — corrected
+  everything else to match current code, confirmed by reading the real files rather than assuming.
+- **`/help`'s route table and two FAQ entries** claimed the upload rate limit is "per IP address" — it has
+  been per-user (`checkUploadRateLimit()`, keyed by `userId`) since the P0A-02 DB-backed rate-limiter
+  rewrite; claimed `/api/health` returns `service: "delivery-clarity-api"` when the real value is
+  `"delivery-clarity"` (apparently copy-pasted from `/api/dashboard`'s value); claimed `backend-view` shows
+  "10 most recent" logs when the real code takes 50; and referenced `RATE_MAX`/`RATE_WINDOW_MS` constants
+  that don't exist under those names in the current implementation. All four corrected.
+
+**What was deliberately NOT done:** a generated/enforced single source of truth (e.g. a route registry per
+CLAUDE.md §10.1 that all three surfaces read from) was considered and explicitly declined for this pass —
+the owner's brief was "correct what's wrong now," not "build the structural fix," given building a shared
+registry is a real architecture decision (schema, ownership, migration of three existing consumers) that
+deserves its own scoping rather than being bundled into a content-accuracy correction. **The underlying
+"nothing enforces consistency" risk this finding described therefore still stands** — these three will
+drift apart again the next time a route is added or a threshold changes, exactly as before. This is a
+point-in-time correction, not a fix for the finding's root cause. No test coverage was added for the same
+reason a generated registry wasn't built: there is nothing to regression-test about static, hand-written
+data literals beyond what `npm run typecheck`/`build` already catch (a malformed object literal). Branch:
+`docs/tech10-api-surface-accuracy-fix`.
+
 ```text
 Finding: Inconsistent confirm-dialog usage within a single admin surface — app/admin/settings/page.tsx uses the shared ConfirmDeleteDialog for one action but native window.confirm() for two other destructive actions (auto-restore, restore-from-backup) in the same file; JiraConnectionsPanel.tsx uses only native confirm().
 Evidence: app/admin/settings/page.tsx (both patterns present); src/components/admin/JiraConnectionsPanel.tsx.
