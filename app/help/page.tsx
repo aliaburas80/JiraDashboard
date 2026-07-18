@@ -130,10 +130,19 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'readiness', icon: 'flag', title: 'Readiness',
+    // Resolved (2026-07-18) — audit finding 03-clarity §A: this section used to be one bare
+    // "Readiness" heading covering both the Epic Readiness continuous score and the Release
+    // Readiness gate verdict, two conceptually different outputs (a 0-100 score vs. a discrete
+    // signal set). Split into two sections below; FAQ content is unchanged, only the grouping.
+    id: 'epic-readiness', icon: 'flag', title: 'Epic Readiness',
     items: [
       { q: 'At-risk epics', a: 'The Readiness page scores each epic on a 0–100 readiness scale based on: percentage of child issues completed (40%), absence of critical-health child issues (30%), absence of open blockers (20%), and presence of a due date (10%). Epics scoring below 50 are flagged as At Risk.' },
       { q: 'Dependencies', a: 'The Dependencies panel shows all "is blocked by", "depends on", and "relates to" link types across all issues. Issues with unresolved inbound dependencies are listed with the count of open blockers. This is the fastest way to identify a release that is being held up by another team or another epic.' },
+    ],
+  },
+  {
+    id: 'release-readiness', icon: 'flag', title: 'Release Readiness',
+    items: [
       { q: 'Release signals', a: 'Release signals are Boolean indicators at the top of the Readiness page: All critical items resolved (yes/no), No open blockers (yes/no), All epics above 80% complete (yes/no), and No items past due date (yes/no). A green tick on all four signals indicates the release is ready to proceed.' },
     ],
   },
@@ -291,8 +300,8 @@ const SECTIONS: Section[] = [
     id: 'teams', icon: 'people', title: 'Teams',
     items: [
       { q: 'What is the Teams page?', a: 'The /teams page shows a side-by-side health comparison for each team member (assignee) in your Jira data. It computes a Team Health Score (0–100) per person based on their completion rate, critical items, and blocked items.' },
-      { q: 'How is the Team Health Score calculated?', a: 'Score = (done/total) × 50 + (1 − critical/total) × 30 + (1 − blocked/total) × 20, clamped 0–100. Bands: Healthy ≥ 70 / At Risk ≥ 40 / Critical < 40.' },
-      { q: 'What do the four comparison charts show?', a: 'Health Score (ranked by score, colour-coded by band) · Completion % (ranked by completion) · Workload Share (load%, red > 35%, amber > 20%) · Blocked + Critical Items (ranked by total risk count).' },
+      { q: 'How is the Team Health Score calculated?', a: 'Score = (done/total) × 50 + (1 − critical/total) × 30 + (1 − blocked/total) × 20, clamped 0–100. Bands: Healthy ≥ 70 / Team At Risk ≥ 40 / Critical < 40.' },
+      { q: 'What do the four comparison charts show?', a: 'Team Health Score (ranked by score, colour-coded by band) · Completion % (ranked by completion) · Workload Share (load%, red > 35%, amber > 20%) · Blocked + Critical Items (ranked by total risk count).' },
       { q: 'The Teams page shows "No team data available"', a: 'This means no assignee data was found in the uploaded Jira export. Ensure your Jira export includes the Assignee column and has been uploaded from the home page.' },
     ],
   },
@@ -300,7 +309,7 @@ const SECTIONS: Section[] = [
     id: 'portfolio', icon: 'folder', title: 'Portfolio',
     items: [
       { q: 'What is the Portfolio page?', a: 'The /portfolio page aggregates all epics, projects, sprints, and quarters into a single Portfolio Score (0–100) and health view. It is designed for programme leads and directors who need a cross-team delivery snapshot.' },
-      { q: 'How is the Portfolio Score calculated?', a: 'Score = epic completion × 40% + project completion × 30% + sprint performance × 20% + data quality × 10%, weighted by issue count. Bands: Excellent ≥ 85 / Good ≥ 70 / Moderate ≥ 55 / At Risk ≥ 35 / Critical < 35.' },
+      { q: 'How is the Portfolio Score calculated?', a: 'Score = epic completion × 40% + project completion × 30% + sprint performance × 20% + data quality × 10%, weighted by issue count. Bands: Excellent ≥ 85 / Good ≥ 70 / Moderate ≥ 55 / Portfolio At Risk ≥ 35 / Critical < 35.' },
       { q: 'What does the Epic Progress panel show?', a: 'A scrollable list of all epics with health dots (green/amber/red), completion bars, percentage, issue counts, and critical/warning counts. Sorted by the order they appear in your Jira data.' },
       { q: 'What do the Quarter Throughput bars show?', a: 'Bar height represents total issues per quarter. Bar colour represents completion rate: green ≥ 70%, amber 40–69%, red < 40%. Bars are capped to the last 8 quarters. "No date" quarters are excluded.' },
     ],
@@ -551,9 +560,9 @@ const SECTIONS: Section[] = [
   {
     id: 'roadmap', icon: 'roadmap', title: 'Roadmap',
     items: [
-      { q: 'What does the Roadmap page show?', a: 'The Roadmap page (/roadmap) shows every epic from your uploaded Jira data as a card with a progress bar, health indicator, delivery forecast label, and confidence badge. It is accessible from the Planning dropdown in the header.' },
+      { q: 'What does the Roadmap page show?', a: 'The Roadmap page (/roadmap) shows every epic from your uploaded Jira data as a card with a progress bar, health indicator, delivery forecast label, and Epic Timeline Confidence badge. It is accessible from the Planning dropdown in the header.' },
       { q: 'How are delivery forecasts calculated?', a: 'Forecasts use linear velocity extrapolation: remaining issues ÷ average throughput (items completed per sprint) = sprints remaining. Weeks = ceil(sprints × 2), assuming 2-week sprints. Labels are: Complete, Within 2 weeks, ~N weeks, ~N months, or Insufficient data.' },
-      { q: 'What is forecast confidence?', a: 'Confidence reflects how reliable the estimate is based on remaining work: High = less than 2 sprints remaining; Medium = 2–5 sprints; Low = 5 or more sprints, or no sprint data available.' },
+      { q: 'What is Epic Timeline Confidence?', a: 'Epic Timeline Confidence reflects how reliable the estimate is based on remaining work: High = less than 2 sprints remaining; Medium = 2–5 sprints; Low = 5 or more sprints, or no sprint data available. This is a per-epic estimate distinct from the project-wide Forecast Reliability shown on the Forecast page.' },
       { q: 'Why do some epics show "Insufficient data"?', a: 'If no sprint history is available in your upload (no Sprint column or no completed sprints), average throughput is 0 and no forecast can be calculated. Upload a Jira export that includes sprint data to enable forecasts.' },
       { q: 'Can I filter or sort epics?', a: 'Yes. Use the filter tabs to show: In Progress, All, Critical, or Done epics. Use the sort control to order by Forecast (soonest first), Progress (most complete first), or Name.' },
     ],
@@ -561,9 +570,9 @@ const SECTIONS: Section[] = [
   {
     id: 'forecast', icon: 'eye', title: 'Forecast',
     items: [
-      { q: 'What does the Forecast page show?', a: 'The Forecast page (/forecast) shows your overall delivery status (On Track / At Risk / Off Track / Complete / Insufficient Data), a Forecast Diagnosis card explaining why, a throughput comparison, a risk & scope trend chart, a burn-up chart of actual vs forecast vs target, a KPI row, a next-quarter capacity plan, and actionable recommendations.' },
-      { q: 'What do the forecast statuses mean?', a: 'Complete = all issues done. On Track = 6 or fewer sprints remaining at current velocity. At Risk = 7–12 sprints remaining. Off Track = more than 12 sprints remaining, or severe blockers/critical items regardless of sprint count. Insufficient Data = no sprint throughput history available.' },
-      { q: 'What is the Forecast Diagnosis card?', a: 'It answers "are we on track, and why?" by identifying the single biggest drag on your forecast — checked in this order: severe blockers, critical/highest-priority items, mid-sprint scope growth, poor Data Quality, or declining throughput. If none of these apply, it says so rather than inventing a risk. The card also explains your confidence rating in plain language, citing real numbers.' },
+      { q: 'What does the Forecast page show?', a: 'The Forecast page (/forecast) shows your overall delivery status (On Track / Timeline At Risk / Off Track / Complete / Insufficient Data), a Forecast Diagnosis card explaining why, a throughput comparison, a risk & scope trend chart, a burn-up chart of actual vs forecast vs target, a KPI row, a next-quarter capacity plan, and actionable recommendations.' },
+      { q: 'What do the forecast statuses mean?', a: 'Complete = all issues done. On Track = 6 or fewer sprints remaining at current velocity. Timeline At Risk = 7–12 sprints remaining. Off Track = more than 12 sprints remaining, or severe blockers/critical items regardless of sprint count. Insufficient Data = no sprint throughput history available.' },
+      { q: 'What is the Forecast Diagnosis card?', a: 'It answers "are we on track, and why?" by identifying the single biggest drag on your forecast — checked in this order: severe blockers, critical/highest-priority items, mid-sprint scope growth, poor Data Quality, or declining throughput. If none of these apply, it says so rather than inventing a risk. The card also explains your Forecast Reliability rating in plain language, citing real numbers.' },
       { q: 'What is the Throughput: Required vs. Current chart?', a: 'It compares your current average throughput to what you would need to be On Track (6 or fewer sprints remaining) at today\'s remaining scope — a quick visual answer to "how much faster would we need to go?"' },
       { q: 'What is the Risk & Scope Trend chart?', a: 'It shows, per recent sprint, how many items were added mid-sprint and how many were blocked — rising bars signal growing risk to the forecast. It only appears when your upload includes rich per-sprint throughput data (sprint start/end dates and scope-change fields).' },
       { q: 'What is the burn-up chart?', a: 'The chart shows three lines: a solid blue line for actual cumulative completed issues per sprint, a dashed blue line extending the forecast forward, and a grey dashed target line showing where you need to be to complete all work.' },
@@ -636,7 +645,7 @@ const SECTIONS: Section[] = [
 const SECTION_GROUPS: { id: string; label: string; icon: string; sectionIds: string[] }[] = [
   { id: 'start',    label: 'Getting Started', icon: 'release', sectionIds: ['welcome'] },
   { id: 'dash',     label: 'Dashboard',       icon: 'chartBar', sectionIds: ['summary','filters','attention','kpi','charts','composition','controls'] },
-  { id: 'planning', label: 'Planning',        icon: 'calendar', sectionIds: ['quarters','kanban','sprint','ownership','readiness'] },
+  { id: 'planning', label: 'Planning',        icon: 'calendar', sectionIds: ['quarters','kanban','sprint','ownership','epic-readiness','release-readiness'] },
   { id: 'analysis', label: 'Analysis',        icon: 'search', sectionIds: ['justification','flow','labels','relations','teams','portfolio','release-confidence','filter-bar'] },
   { id: 'export',   label: 'Export & Data',   icon: 'upload', sectionIds: ['export-guide','aliases','api','explorer-export','export-sheets','executive-pdf'] },
   { id: 'system',   label: 'System',          icon: 'cloud', sectionIds: ['cloud-sync','cloud-storage','data-storage-mode','diagnostics','deployment','about','branding'] },

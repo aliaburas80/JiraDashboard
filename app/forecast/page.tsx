@@ -453,16 +453,16 @@ function RiskScopeTrendChart({ points }: { points: { sprint: string; added: numb
 
 const STATUS_META = {
   on_track:          { label: 'On Track',         color: '#22C55E', bg: 'rgba(34,197,94,0.07)',    border: 'rgba(34,197,94,0.18)',    text: '#4ade80', icon: 'checkCircle' },
-  at_risk:           { label: 'At Risk',           color: '#F59E0B', bg: 'rgba(245,158,11,0.07)',   border: 'rgba(245,158,11,0.18)',   text: '#fcd34d', icon: 'warning' },
+  at_risk:           { label: 'Timeline At Risk',  color: '#F59E0B', bg: 'rgba(245,158,11,0.07)',   border: 'rgba(245,158,11,0.18)',   text: '#fcd34d', icon: 'warning' },
   off_track:         { label: 'Off Track',         color: '#F87171', bg: 'rgba(248,113,113,0.07)',  border: 'rgba(248,113,113,0.18)',  text: '#fca5a5', icon: 'crossCircle' },
   complete:          { label: 'Complete',          color: '#FF8A4C', bg: 'rgba(232,93,18,0.07)',    border: 'rgba(232,93,18,0.18)',    text: '#FF8A4C', icon: 'party' },
   insufficient_data: { label: 'Insufficient Data', color: '#F59E0B', bg: 'rgba(245,158,11,0.05)',   border: 'rgba(245,158,11,0.18)',   text: '#F59E0B', icon: 'info' },
 };
 
 const CONF_META: Record<string, { bg: string; color: string; border: string; label: string }> = {
-  high:   { bg: 'rgba(34,197,94,0.10)',   color: '#4ade80', border: 'rgba(34,197,94,0.25)',   label: 'High confidence'   },
-  medium: { bg: 'rgba(245,158,11,0.10)',  color: '#fcd34d', border: 'rgba(245,158,11,0.25)',  label: 'Medium confidence' },
-  low:    { bg: 'rgba(248,113,113,0.10)', color: '#fca5a5', border: 'rgba(248,113,113,0.25)', label: 'Low confidence'    },
+  high:   { bg: 'rgba(34,197,94,0.10)',   color: '#4ade80', border: 'rgba(34,197,94,0.25)',   label: 'High Forecast Reliability'   },
+  medium: { bg: 'rgba(245,158,11,0.10)',  color: '#fcd34d', border: 'rgba(245,158,11,0.25)',  label: 'Medium Forecast Reliability' },
+  low:    { bg: 'rgba(248,113,113,0.10)', color: '#fca5a5', border: 'rgba(248,113,113,0.25)', label: 'Low Forecast Reliability'    },
 };
 
 const TREND_META = {

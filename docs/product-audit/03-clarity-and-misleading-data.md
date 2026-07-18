@@ -30,6 +30,8 @@ Severity: P1 (clarity/trust — no false data, but high misinterpretation risk)
 Confidence: High confidence (code-confirmed, 4 independent sources)
 ```
 
+**Resolved (2026-07-18):** Implemented as a rename-only fix per an approved terminology-rename table (Checkpoint 4/6 product decision — not the exact candidate names sketched above; the approved table uses more specific wording per location). All four "Confidence" meanings are now visually distinct: the per-KPI badge (`MetricConfidenceBadge.tsx`, wired via `DCKpiCard.tsx`) now reads "KPI Reliability" instead of bare "Confidence"; `/sprint-kanban` and `/customer`'s bare "Confidence" labels for `overallDeliveryConfidence` now read "Delivery Confidence," matching what `/forecast` already used; `/roadmap`'s per-epic column header now reads "Epic Timeline Confidence" (the High/Medium/Low badge value itself is unchanged); and `/forecast`'s project-wide blended reliability chip now reads "High/Medium/Low Forecast Reliability" instead of "…confidence." Release Confidence Score was already distinctly named and needed no change. `/data-quality` and `/dashboard/data-quality`'s mislabeled "Data confidence" (which was actually the Data Quality Score) was also corrected to "Data Quality Score" as part of the same pass. No calculation changed — only display labels, aria-labels, column headers, and the `/glossary`, `/help`, and `/developer` doc text describing them. See `TODO-List.md` for the full rename table and branch name.
+
 ### "At Risk" — 6 incompatible threshold definitions for the same label
 
 | Context | Threshold that makes something "At Risk" | Evidence |
@@ -51,6 +53,8 @@ Severity: P1
 Confidence: High confidence (all 6 sources are the app's own glossary content, not inferred)
 ```
 
+**Resolved (2026-07-18):** Implemented option (a) from the recommendation above — genuinely different labels per context — per an approved terminology-rename table. The sidebar's General Health band (the canonical, most-visible "At Risk" usage, shown on every `/dashboard/*` page) had its own separate spelling bug — hyphenated "At-Risk" instead of `/glossary`'s "At Risk" — which was corrected, but the bare term itself was kept since this is the one genuinely primary/shared usage. The other 5 meanings were given distinct labels: Team Health band → "Team At Risk"; Portfolio band → "Portfolio At Risk"; Sprint Goal status → "Behind Pace" (exactly the example the recommendation above suggested); Forecast status → "Timeline At Risk"; Ops health (admin diagnostics) → "Ops At Risk." Two more bare "At Risk" KPI-tile occurrences found during implementation (`/roadmap` and `/dashboard/epic-readiness`'s count of epics with a warning-health child issue — not a score band, and not one of the 6 rows in the table above, since it's a different signal than the epic-readiness score) were also disambiguated, to "Epics Needing Attention." `/glossary` and `/help` band definitions were updated to match. No threshold changed — only the label attached to each threshold.
+
 ### "Health Score" — same label, different formula, no on-page distinction
 
 `app/teams/page.tsx:228` renders a "Health Score" heading using a **per-assignee Team Health formula**, distinct from the overall-project Health Score shown via `DashboardNavSidebar.tsx:174`/`app/charts/page.tsx:368`. The divergence is documented in `app/help/page.tsx:293-294` — but not on the page itself.
@@ -64,6 +68,8 @@ Recommendation: Not made at this checkpoint — rename candidate (e.g. "Team Hea
 Severity: P2
 Confidence: High confidence
 ```
+
+**Resolved (2026-07-18):** Implemented exactly the rename candidate suggested above — `/teams`' chart section header now reads "Team Health Score" instead of bare "Health Score," matching how `/glossary`, `/developer`, and the landing page's `DashboardPreview` component already qualified it. This was a missing-qualifier fix, not new vocabulary — no formula changed.
 
 ### "Risk" as a bare table column header, two different classifications
 
@@ -92,6 +98,8 @@ Recommendation: Not made at this checkpoint.
 Severity: P2
 Confidence: High confidence
 ```
+
+**Resolved (2026-07-18):** Implemented at the `/help` page — the single "Readiness" FAQ section, which mixed the Epic Readiness continuous score and the Release Readiness discrete verdict under one bare heading, was split into two sections, "Epic Readiness" and "Release Readiness," each keeping its original FAQ content unchanged (only the section titling/grouping changed). This closes the terminology-collision gap on `/help`; the underlying route names (`/roadmap`, `/dashboard/epic-readiness`, `/release-readiness`, `/readiness`) were out of scope for this rename pass and were not touched.
 
 ---
 
@@ -168,3 +176,5 @@ The headline cycle/lead-time tiles on `/flow-health` and `/sprint-kanban` blend 
 ### New terminology finding from Checkpoint 3
 
 Checkpoint 2 (§A above) catalogued 4 distinct meanings of "Confidence." Checkpoint 3's calculation trace surfaced a 5th: `/roadmap`'s epic-forecast confidence badge uses the same "high/medium/low" vocabulary as `/forecast` but a materially different and weaker method (distance-to-completion only, vs. `/forecast`'s blend of sprint count, trend, blocked count, and data quality), with no on-page caveat — CP3-009. This strengthens rather than changes Checkpoint 2's rename/disambiguation recommendation; still not resolved at this checkpoint (Checkpoint 4/6 territory).
+
+**Partially resolved (2026-07-18):** The label-collision half of this finding is resolved — `/roadmap`'s badge no longer shares the bare word "Confidence" with `/forecast` (see the §A "Confidence" resolution note above; the roadmap column header now reads "Epic Timeline Confidence"). The underlying methodological gap CP3-009 actually describes — that the weaker distance-to-completion method exists at all, independent of what it's labeled — is unchanged and remains open.

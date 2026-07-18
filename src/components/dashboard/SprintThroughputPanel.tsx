@@ -9,7 +9,7 @@ function goalChip(outcome: SprintGoalOutcome): string {
     case 'Met':           return 'chip c-gr';
     case 'Partially Met': return 'chip c-am';
     case 'Missed':        return 'chip c-rd';
-    case 'At Risk':       return 'chip c-am';
+    case 'Behind Pace':   return 'chip c-am';
     default:              return 'chip c-nt';
   }
 }

@@ -51,7 +51,7 @@ export default function MetricConfidenceBadge({ confidence, size = 'sm', showLab
         onMouseLeave={() => setOpen(false)}
         onFocus={handleMouseEnter}
         onBlur={() => setOpen(false)}
-        aria-label={`Confidence: ${confidence.band} (${confidence.confidence}%)`}
+        aria-label={`KPI Reliability: ${confidence.band} (${confidence.confidence}%)`}
         className={[
           'inline-flex items-center gap-1 border rounded-full font-bold transition-colors cursor-help select-none',
           isSmall ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5',

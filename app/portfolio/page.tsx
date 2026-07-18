@@ -30,7 +30,7 @@ const BAND_MEANINGS: Record<string, string> = {
   Excellent: 'Delivery is in excellent shape. Epics and projects are progressing well with minimal risk.',
   Good:      'Overall delivery is healthy. A few items need monitoring but no immediate action is required.',
   Moderate:  'Delivery is progressing but risk areas exist. Review at-risk epics and blocked items.',
-  'At Risk': 'Portfolio has significant risk. Escalate blockers and re-prioritise critical epics now.',
+  'Portfolio At Risk': 'Portfolio has significant risk. Escalate blockers and re-prioritise critical epics now.',
   Critical:  'Delivery is critically behind. Immediate leadership review and re-planning is required.',
 };
 
