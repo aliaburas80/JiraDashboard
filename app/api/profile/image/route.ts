@@ -10,6 +10,7 @@ import {
   downloadProfileImageFromS3,
   uploadProfileImageToS3,
 } from '@/services/storage/profileImages';
+import { detectImageContentType } from '@/lib/fileSignature';
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -37,19 +38,31 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: 'Image file is required.' }, { status: 400 });
   }
-  if (!ALLOWED_TYPES.has(file.type)) {
-    return NextResponse.json({ error: 'Only JPG, PNG, WebP, or GIF profile images are supported.' }, { status: 400 });
-  }
   if (file.size > MAX_IMAGE_BYTES) {
     return NextResponse.json({ error: 'Profile image must be 5 MB or smaller.' }, { status: 413 });
   }
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
+
+    // SEC (2026-07-18, docs/product-audit/10-technical-cleanup.md Part 1
+    // finding 4): file.type is client-declared (the browser's File API
+    // reports whatever the client-side FormData construction says it is)
+    // and trivially spoofable — it must never be trusted for either the
+    // accept/reject decision or the S3 contentType. Verify the ACTUAL
+    // content via magic bytes and use that server-verified type for both.
+    // image/svg+xml is correctly still excluded (ALLOWED_TYPES never
+    // included it, and detectImageContentType() has no SVG branch) —
+    // preserves the existing stored-SVG-XSS protection.
+    const detectedType = detectImageContentType(buffer);
+    if (!detectedType || !ALLOWED_TYPES.has(detectedType)) {
+      return NextResponse.json({ error: 'Only JPG, PNG, WebP, or GIF profile images are supported.' }, { status: 400 });
+    }
+
     const { key } = await uploadProfileImageToS3({
       userId: session.userId,
       content: buffer,
-      contentType: file.type,
+      contentType: detectedType,
     });
     const avatarUrl = imageUrlFor(key);
     const user = await prisma.user.update({

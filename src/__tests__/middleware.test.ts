@@ -69,3 +69,65 @@ test('TC-A-10: middleware redirects an unauthenticated request on a protected ro
   expect(response.status).toBe(307);
   expect(response.headers.get('location')).toBe('http://localhost:3000/login?redirect=%2Fdashboard');
 });
+
+// SEC (2026-07-18, docs/product-audit/10-technical-cleanup.md Part 1 finding
+// 1): /api/* defense-in-depth backstop tests.
+describe('SEC-2026-07-18: /api/* backstop', () => {
+  test('a non-public API route with no session is rejected with 401 JSON, not a redirect', async () => {
+    mockSession.isLoggedIn = false;
+    const { middleware } = await import('../../middleware');
+
+    const response = await middleware(reqFor('/api/imports'));
+
+    expect(response.status).toBe(401);
+    const body = await response.json();
+    expect(body.error).toBe('Not authenticated.');
+  });
+
+  test('a non-public API route with a valid session passes through', async () => {
+    mockSession.isLoggedIn = true;
+    const { middleware } = await import('../../middleware');
+
+    const response = await middleware(reqFor('/api/imports'));
+
+    expect(response.status).not.toBe(401);
+    expect(response.status).not.toBe(307);
+  });
+
+  test.each([
+    '/api/auth/login',
+    '/api/auth/logout',
+    '/api/auth/register',
+    '/api/auth/forgot-password',
+    '/api/auth/resend-verification',
+    '/api/auth/reset-password',
+    '/api/auth/verify-email',
+    '/api/health',
+    '/api/ready',
+    '/api/demo-request',
+    '/api/events/error',
+    '/api/dashboard',
+    '/api/backend-view',
+  ])('public API route %s remains reachable with no session', async (pathname) => {
+    mockSession.isLoggedIn = false;
+    const { middleware } = await import('../../middleware');
+
+    const response = await middleware(reqFor(pathname));
+
+    expect(response.status).not.toBe(401);
+    expect(response.status).not.toBe(307);
+  });
+
+  test('an admin-only API route still passes the backstop on session alone — role enforcement stays the route\'s own job', async () => {
+    // The backstop only checks "is there a valid session," never role — this
+    // proves it does not itself 403 a non-admin, so it cannot conflict with
+    // (or duplicate) each admin route's own requireAdmin() check.
+    mockSession.isLoggedIn = true;
+    mockSession.role = 'scrum_master';
+    const { middleware } = await import('../../middleware');
+
+    const response = await middleware(reqFor('/api/admin/users'));
+
+    expect(response.status).not.toBe(401);
+  });
+});

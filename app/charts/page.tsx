@@ -2,7 +2,7 @@
 // /charts — Visual Analytics: two tabs (bar/line Charts + donut Circles).
 'use client';
 
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -14,6 +14,8 @@ import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 import SprintVelocityChart from '@/components/charts/SprintVelocityChart';
 import ChartCustomizerPanel from '@/components/charts/ChartCustomizerPanel';
 import { getChartPrefs, type ChartPref } from '@/lib/chartCustomizer';
+import { exportChartsToCsv, type ChartExportSection } from '@/services/export/chartsExport.service';
+import { exportToExcel } from '@/lib/exportUtils';
 import styles from './page.module.scss';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -262,6 +264,17 @@ export default function ChartsPage() {
   const [loading,    setLoading]    = useState(true);
   const [chartPrefs, setChartPrefs] = useState<ChartPref[]>([]);
   const [tab,        setTab]        = useState<'charts' | 'circles'>('charts');
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!exportOpen) return;
+    function handler(e: MouseEvent) {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) setExportOpen(false);
+    }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [exportOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -391,6 +404,91 @@ export default function ChartsPage() {
     return (p?.span as 1 | 2 | 3) ?? 1;
   };
 
+  // ── CSV export — one section per widget currently visible on the active
+  // tab (MPE-01). Mirrors isVisible()/tab exactly, so the export always
+  // matches what's on screen.
+  function buildVisibleSections(): ChartExportSection[] {
+    const sections: ChartExportSection[] = [
+      { title: 'Key Metrics', header: ['Metric', 'Value'], rows: KPI_PILLS.map(p => [p.lbl, p.val]) },
+    ];
+
+    if (tab === 'charts') {
+      if (isVisible('velocity') && sprints.length > 0) {
+        sections.push({
+          title: 'Sprint Velocity',
+          header: ['Sprint', 'Issues', 'Completion %'],
+          rows: sprints.map((s: any) => [s.name, s.issues, s.completionRate ?? '']),
+        });
+      }
+      if (isVisible('team') && capacity.length > 0) {
+        sections.push({
+          title: 'Team Load',
+          header: ['Assignee', 'Load %'],
+          rows: capacity.map((c: any) => [c.assignee || '(unassigned)', c.loadShare]),
+        });
+      }
+      if (isVisible('quarters') && quarters.length > 0) {
+        sections.push({
+          title: 'Quarter Throughput',
+          header: ['Quarter', 'Issues'],
+          rows: quarters.map((q: any) => [q.quarter, q.issues]),
+        });
+      }
+      if (isVisible('kanban') && kanbanTop.length > 0) {
+        sections.push({
+          title: 'Kanban Status Flow',
+          header: ['Status', 'Count'],
+          rows: kanbanTop.map((k: any) => [k.name || '?', k.count]),
+        });
+      }
+      if (isVisible('labels') && labelStats.length > 0) {
+        sections.push({
+          title: 'Label Distribution',
+          header: ['Label', 'Count'],
+          rows: labelStats.map((l: any) => [l.label, l.count]),
+        });
+      }
+      if (isVisible('timeline') && (epics.length > 0 || sprints.length > 0)) {
+        const isEpic = epics.length > 0;
+        sections.push({
+          title: isEpic ? 'Epic Delivery Progress' : 'Sprint Completion',
+          header: [isEpic ? 'Epic' : 'Sprint', 'Progress %', 'Done', 'Total'],
+          rows: (isEpic ? epics : sprints).map((row: any) => [
+            isEpic ? (row.epic || 'No epic') : (row.name || 'Sprint'),
+            isEpic ? (row.progress ?? 0) : (row.completionRate ?? 0),
+            row.completedIssues ?? 0,
+            row.issues ?? 0,
+          ]),
+        });
+      }
+    } else {
+      if (isVisible('delivery') && deliverySegs.length > 0) {
+        sections.push({ title: 'Delivery Composition', header: ['Status', 'Count'], rows: deliverySegs.map(s => [s.label, s.value]) });
+      }
+      if (isVisible('health') && healthSegs.length > 0) {
+        sections.push({ title: 'Health Mix', header: ['Health', 'Count'], rows: healthSegs.map(s => [s.label, s.value]) });
+      }
+      if (isVisible('types') && typeSegs.length > 0) {
+        sections.push({ title: 'Issue Types', header: ['Type', 'Count'], rows: typeSegs.map(s => [s.label, s.value]) });
+      }
+      if (isVisible('points') && spSegs.length > 0) {
+        sections.push({ title: 'Story Points', header: ['Category', 'Value'], rows: spSegs.map(s => [s.label, s.value]) });
+      }
+      if (isVisible('links') && linkSegs.length > 0) {
+        sections.push({ title: 'Issue Relations', header: ['Link Type', 'Count'], rows: linkSegs.map(s => [s.label, s.value]) });
+      }
+      if (isVisible('timeline') && epics.length > 0) {
+        sections.push({
+          title: 'Epic Completion',
+          header: ['Epic', 'Progress %', 'Done', 'Total'],
+          rows: epics.map((e: any) => [e.epic || 'No epic', e.progress ?? 0, e.completedIssues ?? 0, e.issues ?? 0]),
+        });
+      }
+    }
+
+    return sections;
+  }
+
   return (
     <AppShell showNav>
       <div className={styles.page}>
@@ -405,6 +503,36 @@ export default function ChartsPage() {
             <p className={styles.pageSubtitle}>
               Charts and diagrams summarising delivery health, flow, team, and progress — all derived from your Jira export.
             </p>
+          </div>
+          <div ref={exportMenuRef} className="flex items-center gap-2 relative">
+            <button
+              type="button"
+              onClick={() => setExportOpen(v => !v)}
+              aria-expanded={exportOpen}
+              aria-haspopup="true"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-colors shadow-sm"
+            >
+              <SvgIcon name="download" size={14} />
+              Export
+            </button>
+            {exportOpen && (
+              <div className={clsx('absolute right-0 top-full z-30 bg-white border border-slate-200 rounded-xl shadow-lg py-1', styles.exportMenu)}>
+                <button
+                  type="button"
+                  onClick={() => { exportChartsToCsv(buildVisibleSections()); setExportOpen(false); }}
+                  className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                >
+                  Export visible charts (.csv)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { if (metrics) void exportToExcel(metrics); setExportOpen(false); }}
+                  className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                >
+                  Export full report (.xlsx)
+                </button>
+              </div>
+            )}
           </div>
           <ChartCustomizerPanel onPrefsChange={setChartPrefs} />
           <div className={styles.kpiStrip}>

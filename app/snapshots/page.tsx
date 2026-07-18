@@ -7,6 +7,11 @@ import AppShell from '@/components/layout/AppShell';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { markMetricsSource, saveMetrics } from '@/lib/storage';
+import { paginate } from '@/lib/pagination';
+
+// MPE-02: snapshots are capped at 20 per account server-side (see POST
+// /api/snapshots), so 10-per-page keeps the common case to 1-2 pages.
+const PAGE_SIZE = 10;
 
 interface Snapshot {
   id:           string;
@@ -20,6 +25,8 @@ export default function SnapshotsPage() {
   const [snapshots, setSnapshots]     = useState<Snapshot[]>([]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
+  const [query, setQuery]             = useState('');
+  const [page, setPage]               = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting]       = useState(false);
   const [loadingId, setLoadingId]     = useState('');
@@ -68,6 +75,11 @@ export default function SnapshotsPage() {
   }
 
   if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading snapshots…</div></AppShell>;
+
+  // MPE-03: search by snapshot name (case-insensitive substring).
+  const q = query.trim().toLowerCase();
+  const filteredSnapshots = q ? snapshots.filter(s => s.snapshotName.toLowerCase().includes(q)) : snapshots;
+  const { items: pageSnapshots, page: safePage, totalPages } = paginate(filteredSnapshots, page, PAGE_SIZE);
 
   return (
     <AppShell showNav>
@@ -118,6 +130,20 @@ export default function SnapshotsPage() {
 
         {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-4">{error}</div>}
 
+        {snapshots.length > 0 && (
+          <label className="relative block mb-4">
+            <span className="sr-only">Search snapshots by name</span>
+            <SvgIcon name="search" size={14} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="search"
+              value={query}
+              onChange={e => { setQuery(e.target.value); setPage(1); }}
+              placeholder="Search snapshots by name…"
+              className="w-full h-10 pl-10 pr-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder:text-slate-400 outline-none transition focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
+            />
+          </label>
+        )}
+
         {snapshots.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
             <SvgIcon name="camera" size={40} className="mx-auto mb-4 text-slate-400" />
@@ -134,10 +160,16 @@ export default function SnapshotsPage() {
               Open Full Report
             </button>
           </div>
+        ) : filteredSnapshots.length === 0 ? (
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
+            <SvgIcon name="search" size={40} className="mx-auto mb-4 text-slate-400" />
+            <p className="text-base font-black text-slate-700 mb-2">No snapshots match &quot;{query}&quot;</p>
+            <p className="text-sm text-slate-500">Try a different search term.</p>
+          </div>
         ) : (
           <div id="tour-section-snapshots-2" className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             <ul className="divide-y divide-slate-100">
-              {snapshots.map(snap => (
+              {pageSnapshots.map(snap => (
                 <li key={snap.id} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 group">
                   {/* Icon */}
                   <SvgIcon name="camera" size={20} className="shrink-0 text-slate-400" />
@@ -176,6 +208,29 @@ export default function SnapshotsPage() {
                 </li>
               ))}
             </ul>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 border-t border-slate-100 py-3">
+                <button
+                  type="button"
+                  onClick={() => setPage(safePage - 1)}
+                  disabled={safePage <= 1}
+                  className="btn-secondary btn-sm disabled:opacity-40 disabled:cursor-default"
+                >
+                  ← Prev
+                </button>
+                <span className="text-xs font-semibold text-slate-400">
+                  Page {safePage} of {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPage(safePage + 1)}
+                  disabled={safePage >= totalPages}
+                  className="btn-secondary btn-sm disabled:opacity-40 disabled:cursor-default"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
           </div>
         )}
 

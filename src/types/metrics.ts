@@ -68,6 +68,22 @@ export interface SprintMetrics {
   sprints: SprintEntry[];
 }
 
+// CP3-006: per-issue-type breakdown of the same flow figures FlowSummary
+// blends across all types (averageLeadTimeDays/averageCycleTimeDays here are
+// scoped to one Issue Type, e.g. Bug vs Epic, instead of every type mixed
+// together). Computed by buildTypeMetrics (metrics.service.ts) and returned
+// on DashboardMetrics.types — additional data alongside, not a replacement
+// for, the blended flow.averageCycleTimeDays/averageLeadTimeDays headline
+// figures, which are unchanged. See docs/product-audit/08-metric-dictionary.md
+// CP3-006 for the full finding and resolution note.
+export interface TypeEntry extends FlowSummary {
+  type: string;
+  count: number;
+  done: number;
+  completionRate: number;
+  storyPoints: number;
+}
+
 export interface CapacityEntry {
   assignee: string;
   issues: number;
@@ -116,7 +132,7 @@ export interface DashboardMetrics {
   capacity: CapacityEntry[];
   epics: unknown[];
   labels: unknown;
-  types: unknown[];
+  types: TypeEntry[];
   projects: unknown[];
   parents: unknown[];
   relations: unknown;
