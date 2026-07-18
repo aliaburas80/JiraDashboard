@@ -161,3 +161,44 @@ test('TC-MC-14: sprint items without sprint dates → mid-sprint confidence low'
   expect(result.midSprint.confidence).toBe(0);
   expect(['Low', 'Unreliable']).toContain(result.midSprint.band);
 });
+
+// TC-MC-15 to TC-MC-19: CP3-017 — dataQuality is a sample-size signal, not a
+// field-completeness signal, so it must diverge from every other metric on
+// small-but-fully-populated data.
+test('TC-MC-15: dataQuality confidence is Unreliable for a tiny fully-populated sample', () => {
+  const issues = Array(3).fill(null).map((_, i) => doneIssue({ 'Issue Key': `P-${i}` }));
+  const result = calculateMetricConfidence(issues);
+  expect(result.dataQuality.band).toBe('Unreliable');
+  expect(result.dataQuality.sampleSize).toBe(3);
+  // Contrast: field-completeness metrics on this same fully-populated data are High.
+  expect(result.leadTime.band).toBe('High');
+});
+
+test('TC-MC-16: dataQuality confidence is Low for a small sample (10-29 issues)', () => {
+  const issues = Array(15).fill(null).map((_, i) => doneIssue({ 'Issue Key': `P-${i}` }));
+  const result = calculateMetricConfidence(issues);
+  expect(result.dataQuality.band).toBe('Low');
+});
+
+test('TC-MC-17: dataQuality confidence is Medium for a moderate sample (30-99 issues)', () => {
+  const issues = Array(50).fill(null).map((_, i) => doneIssue({ 'Issue Key': `P-${i}` }));
+  const result = calculateMetricConfidence(issues);
+  expect(result.dataQuality.band).toBe('Medium');
+});
+
+test('TC-MC-18: dataQuality confidence is High for a large sample (100+ issues)', () => {
+  const issues = Array(150).fill(null).map((_, i) => doneIssue({ 'Issue Key': `P-${i}` }));
+  const result = calculateMetricConfidence(issues);
+  expect(result.dataQuality.band).toBe('High');
+});
+
+test('TC-MC-19: dataQuality does not influence healthScore\'s confidence/reason text', () => {
+  // A tiny sample makes dataQuality Unreliable but every field is complete,
+  // so healthScore's own weighted inputs (lead/cycle/sprint/storyPoints/orphan)
+  // are all High — healthScore must stay High too, not be dragged down by
+  // the unrelated dataQuality signal.
+  const issues = Array(3).fill(null).map((_, i) => doneIssue({ 'Issue Key': `P-${i}` }));
+  const result = calculateMetricConfidence(issues);
+  expect(result.dataQuality.band).toBe('Unreliable');
+  expect(result.healthScore.reason).not.toContain('Data Quality Sample Size');
+});

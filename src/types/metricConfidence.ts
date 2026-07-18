@@ -25,4 +25,9 @@ export interface MetricConfidenceMap {
   midSprint:        MetricConfidence;
   teamCapacity:     MetricConfidence;
   releaseReadiness: MetricConfidence;
+  // CP3-017: unlike every metric above (which measures field completeness),
+  // this measures raw sample size — a dataset can have 100% field
+  // completeness while still being too small for its Data Quality
+  // percentages to be statistically meaningful.
+  dataQuality:      MetricConfidence;
 }

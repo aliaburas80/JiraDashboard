@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useDashboardMetrics } from '@/components/dashboard/DashboardMetricsContext';
 import { buildSafeCsv } from '@/lib/exportSafety';
 import type { FlowItem } from '@/types/metrics';
+import MetricConfidenceBadge from '@/components/ui/MetricConfidenceBadge';
 import {
   StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
   PageHeader, SectionCard, PageLoading,
@@ -175,6 +176,10 @@ export default function DataQualityPage() {
               <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 5, background: classification.bg, color: classification.color, border: `1px solid ${classification.border}` }}>
                 {classification.label}
               </span>
+              {/* CP3-017: sample-size reliability, distinct from the field-completeness score itself. */}
+              {metrics.confidence?.dataQuality && (
+                <MetricConfidenceBadge confidence={metrics.confidence.dataQuality} size="sm" showLabel />
+              )}
             </div>
             <p style={{ fontSize: 12, color: '#64748B', margin: 0 }}>
               Your file quality score is {score}%. Metrics are {score >= 75 ? 'highly reliable' : score >= 60 ? 'moderately reliable' : 'less reliable'}.

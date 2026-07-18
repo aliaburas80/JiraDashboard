@@ -5,7 +5,9 @@ import AppShell from '@/components/layout/AppShell';
 import DCKpiCard from '@/components/dc-shell/DCKpiCard';
 import DCStatusChip from '@/components/dc-shell/DCStatusChip';
 import LoadingState from '@/components/ui/LoadingState';
+import MetricConfidenceBadge from '@/components/ui/MetricConfidenceBadge';
 import type { DashboardMetrics } from '@/types/metrics';
+import type { MetricConfidence } from '@/types/metricConfidence';
 import type { DataQualityResult, FieldImpactReport, FieldImpact, CheckSeverity } from '@/types/dataQuality';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { redirectWithLoadError } from '@/lib/loadErrorSignal';
@@ -116,6 +118,7 @@ export default function DataQualityPage() {
   const router = useRouter();
   const [dq, setDq] = useState<DataQualityResult | null>(null);
   const [fi, setFi] = useState<FieldImpactReport | null>(null);
+  const [sampleConfidence, setSampleConfidence] = useState<MetricConfidence | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -126,6 +129,7 @@ export default function DataQualityPage() {
       if (!data) { router.replace('/'); return; }
       setDq(data.dataQuality ?? null);
       setFi(data.fieldImpacts ?? null);
+      setSampleConfidence(data.confidence?.dataQuality ?? null);
     }).catch(() => redirectWithLoadError(router)).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [router]);
@@ -154,10 +158,12 @@ export default function DataQualityPage() {
         <p style={{ fontSize: 13, color: 'var(--n500)', margin: '0 0 16px', maxWidth: 560 }}>{dq.summary}</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <ScoreRing score={dq.score} band={dq.band} />
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <DCStatusChip label={dq.band} tone={BAND_TONE[dq.band] ?? 'neutral'} size="md" />
             {dq.criticalCount > 0 && <DCStatusChip label={`${dq.criticalCount} critical issues`} tone="critical" size="md" />}
             {dq.highCount > 0 && <DCStatusChip label={`${dq.highCount} high impact`} tone="warning" size="md" />}
+            {/* CP3-017: sample-size reliability, distinct from the field-completeness score itself. */}
+            {sampleConfidence && <MetricConfidenceBadge confidence={sampleConfidence} size="sm" showLabel />}
           </div>
         </div>
       </div>

@@ -5,6 +5,17 @@
 
 ---
 
+## Added: Sample-Size Badge on the Data Quality Score (2026-07-19)
+
+`/data-quality` and `/dashboard/data-quality` now show a small reliability badge next to the Data Quality
+score itself (hover for why), and the score's summary sentence adds a note when your file has fewer than
+30 issues. A small file with every field filled in can still score 100%/"Excellent" — that hasn't changed
+— but it's now visibly flagged as a small sample, since percentages from a handful of issues can shift a
+lot once more data is uploaded. The score's own number and calculation are completely unchanged; this only
+adds a second, separate signal about how much data that score is based on.
+
+---
+
 ## Added: Reliability Badges on Two More Pages (2026-07-18)
 
 `/summary`'s Avg Cycle Time card and `/dashboard/key-metrics`'s Lead Time and Cycle Time cards now show

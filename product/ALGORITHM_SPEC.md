@@ -361,6 +361,12 @@ OUTPUT: { score: normalised, band, fieldBreakdown[], summary }
 
 **Implementation:** `src/services/dataQuality/dataQuality.service.ts — calculateDataQuality()`
 
+**Addendum (2026-07-19, CP3-017):** `normalised`/`band` are unchanged — this algorithm has no sample-size
+dimension by design (a 5-issue and a 3,000-issue fully-populated dataset both still score 100). What's new:
+`summary` now appends a caveat sentence when `issues.length < 30` ("Based on only N issues — percentages
+may shift significantly as more data is added"), and a separate sample-size confidence badge is shown
+alongside the score in the UI — see the Metric Confidence Algorithm addendum below.
+
 ---
 
 ## Metric Confidence Algorithm (9.2 — v4.0)
@@ -392,6 +398,13 @@ OUTPUT: Map<KPI, { confidence, reason, missingFields[] }>
 ```
 
 **Implementation:** `src/services/metrics/metricConfidence.service.ts — calculateMetricConfidence()`
+
+**Addendum (2026-07-19, CP3-017):** `MetricConfidenceMap` gained a `dataQuality` entry that does not follow
+the field-completeness algorithm above — it is a raw *sample-size* signal (total issue count), computed
+separately in `dataQualityConf()` and merged into the result after `healthScoreConf()` runs so it cannot
+influence Health Score's own confidence reasoning. Thresholds: <10 issues → Unreliable, 10–29 → Low, 30–99
+→ Medium, 100+ → High. Displayed as a badge on `/data-quality` and `/dashboard/data-quality`, next to the
+Data Quality Score — see the addendum under Algorithm 9.1 above; the score algorithm itself is unchanged.
 
 ---
 
