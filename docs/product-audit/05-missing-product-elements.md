@@ -28,6 +28,21 @@ Severity: P2 (P1 for /admin/logs and /admin/users specifically, given no documen
 Confidence: High
 ```
 
+**Resolved (2026-07-17):** Added client-side pagination to 5 of the 6 flagged pages —
+`app/admin/logs/page.tsx`, `app/admin/users/page.tsx`, `app/members/page.tsx`, and `app/backend/page.tsx`
+(Import Logs section) at 25 rows/page, `app/snapshots/page.tsx` at 10/page (matches its existing 20-item
+documented cap). Each already fetches its full, bounded result set in one request (`/api/imports?all=true`
+caps at 100, `/api/backend-view` caps at 50, `/api/snapshots` caps at 20) — none needed a `?page=`/`?limit=`
+API change, so pagination is a pure client-side slice of the already-loaded array via a new shared
+`paginate()` helper (`src/lib/pagination.ts`, unit-tested in `src/__tests__/pagination.test.ts`), used
+identically across all 5 pages. `app/admin/users/page.tsx`'s existing "select all" bulk-action checkbox still
+selects every row matching the current filter, not just the visible page, since narrowing a bulk role/delete
+action to one page at a time would be a regression, not an improvement. Prev/Next controls match each page's
+existing visual system — SCSS Module + design tokens on the three `AdminConsoleLayout`/`page.module.scss`
+pages (`admin/logs`, `admin/users`, `backend`), plain Tailwind on `members` and `snapshots` (their existing
+convention, no SCSS Module on those two pages). `app/admin/system-errors/page.tsx`, the sixth page named in
+this finding, was **not** included in this pass — it wasn't part of the requested scope and remains open.
+
 ## MPE-03 — Search is inconsistent across admin/list pages
 
 ```text
@@ -38,6 +53,17 @@ Why it matters: combined with MPE-02, /admin/logs and /admin/audit are the two a
 Severity: P2
 Confidence: High
 ```
+
+**Resolved (2026-07-17):** Added free-text search to all 4 flagged pages. `app/snapshots/page.tsx` (by
+snapshot name) and `app/admin/logs/page.tsx` / `app/backend/page.tsx` Import Logs section (by filename or
+uploader name/email) filter the already-fetched, bounded array client-side (case-insensitive substring
+match), same as the MPE-02 pagination above, and search narrows the list before pagination is applied.
+`app/admin/audit/page.tsx` is the one exception: its event log is genuinely unbounded and already paginates
+server-side (`/api/admin/audit-events?page=&limit=`), so a client-side filter would only search the current
+50-row page and silently miss matches elsewhere — search was added as a new `q` query param on that route
+instead (`Prisma` `OR` `contains`/`insensitive` across `eventDescription`, `user.email`, `user.name`),
+submitted through the same "Apply"/"Reset" filter bar the page's existing event-type and date-range filters
+already use, so it composes with them rather than replacing them.
 
 ## MPE-04 — Destructive/state-changing actions are mostly well-guarded; one inconsistency found
 
