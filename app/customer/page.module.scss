@@ -97,6 +97,23 @@
   &:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
 }
 
+.exportBtn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  background: transparent;
+  color: #a78bfa;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: background 150ms ease, color 150ms ease;
+
+  &:hover { background: rgba(124, 58, 237, 0.14); color: #c4b5fd; }
+  &:active { transform: scale(0.97); }
+  &:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
+}
+
 // ── Outer wrapper — centers the paper on the dark canvas ──────────────────────
 .outer {
   padding: 28px 20px 56px;

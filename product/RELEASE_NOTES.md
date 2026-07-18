@@ -5,6 +5,20 @@
 
 ---
 
+## Added: CSV Export on 7 Pages That Previously Had None (2026-07-18)
+
+`/work-explorer`, `/teams`, `/portfolio`, `/delivery-mix`, `/roadmap`, and `/customer` each now have an
+"Export CSV" button that downloads the page's currently-filtered/visible data — closing a gap where a
+narrower feature (`/explore`) and 5 of 9 `/dashboard/*` pages already had export, but these larger,
+data-heavy pages didn't. `/customer`'s "Stakeholder Report," in particular, previously only offered
+print/Save-PDF with no way to take the underlying data out of the app. `/charts` (a grid of independent
+widgets rather than one table) gained both a "Export visible charts (.csv)" option — one labeled section
+per widget currently shown — and a second "Export full report (.xlsx)" option reusing the existing
+full-workbook export already available elsewhere. Found and fixed as part of a full-application product
+audit (`docs/product-audit/`).
+
+---
+
 ## Fixed: Coaching Grid Thresholds Made Visible, Placeholder Metric Labeled, Per-Type Cycle Time Added, Team Comparison Caveat, Upload-Score Wording (2026-07-18)
 
 Five calculation-clarity findings from the product audit's checkpoint 3 (`docs/product-audit/08-metric-dictionary.md`), all in the "Calculation refinement" section of the Phase 5 backlog:
