@@ -35,6 +35,18 @@ Confidence: High confidence (verified against actual rendered <h1> text this che
 Recommendation: rename one of the two — e.g. keep "Data Quality" for the standalone page (which is the more complete, typed-contract version per DUP-02) and rename the dashboard sub-page to something distinguishing its filter/export/composition focus, such as "Quality & Composition" or "Data Quality (Filtered View)." Not acted on in this audit — a naming decision for Checkpoint 6/product review.
 ```
 
+**Resolved (2026-07-18):** Applied the recommended split, mirroring the exact pattern that already
+disambiguates the `/flow-health` pair (top-nav keeps the short name; the `/dashboard/*` sub-page's title
+and sidebar entry get a qualifying word/phrase). `/data-quality` (standalone page, `navigation.ts`'s
+`data` group entry) keeps the plain "Data Quality" title, unchanged. `/dashboard/data-quality`'s
+`PageHeader` title (`app/dashboard/data-quality/page.tsx`) and its sidebar entry
+(`src/components/dashboard/DashboardNavSidebar.tsx:214`) are both now "Data Quality & Composition" —
+naming the dashboard sub-page's actual second section (Delivery Composition, merged in here per §60.3 of
+`CLAUDE.md`) rather than the generic "(Filtered View)" alternative this finding floated. The matching
+tour step title in `src/lib/tour.ts` (`/dashboard/data-quality`'s `header` step) was updated to match, the
+same as the existing `/dashboard/flow-health` tour step already does. No route, redirect, or content
+change — labeling only.
+
 ### Finding: `/trends` nav-level collision, resolved only after navigation
 ```text
 Finding: Both nav registries label their respective Trends entries with the plain word "Trends" and no distinguishing description visible at a glance in the sidebar (the top-nav item does have a desc: 'Upload-over-upload change' subtitle per navigation.ts:40, but the sidebar item has no equivalent subtitle beyond a data-driven chip).
@@ -45,6 +57,14 @@ Severity: P3
 Confidence: High confidence
 Recommendation: no page change needed (content is fine) — consider adding a short subtitle to the top-nav "Trends" item analogous to the sidebar's "Sprints · quarters" meta, e.g. distinguishing "cross-upload history" from "current dataset." Not acted on in this audit.
 ```
+
+**Resolved (2026-07-18):** Applied the recommendation as written. The top-nav "Trends" item's `desc` in
+`navigation.ts` (`analytics` group) changed from "Upload-over-upload change" to "Cross-upload history, not
+current data" — explicitly contrasting against the dashboard sidebar's current-dataset framing, using this
+finding's own suggested "cross-upload history" vs. "current dataset" language. The sidebar's
+`meta="Sprints · quarters"` (`DashboardNavSidebar.tsx:217`) was left unchanged — it already reads as
+current-dataset framing once set beside the reworded top-nav desc, so no sidebar edit was needed. No route
+or page content change, matching the recommendation.
 
 ---
 
@@ -60,6 +80,19 @@ Already the subject of `04-remove-merge-keep.md` R-01 (recommended merge/redirec
 - **The Data group's admin-only relevance**: `/work-explorer`, `/data-quality`, `/snapshots`, `/column-mapping`, `/backend` are grouped together as "Data" — a coherent grouping by subject matter. Per `06-role-based-review.md`, this entire group disappears for `c_level` (empty-group auto-removal). This is intentional and not a bug, but worth flagging as a pattern: no other group is at risk of fully disappearing for any role (Analytics/Planning are universal; Delivery/Administration/Reference always retain at least one visible item per role), which makes Data's all-or-nothing visibility a structural outlier worth a deliberate product check-in (is losing the entire group the right granularity for `c_level`, versus losing just the items least relevant to that persona?).
 - **Administration group's internal `section` subdivision** ("Activity"/"Observability"/"Configure") is a good example of grouping that scales well — 9 items would be a flat wall of links without it. No equivalent internal structure exists in the Delivery group (6 items) or Data group (5 items), which are comparably sized but flat. Not a defect, just an inconsistency in how much internal structure similarly-sized groups get.
 - **Reference group mixes audiences**: `/members` (org directory), `/landing` (marketing), `/glossary` and `/help` (self-serve documentation), and `/developer` (technical/API docs, admin-only) are all grouped as "Reference" despite serving distinct purposes (one is a people-directory, one is marketing, two are documentation, one is developer tooling). This is a coincidental-grouping pattern (things that don't fit elsewhere collected under one label) rather than a designed information architecture — low severity since each item is still individually findable, but worth naming as the least conceptually coherent of the 6 groups.
+
+  **Resolved (2026-07-18):** Split into three groups in `navigation.ts` (`DC_NAV_GROUPS`). `members`
+  moved into its own new `directory` group ("Directory") — still gated by the `isSuperAdmin` flag in
+  `getNavGroupsForRole()`'s `isVisible()`, unchanged. `developer` moved into its own new
+  `developer-tools` group ("Developer Tools") — matching its admin-only access level (`roles.ts`'s
+  `/developer` is gated alongside `/admin`, same as every `administration` group destination), without
+  folding it into the `administration` group itself (that group also drives `AdminNavSidebar.tsx`'s
+  three-section rendering via `getAdminNavSections()`, and adding a fourth destination/section there was
+  judged out of scope for a naming/grouping fix). The trimmed `reference` group now holds only
+  `landing`/`glossary`/`help` — genuinely coherent self-serve, every-role product info. `DC_NAV_GROUPS`
+  now has 8 top-level groups instead of 6; total item count and every route's reachability are unchanged.
+  `src/__tests__/navGroupsForRole.test.ts` TC-NAV-03/04 updated to check the new `developer-tools` group;
+  TC-NAV-18/19 added to guard the split going forward.
 
 ---
 

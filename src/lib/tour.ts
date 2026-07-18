@@ -118,7 +118,7 @@ export const PAGE_TOURS: Record<string, TourStep[]> = {
   '/dashboard/data-quality': [
     {
       id:          'header',
-      title:       'Data Quality',
+      title:       'Data Quality & Composition',
       description: 'Field confidence scores, the impact of missing data on your metrics, and guidance for fixing it.',
       targetId:    'tour-header-dashboard-data-quality',
       placement:   'bottom',

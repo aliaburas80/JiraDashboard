@@ -5,6 +5,12 @@
 
 ---
 
+## Changed: Clearer Navigation Labels and Groups (2026-07-18)
+
+The dashboard's "Data Quality" sub-page is now labeled "Data Quality & Composition" in the sidebar and page header, so it reads distinctly from the top-nav "Data Quality" page rather than sharing an identical name. The top-nav "Trends" item's description now reads "Cross-upload history, not current data" so it's distinguishable from the dashboard's own "Trends" page before you click either one. The "Reference" navigation group — which previously mixed the Members directory, the About page, self-serve Help/Glossary docs, and admin-only Developer tooling under one label — is now split into "Directory," "Developer Tools," and a trimmed "Reference" (About, Glossary, Help). No page moved, was removed, or changed what it shows — this is a labeling and grouping clarity fix only. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
+
+---
+
 ## Added: Confirmation Step Before Dismissing a System Error, and a Contact Link for Expired Verification Links (2026-07-17)
 
 `/admin/system-errors`'s "Dismiss" action now asks for confirmation first, matching how every other state-changing admin action in the app already works. Separately, `/verify-email`'s "your link expired" message now includes a working contact link instead of unclickable text. Found and fixed as part of a full-application product audit (`docs/product-audit/`).
