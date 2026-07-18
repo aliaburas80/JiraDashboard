@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
+import { paginate } from '@/lib/pagination';
 import styles from './page.module.scss';
+
+// MPE-02 (tail): the 6th page named in the finding's evidence but left out of
+// this backlog's original scope — same client-side slice pattern as the
+// other 5 (/admin/logs, /admin/users, /members, /backend, /snapshots).
+const PAGE_SIZE = 25;
 
 interface ErrorLog {
   id:            string;
@@ -68,6 +74,7 @@ export default function SystemErrorsPage() {
   const [filter,    setFilter]    = useState<string>('all');
   const [actionId,  setActionId]  = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState('');
+  const [page,      setPage]      = useState(1);
   // MPE-04: Dismiss previously fired immediately, unlike every other
   // destructive/state-changing action in the app (/snapshots, /backend
   // delete).
@@ -137,6 +144,7 @@ export default function SystemErrorsPage() {
   }
 
   const unresolved = logs.filter(l => !l.resolvedAt).length;
+  const { items: pageLogs, page: safePage, totalPages } = paginate(logs, page, PAGE_SIZE);
 
   const stats = [
     { icon: 'warning',      label: 'Total Logged',  value: String(total),     note: 'All time',          toneStyle: { background: 'rgba(248,113,113,0.12)', color: '#F87171' } },
@@ -174,7 +182,7 @@ export default function SystemErrorsPage() {
         <div className="flex gap-2 items-center">
           <select
             value={filter}
-            onChange={e => { setFilter(e.target.value); load(e.target.value); }}
+            onChange={e => { setFilter(e.target.value); setPage(1); load(e.target.value); }}
             className={styles.filterSelect}
           >
             <option value="all">All statuses</option>
@@ -211,7 +219,7 @@ export default function SystemErrorsPage() {
         </div>
       ) : (
         <div className={styles.cardList}>
-          {logs.map(log => {
+          {pageLogs.map(log => {
             const info = ERROR_INFO[log.errorCode] ?? ERROR_INFO.UNKNOWN;
             return (
               <div
@@ -297,6 +305,14 @@ export default function SystemErrorsPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className={styles.pagination}>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(safePage - 1)} disabled={safePage <= 1}>← Prev</button>
+          <span className={styles.pageInfo}>Page {safePage} of {totalPages}</span>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages}>Next →</button>
         </div>
       )}
       </AdminConsoleLayout>

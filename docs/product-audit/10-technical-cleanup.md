@@ -119,6 +119,16 @@ flagged here as a follow-up candidate for the same treatment. Tests added in
 `src/__tests__/fileSignature.test.ts` (domain-level), `src/__tests__/uploadUserId.test.ts`, and
 `src/__tests__/retroParseSignature.test.ts`. Branch: `fix/security-hardening-nonurgent-audit-p1`.
 
+**Follow-up resolved (2026-07-18):** `app/api/upload/merge/route.ts` now runs the same
+`validateFileSignature()` gate, per-file inside its existing multi-file loop (right after each blob's
+buffer is read, before `parseJiraFile`), reusing the loop's already-computed `ext(name)`. Same reuse of the
+existing `.xlsx` strict / `.xls`/`.csv` lenient behavior — no new logic in `fileSignature.ts` itself, only a
+new call site. Error responses follow this route's existing per-file `"File \"<name>\": ..."` message shape
+so a rejection in a multi-file merge upload still identifies which specific file failed. Tests added in
+`src/__tests__/uploadMergeSignature.test.ts` (spoofed `.xlsx`, binary-garbage `.csv`, legitimate multi-file
+pass-through, and correct file-name attribution when only one of several files fails). This closes the
+follow-up gap noted above — both upload routes now have the content-signature gate.
+
 ```
 Finding: Profile image upload trusts the client-declared Content-Type with no server-side image content verification (though image/svg+xml is correctly excluded, preventing stored-SVG-XSS).
 Evidence: profile image upload route (src/services/storage/profileImages.ts consumer).

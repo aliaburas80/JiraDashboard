@@ -52,7 +52,18 @@ action to one page at a time would be a regression, not an improvement. Prev/Nex
 existing visual system — SCSS Module + design tokens on the three `AdminConsoleLayout`/`page.module.scss`
 pages (`admin/logs`, `admin/users`, `backend`), plain Tailwind on `members` and `snapshots` (their existing
 convention, no SCSS Module on those two pages). `app/admin/system-errors/page.tsx`, the sixth page named in
-this finding, was **not** included in this pass — it wasn't part of the requested scope and remains open.
+this finding, was **not** included in this pass — it wasn't part of the requested scope and remained open.
+
+**Resolved in full (2026-07-18):** Added the same `paginate()` slice to `app/admin/system-errors/page.tsx`
+at 25 rows/page — it already fetches its full result set in one request (`/api/admin/system-errors`, no
+documented cap, but the same "unbounded admin list" profile as the other 5), so no API change was needed
+here either. Uses the `AdminConsoleLayout`/`page.module.scss` visual pattern (matches `admin/logs`,
+`admin/users`, `backend`), including a `page.module.scss` `.pagination`/`.pageBtn`/`.pageInfo` block added
+for this page (it had none before, unlike the three pages that already had a table). The existing status
+filter (`all`/`logged`/`auto-fixed`/`retried`/`resolved`) resets to page 1 on change, same as MPE-03's
+search-resets-page pattern elsewhere. Summary stats (Total Logged, Unresolved, Auto-Fixed, Retried) remain
+computed from the full fetched `logs` array, not the paginated slice — pagination only affects which cards
+render, not the counts. All 6 pages named in this finding are now paginated; MPE-02 is fully closed.
 
 ## MPE-03 — Search is inconsistent across admin/list pages
 
