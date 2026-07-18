@@ -1,4 +1,54 @@
-# Delivery Clarity — Master TODO List
+**Last updated:** 2026-07-19 (**CP3-017 RESOLVED: DATA QUALITY SAMPLE-SIZE BADGE, OWNER-APPROVED
+"BADGE ONLY" APPROACH** — the last genuinely open item from the full-application product audit's
+prioritized backlog. `CP3-017` ("Data Quality score has no sample-size awareness — 1-of-5 missing scores
+identically to 600-of-3000 missing") had been explicitly deferred twice: once when `CP3-002` landed
+2026-07-13 ("a scoring-formula change, not a wiring gap... deliberately left for its own dedicated
+review"), and again when the backlog-accuracy pass on this same date backfilled its tracking rather than
+implementing it. Before writing any code, presented the owner two real approaches — change the score
+formula itself (bigger blast radius, changes historical comparability, needs its own versioning per
+CLAUDE.md §31) vs. add a confidence badge without touching the score (matches how the identical Health
+Score finding, `CP3-002`, was already resolved) — and got an explicit decision: badge only. Implementation:
+(1) `src/types/metricConfidence.ts` — `MetricConfidenceMap` gained a `dataQuality` entry. (2)
+`src/services/metrics/metricConfidence.service.ts` — new `dataQualityConf()` calculator, genuinely
+different from every other entry in the map: those measure field *completeness* (% of issues with a
+required field populated), this measures raw sample *size* (total issue count) — a small dataset can have
+100% field completeness and still not be a statistically meaningful sample. Thresholds exported as
+`DATA_QUALITY_UNRELIABLE_SAMPLE_SIZE=10`, `_LOW_SAMPLE_SIZE=30`, `_MEDIUM_SAMPLE_SIZE=100` (engineering-
+judgment defaults, documented as such in code — not derived from a formal statistical requirement).
+**Deliberately computed and merged in AFTER `healthScoreConf(partial)` runs, not passed into it** — that
+function loops generically over every key it receives to build its own confidence-reason text, and
+`dataQuality` has no business influencing Health Score's unrelated explanation; verified this doesn't
+regress via a dedicated new test (`TC-MC-19`), not just by inspection. (3)
+`src/services/dataQuality/dataQuality.service.ts` — `buildSummary()` now appends a caveat sentence
+("Based on only N issues — percentages may shift significantly as more data is added") below the same
+30-issue threshold the badge uses (imported, not re-hardcoded, so the two can never disagree); the score
+computation itself (`FIELD_CHECKS` weights, deductions, `band()` cutoffs) is byte-for-byte unchanged. (4)
+Badge wired into `app/data-quality/page.tsx` (added a new `sampleConfidence` state read from
+`data.confidence?.dataQuality`, alongside the page's existing `dq`/`fi` state) and
+`app/dashboard/data-quality/page.tsx` (reads `metrics.confidence?.dataQuality` directly, already available
+via `useDashboardMetrics()`) — both render the existing `MetricConfidenceBadge` component next to the
+score's band chip, no new UI component built. **Tests:** 5 new in `metricConfidence.test.ts`
+(`TC-MC-15`–`19`: Unreliable/Low/Medium/High bands at the right thresholds, contrast against a
+field-completeness metric on the same small-but-complete data, and the healthScore-isolation regression),
+2 new in `dataQuality.test.ts` (`TC-MC-13`/`14`: caveat appears under 30 issues, absent at/above 30 — score
+itself unaffected in both). **Verified:** `npm run typecheck` clean (one real error caught and fixed along
+the way — `healthScoreConf`'s parameter type needed `Omit<MetricConfidenceMap, 'healthScore' | 'dataQuality'>`
+once `dataQuality` became a required map key); `npx eslint` on all 7 changed source/test files 0 warnings;
+the 2 touched page files' pre-existing inline-style warning counts (`app/data-quality/page.tsx`,
+`app/dashboard/data-quality/page.tsx`) confirmed byte-identical before/after via a `git stash` diff — 116
+before, 116 after, 0 new; `npx stylelint` on all changed `.scss` 0 warnings; `npm test` 113/113 suites,
+1,082/1,082 tests passing (up from 1,075 — the 7 new tests); `npm run build` compiled all routes clean.
+**Docs:** dated resolution notes in `08-metric-dictionary.md` (`CP3-017`) and `11-prioritized-backlog.md`
+(Phase 5 strikethrough); `product/ALGORITHM_SPEC.md` gained addendums under both Algorithm 9.1 (Data
+Quality Score — score unchanged) and 9.2 (Metric Confidence — new `dataQuality` entry documented) rather
+than rewriting either pseudocode block, since both already had pre-existing drift from the real
+implementation (mismatched weights/cutoffs) that predates and is unrelated to this change — not this
+task's scope to reconcile. `product/RELEASE_NOTES.md` entry added — this is user-visible (a new badge on
+two pages). **With this, the full-application product audit's `11-prioritized-backlog.md` has exactly one
+genuinely open item left**: the "3 hand-maintained API-surface descriptions" structural fix (Technical
+debt line), explicitly flagged there as "a separate, larger structural fix," not a routine pickup — `/api/
+dashboard`'s stub is a closed, owner-decided won't-fix, not open work. Branch:
+`feature/cp3-017-data-quality-sample-size-badge`.)
 
 **Last updated:** 2026-07-18 (**DUP-FLOWITEM-01 RESOLVED: CONSOLIDATED THE DUPLICATE `FlowItem` TYPE** —
 picked up the one remaining self-contained item from Phase 5 tracking after the backlog-accuracy pass

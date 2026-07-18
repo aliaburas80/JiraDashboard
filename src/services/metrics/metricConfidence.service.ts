@@ -10,6 +10,16 @@ import type { ConfidenceBand, MetricConfidence, MetricConfidenceMap } from '@/ty
 
 type JiraIssue = Record<string, unknown>;
 
+// CP3-017: sample-size thresholds for the Data Quality score's reliability
+// signal (dataQualityConf below) — distinct from every other confidence
+// calculator here, which measures field completeness, not dataset size.
+// Exported so dataQuality.service.ts's summary caveat uses the exact same
+// cutoff the badge does, rather than a second, independently hand-picked
+// number.
+export const DATA_QUALITY_UNRELIABLE_SAMPLE_SIZE = 10;
+export const DATA_QUALITY_LOW_SAMPLE_SIZE = 30;
+export const DATA_QUALITY_MEDIUM_SAMPLE_SIZE = 100;
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const DONE_ST = new Set(['done', 'closed', 'resolved']);
@@ -207,7 +217,38 @@ function releaseReadinessConf(issues: JiraIssue[]): MetricConfidence {
   return make('releaseReadiness', 'Release Readiness', score, issues.length, reason, ['Fix Version/s'], missing);
 }
 
-function healthScoreConf(map: Omit<MetricConfidenceMap, 'healthScore'>): MetricConfidence {
+// CP3-017: how reliable is the Data Quality score's percentage given how
+// much data it's based on — not whether fields are populated (every other
+// calculator above answers that), but whether there's enough of a sample
+// for a percentage to mean anything. A 5-issue dataset with every field
+// filled in still isn't a statistically meaningful sample.
+function dataQualityConf(issues: JiraIssue[]): MetricConfidence {
+  const total = issues.length;
+
+  let score: number;
+  let reason: string;
+
+  if (total === 0) {
+    score = 0;
+    reason = 'No issues uploaded — Data Quality score is not available.';
+  } else if (total < DATA_QUALITY_UNRELIABLE_SAMPLE_SIZE) {
+    score = 20;
+    reason = `Only ${total} issue${total !== 1 ? 's' : ''} uploaded — quality percentages can shift significantly as more data is added, even when every field looks complete today.`;
+  } else if (total < DATA_QUALITY_LOW_SAMPLE_SIZE) {
+    score = 50;
+    reason = `${total} issues is a small sample — quality percentages are still likely to shift as more data is added.`;
+  } else if (total < DATA_QUALITY_MEDIUM_SAMPLE_SIZE) {
+    score = 70;
+    reason = `${total} issues is a moderate sample — quality percentages are reasonably stable but can still shift with more data.`;
+  } else {
+    score = 90;
+    reason = `${total} issues is a large enough sample for quality percentages to be statistically stable.`;
+  }
+
+  return make('dataQuality', 'Data Quality Sample Size', score, total, reason, [], []);
+}
+
+function healthScoreConf(map: Omit<MetricConfidenceMap, 'healthScore' | 'dataQuality'>): MetricConfidence {
   // Health score composite: lead(25%) + cycle(20%) + sprint(15%) + storyPoints(20%) + orphan(20%)
   const composite = Math.round(
     map.leadTime.confidence         * 0.25 +
@@ -242,8 +283,15 @@ export function calculateMetricConfidence(issues: JiraIssue[]): MetricConfidence
     releaseReadiness: releaseReadinessConf(issues),
   };
 
+  // dataQuality is computed after healthScoreConf(partial) runs and is added
+  // separately below, not into `partial` — healthScoreConf's own "which
+  // metrics have limited data" reasoning loops over every key it receives,
+  // and dataQuality (a sample-size signal, not one of healthScore's named
+  // weighted inputs) has no business influencing that unrelated metric's
+  // explanation text.
   return {
     ...partial,
-    healthScore: healthScoreConf(partial),
+    healthScore:  healthScoreConf(partial),
+    dataQuality:  dataQualityConf(issues),
   };
 }

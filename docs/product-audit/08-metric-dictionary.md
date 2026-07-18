@@ -222,6 +222,28 @@ Confidence: High confidence
 Validation method: Upload a 5-issue fully-populated dataset and confirm it scores identically to a large fully-populated dataset.
 ```
 
+**Resolved 2026-07-19 — badge only, score/formula unchanged (owner-approved approach):** The score itself
+still deducts purely by percentage, exactly as this finding describes — a 5-issue and a 3,000-issue fully
+populated dataset can still both score 100. What changed: a new sample-size confidence signal
+(`dataQualityConf()` in `metricConfidence.service.ts`, exposed as `metrics.confidence.dataQuality`) is now
+shown as a badge next to the score on `/data-quality` and `/dashboard/data-quality` — the same
+`MetricConfidenceBadge` component already used for Health Score/Lead Time/Cycle Time elsewhere, so a
+5-issue dataset now visibly reads "Unreliable" sample size next to its 100% score, distinct from a
+3,000-issue dataset's "High." This is a genuinely different signal from every other `MetricConfidence` in
+the map — the others measure field *completeness* (what % of issues have a required field populated);
+this one measures raw dataset *size*, since a small dataset can have 100% field completeness and still be
+statistically unrepresentative. Thresholds (exported as `DATA_QUALITY_UNRELIABLE_SAMPLE_SIZE=10`,
+`_LOW_SAMPLE_SIZE=30`, `_MEDIUM_SAMPLE_SIZE=100`): <10 Unreliable, 10–29 Low, 30–99 Medium, 100+ High —
+engineering-judgment defaults, not derived from a statistical requirement, documented as such in code.
+Separately, the score's own `summary` sentence (`dataQuality.service.ts`'s `buildSummary()`) now appends a
+caveat below the same 30-issue threshold — "Based on only N issues — percentages may shift significantly
+as more data is added" — directly addressing this finding's "same 'Metrics are highly reliable' framing"
+complaint, without touching the `bandDescriptions` text itself. `healthScoreConf()`'s composite and its own
+confidence-reason text are both explicitly unaffected — `dataQuality` is computed and merged in after
+`healthScoreConf()` runs, not passed into it, verified by a dedicated regression test (`TC-MC-19`). The
+formula-change alternative (making the score computation itself sample-size-aware) was considered and
+explicitly declined — see `11-prioritized-backlog.md`'s Phase 5 entry for the owner's approach decision.
+
 ### CP3-018 — `thresholds.service.ts` is not the source of truth for the score bands it appears to govern
 ```text
 Finding: HealthThresholds (src/types/thresholds.ts:3-25) only covers 5 per-item flow flags (cycle/lead/active/open age, blocked ratio) and is correctly consumed for those. It does NOT cover the Health Score bands, Portfolio "At Risk," capacity overload, sprint-goal, or delivery-confidence thresholds Checkpoint 2 found — those are independently hardcoded in at least 10 files: src/services/export/excelInsightExport.service.ts:115, src/components/dashboard/DashboardNavSidebar.tsx:37-40, DashboardSidebarNav.tsx:23-30, src/lib/utils.ts:13, app/developer/page.tsx:615, app/admin/logs/page.tsx:11, app/backend/page.tsx:79, src/lib/releaseConfidence.ts:36, src/services/metrics/metricConfidence.service.ts:28, src/services/coaching/coachingConfidence.service.ts:20, src/services/export/recommendationEngine.ts:265, src/services/metrics/throughput.service.ts:163.

@@ -135,6 +135,21 @@ test('TC-DQ-11: summary is a human-readable non-empty string', () => {
   expect(result.summary).toContain('%');
 });
 
+// TC-DQ-13 to TC-DQ-14: CP3-017 — small-sample caveat in the summary sentence.
+// The score/band themselves are unchanged by sample size (that's the
+// finding); only the summary text gains a caveat sentence below the
+// DATA_QUALITY_LOW_SAMPLE_SIZE threshold.
+test('TC-DQ-13: small sample (< 30 issues) gets a caveat sentence in the summary', () => {
+  const result = calculateDataQuality(Array(5).fill(null).map((_, i) => issue({ 'Issue Key': `P-${i}` })));
+  expect(result.score).toBeGreaterThanOrEqual(85); // score itself is unaffected
+  expect(result.summary).toMatch(/only 5 issues/i);
+});
+
+test('TC-DQ-14: large sample (>= 30 issues) gets no caveat sentence', () => {
+  const result = calculateDataQuality(Array(30).fill(null).map((_, i) => issue({ 'Issue Key': `P-${i}` })));
+  expect(result.summary).not.toMatch(/percentages may shift/i);
+});
+
 // TC-DQ-12: Epics excluded from Epic Link check
 test('TC-DQ-12: Epic issue type excluded from Epic Link missing check', () => {
   const issues = [

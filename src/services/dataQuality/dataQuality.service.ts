@@ -13,6 +13,7 @@ import type { DataQualityCheck, DataQualityResult, DataQualityBand } from '@/typ
 import type { OrphanRules } from '@/types/orphanRules';
 import { DEFAULT_ORPHAN_RULES } from '@/types/orphanRules';
 import { isOrphanByRules } from '@/services/settings/orphanRules.service';
+import { DATA_QUALITY_LOW_SAMPLE_SIZE } from '@/services/metrics/metricConfidence.service';
 
 type JiraIssue = Record<string, unknown>;
 
@@ -245,6 +246,16 @@ function buildSummary(
 
   if (orphanCount > 0) {
     summary += ` ${orphanCount} orphan item${orphanCount !== 1 ? 's have' : ' has'} no Epic or Parent link.`;
+  }
+
+  // CP3-017: a small dataset can score 100%/"Excellent" purely because every
+  // field it happens to have is populated — this caveat makes clear that a
+  // high percentage from a small sample isn't the same guarantee as one from
+  // a large sample, without changing the score itself. Same threshold the
+  // dataQuality confidence badge (metricConfidence.service.ts) uses, so the
+  // two never disagree about what counts as "small."
+  if (total > 0 && total < DATA_QUALITY_LOW_SAMPLE_SIZE) {
+    summary += ` Based on only ${total} issue${total !== 1 ? 's' : ''} — percentages may shift significantly as more data is added.`;
   }
 
   return summary;
