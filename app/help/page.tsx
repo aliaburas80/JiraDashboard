@@ -265,12 +265,12 @@ const SECTIONS: Section[] = [
               </thead>
               <tbody>
                 {[
-                  ['POST','/api/upload','Upload a Jira CSV or Excel file and trigger import processing. Returns computed metrics, parse warnings, and an import log entry. Accepts multipart/form-data with a field named "file". Rate limited to 20 requests per 15 minutes per IP. Max file size 20 MB.'],
+                  ['POST','/api/upload','Upload a Jira CSV or Excel file and trigger import processing. Returns computed metrics, parse warnings, and an import log entry. Accepts multipart/form-data with a field named "file". Rate limited to 20 uploads per 15 minutes per user. Max file size 20 MB.'],
                   ['GET','/api/imports','Return the full import log — a JSON array of all past upload attempts including status, file name, row count, timestamp, and any validation errors.'],
                   ['GET','/api/metrics','Return computed KPI metrics derived from the most recent successful import. Returns 404 if no successful import exists.'],
-                  ['GET','/api/dashboard','Return dashboard status and service metadata (version, service name, status: ok).'],
-                  ['GET','/api/health','Health check endpoint — confirms the API service is running. Returns { status: "ok", service: "delivery-clarity-api", version: "2.0.0" }.'],
-                  ['GET','/api/backend-view','JSON overview of import statistics (total, successful, failed), the 10 most recent import logs, and a list of all API endpoints.'],
+                  ['GET','/api/dashboard','Return dashboard status and service metadata (version, service name, status: ok). Note: this is a static stub — it does not return live metrics, despite the name.'],
+                  ['GET','/api/health','Health check endpoint — confirms the API service is running. Returns { status: "ok", service: "delivery-clarity", version, timestamp }.'],
+                  ['GET','/api/backend-view','JSON overview of import statistics (total, successful, failed), up to 50 recent import logs, and a list of all API endpoints.'],
                   ['GET','/api/developer-view','Developer wiki — architecture notes, service descriptions, and data-flow documentation for contributors.'],
                 ].map(([method, route, desc]) => (
                   <tr key={route} style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
@@ -638,7 +638,7 @@ const SECTIONS: Section[] = [
       { q: 'Story points are all zero or missing', a: 'Story Points is a custom field in Jira and its column name varies by instance. Common names include "Story Points", "Story point estimate", "SP", "Points", and "Estimate". If none of these are present in your export, Delivery Clarity falls back to issue count for all point-based metrics. To fix, add the custom story points field to your Jira export column configuration.' },
       { q: 'All items show as Healthy when I expect warnings', a: 'Health classification requires date fields. If Created, Updated, or Resolved dates are missing from the export, the engine cannot calculate active duration or cycle time and defaults to Healthy. Check that your export includes the Created and Updated columns. Also verify that the dates are in a standard format (ISO 8601 or common locale formats — MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD).' },
       { q: 'The page loads but shows "No successful import found"', a: 'The dashboard could not find bucket-backed latest metrics and could not find a browser localStorage fallback. Navigate to the Upload page (/), drop your Jira export, and wait for the success message. That creates data/latest-metrics.json on the server and a browser fallback copy.' },
-      { q: 'Rate limit error (429 Too Many Requests)', a: 'The upload endpoint allows 20 uploads per 15 minutes per IP address. If you hit this limit, wait 15 minutes before trying again. This limit prevents accidental runaway upload loops. If you are a developer testing the app locally and need to lift the limit, see the RATE_MAX and RATE_WINDOW_MS constants in /app/api/upload/route.ts.' },
+      { q: 'Rate limit error (429 Too Many Requests)', a: 'The upload endpoint allows 20 uploads per 15 minutes per user account (not per IP address — it is tracked per logged-in user, so shared networks are not affected). If you hit this limit, wait 15 minutes before trying again. This limit prevents accidental runaway upload loops. If you are a developer testing the app locally and need to lift the limit, see checkUploadRateLimit() in /app/api/upload/route.ts.' },
     ],
   },
 ];

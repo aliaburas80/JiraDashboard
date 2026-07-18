@@ -1,3 +1,59 @@
+# Delivery Clarity — Master TODO List
+
+**Last updated:** 2026-07-19 (**API-SURFACE DOCS ACCURACY FIX — DRIFT WAS WORSE THAN THE ORIGINAL
+FINDING SUGGESTED** — the last remaining item on the full-application product audit's backlog: "3
+hand-maintained API-surface descriptions," originally rated P3/Medium-confidence and deferred as "a
+separate, larger structural fix." Before implementing anything, investigated what each of the three
+actually contained today rather than assuming the original rating was still accurate — it wasn't close:
+**`app/api/backend-view/route.ts`'s `ENDPOINTS` array listed 17 routes; the app has 72 real
+`app/api/**/route.ts` files** (confirmed via `find app/api -name route.ts | wc -l`) — most of `/api/admin/*`
+(29 of 31 admin routes missing), `/api/snapshots`, `/api/trends`, `/api/notifications`, and more were
+absent entirely. **`app/api/developer-view/route.ts`'s architecture block claimed "Next.js 14"** (real
+baseline: 16.2.9, CLAUDE.md §4.1), **listed all four service file paths under a `lib/` prefix that hasn't
+existed since before this audit** (real: `src/services/metrics/`, `src/services/jira/`,
+`src/services/imports/`), and **described Health Score bands as a stale 3-tier scale** (critical/warning/
+good at 50/75) **that predates the `CP3-018` unification** onto the real 5-tier, admin-configurable scale
+(excellent/good/moderate/at-risk/critical at 90/75/60/40 — `src/types/thresholds.ts`
+`DEFAULT_THRESHOLDS`); only `healthScoreWeights` was still accurate, verified against the real
+`calculateHealthScore()` formula in `metrics.service.ts`. **`app/help/page.tsx`'s route table and two FAQ
+entries** claimed the upload rate limit is per-IP (it has been per-user since the P0A-02 DB-backed
+rate-limiter rewrite — `checkUploadRateLimit()` keys on `userId`, not IP), claimed `/api/health` returns
+`service: "delivery-clarity-api"` (real value: `"delivery-clarity"` — looks copy-pasted from
+`/api/dashboard`'s value), claimed `backend-view` shows "10 most recent" logs (real: 50), and referenced
+`RATE_MAX`/`RATE_WINDOW_MS` constants that don't exist under those names in the current code. Given the
+severity gap between what was found and what the original finding assumed, presented the owner two real
+approaches before writing any code — correct the content now vs. build the generated single-source-of-truth
+registry CLAUDE.md §10.1 itself recommends — and got an explicit decision: **correct the content now**, not
+the structural fix. Implementation: rebuilt `backend-view`'s `ENDPOINTS` array from scratch (72 entries,
+grouped by Auth/Account/Upload/Dashboard-data/Meta/Admin for readability) by reading every route file's
+real exported HTTP methods and leading doc comment; **verified programmatically, not by spot-check** — a
+Python script diffed the array's path-set and per-path method-set against a live `find` + `grep` walk of
+`app/api/**/route.ts`, catching one real remaining mismatch (`admin/app-config` is `GET/PUT/POST`, not
+`GET/POST` as first drafted) before it shipped. Corrected `developer-view`'s Next.js version, styling
+description, all four service/type file paths, and the health-band thresholds/tier count. Corrected all
+four `/help` inaccuracies. **Deliberately not done:** the generated route-registry structural fix itself —
+the owner's brief was correcting content, not building new architecture; documented explicitly in both
+`10-technical-cleanup.md` and `11-prioritized-backlog.md` that the "nothing enforces consistency" root
+cause this finding described is unresolved and these three will drift apart again over time. No new tests
+added — nothing to regression-test about static hand-written data literals beyond what typecheck/build
+already catch. **Verified:** `npm run typecheck` clean; `npx eslint` on all 3 changed files 0 warnings (the
+pre-existing 98 warnings in `app/help/page.tsx`, a known Tier-1 tech-debt file, confirmed byte-identical
+before/after via `git stash` diff); `npx stylelint` — no SCSS touched; `npm test` 113/113 suites,
+1,082/1,082 tests passing (one transient timeout in `storageSettingsPersistence.test.ts` on the first run,
+confirmed unrelated to this change and non-reproducing — passed clean on `main` before this branch and
+passed clean again immediately after, in isolation and in the full suite); `npm run build` compiled all
+routes clean. **With this, the full-application product audit's `11-prioritized-backlog.md` has zero
+genuinely open action items left** — the only remaining "still open" line (`/api/dashboard`'s unused stub)
+is a closed, owner-decided won't-fix, not outstanding work. Branch:
+`docs/tech10-api-surface-accuracy-fix`.)
+
+**Last updated:** 2026-07-19 (**BUG FIX: RESTORED MISSING FILE HEADER** — the `# Delivery Clarity — Master
+TODO List` title line had been accidentally dropped from this file's top during the `CP3-017` commit
+(`29a03af`) two entries below — an `Edit` tool call's `old_string`/`new_string` pair evidently omitted it.
+Caught while adding this entry (the file's first line was a `**Last updated:**` entry with no title above
+it) and restored. No content was lost — only the one title line was missing; every dated entry below was
+intact.)
+
 **Last updated:** 2026-07-19 (**CP3-017 RESOLVED: DATA QUALITY SAMPLE-SIZE BADGE, OWNER-APPROVED
 "BADGE ONLY" APPROACH** — the last genuinely open item from the full-application product audit's
 prioritized backlog. `CP3-017` ("Data Quality score has no sample-size awareness — 1-of-5 missing scores
