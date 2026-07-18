@@ -37,7 +37,7 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
       { id: 'overview',   title: 'Overview',     desc: 'Health at a glance',           href: '/summary',    status: 'neutral', icon: 'dashboard'   },
       { id: 'dashboard',  title: 'Full Report',  desc: 'Priority items & full metrics', href: '/dashboard',  status: 'neutral', icon: 'table'       },
       { id: 'charts',     title: 'Charts',       desc: 'Visual breakdowns',            href: '/charts',     status: 'info',    icon: 'chartBar'    },
-      { id: 'trends',     title: 'Trends',       desc: 'Upload-over-upload change',    href: '/trends',     status: 'info',    icon: 'chartTrendUp' },
+      { id: 'trends',     title: 'Trends',       desc: 'Cross-upload history, not current data', href: '/trends', status: 'info',    icon: 'chartTrendUp' },
       { id: 'teams',      title: 'Teams',        desc: 'Team health comparison',       href: '/teams',      status: 'success', icon: 'teams'       },
       { id: 'portfolio',  title: 'Portfolio',    desc: 'Cross-team portfolio summary', href: '/portfolio',  status: 'success', icon: 'briefcase'   },
     ],
@@ -100,16 +100,43 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
       { id: 'admin-theme',       title: 'Branding',         desc: 'Logo, favicon & app name',    href: '/admin/theme',        status: 'neutral', icon: 'tag',       section: 'Configure' },
     ],
   },
+  // ── Directory ─────────────────────────────────────────────────────────────
+  // Split out of the former 'reference' group — 07-information-architecture.md
+  // §D flagged 'Reference' as mixing a people directory, marketing, end-user
+  // docs, and developer tooling under one ambiguous label. 'members' is a
+  // people directory, a distinct audience from the self-serve product docs
+  // kept in 'reference' below. Still gated by the isSuperAdmin flag in
+  // isVisible() below (EP-025), unchanged by this regrouping.
+  {
+    id: 'directory',
+    label: 'Directory',
+    items: [
+      { id: 'members', title: 'Members', desc: 'Team directory & contacts', href: '/members', status: 'success', icon: 'teams' },
+    ],
+  },
+  // ── Developer Tools ───────────────────────────────────────────────────────
+  // Split out of the former 'reference' group — 'developer' is admin-only
+  // technical/API documentation (see the admin-only '/developer' entry in
+  // roles.ts, alongside '/admin'), a different audience than the self-serve
+  // end-user docs kept in 'reference' below.
+  {
+    id: 'developer-tools',
+    label: 'Developer Tools',
+    items: [
+      { id: 'developer', title: 'Developer', desc: 'API & technical docs', href: '/developer', status: 'neutral', icon: 'terminal' },
+    ],
+  },
   // ── Reference ─────────────────────────────────────────────────────────────
+  // Self-serve, product-info destinations open to every role — trimmed to
+  // this one coherent audience (07-information-architecture.md §D); 'members'
+  // and 'developer' moved to their own groups above.
   {
     id: 'reference',
     label: 'Reference',
     items: [
-      { id: 'members',   title: 'Members',   desc: 'Team directory & contacts',  href: '/members',   status: 'success', icon: 'teams'    },
-      { id: 'landing',   title: 'About',     desc: 'Product overview & features', href: '/landing',   status: 'neutral', icon: 'info'     },
-      { id: 'glossary',  title: 'Glossary',  desc: 'Term & abbreviation guide',  href: '/glossary',  status: 'neutral', icon: 'book'     },
-      { id: 'developer', title: 'Developer', desc: 'API & technical docs',       href: '/developer', status: 'neutral', icon: 'terminal' },
-      { id: 'help',      title: 'Help',      desc: 'How to use this app',        href: '/help',      status: 'info',    icon: 'support'  },
+      { id: 'landing',   title: 'About',    desc: 'Product overview & features', href: '/landing',  status: 'neutral', icon: 'info'    },
+      { id: 'glossary',  title: 'Glossary', desc: 'Term & abbreviation guide',   href: '/glossary',  status: 'neutral', icon: 'book'    },
+      { id: 'help',      title: 'Help',     desc: 'How to use this app',         href: '/help',      status: 'info',    icon: 'support' },
     ],
   },
 ];

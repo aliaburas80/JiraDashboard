@@ -147,7 +147,7 @@ export default function DataQualityPage() {
 
       <PageHeader
         id="tour-header-dashboard-data-quality"
-        title="Data Quality"
+        title="Data Quality & Composition"
         badge={`${displayIssues.length} issues found`}
         subtitle="Field confidence, missing data impact, and how the current work breaks down."
       />

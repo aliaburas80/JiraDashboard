@@ -213,7 +213,7 @@ export default function DashboardNavSidebar({ metrics, open, onClose }: Props) {
         <GroupLabel label="Overview" />
         {see('/dashboard/priority-attention') && <NavItem href="/dashboard/priority-attention"  icon="alertTri" title="Priority Attention"    meta="Blockers · overdue · actions"                chip={String(totalAttention)}        chipType={attentionChipType} />}
         {see('/dashboard/key-metrics')        && <NavItem href="/dashboard/key-metrics"         icon="monitor"  title="Key Metrics"           meta="6 KPI cards"                                 chip={hband}                         chipType={healthScore < 60 ? 'cw' : 'cg'} />}
-        {see('/dashboard/data-quality')       && <NavItem href="/dashboard/data-quality"        icon="shield"   title="Data Quality"          meta={`${dataQualityScore}% quality · ${completionRate}% complete`} chip={`${dataQualityScore}%`}        chipType={qualityChipType} />}
+        {see('/dashboard/data-quality')       && <NavItem href="/dashboard/data-quality"        icon="shield"   title="Data Quality & Composition" meta={`${dataQualityScore}% quality · ${completionRate}% complete`} chip={`${dataQualityScore}%`}        chipType={qualityChipType} />}
 
         <GroupLabel label="Delivery" />
         {see('/dashboard/trends')               && <NavItem href="/dashboard/trends"             icon="calendar" title="Trends"                meta="Sprints · quarters"                          chip={metrics?.sprint ? 'Active' : `${quarters.length}Q`} chipType={metrics?.sprint ? 'cg' : 'cn'} />}

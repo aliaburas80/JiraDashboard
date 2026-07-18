@@ -20,15 +20,15 @@ test('TC-NAV-02: a non-admin role never sees the Administration group', () => {
 test('TC-NAV-03: a non-admin role never sees the Developer link (admin-only route)', () => {
   for (const role of ['scrum_master', 'product_owner', 'manager', 'c_level', 'user', null, undefined]) {
     const groups = getNavGroupsForRole(role);
-    const referenceGroup = groups.find(g => g.id === 'reference');
-    expect(referenceGroup?.items.some(item => item.id === 'developer')).toBeFalsy();
+    const developerToolsGroup = groups.find(g => g.id === 'developer-tools');
+    expect(developerToolsGroup?.items.some(item => item.id === 'developer')).toBeFalsy();
   }
 });
 
 test('TC-NAV-04: admin sees the Developer link', () => {
   const groups = getNavGroupsForRole('admin');
-  const referenceGroup = groups.find(g => g.id === 'reference');
-  expect(referenceGroup?.items.some(item => item.id === 'developer')).toBe(true);
+  const developerToolsGroup = groups.find(g => g.id === 'developer-tools');
+  expect(developerToolsGroup?.items.some(item => item.id === 'developer')).toBe(true);
 });
 
 test('TC-NAV-05: c_level does not see Flow Health / Sprint & Kanban / Work Explorer (restricted routes)', () => {
@@ -129,4 +129,24 @@ test('TC-NAV-17: the Reference menu contains only non-admin reference/help desti
   for (const href of hrefs) {
     expect(href.startsWith('/admin')).toBe(false);
   }
+});
+
+// 07-information-architecture.md §D: 'Reference' used to mix a people
+// directory ('members'), marketing ('landing'), self-serve docs ('glossary',
+// 'help'), and admin-only developer tooling ('developer') under one
+// ambiguous label. Split into 'directory' and 'developer-tools' so the
+// trimmed 'reference' group holds only self-serve, every-role product info.
+test('TC-NAV-18: the Reference group no longer mixes the people directory or developer tooling with end-user docs', () => {
+  const referenceGroup = DC_NAV_GROUPS.find(g => g.id === 'reference');
+  const referenceIds = referenceGroup?.items.map(i => i.id) ?? [];
+  expect(referenceIds).toEqual(['landing', 'glossary', 'help']);
+  expect(referenceIds).not.toContain('members');
+  expect(referenceIds).not.toContain('developer');
+});
+
+test('TC-NAV-19: Members lives in its own Directory group, Developer in its own Developer Tools group', () => {
+  const directoryGroup = DC_NAV_GROUPS.find(g => g.id === 'directory');
+  const developerToolsGroup = DC_NAV_GROUPS.find(g => g.id === 'developer-tools');
+  expect(directoryGroup?.items.map(i => i.id)).toEqual(['members']);
+  expect(developerToolsGroup?.items.map(i => i.id)).toEqual(['developer']);
 });

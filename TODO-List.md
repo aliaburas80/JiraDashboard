@@ -1,5 +1,59 @@
 # Delivery Clarity — Master TODO List
 
+**Last updated:** 2026-07-18 (**07-IA THREE NAMING/GROUPING FINDINGS CLOSED (DATA QUALITY COLLISION,
+REFERENCE GROUP SPLIT, TRENDS AMBIGUITY)** — picked up the three remaining open items under Phase 5's
+"IA/naming" line in `11-prioritized-backlog.md`, all from `07-information-architecture.md`. (1)
+**`/data-quality` vs `/dashboard/data-quality` naming collision (P2, the one genuinely unresolved pair)** —
+read how the audit's own comparable pair, `/flow-health` vs `/dashboard/flow-health`, is already
+disambiguated (`04-remove-merge-keep.md` R-03: top-nav keeps "Flow Health," the `/dashboard/*` sub-page's
+title and `DashboardNavSidebar.tsx` entry both say "Flow Health Table") and applied the identical pattern —
+`/data-quality` keeps plain "Data Quality" everywhere it already appears; `/dashboard/data-quality`'s
+`PageHeader` title (`app/dashboard/data-quality/page.tsx`) and sidebar entry
+(`DashboardNavSidebar.tsx:214`) both became "Data Quality & Composition," naming the page's actual second
+section (Delivery Composition, merged in here per `CLAUDE.md` §60.3) rather than a generic qualifier. Also
+updated the matching `src/lib/tour.ts` tour-step title so the product tour doesn't regress out of sync with
+the header it points at — same as `/dashboard/flow-health`'s tour step already does. (2) **Reference nav
+group mixes audiences (P3)** — `navigation.ts`'s `reference` group held `/members` (people directory),
+`/landing` (marketing), `/glossary`+`/help` (self-serve docs), and `/developer` (admin-only technical docs)
+under one label. Split into three groups: new `directory` group for `members` (still gated by the
+`isSuperAdmin` flag in `getNavGroupsForRole()`, unchanged — EP-025), new `developer-tools` group for
+`developer` (matches its actual access level — `roles.ts` gates `/developer` alongside `/admin`, same tier
+as every `administration`-group destination — but kept out of the `administration` group itself since that
+group also drives `AdminNavSidebar.tsx`'s three-section rendering via `getAdminNavSections()`, and adding a
+fourth section there was judged out of scope for a naming fix), and a trimmed `reference` group left with
+only `landing`/`glossary`/`help` — a genuinely coherent "self-serve product info, every role" audience.
+`DC_NAV_GROUPS` goes from 6 top-level groups to 8; every route's reachability and role-gating is unchanged,
+confirmed no group lost its `canAccessRoute`/`isSuperAdmin` filtering behavior in the move (`isVisible()`
+keys off `item.id`, not group membership). (3) **`/trends` nav-level ambiguity (P3)** — both the top-nav and
+dashboard-sidebar "Trends" entries read as the plain word "Trends"; per the finding's own recommendation,
+reworded the top-nav item's `desc` in `navigation.ts` from "Upload-over-upload change" to "Cross-upload
+history, not current data," explicitly contrasting against the sidebar's current-dataset framing (its
+existing `meta="Sprints · quarters"` was left as-is — it already reads correctly once set beside the
+reworded top-nav text). No routes added, removed, redirected, or merged in any of the three — labeling and
+grouping only. **Tests:** `src/__tests__/navGroupsForRole.test.ts` TC-NAV-03/04 updated (they asserted
+`developer` lived inside the `reference` group by id; now check `developer-tools`); added TC-NAV-18
+(reference group holds exactly `landing`/`glossary`/`help`, no `members`/`developer`) and TC-NAV-19
+(`directory`/`developer-tools` each hold exactly their one item) as regression guards for the split.
+**Docs:** added dated "Resolved" notes under all three findings in `07-information-architecture.md`
+(matching the file's existing resolution-note format); struck through all three Phase 5 "IA/naming" items in
+`11-prioritized-backlog.md` with short resolution notes, matching the existing "Full Report" strikethrough
+in the same line. Also added a short `product/RELEASE_NOTES.md` entry — nav relabeling/regrouping is
+low-visibility but still something every user sees, so it gets a line even though nothing moved or was
+removed. **Verified:** `npm run typecheck` clean; `npx eslint --max-warnings=0` on every changed source
+file (0 new warnings on the 3 clean files; the 2 files with pre-existing `react/forbid-dom-props` debt —
+`app/dashboard/data-quality/page.tsx` at 45, `DashboardNavSidebar.tsx` at 1 — confirmed unchanged
+before/after via a targeted single-line revert-and-relint-and-restore, not `git stash`, after an earlier
+`git stash` on the full working tree mid-lint-run timed out at the 2-minute Bash limit and needed a
+`git stash pop` to recover — no data was lost, but avoid stashing the whole tree for a one-line comparison
+again); `npm run test` full suite 108/108 suites, 1006/1006 tests passing (one interim run hit the same
+pre-existing jest-worker SIGSEGV flakiness class documented earlier in this file — `localUpload.test.ts`
+crashed the whole suite run, re-ran clean both in isolation and as part of a full clean re-run immediately
+after); `npm run build` compiled all 73 routes, route count unchanged (this is a nav-registry relabel, not
+a route add/remove) — this worktree had no `.env.local`, so the build was run once with ad-hoc
+verification-only env values (`SESSION_SECRET`, `CONFIG_ENCRYPTION_KEY`, etc., none of them real secrets,
+none committed) passed inline on the command, matching `.env.example`'s documented required set; not a
+repo change. Branch: `fix/07-ia-naming-collisions-and-grouping`.)
+
 **Last updated:** 2026-07-17 (**PHASE 5 VERIFICATION SWEEP + THREE QUICK WINS (MPE-04, MPE-06, CP3-020)** —
 User said "do next" with no specific item named, moving into the Phase 5 P2/P3 polish backlog (no forced
 order, per `11-prioritized-backlog.md`). Given the previous round's discovery that documented "still open"
