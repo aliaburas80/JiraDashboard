@@ -188,6 +188,36 @@
   }
 }
 
+.exportBtn {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--dc-acc2, #FF8A4C);
+  background: rgba(232, 93, 18, 0.06);
+  border: 1px solid var(--dc-acc2, #FF8A4C);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: rgba(232, 93, 18, 0.12);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dc-acc2, #FF8A4C) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
 // ── Layout ────────────────────────────────────────────────────────────────────
 
 .layout {

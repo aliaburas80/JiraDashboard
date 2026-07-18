@@ -69,6 +69,11 @@
 
 .headLeft { flex: 1; min-width: 240px; }
 
+.exportMenu {
+  min-inline-size: 200px;
+  margin-block-start: var(--space-2, 8px);
+}
+
 .pageTitle {
   font-size: 22px;
   font-weight: 900;

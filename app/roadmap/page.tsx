@@ -9,6 +9,7 @@ import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { computePortfolioSummary, type EpicSummary } from '@/lib/portfolioHealth';
 import { computeAverageThroughput } from '@/services/forecast/forecastEngine.service';
+import { exportRoadmapToCsv } from '@/services/export/roadmapExport.service';
 import type { DashboardMetrics } from '@/types/metrics';
 import styles from './page.module.scss';
 
@@ -505,19 +506,29 @@ export default function RoadmapPage() {
             <h1 id="tour-header-roadmap" className={styles.title}>Epic Roadmap</h1>
             <p className={styles.subtitle}>Delivery timeline, forecasts & health — based on your Jira data</p>
           </div>
-          <div id="tour-section-roadmap-1" className={styles.viewToggle} role="group" aria-label="View mode">
-            {(['gantt', 'cards'] as const).map(v => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setView(v)}
-                className={clsx(styles.viewBtn, { [styles.active]: view === v })}
-                aria-pressed={view === v}
-              >
-                <SvgIcon name={v === 'gantt' ? 'chartBar' : 'clipboard'} size={14} />
-                {v === 'gantt' ? 'Timeline' : 'Cards'}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <div id="tour-section-roadmap-1" className={styles.viewToggle} role="group" aria-label="View mode">
+              {(['gantt', 'cards'] as const).map(v => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setView(v)}
+                  className={clsx(styles.viewBtn, { [styles.active]: view === v })}
+                  aria-pressed={view === v}
+                >
+                  <SvgIcon name={v === 'gantt' ? 'chartBar' : 'clipboard'} size={14} />
+                  {v === 'gantt' ? 'Timeline' : 'Cards'}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => exportRoadmapToCsv(sorted)}
+              className="btn-secondary btn-sm"
+              disabled={sorted.length === 0}
+            >
+              ↓ Export CSV
+            </button>
           </div>
         </div>
 

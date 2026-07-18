@@ -8,6 +8,7 @@ import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { redirectWithLoadError } from '@/lib/loadErrorSignal';
+import { exportDeliveryMixToCsv } from '@/services/export/deliveryMixExport.service';
 import type { DashboardMetrics } from '@/types/metrics';
 import styles from './page.module.scss';
 
@@ -401,8 +402,17 @@ export default function DeliveryMixPage() {
         {/* ── Type health table ── */}
         <div className={clsx(styles.card, styles.tableCard)}>
           <div className={styles.cardHead}>
-            <span className={styles.cardTitle}>Type Detail Table</span>
-            <span className={styles.cardBadge}>completion · health · cycle time per type</span>
+            <div className="flex items-center gap-2">
+              <span className={styles.cardTitle}>Type Detail Table</span>
+              <span className={styles.cardBadge}>completion · health · cycle time per type</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => exportDeliveryMixToCsv(enriched)}
+              className="btn-secondary btn-sm"
+            >
+              ↓ Export CSV
+            </button>
           </div>
           <div className={styles.tableWrap}>
             <table className={styles.table}>

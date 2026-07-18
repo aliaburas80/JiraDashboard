@@ -8,6 +8,7 @@ import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { computeTeamHealth, teamBandColor, teamBandBg, type TeamHealthEntry } from '@/lib/teamHealth';
+import { exportTeamsToCsv } from '@/services/export/teamsExport.service';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -202,11 +203,20 @@ export default function TeamsPage() {
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
-        <div className="mb-6">
-          <h1 id="tour-header-teams" className="text-2xl font-black text-slate-900 tracking-tight">Team Health Comparison</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Side-by-side health scores, workload, and risk signals per team member.
-          </p>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 id="tour-header-teams" className="text-2xl font-black text-slate-900 tracking-tight">Team Health Comparison</h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Side-by-side health scores, workload, and risk signals per team member.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => exportTeamsToCsv(teams)}
+            className="btn-secondary btn-sm shrink-0"
+          >
+            ↓ Export CSV
+          </button>
         </div>
 
         {/* Summary KPI strip */}
