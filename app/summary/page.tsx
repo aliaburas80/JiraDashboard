@@ -119,6 +119,7 @@ export default function SummaryPage() {
             color="var(--color-text-secondary)"
             bg="var(--color-subtle)"
             border="var(--color-border)"
+            confidence={metrics.confidence?.cycleTime}
           />
           <MiniKpiCard
             label="Est. Completion"

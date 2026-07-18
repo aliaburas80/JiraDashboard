@@ -79,6 +79,20 @@ Confidence: High confidence
 Validation method: Confirm no confidence badge/indicator renders anywhere on the listed pages regardless of underlying sample size.
 ```
 
+**Partially resolved (2026-07-13, extended 2026-07-18):** `DCKpiCard` (2026-07-13) and `MiniKpiCard`
+(2026-07-18) both now accept an optional `confidence` prop rendering `MetricConfidenceBadge`. Wired into
+`/flow-health`'s Lead/Cycle Time cards, `/summary`'s Avg Cycle Time card, and `/dashboard/key-metrics`'s
+Lead Time/Cycle Time cards — every KPI card on those three pages that has a real, computed
+`MetricConfidence` value (`metrics.confidence.leadTime`/`.cycleTime`) now shows it. **Still not wired**:
+`/sprint-kanban`, `/customer`, `/release-readiness`, `/teams` (no `DCKpiCard`/`MiniKpiCard` usage was
+touched on those pages), and the remaining non-lead/cycle-time KPIs on `/summary` and
+`/dashboard/key-metrics` (Completion, Critical Issues, Health Alerts, Active Work, Story Points, Est.
+Completion) — `calculateMetricConfidence()` has no computed signal for those specific metrics today, so
+badging them would mean fabricating a confidence value rather than surfacing a real one. Closing this
+finding fully would require either computing confidence for those additional metrics (a calculation
+change, out of scope for this wiring-only pass) or accepting a page that mixes badged and unbadged KPIs
+by design. Tracked in `11-prioritized-backlog.md` Phase 5.
+
 ### CP3-005 — Kanban "Flow Health" KPI defaults to "Healthy" with zero completed-item sample
 ```text
 Finding: overallHealth in calculateKanbanFlow defaults to 'Healthy' unless a period is explicitly 'Degraded'/'At Risk'; with zero completed non-sprint issues, both checks are vacuously false and it falls through to 'Healthy'. This is rendered directly as a colored KPI tile with no sample-size guard, unlike the adjacent Cycle Time/Lead Time tiles in the same strip which do fall back to "—" at zero.

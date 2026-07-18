@@ -67,6 +67,11 @@ export default function KeyMetricsPage() {
     String(sp.totalStoryPoints || 0),
   ];
 
+  // CP3-004/CP3-002 follow-up (2026-07-18): only Lead Time and Cycle Time have
+  // a real MetricConfidence signal (metrics.confidence) — the other 4 KPIs
+  // have no equivalent confidence calculation to show, so left undefined.
+  const kpiConfidences = [undefined, undefined, undefined, metrics.confidence?.leadTime, metrics.confidence?.cycleTime, undefined];
+
   return (
     <>
       <StickyToolbar>
@@ -107,6 +112,7 @@ export default function KeyMetricsPage() {
               color={tok.color}
               bg={tok.bg}
               border={tok.border}
+              confidence={kpiConfidences[i]}
             />
           ))}
         </div>
