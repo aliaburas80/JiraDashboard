@@ -1,6 +1,6 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 
-export type SprintGoalOutcome = 'Met' | 'Partially Met' | 'Missed' | 'At Risk' | 'Unknown';
+export type SprintGoalOutcome = 'Met' | 'Partially Met' | 'Missed' | 'Behind Pace' | 'Unknown';
 
 export type SprintDeliveryPattern =
   | 'Healthy Early Progress'

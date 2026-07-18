@@ -41,10 +41,12 @@ function Chip({ type, label }: { type: 'cc' | 'cw' | 'cg' | 'cm' | 'cn'; label: 
 }
 
 // ─── Health helpers ───────────────────────────────────────────────────────────
-// CP3-018: label text kept identical to the original hardcoded copy ("At-Risk"
-// hyphenated); only the band cutoffs now come from the shared getHealthBand().
+// Resolved (2026-07-18) — audit finding 03-clarity §A: this was the one "At-Risk"
+// (hyphenated) spelling in the app; corrected to "At Risk" (no hyphen) to match
+// /glossary and every other general Health-band rendering. Band cutoffs still
+// come from the shared getHealthBand().
 const HEALTH_BAND_LABELS: Record<HealthBand, string> = {
-  excellent: 'Excellent', good: 'Good', moderate: 'Moderate', 'at-risk': 'At-Risk', critical: 'Critical',
+  excellent: 'Excellent', good: 'Good', moderate: 'Moderate', 'at-risk': 'At Risk', critical: 'Critical',
 };
 function healthBandLabel(score: number): string {
   return HEALTH_BAND_LABELS[getHealthBand(score)];

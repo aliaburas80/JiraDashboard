@@ -165,7 +165,7 @@ export default function TeamsPage() {
   const avgHealth       = totalMembers > 0 ? Math.round(teams.reduce((s, t) => s + t.healthScore, 0) / totalMembers) : 0;
   const totalAtRisk     = teams.reduce((s, t) => s + t.criticalCount + t.blockedCount, 0);
   const healthyCount    = teams.filter(t => t.band === 'Healthy').length;
-  const atRiskCount     = teams.filter(t => t.band === 'At Risk').length;
+  const atRiskCount     = teams.filter(t => t.band === 'Team At Risk').length;
   const criticalCount   = teams.filter(t => t.band === 'Critical').length;
 
   const avgColor = avgHealth >= 70 ? '#16a34a' : avgHealth >= 40 ? '#f59e0b' : '#dc2626';
@@ -236,7 +236,7 @@ export default function TeamsPage() {
             { label: 'Team Members',   value: totalMembers,               unit: '',     color: '#2563eb' },
             { label: 'Avg Health',     value: `${avgHealth}/100`,         unit: '',     color: avgColor   },
             { label: 'Healthy',        value: healthyCount,               unit: '',     color: '#16a34a' },
-            { label: 'At Risk',        value: atRiskCount,                unit: '',     color: '#f59e0b' },
+            { label: 'Team At Risk',   value: atRiskCount,                unit: '',     color: '#f59e0b' },
             { label: 'Critical Items', value: totalAtRisk,                unit: '',     color: totalAtRisk > 0 ? '#dc2626' : '#94a3b8' },
           ].map(k => (
             <div key={k.label} className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
@@ -264,7 +264,7 @@ export default function TeamsPage() {
 
               {/* Health score chart */}
               <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-                <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Health Score</p>
+                <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Team Health Score</p>
                 {teams.map(t => (
                   <CompareBar
                     key={t.assignee}

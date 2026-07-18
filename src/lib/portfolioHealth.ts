@@ -12,7 +12,7 @@
 
 import type { DashboardMetrics } from '@/types/metrics';
 
-export type PortfolioBand = 'Excellent' | 'Good' | 'Moderate' | 'At Risk' | 'Critical';
+export type PortfolioBand = 'Excellent' | 'Good' | 'Moderate' | 'Portfolio At Risk' | 'Critical';
 
 export interface EpicSummary {
   name:           string;
@@ -88,7 +88,7 @@ export function portfolioBand(score: number): PortfolioBand {
   if (score >= 85) return 'Excellent';
   if (score >= 70) return 'Good';
   if (score >= 55) return 'Moderate';
-  if (score >= 35) return 'At Risk';
+  if (score >= 35) return 'Portfolio At Risk';
   return 'Critical';
 }
 
@@ -97,7 +97,7 @@ export function portfolioBandColor(band: PortfolioBand): string {
     Excellent: '#16a34a',
     Good:      '#0d9488',
     Moderate:  '#f59e0b',
-    'At Risk': '#ea580c',
+    'Portfolio At Risk': '#ea580c',
     Critical:  '#dc2626',
   };
   return map[band];

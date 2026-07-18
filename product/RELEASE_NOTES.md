@@ -5,6 +5,20 @@
 
 ---
 
+## Changed: Clearer Labels for "Confidence," "At Risk," "Health Score," and "Readiness" (2026-07-18)
+
+Several words were reused across the app for genuinely different things, which made it easy to misread one page's number using another page's meaning. None of the underlying calculations changed — only the on-screen wording, so the numbers you already trust are unaffected.
+
+"Confidence" meant four different things depending on the page: the per-KPI reliability badge next to dashboard metrics now reads "KPI Reliability" instead of bare "Confidence"; the sprint-throughput reliability percentage on `/sprint-kanban` and `/customer` now reads "Delivery Confidence," matching what `/forecast` already showed; `/roadmap`'s per-epic forecast badge column now reads "Epic Timeline Confidence"; and `/forecast`'s overall reliability chip now reads "High/Medium/Low Forecast Reliability" instead of "…confidence." Separately, `/data-quality` and `/dashboard/data-quality` had mislabeled their Data Quality Score as "Data confidence" — corrected to "Data Quality Score" to match every other place in the app that already used the right name.
+
+"At Risk" was used for six unrelated thresholds. The sidebar's general health band (the one most people see every day) keeps the plain "At Risk" label — it only had a small spelling fix (a stray hyphen). The other five now have their own names: `/teams`' band is "Team At Risk," `/portfolio`'s band is "Portfolio At Risk," the active-sprint-behind-pace flag on `/sprint-kanban` is now "Behind Pace," `/forecast`'s delivery-timeline status is "Timeline At Risk," and `/admin/diagnostics`'s operational health status is "Ops At Risk." The epic count on `/roadmap` and `/dashboard/epic-readiness` that flags epics with a struggling child issue is now called "Epics Needing Attention" rather than reusing "At Risk" for yet another meaning.
+
+`/teams`' health chart now reads "Team Health Score" instead of bare "Health Score," since it's a different formula from the overall project Health Score shown elsewhere. And the Help Center's "Readiness" topic — which mixed the Epic Readiness score (a 0–100 number) and the Release Readiness verdict (a Go/Conditional Go/No-Go decision) under one heading — is now split into "Epic Readiness" and "Release Readiness" sections.
+
+Found and fixed as part of a full-application product audit (`docs/product-audit/03-clarity-and-misleading-data.md` §A).
+
+---
+
 ## Fixed: Four Non-Urgent Security Hardening Findings (2026-07-18)
 
 Defense-in-depth improvements, none tied to a known exploit — found and fixed as part of a full-application

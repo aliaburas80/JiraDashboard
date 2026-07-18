@@ -63,5 +63,5 @@ export const THRESHOLD_LABELS: Record<keyof Omit<HealthThresholds, 'updatedAt' |
   healthScoreExcellentPct: { label: 'Health Score Excellent', unit: 'pts', description: 'Health Score at or above this is classified Excellent.',       min: 50, max: 100 },
   healthScoreGoodPct:      { label: 'Health Score Good',      unit: 'pts', description: 'Health Score at or above this is classified Good.',            min: 40, max: 99  },
   healthScoreFairPct:      { label: 'Health Score Fair',      unit: 'pts', description: 'Health Score at or above this is classified Moderate.',        min: 20, max: 90  },
-  healthScoreWeakPct:      { label: 'Health Score Weak',      unit: 'pts', description: 'Health Score at or above this is classified At-Risk; below is Critical.', min: 0, max: 80 },
+  healthScoreWeakPct:      { label: 'Health Score Weak',      unit: 'pts', description: 'Health Score at or above this is classified At Risk; below is Critical.', min: 0, max: 80 },
 };

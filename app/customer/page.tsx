@@ -92,9 +92,9 @@ function speedColor(days: number, goodMax: number, warnMax: number): string {
 }
 
 function confLabel(conf: number): string {
-  if (conf >= 80) return 'High confidence';
-  if (conf >= 50) return 'Medium confidence';
-  return 'Low confidence';
+  if (conf >= 80) return 'High Delivery Confidence';
+  if (conf >= 50) return 'Medium Delivery Confidence';
+  return 'Low Delivery Confidence';
 }
 
 function epicHealthColors(critical: number, warning: number): {
@@ -378,7 +378,7 @@ export default function CustomerPage() {
               {confidence > 0 && (
                 <div className={styles.confidenceWrap}>
                   <p className={styles.confidenceVal}>{Math.round(confidence)}%</p>
-                  <p className={styles.confidenceLabel}>Confidence</p>
+                  <p className={styles.confidenceLabel}>Delivery Confidence</p>
                 </div>
               )}
             </div>

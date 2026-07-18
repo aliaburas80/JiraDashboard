@@ -587,7 +587,7 @@
 // Column header row
 .forecastColRow {
   display: grid;
-  grid-template-columns: 190px 1fr 52px 100px 72px;
+  grid-template-columns: 190px 1fr 52px 100px 140px;
   align-items: center;
   padding: 5px var(--space-5, 20px);
   background: color-mix(in srgb, var(--color-border, #e2e8f0) 30%, transparent);
@@ -606,7 +606,7 @@
 // Data row
 .forecastRow {
   display: grid;
-  grid-template-columns: 190px 1fr 52px 100px 72px;
+  grid-template-columns: 190px 1fr 52px 100px 140px;
   align-items: center;
   padding: 7px var(--space-5, 20px);
   border-bottom: 1px solid color-mix(in srgb, var(--color-border, #e2e8f0) 50%, transparent);
