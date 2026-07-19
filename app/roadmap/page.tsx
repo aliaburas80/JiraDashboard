@@ -29,15 +29,6 @@ interface EpicTimeline extends EpicForecast {
   isEstimated: boolean;
 }
 
-// ── Health color tokens (CSS custom property values — data-driven) ─────────────
-// EXCEPTION (CLAUDE.md Rule 1): color values are data-driven from health status
-// and passed as CSS custom properties consumed by SCSS.
-const HEALTH_COLOR: Record<string, string> = {
-  good:     'var(--color-success, #22c55e)',
-  warning:  'var(--color-warning, #f59e0b)',
-  critical: 'var(--color-danger, #f87171)',
-};
-
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function msFromDate(d: string | null | undefined): number | null {
@@ -111,7 +102,7 @@ function GanttTimeline({ timelines }: { timelines: EpicTimeline[] }) {
 
   if (dated.length === 0) {
     return (
-      <div className={styles.emptyState} style={{ borderRadius: 0, border: 'none', padding: '48px 24px' }}>
+      <div className={`${styles.emptyState} ${styles.emptyStateFlat}`}>
         <div className={styles.emptyIcon}><SvgIcon name="calendar" size={40} /></div>
         <p className={styles.emptyTitle}>No date data for Gantt view</p>
         <p className={styles.emptyText}>
@@ -172,12 +163,10 @@ function GanttTimeline({ timelines }: { timelines: EpicTimeline[] }) {
           const barW    = `${Math.max(0.5, (endF - startF)) * 100}%`;
           const fillW   = `${Math.min(100, epic.progress)}%`;
           const pctLeft = `${Math.min(99, endF) * 100}%`;
-          const color   = HEALTH_COLOR[epic.health] ?? HEALTH_COLOR.warning;
 
           return (
             <div key={i} className={styles.ganttRow}>
               <div className={styles.ganttLabel}>
-                {/* EXCEPTION: health dot color is data-driven — use data attribute for SCSS targeting */}
                 <div className={styles.healthDot} data-health={epic.health} aria-hidden="true" />
                 <span className={styles.epicName} title={epic.name}>{epic.name}</span>
               </div>
@@ -188,10 +177,11 @@ function GanttTimeline({ timelines }: { timelines: EpicTimeline[] }) {
                 )}
 
                 {/* Bar track + fill */}
-                {/* EXCEPTION: bar-left, bar-width, fill-w, bar-color are all data-driven from timeline math and health status */}
+                {/* EXCEPTION: bar-left/bar-width are genuinely runtime-computed from timeline math (§14.2); color is data-health. */}
                 <div
                   className={styles.ganttBarWrap}
-                  style={{ '--bar-left': barLeft, '--bar-width': barW, '--bar-color': color } as CSSProperties}
+                  data-health={epic.health}
+                  style={{ '--bar-left': barLeft, '--bar-width': barW } as CSSProperties}
                 >
                   {epic.isEstimated && <div className={styles.ganttBarEst} aria-hidden="true" />}
                   <div
@@ -217,7 +207,7 @@ function GanttTimeline({ timelines }: { timelines: EpicTimeline[] }) {
       <div className={styles.ganttLegend}>
         {([['good', 'On track'], ['warning', 'At risk'], ['critical', 'Critical']] as const).map(([h, lbl]) => (
           <span key={h} className={styles.legendItem}>
-            <span className={styles.legendDot} style={{ background: HEALTH_COLOR[h] } as CSSProperties} aria-hidden="true" />
+            <span className={styles.legendDot} data-health={h} aria-hidden="true" />
             {lbl}
           </span>
         ))}
@@ -253,8 +243,6 @@ function GanttTimeline({ timelines }: { timelines: EpicTimeline[] }) {
           .map((epic, i) => {
             const ms      = getForecastMs(epic);
             const isDone  = epic.progress >= 100;
-            // EXCEPTION: fill-color and fill-w are data-driven from progress/health
-            const color   = HEALTH_COLOR[epic.health] ?? HEALTH_COLOR.warning;
             return (
               <div key={i} className={styles.forecastRow}>
                 {/* Epic name + health dot */}
@@ -267,7 +255,8 @@ function GanttTimeline({ timelines }: { timelines: EpicTimeline[] }) {
                 <div className={styles.forecastMiniTrack}>
                   <div
                     className={styles.forecastMiniFill}
-                    style={{ '--fill-w': `${Math.min(100, epic.progress)}%`, '--fill-color': color, '--bar-delay': `${i * 30}ms` } as CSSProperties}
+                    data-health={epic.health}
+                    style={{ '--fill-w': `${Math.min(100, epic.progress)}%`, '--bar-delay': `${i * 30}ms` } as CSSProperties}
                   />
                 </div>
 
@@ -299,11 +288,9 @@ function GanttTimeline({ timelines }: { timelines: EpicTimeline[] }) {
 
 function EpicCard({ epic, index }: { epic: EpicForecast; index: number }) {
   const [open, setOpen] = useState(false);
-  const color  = HEALTH_COLOR[epic.health] ?? HEALTH_COLOR.warning;
   const isDone = epic.progress >= 100;
 
   return (
-    // EXCEPTION: --card-accent color is data-driven from health status
     <div className={styles.epicCard} data-health={epic.health}>
       <button type="button" onClick={() => setOpen(v => !v)} className={styles.epicCardBtn}>
 
@@ -333,12 +320,12 @@ function EpicCard({ epic, index }: { epic: EpicForecast; index: number }) {
           <span>{Math.round(epic.progress)}%</span>
         </div>
         <div className={styles.epicProgressTrack}>
-          {/* EXCEPTION: fill-w and fill-color are data-driven */}
+          {/* EXCEPTION: fill-w is genuinely runtime-computed (§14.2); color is data-health. */}
           <div
             className={styles.epicProgressFill}
+            data-health={epic.health}
             style={{
               '--fill-w': `${Math.min(100, epic.progress)}%`,
-              '--fill-color': color,
               '--bar-delay': `${index * 55}ms`,
             } as CSSProperties}
           />
@@ -360,9 +347,9 @@ function EpicCard({ epic, index }: { epic: EpicForecast; index: number }) {
 
         {/* Story points row (if available) */}
         {epic.storyPoints > 0 && (
-          <div style={{ fontSize: 10, color: 'var(--color-text-muted, #94a3b8)', display: 'flex', justifyContent: 'space-between' } as CSSProperties}>
+          <div className={styles.epicSpRow}>
             <span>Story points</span>
-            <span style={{ fontWeight: 700 } as CSSProperties}>{epic.doneStoryPoints} / {epic.storyPoints} SP</span>
+            <span className={styles.epicSpVal}>{epic.doneStoryPoints} / {epic.storyPoints} SP</span>
           </div>
         )}
       </button>
@@ -427,7 +414,7 @@ export default function RoadmapPage() {
   // ── Loading state ──────────────────────────────────────────────────────────
   if (loading) return (
     <AppShell showNav>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 320, color: 'var(--color-text-muted)', fontSize: 13, fontWeight: 600 } as CSSProperties}>
+      <div className={styles.loadingState}>
         Building roadmap…
       </div>
     </AppShell>
@@ -472,13 +459,14 @@ export default function RoadmapPage() {
   const totalIssues = epics.reduce((s, e) => s + e.issues, 0);
   const doneIssues  = epics.reduce((s, e) => s + e.completedIssues, 0);
 
-  const kpis = [
-    { icon: 'clipboard', label: 'Total Epics',  value: totalEpics,        sub: `${doneEpics} complete`,      color: 'var(--color-text-primary)',        bg: 'var(--color-muted, #e2e8f0)' },
-    { icon: 'checkCircle', label: 'Done',         value: doneEpics,         sub: `${Math.round(doneEpics / Math.max(1, totalEpics) * 100)}% of total`, color: 'var(--color-success, #22c55e)',    bg: '#dcfce7' },
-    { icon: 'release', label: 'In Progress',  value: activeEpics,       sub: `${onTrack} on track`,        color: 'var(--color-primary, #2563eb)',    bg: '#dbeafe' },
-    { icon: 'warning', label: 'Epics Needing Attention', value: atRisk,            sub: atRisk > 0 ? 'Needs attention' : 'All clear', color: atRisk > 0 ? 'var(--color-warning, #f59e0b)' : 'var(--color-text-muted)', bg: atRisk > 0 ? '#fef9c3' : 'var(--color-muted)' },
-    { icon: 'statusError', label: 'Critical',     value: critEpics,         sub: critEpics > 0 ? 'Immediate action' : 'None critical', color: critEpics > 0 ? 'var(--color-danger, #f87171)' : 'var(--color-text-muted)', bg: critEpics > 0 ? '#fee2e2' : 'var(--color-muted)' },
-    { icon: 'chartBar', label: 'Issues Done',  value: `${doneIssues}/${totalIssues}`, sub: `${Math.round(doneIssues / Math.max(1, totalIssues) * 100)}% complete`, color: 'var(--color-text-primary)', bg: 'var(--color-muted, #e2e8f0)' },
+  // Colors are resolved from data-tone in SCSS (CLAUDE.md §28).
+  const kpis: { icon: string; label: string; value: string | number; sub: string; tone: 'neutral' | 'success' | 'primary' | 'warning' | 'danger' }[] = [
+    { icon: 'clipboard', label: 'Total Epics',  value: totalEpics,        sub: `${doneEpics} complete`,      tone: 'neutral' },
+    { icon: 'checkCircle', label: 'Done',         value: doneEpics,         sub: `${Math.round(doneEpics / Math.max(1, totalEpics) * 100)}% of total`, tone: 'success' },
+    { icon: 'release', label: 'In Progress',  value: activeEpics,       sub: `${onTrack} on track`,        tone: 'primary' },
+    { icon: 'warning', label: 'Epics Needing Attention', value: atRisk,            sub: atRisk > 0 ? 'Needs attention' : 'All clear', tone: atRisk > 0 ? 'warning' : 'neutral' },
+    { icon: 'statusError', label: 'Critical',     value: critEpics,         sub: critEpics > 0 ? 'Immediate action' : 'None critical', tone: critEpics > 0 ? 'danger' : 'neutral' },
+    { icon: 'chartBar', label: 'Issues Done',  value: `${doneIssues}/${totalIssues}`, sub: `${Math.round(doneIssues / Math.max(1, totalIssues) * 100)}% complete`, tone: 'neutral' },
   ];
 
   // ── Filtered + sorted cards ────────────────────────────────────────────────
@@ -536,13 +524,11 @@ export default function RoadmapPage() {
         <div id="tour-section-roadmap-2" className={styles.kpiStrip} role="list" aria-label="Key metrics">
           {kpis.map(k => (
             <div key={k.label} className={styles.kpiCard} role="listitem">
-              {/* EXCEPTION: bg is data-driven from health/status — CSS custom property */}
-              <div className={styles.kpiIconBox} style={{ background: k.bg } as CSSProperties}>
-                <SvgIcon name={k.icon} size={20} style={{ color: k.color }} />
+              <div className={styles.kpiIconBox} data-tone={k.tone}>
+                <SvgIcon name={k.icon} size={20} />
               </div>
               <div className={styles.kpiBody}>
-                {/* EXCEPTION: color is data-driven from health/status */}
-                <div className={styles.kpiValue} style={{ color: k.color } as CSSProperties}>{k.value}</div>
+                <div className={styles.kpiValue} data-tone={k.tone}>{k.value}</div>
                 <div className={styles.kpiLabel}>{k.label}</div>
                 <div className={styles.kpiSub}>{k.sub}</div>
               </div>
