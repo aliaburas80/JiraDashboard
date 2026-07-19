@@ -13,6 +13,39 @@
   100% { transform: scale(1);   opacity: 1; }
 }
 
+// ── Verdict/status/tier color mixins ──────────────────────────────────────────
+// Colors resolved from a ReleaseVerdict (4-value), CheckStatus (3-value: pass/
+// warn/fail), or a generic Tier (good/warning/critical/neutral) via data-*
+// attributes (CLAUDE.md §28) — used across a dozen+ call sites in this file
+// (Rule of Three, §5.4).
+@mixin verdict-color($prop: color) {
+  &[data-verdict='Go']                { #{$prop}: #16a34a; }
+  &[data-verdict='Conditional Go']    { #{$prop}: #d97706; }
+  &[data-verdict='No-Go']             { #{$prop}: #dc2626; }
+  &[data-verdict='Insufficient Data'] { #{$prop}: #64748b; }
+}
+
+@mixin status-color($prop: color) {
+  &[data-status='pass'] { #{$prop}: #16a34a; }
+  &[data-status='warn'] { #{$prop}: #d97706; }
+  &[data-status='fail'] { #{$prop}: #dc2626; }
+}
+
+// Translucent "wash" background variant of verdict-color.
+@mixin verdict-wash($prop: background) {
+  &[data-verdict='Go']                { #{$prop}: color-mix(in srgb, #22c55e 8%, transparent); }
+  &[data-verdict='Conditional Go']    { #{$prop}: color-mix(in srgb, #f59e0b 8%, transparent); }
+  &[data-verdict='No-Go']             { #{$prop}: color-mix(in srgb, #dc2626 7%, transparent); }
+  &[data-verdict='Insufficient Data'] { #{$prop}: var(--color-subtle, #f8fafc); }
+}
+
+@mixin tier-color($prop: color) {
+  &[data-tier='good']     { #{$prop}: var(--color-success, #16a34a); }
+  &[data-tier='warning']  { #{$prop}: var(--color-warning, #d97706); }
+  &[data-tier='critical'] { #{$prop}: var(--color-danger-strong, #dc2626); }
+  &[data-tier='neutral']  { #{$prop}: var(--color-text-muted, #94a3b8); }
+}
+
 // ── Page root ─────────────────────────────────────────────────────────────────
 .page {
   max-width: 1080px;
@@ -93,22 +126,33 @@
 }
 
 // ── Verdict hero ──────────────────────────────────────────────────────────────
+// Colors resolved from data-verdict on the .verdictHero root (CLAUDE.md §28);
+// descendants (.verdictSlab/.verdictBody/.verdictLabel) pick it up via an
+// ancestor selector since they're genuine DOM descendants.
 .verdictHero {
   display: flex;
   align-items: stretch;
   border-radius: var(--radius-2xl, 16px);
   overflow: hidden;
-  border: 1px solid var(--v-border, var(--color-border, #e2e8f0));
+  border: 1px solid var(--color-border, #e2e8f0);
   margin-bottom: 28px;
   animation: fadeUp 320ms 60ms ease both;
+
+  &[data-verdict='Go']                { border-color: color-mix(in srgb, #22c55e 22%, transparent); }
+  &[data-verdict='Conditional Go']    { border-color: color-mix(in srgb, #f59e0b 22%, transparent); }
+  &[data-verdict='No-Go']             { border-color: color-mix(in srgb, #dc2626 22%, transparent); }
 }
 
 // Left thick accent slab
 .verdictSlab {
   width: 8px;
   flex-shrink: 0;
-  // EXCEPTION: bg driven by verdict value
-  background: var(--v-accent, var(--color-border, #e2e8f0));
+  background: var(--color-border, #e2e8f0);
+
+  [data-verdict='Go'] &             { background: #16a34a; }
+  [data-verdict='Conditional Go'] & { background: #d97706; }
+  [data-verdict='No-Go'] &          { background: #dc2626; }
+  [data-verdict='Insufficient Data'] & { background: #64748b; }
 }
 
 .verdictBody {
@@ -117,9 +161,13 @@
   align-items: center;
   gap: 20px;
   padding: 22px 24px;
-  // EXCEPTION: bg driven by verdict
-  background: var(--v-bg, var(--color-surface, #fff));
+  background: var(--color-surface, #fff);
   flex-wrap: wrap;
+
+  [data-verdict='Go'] &             { background: color-mix(in srgb, #22c55e 8%, transparent); }
+  [data-verdict='Conditional Go'] & { background: color-mix(in srgb, #f59e0b 8%, transparent); }
+  [data-verdict='No-Go'] &          { background: color-mix(in srgb, #dc2626 7%, transparent); }
+  [data-verdict='Insufficient Data'] & { background: var(--color-subtle, #f8fafc); }
 }
 
 .verdictLeft { flex: 1; min-width: 220px; }
@@ -135,8 +183,12 @@
   font-size: 20px;
   font-weight: 900;
   letter-spacing: -0.02em;
-  // EXCEPTION: color driven by verdict
-  color: var(--v-accent, var(--color-text-primary, #0f172a));
+  color: var(--color-text-primary, #0f172a);
+
+  [data-verdict='Go'] &             { color: #16a34a; }
+  [data-verdict='Conditional Go'] & { color: #d97706; }
+  [data-verdict='No-Go'] &          { color: #dc2626; }
+  [data-verdict='Insufficient Data'] & { color: #64748b; }
 }
 
 .verdictBadge {
@@ -146,9 +198,9 @@
   letter-spacing: 0.07em;
   padding: 4px 10px;
   border-radius: var(--radius-full, 9999px);
-  // EXCEPTION: bg/color driven by verdict
-  background: var(--v-accent, var(--color-border));
+  background: var(--color-border);
   color: #fff;
+  @include verdict-color(background);
 }
 
 .verdictExplain {
@@ -182,8 +234,8 @@
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 1;
-  // EXCEPTION: color driven by stat type
-  color: var(--stat-color, var(--color-text-primary, #0f172a));
+  color: var(--color-text-primary, #0f172a);
+  @include tier-color;
 }
 
 .verdictStatLbl {
@@ -209,7 +261,7 @@
 .checkCard {
   background: var(--color-surface, #fff);
   border: 1px solid var(--color-border, #e2e8f0);
-  border-left: 4px solid var(--c-accent, var(--color-border, #e2e8f0));
+  border-left: 4px solid var(--color-border, #e2e8f0);
   border-radius: var(--radius-xl, 12px);
   padding: 18px 20px;
   display: flex;
@@ -217,6 +269,7 @@
   gap: 0;
   animation: fadeUp 320ms var(--c-delay, 0ms) ease both;
   transition: box-shadow var(--transition-fast, 120ms ease);
+  @include status-color(border-left-color);
 
   &:hover {
     box-shadow: 0 2px 10px rgb(0 0 0 / 6%);
@@ -230,6 +283,8 @@
   margin-bottom: 10px;
 }
 
+// color (for the check/warn/x SVG's stroke="currentColor") and bg/border are
+// resolved from data-status.
 .checkIconCircle {
   width: 32px;
   height: 32px;
@@ -238,9 +293,20 @@
   place-items: center;
   flex-shrink: 0;
   animation: iconPop 380ms var(--c-delay, 0ms) ease both;
-  // EXCEPTION: bg and border driven by pass/warn/fail status
-  background: var(--c-icon-bg);
-  border: 2px solid var(--c-icon-border);
+  background: #16a34a;
+  border: 2px solid transparent;
+
+  &[data-status='pass'] { background: #16a34a; border-color: transparent; }
+  &[data-status='warn'] {
+    background: color-mix(in srgb, #f59e0b 12%, transparent);
+    border-color: #f59e0b;
+    color: #d97706;
+  }
+  &[data-status='fail'] {
+    background: color-mix(in srgb, #dc2626 10%, transparent);
+    border-color: #dc2626;
+    color: #dc2626;
+  }
 }
 
 .checkCardMeta { flex: 1; min-width: 0; }
@@ -256,9 +322,12 @@
 .checkCardResult {
   font-size: 12px;
   font-weight: 600;
-  // EXCEPTION: color driven by status
-  color: var(--c-accent, var(--color-text-secondary, #64748b));
+  color: var(--color-text-secondary, #64748b);
   margin: 0;
+
+  [data-status='pass'] & { color: #16a34a; }
+  [data-status='warn'] & { color: #d97706; }
+  [data-status='fail'] & { color: #dc2626; }
 }
 
 // Divider inside card
@@ -300,8 +369,10 @@
   margin-top: 10px;
   padding: 10px 12px;
   border-radius: var(--radius-lg, 10px);
-  // EXCEPTION: bg driven by status
-  background: var(--c-action-bg, var(--color-subtle, #f8fafc));
+  background: var(--color-subtle, #f8fafc);
+
+  [data-status='warn'] & { background: color-mix(in srgb, #f59e0b 8%, transparent); }
+  [data-status='fail'] & { background: color-mix(in srgb, #dc2626 7%, transparent); }
 }
 
 .checkCardActionLabel {
@@ -312,8 +383,10 @@
   white-space: nowrap;
   padding-top: 2px;
   flex-shrink: 0;
-  // EXCEPTION: color driven by status
-  color: var(--c-accent, var(--color-text-muted, #94a3b8));
+  color: var(--color-text-muted, #94a3b8);
+
+  [data-status='warn'] & { color: #d97706; }
+  [data-status='fail'] & { color: #dc2626; }
 }
 
 .checkCardActionText {
@@ -333,9 +406,12 @@
   border-radius: var(--radius-full, 9999px);
   white-space: nowrap;
   flex-shrink: 0;
-  // EXCEPTION: bg/color driven by pass/warn/fail
-  background: var(--c-chip-bg);
-  color: var(--c-chip-fg);
+  background: var(--color-subtle, #f1f5f9);
+  color: var(--color-text-secondary, #475569);
+
+  &[data-status='pass'] { background: color-mix(in srgb, #22c55e 12%, transparent); color: #15803d; }
+  &[data-status='warn'] { background: color-mix(in srgb, #f59e0b 12%, transparent); color: #92400e; }
+  &[data-status='fail'] { background: color-mix(in srgb, #dc2626 10%, transparent); color: #b91c1c; }
 }
 
 // ── Version layout (has fix-version data) ─────────────────────────────────────
@@ -384,10 +460,15 @@
 }
 
 .vBtnActive {
-  // EXCEPTION: border/bg driven by verdict
-  border-color: var(--v-accent, var(--color-primary, #2563eb)) !important;
-  background: var(--v-bg, var(--color-surface, #fff));
+  border-color: var(--color-primary, #2563eb) !important;
+  background: var(--color-surface, #fff);
   box-shadow: 0 2px 10px rgb(0 0 0 / 8%);
+
+  &[data-verdict='Go']                { border-color: #16a34a !important; }
+  &[data-verdict='Conditional Go']    { border-color: #d97706 !important; }
+  &[data-verdict='No-Go']             { border-color: #dc2626 !important; }
+  &[data-verdict='Insufficient Data'] { border-color: #64748b !important; }
+  @include verdict-wash;
 }
 
 .vBtnTop {
@@ -410,9 +491,13 @@
   font-weight: 800;
   padding: 3px 8px;
   border-radius: var(--radius-full, 9999px);
-  // EXCEPTION: bg/color driven by verdict
-  background: var(--v-bg);
-  color: var(--v-accent);
+  background: var(--color-subtle, #f1f5f9);
+  color: var(--color-text-secondary, #475569);
+
+  [data-verdict='Go'] &                { background: color-mix(in srgb, #22c55e 8%, transparent); color: #16a34a; }
+  [data-verdict='Conditional Go'] &    { background: color-mix(in srgb, #f59e0b 8%, transparent); color: #d97706; }
+  [data-verdict='No-Go'] &             { background: color-mix(in srgb, #dc2626 7%, transparent); color: #dc2626; }
+  [data-verdict='Insufficient Data'] & { background: var(--color-subtle, #f8fafc); color: #64748b; }
 }
 
 .vMeta {
@@ -436,10 +521,11 @@
 .vBarFill {
   height: 100%;
   border-radius: var(--radius-full, 9999px);
-  // EXCEPTION: width and color driven by completion + verdict
+  // EXCEPTION: width is genuinely runtime-computed (§14.2); color is data-verdict.
   width: var(--bar-w, 0%);
-  background: var(--v-accent, var(--color-primary, #2563eb));
+  background: var(--color-primary, #2563eb);
   animation: barGrow 600ms ease both;
+  @include verdict-color(background);
 }
 
 // Right detail panel
@@ -454,9 +540,10 @@
 .detailHeader {
   padding: 22px 24px 18px;
   border-bottom: 1px solid var(--color-border, #e2e8f0);
-  // EXCEPTION: bg driven by verdict
-  background: var(--v-bg, var(--color-surface, #fff));
-  border-top: 4px solid var(--v-accent, var(--color-border, #e2e8f0));
+  background: var(--color-surface, #fff);
+  border-top: 4px solid var(--color-border, #e2e8f0);
+  @include verdict-wash;
+  @include verdict-color(border-top-color);
 }
 
 .detailTitleRow {
@@ -503,8 +590,8 @@
   letter-spacing: -0.03em;
   line-height: 1;
   margin-bottom: 4px;
-  // EXCEPTION: color driven by stat meaning
-  color: var(--stat-color, var(--color-text-primary, #0f172a));
+  color: var(--color-text-primary, #0f172a);
+  @include tier-color;
 }
 
 .dStatLabel {
@@ -543,8 +630,8 @@
 .progressRowPct {
   font-size: 14px;
   font-weight: 900;
-  // EXCEPTION: color driven by verdict
-  color: var(--v-accent, var(--color-primary, #2563eb));
+  color: var(--color-primary, #2563eb);
+  @include verdict-color;
 }
 
 .progressTrack {
@@ -557,10 +644,11 @@
 .progressFill {
   height: 100%;
   border-radius: var(--radius-full, 9999px);
-  // EXCEPTION: width and color driven by completion + verdict
+  // EXCEPTION: width is genuinely runtime-computed (§14.2); color is data-verdict.
   width: var(--bar-w, 0%);
-  background: var(--v-accent, var(--color-primary, #2563eb));
+  background: var(--color-primary, #2563eb);
   animation: barGrow 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  @include verdict-color(background);
 }
 
 .progressHint {
@@ -594,6 +682,8 @@
 
 .gateIconWrap { display: flex; justify-content: center; padding-top: 1px; }
 
+// color (for the SVG's stroke="currentColor") and bg/border resolved from
+// data-status, same palette as .checkIconCircle.
 .gateIcon {
   width: 28px;
   height: 28px;
@@ -602,9 +692,20 @@
   place-items: center;
   flex-shrink: 0;
   animation: iconPop 380ms var(--g-delay, 0ms) ease both;
-  // EXCEPTION: bg/border driven by status
-  background: var(--g-icon-bg);
-  border: 2px solid var(--g-icon-border);
+  background: #16a34a;
+  border: 2px solid transparent;
+
+  &[data-status='pass'] { background: #16a34a; border-color: transparent; }
+  &[data-status='warn'] {
+    background: color-mix(in srgb, #f59e0b 12%, transparent);
+    border-color: #f59e0b;
+    color: #d97706;
+  }
+  &[data-status='fail'] {
+    background: color-mix(in srgb, #dc2626 10%, transparent);
+    border-color: #dc2626;
+    color: #dc2626;
+  }
 }
 
 .gateTitle {

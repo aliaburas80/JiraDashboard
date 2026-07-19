@@ -15,15 +15,6 @@ import type { ReleaseReadinessSummary, ReleaseReadinessResult, ReleaseVerdict } 
 import type { DashboardMetrics } from '@/types/metrics';
 import styles from './page.module.scss';
 
-// ── Verdict theme (CSS custom property values — data-driven) ───────────────────
-// EXCEPTION: accent/bg/border are data-driven from verdict value
-const V: Record<ReleaseVerdict, { accent: string; bg: string; border: string }> = {
-  'Go':               { accent: '#16a34a', bg: 'color-mix(in srgb,#22c55e 8%,transparent)',  border: 'color-mix(in srgb,#22c55e 22%,transparent)' },
-  'Conditional Go':   { accent: '#d97706', bg: 'color-mix(in srgb,#f59e0b 8%,transparent)',  border: 'color-mix(in srgb,#f59e0b 22%,transparent)' },
-  'No-Go':            { accent: '#dc2626', bg: 'color-mix(in srgb,#dc2626 7%,transparent)',  border: 'color-mix(in srgb,#dc2626 22%,transparent)' },
-  'Insufficient Data':{ accent: '#64748b', bg: 'var(--color-subtle,#f8fafc)',                border: 'var(--color-border,#e2e8f0)' },
-};
-
 const VERDICT_TONE: Record<ReleaseVerdict, 'success' | 'warning' | 'critical' | 'neutral'> = {
   'Go': 'success', 'Conditional Go': 'warning', 'No-Go': 'critical', 'Insufficient Data': 'neutral',
 };
@@ -37,73 +28,13 @@ const VERDICT_MEANING: Record<ReleaseVerdict, string> = {
 };
 
 type CheckStatus = 'pass' | 'warn' | 'fail';
+type Tier = 'good' | 'warning' | 'critical' | 'neutral';
 
-// EXCEPTION: icon colors are data-driven from check status
-const STATUS_CSS: Record<CheckStatus, { iconBg: string; iconBorder: string; accent: string; chipBg: string; chipFg: string; actionBg: string; label: string }> = {
-  pass: {
-    iconBg:     '#16a34a',
-    iconBorder: 'transparent',
-    accent:     '#16a34a',
-    chipBg:     'color-mix(in srgb,#22c55e 12%,transparent)',
-    chipFg:     '#15803d',
-    actionBg:   'transparent',
-    label:      'Pass',
-  },
-  warn: {
-    iconBg:     'color-mix(in srgb,#f59e0b 12%,transparent)',
-    iconBorder: '#f59e0b',
-    accent:     '#d97706',
-    chipBg:     'color-mix(in srgb,#f59e0b 12%,transparent)',
-    chipFg:     '#92400e',
-    actionBg:   'color-mix(in srgb,#f59e0b 8%,transparent)',
-    label:      'Warning',
-  },
-  fail: {
-    iconBg:     'color-mix(in srgb,#dc2626 10%,transparent)',
-    iconBorder: '#dc2626',
-    accent:     '#dc2626',
-    chipBg:     'color-mix(in srgb,#dc2626 10%,transparent)',
-    chipFg:     '#b91c1c',
-    actionBg:   'color-mix(in srgb,#dc2626 7%,transparent)',
-    label:      'Failed',
-  },
+// Colors for both ReleaseVerdict and CheckStatus are resolved in SCSS from
+// data-verdict / data-status (CLAUDE.md §28); this only supplies the label.
+const STATUS_LABEL: Record<CheckStatus, string> = {
+  pass: 'Pass', warn: 'Warning', fail: 'Failed',
 };
-
-// ── Check icon ────────────────────────────────────────────────────────────────
-function StatusIcon({ status, size = 32, delay = 0, className }: {
-  status: CheckStatus; size?: number; delay?: number; className?: string;
-}) {
-  const s = STATUS_CSS[status];
-  return (
-    <div
-      className={className}
-      style={{
-        width: size, height: size, borderRadius: '50%',
-        display: 'grid', placeItems: 'center', flexShrink: 0,
-        background: s.iconBg, border: `2px solid ${s.iconBorder}`,
-        animation: `iconPop 380ms ${delay}ms ease both`,
-      } as CSSProperties}
-      aria-hidden="true"
-    >
-      {status === 'pass' && (
-        <svg width={size * 0.4} height={size * 0.4} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      )}
-      {status === 'warn' && (
-        <svg width={size * 0.38} height={size * 0.38} viewBox="0 0 24 24" fill="none" stroke={s.accent} strokeWidth="2.8">
-          <path strokeLinecap="round" d="M12 9v4M12 17h.01" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-        </svg>
-      )}
-      {status === 'fail' && (
-        <svg width={size * 0.35} height={size * 0.35} viewBox="0 0 24 24" fill="none" stroke={s.accent} strokeWidth="3">
-          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      )}
-    </div>
-  );
-}
 
 // ── Check card (global checklist) ─────────────────────────────────────────────
 interface CheckCardProps {
@@ -116,35 +47,27 @@ interface CheckCardProps {
 }
 
 function CheckCard({ status, title, result, why, action, delay = 0 }: CheckCardProps) {
-  const s = STATUS_CSS[status];
   return (
     <div
       className={styles.checkCard}
-      style={{
-        '--c-accent':       s.accent,
-        '--c-icon-bg':      s.iconBg,
-        '--c-icon-border':  s.iconBorder,
-        '--c-chip-bg':      s.chipBg,
-        '--c-chip-fg':      s.chipFg,
-        '--c-action-bg':    s.actionBg,
-        '--c-delay':        `${delay}ms`,
-      } as CSSProperties}
+      data-status={status}
+      style={{ '--c-delay': `${delay}ms` } as CSSProperties}
     >
       <div className={styles.checkCardTop}>
-        <div className={styles.checkIconCircle} aria-hidden="true">
+        <div className={styles.checkIconCircle} data-status={status} aria-hidden="true">
           {status === 'pass' && (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           )}
           {status === 'warn' && (
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={s.accent} strokeWidth="2.8">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8">
               <path strokeLinecap="round" d="M12 9v4M12 17h.01" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             </svg>
           )}
           {status === 'fail' && (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={s.accent} strokeWidth="3">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           )}
@@ -155,7 +78,7 @@ function CheckCard({ status, title, result, why, action, delay = 0 }: CheckCardP
           <p className={styles.checkCardResult}>{result}</p>
         </div>
 
-        <span className={styles.statusChip}>{s.label}</span>
+        <span className={styles.statusChip} data-status={status}>{STATUS_LABEL[status]}</span>
       </div>
 
       <div className={styles.checkCardDivider} />
@@ -213,8 +136,6 @@ export default function ReleaseReadinessPage() {
   const overall: ReleaseVerdict = summary.noGoCount > 0 ? 'No-Go'
     : summary.conditionalCount > 0 ? 'Conditional Go'
     : summary.goCount > 0 ? 'Go' : 'Insufficient Data';
-
-  const vt = V[overall];
 
   // ── 7 global checks with full justification + action ────────────────────────
   const globalChecks: CheckCardProps[] = [
@@ -321,16 +242,13 @@ export default function ReleaseReadinessPage() {
         </div>
 
         {/* ── Verdict hero ── */}
-        <div
-          className={styles.verdictHero}
-          style={{ '--v-accent': vt.accent, '--v-bg': vt.bg, '--v-border': vt.border } as CSSProperties}
-        >
+        <div className={styles.verdictHero} data-verdict={overall}>
           <div className={styles.verdictSlab} />
           <div className={styles.verdictBody}>
             <div className={styles.verdictLeft}>
               <div className={styles.verdictDecision}>
                 <span className={styles.verdictLabel}>{overall}</span>
-                <span className={styles.verdictBadge} style={{ background: vt.accent } as CSSProperties}>
+                <span className={styles.verdictBadge} data-verdict={overall}>
                   {overall === 'Go' ? 'Release' : overall === 'No-Go' ? 'Blocked' : 'Review'}
                 </span>
               </div>
@@ -339,13 +257,13 @@ export default function ReleaseReadinessPage() {
 
             {/* Summary counts */}
             <div id="tour-section-release-readiness-2" className={styles.verdictStats}>
-              {[
-                { val: passCount, lbl: 'Passed',   color: '#16a34a' },
-                { val: warnCount, lbl: 'Warnings',  color: '#d97706' },
-                { val: failCount, lbl: 'Failed',    color: failCount > 0 ? '#dc2626' : '#94a3b8' },
-              ].map(s => (
+              {([
+                { val: passCount, lbl: 'Passed',   tier: 'good' },
+                { val: warnCount, lbl: 'Warnings',  tier: 'warning' },
+                { val: failCount, lbl: 'Failed',    tier: failCount > 0 ? 'critical' : 'neutral' },
+              ] as { val: number; lbl: string; tier: Tier }[]).map(s => (
                 <div key={s.lbl} className={styles.verdictStat}>
-                  <span className={styles.verdictStatVal} style={{ '--stat-color': s.color } as CSSProperties}>{s.val}</span>
+                  <span className={styles.verdictStatVal} data-tier={s.tier}>{s.val}</span>
                   <span className={styles.verdictStatLbl}>{s.lbl}</span>
                 </div>
               ))}
@@ -378,7 +296,6 @@ export default function ReleaseReadinessPage() {
               <div className={styles.vList}>
                 {summary.releases.map(r => {
                   const isActive = selected?.version === r.version;
-                  const rv = V[r.verdict];
                   return (
                     <button
                       key={r.version}
@@ -386,7 +303,7 @@ export default function ReleaseReadinessPage() {
                       onClick={() => setSelected(r)}
                       aria-pressed={isActive}
                       className={clsx(styles.vBtn, isActive && styles.vBtnActive)}
-                      style={{ '--v-accent': rv.accent, '--v-bg': rv.bg } as CSSProperties}
+                      data-verdict={r.verdict}
                     >
                       <div className={styles.vBtnTop}>
                         <span className={styles.vBtnName}>{r.version}</span>
@@ -400,7 +317,8 @@ export default function ReleaseReadinessPage() {
                       <div className={styles.vBar}>
                         <div
                           className={styles.vBarFill}
-                          style={{ '--bar-w': `${r.completionPct}%`, '--v-accent': rv.accent } as CSSProperties}
+                          data-verdict={r.verdict}
+                          style={{ '--bar-w': `${r.completionPct}%` } as CSSProperties}
                         />
                       </div>
                     </button>
@@ -411,15 +329,11 @@ export default function ReleaseReadinessPage() {
 
             {/* Right: release detail */}
             {selected ? (() => {
-              const sv = V[selected.verdict];
               return (
                 <div className={styles.detail}>
 
                   {/* Header */}
-                  <div
-                    className={styles.detailHeader}
-                    style={{ '--v-accent': sv.accent, '--v-bg': sv.bg } as CSSProperties}
-                  >
+                  <div className={styles.detailHeader} data-verdict={selected.verdict}>
                     <div className={styles.detailTitleRow}>
                       <h2 className={styles.detailTitle}>{selected.version}</h2>
                       <DCStatusChip label={selected.verdict} tone={VERDICT_TONE[selected.verdict]} size="md" />
@@ -429,14 +343,14 @@ export default function ReleaseReadinessPage() {
 
                   {/* Stats */}
                   <div className={styles.detailStats}>
-                    {[
-                      { label: 'Total scope', val: selected.scope,     color: 'var(--color-text-primary,#0f172a)', sub: 'issues' },
-                      { label: 'Completed',   val: selected.completed,  color: '#16a34a',                          sub: `${selected.completionPct}%` },
-                      { label: 'Remaining',   val: selected.open,       color: selected.open > 0 ? '#d97706' : '#94a3b8', sub: 'open' },
-                      { label: 'Blockers',    val: selected.blockers,   color: selected.blockers > 0 ? '#dc2626' : '#94a3b8', sub: selected.blockers > 0 ? 'blocking' : 'none' },
-                    ].map(s => (
+                    {([
+                      { label: 'Total scope', val: selected.scope,     tier: 'neutral',                                   sub: 'issues' },
+                      { label: 'Completed',   val: selected.completed, tier: 'good',                                      sub: `${selected.completionPct}%` },
+                      { label: 'Remaining',   val: selected.open,      tier: selected.open > 0 ? 'warning' : 'neutral',    sub: 'open' },
+                      { label: 'Blockers',    val: selected.blockers,  tier: selected.blockers > 0 ? 'critical' : 'neutral', sub: selected.blockers > 0 ? 'blocking' : 'none' },
+                    ] as { label: string; val: number; tier: Tier; sub: string }[]).map(s => (
                       <div key={s.label} className={styles.dStat}>
-                        <p className={styles.dStatVal} style={{ '--stat-color': s.color } as CSSProperties}>{s.val}</p>
+                        <p className={styles.dStatVal} data-tier={s.tier}>{s.val}</p>
                         <p className={styles.dStatLabel}>{s.label}</p>
                         <p className={styles.dStatSub}>{s.sub}</p>
                       </div>
@@ -447,14 +361,15 @@ export default function ReleaseReadinessPage() {
                   <div className={styles.progressSection}>
                     <div className={styles.progressRow}>
                       <span className={styles.progressRowLabel}>Completion progress</span>
-                      <span className={styles.progressRowPct} style={{ '--v-accent': sv.accent } as CSSProperties}>
+                      <span className={styles.progressRowPct} data-verdict={selected.verdict}>
                         {selected.completionPct}% of {selected.scope} issues
                       </span>
                     </div>
                     <div className={styles.progressTrack}>
                       <div
                         className={styles.progressFill}
-                        style={{ '--bar-w': `${selected.completionPct}%`, '--v-accent': sv.accent } as CSSProperties}
+                        data-verdict={selected.verdict}
+                        style={{ '--bar-w': `${selected.completionPct}%` } as CSSProperties}
                       />
                     </div>
                     <p className={styles.progressHint}>
@@ -469,19 +384,19 @@ export default function ReleaseReadinessPage() {
                     <p className={styles.gatesSectionHead}>Quality Gates — {selected.checklist.filter(i => i.passed).length} of {selected.checklist.length} passed</p>
                     <div>
                       {selected.checklist.map((item, i) => {
-                        const gs   = gateStatus(item);
-                        const gsc  = STATUS_CSS[gs];
+                        const gs = gateStatus(item);
                         return (
                           <div key={item.id} className={styles.gateItem}>
                             <div className={styles.gateIconWrap}>
                               <div
                                 className={styles.gateIcon}
-                                style={{ '--g-icon-bg': gsc.iconBg, '--g-icon-border': gsc.iconBorder, '--g-delay': `${i * 50}ms` } as CSSProperties}
+                                data-status={gs}
+                                style={{ '--g-delay': `${i * 50}ms` } as CSSProperties}
                                 aria-hidden="true"
                               >
                                 {gs === 'pass' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
-                                {gs === 'warn' && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={gsc.accent} strokeWidth="2.8"><path strokeLinecap="round" d="M12 9v4M12 17h.01" /><path strokeLinecap="round" strokeLinejoin="round" d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>}
-                                {gs === 'fail' && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={gsc.accent} strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                                {gs === 'warn' && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8"><path strokeLinecap="round" d="M12 9v4M12 17h.01" /><path strokeLinecap="round" strokeLinejoin="round" d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>}
+                                {gs === 'fail' && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
                               </div>
                             </div>
                             <div>
@@ -491,8 +406,8 @@ export default function ReleaseReadinessPage() {
                                 <span className={styles.gateBlockChip}>Blocking release</span>
                               )}
                             </div>
-                            <span className={styles.statusChip} style={{ '--c-chip-bg': gsc.chipBg, '--c-chip-fg': gsc.chipFg } as CSSProperties}>
-                              {gsc.label}
+                            <span className={styles.statusChip} data-status={gs}>
+                              {STATUS_LABEL[gs]}
                             </span>
                           </div>
                         );
