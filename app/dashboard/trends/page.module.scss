@@ -1,0 +1,331 @@
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
+// STYLE-03 (2026-07-19): converted from inline styles to SCSS Module +
+// design tokens per CLAUDE.md §13-18/§60. No behavior change.
+
+.page {
+  padding: 0 var(--space-8, 28px) var(--space-12, 48px);
+}
+
+// ── KPI strip ─────────────────────────────────────────────────────────────────
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3, 10px);
+  margin-bottom: var(--space-5, 20px);
+}
+
+.kpiCard {
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  background: var(--color-subtle);
+  border: 1px solid var(--color-border);
+
+  &[data-kpi='primary']  { background: var(--color-primary-soft); border-color: var(--color-primary-border); }
+  &[data-kpi='success']  { background: var(--color-success-soft); border-color: var(--color-success-border); }
+  &[data-kpi='warning']  { background: var(--color-warning-soft); border-color: var(--color-warning-border); }
+  &[data-kpi='critical'] { background: var(--color-danger-soft);  border-color: var(--color-danger-border); }
+}
+
+.kpiLabel {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-1, 4px);
+}
+
+.kpiValue {
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  font-family: var(--font-mono);
+  margin: 0;
+  color: var(--color-text-secondary);
+
+  &[data-kpi='primary']  { color: var(--color-primary); }
+  &[data-kpi='success']  { color: var(--color-success); }
+  &[data-kpi='warning']  { color: var(--color-warning); }
+  &[data-kpi='critical'] { color: var(--color-danger-strong); }
+}
+
+// ── Sprint velocity mini cards ────────────────────────────────────────────────
+
+.velocityGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4, 16px);
+}
+
+.velocityCard {
+  padding: 12px;
+  background: var(--color-subtle);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.velocityLabel {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-1, 4px);
+}
+
+.velocityValue {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+// ── Sprint history ─────────────────────────────────────────────────────────────
+
+.sprintList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+
+.sprintHeadRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-2, 6px);
+  font-size: var(--text-base);
+}
+
+.sprintName {
+  color: var(--color-text-secondary);
+  font-weight: 400;
+
+  &[data-latest='true'] { font-weight: 700; }
+}
+
+.sprintStats {
+  display: flex;
+  gap: var(--space-3, 12px);
+  color: var(--color-text-muted);
+}
+
+.sprintBlocked {
+  color: var(--color-danger-strong);
+}
+
+.sprintCompletion {
+  font-family: var(--font-mono);
+  color: var(--color-warning);
+
+  &[data-good='true'] { color: var(--color-success); }
+}
+
+.sprintTrack {
+  height: 8px;
+  border-radius: var(--radius-xs);
+  background: var(--color-subtle);
+  overflow: hidden;
+}
+
+// EXCEPTION (CLAUDE.md Rule 1): --bar-width/--bar-delay are per-sprint
+// runtime completion percentage and stagger index. Color comes from
+// data-good, not this variable.
+.sprintFill {
+  height: 100%;
+  border-radius: var(--radius-xs);
+  width: var(--bar-width, 0%);
+  animation: barFill 800ms ease-out both;
+  animation-delay: var(--bar-delay, 0ms);
+  transform-origin: left center;
+  background: var(--color-warning);
+
+  &[data-good='true'] { background: var(--color-success); }
+
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+// ── Quarter chart ──────────────────────────────────────────────────────────────
+
+.quarterList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+
+.quarterRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 10px);
+  margin-bottom: var(--space-2, 6px);
+}
+
+.quarterLabel {
+  width: 50px;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+
+  &[data-latest='true'] { color: var(--color-primary); }
+}
+
+.quarterTrack {
+  flex: 1;
+  height: 20px;
+  border-radius: var(--radius-xs);
+  background: var(--color-subtle);
+  overflow: hidden;
+  position: relative;
+}
+
+// EXCEPTION (CLAUDE.md Rule 1): --bar-width/--bar-delay are this quarter's
+// runtime share of the chart's max and its stagger index.
+.quarterFillTotal {
+  height: 100%;
+  border-radius: var(--radius-xs);
+  width: var(--bar-width, 0%);
+  animation: barFill 700ms ease-out both;
+  animation-delay: var(--bar-delay, 0ms);
+  transform-origin: left center;
+  opacity: 0.8;
+  background: var(--color-text-muted);
+
+  &[data-latest='true'] { background: var(--color-primary); }
+
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+.quarterFillDone {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: var(--radius-xs);
+  width: var(--bar-width, 0%);
+  animation: barFill 900ms ease-out both;
+  animation-delay: var(--bar-delay, 0ms);
+  transform-origin: left center;
+  opacity: 0.6;
+  background: var(--color-success);
+
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+.quarterMeta {
+  width: 110px;
+  flex-shrink: 0;
+  display: flex;
+  gap: var(--space-2, 8px);
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.quarterCount {
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+}
+
+.quarterPctBadge {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+
+  &[data-good='true'] { background: var(--color-success-soft); color: var(--color-success); }
+}
+
+.chartLegend {
+  display: flex;
+  gap: var(--space-4, 16px);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1, 4px);
+  padding-top: var(--space-2, 8px);
+  border-top: 1px solid var(--color-subtle);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 5px);
+}
+
+.legendSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-xs);
+  background: var(--color-text-muted);
+  opacity: 0.8;
+
+  &[data-swatch='done'] { background: var(--color-success); opacity: 0.6; }
+}
+
+// ── Quarter table ──────────────────────────────────────────────────────────────
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.dataTable {
+  width: 100%;
+  font-size: var(--text-base);
+  border-collapse: collapse;
+}
+
+.tableHeadRow {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.tableRow {
+  border-bottom: 1px solid var(--color-subtle);
+}
+
+.cellQuarter {
+  padding: 8px 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+
+  &[data-latest='true'] { color: var(--color-primary); }
+}
+
+.cellIssues {
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+}
+
+.cellDone {
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  color: var(--color-success);
+}
+
+.cellCompletion {
+  padding: 8px 12px;
+}
+
+.completionBadge {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  color: var(--color-danger-strong);
+  background: var(--color-danger-soft);
+
+  &[data-tier='good']    { color: var(--color-success); background: var(--color-success-soft); }
+  &[data-tier='fair']    { color: var(--color-warning); background: var(--color-warning-soft); }
+}
