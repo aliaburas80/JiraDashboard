@@ -16,6 +16,32 @@
   to   { stroke-dashoffset: var(--ring-offset, 0); }
 }
 
+// ── Tier/band/status color mixins ─────────────────────────────────────────────
+// Shared by every element whose color is resolved from a good/warning/critical
+// data-tier, a HealthBand data-band, or a work-status data-status (CLAUDE.md
+// §28) — used across a dozen+ call sites in this file (Rule of Three, §5.4).
+@mixin tier-color($prop: color) {
+  &[data-tier='good']     { #{$prop}: var(--color-success, #16a34a); }
+  &[data-tier='warning']  { #{$prop}: var(--color-warning, #d97706); }
+  &[data-tier='critical'] { #{$prop}: var(--color-danger-strong, #dc2626); }
+  &[data-tier='info']     { #{$prop}: var(--dc-purple, #7c3aed); }
+}
+
+@mixin band-color($prop: color) {
+  &[data-band='excellent'] { #{$prop}: #34d399; }
+  &[data-band='good']      { #{$prop}: #60a5fa; }
+  &[data-band='moderate']  { #{$prop}: #fbbf24; }
+  &[data-band='at-risk']   { #{$prop}: #fb923c; }
+  &[data-band='critical']  { #{$prop}: #f87171; }
+}
+
+@mixin status-color($prop: color) {
+  &[data-status='To Do']       { #{$prop}: #cbd5e1; }
+  &[data-status='In Progress'] { #{$prop}: var(--dc-purple, #7c3aed); }
+  &[data-status='Blocked']     { #{$prop}: var(--color-danger-strong, #dc2626); }
+  &[data-status='Done']        { #{$prop}: var(--color-success, #16a34a); }
+}
+
 // ── Page — dark premium canvas ────────────────────────────────────────────────
 .page {
   min-height: 100vh;
@@ -144,16 +170,24 @@
 }
 
 // ── Hero — full-bleed gradient header inside the paper ────────────────────────
+// Gradient/print colors are resolved from data-band (CLAUDE.md §28) — each
+// HealthBand gets a distinct gradient, kept page-local since no existing
+// token represents a 3-stop gradient.
 .hero {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 28px;
   padding: 36px 40px 32px;
-  // EXCEPTION: gradient driven by health band enum
-  background: var(--hero-gradient, linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%));
+  background: linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%);
   position: relative;
   overflow: hidden;
+
+  &[data-band='excellent'] { background: linear-gradient(135deg, #052e16 0%, #065f46 65%, #0d9488 100%); }
+  &[data-band='good']      { background: linear-gradient(135deg, #0f2547 0%, #1e40af 75%, #2563eb 100%); }
+  &[data-band='moderate']  { background: linear-gradient(135deg, #3f1c00 0%, #92400e 70%, #b45309 100%); }
+  &[data-band='at-risk']   { background: linear-gradient(135deg, #3b0f00 0%, #9a3412 70%, #c2410c 100%); }
+  &[data-band='critical']  { background: linear-gradient(135deg, #450a0a 0%, #991b1b 65%, #b91c1c 100%); }
 
   &::before {
     content: '';
@@ -172,10 +206,15 @@
   }
 
   @media print {
-    // EXCEPTION: print bg driven by health band
-    background: var(--hero-print-bg, #f0f4ff) !important;
-    border-bottom: 3px solid var(--hero-print-border, #bfdbfe);
+    background: #f0f4ff !important;
+    border-bottom: 3px solid #bfdbfe;
     padding: 24px;
+
+    &[data-band='excellent'] { background: #f0fdf4 !important; border-bottom-color: #86efac; }
+    &[data-band='good']      { background: #eff6ff !important; border-bottom-color: #93c5fd; }
+    &[data-band='moderate']  { background: #fffbeb !important; border-bottom-color: #fde68a; }
+    &[data-band='at-risk']   { background: #fff7ed !important; border-bottom-color: #fed7aa; }
+    &[data-band='critical']  { background: #fff1f2 !important; border-bottom-color: #fecdd3; }
 
     &::before { display: none; }
   }
@@ -250,11 +289,12 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  // EXCEPTION: border and text color driven by health band accent
-  border: 1.5px solid var(--pill-color, rgba(255,255,255,0.35));
-  color: var(--pill-color, #fff);
+  border: 1.5px solid rgba(255,255,255,0.35);
+  color: #fff;
   margin-bottom: 10px;
   animation: scaleIn 400ms 200ms ease both;
+  @include band-color(border-color);
+  @include band-color;
 
   &::before {
     content: '';
@@ -314,11 +354,13 @@
   fill: none;
   stroke-width: 12;
   stroke-linecap: round;
-  // EXCEPTION: stroke and dashoffset driven by completion %
-  stroke: var(--ring-color, #7c3aed);
+  // EXCEPTION: dasharray/dashoffset are genuinely runtime-computed (§14.2);
+  // stroke color is resolved from data-band.
+  stroke: #7c3aed;
   stroke-dasharray: var(--ring-full, 276);
   stroke-dashoffset: var(--ring-offset, 276);
   animation: ringDraw 1100ms 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  @include band-color(stroke);
 }
 
 .ringCenter {
@@ -336,8 +378,9 @@
   font-weight: 900;
   letter-spacing: -0.05em;
   line-height: 1;
-  // EXCEPTION: color driven by ring/band color (overridden to white inside .heroRight)
-  color: var(--ring-color, #7c3aed);
+  // Always rendered inside .heroRight, whose rule below (higher specificity)
+  // overrides this to white — this base value is unreachable in practice.
+  color: #7c3aed;
   animation: scaleIn 500ms 750ms ease both;
 }
 
@@ -439,8 +482,8 @@
   letter-spacing: -0.04em;
   line-height: 1;
   margin-bottom: 4px;
-  // EXCEPTION: color driven by metric health level
-  color: var(--metric-color, #1e1b4b);
+  color: #1e1b4b;
+  @include tier-color;
 }
 
 .metricSub {
@@ -479,8 +522,8 @@
   font-size: 24px;
   font-weight: 900;
   letter-spacing: -0.04em;
-  // EXCEPTION: color driven by completion level
-  color: var(--cv-color, #7c3aed);
+  color: #7c3aed;
+  @include tier-color;
 }
 
 .cvBarTrack {
@@ -494,10 +537,11 @@
 .cvBarFill {
   height: 100%;
   border-radius: 9999px;
-  // EXCEPTION: width and color driven by customer-visible progress
+  // EXCEPTION: width is genuinely runtime-computed (§14.2); color is data-tier.
   width: var(--bar-w, 0%);
-  background: var(--cv-color, #7c3aed);
+  background: #7c3aed;
   animation: barFill 900ms 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  @include tier-color(background);
 }
 
 .cvMeta {
@@ -536,14 +580,13 @@
 .epicCard {
   background: #fff;
   border: 1px solid #e8e4f8;
-  border-left: 4px solid;
-  // EXCEPTION: left accent driven by epic health
-  border-left-color: var(--epic-color, #7c3aed);
+  border-left: 4px solid #7c3aed;
   border-radius: 12px;
   padding: 16px 20px;
   margin-bottom: 10px;
   transition: box-shadow 180ms ease;
   animation: fadeUp 300ms var(--epic-delay, 0ms) ease both;
+  @include tier-color(border-left-color);
 
   &:last-child { margin-bottom: 0; }
 
@@ -574,9 +617,13 @@
   padding: 3px 9px;
   border-radius: 9999px;
   flex-shrink: 0;
-  // EXCEPTION: bg/fg driven by epic health
-  background: var(--chip-bg);
-  color: var(--chip-fg);
+  background: var(--color-subtle, #f1f5f9);
+  color: var(--color-text-secondary, #475569);
+  @include tier-color;
+
+  &[data-tier='good']     { background: var(--color-success-soft); }
+  &[data-tier='warning']  { background: var(--color-warning-soft); }
+  &[data-tier='critical'] { background: var(--color-danger-soft); }
 }
 
 .epicPct {
@@ -584,8 +631,8 @@
   font-weight: 900;
   letter-spacing: -0.03em;
   flex-shrink: 0;
-  // EXCEPTION: color driven by epic health
-  color: var(--epic-color, #7c3aed);
+  color: #7c3aed;
+  @include tier-color;
 }
 
 .epicBarTrack {
@@ -599,10 +646,11 @@
 .epicBarFill {
   height: 100%;
   border-radius: 9999px;
-  // EXCEPTION: width and color driven by epic progress + health
+  // EXCEPTION: width is genuinely runtime-computed (§14.2); color is data-tier.
   width: var(--bar-w, 0%);
-  background: var(--epic-color, #7c3aed);
+  background: #7c3aed;
   animation: barFill 750ms var(--epic-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+  @include tier-color(background);
 }
 
 .epicMeta {
@@ -821,12 +869,14 @@
 }
 
 .distSeg {
-  // EXCEPTION: flex share and color driven by status distribution data
+  // EXCEPTION: flex share is genuinely runtime-computed (§14.2); color is
+  // resolved from data-status.
   flex: var(--seg-flex, 1);
-  background: var(--seg-color, #94a3b8);
+  background: #94a3b8;
   height: 100%;
   border-radius: 9999px;
   min-width: 5px;
+  @include status-color(background);
 }
 
 .distLegend {
@@ -849,8 +899,8 @@
   height: 10px;
   border-radius: 3px;
   flex-shrink: 0;
-  // EXCEPTION: color driven by status category
-  background: var(--swatch-color, #94a3b8);
+  background: #94a3b8;
+  @include status-color(background);
 }
 
 .distLabel {
@@ -886,8 +936,8 @@
   letter-spacing: -0.04em;
   line-height: 1;
   margin-bottom: 4px;
-  // EXCEPTION: color driven by speed health level
-  color: var(--speed-color, #1e1b4b);
+  color: #1e1b4b;
+  @include tier-color;
 }
 
 .speedLabel {
