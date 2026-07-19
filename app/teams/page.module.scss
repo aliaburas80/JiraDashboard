@@ -1,0 +1,84 @@
+// ─── Teams page — color-bearing elements only ─────────────────────────────────
+// Tailwind utility classes on these elements (layout, spacing, typography scale,
+// borders) are left as pre-existing usage — this module only replaces the raw
+// `style=` props that drove inline colors (CLAUDE.md Rule 1).
+
+// Colors resolved from a TeamHealthBand ('Healthy' | 'Team At Risk' | 'Critical')
+// via data-band (CLAUDE.md §28) — matches src/lib/teamHealth.ts's 3-band scale.
+@mixin band-color($prop: color) {
+  &[data-band='Healthy']      { #{$prop}: var(--color-success, #16a34a); }
+  &[data-band='Team At Risk'] { #{$prop}: var(--color-warning, #f59e0b); }
+  &[data-band='Critical']     { #{$prop}: var(--color-danger-strong, #dc2626); }
+}
+
+// Shared by every element whose color is resolved from a good/warning/critical
+// data-tier (thresholds vary per caller — completion %, load %, blocked count).
+@mixin tier-color($prop: color) {
+  &[data-tier='good']     { #{$prop}: var(--color-success, #16a34a); }
+  &[data-tier='warning']  { #{$prop}: var(--color-warning, #f59e0b); }
+  &[data-tier='critical'] { #{$prop}: var(--color-danger-strong, #dc2626); }
+  &[data-tier='neutral']  { #{$prop}: var(--color-text-muted, #94a3b8); }
+  &[data-tier='primary']  { #{$prop}: var(--color-primary, #2563eb); }
+}
+
+// ── Avatar — hash-of-name rotates through a small fixed palette ────────────────
+.avatar {
+  color: #fff;
+  background: #2563eb;
+
+  &[data-avatar='0'] { background: #2563eb; }
+  &[data-avatar='1'] { background: #0891b2; }
+  &[data-avatar='2'] { background: #7c3aed; }
+  &[data-avatar='3'] { background: #16a34a; }
+  &[data-avatar='4'] { background: #f59e0b; }
+  &[data-avatar='5'] { background: #ea580c; }
+  &[data-avatar='6'] { background: #dc2626; }
+  &[data-avatar='7'] { background: #0d9488; }
+}
+
+// ── Team card ─────────────────────────────────────────────────────────────────
+.bandBadge {
+  background: var(--color-subtle, #f1f5f9);
+  @include band-color;
+
+  &[data-band='Healthy']      { background: #f0fdf4; }
+  &[data-band='Team At Risk'] { background: #fffbeb; }
+  &[data-band='Critical']     { background: #fef2f2; }
+}
+
+.healthScore {
+  color: var(--color-text-primary, #0f172a);
+  @include band-color;
+}
+
+.completionPct {
+  @include band-color;
+}
+
+.statValue {
+  @include tier-color;
+}
+
+// ── Bars (generic — MiniBar/CompareBar take color as a caller-supplied prop
+// from many non-unifiable threshold schemes; --bar-color passthrough is the
+// sanctioned exception here, same as MiniKpiCard) ──────────────────────────────
+.barFill {
+  // EXCEPTION: width and color are genuinely caller-supplied (§14.2)
+  width: var(--bar-w, 0%);
+  background: var(--bar-color, #2563eb);
+}
+
+// ── KPI strip ─────────────────────────────────────────────────────────────────
+.kpiValue {
+  color: var(--color-text-primary, #0f172a);
+  @include tier-color;
+}
+
+// ── Detail table ──────────────────────────────────────────────────────────────
+.tableScoreCell {
+  @include band-color;
+}
+
+.tableTier {
+  @include tier-color;
+}
