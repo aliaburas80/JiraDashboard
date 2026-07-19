@@ -8,11 +8,20 @@ import { SvgIcon } from '@/components/ui/SvgIcon';
 import TrendChart, { type TrendDataPoint } from '@/components/trends/TrendChart';
 import { releaseConfidenceBand } from '@/lib/releaseConfidence';
 import type { TrendPoint } from '@/types/trends';
+import styles from './page.module.scss';
 
-// CP3-020: color derived from the canonical releaseConfidenceBand() instead
+type Tier = 'good' | 'warning' | 'critical' | 'neutral';
+
+function healthTier(score: number): Tier {
+  if (score >= 75) return 'good';
+  if (score >= 50) return 'warning';
+  return 'critical';
+}
+
+// CP3-020: tier derived from the canonical releaseConfidenceBand() instead
 // of an inline re-derivation of the same 80/60 cutoffs.
-const RELEASE_CONFIDENCE_COLOR: Record<ReturnType<typeof releaseConfidenceBand>, string> = {
-  High: '#16a34a', Medium: '#f59e0b', Low: '#dc2626', Critical: '#dc2626',
+const RELEASE_CONFIDENCE_TIER: Record<ReturnType<typeof releaseConfidenceBand>, Tier> = {
+  High: 'good', Medium: 'warning', Low: 'critical', Critical: 'critical',
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -40,17 +49,17 @@ function toChartData(points: TrendPoint[], key: keyof TrendPoint): TrendDataPoin
 function StatCard({ label, first, last, unit, higherIsBetter = true }: {
   label: string; first: number; last: number; unit: string; higherIsBetter?: boolean;
 }) {
-  const delta   = Math.round((last - first) * 10) / 10;
-  const dir     = Math.abs(delta) < 0.5 ? 'stable'
+  const delta = Math.round((last - first) * 10) / 10;
+  const dir   = Math.abs(delta) < 0.5 ? 'stable'
     : ((delta > 0 && higherIsBetter) || (delta < 0 && !higherIsBetter)) ? 'positive' : 'negative';
-  const clr     = dir === 'positive' ? '#16a34a' : dir === 'negative' ? '#dc2626' : '#94a3b8';
-  const icon    = dir === 'positive' ? '↑' : dir === 'negative' ? '↓' : '→';
+  const tier: Tier = dir === 'positive' ? 'good' : dir === 'negative' ? 'critical' : 'neutral';
+  const icon  = dir === 'positive' ? '↑' : dir === 'negative' ? '↓' : '→';
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
       <p className="text-xl font-black text-slate-900">{last}{unit}</p>
-      <p className="text-xs font-bold mt-0.5" style={{ color: clr }}>
+      <p className={`text-xs font-bold mt-0.5 ${styles.statDelta}`} data-tier={tier}>
         {icon} {delta > 0 ? '+' : ''}{delta}{unit} vs first upload
       </p>
     </div>
@@ -136,11 +145,11 @@ export default function TrendsPage() {
                   <div key={p.id} className="flex items-center gap-2 shrink-0">
                     <div className="text-center">
                       <div
-                        className="w-3 h-3 rounded-full mx-auto mb-1"
-                        style={{ background: p.healthScore >= 75 ? '#16a34a' : p.healthScore >= 50 ? '#f59e0b' : '#dc2626' }}
+                        className={`w-3 h-3 rounded-full mx-auto mb-1 ${styles.timelineDot}`}
+                        data-tier={healthTier(p.healthScore)}
                       />
                       <p className="text-[9px] text-slate-500 font-semibold">{shortDate(p.uploadedAt)}</p>
-                      <p className="text-[9px] font-black" style={{ color: p.healthScore >= 75 ? '#16a34a' : p.healthScore >= 50 ? '#f59e0b' : '#dc2626' }}>
+                      <p className={`text-[9px] font-black ${styles.timelineScore}`} data-tier={healthTier(p.healthScore)}>
                         {p.healthScore}
                       </p>
                     </div>
@@ -243,14 +252,17 @@ export default function TrendsPage() {
                       <tr key={p.id} className="hover:bg-slate-50">
                         <td className="py-2 px-3 text-slate-500 whitespace-nowrap">{new Date(p.uploadedAt).toLocaleDateString()}</td>
                         <td className="py-2 px-3 text-slate-700 max-w-[160px] truncate font-semibold" title={p.fileName}>{p.fileName}</td>
-                        <td className="py-2 px-3 font-bold" style={{ color: p.healthScore >= 75 ? '#16a34a' : p.healthScore >= 50 ? '#f59e0b' : '#dc2626' }}>{p.healthScore}</td>
+                        <td className={`py-2 px-3 font-bold ${styles.tableCell}`} data-tier={healthTier(p.healthScore)}>{p.healthScore}</td>
                         <td className="py-2 px-3 text-slate-700 font-semibold">{p.completionRate}%</td>
                         <td className="py-2 px-3 text-slate-600">{p.doneIssues}/{p.totalIssues}</td>
-                        <td className="py-2 px-3 font-semibold" style={{ color: p.blockedIssues > 0 ? '#dc2626' : '#16a34a' }}>{p.blockedIssues}</td>
+                        <td className={`py-2 px-3 font-semibold ${styles.tableCell}`} data-tier={p.blockedIssues > 0 ? 'critical' : 'good'}>{p.blockedIssues}</td>
                         <td className="py-2 px-3 text-slate-600">{p.avgLeadTimeDays > 0 ? `${p.avgLeadTimeDays}d` : '—'}</td>
                         <td className="py-2 px-3 text-slate-600">{p.avgCycleTimeDays > 0 ? `${p.avgCycleTimeDays}d` : '—'}</td>
                         <td className="py-2 px-3 text-slate-600">{p.dataQualityScore != null ? `${p.dataQualityScore}%` : '—'}</td>
-                        <td className="py-2 px-3 font-semibold" style={{ color: p.releaseConfidenceScore == null ? '#94a3b8' : RELEASE_CONFIDENCE_COLOR[releaseConfidenceBand(p.releaseConfidenceScore)] }}>
+                        <td
+                          className={`py-2 px-3 font-semibold ${styles.tableCell}`}
+                          data-tier={p.releaseConfidenceScore == null ? 'neutral' : RELEASE_CONFIDENCE_TIER[releaseConfidenceBand(p.releaseConfidenceScore)]}
+                        >
                           {p.releaseConfidenceScore != null ? `${p.releaseConfidenceScore}%` : '—'}
                         </td>
                       </tr>
