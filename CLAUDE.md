@@ -3289,12 +3289,14 @@ CLI, not `next lint` — `package.json`'s `lint` script still runs the §4.6-pro
 `TODO-List.md` `STYLE-07` for why it can't simply be switched yet). Re-run that command before trusting
 these counts; they drift every time a file is touched.
 
-**Result: 898 warnings, 0 errors, across 74 files.** All warnings are `react/forbid-dom-props`
-(this rule's CLAUDE.md Rule 1 message). The drop from the 2026-07-12 count (1,276/87) is primarily
-`STYLE-03`/Tier 2 closing (see §60.3a below — 269 warnings across 8 files down to 17, all 17 being
-legitimate, documented CSS-variable exceptions, not remaining violations), plus incidental drift from
-unrelated fixes landed in between (e.g. `app/dashboard/data-quality/page.tsx` gained one new legitimate
-exception when its CP3-017 sample-size badge was added).
+**Result (re-audited same day after STYLE-04 closed): 807 warnings, 0 errors, across 70 files.**
+All warnings are `react/forbid-dom-props` (this rule's CLAUDE.md Rule 1 message). The drop from the
+2026-07-12 count (1,276/87) is primarily `STYLE-03`/Tier 2 closing (§60.3 — 269 warnings across 8 files
+down to 17, all legitimate documented CSS-variable exceptions) and `STYLE-04`/Tier 3 closing (§60.4 —
+94 warnings across 7 files down to 3, of which 90 warnings across 4 files were dead code deleted rather
+than refactored), plus incidental drift from unrelated fixes landed in between (e.g.
+`app/dashboard/data-quality/page.tsx` gained one new legitimate exception when its CP3-017 sample-size
+badge was added).
 
 Full per-file ticket breakdown is tracked in `TODO-List.md` Section 18f (`STYLE-01`–`08`). This section
 holds the prioritized summary; TODO-List.md holds the working checklist.
@@ -3351,16 +3353,40 @@ even those pass `var(--token)` references, never raw hex. Added a new `--chart-s
 `src/styles/_tokens.scss` for `labels`'s issue-type rotating palette — the first token layer entry for
 "categorical, non-status" chart colors (§34). See branch `refactor/style-03-tier2-dashboard-pages`.
 
-## 60.4 Refactor priority — Tier 3: shared `src/components/dashboard/**` (160 warnings, 14 files)
+## 60.4 Refactor priority — Tier 3: shared `src/components/dashboard/**` — RESOLVED 2026-07-19
 
-Higher leverage than a single page — these render inside multiple dashboard routes, so one fix
+~~Higher leverage than a single page — these render inside multiple dashboard routes, so one fix
 benefits several pages at once. They also carry broader regression risk for the same reason: changes
-here need manual verification across every page that mounts the component, not just one route.
+here need manual verification across every page that mounts the component, not just one route.~~
 
-* `SprintThroughputPanel.tsx` (33), `KanbanThroughputPanel.tsx` (31), `MidSprintDeliveryPanel.tsx` (21)
-* Remaining `src/components/dashboard/**` files at ≤7 warnings each. `SprintComparePanel.tsx` (46) and
-  the two files formerly tracked here as orphaned (`DashboardSectionSwitcher.tsx`, `LayoutBuilderPanel.tsx`)
-  dropped out of this tier on 2026-07-18 — deleted as dead code, not refactored — see §60.6a
+~~`SprintThroughputPanel.tsx` (33), `KanbanThroughputPanel.tsx` (31), `MidSprintDeliveryPanel.tsx` (21)~~
+
+**Resolved 2026-07-19.** A fresh re-audit found the real scope was 94 warnings/7 files, not the stale
+160/14 figure above — most of that gap had already closed via unrelated work between audits. Of those 94,
+**90 lived in four components with zero live callers** (`SprintThroughputPanel.tsx` 33,
+`KanbanThroughputPanel.tsx` 31, `MidSprintDeliveryPanel.tsx` 21, `DataQualityCard.tsx` 5 — confirmed via
+`grep` for both the component name and its import path; the only matches were prose mentions in
+`/developer`, not JSX usage). Same shape as `ORPHAN-02`: presented to the owner, who chose deletion over
+refactoring dead code. All four removed; their underlying domain types and calculation services
+(`throughput.service.ts`, `kanbanFlow.service.ts`, `midSprint.service.ts`) remain live and in active use
+by `/forecast`, `/sprint-kanban`, and `SprintVelocityChart` — only the orphaned presentational panels were
+deleted, not the domain layer.
+
+The remaining 4 warnings across the 3 actually-live files: `DashboardTopbar.tsx`'s nav-dropdown status dot
+was a real violation — a `STATUS_DOT` hex lookup keyed by a fixed `DCShellNavStatus` union
+(`critical`/`warning`/`success`/`info`/`neutral`) passed through inline `style={{ background }}`. Replaced
+with a `data-status` attribute resolved in SCSS against existing `--color-danger`/`--color-warning`/
+`--color-success`/`--color-info` tokens (§28) — the neutral fallback maps to `--color-text-muted` (closest
+existing token; no exact prior match existed). `DashboardTopbar.tsx`'s `--drop-top`/`--drop-left` panel
+position and `DashboardNavSidebar.tsx`'s `--progress-width` health bar were already correct, documented
+`--*`-only exceptions (§14.2) — verified, not changed. `DashboardPageShell.tsx`'s shared `MiniKpiCard`
+(`--kpi-bg`/`--kpi-border`/`--kpi-color`/`--delay`) is a generic component taking `color`/`bg`/`border` as
+caller-supplied props, not a fixed enum — also a correct exception, verified, not changed.
+
+94 → 3 warnings; all 3 are legitimate exceptions, not remaining violations. `SprintComparePanel.tsx` and
+the two files formerly tracked here as orphaned (`DashboardSectionSwitcher.tsx`, `LayoutBuilderPanel.tsx`)
+had already dropped out of this tier on 2026-07-18 — deleted as dead code, not refactored — see §60.6a.
+See branch `refactor/style-04-tier3-orphans-and-shared-components`.
 
 ## 60.5 Refactor priority — Tier 4 and 5: remaining pages and shared components (256 + 158 warnings)
 
