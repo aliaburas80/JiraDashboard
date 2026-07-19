@@ -1,0 +1,26 @@
+// ─── Trends page — color-bearing elements only ────────────────────────────────
+// Colors resolved from data-tier (CLAUDE.md §28). Tailwind utility classes
+// elsewhere on this page (layout, typography, borders) are pre-existing usage.
+@mixin tier-color($prop: color) {
+  &[data-tier='good']     { #{$prop}: var(--color-success, #16a34a); }
+  &[data-tier='warning']  { #{$prop}: var(--color-warning, #f59e0b); }
+  &[data-tier='critical'] { #{$prop}: var(--color-danger-strong, #dc2626); }
+  &[data-tier='neutral']  { #{$prop}: var(--color-text-muted, #94a3b8); }
+}
+
+.statDelta {
+  @include tier-color;
+}
+
+.timelineDot {
+  background: var(--color-danger-strong, #dc2626);
+  @include tier-color(background);
+}
+
+.timelineScore {
+  @include tier-color;
+}
+
+.tableCell {
+  @include tier-color;
+}

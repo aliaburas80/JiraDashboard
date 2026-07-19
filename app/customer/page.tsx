@@ -12,65 +12,17 @@ import { exportCustomerReportToCsv } from '@/services/export/customerReportExpor
 import type { DashboardMetrics } from '@/types/metrics';
 import styles from './page.module.scss';
 
-// ── Health band metadata ───────────────────────────────────────────────────────
-// EXCEPTION: all colors are data-driven from the health band enum
-const BAND_META: Record<HealthBand, {
-  label:        string;
-  headline:     string;
-  gradient:     string;
-  accentColor:  string;
-  printBg:      string;
-  printBorder:  string;
-}> = {
-  excellent: {
-    label:       'On Track',
-    headline:    'Delivery is on track and performing excellently.',
-    gradient:    'linear-gradient(135deg, #052e16 0%, #065f46 65%, #0d9488 100%)',
-    accentColor: '#34d399',
-    printBg:     '#f0fdf4',
-    printBorder: '#86efac',
-  },
-  good: {
-    label:       'Progressing',
-    headline:    'Delivery is progressing well with minor risks to monitor.',
-    gradient:    'linear-gradient(135deg, #0f2547 0%, #1e40af 75%, #2563eb 100%)',
-    accentColor: '#60a5fa',
-    printBg:     '#eff6ff',
-    printBorder: '#93c5fd',
-  },
-  moderate: {
-    label:       'Needs Attention',
-    headline:    'Delivery is progressing but has areas that need attention.',
-    gradient:    'linear-gradient(135deg, #3f1c00 0%, #92400e 70%, #b45309 100%)',
-    accentColor: '#fbbf24',
-    printBg:     '#fffbeb',
-    printBorder: '#fde68a',
-  },
-  'at-risk': {
-    label:       'At Risk',
-    headline:    'Delivery has risks that require prompt action to stay on track.',
-    gradient:    'linear-gradient(135deg, #3b0f00 0%, #9a3412 70%, #c2410c 100%)',
-    accentColor: '#fb923c',
-    printBg:     '#fff7ed',
-    printBorder: '#fed7aa',
-  },
-  critical: {
-    label:       'Critical',
-    headline:    'Delivery requires immediate attention and leadership escalation.',
-    gradient:    'linear-gradient(135deg, #450a0a 0%, #991b1b 65%, #b91c1c 100%)',
-    accentColor: '#f87171',
-    printBg:     '#fff1f2',
-    printBorder: '#fecdd3',
-  },
+// Colors for each health band (gradient, accent, print bg/border) are
+// resolved in SCSS from data-band (CLAUDE.md §28); this only supplies text.
+const BAND_META: Record<HealthBand, { label: string; headline: string }> = {
+  excellent: { label: 'On Track',        headline: 'Delivery is on track and performing excellently.' },
+  good:      { label: 'Progressing',     headline: 'Delivery is progressing well with minor risks to monitor.' },
+  moderate:  { label: 'Needs Attention', headline: 'Delivery is progressing but has areas that need attention.' },
+  'at-risk': { label: 'At Risk',         headline: 'Delivery has risks that require prompt action to stay on track.' },
+  critical:  { label: 'Critical',        headline: 'Delivery requires immediate attention and leadership escalation.' },
 };
 
-// Status distribution colour map
-const STATUS_COLORS: Record<string, string> = {
-  'To Do':       '#cbd5e1',
-  'In Progress': '#7c3aed',
-  'Blocked':     '#dc2626',
-  'Done':        '#16a34a',
-};
+// Status distribution — color resolved in SCSS from data-status.
 const STATUS_ORDER: Record<string, number> = {
   'To Do': 0, 'In Progress': 1, 'Blocked': 2, 'Done': 3,
 };
@@ -79,16 +31,18 @@ const STATUS_ORDER: Record<string, number> = {
 const RING_R    = 44;
 const RING_CIRC = 2 * Math.PI * RING_R; // ≈ 276.46
 
-function pctColor(pct: number): string {
-  if (pct >= 70) return '#16a34a';
-  if (pct >= 40) return '#d97706';
-  return '#dc2626';
+type Tier = 'good' | 'warning' | 'critical';
+
+function pctTier(pct: number): Tier {
+  if (pct >= 70) return 'good';
+  if (pct >= 40) return 'warning';
+  return 'critical';
 }
 
-function speedColor(days: number, goodMax: number, warnMax: number): string {
-  if (days <= goodMax) return '#16a34a';
-  if (days <= warnMax) return '#d97706';
-  return '#dc2626';
+function speedTier(days: number, goodMax: number, warnMax: number): Tier {
+  if (days <= goodMax) return 'good';
+  if (days <= warnMax) return 'warning';
+  return 'critical';
 }
 
 function confLabel(conf: number): string {
@@ -97,12 +51,10 @@ function confLabel(conf: number): string {
   return 'Low Delivery Confidence';
 }
 
-function epicHealthColors(critical: number, warning: number): {
-  color: string; bg: string; fg: string; label: string;
-} {
-  if (critical > 0) return { color: '#dc2626', bg: '#fee2e2', fg: '#b91c1c', label: 'At Risk' };
-  if (warning  > 0) return { color: '#d97706', bg: '#fef9c3', fg: '#92400e', label: 'Needs Attention' };
-  return                  { color: '#16a34a', bg: '#dcfce7', fg: '#15803d', label: 'On Track' };
+function epicHealth(critical: number, warning: number): { tier: Tier; label: string } {
+  if (critical > 0) return { tier: 'critical', label: 'At Risk' };
+  if (warning  > 0) return { tier: 'warning',  label: 'Needs Attention' };
+  return                  { tier: 'good',     label: 'On Track' };
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -156,8 +108,7 @@ export default function CustomerPage() {
       .map(([label, count]) => ({
         label,
         count,
-        color: STATUS_COLORS[label] ?? '#94a3b8',
-        pct:   Math.round((count / total) * 100),
+        pct: Math.round((count / total) * 100),
       }));
   })();
 
@@ -173,7 +124,7 @@ export default function CustomerPage() {
       val:   `${cycleTime.toFixed(1)}d`,
       sub:   'from start to done',
       note:  ctSampleSize > 0 ? `${ctSampleSize} items sampled` : undefined,
-      color: speedColor(cycleTime, 7, 14),
+      tier:  speedTier(cycleTime, 7, 14),
       delay: 0,
     },
     leadTime > 0 && {
@@ -181,7 +132,7 @@ export default function CustomerPage() {
       val:   `${leadTime.toFixed(1)}d`,
       sub:   'from request to done',
       note:  undefined,
-      color: speedColor(leadTime, 14, 28),
+      tier:  speedTier(leadTime, 14, 28),
       delay: 60,
     },
     velocity > 0 && {
@@ -189,10 +140,10 @@ export default function CustomerPage() {
       val:   `${velocity.toFixed(1)}`,
       sub:   'items completed/day',
       note:  undefined,
-      color: '#7c3aed',
+      tier:  'info' as const,
       delay: 120,
     },
-  ].filter(Boolean) as { label: string; val: string; sub: string; note?: string; color: string; delay: number }[];
+  ].filter(Boolean) as { label: string; val: string; sub: string; note?: string; tier: Tier | 'info'; delay: number }[];
 
   // Risks — all risk sources
   const riskList: { text: string; level: 'high' | 'medium' | 'low'; icon: string }[] = [];
@@ -242,26 +193,26 @@ export default function CustomerPage() {
     day: 'numeric', month: 'long', year: 'numeric',
   });
 
-  const kpis = [
+  const kpis: { label: string; val: string | number; sub: string; tier: Tier | 'info'; delay: number }[] = [
     {
       label: 'Overall Done',
       val:   `${completionRate}%`,
       sub:   `${metrics.doneIssues} of ${metrics.totalIssues} items`,
-      color: pctColor(completionRate),
+      tier:  pctTier(completionRate),
       delay: 0,
     },
     {
       label: 'In Progress',
       val:   activeCount,
       sub:   'items being worked on now',
-      color: '#7c3aed',
+      tier:  'info',
       delay: 60,
     },
     {
       label: 'Blocked',
       val:   metrics.blockedIssues ?? 0,
       sub:   metrics.blockedIssues > 0 ? 'require immediate action' : 'none blocked',
-      color: metrics.blockedIssues > 0 ? '#dc2626' : '#16a34a',
+      tier:  metrics.blockedIssues > 0 ? 'critical' : 'good',
       delay: 120,
     },
     {
@@ -272,9 +223,9 @@ export default function CustomerPage() {
       sub:   sp && sp.totalStoryPoints > 0
         ? `${sp.completedStoryPoints}/${sp.totalStoryPoints} pts`
         : (metrics.openDefects > 0 ? 'open defects' : 'no open defects'),
-      color: sp && sp.totalStoryPoints > 0
-        ? pctColor(sp.pointCompletionRate ?? 0)
-        : (metrics.openDefects > 0 ? '#dc2626' : '#16a34a'),
+      tier: sp && sp.totalStoryPoints > 0
+        ? pctTier(sp.pointCompletionRate ?? 0)
+        : (metrics.openDefects > 0 ? 'critical' : 'good'),
       delay: 180,
     },
   ];
@@ -284,7 +235,7 @@ export default function CustomerPage() {
     statusDistribution: distData,
     epics: epicList.map((epic: any) => ({
       epic: epic.epic,
-      healthLabel: epicHealthColors(epic.critical ?? 0, epic.warning ?? 0).label,
+      healthLabel: epicHealth(epic.critical ?? 0, epic.warning ?? 0).label,
       progress: Math.max(0, Math.min(100, epic.progress ?? 0)),
       completedIssues: epic.completedIssues ?? 0,
       issues: epic.issues ?? 0,
@@ -325,22 +276,12 @@ export default function CustomerPage() {
         <article className={styles.paper}>
 
           {/* ── Hero — full-bleed gradient, color-matched to health band ── */}
-          <div
-            className={styles.hero}
-            style={{
-              '--hero-gradient':     bandMeta.gradient,
-              '--hero-print-bg':     bandMeta.printBg,
-              '--hero-print-border': bandMeta.printBorder,
-            } as CSSProperties}
-          >
+          <div className={styles.hero} data-band={band}>
             <div className={styles.heroLeft}>
               <p className={styles.heroEyebrow}>Delivery Status Report</p>
               <h1 id="tour-header-customer" className={styles.heroTitle}>Project Delivery Summary</h1>
               <p className={styles.heroDate}>{today}</p>
-              <div
-                className={styles.heroStatusPill}
-                style={{ '--pill-color': bandMeta.accentColor } as CSSProperties}
-              >
+              <div className={styles.heroStatusPill} data-band={band}>
                 {bandMeta.label}
               </div>
               <p className={styles.heroHeadline}>{bandMeta.headline}</p>
@@ -360,10 +301,10 @@ export default function CustomerPage() {
                   <circle className={styles.ringBg} cx="55" cy="55" r={RING_R} />
                   <circle
                     className={styles.ringFill}
+                    data-band={band}
                     cx="55" cy="55"
                     r={RING_R}
                     style={{
-                      '--ring-color':  bandMeta.accentColor,
                       '--ring-full':   `${RING_CIRC.toFixed(2)}`,
                       '--ring-offset': `${ringOffset.toFixed(2)}`,
                     } as CSSProperties}
@@ -405,10 +346,7 @@ export default function CustomerPage() {
                   style={{ '--card-delay': `${k.delay}ms` } as CSSProperties}
                 >
                   <p className={styles.metricLabel}>{k.label}</p>
-                  <p
-                    className={styles.metricVal}
-                    style={{ '--metric-color': k.color } as CSSProperties}
-                  >
+                  <p className={styles.metricVal} data-tier={k.tier}>
                     {k.val}
                   </p>
                   <p className={styles.metricSub}>{k.sub}</p>
@@ -419,16 +357,14 @@ export default function CustomerPage() {
             {/* ── Status distribution ── */}
             {distData.length > 0 && items.length > 0 && (
               <div className={styles.distCard}>
-                <p className={styles.sectionHead} style={{ marginBottom: '14px' }}>Work Status Breakdown</p>
+                <p className={styles.sectionHead}>Work Status Breakdown</p>
                 <div className={styles.distBar}>
                   {distData.map(d => (
                     <div
                       key={d.label}
                       className={styles.distSeg}
-                      style={{
-                        '--seg-flex':  d.count,
-                        '--seg-color': d.color,
-                      } as CSSProperties}
+                      data-status={d.label}
+                      style={{ '--seg-flex': d.count } as CSSProperties}
                       title={`${d.label}: ${d.count} items (${d.pct}%)`}
                     />
                   ))}
@@ -436,10 +372,7 @@ export default function CustomerPage() {
                 <div className={styles.distLegend}>
                   {distData.map(d => (
                     <div key={d.label} className={styles.distLegendItem}>
-                      <span
-                        className={styles.distSwatch}
-                        style={{ '--swatch-color': d.color } as CSSProperties}
-                      />
+                      <span className={styles.distSwatch} data-status={d.label} />
                       <span className={styles.distLabel}>{d.label}</span>
                       <span className={styles.distCount}>{d.count} items · {d.pct}%</span>
                     </div>
@@ -453,20 +386,15 @@ export default function CustomerPage() {
               <div className={styles.customerVisibleCard}>
                 <div className={styles.cvHead}>
                   <span className={styles.cvLabel}>Customer-Facing Progress</span>
-                  <span
-                    className={styles.cvPct}
-                    style={{ '--cv-color': pctColor(cvProgress) } as CSSProperties}
-                  >
+                  <span className={styles.cvPct} data-tier={pctTier(cvProgress)}>
                     {Math.round(cvProgress)}%
                   </span>
                 </div>
                 <div className={styles.cvBarTrack}>
                   <div
                     className={styles.cvBarFill}
-                    style={{
-                      '--bar-w':    `${Math.min(cvProgress, 100)}%`,
-                      '--cv-color':  pctColor(cvProgress),
-                    } as CSSProperties}
+                    data-tier={pctTier(cvProgress)}
+                    style={{ '--bar-w': `${Math.min(cvProgress, 100)}%` } as CSSProperties}
                   />
                 </div>
                 <p className={styles.cvMeta}>
@@ -518,10 +446,7 @@ export default function CustomerPage() {
                       style={{ '--card-delay': `${i * 60}ms` } as CSSProperties}
                     >
                       <p className={styles.speedLabel}>{s.label}</p>
-                      <p
-                        className={styles.speedVal}
-                        style={{ '--speed-color': s.color } as CSSProperties}
-                      >
+                      <p className={styles.speedVal} data-tier={s.tier}>
                         {s.val}
                       </p>
                       <p className={styles.speedSub}>{s.sub}</p>
@@ -539,32 +464,27 @@ export default function CustomerPage() {
                 <div className={styles.epicList}>
                   {epicList.map((epic: any, i: number) => {
                     const pct = Math.max(0, Math.min(100, epic.progress ?? 0));
-                    const hc  = epicHealthColors(epic.critical ?? 0, epic.warning ?? 0);
+                    const hc  = epicHealth(epic.critical ?? 0, epic.warning ?? 0);
                     return (
                       <div
                         key={epic.epic}
                         className={styles.epicCard}
-                        style={{
-                          '--epic-color': hc.color,
-                          '--epic-delay': `${i * 60}ms`,
-                        } as CSSProperties}
+                        data-tier={hc.tier}
+                        style={{ '--epic-delay': `${i * 60}ms` } as CSSProperties}
                       >
                         <div className={styles.epicTop}>
                           <span className={styles.epicName}>{epic.epic}</span>
-                          <span
-                            className={styles.epicHealthChip}
-                            style={{ '--chip-bg': hc.bg, '--chip-fg': hc.fg } as CSSProperties}
-                          >
+                          <span className={styles.epicHealthChip} data-tier={hc.tier}>
                             {hc.label}
                           </span>
-                          <span className={styles.epicPct}>{pct}%</span>
+                          <span className={styles.epicPct} data-tier={hc.tier}>{pct}%</span>
                         </div>
                         <div className={styles.epicBarTrack}>
                           <div
                             className={styles.epicBarFill}
+                            data-tier={hc.tier}
                             style={{
                               '--bar-w':      `${pct}%`,
-                              '--epic-color': hc.color,
                               '--epic-delay': `${i * 60}ms`,
                             } as CSSProperties}
                           />

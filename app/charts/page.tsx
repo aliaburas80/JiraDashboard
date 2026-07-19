@@ -89,26 +89,34 @@ function AnimatedDonut({
             stroke={seg.color}
             strokeWidth={size * 0.09}
             style={{
-              '--arc-len':   `${circ}`,
-              '--arc-end':   `${endOff}`,
-              '--arc-delay': `${delayBase + i * 120}ms`,
-              '--arc-dur':   '850ms',
-              strokeDasharray: `${circ}`,
-              strokeDashoffset: endOff,
-              transform: 'rotate(-90deg)',
-              transformOrigin: `${cx}px ${cy}px`,
+              '--arc-len':    `${circ}`,
+              '--arc-end':    `${endOff}`,
+              '--arc-delay':  `${delayBase + i * 120}ms`,
+              '--arc-dur':    '850ms',
+              '--arc-origin': `${cx}px ${cy}px`,
             } as CSSProperties}
           />
         );
       })}
 
       {/* Center text */}
+      {/* EXCEPTION: font-size is genuinely computed from the size prop (§14.2) */}
       <text x={cx} y={cy - (centerSub ? size * 0.06 : 0)} className={styles.donutCenter}>
-        <tspan className={styles.donutCenterVal} style={{ fontSize: size * 0.13 }}>{centerVal}</tspan>
+        <tspan
+          className={styles.donutCenterVal}
+          style={{ '--donut-val-size': `${size * 0.13}px` } as CSSProperties}
+        >
+          {centerVal}
+        </tspan>
       </text>
       {centerSub && (
         <text x={cx} y={cy + size * 0.1} className={styles.donutCenter}>
-          <tspan className={styles.donutCenterSub} style={{ fontSize: size * 0.065 }}>{centerSub}</tspan>
+          <tspan
+            className={styles.donutCenterSub}
+            style={{ '--donut-sub-size': `${size * 0.065}px` } as CSSProperties}
+          >
+            {centerSub}
+          </tspan>
         </text>
       )}
     </svg>
@@ -177,26 +185,20 @@ function VBar({ label, valLabel, pct, color, delay = 0 }: {
 }
 
 // ── Gantt row ─────────────────────────────────────────────────────────────────
-const HEALTH_META = {
-  good:     { color: '#16a34a', bg: 'rgba(22,163,74,0.06)',    accent: '#16a34a', chipBg: '#dcfce7', chipFg: '#15803d', label: 'On track'  },
-  warning:  { color: '#f59e0b', bg: 'rgba(245,158,11,0.07)',   accent: '#f59e0b', chipBg: '#fef9c3', chipFg: '#a16207', label: 'At risk'   },
-  critical: { color: '#dc2626', bg: 'rgba(220,38,38,0.06)',    accent: '#dc2626', chipBg: '#fee2e2', chipFg: '#b91c1c', label: 'Critical'  },
+// Colors resolved from data-health in SCSS (CLAUDE.md §28); this only
+// supplies the human label.
+const HEALTH_LABEL = {
+  good:     'On track',
+  warning:  'At risk',
+  critical: 'Critical',
 };
 
 function GanttRow({ label, pct, done, total, health, delay = 0 }: {
   label: string; pct: number; done: number; total: number;
   health: 'good' | 'warning' | 'critical'; delay?: number;
 }) {
-  const m = HEALTH_META[health] ?? HEALTH_META.warning;
-
   return (
-    <div
-      className={styles.ganttRow}
-      style={{
-        '--row-bg':     m.bg,
-        '--row-accent': m.accent,
-      } as CSSProperties}
-    >
+    <div className={styles.ganttRow} data-health={health}>
       {/* Label column */}
       <div className={styles.ganttRowLabel}>
         <span className={styles.ganttRowName} title={label}>{label}</span>
@@ -210,21 +212,19 @@ function GanttRow({ label, pct, done, total, health, delay = 0 }: {
         <div className={styles.ganttTick} />
         <div
           className={styles.ganttFill}
-          style={{ '--bar-w': `${pct}%`, '--bar-color': m.color, '--bar-delay': `${delay}ms` } as CSSProperties}
+          data-health={health}
+          style={{ '--bar-w': `${pct}%`, '--bar-delay': `${delay}ms` } as CSSProperties}
         />
       </div>
 
       {/* Health chip */}
-      <span
-        className={styles.ganttHealthChip}
-        style={{ '--chip-bg': m.chipBg, '--chip-fg': m.chipFg } as CSSProperties}
-      >
-        {m.label}
+      <span className={styles.ganttHealthChip} data-health={health}>
+        {HEALTH_LABEL[health]}
       </span>
 
       {/* % + fraction */}
       <div className={styles.ganttDoneCell}>
-        <span className={styles.ganttPct} style={{ '--bar-color': m.color } as CSSProperties}>{pct}%</span>
+        <span className={styles.ganttPct} data-health={health}>{pct}%</span>
       </div>
     </div>
   );
@@ -359,12 +359,14 @@ export default function ChartsPage() {
     const healthTotal = Math.max((flow.good || 0) + (flow.warning || 0) + (flow.critical || 0), 1);
     const spTotal     = sp.totalStoryPoints || 0;
 
+    // Gradients are resolved in SCSS from data-kpi (CLAUDE.md §28) — a fixed,
+    // decorative 1:1 mapping from KPI identity, not a business-state lookup.
     const KPI_PILLS = [
-      { val: `${metrics?.completionRate || 0}%`, lbl: 'Complete',    grad: 'linear-gradient(135deg,#16a34a,#14b8a6)' },
-      { val: flow.critical || 0,                lbl: 'Critical',    grad: 'linear-gradient(135deg,#dc2626,#f97316)' },
-      { val: metrics?.healthScore || 0,          lbl: 'Health Score', grad: 'linear-gradient(135deg,#2563eb,#7c3aed)' },
+      { val: `${metrics?.completionRate || 0}%`, lbl: 'Complete',     kpi: 'complete' as const },
+      { val: flow.critical || 0,                lbl: 'Critical',     kpi: 'critical' as const },
+      { val: metrics?.healthScore || 0,          lbl: 'Health Score', kpi: 'health' as const },
       ...(metrics?.prediction && !metrics.prediction.complete && metrics.prediction.daysRemaining !== null
-        ? [{ val: `~${metrics.prediction.daysRemaining}d`, lbl: 'Est. Done', grad: 'linear-gradient(135deg,#0891b2,#2563eb)' }]
+        ? [{ val: `~${metrics.prediction.daysRemaining}d`, lbl: 'Est. Done', kpi: 'estdone' as const }]
         : []),
     ];
 
@@ -540,7 +542,8 @@ export default function ChartsPage() {
               <div
                 key={p.lbl}
                 className={styles.kpiPill}
-                style={{ '--pill-gradient': p.grad, '--pill-delay': `${i * 60}ms` } as CSSProperties}
+                data-kpi={p.kpi}
+                style={{ '--pill-delay': `${i * 60}ms` } as CSSProperties}
               >
                 <span className={styles.kpiVal}>{p.val}</span>
                 <span className={styles.kpiLbl}>{p.lbl}</span>
@@ -914,13 +917,12 @@ export default function ChartsPage() {
                           delayBase={i * 80}
                         />
                         <span
-                          className="text-center leading-tight font-semibold max-w-[80px] truncate"
-                          style={{ fontSize: 9, color: 'var(--color-text-secondary,#64748b)' }}
+                          className={`text-center leading-tight font-semibold truncate ${styles.epicRingLabel}`}
                           title={e.epic}
                         >
                           {(e.epic || 'No epic').slice(0, 14)}
                         </span>
-                        <span style={{ fontSize: 9, color: 'var(--color-text-muted,#94a3b8)' }}>
+                        <span className={styles.epicRingCount}>
                           {e.completedIssues}/{e.issues}
                         </span>
                       </div>

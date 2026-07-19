@@ -3289,12 +3289,13 @@ CLI, not `next lint` — `package.json`'s `lint` script still runs the §4.6-pro
 `TODO-List.md` `STYLE-07` for why it can't simply be switched yet). Re-run that command before trusting
 these counts; they drift every time a file is touched.
 
-**Result (re-audited same day after STYLE-04 closed): 807 warnings, 0 errors, across 70 files.**
+**Result (re-audited same day after STYLE-05 closed): 658 warnings, 0 errors, across 68 files.**
 All warnings are `react/forbid-dom-props` (this rule's CLAUDE.md Rule 1 message). The drop from the
 2026-07-12 count (1,276/87) is primarily `STYLE-03`/Tier 2 closing (§60.3 — 269 warnings across 8 files
-down to 17, all legitimate documented CSS-variable exceptions) and `STYLE-04`/Tier 3 closing (§60.4 —
-94 warnings across 7 files down to 3, of which 90 warnings across 4 files were dead code deleted rather
-than refactored), plus incidental drift from unrelated fixes landed in between (e.g.
+down to 17), `STYLE-04`/Tier 3 closing (§60.4 — 94 warnings across 7 files down to 3, of which 90
+warnings across 4 files were dead code deleted rather than refactored), and `STYLE-05`/Tier 4 closing
+(§60.5 — 277 warnings across 12 large files down to ~30, all legitimate documented CSS-variable
+exceptions), plus incidental drift from unrelated fixes landed in between (e.g.
 `app/dashboard/data-quality/page.tsx` gained one new legitimate exception when its CP3-017 sample-size
 badge was added).
 
@@ -3388,11 +3389,48 @@ the two files formerly tracked here as orphaned (`DashboardSectionSwitcher.tsx`,
 had already dropped out of this tier on 2026-07-18 — deleted as dead code, not refactored — see §60.6a.
 See branch `refactor/style-04-tier3-orphans-and-shared-components`.
 
-## 60.5 Refactor priority — Tier 4 and 5: remaining pages and shared components (256 + 158 warnings)
+## 60.5 Refactor priority — Tier 4: remaining standalone pages — RESOLVED 2026-07-19
 
-See `TODO-List.md` `STYLE-05`/`STYLE-06` for the full remaining file list (remaining standalone pages
-under `app/`, plus `src/components/explore/**`, `src/components/admin/**`, `src/components/dc-shell/**`,
-`src/components/tour/**`, and the long tail of files at ≤7 warnings each).
+~~256 warnings across the remaining standalone pages under `app/`. See `TODO-List.md` `STYLE-05` for
+the full file list.~~
+
+**Resolved 2026-07-19.** A fresh re-audit found the real scope was 12 large files (sprint-kanban 39,
+members 32, portfolio 30, glossary 26, delivery-mix 23, customer 20, charts 18, roadmap 16, teams 14,
+release-readiness 13, trends 6 — 277 warnings) plus a ~10-file small remainder at ≤3 warnings each
+(admin/audit, column-mapping, summary, work-explorer, promo/**, and all 7 `landing/components/**`
+files). All 12 large files converted from JS color lookups (finite health/verdict/status/category
+enums) to `data-*` attributes resolved in SCSS (§28), following the same pattern established in
+§60.3/§60.4 — `data-tier`/`data-band`/`data-verdict`/`data-status`/`data-health`/`data-cat` depending
+on the page's domain vocabulary. Two pages (`sprint-kanban`, `portfolio`) already had partial
+CSS-var-exception scaffolding from a prior pass but were piping *colors* through it rather than
+resolving them via selectors — fixed to match the established convention (CSS vars reserved for
+genuinely runtime-computed geometry only). `charts.tsx` and `teams.tsx` each contain generic,
+reusable chart primitives (`HBar`/`VBar`/`AnimatedDonut`/`MiniBar`/`CompareBar`) that take `color` as
+a caller-supplied prop from several non-unifiable threshold schemes — left as the sanctioned
+"generic component" exception (§14.2), the same treatment already given to `DashboardPageShell`'s
+`MiniKpiCard`.
+
+Auditing the small remainder found all of it — `admin/audit`, `column-mapping`, `summary`, and all 7
+`landing/components/**` files — was **already** using the correct, documented `--*`-only CSS-variable
+exception pattern; zero changes needed (same outcome as `key-metrics/page.tsx` in §60.3).
+`promo/page.tsx` and `promo/PromoNav.tsx`'s only warnings are unrelated `@next/next/no-img-element`,
+out of scope. `work-explorer/page.tsx` had one tracked warning (already a correct exception) plus two
+*untracked* violations the audit surfaced by hand: `style=` passed to the custom `SvgIcon` component
+isn't caught by `react/forbid-dom-props` (the rule only inspects native DOM elements), so a 9-way
+issue-type color lookup and a static brand-color icon had slipped through undetected. Both fixed —
+the type lookup now wraps `SvgIcon` in a `data-type`-carrying `<span>` that resolves color via
+`currentColor`; the static color moved directly into its SCSS class.
+
+277 → ~30 warnings across the 12 large files (all legitimate documented exceptions — see individual
+`TODO-List.md` `STYLE-05` entries for exact per-file before/after counts). Repo-wide: 807 → 658
+warnings, 70 → 68 files. See branch `refactor/style-05-tier4-standalone-pages`.
+
+## 60.5a Refactor priority — Tier 5: remaining shared components (158 warnings) — NOT STARTED
+
+`src/components/explore/**`, `src/components/admin/**`, `src/components/dc-shell/**`,
+`src/components/tour/**`, and the long tail of files at ≤7 warnings each. See `TODO-List.md`
+`STYLE-06` for the full file list. Not part of the `STYLE-05` pass above — Tier 5 targets
+`src/components/**`, a distinct scope from Tier 4's `app/**` standalone pages.
 
 ## 60.6 Resolved: legacy `frontend/` Create React App (removed 2026-07-14)
 

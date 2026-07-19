@@ -2,14 +2,15 @@
 // Team-level health comparison — 9.31
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
-import { computeTeamHealth, teamBandColor, teamBandBg, type TeamHealthEntry } from '@/lib/teamHealth';
+import { computeTeamHealth, type TeamHealthEntry } from '@/lib/teamHealth';
 import { exportTeamsToCsv } from '@/services/export/teamsExport.service';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
+import styles from './page.module.scss';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -22,19 +23,37 @@ function initials(name: string): string {
     .join('');
 }
 
-function avatarBg(name: string): string {
-  const colors = ['#2563eb','#0891b2','#7c3aed','#16a34a','#f59e0b','#ea580c','#dc2626','#0d9488'];
+const AVATAR_COUNT = 8;
+
+// Avatar color rotates through a small fixed palette by name hash — resolved
+// in SCSS from data-avatar (CLAUDE.md §28).
+function avatarIndex(name: string): number {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff;
-  return colors[Math.abs(h) % colors.length];
+  return Math.abs(h) % AVATAR_COUNT;
+}
+
+type Tier = 'good' | 'warning' | 'critical' | 'neutral' | 'primary';
+
+// Token reference for a band — used only where a generic component (MiniBar/
+// CompareBar) needs a plain color string prop, not a data-attribute.
+function bandColorVar(band: TeamHealthEntry['band']): string {
+  if (band === 'Healthy') return 'var(--color-success, #16a34a)';
+  if (band === 'Team At Risk') return 'var(--color-warning, #f59e0b)';
+  return 'var(--color-danger-strong, #dc2626)';
 }
 
 // ── Reusable mini-bar ─────────────────────────────────────────────────────────
+// EXCEPTION: color is a caller-supplied prop from many non-unifiable threshold
+// schemes across this page — same sanctioned pattern as MiniKpiCard (§14.2).
 
 function MiniBar({ pct, color }: { pct: number; color: string }) {
   return (
     <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-      <div className="h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%`, background: color }} />
+      <div
+        className={`h-full rounded-full ${styles.barFill}`}
+        style={{ '--bar-w': `${Math.min(pct, 100)}%`, '--bar-color': color } as CSSProperties}
+      />
     </div>
   );
 }
@@ -42,31 +61,28 @@ function MiniBar({ pct, color }: { pct: number; color: string }) {
 // ── Team card ─────────────────────────────────────────────────────────────────
 
 function TeamCard({ entry }: { entry: TeamHealthEntry }) {
-  const color = teamBandColor(entry.band);
-  const bg    = teamBandBg(entry.band);
-
   return (
     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col gap-3">
 
       {/* Header: avatar + name + score */}
       <div className="flex items-center gap-3">
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-black shrink-0"
-          style={{ background: avatarBg(entry.assignee) }}
+          className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black shrink-0 ${styles.avatar}`}
+          data-avatar={avatarIndex(entry.assignee)}
         >
           {initials(entry.assignee) || '?'}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-black text-slate-900 truncate" title={entry.assignee}>{entry.assignee}</p>
           <span
-            className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5"
-            style={{ background: bg, color }}
+            className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 ${styles.bandBadge}`}
+            data-band={entry.band}
           >
             {entry.band}
           </span>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-2xl font-black leading-none" style={{ color }}>{entry.healthScore}</p>
+          <p className={`text-2xl font-black leading-none ${styles.healthScore}`} data-band={entry.band}>{entry.healthScore}</p>
           <p className="text-[10px] text-slate-400 font-semibold">/100</p>
         </div>
       </div>
@@ -75,21 +91,21 @@ function TeamCard({ entry }: { entry: TeamHealthEntry }) {
       <div>
         <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
           <span>Completion</span>
-          <span style={{ color }}>{entry.completionPct}%</span>
+          <span className={styles.completionPct} data-band={entry.band}>{entry.completionPct}%</span>
         </div>
-        <MiniBar pct={entry.completionPct} color={color} />
+        <MiniBar pct={entry.completionPct} color={bandColorVar(entry.band)} />
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-4 gap-1 text-center">
         {[
-          { label: 'Issues',   value: entry.totalIssues,   clr: '#64748b' },
-          { label: 'Done',     value: entry.doneIssues,    clr: '#16a34a' },
-          { label: 'Blocked',  value: entry.blockedCount,  clr: entry.blockedCount  > 0 ? '#dc2626' : '#94a3b8' },
-          { label: 'Critical', value: entry.criticalCount, clr: entry.criticalCount > 0 ? '#dc2626' : '#94a3b8' },
+          { label: 'Issues',   value: entry.totalIssues,   tier: 'neutral' as Tier },
+          { label: 'Done',     value: entry.doneIssues,    tier: 'good' as Tier },
+          { label: 'Blocked',  value: entry.blockedCount,  tier: (entry.blockedCount  > 0 ? 'critical' : 'neutral') as Tier },
+          { label: 'Critical', value: entry.criticalCount, tier: (entry.criticalCount > 0 ? 'critical' : 'neutral') as Tier },
         ].map(s => (
           <div key={s.label}>
-            <p className="text-sm font-black" style={{ color: s.clr }}>{s.value}</p>
+            <p className={`text-sm font-black ${styles.statValue}`} data-tier={s.tier}>{s.value}</p>
             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">{s.label}</p>
           </div>
         ))}
@@ -124,7 +140,10 @@ function CompareBar({ label, value, maxValue, color, unit = '' }: {
     <div className="flex items-center gap-2 text-xs mb-1.5">
       <span className="text-slate-600 truncate w-28 shrink-0 font-semibold" title={label}>{label}</span>
       <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
+        <div
+          className={`h-full rounded-full ${styles.barFill}`}
+          style={{ '--bar-w': `${pct}%`, '--bar-color': color } as CSSProperties}
+        />
       </div>
       <span className="font-black text-slate-800 w-12 text-right shrink-0">{value}{unit}</span>
     </div>
@@ -168,7 +187,7 @@ export default function TeamsPage() {
   const atRiskCount     = teams.filter(t => t.band === 'Team At Risk').length;
   const criticalCount   = teams.filter(t => t.band === 'Critical').length;
 
-  const avgColor = avgHealth >= 70 ? '#16a34a' : avgHealth >= 40 ? '#f59e0b' : '#dc2626';
+  const avgTier: Tier = avgHealth >= 70 ? 'good' : avgHealth >= 40 ? 'warning' : 'critical';
 
   if (loadError) {
     return (
@@ -232,16 +251,16 @@ export default function TeamsPage() {
 
         {/* Summary KPI strip */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
-          {[
-            { label: 'Team Members',   value: totalMembers,               unit: '',     color: '#2563eb' },
-            { label: 'Avg Health',     value: `${avgHealth}/100`,         unit: '',     color: avgColor   },
-            { label: 'Healthy',        value: healthyCount,               unit: '',     color: '#16a34a' },
-            { label: 'Team At Risk',   value: atRiskCount,                unit: '',     color: '#f59e0b' },
-            { label: 'Critical Items', value: totalAtRisk,                unit: '',     color: totalAtRisk > 0 ? '#dc2626' : '#94a3b8' },
-          ].map(k => (
+          {([
+            { label: 'Team Members',   value: totalMembers,   tier: 'primary' },
+            { label: 'Avg Health',     value: `${avgHealth}/100`, tier: avgTier },
+            { label: 'Healthy',        value: healthyCount,   tier: 'good' },
+            { label: 'Team At Risk',   value: atRiskCount,    tier: 'warning' },
+            { label: 'Critical Items', value: totalAtRisk,    tier: totalAtRisk > 0 ? 'critical' : 'neutral' },
+          ] as { label: string; value: string | number; tier: Tier }[]).map(k => (
             <div key={k.label} className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{k.label}</p>
-              <p className="text-xl font-black" style={{ color: k.color }}>{k.value}</p>
+              <p className={`text-xl font-black ${styles.kpiValue}`} data-tier={k.tier}>{k.value}</p>
             </div>
           ))}
         </div>
@@ -271,7 +290,7 @@ export default function TeamsPage() {
                     label={t.assignee}
                     value={t.healthScore}
                     maxValue={100}
-                    color={teamBandColor(t.band)}
+                    color={bandColorVar(t.band)}
                     unit="/100"
                   />
                 ))}
@@ -345,21 +364,22 @@ export default function TeamsPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {teams.map(t => {
-                      const color = teamBandColor(t.band);
+                      const completionTier: Tier = t.completionPct >= 70 ? 'good' : t.completionPct >= 40 ? 'warning' : 'critical';
+                      const loadTier: Tier = t.loadShare > 35 ? 'critical' : t.loadShare > 20 ? 'warning' : 'good';
                       return (
                         <tr key={t.assignee} className="hover:bg-slate-50">
                           <td className="py-2 px-3 font-semibold text-slate-800 max-w-[140px] truncate" title={t.assignee}>{t.assignee}</td>
-                          <td className="py-2 px-3 font-black" style={{ color }}>{t.healthScore}</td>
+                          <td className={`py-2 px-3 font-black ${styles.tableScoreCell}`} data-band={t.band}>{t.healthScore}</td>
                           <td className="py-2 px-3">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: teamBandBg(t.band), color }}>{t.band}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${styles.bandBadge}`} data-band={t.band}>{t.band}</span>
                           </td>
                           <td className="py-2 px-3 text-slate-600">{t.totalIssues}</td>
-                          <td className="py-2 px-3 font-semibold" style={{ color: t.completionPct >= 70 ? '#16a34a' : t.completionPct >= 40 ? '#f59e0b' : '#dc2626' }}>{t.completionPct}%</td>
+                          <td className={`py-2 px-3 font-semibold ${styles.tableTier}`} data-tier={completionTier}>{t.completionPct}%</td>
                           <td className="py-2 px-3 text-slate-600">{t.activeIssues}</td>
-                          <td className="py-2 px-3 font-semibold" style={{ color: t.blockedCount  > 0 ? '#dc2626' : '#94a3b8' }}>{t.blockedCount}</td>
-                          <td className="py-2 px-3 font-semibold" style={{ color: t.criticalCount > 0 ? '#dc2626' : '#94a3b8' }}>{t.criticalCount}</td>
+                          <td className={`py-2 px-3 font-semibold ${styles.tableTier}`} data-tier={t.blockedCount > 0 ? 'critical' : 'neutral'}>{t.blockedCount}</td>
+                          <td className={`py-2 px-3 font-semibold ${styles.tableTier}`} data-tier={t.criticalCount > 0 ? 'critical' : 'neutral'}>{t.criticalCount}</td>
                           <td className="py-2 px-3 text-slate-600">{t.storyPoints > 0 ? `${t.doneStoryPoints}/${t.storyPoints}` : '—'}</td>
-                          <td className="py-2 px-3 font-semibold" style={{ color: t.loadShare > 35 ? '#dc2626' : t.loadShare > 20 ? '#f59e0b' : '#16a34a' }}>{t.loadShare}%</td>
+                          <td className={`py-2 px-3 font-semibold ${styles.tableTier}`} data-tier={loadTier}>{t.loadShare}%</td>
                           <td className="py-2 px-3 text-slate-600">{t.avgOpenAgeDays !== null ? `${t.avgOpenAgeDays}d` : '—'}</td>
                         </tr>
                       );

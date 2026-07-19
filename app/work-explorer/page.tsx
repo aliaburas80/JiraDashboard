@@ -28,16 +28,18 @@ function statusCat(status: string): 'done' | 'in-progress' | 'blocked' | 'review
 
 // ── Type icon ─────────────────────────────────────────────────────────────────
 
-const TYPE_CFG: Record<string, { color: string; icon: string }> = {
-  bug:         { color: '#F87171', icon: 'bug' },
-  story:       { color: '#4ade80', icon: 'story' },
-  task:        { color: '#60A5FA', icon: 'task' },
-  epic:        { color: '#A78BFA', icon: 'epic' },
-  'sub-task':  { color: '#93c5fd', icon: 'subtasks' },
-  feature:     { color: '#FB923C', icon: 'component' },
-  improvement: { color: '#22D3EE', icon: 'chartTrendUp' },
-  spike:       { color: '#F472B6', icon: 'flask' },
-  'test case': { color: '#FACC15', icon: 'checkCircle' },
+// Color is resolved in SCSS from data-type (CLAUDE.md §28); this only maps
+// the type to its icon.
+const TYPE_CFG: Record<string, { icon: string }> = {
+  bug:         { icon: 'bug' },
+  story:       { icon: 'story' },
+  task:        { icon: 'task' },
+  epic:        { icon: 'epic' },
+  'sub-task':  { icon: 'subtasks' },
+  feature:     { icon: 'component' },
+  improvement: { icon: 'chartTrendUp' },
+  spike:       { icon: 'flask' },
+  'test case': { icon: 'checkCircle' },
 };
 
 function resolveTypeKey(type: string): string {
@@ -57,7 +59,11 @@ function resolveTypeKey(type: string): string {
 function TypeIcon({ type }: { type: string }) {
   const key = resolveTypeKey(type);
   const c = TYPE_CFG[key] ?? TYPE_CFG.task;
-  return <SvgIcon name={c.icon} size={16} className={styles.typeIcon} style={{ color: c.color }} />;
+  return (
+    <span className={styles.typeIconWrap} data-type={key}>
+      <SvgIcon name={c.icon} size={16} className={styles.typeIcon} />
+    </span>
+  );
 }
 
 // ── Priority ──────────────────────────────────────────────────────────────────
@@ -195,7 +201,7 @@ export default function WorkExplorerPage() {
         {/* ── Header ── */}
         <header className={styles.pageHeader}>
           <div className={styles.breadcrumb}>
-            <SvgIcon name="project" size={18} className={styles.jiraIcon} style={{ color: '#FF8A4C' }} />
+            <SvgIcon name="project" size={18} className={styles.jiraIcon} />
             <span className={styles.breadcrumbProject}>Project Backlog</span>
             <span className={styles.breadcrumbSep}>/</span>
             <span className={styles.breadcrumbCurrent}>Work Explorer</span>

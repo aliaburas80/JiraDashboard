@@ -20,52 +20,61 @@ import type {
 } from '@/types/throughput';
 import styles from './page.module.scss';
 
-// ── Semantic color maps (all passed as CSS custom properties) ─────────────────
-// EXCEPTION: colors are data-driven from outcome/pattern enum values
+// ── Semantic state → tone mapping ──────────────────────────────────────────────
+// Colors are resolved entirely in SCSS from these data-* attributes (CLAUDE.md
+// §28) — JS only classifies state into a tone/tier, it never returns a color.
 
-const GOAL_COLORS: Record<SprintGoalOutcome, { bg: string; fg: string }> = {
-  'Met':           { bg: 'color-mix(in srgb,#22c55e 12%,transparent)', fg: '#15803d' },
-  'Partially Met': { bg: 'color-mix(in srgb,#f59e0b 12%,transparent)', fg: '#92400e' },
-  'Missed':        { bg: 'color-mix(in srgb,#dc2626 10%,transparent)', fg: '#b91c1c' },
-  'Behind Pace':   { bg: 'color-mix(in srgb,#ea580c 10%,transparent)', fg: '#9a3412' },
-  'Unknown':       { bg: 'color-mix(in srgb,#94a3b8 10%,transparent)', fg: '#64748b' },
+const PATTERN_LABEL: Record<SprintDeliveryPattern, string> = {
+  'Healthy Early Progress': 'Healthy',
+  'End-Loaded Sprint':      'End-Loaded',
+  'Scope Instability':      'Scope Drift',
+  'Blocked Sprint':         'Blocked',
+  'Late Delivery Risk':     'Late Risk',
+  'Unknown':                'Unknown',
 };
 
-const PATTERN_COLORS: Record<SprintDeliveryPattern, { bg: string; fg: string; border: string; label: string }> = {
-  'Healthy Early Progress': { bg: 'color-mix(in srgb,#22c55e 10%,transparent)', fg: '#15803d', border: '#22c55e', label: 'Healthy'      },
-  'End-Loaded Sprint':      { bg: 'color-mix(in srgb,#f59e0b 10%,transparent)', fg: '#92400e', border: '#f59e0b', label: 'End-Loaded'   },
-  'Scope Instability':      { bg: 'color-mix(in srgb,#8b5cf6 10%,transparent)', fg: '#6d28d9', border: '#8b5cf6', label: 'Scope Drift'  },
-  'Blocked Sprint':         { bg: 'color-mix(in srgb,#dc2626 10%,transparent)', fg: '#b91c1c', border: '#dc2626', label: 'Blocked'      },
-  'Late Delivery Risk':     { bg: 'color-mix(in srgb,#ea580c 10%,transparent)', fg: '#9a3412', border: '#ea580c', label: 'Late Risk'    },
-  'Unknown':                { bg: 'color-mix(in srgb,#94a3b8 10%,transparent)', fg: '#64748b', border: '#94a3b8', label: 'Unknown'      },
+type Tier = 'good' | 'warning' | 'critical';
+type Tone = Tier | 'primary' | 'neutral';
+
+function pctTier(pct: number): Tier {
+  if (pct >= 80) return 'good';
+  if (pct >= 50) return 'warning';
+  return 'critical';
+}
+
+function healthTier(h: KanbanFlowHealth): Tier {
+  if (h === 'Healthy') return 'good';
+  if (h === 'At Risk') return 'warning';
+  return 'critical';
+}
+
+type BoardTone = 'progress' | 'review' | 'pending' | 'success' | 'neutral' | 'blocked';
+
+const STATUS_TONE: Record<string, BoardTone> = {
+  'in progress': 'progress',
+  'code review': 'review',
+  'qa':          'pending',
+  'testing':     'pending',
+  'uat':         'pending',
+  'done':        'success',
+  'closed':      'success',
+  'resolved':    'success',
+  'to do':       'neutral',
+  'backlog':     'neutral',
+  'blocked':     'blocked',
 };
 
-const FLOW_HEALTH_COLORS: Record<KanbanFlowHealth, string> = {
-  'Healthy':   '#16a34a',
-  'At Risk':   '#d97706',
-  'Degraded':  '#dc2626',
-};
-
-const BOTTLENECK_COLORS: Record<KanbanBottleneckStatus, string> = {
-  'None':     '#16a34a',
-  'Mild':     '#d97706',
-  'Moderate': '#ea580c',
-  'Severe':   '#dc2626',
-};
-
-function pctColor(pct: number): string {
-  if (pct >= 80) return '#16a34a';
-  if (pct >= 50) return '#d97706';
-  return '#dc2626';
+function statusTone(status: string): BoardTone {
+  return STATUS_TONE[status.toLowerCase()] ?? 'neutral';
 }
 
 // ── Small chips ───────────────────────────────────────────────────────────────
 function GoalChip({ outcome, delay }: { outcome: SprintGoalOutcome; delay?: number }) {
-  const c = GOAL_COLORS[outcome] ?? GOAL_COLORS['Unknown'];
   return (
     <span
       className={styles.goalChip}
-      style={{ '--chip-bg': c.bg, '--chip-fg': c.fg, '--chip-delay': `${delay ?? 0}ms` } as CSSProperties}
+      data-outcome={outcome}
+      style={{ '--chip-delay': `${delay ?? 0}ms` } as CSSProperties}
     >
       {outcome}
     </span>
@@ -73,23 +82,23 @@ function GoalChip({ outcome, delay }: { outcome: SprintGoalOutcome; delay?: numb
 }
 
 function PatternChip({ pattern, delay }: { pattern: SprintDeliveryPattern; delay?: number }) {
-  const c = PATTERN_COLORS[pattern] ?? PATTERN_COLORS['Unknown'];
   return (
     <span
       className={styles.patternChip}
-      style={{ '--chip-bg': c.bg, '--chip-fg': c.fg, '--chip-delay': `${delay ?? 0}ms` } as CSSProperties}
+      data-pattern={pattern}
+      style={{ '--chip-delay': `${delay ?? 0}ms` } as CSSProperties}
     >
-      {c.label}
+      {PATTERN_LABEL[pattern] ?? pattern}
     </span>
   );
 }
 
 // ── Sprint row ────────────────────────────────────────────────────────────────
 function SprintRow({ sp, index, isLatest }: { sp: SprintThroughput; index: number; isLatest: boolean }) {
-  const pct     = sp.completionPct;
-  const color   = pctColor(pct);
-  const pattern = PATTERN_COLORS[sp.deliveryPattern] ?? PATTERN_COLORS['Unknown'];
-  const delay   = index * 50;
+  const pct        = sp.completionPct;
+  const tier       = pctTier(pct);
+  const confTier   = pctTier(sp.deliveryConfidence);
+  const delay      = index * 50;
 
   return (
     <div
@@ -104,10 +113,7 @@ function SprintRow({ sp, index, isLatest }: { sp: SprintThroughput; index: numbe
           <GoalChip outcome={sp.goalOutcome} delay={delay + 80} />
         )}
         <PatternChip pattern={sp.deliveryPattern} delay={delay + 120} />
-        <span
-          className={styles.sprintPct}
-          style={{ '--pct-color': color } as CSSProperties}
-        >
+        <span className={styles.sprintPct} data-tier={tier}>
           {pct}%
         </span>
       </div>
@@ -116,7 +122,8 @@ function SprintRow({ sp, index, isLatest }: { sp: SprintThroughput; index: numbe
       <div className={styles.sprintTrack}>
         <div
           className={styles.sprintFill}
-          style={{ '--bar-w': `${pct}%`, '--pct-color': color, '--bar-delay': `${delay}ms` } as CSSProperties}
+          data-tier={tier}
+          style={{ '--bar-w': `${pct}%`, '--bar-delay': `${delay}ms` } as CSSProperties}
         />
       </div>
 
@@ -146,18 +153,18 @@ function SprintRow({ sp, index, isLatest }: { sp: SprintThroughput; index: numbe
           </span>
         )}
         {/* Delivery confidence mini bar */}
-        <div className={styles.confidenceBar} style={{ marginLeft: 'auto' }}>
+        <div className={styles.confidenceBar}>
           <div className={styles.confidenceTrack}>
             <div
               className={styles.confidenceFill}
+              data-tier={confTier}
               style={{
                 '--bar-w':    `${sp.deliveryConfidence}%`,
-                '--pct-color': color,
                 '--bar-delay': `${delay + 200}ms`,
               } as CSSProperties}
             />
           </div>
-          <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8' }}>
+          <span className={styles.confidenceLabel}>
             {sp.deliveryConfidence}% confidence
           </span>
         </div>
@@ -165,10 +172,7 @@ function SprintRow({ sp, index, isLatest }: { sp: SprintThroughput; index: numbe
 
       {/* Pattern interpretation */}
       {sp.patternInterpretation && (
-        <p
-          className={styles.sprintInterpretation}
-          style={{ '--pattern-color': pattern.border } as CSSProperties}
-        >
+        <p className={styles.sprintInterpretation} data-pattern={sp.deliveryPattern}>
           {sp.patternInterpretation}
         </p>
       )}
@@ -178,7 +182,7 @@ function SprintRow({ sp, index, isLatest }: { sp: SprintThroughput; index: numbe
 
 // ── Mid-sprint insight card ───────────────────────────────────────────────────
 function MidCard({ m, index }: { m: MidSprintInsight; index: number }) {
-  const color = pctColor(m.midSprintPct);
+  const tier = pctTier(m.midSprintPct);
   return (
     <div className={styles.midCard} style={{ '--row-delay': `${index * 50}ms` } as CSSProperties}>
       <div className={styles.midCardHead}>
@@ -192,14 +196,14 @@ function MidCard({ m, index }: { m: MidSprintInsight; index: number }) {
         <div className={styles.midPctTrack}>
           <div
             className={styles.midPctFill}
+            data-tier={tier}
             style={{
               '--bar-w':    `${m.midSprintPct}%`,
-              '--bar-color': color,
               '--bar-delay': `${index * 50}ms`,
             } as CSSProperties}
           />
         </div>
-        <span className={styles.midPctLabel} style={{ '--bar-color': color } as CSSProperties}>
+        <span className={styles.midPctLabel} data-tier={tier}>
           {m.midSprintPct}%
         </span>
       </div>
@@ -210,20 +214,6 @@ function MidCard({ m, index }: { m: MidSprintInsight; index: number }) {
 }
 
 // ── Board status bar ──────────────────────────────────────────────────────────
-const STATUS_COLORS: Record<string, string> = {
-  'in progress': '#2563eb',
-  'code review': '#7c3aed',
-  'qa':          '#d97706',
-  'testing':     '#d97706',
-  'uat':         '#d97706',
-  'done':        '#16a34a',
-  'closed':      '#16a34a',
-  'resolved':    '#16a34a',
-  'to do':       '#94a3b8',
-  'backlog':     '#94a3b8',
-  'blocked':     '#dc2626',
-};
-
 function BoardStatusBar({
   status,
   count,
@@ -231,22 +221,22 @@ function BoardStatusBar({
   index,
 }: { status: string; count: number; maxCount: number; index: number }) {
   const safeStatus = status ?? '';
-  const color = STATUS_COLORS[safeStatus.toLowerCase()] ?? '#94a3b8';
-  const pct   = Math.round((count / maxCount) * 100);
+  const tone = statusTone(safeStatus);
+  const pct  = Math.round((count / maxCount) * 100);
   return (
     <div className={styles.boardRow} style={{ '--row-delay': `${index * 40}ms` } as CSSProperties}>
       <div className={styles.boardRowTop}>
         <span className={styles.boardStatusName}>{safeStatus || '(unknown)'}</span>
-        <span className={styles.boardStatusCount} style={{ '--bar-color': color } as CSSProperties}>
+        <span className={styles.boardStatusCount} data-tone={tone}>
           {count}
         </span>
       </div>
       <div className={styles.boardTrack}>
         <div
           className={styles.boardFill}
+          data-tone={tone}
           style={{
             '--bar-w':    `${pct}%`,
-            '--bar-color': color,
             '--bar-delay': `${index * 40}ms`,
           } as CSSProperties}
         />
@@ -274,47 +264,40 @@ function buildPeriodSummary(p: KanbanPeriod): string {
   return `Some flow issues detected — review the metrics below for areas to improve.`;
 }
 
+function metricTier(value: number, warnAt: number, criticalAt: number): Tier {
+  if (value > criticalAt) return 'critical';
+  if (value > warnAt) return 'warning';
+  return 'good';
+}
+
+// Higher is better (opposite direction from metricTier's "higher is worse").
+function flowEfficiencyTier(pct: number): Tier {
+  if (pct < 30) return 'critical';
+  if (pct < 50) return 'warning';
+  return 'good';
+}
+
 function PeriodCard({ p, index }: { p: KanbanPeriod; index: number }) {
-  const accent  = FLOW_HEALTH_COLORS[p.flowHealth];
-  const bColor  = BOTTLENECK_COLORS[p.bottleneckStatus];
   const hasBot  = p.bottleneckStatus !== 'None';
   const trend   = p.throughputTrend;
   const summary = buildPeriodSummary(p);
-
-  // Flow health chip colors
-  const flowChipBg  = `color-mix(in srgb,${accent} 12%,transparent)`;
-  const flowChipFg  = accent;
-
-  // Bottleneck chip colors
-  const botChipBg   = `color-mix(in srgb,${bColor} 12%,transparent)`;
-  const botChipFg   = bColor;
-
-  // Metric health colors
-  const cycleColor  = p.avgCycleTimeDays > 14 ? '#dc2626' : p.avgCycleTimeDays > 7 ? '#d97706' : '#16a34a';
-  const leadColor   = p.avgLeadTimeDays  > 21 ? '#dc2626' : p.avgLeadTimeDays  > 10 ? '#d97706' : '#16a34a';
-  const flowColor   = p.flowEfficiencyPct < 30 ? '#dc2626' : p.flowEfficiencyPct < 50 ? '#d97706' : '#16a34a';
-  const wipColor    = 'var(--color-text-primary,#0f172a)';
+  const trendTier: Tier = trend > 0 ? 'good' : trend < 0 ? 'critical' : 'warning';
 
   return (
     <div
       className={styles.periodCard}
-      style={{ '--period-accent': accent, '--row-delay': `${index * 60}ms` } as CSSProperties}
+      data-health={p.flowHealth}
+      style={{ '--row-delay': `${index * 60}ms` } as CSSProperties}
     >
       {/* Header: period label + health chips */}
       <div className={styles.periodCardHead}>
         <span className={styles.periodLabel}>{p.periodLabel}</span>
         <div className={styles.periodChips}>
-          <span
-            className={styles.periodFlowChip}
-            style={{ '--chip-bg': flowChipBg, '--chip-fg': flowChipFg } as CSSProperties}
-          >
+          <span className={styles.periodFlowChip} data-health={p.flowHealth}>
             {p.flowHealth}
           </span>
           {hasBot && (
-            <span
-              className={styles.periodBotChip}
-              style={{ '--chip-bg': botChipBg, '--chip-fg': botChipFg } as CSSProperties}
-            >
+            <span className={styles.periodBotChip} data-bottleneck={p.bottleneckStatus}>
               {p.bottleneckStatus} bottleneck
             </span>
           )}
@@ -324,7 +307,8 @@ function PeriodCard({ p, index }: { p: KanbanPeriod; index: number }) {
       {/* Plain-English summary */}
       <p
         className={styles.periodSummary}
-        style={{ '--summary-color': hasBot ? bColor : accent } as CSSProperties}
+        data-health={p.flowHealth}
+        data-bottleneck={hasBot ? p.bottleneckStatus : undefined}
       >
         {summary}
       </p>
@@ -332,13 +316,13 @@ function PeriodCard({ p, index }: { p: KanbanPeriod; index: number }) {
       {/* 2×2 metric grid */}
       <div className={styles.periodMetricGrid}>
         {[
-          { label: 'Cycle time',   val: p.avgCycleTimeDays > 0 ? `${p.avgCycleTimeDays.toFixed(1)}d` : '—', color: cycleColor, hint: '< 7d fast · > 14d slow' },
-          { label: 'Lead time',    val: p.avgLeadTimeDays  > 0 ? `${p.avgLeadTimeDays.toFixed(1)}d`  : '—', color: leadColor,  hint: '< 10d fast · > 21d slow' },
-          { label: 'Flow eff.',    val: `${p.flowEfficiencyPct}%`,                                          color: flowColor,  hint: '> 50% = healthy flow' },
-          { label: 'WIP average',  val: p.wipAverage > 0 ? p.wipAverage.toFixed(1) : '—',                  color: wipColor,   hint: 'active items at any time' },
+          { label: 'Cycle time',   val: p.avgCycleTimeDays > 0 ? `${p.avgCycleTimeDays.toFixed(1)}d` : '—', tier: metricTier(p.avgCycleTimeDays, 7, 14),        hint: '< 7d fast · > 14d slow' },
+          { label: 'Lead time',    val: p.avgLeadTimeDays  > 0 ? `${p.avgLeadTimeDays.toFixed(1)}d`  : '—', tier: metricTier(p.avgLeadTimeDays, 10, 21),        hint: '< 10d fast · > 21d slow' },
+          { label: 'Flow eff.',    val: `${p.flowEfficiencyPct}%`,                                          tier: flowEfficiencyTier(p.flowEfficiencyPct),      hint: '> 50% = healthy flow' },
+          { label: 'WIP average',  val: p.wipAverage > 0 ? p.wipAverage.toFixed(1) : '—',                  tier: 'neutral' as const,                            hint: 'active items at any time' },
         ].map(m => (
           <div key={m.label} className={styles.periodMetricBlock}>
-            <span className={styles.periodMetricVal} style={{ '--metric-color': m.color } as CSSProperties}>
+            <span className={styles.periodMetricVal} data-tier={m.tier}>
               {m.val}
             </span>
             <span className={styles.periodMetricLabel}>{m.label}</span>
@@ -350,10 +334,7 @@ function PeriodCard({ p, index }: { p: KanbanPeriod; index: number }) {
       {/* Footer: completed + trend */}
       <div className={styles.periodFooter}>
         <span>{p.completedCount} completed · {p.completedPoints > 0 ? `${p.completedPoints} pts` : 'no points tracked'}</span>
-        <span
-          className={styles.periodFooterAlert}
-          style={{ '--alert-color': trend > 0 ? '#16a34a' : trend < 0 ? '#dc2626' : '#94a3b8' } as CSSProperties}
-        >
+        <span className={styles.periodFooterAlert} data-tier={trendTier}>
           {trend > 0 ? `▲ +${trend} vs prev` : trend < 0 ? `▼ ${trend} vs prev` : 'Stable throughput'}
         </span>
       </div>
@@ -414,30 +395,30 @@ export default function SprintKanbanPage() {
   const flowHealth    = tpKanban?.overallFlowHealth    ?? 'Healthy';
 
   // ── KPI strip ──────────────────────────────────────────────────────────────
-  const trendColor = trendDirection === 'Improving' ? '#16a34a' : trendDirection === 'Declining' ? '#dc2626' : '#d97706';
+  const trendTone: Tone = trendDirection === 'Improving' ? 'good' : trendDirection === 'Declining' ? 'critical' : 'warning';
   const kpis = hasSprintData
     ? [
-        { label: 'Sprints',      val: sprintCount,           sub: 'total sprints',        color: 'var(--color-primary,#2563eb)', delay: 0   },
-        { label: 'Avg Complete', val: `${Math.round(avgCompletion)}%`, sub: 'avg sprint completion', color: pctColor(avgCompletion), delay: 40  },
-        { label: 'Avg Velocity', val: Math.round(avgThroughput),      sub: 'issues per sprint',     color: 'var(--color-text-primary,#0f172a)', delay: 80  },
-        { label: 'Trend',        val: trendDirection,                  sub: 'delivery direction',    color: trendColor,              delay: 120 },
-        { label: 'Delivery Confidence', val: `${Math.round(confidence)}%`,   sub: 'delivery confidence',  color: pctColor(confidence),    delay: 160 },
-        { label: 'End-Loaded',   val: endLoaded,     sub: 'sprints end-loaded',           color: endLoaded  > 0 ? '#d97706' : '#94a3b8', delay: 200 },
-        { label: 'Blocked',      val: blockedSprints, sub: 'sprints had blockers',         color: blockedSprints > 0 ? '#dc2626' : '#94a3b8', delay: 240 },
-        { label: 'Active WIP',   val: metrics.activeIssues ?? 0, sub: 'in progress now',  color: (metrics.activeIssues ?? 0) > 15 ? '#dc2626' : 'var(--color-primary,#2563eb)', delay: 280 },
+        { label: 'Sprints',      val: sprintCount,           sub: 'total sprints',        tone: 'primary' as Tone, delay: 0   },
+        { label: 'Avg Complete', val: `${Math.round(avgCompletion)}%`, sub: 'avg sprint completion', tone: pctTier(avgCompletion), delay: 40  },
+        { label: 'Avg Velocity', val: Math.round(avgThroughput),      sub: 'issues per sprint',     tone: 'neutral' as Tone, delay: 80  },
+        { label: 'Trend',        val: trendDirection,                  sub: 'delivery direction',    tone: trendTone,        delay: 120 },
+        { label: 'Delivery Confidence', val: `${Math.round(confidence)}%`,   sub: 'delivery confidence',  tone: pctTier(confidence),    delay: 160 },
+        { label: 'End-Loaded',   val: endLoaded,     sub: 'sprints end-loaded',           tone: (endLoaded  > 0 ? 'warning' : 'neutral') as Tone, delay: 200 },
+        { label: 'Blocked',      val: blockedSprints, sub: 'sprints had blockers',         tone: (blockedSprints > 0 ? 'critical' : 'neutral') as Tone, delay: 240 },
+        { label: 'Active WIP',   val: metrics.activeIssues ?? 0, sub: 'in progress now',  tone: ((metrics.activeIssues ?? 0) > 15 ? 'critical' : 'primary') as Tone, delay: 280 },
       ]
     : [
-        { label: 'Active Issues', val: metrics.activeIssues  ?? 0, sub: 'in progress',    color: 'var(--color-primary,#2563eb)', delay: 0   },
-        { label: 'Completion',    val: `${metrics.completionRate ?? 0}%`, sub: 'overall done', color: pctColor(metrics.completionRate ?? 0), delay: 40  },
-        { label: 'Cycle Time',    val: avgCycleTime > 0 ? `${avgCycleTime.toFixed(1)}d` : '—', sub: 'avg cycle time', color: avgCycleTime > 14 ? '#dc2626' : '#16a34a', delay: 80  },
-        { label: 'Lead Time',     val: avgLeadTime  > 0 ? `${avgLeadTime.toFixed(1)}d`  : '—', sub: 'avg lead time',  color: avgLeadTime  > 21 ? '#dc2626' : '#16a34a', delay: 120 },
-        { label: 'Flow Eff.',     val: `${Math.round(avgFlowEff)}%`, sub: 'flow efficiency',    color: avgFlowEff < 30 ? '#dc2626' : avgFlowEff < 50 ? '#d97706' : '#16a34a', delay: 160 },
-        { label: 'Aging WIP',     val: totalAgingWip, sub: 'items > 14 days',             color: totalAgingWip > 0 ? '#d97706' : '#94a3b8', delay: 200 },
-        { label: 'Blocked',       val: metrics.blockedIssues ?? 0, sub: 'items blocked',  color: (metrics.blockedIssues ?? 0) > 0 ? '#dc2626' : '#94a3b8', delay: 240 },
+        { label: 'Active Issues', val: metrics.activeIssues  ?? 0, sub: 'in progress',    tone: 'primary' as Tone, delay: 0   },
+        { label: 'Completion',    val: `${metrics.completionRate ?? 0}%`, sub: 'overall done', tone: pctTier(metrics.completionRate ?? 0), delay: 40  },
+        { label: 'Cycle Time',    val: avgCycleTime > 0 ? `${avgCycleTime.toFixed(1)}d` : '—', sub: 'avg cycle time', tone: (avgCycleTime > 14 ? 'critical' : 'good') as Tone, delay: 80  },
+        { label: 'Lead Time',     val: avgLeadTime  > 0 ? `${avgLeadTime.toFixed(1)}d`  : '—', sub: 'avg lead time',  tone: (avgLeadTime  > 21 ? 'critical' : 'good') as Tone, delay: 120 },
+        { label: 'Flow Eff.',     val: `${Math.round(avgFlowEff)}%`, sub: 'flow efficiency',    tone: flowEfficiencyTier(avgFlowEff), delay: 160 },
+        { label: 'Aging WIP',     val: totalAgingWip, sub: 'items > 14 days',             tone: (totalAgingWip > 0 ? 'warning' : 'neutral') as Tone, delay: 200 },
+        { label: 'Blocked',       val: metrics.blockedIssues ?? 0, sub: 'items blocked',  tone: ((metrics.blockedIssues ?? 0) > 0 ? 'critical' : 'neutral') as Tone, delay: 240 },
         // AUDIT-CP3-005: overallFlowHealth defaults to 'Healthy' when there are zero
         // completed periods to evaluate — guard on real period data the same way the
         // Cycle Time / Lead Time tiles above already guard on a zero average.
-        { label: 'Flow Health',   val: kanbanPeriods.length > 0 ? flowHealth : '—', sub: 'kanban flow status', color: kanbanPeriods.length > 0 ? FLOW_HEALTH_COLORS[flowHealth] : '#94a3b8', delay: 280 },
+        { label: 'Flow Health',   val: kanbanPeriods.length > 0 ? flowHealth : '—', sub: 'kanban flow status', tone: (kanbanPeriods.length > 0 ? healthTier(flowHealth) : 'neutral') as Tone, delay: 280 },
       ];
 
   return (
@@ -488,7 +469,7 @@ export default function SprintKanbanPage() {
           {kpis.map(k => (
             <div key={k.label} className={styles.kpiCard} style={{ '--kpi-delay': `${k.delay}ms` } as CSSProperties}>
               <p className={styles.kpiLabel}>{k.label}</p>
-              <p className={styles.kpiVal} style={{ '--kpi-color': k.color } as CSSProperties}>{k.val}</p>
+              <p className={styles.kpiVal} data-tone={k.tone}>{k.val}</p>
               <p className={styles.kpiSub}>{k.sub}</p>
             </div>
           ))}
@@ -517,15 +498,15 @@ export default function SprintKanbanPage() {
                     <p className={styles.trendTitle}>Completion trend per sprint</p>
                     <div className={styles.trendChart}>
                       {richSprints.map((sp, i) => {
-                        const color = pctColor(sp.completionPct);
+                        const tier = pctTier(sp.completionPct);
                         return (
                           <div key={sp.sprintName} className={styles.trendCol}>
                             <div className={styles.trendBarTrack}>
                               <div
                                 className={styles.trendBarFill}
+                                data-tier={tier}
                                 style={{
                                   '--bar-h':    `${sp.completionPct}%`,
-                                  '--bar-color': color,
                                   '--bar-delay': `${i * 50}ms`,
                                 } as CSSProperties}
                                 title={`${sp.sprintName}: ${sp.completionPct}%`}
@@ -540,12 +521,12 @@ export default function SprintKanbanPage() {
                     </div>
                     <div className={styles.trendLegend}>
                       {[
-                        { label: '≥ 80% (healthy)',  color: '#16a34a' },
-                        { label: '50–79% (at risk)', color: '#d97706' },
-                        { label: '< 50% (critical)', color: '#dc2626' },
+                        { label: '≥ 80% (healthy)',  tier: 'good' as Tier },
+                        { label: '50–79% (at risk)', tier: 'warning' as Tier },
+                        { label: '< 50% (critical)', tier: 'critical' as Tier },
                       ].map(l => (
                         <div key={l.label} className={styles.trendLegendItem}>
-                          <div className={styles.trendLegendDot} style={{ '--dot-color': l.color } as CSSProperties} />
+                          <div className={styles.trendLegendDot} data-tier={l.tier} />
                           {l.label}
                         </div>
                       ))}
@@ -636,18 +617,18 @@ export default function SprintKanbanPage() {
                 </div>
                 <div className={styles.flowStatGrid}>
                   {[
-                    { label: 'Best sprint',        val: bestSprint,  color: '#16a34a', sub: 'highest completion',          delay: 0   },
-                    { label: 'Worst sprint',        val: worstSprint, color: '#dc2626', sub: 'lowest completion',           delay: 40  },
-                    { label: 'Avg throughput',      val: `${Math.round(avgThroughput)} issues`, color: 'var(--color-text-primary,#0f172a)', sub: 'per sprint',    delay: 80  },
-                    { label: 'Avg point velocity',  val: tpSprint?.averageThroughputPoints ? `${Math.round(tpSprint.averageThroughputPoints)} pts` : '—', color: 'var(--color-text-primary,#0f172a)', sub: 'per sprint', delay: 120 },
-                    { label: 'Avg mid-sprint done', val: `${Math.round(tpSprint?.averageMidSprintPct ?? 0)}%`, color: pctColor(tpSprint?.averageMidSprintPct ?? 0), sub: 'done by midpoint', delay: 160 },
+                    { label: 'Best sprint',        val: bestSprint,  tone: 'good' as Tone, sub: 'highest completion',          delay: 0   },
+                    { label: 'Worst sprint',        val: worstSprint, tone: 'critical' as Tone, sub: 'lowest completion',           delay: 40  },
+                    { label: 'Avg throughput',      val: `${Math.round(avgThroughput)} issues`, tone: 'neutral' as Tone, sub: 'per sprint',    delay: 80  },
+                    { label: 'Avg point velocity',  val: tpSprint?.averageThroughputPoints ? `${Math.round(tpSprint.averageThroughputPoints)} pts` : '—', tone: 'neutral' as Tone, sub: 'per sprint', delay: 120 },
+                    { label: 'Avg mid-sprint done', val: `${Math.round(tpSprint?.averageMidSprintPct ?? 0)}%`, tone: pctTier(tpSprint?.averageMidSprintPct ?? 0), sub: 'done by midpoint', delay: 160 },
                   ].map(r => (
                     <div key={r.label} className={styles.flowStatRow} style={{ '--row-delay': `${r.delay}ms` } as CSSProperties}>
                       <div>
                         <p className={styles.flowStatLabel}>{r.label}</p>
                         <p className={styles.flowStatSub}>{r.sub}</p>
                       </div>
-                      <span className={styles.flowStatVal} style={{ '--stat-color': r.color } as CSSProperties}>
+                      <span className={styles.flowStatVal} data-tone={r.tone}>
                         {r.val}
                       </span>
                     </div>
@@ -661,7 +642,7 @@ export default function SprintKanbanPage() {
               <div className={styles.card} style={{ '--card-delay': '100ms' } as CSSProperties}>
                 <div className={styles.cardHead}>
                   <span className={styles.cardTitle}>Flow Health</span>
-                  <span className={styles.cardBadge} style={{ color: FLOW_HEALTH_COLORS[flowHealth] }}>{flowHealth}</span>
+                  <span className={styles.cardBadge} data-health={flowHealth}>{flowHealth}</span>
                 </div>
                 <div className={styles.flowStatGrid}>
                   {[
@@ -669,28 +650,28 @@ export default function SprintKanbanPage() {
                       label: 'Cycle time',
                       val:   avgCycleTime > 0 ? `${avgCycleTime.toFixed(1)} days` : '—',
                       sub:   'avg active work time',
-                      color: avgCycleTime > 14 ? '#dc2626' : avgCycleTime > 7 ? '#d97706' : '#16a34a',
+                      tone:  metricTier(avgCycleTime, 7, 14),
                       delay: 0,
                     },
                     {
                       label: 'Lead time',
                       val:   avgLeadTime > 0 ? `${avgLeadTime.toFixed(1)} days` : '—',
                       sub:   'total wait + work time',
-                      color: avgLeadTime > 21 ? '#dc2626' : avgLeadTime > 10 ? '#d97706' : '#16a34a',
+                      tone:  metricTier(avgLeadTime, 10, 21),
                       delay: 40,
                     },
                     {
                       label: 'Flow efficiency',
                       val:   `${Math.round(avgFlowEff)}%`,
                       sub:   'active / lead time',
-                      color: avgFlowEff < 30 ? '#dc2626' : avgFlowEff < 50 ? '#d97706' : '#16a34a',
+                      tone:  flowEfficiencyTier(avgFlowEff),
                       delay: 80,
                     },
                     {
                       label: 'Aging WIP',
                       val:   `${totalAgingWip} items`,
                       sub:   'active > 14 days',
-                      color: totalAgingWip > 5 ? '#dc2626' : totalAgingWip > 0 ? '#d97706' : '#94a3b8',
+                      tone:  (totalAgingWip > 5 ? 'critical' : totalAgingWip > 0 ? 'warning' : 'neutral') as Tone,
                       delay: 120,
                     },
                   ].map(r => (
@@ -699,7 +680,7 @@ export default function SprintKanbanPage() {
                         <p className={styles.flowStatLabel}>{r.label}</p>
                         <p className={styles.flowStatSub}>{r.sub}</p>
                       </div>
-                      <span className={styles.flowStatVal} style={{ '--stat-color': r.color } as CSSProperties}>
+                      <span className={styles.flowStatVal} data-tone={r.tone}>
                         {r.val}
                       </span>
                     </div>
@@ -715,11 +696,11 @@ export default function SprintKanbanPage() {
               </div>
               <div className={styles.flowStatGrid}>
                 {[
-                  { label: 'Total issues',    val: metrics.totalIssues    ?? 0, sub: 'in scope',            isAlert: false,                                   color: 'var(--color-text-primary,#0f172a)', delay: 0   },
-                  { label: 'Done / Closed',   val: metrics.doneIssues     ?? 0, sub: 'completed',           isAlert: false,                                   color: '#16a34a',                           delay: 40  },
-                  { label: 'Active WIP',      val: metrics.activeIssues   ?? 0, sub: 'in progress now',     isAlert: (metrics.activeIssues  ?? 0) > 15,       color: (metrics.activeIssues ?? 0) > 15 ? '#dc2626' : 'var(--color-primary,#2563eb)', delay: 80  },
-                  { label: 'Blocked',         val: metrics.blockedIssues  ?? 0, sub: 'need unblocking',     isAlert: (metrics.blockedIssues ?? 0) > 0,        color: (metrics.blockedIssues ?? 0) > 0 ? '#dc2626' : '#94a3b8', delay: 120 },
-                  { label: 'Open defects',    val: metrics.openDefects    ?? 0, sub: 'quality risk',        isAlert: (metrics.openDefects   ?? 0) > 5,        color: (metrics.openDefects ?? 0) > 5 ? '#dc2626' : (metrics.openDefects ?? 0) > 0 ? '#d97706' : '#94a3b8', delay: 160 },
+                  { label: 'Total issues',    val: metrics.totalIssues    ?? 0, sub: 'in scope',            isAlert: false,                                   tone: 'neutral' as Tone, delay: 0   },
+                  { label: 'Done / Closed',   val: metrics.doneIssues     ?? 0, sub: 'completed',           isAlert: false,                                   tone: 'good' as Tone,    delay: 40  },
+                  { label: 'Active WIP',      val: metrics.activeIssues   ?? 0, sub: 'in progress now',     isAlert: (metrics.activeIssues  ?? 0) > 15,       tone: ((metrics.activeIssues ?? 0) > 15 ? 'critical' : 'primary') as Tone, delay: 80  },
+                  { label: 'Blocked',         val: metrics.blockedIssues  ?? 0, sub: 'need unblocking',     isAlert: (metrics.blockedIssues ?? 0) > 0,        tone: ((metrics.blockedIssues ?? 0) > 0 ? 'critical' : 'neutral') as Tone, delay: 120 },
+                  { label: 'Open defects',    val: metrics.openDefects    ?? 0, sub: 'quality risk',        isAlert: (metrics.openDefects   ?? 0) > 5,        tone: ((metrics.openDefects ?? 0) > 5 ? 'critical' : (metrics.openDefects ?? 0) > 0 ? 'warning' : 'neutral') as Tone, delay: 160 },
                 ].map(r => (
                   <div
                     key={r.label}
@@ -731,7 +712,7 @@ export default function SprintKanbanPage() {
                       <p className={styles.healthRowLabel}>{r.label}</p>
                       <p className={styles.healthRowSub}>{r.sub}</p>
                     </div>
-                    <span className={styles.healthRowVal} style={{ '--stat-color': r.color } as CSSProperties}>
+                    <span className={styles.healthRowVal} data-tone={r.tone}>
                       {r.val}
                     </span>
                   </div>

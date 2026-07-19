@@ -24,6 +24,7 @@
   height: 18px;
   border-radius: 4px;
   flex-shrink: 0;
+  color: var(--dc-acc2, #ff8a4c);
 }
 
 .breadcrumbProject {
@@ -366,6 +367,23 @@
 }
 
 .typeIcon { flex-shrink: 0; }
+
+// Color resolved from a work-item-type classification via data-type on the
+// wrapper (CLAUDE.md §28) — .typeIcon inherits it via currentColor.
+.typeIconWrap {
+  display: inline-flex;
+  color: #60a5fa;
+
+  &[data-type='bug']         { color: #f87171; }
+  &[data-type='story']       { color: #4ade80; }
+  &[data-type='task']        { color: #60a5fa; }
+  &[data-type='epic']        { color: #a78bfa; }
+  &[data-type='sub-task']    { color: #93c5fd; }
+  &[data-type='feature']     { color: #fb923c; }
+  &[data-type='improvement'] { color: #22d3ee; }
+  &[data-type='spike']       { color: #f472b6; }
+  &[data-type='test case']   { color: #facc15; }
+}
 
 .summaryCell {
   padding: 10px 14px;

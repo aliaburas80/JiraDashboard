@@ -130,6 +130,8 @@
   }
 }
 
+// Colors resolved from data-tone (CLAUDE.md §28) — .kpiIconBox's `color`
+// cascades into its child SvgIcon via currentColor (see SvgIcon.tsx).
 .kpiIconBox {
   width: 38px;
   height: 38px;
@@ -139,6 +141,13 @@
   justify-content: center;
   font-size: 18px;
   flex-shrink: 0;
+  background: var(--color-muted, #e2e8f0);
+  color: var(--color-text-primary, #0f172a);
+
+  &[data-tone='success'] { background: #dcfce7; color: var(--color-success, #22c55e); }
+  &[data-tone='primary'] { background: #dbeafe; color: var(--color-primary, #2563eb); }
+  &[data-tone='warning'] { background: #fef9c3; color: var(--color-warning, #f59e0b); }
+  &[data-tone='danger']  { background: #fee2e2; color: var(--color-danger, #f87171); }
 }
 
 .kpiBody { flex: 1; min-width: 0; }
@@ -149,6 +158,12 @@
   line-height: 1;
   font-family: var(--font-mono, monospace);
   letter-spacing: -0.02em;
+  color: var(--color-text-primary, #0f172a);
+
+  &[data-tone='success'] { color: var(--color-success, #22c55e); }
+  &[data-tone='primary'] { color: var(--color-primary, #2563eb); }
+  &[data-tone='warning'] { color: var(--color-warning, #f59e0b); }
+  &[data-tone='danger']  { color: var(--color-danger, #f87171); }
 }
 
 .kpiLabel {
@@ -441,10 +456,12 @@
   z-index: 5;
 }
 
-// Bar track + fill
+// Bar track + fill — color resolved from data-health on the wrap (CLAUDE.md
+// §28); .ganttBarFill picks it up via an ancestor selector since it's a
+// genuine DOM descendant of the wrap.
 .ganttBarWrap {
   position: absolute;
-  // EXCEPTION: left/width are data-driven from timeline calculation
+  // EXCEPTION: left/width are genuinely runtime-computed from timeline math (§14.2)
   left: var(--bar-left, 0%);
   width: var(--bar-width, 40%);
   top: 50%;
@@ -452,17 +469,25 @@
   transform: translateY(-50%);
   border-radius: 4px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--bar-color, #2563eb) 12%, var(--color-muted, #e2e8f0));
+  background: color-mix(in srgb, var(--color-primary, #2563eb) 12%, var(--color-muted, #e2e8f0));
+
+  &[data-health='good']     { background: color-mix(in srgb, var(--color-success, #22c55e) 12%, var(--color-muted, #e2e8f0)); }
+  &[data-health='warning']  { background: color-mix(in srgb, var(--color-warning, #f59e0b) 12%, var(--color-muted, #e2e8f0)); }
+  &[data-health='critical'] { background: color-mix(in srgb, var(--color-danger, #f87171) 12%, var(--color-muted, #e2e8f0)); }
 }
 
 .ganttBarFill {
   height: 100%;
   border-radius: 4px;
-  // EXCEPTION: width and color are data-driven
-  background: var(--bar-color, var(--color-primary, #2563eb));
+  // EXCEPTION: width is genuinely runtime-computed (§14.2)
+  background: var(--color-primary, #2563eb);
   width: var(--fill-w, 0%);
   animation: barFill 900ms var(--bar-delay, 0ms) cubic-bezier(0.25, 1, 0.5, 1) both;
   opacity: 0.9;
+
+  [data-health='good'] &     { background: var(--color-success, #22c55e); }
+  [data-health='warning'] &  { background: var(--color-warning, #f59e0b); }
+  [data-health='critical'] & { background: var(--color-danger, #f87171); }
 }
 
 // Estimated hatch overlay within bar
@@ -473,9 +498,32 @@
     45deg,
     transparent,
     transparent 3px,
-    color-mix(in srgb, var(--bar-color, #2563eb) 20%, transparent) 3px,
-    color-mix(in srgb, var(--bar-color, #2563eb) 20%, transparent) 6px
+    color-mix(in srgb, var(--color-primary, #2563eb) 20%, transparent) 3px,
+    color-mix(in srgb, var(--color-primary, #2563eb) 20%, transparent) 6px
   );
+
+  [data-health='good'] & {
+    background: repeating-linear-gradient(
+      45deg, transparent, transparent 3px,
+      color-mix(in srgb, var(--color-success, #22c55e) 20%, transparent) 3px,
+      color-mix(in srgb, var(--color-success, #22c55e) 20%, transparent) 6px
+    );
+  }
+  [data-health='warning'] & {
+    background: repeating-linear-gradient(
+      45deg, transparent, transparent 3px,
+      color-mix(in srgb, var(--color-warning, #f59e0b) 20%, transparent) 3px,
+      color-mix(in srgb, var(--color-warning, #f59e0b) 20%, transparent) 6px
+    );
+  }
+  [data-health='critical'] & {
+    background: repeating-linear-gradient(
+      45deg, transparent, transparent 3px,
+      color-mix(in srgb, var(--color-danger, #f87171) 20%, transparent) 3px,
+      color-mix(in srgb, var(--color-danger, #f87171) 20%, transparent) 6px
+    );
+  }
+
   pointer-events: none;
 }
 
@@ -532,6 +580,10 @@
   height: 8px;
   border-radius: var(--radius-full, 9999px);
   flex-shrink: 0;
+
+  &[data-health='good']     { background: var(--color-success, #22c55e); }
+  &[data-health='warning']  { background: var(--color-warning, #f59e0b); }
+  &[data-health='critical'] { background: var(--color-danger, #f87171); }
 }
 
 .legendHatch {
@@ -647,10 +699,14 @@
 .forecastMiniFill {
   height: 100%;
   border-radius: var(--radius-full, 9999px);
-  // EXCEPTION: width and color are data-driven from progress and health
+  // EXCEPTION: width is genuinely runtime-computed (§14.2); color is data-health.
   width: var(--fill-w, 0%);
-  background: var(--fill-color, var(--color-primary, #2563eb));
+  background: var(--color-primary, #2563eb);
   animation: barFill 800ms var(--bar-delay, 0ms) cubic-bezier(0.25, 1, 0.5, 1) both;
+
+  &[data-health='good']     { background: var(--color-success, #22c55e); }
+  &[data-health='warning']  { background: var(--color-warning, #f59e0b); }
+  &[data-health='critical'] { background: var(--color-danger, #f87171); }
 }
 
 .forecastPctCell {
@@ -908,10 +964,14 @@
 .epicProgressFill {
   height: 100%;
   border-radius: var(--radius-full, 9999px);
-  // EXCEPTION: width and color are data-driven
+  // EXCEPTION: width is genuinely runtime-computed (§14.2); color is data-health.
   width: var(--fill-w, 0%);
-  background: var(--fill-color, var(--color-primary, #2563eb));
+  background: var(--color-primary, #2563eb);
   animation: barFill 900ms var(--bar-delay, 0ms) cubic-bezier(0.25, 1, 0.5, 1) both;
+
+  [data-health='good'] &     { background: var(--color-success, #22c55e); }
+  [data-health='warning'] &  { background: var(--color-warning, #f59e0b); }
+  [data-health='critical'] & { background: var(--color-danger, #f87171); }
 }
 
 // Stat grid
@@ -1026,4 +1086,32 @@
     outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
     outline-offset: 2px;
   }
+}
+
+// ── Misc new classes (STYLE-05, 2026-07-19) ──────────────────────────────────
+.emptyStateFlat {
+  border-radius: 0;
+  border: none;
+  padding: 48px 24px;
+}
+
+.epicSpRow {
+  font-size: 10px;
+  color: var(--color-text-muted, #94a3b8);
+  display: flex;
+  justify-content: space-between;
+}
+
+.epicSpVal {
+  font-weight: 700;
+}
+
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 320px;
+  color: var(--color-text-muted, #94a3b8);
+  font-size: 13px;
+  font-weight: 600;
 }

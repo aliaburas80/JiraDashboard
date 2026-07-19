@@ -1,0 +1,197 @@
+// ── Header ────────────────────────────────────────────────────────────────────
+.title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--color-text-secondary, #64748b);
+}
+
+// ── Stats + request button ───────────────────────────────────────────────────
+.statChip {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-full, 9999px);
+}
+
+.statLabel {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted, #94a3b8);
+}
+
+.statValue {
+  color: var(--color-primary, #2563eb);
+}
+
+.requestBtn {
+  border-radius: var(--radius-lg, 14px);
+  background: var(--color-primary-soft, rgb(37 99 235 / 10%));
+  border: 1px solid var(--color-primary-border, rgb(37 99 235 / 20%));
+  color: var(--color-primary, #2563eb);
+  transition: background var(--transition-fast, 150ms ease);
+
+  &:hover { background: color-mix(in srgb, var(--color-primary, #2563eb) 16%, transparent); }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--color-primary, #2563eb);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+.searchIcon {
+  color: var(--color-text-muted, #94a3b8);
+}
+
+.searchInput {
+  height: 48px;
+  width: 100%;
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  color: var(--color-text-primary, #0f172a);
+  outline: none;
+  transition: box-shadow var(--transition-fast, 150ms ease);
+
+  &:focus {
+    box-shadow: 0 0 0 2px var(--color-primary-soft, rgb(37 99 235 / 25%));
+  }
+}
+
+// ── Error / empty states ─────────────────────────────────────────────────────
+.errorBanner {
+  border-radius: var(--radius-lg, 14px);
+  background: var(--color-danger-soft, rgb(248 113 113 / 11%));
+  border: 1px solid var(--color-danger-border, rgb(248 113 113 / 25%));
+  color: var(--color-danger-strong, #dc2626);
+}
+
+.emptyState {
+  border-radius: var(--radius-lg, 14px);
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  color: var(--color-text-muted, #94a3b8);
+}
+
+// ── Skeleton loading ──────────────────────────────────────────────────────────
+.skeletonCard {
+  height: 160px;
+  border-radius: var(--radius-lg, 14px);
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+// ── Member cards ──────────────────────────────────────────────────────────────
+.memberCard {
+  border-radius: var(--radius-lg, 14px);
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  transition: border-color var(--transition-fast, 200ms ease), transform var(--transition-fast, 200ms ease), box-shadow var(--transition-fast, 200ms ease);
+
+  &:hover {
+    border-color: var(--color-border-strong, #cbd5e1);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md, 0 8px 24px rgb(0 0 0 / 10%));
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--color-primary, #2563eb);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+}
+
+// Avatar gradient rotates through a small fixed palette by card index —
+// data-avatar (0-4) selects it (CLAUDE.md §28); these decorative gradients
+// have no existing single-token equivalent, so they're page-local.
+.avatarFallback {
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary, #2563eb), var(--color-primary-hover, #1d4ed8));
+
+  &[data-avatar='0'] { background: linear-gradient(135deg, var(--dc-acc, #e85d12), #8b2d00); }
+  &[data-avatar='1'] { background: linear-gradient(135deg, #7c3aed, #4c1d95); }
+  &[data-avatar='2'] { background: linear-gradient(135deg, #0284c7, #1e3a5f); }
+  &[data-avatar='3'] { background: linear-gradient(135deg, #0d9488, #134e4a); }
+  &[data-avatar='4'] { background: linear-gradient(135deg, #ca8a04, #78350f); }
+}
+
+.memberName {
+  font-size: 13px;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.memberPosition {
+  font-size: 10px;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.memberEmail {
+  font-size: 10px;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.memberBio {
+  font-size: 10px;
+  color: var(--color-text-muted, #94a3b8);
+
+  &[data-empty='true'] { font-style: italic; }
+}
+
+// ── Member detail modal ───────────────────────────────────────────────────────
+.modalOverlay {
+  background: rgb(0 0 0 / 60%);
+}
+
+.modalCard {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border-strong, #cbd5e1);
+  box-shadow: 0 24px 64px rgb(0 0 0 / 25%);
+  max-height: 90vh;
+}
+
+.modalAvatarLg {
+  color: #fff;
+  background: linear-gradient(135deg, var(--dc-acc, #e85d12), #8b2d00);
+}
+
+.modalName {
+  color: var(--color-text-primary, #0f172a);
+}
+
+.modalPosition {
+  color: var(--color-text-secondary, #64748b);
+}
+
+.modalCloseBtn {
+  border-radius: var(--radius-md, 9px);
+  border: 1px solid var(--color-border, #e2e8f0);
+  color: var(--color-text-secondary, #64748b);
+  background: transparent;
+  transition: background var(--transition-fast, 150ms ease);
+
+  &:hover { background: var(--color-surface-hover, #f1f5f9); }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--color-primary, #2563eb);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+}
+
+.detailCard {
+  border-radius: var(--radius-md, 12px);
+  background: var(--color-subtle, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.detailLabel {
+  color: var(--color-text-muted, #94a3b8);
+}
+
+.detailValue {
+  color: var(--color-text-primary, #0f172a);
+}
