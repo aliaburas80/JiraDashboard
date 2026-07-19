@@ -1,0 +1,392 @@
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
+// STYLE-03 (2026-07-19): converted from inline styles to SCSS Module +
+// design tokens per CLAUDE.md §13-18/§60. No behavior change. The score
+// classification (Excellent/Good/Moderate/Poor) is a page-local 4-tier
+// scale distinct from the shared 5-tier Health Score band system
+// (CP3-018) — "Good" here is cyan, not green, so it intentionally does not
+// reuse --color-health-good-*. SVG stroke colors now come from CSS
+// data-band selectors instead of a JS color lookup passed as an attribute
+// value (CLAUDE.md §28).
+
+.page {
+  padding: 0 var(--space-8, 28px) var(--space-12, 48px);
+}
+
+// ── Score block ──────────────────────────────────────────────────────────────
+
+.scoreBlock {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5, 20px);
+  padding: 20px 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-5, 20px);
+}
+
+.scoreRingWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.scoreRingTrack {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 2.5;
+}
+
+.scoreRingArc {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 900ms cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+  transform: rotate(-90deg);
+  stroke: var(--color-health-excellent-arc);
+
+  &[data-band='good']     { stroke: var(--chart-series-6); }
+  &[data-band='moderate'] { stroke: var(--color-health-moderate-arc); }
+  &[data-band='poor']     { stroke: var(--color-health-atrisk-arc); }
+}
+
+.scoreRingLabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.scoreValue {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-health-excellent-text);
+
+  &[data-band='good']     { color: var(--chart-series-6); }
+  &[data-band='moderate'] { color: var(--color-health-moderate-text); }
+  &[data-band='poor']     { color: var(--color-health-atrisk-text); }
+}
+
+.scoreMax {
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.scoreDetail {
+  flex: 1;
+}
+
+.scoreHeaderRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-bottom: 6px;
+}
+
+.scoreTitle {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.bandChip {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  color: var(--color-health-excellent-text);
+  background: var(--color-health-excellent-bg);
+  border-color: var(--color-health-excellent-border);
+
+  &[data-band='good'] {
+    color: var(--chart-series-6);
+    background: rgb(8 145 178 / 8%);
+    border-color: rgb(8 145 178 / 25%);
+  }
+
+  &[data-band='moderate'] {
+    color: var(--color-health-moderate-text);
+    background: var(--color-health-moderate-bg);
+    border-color: var(--color-health-moderate-border);
+  }
+
+  &[data-band='poor'] {
+    color: var(--color-health-atrisk-text);
+    background: var(--color-health-atrisk-bg);
+    border-color: var(--color-health-atrisk-border);
+  }
+}
+
+.scoreSummary {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.severityStats {
+  display: flex;
+  gap: var(--space-2, 8px);
+  flex-shrink: 0;
+}
+
+.severityStat {
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  text-align: center;
+  color: var(--color-danger-strong);
+  background: var(--color-danger-soft);
+  border: 1px solid var(--color-danger-border);
+
+  &[data-severity='high'] {
+    color: var(--color-warning);
+    background: var(--color-warning-soft);
+    border-color: var(--color-warning-border);
+  }
+
+  &[data-severity='medium'] {
+    color: var(--color-primary);
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary-border);
+  }
+}
+
+.severityStatCount {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  font-family: var(--font-mono);
+  margin: 0;
+}
+
+.severityStatLabel {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+// ── Missing column impact ──────────────────────────────────────────────────────
+
+.issueList {
+  display: flex;
+  flex-direction: column;
+}
+
+.issueRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3, 14px);
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-subtle);
+
+  &:last-child { border-bottom: none; }
+}
+
+.issueDot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-danger-strong);
+  flex-shrink: 0;
+  margin-top: 3px;
+
+  &[data-severity='high']   { background: var(--color-warning); }
+  &[data-severity='medium'] { background: var(--color-primary); }
+  &[data-severity='low']    { background: var(--color-success); }
+}
+
+.issueBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.issueHeadRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-bottom: 4px;
+}
+
+.issueField {
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.severityBadge {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  border: 1px solid;
+  color: var(--color-danger-strong);
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-border);
+
+  &[data-severity='high'] {
+    color: var(--color-warning);
+    background: var(--color-warning-soft);
+    border-color: var(--color-warning-border);
+  }
+
+  &[data-severity='medium'] {
+    color: var(--color-primary);
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary-border);
+  }
+
+  &[data-severity='low'] {
+    color: var(--color-success);
+    background: var(--color-success-soft);
+    border-color: var(--color-success-border);
+  }
+}
+
+.issueCount {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+
+.issueImpact {
+  font-size: var(--text-base);
+  color: var(--color-danger-strong);
+  margin: 0;
+}
+
+.emptyState {
+  padding: 60px 0;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+}
+
+.emptyIcon {
+  font-size: 36px;
+  margin-bottom: var(--space-3, 12px);
+}
+
+// ── Delivery composition ────────────────────────────────────────────────────────
+
+.compositionRow {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.donutWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+// EXCEPTION (CLAUDE.md Rule 1): the conic-gradient is composed at runtime
+// from a variable number of segments (however many status buckets have a
+// non-zero count) with data-dependent stop percentages — there is no fixed
+// set of gradients to express as classes. The gradient's color stops are
+// var(--token) references, never raw hex, so this is purely geometry, not
+// a business-logic color decision.
+.donutRing {
+  width: 140px;
+  height: 140px;
+  border-radius: var(--radius-full);
+  background: var(--donut-bg);
+  animation: donutReveal 700ms ease-out both;
+
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+.donutHole {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-subtle) 95%, transparent) 52%, transparent 52%);
+}
+
+.donutValue {
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+}
+
+.donutLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.donutSub {
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+}
+
+.legend {
+  flex: 1;
+  min-width: 220px;
+}
+
+.legendGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3, 10px);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+.legendDot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  background: var(--color-success);
+
+  &[data-segment='active']   { background: var(--color-info); }
+  &[data-segment='warning']  { background: var(--color-warning); }
+  &[data-segment='critical'] { background: var(--color-danger); }
+  &[data-segment='other']    { background: var(--dc-s4); }
+}
+
+.legendLabel {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  flex: 1;
+}
+
+.legendValue {
+  font-size: var(--text-md);
+  color: var(--color-text-primary);
+}
+
+.legendPct {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  width: 32px;
+  text-align: right;
+}
+
+.legendFooter {
+  margin-top: var(--space-3, 12px);
+  padding-top: var(--space-3, 12px);
+  border-top: 1px solid var(--color-subtle);
+  display: flex;
+  gap: var(--space-4, 16px);
+  flex-wrap: wrap;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}
+
+.legendFooterStrong {
+  color: var(--color-text-primary);
+}
