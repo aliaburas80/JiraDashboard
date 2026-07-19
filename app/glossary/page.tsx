@@ -1,8 +1,12 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 'use client';
-import { useState, useMemo, type CSSProperties } from 'react';
+import { useState, useMemo } from 'react';
 import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import styles from './page.module.scss';
+
+// STYLE-05 (2026-07-19): converted from inline styles to SCSS Module — see
+// page.module.scss for the token mapping notes. No behavior change.
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface GlossaryRow { term: string; full: string; meaning: string; }
@@ -243,15 +247,19 @@ const CATS = [
   { id: 'people',    label: 'People & roles',  icon: 'people' },
 ];
 
-// ── Tag badge style helper ─────────────────────────────────────────────────────
-function termBadgeStyle(term: string, category: string): { useChip: boolean; chipClass?: string; style?: CSSProperties } {
-  if (term === 'P0') return { useChip: false, style: { background: 'rgba(232,93,18,0.18)', color: 'var(--dc-acc, #E85D12)', fontFamily: 'var(--font-mono, monospace)', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700 } };
-  if (term === 'P1') return { useChip: false, style: { background: 'rgba(255,138,76,0.15)', color: 'var(--dc-acc2, #FF8A4C)', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700 } };
-  if (term === 'P2') return { useChip: false, style: { background: 'rgba(245,158,11,0.12)', color: '#fcd34d', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700 } };
-  if (term === 'P3') return { useChip: false, style: { background: 'rgba(255,255,255,0.08)', color: 'var(--dc-p1, #F2F2F2)', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700 } };
-  if (category === 'delivery') return { useChip: false, style: { background: 'rgba(34,197,94,0.11)', color: '#4ade80', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700 } };
-  if (category === 'people')   return { useChip: true, chipClass: 'chip c-nt' };
-  return { useChip: false, style: { background: 'rgba(255,255,255,0.08)', color: 'var(--dc-p2, #909090)', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700 } };
+// ── Tag badge classifier ────────────────────────────────────────────────────────
+// Colors are resolved in SCSS from data-badge (CLAUDE.md §28); this only
+// classifies which fixed badge variant a term belongs to.
+type BadgeVariant = 'p0' | 'p1' | 'p2' | 'p3' | 'delivery' | 'default';
+
+function termBadgeVariant(term: string, category: string): { chip: boolean; badge: BadgeVariant } {
+  if (term === 'P0') return { chip: false, badge: 'p0' };
+  if (term === 'P1') return { chip: false, badge: 'p1' };
+  if (term === 'P2') return { chip: false, badge: 'p2' };
+  if (term === 'P3') return { chip: false, badge: 'p3' };
+  if (category === 'delivery') return { chip: false, badge: 'delivery' };
+  if (category === 'people')   return { chip: true, badge: 'default' };
+  return { chip: false, badge: 'default' };
 }
 
 // ── FlatTerm type ──────────────────────────────────────────────────────────────
@@ -259,36 +267,27 @@ interface FlatTerm extends GlossaryRow { category: string; sectionId: string; }
 
 // ── TermCard ──────────────────────────────────────────────────────────────────
 function TermCard({ term, expanded, onToggle }: { term: FlatTerm; expanded: boolean; onToggle: () => void }) {
-  const badge = termBadgeStyle(term.term, term.category);
+  const badge = termBadgeVariant(term.term, term.category);
+  const badgeEl = badge.chip
+    ? <span className={`chip c-nt ${styles.termBadgeChip}`}>{term.term}</span>
+    : <span className={styles.termBadge} data-badge={badge.badge}>{term.term}</span>;
   return (
     <div
       onClick={onToggle}
-      className="rounded-[9px] cursor-pointer transition-all duration-150 p-3 select-none"
-      style={{
-        background: 'var(--dc-s2, #1E1E1E)',
-        border: expanded ? '1px solid rgba(232,93,18,0.2)' : '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
-      }}
-      onMouseEnter={e => {
-        if (!expanded) e.currentTarget.style.border = '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))';
-      }}
-      onMouseLeave={e => {
-        if (!expanded) e.currentTarget.style.border = '1px solid var(--dc-bdr, rgba(255,255,255,0.07))';
-      }}
+      className={styles.termCard}
+      data-expanded={expanded || undefined}
     >
-      {badge.useChip
-        ? <span className={badge.chipClass} style={{ marginBottom: 10, display: 'inline-flex' }}>{term.term}</span>
-        : <span style={{ ...badge.style, display: 'inline-block', marginBottom: 10 }}>{term.term}</span>
-      }
-      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--dc-p1, #F2F2F2)', lineHeight: 1.3 }}>
+      {badgeEl}
+      <div className={styles.termName}>
         {term.full !== '—' && term.full !== term.term ? term.full : term.term}
       </div>
       {!expanded && (
-        <div style={{ marginTop: 6, fontSize: 10, color: 'var(--dc-p3, #505050)', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div className={styles.termExpandHint}>
           <SvgIcon name="priorityHigh" size={10} /> Click to expand
         </div>
       )}
       {expanded && (
-        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', fontSize: 12, color: 'var(--dc-p2, #909090)', lineHeight: 1.6 }}>
+        <div className={styles.termMeaning}>
           {term.meaning}
         </div>
       )}
@@ -328,32 +327,29 @@ export default function GlossaryPage() {
 
   return (
     <AppShell showNav>
-      <div className="max-w-4xl mx-auto" style={{ minHeight: '100vh' }}>
+      <div className={`max-w-4xl mx-auto ${styles.page}`}>
 
         {/* ── Hero ── */}
         <div className="pt-10 pb-8 flex items-start justify-between gap-6 flex-wrap">
           <div className="flex-1">
-            <div className="chip c-acc mb-3"
-              style={{ borderRadius: 100, fontSize: 9, letterSpacing: '0.08em', display: 'inline-flex' }}>
+            <div className={`chip c-acc mb-3 ${styles.eyebrow}`}>
               REFERENCE
             </div>
-            <h1 id="tour-header-glossary" style={{ fontSize: 28, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: 8 }}>
+            <h1 id="tour-header-glossary" className={styles.title}>
               Glossary & Appendix
             </h1>
-            <p style={{ fontSize: 14, color: 'var(--dc-p2, #909090)', maxWidth: 420, lineHeight: 1.6 }}>
+            <p className={styles.subtitle}>
               Every term, code, and abbreviation in Delivery Clarity — explained in plain English.
             </p>
           </div>
           <div className="flex gap-3 shrink-0 pt-1">
-            <div className="text-center"
-              style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, padding: '12px 20px', minWidth: 80 }}>
-              <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--dc-acc2, #FF8A4C)', fontFamily: 'var(--font-mono, monospace)' }}>{SECTIONS.length}</div>
-              <div style={{ fontSize: 10, color: 'var(--dc-p3, #505050)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 4 }}>Sections</div>
+            <div className={styles.statCard}>
+              <div className={styles.statValue}>{SECTIONS.length}</div>
+              <div className={styles.statLabel}>Sections</div>
             </div>
-            <div className="text-center"
-              style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, padding: '12px 20px', minWidth: 80 }}>
-              <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--dc-acc2, #FF8A4C)', fontFamily: 'var(--font-mono, monospace)' }}>{totalTerms}+</div>
-              <div style={{ fontSize: 10, color: 'var(--dc-p3, #505050)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 4 }}>Terms</div>
+            <div className={styles.statCard}>
+              <div className={styles.statValue}>{totalTerms}+</div>
+              <div className={styles.statLabel}>Terms</div>
             </div>
           </div>
         </div>
@@ -363,28 +359,19 @@ export default function GlossaryPage() {
           <SvgIcon
             name="search"
             size={16}
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-            style={{ color: 'var(--dc-p3, #505050)' }}
+            className={`absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none ${styles.searchIcon}`}
           />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search terms, e.g. P0, sprint, velocity, SLA…"
-            className="w-full h-11 pl-10 pr-4 outline-none transition focus:ring-2 focus:ring-[rgba(232,93,18,0.25)]"
-            style={{
-              background: 'var(--dc-s2, #1E1E1E)',
-              border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
-              borderRadius: 12,
-              color: 'var(--dc-p1, #F2F2F2)',
-              fontSize: 14,
-            }}
+            className={`pl-10 pr-4 ${styles.searchInput}`}
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-lg"
-              style={{ color: 'var(--dc-p3, #505050)' }}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 text-lg ${styles.searchClear}`}
             >×</button>
           )}
         </div>
@@ -398,18 +385,8 @@ export default function GlossaryPage() {
                 <button
                   key={cat.id}
                   onClick={() => { setActiveCat(cat.id); setExpandedId(null); }}
-                  className="inline-flex items-center gap-2 cursor-pointer transition-all"
-                  style={{
-                    padding: '5px 14px',
-                    borderRadius: 100,
-                    fontSize: 13,
-                    fontWeight: 500,
-                    border: isActive ? '1.5px solid rgba(232,93,18,0.22)' : '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
-                    background: isActive ? 'rgba(232,93,18,0.12)' : 'transparent',
-                    color: isActive ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p2, #909090)',
-                  }}
-                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = 'var(--dc-p1, #F2F2F2)'; }}
-                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = 'var(--dc-p2, #909090)'; }}
+                  className={`inline-flex items-center gap-2 ${styles.catBtn}`}
+                  data-active={isActive || undefined}
                 >
                   <SvgIcon name={cat.icon} size={14} />
                   {cat.label}
@@ -419,20 +396,20 @@ export default function GlossaryPage() {
           </div>
         )}
         {search && (
-          <p className="mb-6" style={{ fontSize: 14, color: 'var(--dc-p2, #909090)' }}>
-            <span style={{ fontWeight: 600, color: 'var(--dc-p1, #F2F2F2)' }}>{filtered.length}</span> result{filtered.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;
+          <p className={`mb-6 ${styles.searchResultCount}`}>
+            <span className={styles.searchResultNum}>{filtered.length}</span> result{filtered.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;
           </p>
         )}
 
         {/* ── Term grid ── */}
         {filtered.length === 0 ? (
-          <div className="text-center py-16" style={{ color: 'var(--dc-p3, #505050)' }}>
+          <div className={styles.emptyState}>
             <SvgIcon name="search" size={40} className="mx-auto mb-3" />
-            <p style={{ fontWeight: 600, color: 'var(--dc-p2, #909090)', marginBottom: 4 }}>No terms found</p>
-            <p style={{ fontSize: 13 }}>Try a different search term or browse a category.</p>
+            <p className={styles.emptyTitle}>No terms found</p>
+            <p className={styles.emptyHint}>Try a different search term or browse a category.</p>
           </div>
         ) : (
-          <div className="grid gap-3 pb-12" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))' }}>
+          <div className={styles.termGrid}>
             {filtered.map((t, i) => {
               const key = `${t.sectionId}-${i}`;
               return (
@@ -448,8 +425,7 @@ export default function GlossaryPage() {
         )}
 
         {/* ── Footer ── */}
-        <div className="text-center py-6"
-          style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', fontSize: 12, color: 'var(--dc-p3, #505050)' }}>
+        <div className={styles.footer}>
           © 2026 Ali Abu Ras · ali.aburas@deliveryclarity.app · Delivery Clarity v4.6
           <span className="mx-2">·</span>
           Also in <code className="font-mono">product/APPENDIX.md</code>
