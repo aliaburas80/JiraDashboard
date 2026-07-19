@@ -13,14 +13,6 @@ import { PersonaPreviewSwitcher } from './PersonaPreviewSwitcher';
 import GlobalSearch from '@/components/search/GlobalSearch';
 import styles from './DashboardTopbar.module.scss';
 
-// Status → dot colour mapping (data-driven, not hardcoded per-item)
-const STATUS_DOT: Record<string, string> = {
-  critical: '#f87171',
-  warning:  '#f59e0b',
-  success:  '#22c55e',
-  info:     '#3b82f6',
-};
-
 // Label overrides for space-constrained topbar
 const GROUP_LABEL_OVERRIDE: Record<string, string> = {
   administration: 'Admin',
@@ -239,8 +231,7 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
           style={{ '--drop-top': `${dropPos.top}px`, '--drop-left': `${dropPos.left}px` } as CSSProperties}
         >
           {activeGroup.items.map(item => {
-            const active   = isActivePath(pathname, item.href);
-            const dotColor = STATUS_DOT[item.status] ?? '#cbd5e1';
+            const active = isActivePath(pathname, item.href);
             return (
               <Link
                 key={item.id}
@@ -253,10 +244,9 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
                   <span className={styles.dropdownItemTitle}>{item.title}</span>
                   <span className={styles.dropdownItemDesc}>{item.desc}</span>
                 </span>
-                {/* EXCEPTION: dot color is data-driven from item.status */}
                 <span
                   className={styles.dropdownItemDot}
-                  style={{ background: dotColor } as CSSProperties}
+                  data-status={item.status}
                   aria-hidden="true"
                 />
               </Link>
