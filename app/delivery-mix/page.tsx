@@ -30,21 +30,30 @@ function typeCategory(name: string): Category {
   return 'other';
 }
 
-// EXCEPTION: colors are data-driven from semantic category
-const CAT: Record<Category, { color: string; bg: string; fg: string; label: string; desc: string }> = {
-  feature: { color: '#2563eb', bg: '#dbeafe', fg: '#1e40af', label: 'Feature',  desc: 'Value-adding work shipped to users — stories, features, and improvements.' },
-  bug:     { color: '#dc2626', bg: '#fee2e2', fg: '#991b1b', label: 'Bug',      desc: 'Reactive fixes — bugs and defects that reduce quality and slow delivery.' },
-  test:    { color: '#7c3aed', bg: '#ede9fe', fg: '#5b21b6', label: 'Test',     desc: 'Quality investment — test cases and QA tasks that protect future velocity.' },
-  task:    { color: '#16a34a', bg: '#dcfce7', fg: '#15803d', label: 'Task',     desc: 'Operational and delivery tasks — the backbone of day-to-day sprint work.' },
-  epic:    { color: '#d97706', bg: '#fef9c3', fg: '#92400e', label: 'Epic',     desc: 'High-level initiative trackers grouping related work under a shared goal.' },
-  spike:   { color: '#0891b2', bg: '#cffafe', fg: '#0e7490', label: 'Spike',    desc: 'Research and investigation — time-boxed discovery to reduce uncertainty.' },
-  other:   { color: '#94a3b8', bg: '#f1f5f9', fg: '#475569', label: 'Other',    desc: 'Unclassified issue types — consider normalising for better reporting.' },
+// Colors for each category are resolved in SCSS from data-cat (CLAUDE.md §28);
+// this only supplies the human label/description.
+const CAT: Record<Category, { label: string; desc: string }> = {
+  feature: { label: 'Feature', desc: 'Value-adding work shipped to users — stories, features, and improvements.' },
+  bug:     { label: 'Bug',     desc: 'Reactive fixes — bugs and defects that reduce quality and slow delivery.' },
+  test:    { label: 'Test',    desc: 'Quality investment — test cases and QA tasks that protect future velocity.' },
+  task:    { label: 'Task',    desc: 'Operational and delivery tasks — the backbone of day-to-day sprint work.' },
+  epic:    { label: 'Epic',    desc: 'High-level initiative trackers grouping related work under a shared goal.' },
+  spike:   { label: 'Spike',   desc: 'Research and investigation — time-boxed discovery to reduce uncertainty.' },
+  other:   { label: 'Other',   desc: 'Unclassified issue types — consider normalising for better reporting.' },
 };
 
-function pctColor(pct: number): string {
-  if (pct >= 70) return '#16a34a';
-  if (pct >= 40) return '#d97706';
-  return '#dc2626';
+type Tier = 'good' | 'warning' | 'critical';
+
+function pctTier(pct: number): Tier {
+  if (pct >= 70) return 'good';
+  if (pct >= 40) return 'warning';
+  return 'critical';
+}
+
+function metricTier(days: number, warnAt: number, criticalAt: number): Tier {
+  if (days > criticalAt) return 'critical';
+  if (days > warnAt) return 'warning';
+  return 'good';
 }
 
 // ── TypeEntry shape (from metrics.service.ts) ─────────────────────────────────
@@ -65,11 +74,12 @@ interface TypeEntry {
 
 // ── Animated donut arc ────────────────────────────────────────────────────────
 function DonutArc({
-  segLen, offset, color, delay,
-}: { segLen: number; offset: number; color: string; delay: number }) {
+  segLen, offset, cat, delay,
+}: { segLen: number; offset: number; cat: Category; delay: number }) {
   return (
     <circle
       className={styles.donutArc}
+      data-cat={cat}
       cx="50" cy="50"
       r={DONUT_R}
       style={{
@@ -77,7 +87,6 @@ function DonutArc({
         '--arc-circ':   DONUT_CIRC.toFixed(2),
         // EXCEPTION: negative offset positions each arc segment clockwise after previous
         '--arc-offset': (-offset).toFixed(2),
-        '--arc-color':   color,
         '--arc-delay':  `${delay}ms`,
       } as CSSProperties}
     />
@@ -144,7 +153,7 @@ export default function DeliveryMixPage() {
 
   // ── Work mix signal ───────────────────────────────────────────────────────
   const mixLabel  = bugRatio > 30 ? 'High Bug Ratio' : featurePct < 20 && featureCount > 0 ? 'Low Feature Work' : 'Balanced Mix';
-  const mixTone   = bugRatio > 30 ? { bg: '#fee2e2', fg: '#b91c1c' } : featurePct < 20 && featureCount > 0 ? { bg: '#fef9c3', fg: '#92400e' } : { bg: '#dcfce7', fg: '#15803d' };
+  const mixTier: Tier = bugRatio > 30 ? 'critical' : featurePct < 20 && featureCount > 0 ? 'warning' : 'good';
   const mixSubtitle = bugRatio > 30
     ? `${bugRatio}% of work is bugs or defects. High maintenance load — consider investing in quality to reduce reactive work.`
     : featureCount === 0
@@ -155,15 +164,15 @@ export default function DeliveryMixPage() {
   const mostCritType = [...enriched].sort((a, b) => (b.critical ?? 0) - (a.critical ?? 0))[0];
 
   // ── KPI strip ─────────────────────────────────────────────────────────────
-  const kpis = [
-    { label: 'Total Issues',   val: total,          sub: `${typeEntries.length} types`,          color: 'var(--color-text-primary,#0f172a)', delay: 0   },
-    { label: 'Overall Done',   val: `${overallComp}%`, sub: `${totalDone} of ${total} done`,     color: pctColor(overallComp),              delay: 40  },
-    { label: 'Feature Work',   val: `${featurePct}%`, sub: `${featureCount} stories/features`,   color: featurePct > 0 ? CAT.feature.color : '#94a3b8', delay: 80  },
-    { label: 'Bug Ratio',      val: `${bugRatio}%`,  sub: `${bugCount} bugs/defects`,            color: bugRatio > 30 ? '#dc2626' : bugRatio > 0 ? '#d97706' : '#94a3b8', delay: 120 },
-    { label: 'Test Work',      val: `${Math.round((testCount / total) * 100)}%`, sub: `${testCount} test cases`, color: testCount > 0 ? CAT.test.color : '#94a3b8', delay: 160 },
-    { label: 'Story Points',   val: totalSP > 0 ? totalSP : '—', sub: 'total SP in scope',      color: 'var(--color-text-primary,#0f172a)', delay: 200 },
-    { label: 'Critical Items', val: totalCrit,       sub: 'need immediate action',               color: totalCrit > 0 ? '#dc2626' : '#94a3b8', delay: 240 },
-    { label: 'Healthy Items',  val: `${Math.round((totalGood / Math.max(totalGood + totalWarn + totalCrit, 1)) * 100)}%`, sub: 'good health signal', color: '#16a34a', delay: 280 },
+  const kpis: { label: string; val: string | number; sub: string; tier?: Tier; cat?: Category; delay: number }[] = [
+    { label: 'Total Issues',   val: total,          sub: `${typeEntries.length} types`,          delay: 0   },
+    { label: 'Overall Done',   val: `${overallComp}%`, sub: `${totalDone} of ${total} done`,     tier: pctTier(overallComp), delay: 40  },
+    { label: 'Feature Work',   val: `${featurePct}%`, sub: `${featureCount} stories/features`,   cat: featurePct > 0 ? 'feature' : undefined, delay: 80  },
+    { label: 'Bug Ratio',      val: `${bugRatio}%`,  sub: `${bugCount} bugs/defects`,            tier: bugRatio > 30 ? 'critical' : bugRatio > 0 ? 'warning' : undefined, delay: 120 },
+    { label: 'Test Work',      val: `${Math.round((testCount / total) * 100)}%`, sub: `${testCount} test cases`, cat: testCount > 0 ? 'test' : undefined, delay: 160 },
+    { label: 'Story Points',   val: totalSP > 0 ? totalSP : '—', sub: 'total SP in scope',      delay: 200 },
+    { label: 'Critical Items', val: totalCrit,       sub: 'need immediate action',               tier: totalCrit > 0 ? 'critical' : undefined, delay: 240 },
+    { label: 'Healthy Items',  val: `${Math.round((totalGood / Math.max(totalGood + totalWarn + totalCrit, 1)) * 100)}%`, sub: 'good health signal', tier: 'good', delay: 280 },
   ];
 
   // ── Analysis items (right card) ───────────────────────────────────────────
@@ -172,16 +181,16 @@ export default function DeliveryMixPage() {
   ).map(cat => ({ cat, count: catCount(cat), pct: Math.round((catCount(cat) / total) * 100) }))
    .filter(x => x.count > 0);
 
-  function catSignal(cat: Category, count: number): { text: string; color: string } {
-    if (cat === 'bug' && bugRatio > 30) return { text: `${bugRatio}% is above the 30% threshold — quality may be suffering.`, color: '#dc2626' };
-    if (cat === 'bug' && bugRatio > 0)  return { text: `Bug ratio is manageable. Monitor for upward trends.`, color: '#d97706' };
-    if (cat === 'feature' && featurePct < 20) return { text: 'Low feature throughput — more capacity going to maintenance.', color: '#d97706' };
-    if (cat === 'feature' && featurePct >= 50) return { text: 'Strong feature delivery focus — good for product velocity.', color: '#16a34a' };
-    if (cat === 'test' && count === 0)  return { text: 'No test work tracked — consider adding QA tasks.', color: '#d97706' };
-    if (cat === 'test' && count > 0)    return { text: 'Test coverage is being tracked. Keep it growing.', color: '#16a34a' };
-    if (cat === 'spike' && count > 0)   return { text: 'Investigation work suggests uncertainty in scope. Time-box spikes.', color: '#d97706' };
-    if (cat === 'other' && count > 0)   return { text: 'Normalise these types for accurate reporting.', color: '#d97706' };
-    return { text: 'No additional signals.', color: '#94a3b8' };
+  function catSignal(cat: Category, count: number): { text: string; tier: Tier | 'neutral' } {
+    if (cat === 'bug' && bugRatio > 30) return { text: `${bugRatio}% is above the 30% threshold — quality may be suffering.`, tier: 'critical' };
+    if (cat === 'bug' && bugRatio > 0)  return { text: `Bug ratio is manageable. Monitor for upward trends.`, tier: 'warning' };
+    if (cat === 'feature' && featurePct < 20) return { text: 'Low feature throughput — more capacity going to maintenance.', tier: 'warning' };
+    if (cat === 'feature' && featurePct >= 50) return { text: 'Strong feature delivery focus — good for product velocity.', tier: 'good' };
+    if (cat === 'test' && count === 0)  return { text: 'No test work tracked — consider adding QA tasks.', tier: 'warning' };
+    if (cat === 'test' && count > 0)    return { text: 'Test coverage is being tracked. Keep it growing.', tier: 'good' };
+    if (cat === 'spike' && count > 0)   return { text: 'Investigation work suggests uncertainty in scope. Time-box spikes.', tier: 'warning' };
+    if (cat === 'other' && count > 0)   return { text: 'Normalise these types for accurate reporting.', tier: 'warning' };
+    return { text: 'No additional signals.', tier: 'neutral' };
   }
 
   return (
@@ -197,23 +206,14 @@ export default function DeliveryMixPage() {
           <h1 id="tour-header-delivery-mix" className={styles.title}>Delivery Mix</h1>
           <p className={styles.subtitle}>{mixSubtitle}</p>
           <div className={styles.chips}>
-            <span
-              className={styles.chip}
-              style={{ '--chip-bg': mixTone.bg, '--chip-fg': mixTone.fg } as CSSProperties}
-            >
+            <span className={styles.chip} data-tier={mixTier}>
               {mixLabel}
             </span>
-            <span
-              className={styles.chip}
-              style={{ '--chip-bg': '#f1f5f9', '--chip-fg': '#475569' } as CSSProperties}
-            >
+            <span className={styles.chip}>
               {typeEntries.length} issue types
             </span>
             {totalSP > 0 && (
-              <span
-                className={styles.chip}
-                style={{ '--chip-bg': '#dbeafe', '--chip-fg': '#1e40af' } as CSSProperties}
-              >
+              <span className={styles.chip} data-cat="feature">
                 {totalSP} story points
               </span>
             )}
@@ -255,7 +255,7 @@ export default function DeliveryMixPage() {
           {kpis.map(k => (
             <div key={k.label} className={styles.kpiCard} style={{ '--kpi-delay': `${k.delay}ms` } as CSSProperties}>
               <p className={styles.kpiLabel}>{k.label}</p>
-              <p className={styles.kpiVal} style={{ '--kpi-color': k.color } as CSSProperties}>{k.val}</p>
+              <p className={styles.kpiVal} data-tier={k.tier} data-cat={k.cat}>{k.val}</p>
               <p className={styles.kpiSub}>{k.sub}</p>
             </div>
           ))}
@@ -281,7 +281,7 @@ export default function DeliveryMixPage() {
                       key={arc.type}
                       segLen={arc.segLen}
                       offset={arc.offset}
-                      color={CAT[arc.cat].color}
+                      cat={arc.cat}
                       delay={arc.delay}
                     />
                   ))}
@@ -300,40 +300,32 @@ export default function DeliveryMixPage() {
                     <div
                       key={t.type}
                       className={styles.legendRow}
-                      style={{
-                        '--swatch-color': c.color,
-                        '--row-delay':    `${i * 60 + 200}ms`,
-                      } as CSSProperties}
+                      style={{ '--row-delay': `${i * 60 + 200}ms` } as CSSProperties}
                     >
-                      <span className={styles.legendSwatch} />
+                      <span className={styles.legendSwatch} data-cat={t.cat} />
                       <div className={styles.legendBody}>
                         <p className={styles.legendName}>{t.type}</p>
-                        <span
-                          className={styles.legendCatChip}
-                          style={{ '--cat-bg': c.bg, '--cat-fg': c.fg } as CSSProperties}
-                        >
+                        <span className={styles.legendCatChip} data-cat={t.cat}>
                           {c.label}
                         </span>
                         <div className={styles.legendCompRow}>
                           <div className={styles.legendCompTrack}>
                             <div
                               className={styles.legendCompFill}
+                              data-cat={t.cat}
                               style={{
                                 '--bar-w':    `${t.completionRate}%`,
                                 '--row-delay': `${i * 60 + 200}ms`,
                               } as CSSProperties}
                             />
                           </div>
-                          <span
-                            className={styles.legendCompPct}
-                            style={{ '--pct-color': pctColor(t.completionRate) } as CSSProperties}
-                          >
+                          <span className={styles.legendCompPct} data-tier={pctTier(t.completionRate)}>
                             {t.completionRate}%
                           </span>
                         </div>
                       </div>
                       <div className={styles.legendRight}>
-                        <p className={styles.legendCount} style={{ '--row-delay': `${i * 60 + 200}ms` } as CSSProperties}>
+                        <p className={styles.legendCount} data-cat={t.cat} style={{ '--row-delay': `${i * 60 + 200}ms` } as CSSProperties}>
                           {t.count}
                         </p>
                         <p className={styles.legendPct}>{t.pct}%</p>
@@ -364,25 +356,17 @@ export default function DeliveryMixPage() {
                   <div
                     key={x.cat}
                     className={styles.analysisItem}
-                    style={{
-                      '--cat-color':  c.color,
-                      '--item-delay': `${i * 60}ms`,
-                    } as CSSProperties}
+                    data-cat={x.cat}
+                    style={{ '--item-delay': `${i * 60}ms` } as CSSProperties}
                   >
                     <div className={styles.analysisItemHead}>
                       <span className={styles.analysisItemLabel}>{c.label} Work</span>
-                      <span
-                        className={styles.analysisItemCount}
-                        style={{ '--cat-color': c.color } as CSSProperties}
-                      >
+                      <span className={styles.analysisItemCount} data-cat={x.cat}>
                         {x.count} · {x.pct}%
                       </span>
                     </div>
                     <p className={styles.analysisItemDesc}>{c.desc}</p>
-                    <p
-                      className={styles.analysisItemSignal}
-                      style={{ '--signal-color': signal.color } as CSSProperties}
-                    >
+                    <p className={styles.analysisItemSignal} data-tier={signal.tier}>
                       {signal.text}
                     </p>
                     {(catGood + catWarn + catCrit) > 0 && (
@@ -425,31 +409,30 @@ export default function DeliveryMixPage() {
               </thead>
               <tbody>
                 {enriched.map((t, i) => {
-                  const c      = CAT[t.cat];
+                  const c       = CAT[t.cat];
                   const cycleOk = (t.cycleTimeSampleSize ?? 0) > 0;
                   const leadOk  = (t.leadTimeSampleSize  ?? 0) > 0;
-                  const cycleColor = t.averageCycleTimeDays > 14 ? '#dc2626' : t.averageCycleTimeDays > 7 ? '#d97706' : '#16a34a';
+                  const cycleTier = metricTier(t.averageCycleTimeDays, 7, 14);
+                  const leadTier  = metricTier(t.averageLeadTimeDays, 10, 21);
 
                   return (
                     <tr
                       key={t.type}
                       className={styles.tableTr}
-                      style={{ '--row-color': c.color, '--row-delay': `${i * 40}ms` } as CSSProperties}
+                      data-cat={t.cat}
+                      style={{ '--row-delay': `${i * 40}ms` } as CSSProperties}
                     >
                       {/* Type name + category chip */}
                       <td className={styles.tableTd}>
                         <p className={styles.tableTypeName}>{t.type}</p>
-                        <span
-                          className={styles.tableCatChip}
-                          style={{ '--cat-bg': c.bg, '--cat-fg': c.fg } as CSSProperties}
-                        >
+                        <span className={styles.tableCatChip} data-cat={t.cat}>
                           {c.label}
                         </span>
                       </td>
 
                       {/* Count */}
                       <td className={styles.tableTd}>
-                        <p className={styles.tableCount}>{t.count}</p>
+                        <p className={styles.tableCount} data-cat={t.cat}>{t.count}</p>
                         <p className={styles.tableDone}>{t.pct}% of total</p>
                       </td>
 
@@ -465,16 +448,14 @@ export default function DeliveryMixPage() {
                           <div className={styles.tableCompTrack}>
                             <div
                               className={styles.tableCompFill}
+                              data-cat={t.cat}
                               style={{
                                 '--bar-w':    `${t.completionRate}%`,
                                 '--row-delay': `${i * 40}ms`,
                               } as CSSProperties}
                             />
                           </div>
-                          <span
-                            className={styles.tableCompPct}
-                            style={{ '--pct-color': pctColor(t.completionRate) } as CSSProperties}
-                          >
+                          <span className={styles.tableCompPct} data-tier={pctTier(t.completionRate)}>
                             {t.completionRate}%
                           </span>
                         </div>
@@ -502,17 +483,14 @@ export default function DeliveryMixPage() {
                       {/* Avg cycle time */}
                       <td className={styles.tableTd}>
                         {cycleOk
-                          ? <span className={styles.tableCycleTime} style={{ '--cycle-color': cycleColor } as CSSProperties}>{t.averageCycleTimeDays.toFixed(1)}d</span>
+                          ? <span className={styles.tableCycleTime} data-tier={cycleTier}>{t.averageCycleTimeDays.toFixed(1)}d</span>
                           : <span className={styles.tableEmpty}>—</span>}
                       </td>
 
                       {/* Avg lead time */}
                       <td className={styles.tableTd}>
                         {leadOk
-                          ? <span
-                              className={styles.tableCycleTime}
-                              style={{ '--cycle-color': t.averageLeadTimeDays > 21 ? '#dc2626' : t.averageLeadTimeDays > 10 ? '#d97706' : '#16a34a' } as CSSProperties}
-                            >
+                          ? <span className={styles.tableCycleTime} data-tier={leadTier}>
                               {t.averageLeadTimeDays.toFixed(1)}d
                             </span>
                           : <span className={styles.tableEmpty}>—</span>}
