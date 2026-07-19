@@ -1,0 +1,392 @@
+// © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
+// STYLE-03 (2026-07-19): converted from inline styles to SCSS Module +
+// design tokens per CLAUDE.md §13-18/§60. No behavior change — only the
+// styling mechanism moved; a few raw hex colors that predated the token
+// system (e.g. the health badge's exact greens/ambers) now resolve to the
+// nearest semantic token, which can shift the rendered shade slightly —
+// that is the intended outcome of this refactor, not a regression.
+
+.page {
+  padding: 0 var(--space-8, 28px) var(--space-12, 48px);
+}
+
+// ── Filter panel ────────────────────────────────────────────────────────────
+
+.filterPanel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5, 20px);
+  margin-bottom: var(--space-5, 20px);
+}
+
+.filterGridText {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3, 12px);
+  margin-bottom: var(--space-3, 12px);
+}
+
+.filterGridSelect {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-3, 12px);
+}
+
+.filterField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+}
+
+.filterLabel {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.filterControl {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  outline: none;
+  width: 100%;
+  background: var(--color-surface);
+  font-family: inherit;
+
+  &:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid var(--color-subtle);
+}
+
+.btnReset,
+.btnExport {
+  padding: 7px 16px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 6px);
+  transition: background var(--transition-fast), color var(--transition-fast);
+
+  &:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+}
+
+.btnReset {
+  border: 1px solid var(--color-border);
+  background: var(--color-subtle);
+  color: var(--color-text-secondary);
+
+  &:hover { background: var(--color-border); }
+}
+
+.btnExport {
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+
+  &:hover { background: var(--color-primary-hover); }
+}
+
+.resultCount {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-left: var(--space-1, 4px);
+}
+
+// ── Status distribution ──────────────────────────────────────────────────────
+
+.statusList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+.statusName {
+  width: 130px;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statusBarTrack {
+  flex: 1;
+  height: 7px;
+  border-radius: var(--radius-xs);
+  background: var(--color-subtle);
+  overflow: hidden;
+}
+
+// EXCEPTION (CLAUDE.md Rule 1): --bar-width and --bar-delay are per-row
+// runtime values (fill percentage, stagger index) with no fixed set of
+// values to express as classes. Color is NOT passed through a variable —
+// data-status selects it below, per CLAUDE.md §19's documented pattern.
+.statusBarFill {
+  height: 100%;
+  border-radius: var(--radius-xs);
+  background: var(--color-text-muted);
+  width: var(--bar-width, 0%);
+  animation: barFill 700ms ease-out both;
+  animation-delay: var(--bar-delay, 0ms);
+  transform-origin: left center;
+
+  &[data-status='done']   { background: var(--color-success); }
+  &[data-status='active'] { background: var(--color-primary); }
+
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+.statusCount {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+
+  &[data-status='done']   { color: var(--color-success); }
+  &[data-status='active'] { color: var(--color-primary); }
+}
+
+// ── Summary line ──────────────────────────────────────────────────────────────
+
+.summaryLine {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  background: var(--color-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  margin-bottom: var(--space-4, 16px);
+}
+
+.summaryStrong {
+  color: var(--color-text-primary);
+}
+
+.orphanNote {
+  margin-left: 10px;
+  color: var(--dc-purple);
+  font-weight: 700;
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+
+.tableCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.dataTable {
+  width: 100%;
+  font-size: var(--text-base);
+  border-collapse: collapse;
+}
+
+.tableHeadRow {
+  background: var(--color-subtle);
+}
+
+.th {
+  padding: 6px 10px;
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.colKey      { width: 80px; }
+.colType     { width: 90px; }
+.colStatus   { width: 110px; }
+.colSprint   { width: 110px; }
+.colEpic     { width: 120px; }
+.colAssignee { width: 110px; }
+.colMetric   { width: 60px; }
+
+.emptyCell {
+  padding: 40px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+}
+
+.tableRow {
+  border-bottom: 1px solid var(--color-subtle);
+
+  &[data-orphan='true'] {
+    background: color-mix(in srgb, var(--dc-purple) 6%, transparent);
+  }
+}
+
+.cellKey {
+  padding: 7px 10px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.cellSummary {
+  padding: 7px 10px;
+  color: var(--color-text-secondary);
+  max-width: 260px;
+}
+
+.ellipsisText {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cellType {
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+
+.typeBadge {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--color-subtle);
+  color: var(--color-text-secondary);
+}
+
+.cellStatus {
+  padding: 7px 10px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.cellSprint {
+  padding: 7px 10px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  font-size: var(--text-sm);
+}
+
+.cellEpic {
+  padding: 7px 10px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+
+  &[data-orphan='true'] { color: var(--dc-purple); }
+}
+
+.orphanLabel {
+  color: var(--dc-purple);
+  font-weight: 600;
+}
+
+.cellAssignee {
+  padding: 7px 10px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.cellMetric {
+  padding: 7px 10px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+
+  &[data-severity='warning']  { color: var(--color-warning); }
+  &[data-severity='critical'] { color: var(--color-danger-strong); }
+}
+
+.cellHealth {
+  padding: 7px 10px;
+}
+
+.cellReason {
+  padding: 7px 10px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  max-width: 200px;
+}
+
+.loadMoreWrap {
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-subtle);
+  text-align: center;
+}
+
+.btnLoadMore {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-md);
+  padding: 8px 20px;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover { background: var(--color-primary-border); }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+}
+
+.loadMoreCount {
+  color: var(--color-text-muted);
+  margin-left: var(--space-2, 6px);
+}
+
+// ── Health badge ──────────────────────────────────────────────────────────────
+
+.healthBadge {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  background: var(--color-subtle);
+
+  &[data-health='critical'] { color: var(--color-danger-strong); background: var(--color-danger-soft); }
+  &[data-health='warning']  { color: var(--color-warning);       background: var(--color-warning-soft); }
+  &[data-health='good']     { color: var(--color-success);       background: var(--color-success-soft); }
+}
