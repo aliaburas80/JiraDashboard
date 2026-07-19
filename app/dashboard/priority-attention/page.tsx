@@ -26,6 +26,14 @@ const TYPE_TOKENS: Record<string, { bg: string; border: string; color: string }>
   info:     { bg: 'var(--color-primary-soft)', border: 'var(--color-primary-border)', color: 'var(--color-primary)'       },
 };
 
+// Same pattern as TYPE_TOKENS above, for the summary count strip.
+const SUMMARY_TOKENS = {
+  blockers: { bg: 'var(--color-danger-soft)',  border: 'var(--color-danger-border)',  color: 'var(--color-danger-strong)' },
+  overdue:  { bg: 'var(--color-warning-soft)', border: 'var(--color-warning-border)', color: 'var(--color-warning)'       },
+  orphans:  { bg: 'rgb(8 145 178 / 8%)',       border: 'rgb(8 145 178 / 25%)',        color: 'var(--chart-series-6)'      },
+  critical: { bg: 'rgb(124 58 237 / 8%)',      border: 'rgb(124 58 237 / 25%)',       color: 'var(--dc-purple)'           },
+};
+
 export default function PriorityAttentionPage() {
   const router = useRouter();
   const { metrics, loading } = useDashboardMetrics();
@@ -128,19 +136,26 @@ export default function PriorityAttentionPage() {
         subtitle="Items requiring immediate delivery intervention, plus recommended actions."
       />
 
-      <div style={{ padding: '0 28px 48px' }}>
+      <div className={styles.page}>
 
         {/* ── Summary row ── */}
-        <div id="tour-section-priority-attention-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+        <div id="tour-section-priority-attention-1" className={styles.countStrip}>
           {[
-            { label: 'Blockers', value: blockers.length, color: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
-            { label: 'Overdue', value: overdueItems.length, color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
-            { label: 'Orphans', value: orphans.length, color: '#0369A1', bg: '#F0F9FF', border: '#BAE6FD' },
-            { label: 'Critical', value: criticalItems.length, color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE' },
-          ].map(({ label, value, color, bg, border }) => (
-            <div key={label} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: '14px 16px' }}>
-              <p style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#94A3B8', marginBottom: 4 }}>{label}</p>
-              <p style={{ fontSize: 22, fontWeight: 800, fontFamily: 'monospace', color, margin: 0 }}>{value}</p>
+            { label: 'Blockers', value: blockers.length, tok: SUMMARY_TOKENS.blockers },
+            { label: 'Overdue', value: overdueItems.length, tok: SUMMARY_TOKENS.overdue },
+            { label: 'Orphans', value: orphans.length, tok: SUMMARY_TOKENS.orphans },
+            { label: 'Critical', value: criticalItems.length, tok: SUMMARY_TOKENS.critical },
+          ].map(({ label, value, tok }) => (
+            // --count-bg / --count-border / --count-color are data-driven
+            // token references (never raw hex) — see TYPE_TOKENS above.
+            // Set on the chip so --count-color inherits into .countValue.
+            <div
+              key={label}
+              className={styles.countChip}
+              style={{ '--count-bg': tok.bg, '--count-border': tok.border, '--count-color': tok.color } as CSSProperties}
+            >
+              <p className={styles.countLabel}>{label}</p>
+              <p className={styles.countValue}>{value}</p>
             </div>
           ))}
         </div>
@@ -199,8 +214,8 @@ export default function PriorityAttentionPage() {
         )}
 
         {totalAttention === 0 && (
-          <div style={{ padding: '60px 0', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>✅</div>
             No priority items require attention.
           </div>
         )}
@@ -214,41 +229,40 @@ function AttentionTable({ items, showAge, showAssignee, showSprint, headerId }: 
 }) {
   const shown = items.slice(0, 50);
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+    <div className={styles.tableWrap}>
+      <table className={styles.dataTable}>
         <thead id={headerId}>
-          <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+          <tr className={styles.tableHeadRow}>
             {['Key', 'Summary', 'Status', showSprint && 'Sprint', showAssignee && 'Assignee', showAge && 'Age (d)', 'Health'].filter(Boolean).map(h => (
-              <th key={h as string} style={{ padding: '6px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94A3B8' }}>{h}</th>
+              <th key={h as string} className={styles.th}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {shown.map((item, i) => (
-            <tr key={item.key ?? i} style={{ borderBottom: '1px solid #F1F5F9' }}>
-              <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: '#2563EB', fontWeight: 700, whiteSpace: 'nowrap' }}>{item.key}</td>
-              <td style={{ padding: '7px 10px', color: '#334155', maxWidth: 300 }}>
-                <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.summary}</span>
-              </td>
-              <td style={{ padding: '7px 10px', color: '#64748B', whiteSpace: 'nowrap' }}>{item.status}</td>
-              {showSprint && <td style={{ padding: '7px 10px', color: '#64748B', whiteSpace: 'nowrap' }}>{item.sprint || '—'}</td>}
-              {showAssignee && <td style={{ padding: '7px 10px', color: '#64748B', whiteSpace: 'nowrap' }}>{item.assignee ?? '—'}</td>}
-              {showAge && <td style={{ padding: '7px 10px', fontFamily: 'monospace', color: Number(item.ageDays) > 30 ? '#DC2626' : '#D97706', fontWeight: 700, whiteSpace: 'nowrap' }}>{item.ageDays ?? '—'}</td>}
-              <td style={{ padding: '7px 10px', whiteSpace: 'nowrap' }}>
-                <span style={{
-                  fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
-                  background: item.health === 'critical' ? '#FEF2F2' : item.health === 'warning' ? '#FFFBEB' : '#F0FDF4',
-                  color: item.health === 'critical' ? '#DC2626' : item.health === 'warning' ? '#D97706' : '#059669',
-                }}>
-                  {item.health ?? 'good'}
-                </span>
-              </td>
-            </tr>
-          ))}
+          {shown.map((item, i) => {
+            const health = ['critical', 'warning'].includes(item.health) ? item.health : undefined;
+            return (
+              <tr key={item.key ?? i} className={styles.tableRow}>
+                <td className={styles.cellKey}>{item.key}</td>
+                <td className={styles.cellSummary}>
+                  <span className={styles.ellipsisText}>{item.summary}</span>
+                </td>
+                <td className={styles.cellPlain}>{item.status}</td>
+                {showSprint && <td className={styles.cellPlain}>{item.sprint || '—'}</td>}
+                {showAssignee && <td className={styles.cellPlain}>{item.assignee ?? '—'}</td>}
+                {showAge && <td className={styles.cellAge} data-severe={Number(item.ageDays) > 30 || undefined}>{item.ageDays ?? '—'}</td>}
+                <td className={styles.cellHealth}>
+                  <span className={styles.healthBadge} data-health={health}>
+                    {item.health ?? 'good'}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       {items.length > 50 && (
-        <p style={{ fontSize: 11, color: '#94A3B8', padding: '8px 10px' }}>
+        <p className={styles.moreNote}>
           Showing 50 of {items.length} items
         </p>
       )}

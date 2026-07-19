@@ -1,13 +1,19 @@
 // @ts-nocheck
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDashboardMetrics } from '@/components/dashboard/DashboardMetricsContext';
 import {
   StickyToolbar, ToolbarSpacer,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
+import styles from './page.module.scss';
+
+// STYLE-03 (2026-07-19): converted from inline styles to SCSS Module — see
+// page.module.scss for the token mapping notes. No behavior change.
+
+type CSSVariableProperties = CSSProperties & Record<`--${string}`, string | number>;
 
 export default function OwnershipCapacityPage() {
   const router = useRouter();
@@ -24,17 +30,6 @@ export default function OwnershipCapacityPage() {
 
   const capMax = Math.max(...capacity.map((c: any) => c.issues ?? 0), 1);
 
-  const th = (label: string) => (
-    <th key={label} style={{ padding: '6px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94A3B8', borderBottom: '1px solid #E2E8F0' }}>
-      {label}
-    </th>
-  );
-  const td = (content: React.ReactNode, opts?: { mono?: boolean; color?: string }) => (
-    <td style={{ padding: '7px 10px', fontSize: 12, color: opts?.color ?? '#334155', fontFamily: opts?.mono ? 'monospace' : undefined }}>
-      {content}
-    </td>
-  );
-
   return (
     <>
       <StickyToolbar>
@@ -48,24 +43,25 @@ export default function OwnershipCapacityPage() {
         subtitle="Team load distribution and per-assignee metrics. See Epic Readiness for epic-level ownership."
       />
 
-      <div style={{ padding: '0 28px 48px' }}>
+      <div className={styles.page}>
 
         {/* ── Capacity bar chart ── */}
         <SectionCard title="Capacity by Assignee">
           {capacity.length === 0 ? (
-            <p style={{ fontSize: 12, color: '#94A3B8' }}>No assignee data found.</p>
+            <p className={styles.emptyNote}>No assignee data found.</p>
           ) : (
-            <div id="tour-section-ownership-1" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div id="tour-section-ownership-1" className={styles.barList}>
               {capacity.slice(0, 10).map((c: any, idx: number) => {
                 const pct = Math.round(((c.issues ?? 0) / capMax) * 100);
                 const skewed = (c.loadShare ?? 0) > 35;
+                const barVars: CSSVariableProperties = { '--bar-width': `${pct}%`, '--bar-delay': `${idx * 60}ms` };
                 return (
-                  <div key={c.assignee} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ width: 140, fontSize: 12, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.assignee}>{c.assignee}</span>
-                    <div style={{ flex: 1, height: 8, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 4, background: skewed ? '#DC2626' : '#2563EB', width: `${pct}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${idx * 60}ms` }} />
+                  <div key={c.assignee} className={styles.barRow}>
+                    <span className={styles.barLabel} title={c.assignee}>{c.assignee}</span>
+                    <div className={styles.barTrack}>
+                      <div className={styles.barFill} data-skewed={skewed || undefined} style={barVars} />
                     </div>
-                    <span style={{ fontFamily: 'monospace', fontSize: 11, color: skewed ? '#DC2626' : '#475569', width: 80, textAlign: 'right', flexShrink: 0 }}>
+                    <span className={styles.barMeta} data-skewed={skewed || undefined}>
                       {c.issues} issues · {c.loadShare ?? 0}%
                     </span>
                   </div>
@@ -78,21 +74,28 @@ export default function OwnershipCapacityPage() {
         {/* ── Capacity table ── */}
         {capacity.length > 0 && (
           <SectionCard title="Assignee Detail">
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+            <div className={styles.tableWrap}>
+              <table className={styles.dataTable}>
                 <thead>
-                  <tr>{['Assignee', 'Issues', 'Active', 'Points', 'Load %'].map(th)}</tr>
+                  <tr>
+                    {['Assignee', 'Issues', 'Active', 'Points', 'Load %'].map(label => (
+                      <th key={label} className={styles.th}>{label}</th>
+                    ))}
+                  </tr>
                 </thead>
                 <tbody>
-                  {capacity.map((c: any, i: number) => (
-                    <tr key={c.assignee ?? i} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                      {td(c.assignee ?? '—')}
-                      {td(c.issues ?? 0, { mono: true })}
-                      {td(c.activeIssues ?? 0, { mono: true })}
-                      {td(c.storyPoints ?? 0, { mono: true })}
-                      {td(`${c.loadShare ?? 0}%`, { mono: true, color: (c.loadShare ?? 0) > 35 ? '#DC2626' : '#059669' })}
-                    </tr>
-                  ))}
+                  {capacity.map((c: any, i: number) => {
+                    const skewed = (c.loadShare ?? 0) > 35;
+                    return (
+                      <tr key={c.assignee ?? i} className={styles.tableRow}>
+                        <td className={styles.cell}>{c.assignee ?? '—'}</td>
+                        <td className={styles.cellMono}>{c.issues ?? 0}</td>
+                        <td className={styles.cellMono}>{c.activeIssues ?? 0}</td>
+                        <td className={styles.cellMono}>{c.storyPoints ?? 0}</td>
+                        <td className={styles.cellLoad} data-skewed={skewed || undefined}>{c.loadShare ?? 0}%</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

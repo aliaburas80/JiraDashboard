@@ -3282,22 +3282,19 @@ The following legacy areas contain inline styling from before these standards.
 
 Do not add new inline styling to them.
 
-## 60.1 Audited scope (2026-07-12)
+## 60.1 Audited scope (2026-07-19)
 
-The lists below were re-audited on 2026-07-12 via `eslint . --max-warnings=-1 -f json` (direct ESLint
+The lists below were re-audited on 2026-07-19 via `eslint . --max-warnings=-1 -f json` (direct ESLint
 CLI, not `next lint` — `package.json`'s `lint` script still runs the §4.6-prohibited `next lint`; see
 `TODO-List.md` `STYLE-07` for why it can't simply be switched yet). Re-run that command before trusting
 these counts; they drift every time a file is touched.
 
-**Result: 1,276 warnings, 0 errors, across 87 files.** All warnings are `react/forbid-dom-props`
-(this rule's CLAUDE.md Rule 1 message). The drop from the 2026-06-27 count (1,524/86) is only partly
-from the three dashboard nav consolidation passes below (§60.3: 15 routed pages → 9, removing 5
-duplicate-content pages and merging/trimming 6 others) — the rest reflects unrelated fixes landed since
-the last audit (e.g. `app/retro/page.tsx` went from 112 warnings to 0, `ProductTour.tsx` from 13 to 2)
-plus some drift the other direction (a handful of `app/landing/**`, `app/promo/**`, and
-`app/admin/audit/page.tsx` files now carry small counts that weren't present in the 2026-06-27 audit).
-Tiers 1, 4, and 5 below are refreshed to current reality as an incidental result of this re-audit, not
-because they were remediated.
+**Result: 898 warnings, 0 errors, across 74 files.** All warnings are `react/forbid-dom-props`
+(this rule's CLAUDE.md Rule 1 message). The drop from the 2026-07-12 count (1,276/87) is primarily
+`STYLE-03`/Tier 2 closing (see §60.3a below — 269 warnings across 8 files down to 17, all 17 being
+legitimate, documented CSS-variable exceptions, not remaining violations), plus incidental drift from
+unrelated fixes landed in between (e.g. `app/dashboard/data-quality/page.tsx` gained one new legitimate
+exception when its CP3-017 sample-size badge was added).
 
 Full per-file ticket breakdown is tracked in `TODO-List.md` Section 18f (`STYLE-01`–`08`). This section
 holds the prioritized summary; TODO-List.md holds the working checklist.
@@ -3331,14 +3328,28 @@ A third pass on 2026-07-12 merged `delivery-composition` into `data-quality` as 
 were compact single-widget pages; `data-quality`'s count absorbed the donut's warnings). 10 routed pages
 became 9.
 
-1. `app/dashboard/flow-health/page.tsx` (52)
-2. `app/dashboard/labels/page.tsx` (49)
-3. `app/dashboard/data-quality/page.tsx` (45)
-4. `app/dashboard/epic-readiness/page.tsx` (44)
-5. `app/dashboard/trends/page.tsx` (41)
-6. `app/dashboard/priority-attention/page.tsx` (24)
-7. `app/dashboard/ownership/page.tsx` (13)
-8. `app/dashboard/key-metrics/page.tsx` (1)
+~~1. `app/dashboard/flow-health/page.tsx` (52)~~
+~~2. `app/dashboard/labels/page.tsx` (49)~~
+~~3. `app/dashboard/data-quality/page.tsx` (45)~~
+~~4. `app/dashboard/epic-readiness/page.tsx` (44)~~
+~~5. `app/dashboard/trends/page.tsx` (41)~~
+~~6. `app/dashboard/priority-attention/page.tsx` (24)~~
+~~7. `app/dashboard/ownership/page.tsx` (13)~~
+~~8. `app/dashboard/key-metrics/page.tsx` (1)~~
+
+**Resolved 2026-07-19 — all 8 files converted to SCSS Modules + design tokens.** 269 warnings → 17,
+every one of the 17 a legitimate, documented CSS-variable exception (a `--bar-width`/`--bar-delay`/
+similar runtime-computed geometry value, per §14.2) — none are unaddressed violations.
+`app/dashboard/key-metrics/page.tsx` needed no change at all: its sole warning was already the correct,
+documented exception via the shared `barCssVars()` helper. `app/dashboard/priority-attention/page.tsx`
+had a partial prior conversion (`.actionCard`/`.actionList` etc. already existed, unused by parts of the
+page) — finished rather than restarted. Business-logic color-picking (`HEALTH_COLORS`, `TYPE_COLORS`,
+per-threshold hex ternaries) was replaced with semantic `data-*` attributes resolved entirely in SCSS,
+per §28 — JS no longer returns color values anywhere in this tier except where a CSS custom property was
+the only way to express genuinely dynamic values (bar widths, conic-gradient stops, stagger delays), and
+even those pass `var(--token)` references, never raw hex. Added a new `--chart-series-1..6` token set to
+`src/styles/_tokens.scss` for `labels`'s issue-type rotating palette — the first token layer entry for
+"categorical, non-status" chart colors (§34). See branch `refactor/style-03-tier2-dashboard-pages`.
 
 ## 60.4 Refactor priority — Tier 3: shared `src/components/dashboard/**` (160 warnings, 14 files)
 

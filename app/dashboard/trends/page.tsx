@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDashboardMetrics } from '@/components/dashboard/DashboardMetricsContext';
 import { buildSafeCsv } from '@/lib/exportSafety';
@@ -10,9 +10,21 @@ import {
   StickyToolbar, FilterChip, ToolbarSpacer, ToolbarButton,
   PageHeader, SectionCard, PageLoading, EmptyPage,
 } from '@/components/dashboard/DashboardPageShell';
+import styles from './page.module.scss';
+
+// STYLE-03 (2026-07-19): converted from inline styles to SCSS Module — see
+// page.module.scss for the token mapping notes. No behavior change.
+
+type CSSVariableProperties = CSSProperties & Record<`--${string}`, string | number>;
 
 const DONE_STATUSES = ['done', 'closed', 'resolved'];
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
+
+function completionTier(pct: number): 'good' | 'fair' | 'poor' {
+  if (pct >= 70) return 'good';
+  if (pct >= 50) return 'fair';
+  return 'poor';
+}
 
 export default function TrendsPage() {
   const router = useRouter();
@@ -67,6 +79,13 @@ export default function TrendsPage() {
     a.download = 'trends-quarterly.csv'; a.click();
   };
 
+  const kpis = [
+    { label: 'Sprint Items', value: sprintItems.length, kpi: 'primary' },
+    { label: 'Completed', value: sprintItems.filter(i => DONE_STATUSES.includes(norm(i.status))).length, kpi: 'success' },
+    { label: 'In Progress', value: sprintItems.filter(i => norm(i.status) === 'in progress').length, kpi: 'warning' },
+    { label: 'Blocked', value: blockedInSprint.length, kpi: blockedInSprint.length > 0 ? 'critical' : 'success' },
+  ];
+
   return (
     <>
       <StickyToolbar>
@@ -83,23 +102,18 @@ export default function TrendsPage() {
         subtitle="Sprint velocity and quarter-over-quarter delivery trends."
       />
 
-      <div style={{ padding: '0 28px 48px' }} id="tour-section-trends-content">
+      <div className={styles.page} id="tour-section-trends-content">
 
         {view === 'sprint' && (!sprint ? (
           <EmptyPage message="No sprint data detected. Upload a file with Sprint field data to see sprint metrics." />
         ) : (
           <>
             {/* ── Sprint gauges ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
-              {[
-                { label: 'Sprint Items', value: sprintItems.length, color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
-                { label: 'Completed', value: sprintItems.filter(i => DONE_STATUSES.includes(norm(i.status))).length, color: '#059669', bg: '#F0FDF4', border: '#BBF7D0' },
-                { label: 'In Progress', value: sprintItems.filter(i => norm(i.status) === 'in progress').length, color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
-                { label: 'Blocked', value: blockedInSprint.length, color: blockedInSprint.length > 0 ? '#DC2626' : '#059669', bg: '#FEF2F2', border: '#FECACA' },
-              ].map(({ label, value, color, bg, border }) => (
-                <div key={label} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: '14px 16px' }}>
-                  <p style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#94A3B8', marginBottom: 4 }}>{label}</p>
-                  <p style={{ fontSize: 22, fontWeight: 800, fontFamily: 'monospace', color, margin: 0 }}>{value}</p>
+            <div className={styles.kpiGrid}>
+              {kpis.map(({ label, value, kpi }) => (
+                <div key={label} className={styles.kpiCard} data-kpi={kpi}>
+                  <p className={styles.kpiLabel}>{label}</p>
+                  <p className={styles.kpiValue} data-kpi={kpi}>{value}</p>
                 </div>
               ))}
             </div>
@@ -107,15 +121,15 @@ export default function TrendsPage() {
             {/* ── Sprint velocity ── */}
             {typeof sprint.velocity !== 'undefined' && (
               <SectionCard title="Sprint Velocity">
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+                <div className={styles.velocityGrid}>
                   {[
                     { label: 'Velocity', value: sprint.velocity ?? '—' },
                     { label: 'Avg Velocity', value: sprint.averageVelocity ?? '—' },
                     { label: 'Predictability', value: sprint.predictability != null ? `${sprint.predictability}%` : '—' },
                   ].map(({ label, value }) => (
-                    <div key={label} style={{ padding: '12px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                      <p style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#94A3B8', marginBottom: 4 }}>{label}</p>
-                      <p style={{ fontSize: 20, fontWeight: 800, fontFamily: 'monospace', color: '#0F172A', margin: 0 }}>{value}</p>
+                    <div key={label} className={styles.velocityCard}>
+                      <p className={styles.velocityLabel}>{label}</p>
+                      <p className={styles.velocityValue}>{value}</p>
                     </div>
                   ))}
                 </div>
@@ -125,22 +139,26 @@ export default function TrendsPage() {
             {/* ── Sprint history ── */}
             {sprintDist.length > 0 && (
               <SectionCard title="Sprint Completion History">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {sprintDist.map((s, i) => (
-                    <div key={s.name}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12 }}>
-                        <span style={{ color: '#334155', fontWeight: i === 0 ? 700 : 400 }}>{s.name}</span>
-                        <div style={{ display: 'flex', gap: 12, color: '#64748B' }}>
-                          <span>{s.done}/{s.total} done</span>
-                          {s.blocked > 0 && <span style={{ color: '#DC2626' }}>{s.blocked} blocked</span>}
-                          <strong style={{ color: s.completion >= 70 ? '#059669' : '#D97706', fontFamily: 'monospace' }}>{s.completion}%</strong>
+                <div className={styles.sprintList}>
+                  {sprintDist.map((s, i) => {
+                    const good = s.completion >= 70;
+                    const barVars: CSSVariableProperties = { '--bar-width': `${s.completion}%`, '--bar-delay': `${i * 70}ms` };
+                    return (
+                      <div key={s.name}>
+                        <div className={styles.sprintHeadRow}>
+                          <span className={styles.sprintName} data-latest={i === 0 || undefined}>{s.name}</span>
+                          <div className={styles.sprintStats}>
+                            <span>{s.done}/{s.total} done</span>
+                            {s.blocked > 0 && <span className={styles.sprintBlocked}>{s.blocked} blocked</span>}
+                            <strong className={styles.sprintCompletion} data-good={good || undefined}>{s.completion}%</strong>
+                          </div>
+                        </div>
+                        <div className={styles.sprintTrack}>
+                          <div className={styles.sprintFill} data-good={good || undefined} style={barVars} />
                         </div>
                       </div>
-                      <div style={{ height: 8, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', borderRadius: 4, background: s.completion >= 70 ? '#059669' : '#D97706', width: `${s.completion}%`, animation: 'barFill 800ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 70}ms` }} />
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </SectionCard>
             )}
@@ -153,24 +171,26 @@ export default function TrendsPage() {
           <>
             {/* ── Quarter chart ── */}
             <SectionCard title="Throughput by Quarter">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className={styles.quarterList}>
                 {quarters.map((q: any, i: number) => {
                   const pct = Math.round((q.issues / qMax) * 100);
                   const donePct = q.issues > 0 ? Math.round(((q.done ?? 0) / q.issues) * 100) : 0;
                   const isLatest = i === 0;
+                  const totalVars: CSSVariableProperties = { '--bar-width': `${pct}%`, '--bar-delay': `${i * 65}ms` };
+                  const doneVars: CSSVariableProperties = { '--bar-width': `${(q.done / qMax) * 100}%`, '--bar-delay': `${i * 65 + 200}ms` };
                   return (
                     <div key={q.quarter ?? i}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                        <span style={{ width: 50, fontSize: 11, fontWeight: 700, color: isLatest ? '#2563EB' : '#475569', flexShrink: 0 }}>{q.quarter}</span>
-                        <div style={{ flex: 1, height: 20, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden', position: 'relative' }}>
-                          <div style={{ height: '100%', borderRadius: 4, background: isLatest ? '#2563EB' : '#94A3B8', width: `${pct}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 65}ms`, opacity: 0.8 }} />
+                      <div className={styles.quarterRow}>
+                        <span className={styles.quarterLabel} data-latest={isLatest || undefined}>{q.quarter}</span>
+                        <div className={styles.quarterTrack}>
+                          <div className={styles.quarterFillTotal} data-latest={isLatest || undefined} style={totalVars} />
                           {q.done > 0 && (
-                            <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', borderRadius: 4, background: '#059669', width: `${(q.done / qMax) * 100}%`, animation: 'barFill 900ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 65 + 200}ms`, opacity: 0.6 }} />
+                            <div className={styles.quarterFillDone} style={doneVars} />
                           )}
                         </div>
-                        <div style={{ width: 110, flexShrink: 0, display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
-                          <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#475569' }}>{(q.issues || 0).toLocaleString()}</span>
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: donePct >= 70 ? '#F0FDF4' : '#FFFBEB', color: donePct >= 70 ? '#059669' : '#D97706' }}>
+                        <div className={styles.quarterMeta}>
+                          <span className={styles.quarterCount}>{(q.issues || 0).toLocaleString()}</span>
+                          <span className={styles.quarterPctBadge} data-good={donePct >= 70 || undefined}>
                             {donePct}%
                           </span>
                         </div>
@@ -178,34 +198,35 @@ export default function TrendsPage() {
                     </div>
                   );
                 })}
-                <div style={{ display: 'flex', gap: 16, fontSize: 11, color: '#94A3B8', marginTop: 4, paddingTop: 8, borderTop: '1px solid #F1F5F9' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#94A3B8', opacity: 0.8 }} />Total issues</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#059669', opacity: 0.6 }} />Done</div>
+                <div className={styles.chartLegend}>
+                  <div className={styles.legendItem}><span className={styles.legendSwatch} />Total issues</div>
+                  <div className={styles.legendItem}><span className={styles.legendSwatch} data-swatch="done" />Done</div>
                 </div>
               </div>
             </SectionCard>
 
             {/* ── Quarter table ── */}
             <SectionCard title="Quarterly Breakdown">
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+              <div className={styles.tableWrap}>
+                <table className={styles.dataTable}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+                    <tr className={styles.tableHeadRow}>
                       {['Quarter', 'Total Issues', 'Completed', 'Completion Rate'].map(h => (
-                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94A3B8' }}>{h}</th>
+                        <th key={h} className={styles.th}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {quarters.map((q: any, i: number) => {
                       const donePct = q.issues > 0 ? Math.round(((q.done ?? 0) / q.issues) * 100) : 0;
+                      const isLatest = i === 0;
                       return (
-                        <tr key={q.quarter ?? i} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                          <td style={{ padding: '8px 12px', fontWeight: 700, color: i === 0 ? '#2563EB' : '#334155', fontFamily: 'monospace' }}>{q.quarter}</td>
-                          <td style={{ padding: '8px 12px', fontFamily: 'monospace', color: '#475569' }}>{(q.issues || 0).toLocaleString()}</td>
-                          <td style={{ padding: '8px 12px', fontFamily: 'monospace', color: '#059669' }}>{(q.done || 0).toLocaleString()}</td>
-                          <td style={{ padding: '8px 12px' }}>
-                            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: donePct >= 70 ? '#F0FDF4' : donePct >= 50 ? '#FFFBEB' : '#FEF2F2', color: donePct >= 70 ? '#059669' : donePct >= 50 ? '#D97706' : '#DC2626' }}>
+                        <tr key={q.quarter ?? i} className={styles.tableRow}>
+                          <td className={styles.cellQuarter} data-latest={isLatest || undefined}>{q.quarter}</td>
+                          <td className={styles.cellIssues}>{(q.issues || 0).toLocaleString()}</td>
+                          <td className={styles.cellDone}>{(q.done || 0).toLocaleString()}</td>
+                          <td className={styles.cellCompletion}>
+                            <span className={styles.completionBadge} data-tier={completionTier(donePct)}>
                               {donePct}%
                             </span>
                           </td>

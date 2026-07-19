@@ -40,6 +40,18 @@
   --color-info:           var(--dc-acc2, #3b82f6);
   --color-info-soft:      rgb(59 130 246 / 10%);
 
+  // ── Chart series (CLAUDE.md §34 "approved chart-series tokens") ───────────
+  // A small rotating palette for categorical/legend distinction — e.g. issue
+  // type breakdown bars — where colors carry no semantic status meaning (not
+  // critical/warning/good). Distinct from the status colors above; components
+  // select by index (--chart-series-1..6), never a raw hex.
+  --chart-series-1: var(--color-primary,       #2563eb);
+  --chart-series-2: var(--color-success,       #22c55e);
+  --chart-series-3: var(--color-warning,       #f59e0b);
+  --chart-series-4: var(--color-danger-strong, #dc2626);
+  --chart-series-5: var(--dc-purple,           #7c3aed);
+  --chart-series-6: #0891b2;
+
   // ── Health status bands ───────────────────────────────────────────────────
   --color-health-excellent-arc:    #059669;
   --color-health-excellent-bg:     #ecfdf5;

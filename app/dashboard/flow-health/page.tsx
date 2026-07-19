@@ -1,8 +1,9 @@
 // @ts-nocheck
 'use client';
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
+import clsx from 'clsx';
 import { useDashboardMetrics } from '@/components/dashboard/DashboardMetricsContext';
 import { buildSafeCsv } from '@/lib/exportSafety';
 import type { FlowItem } from '@/types/metrics';
@@ -10,20 +11,28 @@ import {
   StickyToolbar, FilterChip, ToolbarSpacer,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
+import styles from './page.module.scss';
+
+// STYLE-03 (2026-07-19): converted from inline styles to SCSS Module — see
+// page.module.scss for the token mapping notes. No behavior change.
+
+type CSSVariableProperties = CSSProperties & Record<`--${string}`, string | number>;
 
 const DONE_STATUSES = ['done', 'closed', 'resolved'];
+const ACTIVE_STATUSES = ['in progress', 'code review', 'qa', 'testing'];
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
 const matchText = (val: unknown, q: string) => !q || norm(val).includes(norm(q));
 
-const HEALTH_COLORS: Record<string, string> = {
-  critical: '#DC2626', warning: '#D97706', good: '#059669',
-};
-
+// CP3-002/CP3-004-adjacent: this badge only reflects the pre-computed
+// per-item `health` classification already on FlowItem — no new business
+// logic here, just how it renders. HEALTH_COLORS removed in favor of a
+// data-health attribute + page.module.scss (CLAUDE.md §28: business logic
+// must not return colors).
 function HealthBadge({ value }: { value?: string }) {
   const v = norm(value);
-  const color = HEALTH_COLORS[v] ?? '#94A3B8';
+  const health = ['critical', 'warning', 'good'].includes(v) ? v : undefined;
   return (
-    <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase', background: `${color}18`, color }}>
+    <span className={styles.healthBadge} data-health={health}>
       {value || '—'}
     </span>
   );
@@ -118,19 +127,38 @@ export default function FlowHealthPage() {
   const orphanCount = filtered.filter(i => i.isOrphan).length;
   const visible = filtered.slice(0, visibleCount);
 
-  const inputStyle = {
-    border: '1px solid #E2E8F0', borderRadius: 8, padding: '6px 10px',
-    fontSize: 12, color: '#334155', outline: 'none', width: '100%',
-    background: '#fff',
-  };
-  const selectStyle = { ...inputStyle };
-  const labelStyle = { fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase' as const, letterSpacing: '.06em', marginBottom: 4 };
+  const textFilters = [
+    { label: 'Key', value: keyFilter, set: setKeyFilter, placeholder: 'AJ-24' },
+    { label: 'Story / Task', value: summaryFilter, set: setSummaryFilter, placeholder: 'Summary text' },
+    { label: 'Reason', value: reasonFilter, set: setReasonFilter, placeholder: 'Blocked, overdue…' },
+    { label: 'Labels', value: labelFilter, set: setLabelFilter, placeholder: 'bug-fix, mobile…' },
+    { label: 'Lead ≤ (days)', value: leadMax, set: setLeadMax, placeholder: '30', type: 'number' },
+    { label: 'Cycle ≤ (days)', value: cycleMax, set: setCycleMax, placeholder: '14', type: 'number' },
+    { label: 'Open Age ≤ (days)', value: ageMax, set: setAgeMax, placeholder: '10', type: 'number' },
+  ];
 
-  const th = (label: string, width?: number) => (
-    <th key={label} style={{ padding: '6px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94A3B8', borderBottom: '1px solid #E2E8F0', width, whiteSpace: 'nowrap' }}>
-      {label}
-    </th>
-  );
+  const selectFilters = [
+    { label: 'Issue Type', value: typeFilter, set: setTypeFilter, opts: typeOptions, allLabel: 'All types' },
+    { label: 'Status', value: statusFilter, set: setStatusFilter, opts: statusOptions, allLabel: 'All statuses' },
+    { label: 'Sprint', value: sprintFilter, set: setSprintFilter, opts: sprintOptions, allLabel: 'All sprints' },
+    { label: 'Assignee', value: assigneeFilter, set: setAssigneeFilter, opts: assigneeOptions, allLabel: 'All assignees' },
+    { label: 'Health', value: healthFilter, set: setHealthFilter, opts: ['critical', 'warning', 'good'], allLabel: 'All health' },
+  ];
+
+  const columns = [
+    { label: 'Key', className: styles.colKey },
+    { label: 'Summary' },
+    { label: 'Type', className: styles.colType },
+    { label: 'Status', className: styles.colStatus },
+    { label: 'Sprint', className: styles.colSprint },
+    { label: 'Epic / Parent', className: styles.colEpic },
+    { label: 'Assignee', className: styles.colAssignee },
+    { label: 'Lead', className: styles.colMetric },
+    { label: 'Cycle', className: styles.colMetric },
+    { label: 'Age', className: styles.colMetric },
+    { label: 'Health', className: styles.colMetric },
+    { label: 'Reason' },
+  ];
 
   return (
     <>
@@ -150,43 +178,29 @@ export default function FlowHealthPage() {
         subtitle="Filter, inspect, and export every item in this delivery."
       />
 
-      <div style={{ padding: '0 28px 48px' }}>
+      <div className={styles.page}>
 
         {/* ── Filters ── */}
-        <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, padding: 20, marginBottom: 20 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
-            {[
-              { label: 'Key', value: keyFilter, set: setKeyFilter, placeholder: 'AJ-24' },
-              { label: 'Story / Task', value: summaryFilter, set: setSummaryFilter, placeholder: 'Summary text' },
-              { label: 'Reason', value: reasonFilter, set: setReasonFilter, placeholder: 'Blocked, overdue…' },
-              { label: 'Labels', value: labelFilter, set: setLabelFilter, placeholder: 'bug-fix, mobile…' },
-              { label: 'Lead ≤ (days)', value: leadMax, set: setLeadMax, placeholder: '30', type: 'number' },
-              { label: 'Cycle ≤ (days)', value: cycleMax, set: setCycleMax, placeholder: '14', type: 'number' },
-              { label: 'Open Age ≤ (days)', value: ageMax, set: setAgeMax, placeholder: '10', type: 'number' },
-            ].map(({ label, value, set, placeholder, type }) => (
-              <label key={label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={labelStyle}>{label}</span>
+        <div className={styles.filterPanel}>
+          <div className={styles.filterGridText}>
+            {textFilters.map(({ label, value, set, placeholder, type }) => (
+              <label key={label} className={styles.filterField}>
+                <span className={styles.filterLabel}>{label}</span>
                 <input
                   type={type ?? 'search'}
                   value={value}
                   placeholder={placeholder}
                   onChange={e => { set(e.target.value); setVisibleCount(100); }}
-                  style={inputStyle}
+                  className={styles.filterControl}
                 />
               </label>
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
-            {[
-              { label: 'Issue Type', value: typeFilter, set: setTypeFilter, opts: typeOptions, allLabel: 'All types' },
-              { label: 'Status', value: statusFilter, set: setStatusFilter, opts: statusOptions, allLabel: 'All statuses' },
-              { label: 'Sprint', value: sprintFilter, set: setSprintFilter, opts: sprintOptions, allLabel: 'All sprints' },
-              { label: 'Assignee', value: assigneeFilter, set: setAssigneeFilter, opts: assigneeOptions, allLabel: 'All assignees' },
-              { label: 'Health', value: healthFilter, set: setHealthFilter, opts: ['critical', 'warning', 'good'], allLabel: 'All health' },
-            ].map(({ label, value, set, opts, allLabel }) => (
-              <label key={label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={labelStyle}>{label}</span>
-                <select value={value} onChange={e => { set(e.target.value); setVisibleCount(100); }} style={selectStyle}>
+          <div className={styles.filterGridSelect}>
+            {selectFilters.map(({ label, value, set, opts, allLabel }) => (
+              <label key={label} className={styles.filterField}>
+                <span className={styles.filterLabel}>{label}</span>
+                <select value={value} onChange={e => { set(e.target.value); setVisibleCount(100); }} className={styles.filterControl}>
                   <option value="all">{allLabel}</option>
                   {opts.map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
@@ -195,31 +209,15 @@ export default function FlowHealthPage() {
           </div>
 
           {/* ── Action row ── */}
-          <div id="tour-section-dashboard-flow-health-1" style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 14, marginTop: 14, borderTop: '1px solid #F1F5F9' }}>
-            <button
-              type="button"
-              onClick={resetAll}
-              style={{
-                padding: '7px 16px', borderRadius: 8, border: '1px solid #E2E8F0',
-                background: '#F8FAFC', color: '#475569', fontSize: 12, fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6,
-              }}
-            >
+          <div id="tour-section-dashboard-flow-health-1" className={styles.actionRow}>
+            <button type="button" onClick={resetAll} className={styles.btnReset}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
                 <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
                 <path d="M3 3v5h5"/>
               </svg>
               Reset filters
             </button>
-            <button
-              type="button"
-              onClick={exportCsv}
-              style={{
-                padding: '7px 16px', borderRadius: 8, border: 'none',
-                background: '#2563EB', color: '#fff', fontSize: 12, fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6,
-              }}
-            >
+            <button type="button" onClick={exportCsv} className={styles.btnExport}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="7 10 12 15 17 10"/>
@@ -227,7 +225,7 @@ export default function FlowHealthPage() {
               </svg>
               Export CSV
             </button>
-            <span style={{ fontSize: 11, color: '#94A3B8', marginLeft: 4 }}>
+            <span className={styles.resultCount}>
               {filtered.length.toLocaleString()} of {flowItems.length.toLocaleString()} items
             </span>
           </div>
@@ -236,18 +234,25 @@ export default function FlowHealthPage() {
         {/* ── Status distribution of filtered set ── */}
         {statusDist.length > 0 && (
           <SectionCard title="Status Distribution (filtered)">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className={styles.statusList}>
               {statusDist.map((r, i) => {
                 const isDone = DONE_STATUSES.includes(norm(r.name));
-                const isActive = ['in progress', 'code review', 'qa', 'testing'].includes(norm(r.name));
-                const color = isDone ? '#059669' : isActive ? '#2563EB' : '#94A3B8';
+                const isActive = ACTIVE_STATUSES.includes(norm(r.name));
+                const status = isDone ? 'done' : isActive ? 'active' : undefined;
+                // EXCEPTION (CLAUDE.md Rule 1): fill width and stagger delay
+                // are computed from the current filtered dataset — no color
+                // travels through this variable, only geometry/timing.
+                const barVars: CSSVariableProperties = {
+                  '--bar-width': `${(r.count / statusMax) * 100}%`,
+                  '--bar-delay': `${i * 50}ms`,
+                };
                 return (
-                  <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 130, fontSize: 11, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
-                    <div style={{ flex: 1, height: 7, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 4, background: color, width: `${(r.count / statusMax) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 50}ms` }} />
+                  <div key={r.name} className={styles.statusRow}>
+                    <span className={styles.statusName}>{r.name}</span>
+                    <div className={styles.statusBarTrack}>
+                      <div className={styles.statusBarFill} data-status={status} style={barVars} />
                     </div>
-                    <strong style={{ fontFamily: 'monospace', fontSize: 11, color, width: 36, textAlign: 'right', flexShrink: 0 }}>{r.count}</strong>
+                    <strong className={styles.statusCount} data-status={status}>{r.count}</strong>
                   </div>
                 );
               })}
@@ -256,81 +261,73 @@ export default function FlowHealthPage() {
         )}
 
         {/* ── Summary line ── */}
-        <div style={{ fontSize: 11, color: '#64748B', background: '#F8FAFC', borderRadius: 8, padding: '8px 14px', marginBottom: 16 }}>
-          Showing <strong style={{ color: '#0F172A' }}>{visible.length}</strong> of <strong style={{ color: '#0F172A' }}>{filtered.length}</strong> matching items from <strong style={{ color: '#0F172A' }}>{flowItems.length}</strong> total.
-          {orphanCount > 0 && <span style={{ marginLeft: 10, color: '#7C3AED', fontWeight: 700 }}>{orphanCount} orphan items</span>}
+        <div className={styles.summaryLine}>
+          Showing <strong className={styles.summaryStrong}>{visible.length}</strong> of <strong className={styles.summaryStrong}>{filtered.length}</strong> matching items from <strong className={styles.summaryStrong}>{flowItems.length}</strong> total.
+          {orphanCount > 0 && <span className={styles.orphanNote}>{orphanCount} orphan items</span>}
         </div>
 
         {/* ── Items table ── */}
-        <div id="tour-section-dashboard-flow-health-2" style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+        <div id="tour-section-dashboard-flow-health-2" className={styles.tableCard}>
+          <div className={styles.tableScroll}>
+            <table className={styles.dataTable}>
               <thead>
-                <tr style={{ background: '#F8FAFC' }}>
-                  {th('Key', 80)}
-                  {th('Summary')}
-                  {th('Type', 90)}
-                  {th('Status', 110)}
-                  {th('Sprint', 110)}
-                  {th('Epic / Parent', 120)}
-                  {th('Assignee', 110)}
-                  {th('Lead', 60)}
-                  {th('Cycle', 60)}
-                  {th('Age', 60)}
-                  {th('Health', 80)}
-                  {th('Reason')}
+                <tr className={styles.tableHeadRow}>
+                  {columns.map(col => (
+                    <th key={col.label} className={clsx(styles.th, col.className)}>{col.label}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {visible.length === 0 ? (
                   <tr>
-                    <td colSpan={12} style={{ padding: '40px', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>
+                    <td colSpan={columns.length} className={styles.emptyCell}>
                       No items match the selected filters.
                     </td>
                   </tr>
-                ) : visible.map((item, i) => (
-                  <tr key={item.key ?? i} style={{ borderBottom: '1px solid #F1F5F9', background: item.isOrphan ? '#F5F3FF' : undefined }}>
-                    <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: '#2563EB', whiteSpace: 'nowrap' }}>{item.key}</td>
-                    <td style={{ padding: '7px 10px', color: '#334155', maxWidth: 260 }}>
-                      <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.summary}>{item.summary}</span>
-                    </td>
-                    <td style={{ padding: '7px 10px', whiteSpace: 'nowrap' }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 4, background: '#F1F5F9', color: '#475569' }}>{item.type || '—'}</span>
-                    </td>
-                    <td style={{ padding: '7px 10px', color: '#475569', whiteSpace: 'nowrap' }}>{item.status}</td>
-                    <td style={{ padding: '7px 10px', color: '#64748B', whiteSpace: 'nowrap', fontSize: 11 }}>{item.sprint ?? '—'}</td>
-                    <td style={{ padding: '7px 10px', color: item.isOrphan ? '#7C3AED' : '#64748B', fontSize: 11 }}>
-                      {item.epic ?? item.parent ?? <span style={{ color: '#7C3AED', fontWeight: 600 }}>Orphan</span>}
-                    </td>
-                    <td style={{ padding: '7px 10px', color: '#64748B', fontSize: 11 }}>{item.assignee ?? '—'}</td>
-                    <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: Number(item.leadTimeDays) > 14 ? '#D97706' : '#64748B' }}>
-                      {item.leadTimeDays != null ? `${item.leadTimeDays}d` : '—'}
-                    </td>
-                    <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: Number(item.cycleTimeDays) > 14 ? '#D97706' : '#64748B' }}>
-                      {item.cycleTimeDays != null ? `${item.cycleTimeDays}d` : '—'}
-                    </td>
-                    <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: Number(item.ageDays) > 10 ? '#DC2626' : '#64748B' }}>
-                      {item.ageDays != null ? `${item.ageDays}d` : '—'}
-                    </td>
-                    <td style={{ padding: '7px 10px' }}><HealthBadge value={item.health} /></td>
-                    <td style={{ padding: '7px 10px', color: '#64748B', fontSize: 11, maxWidth: 200 }}>
-                      <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.reason}>{item.reason || '—'}</span>
-                    </td>
-                  </tr>
-                ))}
+                ) : visible.map((item, i) => {
+                  const leadSeverity = Number(item.leadTimeDays) > 14 ? 'warning' : undefined;
+                  const cycleSeverity = Number(item.cycleTimeDays) > 14 ? 'warning' : undefined;
+                  const ageSeverity = Number(item.ageDays) > 10 ? 'critical' : undefined;
+                  return (
+                    <tr key={item.key ?? i} className={styles.tableRow} data-orphan={item.isOrphan || undefined}>
+                      <td className={styles.cellKey}>{item.key}</td>
+                      <td className={styles.cellSummary}>
+                        <span className={styles.ellipsisText} title={item.summary}>{item.summary}</span>
+                      </td>
+                      <td className={styles.cellType}>
+                        <span className={styles.typeBadge}>{item.type || '—'}</span>
+                      </td>
+                      <td className={styles.cellStatus}>{item.status}</td>
+                      <td className={styles.cellSprint}>{item.sprint ?? '—'}</td>
+                      <td className={styles.cellEpic} data-orphan={item.isOrphan || undefined}>
+                        {item.epic ?? item.parent ?? <span className={styles.orphanLabel}>Orphan</span>}
+                      </td>
+                      <td className={styles.cellAssignee}>{item.assignee ?? '—'}</td>
+                      <td className={styles.cellMetric} data-severity={leadSeverity}>
+                        {item.leadTimeDays != null ? `${item.leadTimeDays}d` : '—'}
+                      </td>
+                      <td className={styles.cellMetric} data-severity={cycleSeverity}>
+                        {item.cycleTimeDays != null ? `${item.cycleTimeDays}d` : '—'}
+                      </td>
+                      <td className={styles.cellMetric} data-severity={ageSeverity}>
+                        {item.ageDays != null ? `${item.ageDays}d` : '—'}
+                      </td>
+                      <td className={styles.cellHealth}><HealthBadge value={item.health} /></td>
+                      <td className={styles.cellReason}>
+                        <span className={styles.ellipsisText} title={item.reason}>{item.reason || '—'}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           {filtered.length > visibleCount && (
-            <div style={{ padding: '14px 20px', borderTop: '1px solid #F1F5F9', textAlign: 'center' }}>
-              <button
-                type="button"
-                onClick={() => setVisibleCount(c => c + 100)}
-                style={{ fontSize: 12, fontWeight: 600, color: '#2563EB', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 8, padding: '8px 20px', cursor: 'pointer' }}
-              >
+            <div className={styles.loadMoreWrap}>
+              <button type="button" onClick={() => setVisibleCount(c => c + 100)} className={styles.btnLoadMore}>
                 Show {Math.min(100, filtered.length - visibleCount)} more
-                <span style={{ color: '#94A3B8', marginLeft: 6 }}>— {filtered.length - visibleCount} remaining</span>
+                <span className={styles.loadMoreCount}>— {filtered.length - visibleCount} remaining</span>
               </button>
             </div>
           )}
