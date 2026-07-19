@@ -1,0 +1,40 @@
+@keyframes preloaderPulse {
+  0%, 100% { transform: scale(1);    opacity: 1;   }
+  50%      { transform: scale(0.92); opacity: 0.6; }
+}
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3, 12px);
+  padding: var(--space-10, 40px) 0;
+}
+
+.fullScreen {
+  min-height: 100vh;
+  padding: 0;
+}
+
+.mark {
+  animation: preloaderPulse 1.6s ease-in-out infinite;
+}
+
+.wordmark {
+  font-size: var(--text-md, 13px);
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  letter-spacing: -0.01em;
+}
+
+.message {
+  font-size: var(--text-sm, 11px);
+  color: var(--color-text-muted, #94a3b8);
+  margin: 0;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mark { animation: none; }
+}
