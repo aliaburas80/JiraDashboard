@@ -9,7 +9,6 @@ import AppShell from '@/components/layout/AppShell';
 import { loadMetricsWithSource } from '@/lib/storage';
 import {
   computePortfolioSummary,
-  portfolioBandColor,
   type PortfolioSummary,
   type EpicSummary,
   type ProjectSummary,
@@ -19,13 +18,32 @@ import { exportPortfolioEpicsToCsv } from '@/services/export/portfolioExport.ser
 import type { DashboardMetrics } from '@/types/metrics';
 import styles from './page.module.scss';
 
-// ── Health color tokens (data-driven, passed as CSS custom properties) ─────────
-// EXCEPTION: these values are data-driven from health status
-const HEALTH: Record<'good' | 'warning' | 'critical', { color: string; badgeBg: string; badgeFg: string; label: string }> = {
-  good:     { color: '#16a34a', badgeBg: 'color-mix(in srgb,#22c55e 10%,transparent)', badgeFg: '#15803d', label: 'On track'  },
-  warning:  { color: '#d97706', badgeBg: 'color-mix(in srgb,#f59e0b 10%,transparent)', badgeFg: '#92400e', label: 'At risk'   },
-  critical: { color: '#dc2626', badgeBg: 'color-mix(in srgb,#dc2626  9%,transparent)', badgeFg: '#b91c1c', label: 'Critical'  },
+// STYLE-05 (2026-07-19): converted from inline styles to SCSS Module — see
+// page.module.scss for the token mapping notes. No behavior change.
+
+type HealthTier = 'good' | 'warning' | 'critical';
+
+// Colors for epic/project health are resolved in SCSS from data-tier
+// (CLAUDE.md §28); JS only supplies the human label.
+const HEALTH_LABEL: Record<HealthTier, string> = {
+  good:     'On track',
+  warning:  'At risk',
+  critical: 'Critical',
 };
+
+type Tone = HealthTier | 'primary' | 'neutral';
+
+function quarterTier(completionRate: number): HealthTier {
+  if (completionRate >= 70) return 'good';
+  if (completionRate >= 40) return 'warning';
+  return 'critical';
+}
+
+function insightTone(text: string): HealthTier {
+  if (text.includes('critical') || text.includes('Immediate')) return 'critical';
+  if (text.includes('risk') || text.includes('behind')) return 'warning';
+  return 'good';
+}
 
 const BAND_MEANINGS: Record<string, string> = {
   Excellent: 'Delivery is in excellent shape. Epics and projects are progressing well with minimal risk.',
@@ -40,25 +58,21 @@ const RING_CIRC = 2 * Math.PI * 44; // ≈ 276.5
 
 // ── Epic row ──────────────────────────────────────────────────────────────────
 function EpicRow({ epic, index }: { epic: EpicSummary; index: number }) {
-  const h = HEALTH[epic.health];
   return (
     <div
       className={styles.epicRow}
       style={{ '--epic-delay': `${index * 45}ms` } as CSSProperties}
     >
       <div className={styles.epicRowTop}>
-        <div className={styles.epicDot} style={{ '--health-color': h.color } as CSSProperties} aria-hidden="true" />
+        <div className={styles.epicDot} data-tier={epic.health} aria-hidden="true" />
         <span className={styles.epicName} title={epic.name}>{epic.name}</span>
 
         {/* Health badge */}
-        <span
-          className={styles.epicHealthBadge}
-          style={{ '--badge-bg': h.badgeBg, '--badge-fg': h.badgeFg } as CSSProperties}
-        >
-          {h.label}
+        <span className={styles.epicHealthBadge} data-tier={epic.health}>
+          {HEALTH_LABEL[epic.health]}
         </span>
 
-        <span className={styles.epicPct} style={{ '--health-color': h.color } as CSSProperties}>
+        <span className={styles.epicPct} data-tier={epic.health}>
           {epic.progress}%
         </span>
       </div>
@@ -67,10 +81,10 @@ function EpicRow({ epic, index }: { epic: EpicSummary; index: number }) {
       <div className={styles.epicTrack}>
         <div
           className={styles.epicFill}
+          data-tier={epic.health}
           style={{
-            '--bar-w':       `${Math.min(epic.progress, 100)}%`,
-            '--health-color': h.color,
-            '--bar-delay':   `${index * 45}ms`,
+            '--bar-w':     `${Math.min(epic.progress, 100)}%`,
+            '--bar-delay': `${index * 45}ms`,
           } as CSSProperties}
         />
       </div>
@@ -89,32 +103,29 @@ function EpicRow({ epic, index }: { epic: EpicSummary; index: number }) {
 
 // ── Project card ──────────────────────────────────────────────────────────────
 function ProjectCard({ project, index }: { project: ProjectSummary; index: number }) {
-  const h = HEALTH[project.health];
   return (
     <div
       className={styles.projectCard}
-      style={{
-        '--project-accent': h.color,
-        '--proj-delay':     `${index * 50}ms`,
-      } as CSSProperties}
+      data-tier={project.health}
+      style={{ '--proj-delay': `${index * 50}ms` } as CSSProperties}
     >
       <p className={styles.projectName} title={project.name}>{project.name}</p>
-      <p className={styles.projectStatus}>{h.label}</p>
+      <p className={styles.projectStatus} data-tier={project.health}>{HEALTH_LABEL[project.health]}</p>
 
       <div className={styles.projectTrack}>
         <div
           className={styles.projectFill}
+          data-tier={project.health}
           style={{
-            '--bar-w':          `${Math.min(project.completionRate, 100)}%`,
-            '--project-accent':  h.color,
-            '--bar-delay':      `${index * 50}ms`,
+            '--bar-w':     `${Math.min(project.completionRate, 100)}%`,
+            '--bar-delay': `${index * 50}ms`,
           } as CSSProperties}
         />
       </div>
 
       <div className={styles.projectMeta}>
         <span className={styles.projectMetaDone}>{project.done}/{project.issues} issues</span>
-        <span className={styles.projectMetaPct}>{project.completionRate}%</span>
+        <span className={styles.projectMetaPct} data-tier={project.health}>{project.completionRate}%</span>
       </div>
     </div>
   );
@@ -129,9 +140,9 @@ function QuarterBars({ quarters }: { quarters: QuarterSummary[] }) {
     <>
       <div className={styles.quarterBars}>
         {visible.map((q, i) => {
-          const totalH  = Math.max(6, Math.round((q.issues / maxIssues) * 100));
-          const doneH   = Math.max(0, Math.round((q.doneIssues / maxIssues) * 100));
-          const color   = q.completionRate >= 70 ? '#16a34a' : q.completionRate >= 40 ? '#d97706' : '#dc2626';
+          const totalH = Math.max(6, Math.round((q.issues / maxIssues) * 100));
+          const doneH  = Math.max(0, Math.round((q.doneIssues / maxIssues) * 100));
+          const tier   = quarterTier(q.completionRate);
           return (
             <div key={q.quarter} className={styles.quarterCol}>
               <span className={styles.quarterTopLabel}>{q.issues}</span>
@@ -139,20 +150,21 @@ function QuarterBars({ quarters }: { quarters: QuarterSummary[] }) {
                 {/* Background (total) */}
                 <div
                   className={styles.quarterBarBg}
-                  style={{ '--bar-total': `${totalH}%`, '--bar-color': color } as CSSProperties}
+                  data-tier={tier}
+                  style={{ '--bar-total': `${totalH}%` } as CSSProperties}
                 />
                 {/* Foreground (done) */}
                 <div
                   className={styles.quarterBarDone}
+                  data-tier={tier}
                   style={{
                     '--bar-done':  `${doneH}%`,
-                    '--bar-color':  color,
                     '--bar-delay': `${i * 60}ms`,
                   } as CSSProperties}
                   title={`${q.doneIssues} done of ${q.issues} (${q.completionRate}%)`}
                 />
               </div>
-              <span className={styles.quarterCompletionLabel} style={{ '--bar-color': color } as CSSProperties}>
+              <span className={styles.quarterCompletionLabel} data-tier={tier}>
                 {q.completionRate}%
               </span>
               <span className={styles.quarterLabel} title={q.quarter}>
@@ -164,19 +176,19 @@ function QuarterBars({ quarters }: { quarters: QuarterSummary[] }) {
       </div>
       <div className={styles.quarterLegend}>
         <div className={styles.quarterLegendItem}>
-          <div className={styles.quarterLegendDot} style={{ '--dot-color': 'rgba(22,163,74,0.18)' } as CSSProperties} />
+          <div className={styles.quarterLegendDot} data-legend="total" />
           Total issues in quarter
         </div>
         <div className={styles.quarterLegendItem}>
-          <div className={styles.quarterLegendDot} style={{ '--dot-color': '#16a34a' } as CSSProperties} />
+          <div className={styles.quarterLegendDot} data-legend="done" />
           Completed (solid = done)
         </div>
         <div className={styles.quarterLegendItem}>
-          <div className={styles.quarterLegendDot} style={{ '--dot-color': '#dc2626' } as CSSProperties} />
+          <div className={styles.quarterLegendDot} data-legend="critical" />
           {`< 40%`} completion rate
         </div>
         <div className={styles.quarterLegendItem}>
-          <div className={styles.quarterLegendDot} style={{ '--dot-color': '#d97706' } as CSSProperties} />
+          <div className={styles.quarterLegendDot} data-legend="warning" />
           40–69% completion rate
         </div>
       </div>
@@ -229,32 +241,26 @@ export default function PortfolioPage() {
   );
   if (!summary) return null;
 
-  const scoreColor = portfolioBandColor(summary.band);
   const ringOffset = RING_CIRC * (1 - summary.portfolioScore / 100);
 
   // Score factor breakdown — what contributes to the portfolio score
   const scoreFactors = [
-    { label: 'Epic completion',    pct: Math.round(summary.completionRate), weight: '40%', color: scoreColor },
-    { label: 'Project completion', pct: summary.healthyProjects > 0 ? Math.round((summary.healthyProjects / Math.max(summary.healthyProjects + summary.atRiskProjects, 1)) * 100) : 0, weight: '30%', color: scoreColor },
-    { label: 'Sprint performance', pct: summary.portfolioScore,  weight: '20%', color: scoreColor },
-    { label: 'Data quality',       pct: Math.min(100, summary.portfolioScore + 10), weight: '10%', color: scoreColor },
+    { label: 'Epic completion',    pct: Math.round(summary.completionRate), weight: '40%' },
+    { label: 'Project completion', pct: summary.healthyProjects > 0 ? Math.round((summary.healthyProjects / Math.max(summary.healthyProjects + summary.atRiskProjects, 1)) * 100) : 0, weight: '30%' },
+    { label: 'Sprint performance', pct: summary.portfolioScore,  weight: '20%' },
+    { label: 'Data quality',       pct: Math.min(100, summary.portfolioScore + 10), weight: '10%' },
   ];
 
   // KPI strip data
   const kpis = [
-    { label: 'Total Issues',     val: summary.totalIssues,       sub: 'in scope',            color: 'var(--color-primary,#2563eb)',                                           delay: 0   },
-    { label: 'Completion',       val: `${summary.completionRate}%`, sub: 'issues done',       color: scoreColor,                                                              delay: 50  },
-    { label: 'Story Points',     val: summary.totalStoryPoints > 0 ? `${summary.doneStoryPoints}/${summary.totalStoryPoints}` : '—', sub: 'SP done/total', color: scoreColor,delay: 100 },
-    { label: 'Active Epics',     val: summary.activeEpics,       sub: 'not yet complete',    color: 'var(--color-primary,#2563eb)',                                           delay: 150 },
-    { label: 'At-Risk Epics',    val: summary.atRiskEpics,       sub: 'have critical items', color: summary.atRiskEpics    > 0 ? '#dc2626' : '#94a3b8',                      delay: 200 },
-    { label: 'Blocked',          val: summary.totalBlockedItems,  sub: 'items blocked',      color: summary.totalBlockedItems > 0 ? '#dc2626' : '#94a3b8',                   delay: 250 },
-    { label: 'Healthy Projects', val: summary.healthyProjects,   sub: '≥ 70% complete',      color: '#16a34a',                                                               delay: 300 },
+    { label: 'Total Issues',     val: summary.totalIssues,       sub: 'in scope',            tone: 'primary' as Tone, band: false, delay: 0   },
+    { label: 'Completion',       val: `${summary.completionRate}%`, sub: 'issues done',       tone: 'primary' as Tone, band: true,  delay: 50  },
+    { label: 'Story Points',     val: summary.totalStoryPoints > 0 ? `${summary.doneStoryPoints}/${summary.totalStoryPoints}` : '—', sub: 'SP done/total', tone: 'primary' as Tone, band: true, delay: 100 },
+    { label: 'Active Epics',     val: summary.activeEpics,       sub: 'not yet complete',    tone: 'primary' as Tone, band: false, delay: 150 },
+    { label: 'At-Risk Epics',    val: summary.atRiskEpics,       sub: 'have critical items', tone: (summary.atRiskEpics    > 0 ? 'critical' : 'neutral') as Tone, band: false, delay: 200 },
+    { label: 'Blocked',          val: summary.totalBlockedItems,  sub: 'items blocked',      tone: (summary.totalBlockedItems > 0 ? 'critical' : 'neutral') as Tone, band: false, delay: 250 },
+    { label: 'Healthy Projects', val: summary.healthyProjects,   sub: '≥ 70% complete',      tone: 'good' as Tone, band: false, delay: 300 },
   ];
-
-  // Insight dot color
-  const insightColor = (text: string) =>
-    text.includes('critical') || text.includes('Immediate') ? '#dc2626'
-    : text.includes('risk') || text.includes('behind') ? '#d97706' : '#16a34a';
 
   return (
     <AppShell showNav>
@@ -282,16 +288,16 @@ export default function PortfolioPage() {
               <circle className={styles.scoreRingBg} cx="55" cy="55" r="44" />
               <circle
                 className={styles.scoreRingFill}
+                data-band={summary.band}
                 cx="55" cy="55" r="44"
                 style={{
                   '--ring-full':   `${RING_CIRC}`,
                   '--ring-offset': `${ringOffset}`,
-                  '--ring-color':   scoreColor,
                 } as CSSProperties}
               />
             </svg>
             <div className={styles.scoreLabel}>
-              <span className={styles.scoreNum} style={{ '--ring-color': scoreColor } as CSSProperties}>
+              <span className={styles.scoreNum} data-band={summary.band}>
                 {summary.portfolioScore}
               </span>
               <span className={styles.scoreOf}>/100</span>
@@ -300,7 +306,7 @@ export default function PortfolioPage() {
 
           {/* Band + factors */}
           <div className={styles.scoreMid}>
-            <p className={styles.scoreBand} style={{ '--ring-color': scoreColor } as CSSProperties}>
+            <p className={styles.scoreBand} data-band={summary.band}>
               {summary.band}
             </p>
             <p className={styles.scoreDesc}>{BAND_MEANINGS[summary.band]}</p>
@@ -313,9 +319,9 @@ export default function PortfolioPage() {
                   <div className={styles.scoreFactorTrack}>
                     <div
                       className={styles.scoreFactorFill}
+                      data-band={summary.band}
                       style={{
                         '--bar-w':     `${f.pct}%`,
-                        '--bar-color':  f.color,
                         '--bar-delay': `${i * 100 + 400}ms`,
                       } as CSSProperties}
                     />
@@ -335,10 +341,7 @@ export default function PortfolioPage() {
                 className={styles.insightItem}
                 style={{ '--ins-delay': `${i * 80 + 200}ms` } as CSSProperties}
               >
-                <div
-                  className={styles.insightDot}
-                  style={{ '--dot-color': insightColor(ins) } as CSSProperties}
-                />
+                <div className={styles.insightDot} data-tier={insightTone(ins)} />
                 {ins}
               </div>
             ))}
@@ -350,7 +353,7 @@ export default function PortfolioPage() {
           {kpis.map(k => (
             <div key={k.label} className={styles.kpiCard} style={{ '--kpi-delay': `${k.delay}ms` } as CSSProperties}>
               <p className={styles.kpiLabel}>{k.label}</p>
-              <p className={styles.kpiVal} style={{ '--kpi-color': k.color } as CSSProperties}>{k.val}</p>
+              <p className={styles.kpiVal} data-tone={k.tone} data-band={k.band ? summary.band : undefined}>{k.val}</p>
               <p className={styles.kpiSub}>{k.sub}</p>
             </div>
           ))}
@@ -396,7 +399,7 @@ export default function PortfolioPage() {
                 {summary.quarters.length} quarters · solid bar = completed issues
               </span>
             </div>
-            <div style={{ paddingTop: 16 }}>
+            <div className={styles.quarterBarsWrap}>
               <QuarterBars quarters={summary.quarters} />
             </div>
           </div>
@@ -418,7 +421,7 @@ export default function PortfolioPage() {
                 ↓ Export CSV
               </button>
             </div>
-            <div style={{ overflowX: 'auto' }}>
+            <div className={styles.tableScroll}>
               <table className={styles.table}>
                 <thead>
                   <tr>
@@ -429,15 +432,14 @@ export default function PortfolioPage() {
                 </thead>
                 <tbody>
                   {summary.epics.map((e, i) => {
-                    const h = HEALTH[e.health];
                     return (
                       <tr key={e.name} className={styles.tableTr}>
                         <td className={clsx(styles.tableTd, styles.tableTdName)} title={e.name}>{e.name}</td>
                         <td className={styles.tableTd}>
                           <div className={styles.tableHealthCell}>
-                            <div className={styles.tableHealthDot} style={{ '--health-color': h.color } as CSSProperties} />
-                            <span className={styles.tableHealthLabel} style={{ '--health-color': h.color } as CSSProperties}>
-                              {h.label}
+                            <div className={styles.tableHealthDot} data-tier={e.health} />
+                            <span className={styles.tableHealthLabel} data-tier={e.health}>
+                              {HEALTH_LABEL[e.health]}
                             </span>
                           </div>
                         </td>
@@ -448,14 +450,14 @@ export default function PortfolioPage() {
                             <div className={styles.tableBarTrack}>
                               <div
                                 className={styles.tableBarFill}
+                                data-tier={e.health}
                                 style={{
-                                  '--bar-w':        `${e.progress}%`,
-                                  '--health-color':  h.color,
-                                  '--bar-delay':    `${i * 30}ms`,
+                                  '--bar-w':     `${e.progress}%`,
+                                  '--bar-delay': `${i * 30}ms`,
                                 } as CSSProperties}
                               />
                             </div>
-                            <span className={styles.tablePct} style={{ '--health-color': h.color } as CSSProperties}>
+                            <span className={styles.tablePct} data-tier={e.health}>
                               {e.progress}%
                             </span>
                           </div>

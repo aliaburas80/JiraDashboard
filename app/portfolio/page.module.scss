@@ -20,6 +20,34 @@
   to   { opacity: 1; transform: translateX(0); }
 }
 
+// ── Tier/band color mixins ────────────────────────────────────────────────────
+// Shared by every element whose color is resolved from a good/warning/critical
+// data-tier or a PortfolioBand data-band (CLAUDE.md §28) — used across a dozen+
+// call sites in this file (Rule of Three, §5.4).
+@mixin tier-color($prop: color) {
+  &[data-tier='good']     { #{$prop}: var(--color-success, #16a34a); }
+  &[data-tier='warning']  { #{$prop}: var(--color-warning, #d97706); }
+  &[data-tier='critical'] { #{$prop}: var(--color-danger-strong, #dc2626); }
+}
+
+// Same palette as tier-color, keyed on data-tone (adds primary/neutral).
+@mixin tone-color($prop: color) {
+  &[data-tone='good']     { #{$prop}: var(--color-success, #16a34a); }
+  &[data-tone='warning']  { #{$prop}: var(--color-warning, #d97706); }
+  &[data-tone='critical'] { #{$prop}: var(--color-danger-strong, #dc2626); }
+  &[data-tone='primary']  { #{$prop}: var(--color-primary, #2563eb); }
+  &[data-tone='neutral']  { #{$prop}: var(--color-text-primary, #0f172a); }
+}
+
+// Matches src/lib/portfolioHealth.ts's portfolioBandColor() 5-band palette.
+@mixin band-color($prop: color) {
+  &[data-band='Excellent']          { #{$prop}: var(--color-success, #16a34a); }
+  &[data-band='Good']               { #{$prop}: #0d9488; }
+  &[data-band='Moderate']           { #{$prop}: var(--color-warning, #f59e0b); }
+  &[data-band='Portfolio At Risk']  { #{$prop}: #ea580c; }
+  &[data-band='Critical']           { #{$prop}: var(--color-danger-strong, #dc2626); }
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 .page {
   max-width: 1120px;
@@ -110,11 +138,13 @@
   fill: none;
   stroke-width: 10;
   stroke-linecap: round;
-  // EXCEPTION: stroke and dashoffset driven by portfolio score
-  stroke: var(--ring-color, #2563eb);
+  // EXCEPTION: dasharray/dashoffset are genuinely runtime-computed (§14.2);
+  // stroke color is resolved from data-band.
+  stroke: var(--color-primary, #2563eb);
   stroke-dasharray: var(--ring-full, 314);
   stroke-dashoffset: var(--ring-offset, 314);
   animation: ringDraw 1000ms 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  @include band-color(stroke);
 }
 
 .scoreLabel {
@@ -132,9 +162,9 @@
   font-weight: 900;
   letter-spacing: -0.04em;
   line-height: 1;
-  // EXCEPTION: color driven by portfolio band
-  color: var(--ring-color, #2563eb);
+  color: var(--color-primary, #2563eb);
   animation: countUp 500ms 600ms ease both;
+  @include band-color;
 }
 
 .scoreOf {
@@ -152,8 +182,8 @@
   letter-spacing: -0.02em;
   line-height: 1;
   margin-bottom: 6px;
-  // EXCEPTION: color driven by band
-  color: var(--ring-color, #2563eb);
+  color: var(--color-primary, #2563eb);
+  @include band-color;
 }
 
 .scoreDesc {
@@ -196,10 +226,11 @@
 .scoreFactorFill {
   height: 100%;
   border-radius: var(--radius-full, 9999px);
-  // EXCEPTION: width and color driven by component score
+  // EXCEPTION: width is genuinely runtime-computed (§14.2); color is data-band.
   width: var(--bar-w, 0%);
-  background: var(--bar-color, var(--color-primary, #2563eb));
+  background: var(--color-primary, #2563eb);
   animation: barFill 800ms var(--bar-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+  @include band-color(background);
 }
 
 .scoreFactorWeight {
@@ -257,8 +288,8 @@
   border-radius: var(--radius-full, 9999px);
   flex-shrink: 0;
   margin-top: 4px;
-  // EXCEPTION: color driven by insight priority
-  background: var(--dot-color, var(--color-primary, #2563eb));
+  background: var(--color-primary, #2563eb);
+  @include tier-color(background);
 }
 
 // ── KPI strip ─────────────────────────────────────────────────────────────────
@@ -281,14 +312,17 @@
   animation: countUp 400ms var(--kpi-delay, 0ms) ease both;
 }
 
+// data-tone: good/warning/critical/primary/neutral. data-band: portfolio band
+// (used instead of data-tone for the two KPIs that mirror the hero score).
 .kpiVal {
   font-size: 22px;
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 1;
   margin-bottom: 4px;
-  // EXCEPTION: color driven by metric status
-  color: var(--kpi-color, var(--color-text-primary, #0f172a));
+  color: var(--color-text-primary, #0f172a);
+  @include tone-color;
+  @include band-color;
 }
 
 .kpiLabel {
@@ -375,8 +409,8 @@
   height: 8px;
   border-radius: var(--radius-full, 9999px);
   flex-shrink: 0;
-  // EXCEPTION: bg driven by health
-  background: var(--health-color, var(--color-text-muted, #94a3b8));
+  background: var(--color-text-muted, #94a3b8);
+  @include tier-color(background);
 }
 
 .epicName {
@@ -394,9 +428,9 @@
   font-size: 15px;
   font-weight: 900;
   letter-spacing: -0.02em;
-  // EXCEPTION: color driven by health
-  color: var(--health-color, var(--color-text-primary, #0f172a));
+  color: var(--color-text-primary, #0f172a);
   flex-shrink: 0;
+  @include tier-color;
 }
 
 .epicTrack {
@@ -410,10 +444,11 @@
 .epicFill {
   height: 100%;
   border-radius: var(--radius-full, 9999px);
-  // EXCEPTION: width and color driven by progress + health
+  // EXCEPTION: width is genuinely runtime-computed (§14.2); color is data-tier.
   width: var(--bar-w, 0%);
-  background: var(--health-color, var(--color-primary, #2563eb));
+  background: var(--color-primary, #2563eb);
   animation: barFill 750ms var(--bar-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+  @include tier-color(background);
 }
 
 .epicMeta {
@@ -462,9 +497,13 @@
   padding: 2px 7px;
   border-radius: var(--radius-full, 9999px);
   flex-shrink: 0;
-  // EXCEPTION: bg/color driven by health
-  background: var(--badge-bg);
-  color: var(--badge-fg);
+  background: var(--color-subtle, #f1f5f9);
+  color: var(--color-text-secondary, #64748b);
+  @include tier-color;
+
+  &[data-tier='good']     { background: var(--color-success-soft); }
+  &[data-tier='warning']  { background: var(--color-warning-soft); }
+  &[data-tier='critical'] { background: var(--color-danger-soft); }
 }
 
 // ── Project card ──────────────────────────────────────────────────────────────
@@ -479,12 +518,13 @@
 
 .projectCard {
   border: 1px solid var(--color-border, #e2e8f0);
-  border-left: 4px solid var(--project-accent, var(--color-border));
+  border-left: 4px solid var(--color-border, #e2e8f0);
   border-radius: var(--radius-xl, 12px);
   padding: 14px 16px;
   background: var(--color-surface, #fff);
   animation: fadeUp 320ms var(--proj-delay, 0ms) ease both;
   transition: box-shadow var(--transition-fast, 120ms ease);
+  @include tier-color(border-left-color);
 
   &:hover { box-shadow: 0 2px 8px rgb(0 0 0 / 6%); }
 }
@@ -505,9 +545,9 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  // EXCEPTION: color driven by health
-  color: var(--project-accent);
+  color: var(--color-text-secondary, #64748b);
   margin-bottom: 10px;
+  @include tier-color;
 }
 
 .projectTrack {
@@ -521,10 +561,11 @@
 .projectFill {
   height: 100%;
   border-radius: var(--radius-full, 9999px);
-  // EXCEPTION: width and color driven by completion + health
+  // EXCEPTION: width is genuinely runtime-computed (§14.2); color is data-tier.
   width: var(--bar-w, 0%);
-  background: var(--project-accent, var(--color-primary, #2563eb));
+  background: var(--color-primary, #2563eb);
   animation: barFill 700ms var(--bar-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+  @include tier-color(background);
 }
 
 .projectMeta {
@@ -540,14 +581,18 @@
   font-size: 14px;
   font-weight: 900;
   letter-spacing: -0.02em;
-  // EXCEPTION: color driven by health
-  color: var(--project-accent);
+  color: var(--color-text-primary, #0f172a);
+  @include tier-color;
 }
 
 // ── Quarter throughput ────────────────────────────────────────────────────────
 .quarterSection {
   margin-bottom: 16px;
   animation: fadeUp 340ms 140ms ease both;
+}
+
+.quarterBarsWrap {
+  padding-top: 16px;
 }
 
 .quarterBars {
@@ -588,9 +633,13 @@
   left: 0;
   right: 0;
   border-radius: 4px 4px 0 0;
-  // EXCEPTION: height driven by issue count ratio
+  // EXCEPTION: height is genuinely runtime-computed (§14.2); color is data-tier.
   height: var(--bar-total, 20%);
-  background: color-mix(in srgb, var(--bar-color, #2563eb) 20%, transparent);
+  background: color-mix(in srgb, var(--color-primary, #2563eb) 20%, transparent);
+
+  &[data-tier='good']     { background: color-mix(in srgb, var(--color-success, #16a34a) 20%, transparent); }
+  &[data-tier='warning']  { background: color-mix(in srgb, var(--color-warning, #d97706) 20%, transparent); }
+  &[data-tier='critical'] { background: color-mix(in srgb, var(--color-danger-strong, #dc2626) 20%, transparent); }
 }
 
 .quarterBarDone {
@@ -599,11 +648,12 @@
   left: 0;
   right: 0;
   border-radius: 4px 4px 0 0;
-  // EXCEPTION: height and color driven by done ratio + completion rate
+  // EXCEPTION: height is genuinely runtime-computed (§14.2); color is data-tier.
   height: var(--bar-done, 10%);
-  background: var(--bar-color, #2563eb);
+  background: var(--color-primary, #2563eb);
   animation: barFill 700ms var(--bar-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-name: quarterGrow;
+  @include tier-color(background);
 }
 
 @keyframes quarterGrow {
@@ -624,8 +674,8 @@
 .quarterCompletionLabel {
   font-size: 9px;
   font-weight: 700;
-  // EXCEPTION: color driven by completion rate
-  color: var(--bar-color, #2563eb);
+  color: var(--color-primary, #2563eb);
+  @include tier-color;
 }
 
 .quarterLegend {
@@ -648,14 +698,22 @@
   height: 8px;
   border-radius: 2px;
   flex-shrink: 0;
-  // EXCEPTION: bg driven by legend category
-  background: var(--dot-color);
+  background: var(--color-text-muted, #94a3b8);
+
+  &[data-legend='total']    { background: rgb(22 163 74 / 18%); }
+  &[data-legend='done']     { background: var(--color-success, #16a34a); }
+  &[data-legend='critical'] { background: var(--color-danger-strong, #dc2626); }
+  &[data-legend='warning']  { background: var(--color-warning, #d97706); }
 }
 
 // ── Epic detail table ─────────────────────────────────────────────────────────
 .tableCard {
   margin-bottom: 16px;
   animation: fadeUp 340ms 160ms ease both;
+}
+
+.tableScroll {
+  overflow-x: auto;
 }
 
 .table {
@@ -711,23 +769,23 @@
   height: 7px;
   border-radius: var(--radius-full, 9999px);
   flex-shrink: 0;
-  // EXCEPTION: bg driven by health
-  background: var(--health-color);
+  background: var(--color-text-muted, #94a3b8);
+  @include tier-color(background);
 }
 
 .tableHealthLabel {
   font-weight: 700;
   font-size: 11px;
-  // EXCEPTION: color driven by health
-  color: var(--health-color);
+  color: var(--color-text-secondary, #64748b);
+  @include tier-color;
 }
 
 .tablePct {
   font-weight: 900;
   font-size: 13px;
   letter-spacing: -0.01em;
-  // EXCEPTION: color driven by health
-  color: var(--health-color, var(--color-text-primary, #0f172a));
+  color: var(--color-text-primary, #0f172a);
+  @include tier-color;
 }
 
 .tableInlineBar {
@@ -748,10 +806,11 @@
 .tableBarFill {
   height: 100%;
   border-radius: var(--radius-full, 9999px);
-  // EXCEPTION: width and color driven by progress + health
+  // EXCEPTION: width is genuinely runtime-computed (§14.2); color is data-tier.
   width: var(--bar-w, 0%);
-  background: var(--health-color, var(--color-primary, #2563eb));
+  background: var(--color-primary, #2563eb);
   animation: barFill 700ms var(--bar-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+  @include tier-color(background);
 }
 
 .tableCritBadge {
