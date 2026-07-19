@@ -1,15 +1,26 @@
 // @ts-nocheck
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
+import clsx from 'clsx';
 import { useDashboardMetrics } from '@/components/dashboard/DashboardMetricsContext';
 import {
   StickyToolbar, ToolbarSpacer,
   PageHeader, SectionCard, PageLoading,
 } from '@/components/dashboard/DashboardPageShell';
+import styles from './page.module.scss';
 
-const TYPE_COLORS = ['#2563EB', '#059669', '#D97706', '#DC2626', '#7C3AED', '#0891B2'];
+// STYLE-03 (2026-07-19): converted from inline styles to SCSS Module — see
+// page.module.scss for the token/palette mapping notes. No behavior change.
+
+type CSSVariableProperties = CSSProperties & Record<`--${string}`, string | number>;
+
+const TYPE_SERIES_COUNT = 6;
+
+function barVars(pct: number, delayMs: number): CSSVariableProperties {
+  return { '--bar-width': `${pct}%`, '--bar-delay': `${delayMs}ms` };
+}
 
 export default function LabelsTypesPage() {
   const router = useRouter();
@@ -32,12 +43,6 @@ export default function LabelsTypesPage() {
   const typeMax    = Math.max(...types.map((t: any) => t.count ?? 0), 1);
   const parentMax  = Math.max(...parents.map((p: any) => p.count ?? 0), 1);
 
-  const th = (label: string) => (
-    <th key={label} style={{ padding: '6px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: '#94A3B8', borderBottom: '1px solid #E2E8F0' }}>
-      {label}
-    </th>
-  );
-
   return (
     <>
       <StickyToolbar>
@@ -52,32 +57,32 @@ export default function LabelsTypesPage() {
         subtitle="Label distribution, issue type breakdown, and project classification."
       />
 
-      <div style={{ padding: '0 28px 48px' }}>
+      <div className={styles.page}>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+        <div className={styles.grid2}>
 
           {/* ── Label distribution ── */}
           <SectionCard title="Label Distribution">
             {labelStats.length === 0 ? (
-              <p style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic' }}>No label data found.</p>
+              <p className={styles.emptyNote}>No label data found.</p>
             ) : (
               <>
-                <div id="tour-section-labels-1" style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: 20, padding: '2px 10px' }}>
+                <div id="tour-section-labels-1" className={styles.chipRow}>
+                  <span className={clsx(styles.chip, styles.chipPrimary)}>
                     {labelData.uniqueLabels} unique labels
                   </span>
-                  <span style={{ fontSize: 11, fontWeight: 700, background: '#F8FAFC', color: '#64748B', border: '1px solid #E2E8F0', borderRadius: 20, padding: '2px 10px' }}>
+                  <span className={clsx(styles.chip, styles.chipNeutral)}>
                     {labelData.totalUnlabeled ?? 0} unlabeled
                   </span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div className={styles.barList}>
                   {labelStats.slice(0, 8).map((l: any, i: number) => (
-                    <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ width: 110, fontSize: 11, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.label}>{l.label}</span>
-                      <div style={{ flex: 1, height: 7, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', borderRadius: 4, background: '#2563EB', width: `${(l.count / labelMax) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 55}ms` }} />
+                    <div key={l.label} className={styles.barRow}>
+                      <span className={styles.barLabel} title={l.label}>{l.label}</span>
+                      <div className={styles.barTrack}>
+                        <div className={clsx(styles.barFill, styles.barFillPrimary)} style={barVars((l.count / labelMax) * 100, i * 55)} />
                       </div>
-                      <strong style={{ fontFamily: 'monospace', fontSize: 11, color: '#2563EB', width: 30, textAlign: 'right', flexShrink: 0 }}>{l.count}</strong>
+                      <strong className={clsx(styles.barCount, styles.barCountPrimary)}>{l.count}</strong>
                     </div>
                   ))}
                 </div>
@@ -88,18 +93,21 @@ export default function LabelsTypesPage() {
           {/* ── Type breakdown ── */}
           <SectionCard title="Issue Type Breakdown">
             {types.length === 0 ? (
-              <p style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic' }}>No issue type data found.</p>
+              <p className={styles.emptyNote}>No issue type data found.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {types.slice(0, 8).map((t: any, i: number) => (
-                  <div key={t.type} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 110, fontSize: 11, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={t.type}>{t.type}</span>
-                    <div style={{ flex: 1, height: 7, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 4, background: TYPE_COLORS[i % TYPE_COLORS.length], width: `${(t.count / typeMax) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 55}ms` }} />
+              <div className={styles.barList}>
+                {types.slice(0, 8).map((t: any, i: number) => {
+                  const series = String(i % TYPE_SERIES_COUNT);
+                  return (
+                    <div key={t.type} className={styles.barRow}>
+                      <span className={styles.barLabel} title={t.type}>{t.type}</span>
+                      <div className={styles.barTrack}>
+                        <div className={styles.barFill} data-series={series} style={barVars((t.count / typeMax) * 100, i * 55)} />
+                      </div>
+                      <strong className={styles.barCount} data-series={series}>{t.count}</strong>
                     </div>
-                    <strong style={{ fontFamily: 'monospace', fontSize: 11, color: TYPE_COLORS[i % TYPE_COLORS.length], width: 30, textAlign: 'right', flexShrink: 0 }}>{t.count}</strong>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </SectionCard>
@@ -108,32 +116,38 @@ export default function LabelsTypesPage() {
         {/* ── Label health table ── */}
         {labelStats.length > 0 && (
           <SectionCard title="Label Health & Completion">
-            <div id="tour-section-labels-2" style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+            <div id="tour-section-labels-2" className={styles.tableWrap}>
+              <table className={styles.dataTable}>
                 <thead>
-                  <tr>{['Label', 'Issues', 'Done', 'Completion', 'Critical', 'Warning', 'Points', 'Avg Lead', 'Avg Cycle'].map(th)}</tr>
+                  <tr>
+                    {['Label', 'Issues', 'Done', 'Completion', 'Critical', 'Warning', 'Points', 'Avg Lead', 'Avg Cycle'].map(label => (
+                      <th key={label} className={styles.th}>{label}</th>
+                    ))}
+                  </tr>
                 </thead>
                 <tbody>
                   {labelStats.map((l: any, i: number) => {
                     const prog = Math.min(100, l.completionRate ?? 0);
+                    const critical = (l.critical ?? 0) > 0;
+                    const warning = (l.warning ?? 0) > 0;
                     return (
-                      <tr key={l.label ?? i} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                        <td style={{ padding: '7px 10px', color: '#334155', fontWeight: 600 }}>{l.label}</td>
-                        <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11 }}>{l.count ?? 0}</td>
-                        <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11 }}>{l.done ?? 0}</td>
-                        <td style={{ padding: '7px 10px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div style={{ width: 60, height: 6, borderRadius: 3, background: '#F1F5F9', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', borderRadius: 3, background: prog >= 70 ? '#059669' : '#D97706', width: `${prog}%`, animation: 'barFill 800ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 35}ms` }} />
+                      <tr key={l.label ?? i} className={styles.tableRow}>
+                        <td className={styles.cellLabel}>{l.label}</td>
+                        <td className={styles.cellMono}>{l.count ?? 0}</td>
+                        <td className={styles.cellMono}>{l.done ?? 0}</td>
+                        <td className={styles.cellCompletion}>
+                          <div className={styles.completionRow}>
+                            <div className={styles.completionTrack}>
+                              <div className={styles.completionFill} data-good={prog >= 70 || undefined} style={barVars(prog, i * 35)} />
                             </div>
-                            <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#64748B' }}>{prog}%</span>
+                            <span className={styles.completionPct}>{prog}%</span>
                           </div>
                         </td>
-                        <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: (l.critical ?? 0) > 0 ? '#DC2626' : '#64748B' }}>{l.critical ?? 0}</td>
-                        <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11, color: (l.warning ?? 0) > 0 ? '#D97706' : '#64748B' }}>{l.warning ?? 0}</td>
-                        <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11 }}>{l.storyPoints ?? 0}</td>
-                        <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11 }}>{l.averageLeadTimeDays != null ? `${l.averageLeadTimeDays}d` : '—'}</td>
-                        <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 11 }}>{l.averageCycleTimeDays != null ? `${l.averageCycleTimeDays}d` : '—'}</td>
+                        <td className={styles.cellFlag} data-active={critical || undefined} data-tone="critical">{l.critical ?? 0}</td>
+                        <td className={styles.cellFlag} data-active={warning || undefined} data-tone="warning">{l.warning ?? 0}</td>
+                        <td className={styles.cellMono}>{l.storyPoints ?? 0}</td>
+                        <td className={styles.cellMono}>{l.averageLeadTimeDays != null ? `${l.averageLeadTimeDays}d` : '—'}</td>
+                        <td className={styles.cellMono}>{l.averageCycleTimeDays != null ? `${l.averageCycleTimeDays}d` : '—'}</td>
                       </tr>
                     );
                   })}
@@ -145,17 +159,17 @@ export default function LabelsTypesPage() {
 
         {/* ── Parent & Project breakdown ── */}
         {(parents.length > 0 || projects.length > 1) && (
-          <div style={{ display: 'grid', gridTemplateColumns: parents.length > 0 && projects.length > 1 ? '1fr 1fr' : '1fr', gap: 20 }}>
+          <div className={styles.gridBreakdown} data-single={!(parents.length > 0 && projects.length > 1) || undefined}>
             {parents.length > 0 && (
               <SectionCard title="Parent Key Breakdown">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                <div className={styles.barList}>
                   {parents.slice(0, 8).map((p: any, i: number) => (
-                    <div key={p.parent ?? i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ width: 100, fontSize: 11, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.parent}>{p.parent}</span>
-                      <div style={{ flex: 1, height: 7, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', borderRadius: 4, background: '#7C3AED', width: `${((p.count ?? 0) / parentMax) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 55}ms` }} />
+                    <div key={p.parent ?? i} className={styles.barRow}>
+                      <span className={clsx(styles.barLabel, styles.barLabelNarrow)} title={p.parent}>{p.parent}</span>
+                      <div className={styles.barTrack}>
+                        <div className={clsx(styles.barFill, styles.barFillPurple)} style={barVars(((p.count ?? 0) / parentMax) * 100, i * 55)} />
                       </div>
-                      <strong style={{ fontFamily: 'monospace', fontSize: 11, color: '#7C3AED', width: 30, textAlign: 'right', flexShrink: 0 }}>{p.count}</strong>
+                      <strong className={clsx(styles.barCount, styles.barCountPurple)}>{p.count}</strong>
                     </div>
                   ))}
                 </div>
@@ -163,16 +177,16 @@ export default function LabelsTypesPage() {
             )}
             {projects.length > 1 && (
               <SectionCard title="Project Breakdown">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div className={styles.barList}>
                   {projects.map((p: any, i: number) => {
                     const projectMax = Math.max(...projects.map((x: any) => x.count ?? 0), 1);
                     return (
-                      <div key={p.project ?? i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ width: 100, fontSize: 11, color: '#334155', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.project}>{p.project}</span>
-                        <div style={{ flex: 1, height: 7, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', borderRadius: 4, background: '#0891B2', width: `${((p.count ?? 0) / projectMax) * 100}%`, animation: 'barFill 700ms ease-out both', transformOrigin: 'left center', animationDelay: `${i * 55}ms` }} />
+                      <div key={p.project ?? i} className={styles.barRow}>
+                        <span className={clsx(styles.barLabel, styles.barLabelNarrow)} title={p.project}>{p.project}</span>
+                        <div className={styles.barTrack}>
+                          <div className={clsx(styles.barFill, styles.barFillCyan)} style={barVars(((p.count ?? 0) / projectMax) * 100, i * 55)} />
                         </div>
-                        <strong style={{ fontFamily: 'monospace', fontSize: 11, color: '#0891B2', width: 30, textAlign: 'right', flexShrink: 0 }}>{p.count}</strong>
+                        <strong className={clsx(styles.barCount, styles.barCountCyan)}>{p.count}</strong>
                       </div>
                     );
                   })}
