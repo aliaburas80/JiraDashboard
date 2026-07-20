@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import LoadingState from '@/components/ui/LoadingState';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { DashboardMetrics } from '@/types/metrics';
 
@@ -145,7 +146,7 @@ export default function SnapshotComparePage() {
     finally { setComparing(false); }
   }
 
-  if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading…</div></AppShell>;
+  if (loading) return <AppShell showNav><LoadingState message="Loading…" /></AppShell>;
 
   const canCompare = snaps.length >= 2;
   const a = snapA?.metrics;

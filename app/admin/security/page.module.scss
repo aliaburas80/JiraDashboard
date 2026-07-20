@@ -1,11 +1,7 @@
 // Security page — SCSS module
 // All visual identity; Tailwind handles layout utilities in the TSX.
 
-// ── Loading / error states ─────────────────────────────────────────────────
-
-.loadingState {
-  color: var(--dc-p3, #505050);
-}
+// ── Error state ────────────────────────────────────────────────────────────
 
 .errorBanner {
   background: var(--color-danger-soft);

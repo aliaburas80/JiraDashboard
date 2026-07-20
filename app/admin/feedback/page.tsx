@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import LoadingState from '@/components/ui/LoadingState';
 import styles from './page.module.scss';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -178,7 +179,7 @@ export default function AdminFeedbackPage() {
     fetchFeedback(p, tab);
   }
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading feedback…</div>;
+  if (loading) return <LoadingState message="Loading feedback…" />;
 
   const totalCount = Object.values(counts).reduce((s, n) => s + n, 0);
   const newCount   = counts['New']       ?? 0;

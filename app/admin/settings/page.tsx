@@ -14,6 +14,7 @@ import JiraConnectionsPanel from '@/components/admin/JiraConnectionsPanel';
 import AppConfigPanel from '@/components/admin/AppConfigPanel';
 import PersonaPreviewPanel from '@/components/admin/PersonaPreviewPanel';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import LoadingState from '@/components/ui/LoadingState';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { PasswordInput } from '@/components/ui/PasswordInput';
@@ -665,11 +666,7 @@ function CloudStorageSettings() {
   // loaded — otherwise the form briefly renders with the 'local' default
   // before the real saved provider arrives.
   if (!data) {
-    return (
-      <div className="flex items-center justify-center h-40 text-slate-400 animate-pulse text-sm">
-        Loading storage settings…
-      </div>
-    );
+    return <LoadingState message="Loading storage settings…" />;
   }
 
   return (
@@ -1024,7 +1021,7 @@ export default function AdminSettingsPage() {
     return data;
   }
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading settings…</div>;
+  if (loading) return <LoadingState message="Loading settings…" />;
 
   const selectedTab = activeTabMeta(tab);
   const statsCards = buildSettingsStats({ tab, settings, stats, thresholds, orphanRules, issueTypeHierarchy, backupFiles });

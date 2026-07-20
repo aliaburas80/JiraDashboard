@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import LoadingState from '@/components/ui/LoadingState';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { markMetricsSource, saveMetrics } from '@/lib/storage';
@@ -74,7 +75,7 @@ export default function SnapshotsPage() {
     finally { setDeleting(false); setDeleteTarget(null); }
   }
 
-  if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading snapshots…</div></AppShell>;
+  if (loading) return <AppShell showNav><LoadingState message="Loading snapshots…" /></AppShell>;
 
   // MPE-03: search by snapshot name (case-insensitive substring).
   const q = query.trim().toLowerCase();

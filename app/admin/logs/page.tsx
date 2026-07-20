@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import LoadingState from '@/components/ui/LoadingState';
 import { getHealthBand, type HealthBand } from '@/lib/utils';
 import { paginate } from '@/lib/pagination';
 import styles from './page.module.scss';
@@ -48,7 +49,7 @@ export default function AdminLogsPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  if (loading) return <div className="flex items-center justify-center h-64 animate-pulse text-slate-400">Loading logs…</div>;
+  if (loading) return <LoadingState message="Loading logs…" />;
 
   // MPE-03: search by filename or uploader name/email (case-insensitive substring).
   const q = query.trim().toLowerCase();

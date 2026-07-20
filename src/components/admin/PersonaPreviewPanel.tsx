@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react';
 import { PERSONA_FOCUS_LIST } from '@/config/personaFocus.config';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import LoadingState from '@/components/ui/LoadingState';
 
 export default function PersonaPreviewPanel() {
   const [enabled, setEnabled]   = useState(false);
@@ -48,7 +49,7 @@ export default function PersonaPreviewPanel() {
   }
 
   if (loading) {
-    return <div className="text-sm text-slate-400 animate-pulse">Loading…</div>;
+    return <LoadingState />;
   }
 
   return (
