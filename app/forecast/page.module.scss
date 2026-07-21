@@ -254,6 +254,13 @@
   color: var(--dc-p3, #505050);
   margin-top: 3px;
   line-height: 1.5;
+
+  &--mb16 { margin-bottom: 16px; }
+  &--mb12 { margin-bottom: 12px; }
+}
+
+.partyIcon {
+  vertical-align: -2px;
 }
 
 .chartLegend {
@@ -270,6 +277,10 @@
   gap: 5px;
   font-size: 10px;
   color: var(--dc-p3, #505050);
+
+  &[data-trend='improving'] { color: var(--dc-green, #22C55E); }
+  &[data-trend='stable']    { color: var(--dc-acc2, #FF8A4C); }
+  &[data-trend='declining'] { color: var(--dc-red, #F87171); }
 }
 
 .legendLine {
