@@ -1,0 +1,30 @@
+// © 2026 Ali Abu Ras — TrendChart (upload-to-upload trend line chart) styles
+
+.trendLabel {
+  color: #94a3b8;
+
+  &[data-trend='positive'] { color: #16a34a; }
+  &[data-trend='negative'] { color: #dc2626; }
+}
+
+.chartWrap {
+  position: relative;
+  height: var(--chart-height);
+}
+
+.dot {
+  cursor: pointer;
+  transition: r 0.1s;
+}
+
+.tooltip {
+  position: absolute;
+  left: var(--tooltip-left);
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.latestValue {
+  color: var(--chart-color);
+}
