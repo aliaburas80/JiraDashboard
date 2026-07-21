@@ -1,7 +1,11 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // Shown immediately after upload — compact quality score + top issues.
 'use client';
+import type { CSSProperties } from 'react';
 import type { DataQualityResult, DataQualityBand } from '@/types/dataQuality';
+import styles from './DataQualitySummary.module.scss';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 const BAND_STYLE: Record<DataQualityBand, { bg: string; border: string; text: string; dot: string }> = {
   Excellent: { bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-800',  dot: 'bg-green-500'  },
@@ -57,7 +61,10 @@ export default function DataQualitySummary({ quality, compact = false }: Props) 
 
       {/* Progress bar */}
       <div className="h-2 rounded-full bg-white/60 mb-4 overflow-hidden">
-        <div className={`h-full rounded-full ${style.dot} transition-all`} style={{ width: `${quality.score}%` }} />
+        <div
+          className={`h-full rounded-full ${style.dot} transition-all ${styles.progressFill}`}
+          style={{ '--progress-width': `${quality.score}%` } as CSSVars}
+        />
       </div>
 
       {/* Failing checks */}

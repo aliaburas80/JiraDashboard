@@ -2,8 +2,12 @@
 // Shows what specific data each missing/incomplete column is causing in the dashboard.
 'use client';
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { FieldImpact, FieldImpactReport, CheckSeverity } from '@/types/dataQuality';
+import styles from './MissingFieldImpactPanel.module.scss';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 const SEV_CONFIG: Record<CheckSeverity, { badge: string; dot: string; icon: string }> = {
   critical: { badge: 'bg-red-100 text-red-800 border-red-200',    dot: 'bg-red-500',    icon: 'statusError' },
@@ -53,7 +57,10 @@ function ImpactRow({ impact }: { impact: FieldImpact }) {
               <span>{impact.missingPct}%</span>
             </div>
             <div className="h-1.5 rounded-full bg-slate-200 overflow-hidden">
-              <div className="h-full rounded-full bg-red-400" style={{ width: `${impact.missingPct}%` }} />
+              <div
+                className={`h-full rounded-full bg-red-400 ${styles.progressFill}`}
+                style={{ '--progress-width': `${impact.missingPct}%` } as CSSVars}
+              />
             </div>
           </div>
 

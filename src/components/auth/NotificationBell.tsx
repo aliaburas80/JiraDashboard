@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import styles from './NotificationBell.module.scss';
 
 interface AppNotification {
   id: string;
@@ -135,7 +136,7 @@ export default function NotificationBell({ role: roleProp }: Props) {
     <>
       {/* Persistent amber strip below the header — shown outside dropdown, always visible */}
       {isAdmin && pendingRequests > 0 && (
-        <div className="fixed left-0 right-0 z-30" style={{ top: 56 }}>
+        <div className={`fixed left-0 right-0 z-30 ${styles.pendingStrip}`}>
           <a
             href="/admin/settings?tab=requests"
             className="flex items-center justify-center gap-2 bg-amber-500 px-4 py-1.5 text-xs font-black text-white shadow-md hover:bg-amber-600 transition-colors"

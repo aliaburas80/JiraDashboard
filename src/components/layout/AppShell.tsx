@@ -14,13 +14,7 @@ import GlobalSearch from '@/components/search/GlobalSearch';
 import styles from './AppShell.module.scss';
 
 // Single source of truth: DC_NAV_GROUPS from navigation.ts
-// Status dot colours mirror DashboardTopbar
-const STATUS_DOT: Record<string, string> = {
-  critical: '#f87171',
-  warning:  '#f59e0b',
-  success:  '#22c55e',
-  info:     '#3b82f6',
-};
+// Status dot colors resolved in SCSS via data-status — see CLAUDE.md §28.
 
 // Label abbreviations matching DashboardTopbar GROUP_LABEL_OVERRIDE
 const GROUP_LABEL_OVERRIDE: Record<string, string> = {
@@ -132,7 +126,6 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                       <div className={styles.dropdown}>
                         {group.items.map(item => {
                           const itemActive = isActivePath(pathname, item.href);
-                          const dotColor   = STATUS_DOT[item.status] ?? '#cbd5e1';
                           return (
                             <Link
                               key={item.id}
@@ -147,7 +140,7 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                               </span>
                               <span
                                 className={styles.dropdownDot}
-                                style={{ background: dotColor } as React.CSSProperties}
+                                data-status={item.status}
                                 aria-hidden="true"
                               />
                             </Link>
