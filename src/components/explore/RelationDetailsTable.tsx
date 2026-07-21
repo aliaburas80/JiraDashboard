@@ -1,11 +1,16 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 'use client';
 import { useState, useMemo } from 'react';
+import type { CSSProperties } from 'react';
+import clsx from 'clsx';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { RelationNode } from '@/types/relations';
 import type { IssueTypeDefinition } from '@/types/issueTypeHierarchy';
 import { DEFAULT_ISSUE_TYPES } from '@/types/issueTypeHierarchy';
 import { buildNodeTypeConfig } from './nodeStyles';
+import styles from './RelationDetailsTable.module.scss';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 interface Props {
   nodes: RelationNode[];
@@ -85,7 +90,7 @@ export default function RelationDetailsTable({ nodes, orphanNodes, onFocusNode, 
               onClick={() => onFocusNode?.(node.issueKey)}>
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-mono text-xs font-bold shrink-0" style={{ color: cfg.color }}>{node.issueKey}</span>
+                  <span className={clsx('font-mono text-xs font-bold shrink-0', styles.typeColor)} style={{ '--type-color': cfg.color } as CSSVars}>{node.issueKey}</span>
                   {node.isFocusNode && <span className="text-[9px] bg-blue-600 text-white px-1.5 py-0.5 rounded shrink-0">focus</span>}
                   {node.isOrphan && <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200 shrink-0">Orphan</span>}
                 </div>
@@ -93,7 +98,7 @@ export default function RelationDetailsTable({ nodes, orphanNodes, onFocusNode, 
               </div>
               <p className="text-xs text-slate-700 mt-1 line-clamp-2">{node.summary}</p>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
-                <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: cfg.color }}>
+                <span className={clsx('inline-flex items-center gap-1 text-xs font-semibold', styles.typeColor)} style={{ '--type-color': cfg.color } as CSSVars}>
                   <SvgIcon name={cfg.icon} size={12} />
                   {node.type}
                 </span>
@@ -139,14 +144,14 @@ export default function RelationDetailsTable({ nodes, orphanNodes, onFocusNode, 
                   className={`border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer ${node.isFocusNode ? 'bg-blue-50' : ''}`}
                   onClick={() => onFocusNode?.(node.issueKey)}>
                   <td className="py-2 pl-4 pr-2">
-                    <span className="font-mono text-xs font-bold" style={{ color: cfg.color }}>{node.issueKey}</span>
+                    <span className={clsx('font-mono text-xs font-bold', styles.typeColor)} style={{ '--type-color': cfg.color } as CSSVars}>{node.issueKey}</span>
                     {node.isFocusNode && <span className="ml-1 text-[9px] bg-blue-600 text-white px-1 rounded">focus</span>}
                   </td>
                   <td className="py-2 px-2 max-w-[280px]">
                     <span className="block truncate text-xs text-slate-700" title={node.summary}>{node.summary}</span>
                   </td>
                   <td className="py-2 px-2">
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: cfg.color }}>
+                    <span className={clsx('inline-flex items-center gap-1 text-xs font-semibold', styles.typeColor)} style={{ '--type-color': cfg.color } as CSSVars}>
                       <SvgIcon name={cfg.icon} size={12} />
                       {node.type}
                     </span>

@@ -1,7 +1,9 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 'use client';
 import { useState } from 'react';
+import clsx from 'clsx';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import styles from './RelationLegend.module.scss';
 
 export default function RelationLegend() {
   const [open, setOpen] = useState(false);
@@ -21,32 +23,33 @@ export default function RelationLegend() {
 
           <p className="font-bold text-slate-500 uppercase tracking-wider mb-1.5">Issue Types</p>
           {[
-            { icon: 'roadmap', label: 'Epic', color: '#7c3aed' },
-            { icon: 'story', label: 'Story', color: '#2563eb' },
-            { icon: 'checkCircle', label: 'Task', color: '#475569' },
-            { icon: 'subtasks',  label: 'Sub-task', color: '#64748b' },
-            { icon: 'bug', label: 'Bug', color: '#dc2626' },
-            { icon: 'flask', label: 'Spike', color: '#d97706' },
-          ].map(({ icon, label, color }) => (
+            { icon: 'roadmap', label: 'Epic', color: '#7c3aed', key: 'epic' },
+            { icon: 'story', label: 'Story', color: '#2563eb', key: 'story' },
+            { icon: 'checkCircle', label: 'Task', color: '#475569', key: 'task' },
+            { icon: 'subtasks',  label: 'Sub-task', color: '#64748b', key: 'subtask' },
+            { icon: 'bug', label: 'Bug', color: '#dc2626', key: 'bug' },
+            { icon: 'flask', label: 'Spike', color: '#d97706', key: 'spike' },
+          ].map(({ icon, label, color, key }) => (
             <div key={label} className="flex items-center gap-2 mb-1">
               <SvgIcon name={icon} size={12} style={{ color }} />
-              <span style={{ color }} className="font-semibold">{label}</span>
+              <span className={clsx('font-semibold', styles.typeLabel)} data-legend={key}>{label}</span>
             </div>
           ))}
 
           <div className="border-t border-slate-100 my-2" />
           <p className="font-bold text-slate-500 uppercase tracking-wider mb-1.5">Connections</p>
           {[
-            { style: 'solid', color: '#64748b', label: 'Parent → Child' },
-            { style: 'solid', color: '#7c3aed', label: 'Epic → Story' },
-            { style: 'solid', color: '#dc2626', label: 'Blocks' },
-            { style: 'dashed', color: '#f97316', label: 'Orphan link' },
-          ].map(({ style, color, label }) => (
+            { dashed: false, label: 'Parent → Child', key: 'parentChild' },
+            { dashed: false, label: 'Epic → Story', key: 'epicStory' },
+            { dashed: false, label: 'Blocks', key: 'blocks' },
+            { dashed: true, label: 'Orphan link', key: 'orphan' },
+          ].map(({ dashed, label, key }) => (
             <div key={label} className="flex items-center gap-2 mb-1">
               <span
                 aria-hidden
-                className="w-7 shrink-0 border-t-2"
-                style={{ borderColor: color, borderStyle: style === 'dashed' ? 'dashed' : 'solid' }}
+                className={styles.connLine}
+                data-conn={key}
+                data-dashed={dashed}
               />
               <span className="text-slate-600">{label}</span>
             </div>

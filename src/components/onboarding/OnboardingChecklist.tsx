@@ -3,6 +3,7 @@
 // Persists state to localStorage. Auto-detects completed steps on mount.
 'use client';
 import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import {
   ONBOARDING_STEPS,
@@ -13,6 +14,9 @@ import {
   dismissOnboarding,
   type StepId,
 } from '@/lib/onboarding';
+import styles from './OnboardingChecklist.module.scss';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 interface Props {
   /** If the user is logged in, auto-mark create_account as done */
@@ -71,7 +75,7 @@ export default function OnboardingChecklist({ isLoggedIn = false, compact = fals
         className="inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-purple-200 bg-purple-50 px-2.5 text-xs font-black text-purple-700 transition-colors hover:bg-purple-100"
       >
         <span className="h-2.5 w-2.5 flex-shrink-0 overflow-hidden rounded-full bg-purple-200">
-          <span className="block h-full bg-purple-600 rounded-full" style={{ width: `${progress}%` }} />
+          <span className={`block h-full bg-purple-600 rounded-full ${styles.progressFill}`} style={{ '--progress-width': `${progress}%` } as CSSVars} />
         </span>
         <span>{doneCount}/{totalSteps}</span>
         <span className="hidden xl:inline">setup</span>
@@ -121,8 +125,8 @@ export default function OnboardingChecklist({ isLoggedIn = false, compact = fals
       <div className="px-5 pb-3">
         <div className="h-1.5 rounded-full bg-purple-100 overflow-hidden">
           <div
-            className="h-full rounded-full bg-purple-500 transition-all duration-500"
-            style={{ width: `${progress}%` }}
+            className={`h-full rounded-full bg-purple-500 transition-all duration-500 ${styles.progressFill}`}
+            style={{ '--progress-width': `${progress}%` } as CSSVars}
           />
         </div>
         <p className="text-[10px] text-slate-400 mt-1 text-right">{progress}% complete</p>

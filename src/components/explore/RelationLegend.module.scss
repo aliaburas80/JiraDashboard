@@ -1,0 +1,26 @@
+// © 2026 Ali Abu Ras — Relation Legend styles
+
+.typeLabel {
+  &[data-legend='epic']    { color: #7c3aed; }
+  &[data-legend='story']   { color: #2563eb; }
+  &[data-legend='task']    { color: #475569; }
+  &[data-legend='subtask'] { color: #64748b; }
+  &[data-legend='bug']     { color: #dc2626; }
+  &[data-legend='spike']   { color: #d97706; }
+}
+
+.connLine {
+  width: 28px;
+  flex-shrink: 0;
+  border-top: 2px solid;
+  border-top-style: solid;
+
+  &[data-dashed='true'] {
+    border-top-style: dashed;
+  }
+
+  &[data-conn='parentChild'] { border-color: #64748b; }
+  &[data-conn='epicStory']   { border-color: #7c3aed; }
+  &[data-conn='blocks']      { border-color: #dc2626; }
+  &[data-conn='orphan']      { border-color: #f97316; }
+}

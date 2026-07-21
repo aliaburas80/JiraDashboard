@@ -4,8 +4,10 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
+import clsx from 'clsx';
 import { getMetricsSource } from '@/lib/storage';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import styles from './DataSourceBadge.module.scss';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -189,10 +191,13 @@ export function DataSourceBadge({ className = '', compact = false }: { className
 
   return (
     <div
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border font-bold print:hidden ${
-        compact ? 'h-9 shrink-0 px-2.5 text-xs' : 'px-2.5 py-1 text-[10px]'
-      } ${className}`}
-      style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border }}
+      className={clsx(
+        'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border font-bold print:hidden',
+        compact ? 'h-9 shrink-0 px-2.5 text-xs' : 'px-2.5 py-1 text-[10px]',
+        className,
+        styles.badge,
+      )}
+      data-source={source}
       title={titleText}
     >
       {loading ? (
@@ -221,13 +226,7 @@ export function CloudLoadingBanner() {
 
   return (
     <div
-      style={{
-        position: 'fixed', top: 56, left: 0, right: 0, zIndex: 9990,
-        background: 'linear-gradient(90deg, #1e3a5f, #2563eb)',
-        color: '#fff', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', gap: 10, padding: '8px 16px',
-        fontSize: 12, fontWeight: 700,
-      }}
+      className={styles.loadingBanner}
       role="status"
       aria-live="polite"
     >
