@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { PasswordInput } from '@/components/ui/PasswordInput';
+import LoadingState from '@/components/ui/LoadingState';
 
 type ProviderType = 's3' | 'azure' | 'gcp';
 
@@ -138,7 +139,7 @@ export default function UserCloudProviderForm({ onToast }: UserCloudProviderForm
   }
 
   if (loading) {
-    return <div className="text-xs text-slate-400 py-4">Loading…</div>;
+    return <LoadingState />;
   }
 
   const showForm = editing || !saved;

@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { PasswordInput } from '@/components/ui/PasswordInput';
+import LoadingState from '@/components/ui/LoadingState';
 
 interface SafeConfig {
   host:    string;
@@ -263,7 +264,7 @@ export default function AppConfigPanel() {
     }
   }
 
-  if (loading) return <div className="py-12 text-center text-sm text-slate-400 animate-pulse">Loading config…</div>;
+  if (loading) return <LoadingState message="Loading config…" />;
 
   return (
     <div className="space-y-6 max-w-2xl">

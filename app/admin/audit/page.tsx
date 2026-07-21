@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 
 type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import LoadingState from '@/components/ui/LoadingState';
 import styles from './page.module.scss';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -327,7 +328,7 @@ export default function AuditEventsPage() {
     fetchEvents(p, applied);
   }
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading audit events…</div>;
+  if (loading) return <LoadingState message="Loading audit events…" />;
 
   const statCards = stats ? [
     { icon: 'clipboard',   label: 'Total Events',   value: String(stats.total),        note: 'All time',          toneStyle: { background: 'rgba(232,93,18,0.1)', color: 'var(--dc-accent,#e85d12)' } },

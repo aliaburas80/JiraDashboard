@@ -3,6 +3,11 @@
   50%      { transform: scale(0.92); opacity: 0.6; }
 }
 
+@keyframes preloaderTrackSlide {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(210%); }
+}
+
 .wrap {
   display: flex;
   flex-direction: column;
@@ -28,6 +33,22 @@
   letter-spacing: -0.01em;
 }
 
+.track {
+  inline-size: 120px;
+  block-size: 3px;
+  border-radius: 999px;
+  background: var(--color-border, #e2e8f0);
+  overflow: hidden;
+}
+
+.indicator {
+  inline-size: 40%;
+  block-size: 100%;
+  border-radius: 999px;
+  background: var(--color-primary, #2563eb);
+  animation: preloaderTrackSlide 1.3s ease-in-out infinite;
+}
+
 .message {
   font-size: var(--text-sm, 11px);
   color: var(--color-text-muted, #94a3b8);
@@ -37,4 +58,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .mark { animation: none; }
+
+  .indicator {
+    animation: none;
+    inline-size: 100%;
+    opacity: 0.5;
+  }
 }

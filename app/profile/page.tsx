@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import LoadingState from '@/components/ui/LoadingState';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import ProfileTab, { type ProfileFields } from '@/components/settings/ProfileTab';
 import StorageTab from '@/components/settings/StorageTab';
@@ -145,7 +146,7 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) return <AppShell showNav><div className="flex h-64 items-center justify-center text-slate-400">Loading...</div></AppShell>;
+  if (loading) return <AppShell showNav><LoadingState /></AppShell>;
 
   const visibleTabs = SETTINGS_TABS.filter(tab => !tab.roles || tab.roles.includes(profile.role));
 

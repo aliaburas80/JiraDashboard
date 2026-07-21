@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
+import LoadingState from '@/components/ui/LoadingState';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { DashboardMetrics } from '@/types/metrics';
 import { loadMetricsWithSource } from '@/lib/storage';
@@ -385,13 +386,7 @@ export default function ChartsPage() {
     healthTotal, spTotal, KPI_PILLS,
   } = derived;
 
-  if (loading) return (
-    <AppShell showNav>
-      <div className="flex items-center justify-center h-64 text-slate-400 text-sm animate-pulse">
-        Loading charts…
-      </div>
-    </AppShell>
-  );
+  if (loading) return <AppShell showNav><LoadingState message="Loading charts…" /></AppShell>;
   if (!metrics) return null;
 
   // ── Chart pref helpers ──────────────────────────────────────────────────────

@@ -20,7 +20,7 @@ import type { IssueTypeDefinition } from '@/types/issueTypeHierarchy';
 import { DEFAULT_ISSUE_TYPES } from '@/types/issueTypeHierarchy';
 
 // React Flow must be client-side only — no SSR
-const WorkItemGraph = dynamic(() => import('@/components/explore/WorkItemGraph'), { ssr: false, loading: () => <div className="h-[520px] flex items-center justify-center text-slate-400 text-sm animate-pulse bg-slate-50 rounded-2xl border border-slate-200">Rendering graph…</div> });
+const WorkItemGraph = dynamic(() => import('@/components/explore/WorkItemGraph'), { ssr: false, loading: () => <div className="h-[520px] flex items-center justify-center bg-slate-50 rounded-2xl border border-slate-200"><LoadingState message="Rendering graph…" /></div> });
 
 const MAX_RECENT = 5;
 const RECENT_KEY = 'dc_explore_recent';

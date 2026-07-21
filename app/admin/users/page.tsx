@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import LoadingState from '@/components/ui/LoadingState';
 import { ASSIGNABLE_ROLES, roleLabel, type AppRole } from '@/lib/roles';
 import type { ManagedUser } from '@/lib/adminConsole';
 import { paginate } from '@/lib/pagination';
@@ -304,9 +305,7 @@ export default function AdminUsersPage() {
     { icon: 'teams',         label: 'Role Types',  value: String(ASSIGNABLE_ROLES.length), note: 'Assignable roles', toneStyle: { background: 'rgba(255,255,255,0.06)', color: '#94A3B8' } },
   ];
 
-  if (loading) return (
-    <div className={styles.loading}>Loading users…</div>
-  );
+  if (loading) return <LoadingState message="Loading users…" />;
 
   return (
     <AdminConsoleLayout

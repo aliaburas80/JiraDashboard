@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import LoadingState from '@/components/ui/LoadingState';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { SecurityReport, SecurityCheck, CheckStatus, CheckSeverity } from '@/services/settings/securityCheck.service';
 import styles from './page.module.scss';
@@ -95,11 +96,7 @@ export default function SecurityPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  if (loading) return (
-    <div className={clsx('flex items-center justify-center h-64 animate-pulse', styles.loadingState)}>
-      Running security checks…
-    </div>
-  );
+  if (loading) return <LoadingState message="Running security checks…" />;
 
   const filtered = report?.checks.filter(c =>
     (catFilter === 'all' || c.category === catFilter) &&

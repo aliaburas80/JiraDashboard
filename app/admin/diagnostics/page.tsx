@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import LoadingState from '@/components/ui/LoadingState';
 import styles from './page.module.scss';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -123,9 +124,7 @@ export default function DiagnosticsPage() {
       .finally(() => setLoading(false));
   }, [router, refresh]);
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-64 text-slate-400 animate-pulse text-sm">Loading diagnostics…</div>
-  );
+  if (loading) return <LoadingState message="Loading diagnostics…" />;
 
   if (error || !data) return (
     <div className="max-w-4xl mx-auto py-8">

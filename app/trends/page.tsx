@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import LoadingState from '@/components/ui/LoadingState';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import TrendChart, { type TrendDataPoint } from '@/components/trends/TrendChart';
 import { releaseConfidenceBand } from '@/lib/releaseConfidence';
@@ -86,7 +87,7 @@ export default function TrendsPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  if (loading) return <AppShell showNav><div className="flex items-center justify-center h-64 text-slate-400 animate-pulse">Loading trends…</div></AppShell>;
+  if (loading) return <AppShell showNav><LoadingState message="Loading trends…" /></AppShell>;
 
   const hasData = points.length >= 2;
   const first   = points[0];

@@ -2497,6 +2497,16 @@ This section is still documentation-only — no remediation code has been writte
 
 ---
 
+## 18g. P2 — Branded Preloader Rollout (2026-07-21)
+
+| ID | Task | Priority | Status | Details / Acceptance Criteria |
+|---|---|---:|---|---|
+| PRELOAD-01 | Build a single branded loading component and use it for route-level loading | P2 | ✅ Done | `src/components/ui/Preloader.tsx` (logo mark + pulse) built and wired into `app/loading.tsx` (Next.js's automatic per-route Suspense fallback) and `src/components/ui/LoadingState.tsx` (existing 6 call sites kept their API, picked up the new branding automatically). Merged to `main`. |
+| PRELOAD-02 | Redesign `Preloader` with a progress element, then extend to in-page data-loading states | P2 | ✅ Done | User supplied a richer external Figma Make reference (`App Preloader/`, since excluded from the TS build — see `ORPHAN-04` below) with a progress bar and rotating stage text; adopted the progress-bar idea only (as a token-driven, non-fake indeterminate track under the pulsing mark), not the fake stage/metric text, per CLAUDE.md §5.5 (no speculative architecture) and §2 (correctness — a numeric progress % not tied to real state would be misleading). Rolled `LoadingState`/`Preloader` out to: admin console (audit, diagnostics, feedback, logs, security, settings ×2), `charts`, `snapshots`, `snapshots/compare`, `trends`, `profile`, `explore`'s dynamic-import graph placeholder, `AppConfigPanel`, `PersonaPreviewPanel`. A first pass missed 5 real call sites (`forecast`, `roadmap`, `admin/system-errors`, `admin/users`, `UserCloudProviderForm`) — found via a `grep -rn "if (loading) return"` sweep prompted by the user after the first pass; converted in a follow-up commit. Deliberately left unconverted, with reasons recorded in `product/DEVELOPER_GUIDE.md`'s new "Branded Preloader / LoadingState" section: content-shaped skeletons (`DashboardPageShell`'s `PageLoading`, `/members` grid, `JiraConnectionsPanel`/`UserAddRequestsPanel` row skeletons), `/customer`/`/developer`'s fixed dark themes, `/verify-email` (already shows the logo once), and all button/badge-level spinners (no compact variant exists yet). Branch `feature/preloader-rollout`, verified clean: typecheck, ESLint, Stylelint, full test suite (1080/1082 — 2 pre-existing flaky timeouts confirmed unrelated by rerunning isolated), production build. |
+| ORPHAN-04 | Decide the fate of the `App Preloader/` reference folder | P2 | ⚠️ Partially resolved | A standalone Figma Make export (own `package.json`/Vite config, no dependencies installed) was dropped into the repo root as design inspiration for `PRELOAD-02`. It broke `npm run build` (its files got swept into Next's type-check, ~60 unresolved-module errors) — same shape as `ORPHAN-01`'s `frontend/`. **Partially resolved**: excluded from `tsconfig.json` (mirrors the existing `frontend`/`backend` exclusion) so the build passes again; the folder itself is still untracked in the working tree, kept as the user's reference material. Decide: keep permanently (formalize its exclusion, maybe `.gitignore` it), or remove now that its ideas have been extracted into `PRELOAD-02` — don't leave undecided indefinitely per CLAUDE.md §5. |
+
+---
+
 ## 19. P2 — Architecture / Planning Track
 
 Do not implement PostgreSQL, CI/CD, or expanded gateway routing without explicit approval.
