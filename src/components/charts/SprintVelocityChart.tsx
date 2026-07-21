@@ -3,8 +3,13 @@
 // Shows trend direction and average velocity line.
 'use client';
 
+import type { CSSProperties } from 'react';
+import clsx from 'clsx';
 import type { SprintThroughputSummary } from '@/types/throughput';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import styles from './SprintVelocityChart.module.scss';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 interface Props {
   summary: SprintThroughputSummary;
@@ -12,10 +17,10 @@ interface Props {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function completionColor(pct: number): string {
-  if (pct >= 90) return '#16a34a';
-  if (pct >= 60) return '#f59e0b';
-  return '#dc2626';
+function completionBand(pct: number): 'good' | 'warning' | 'critical' {
+  if (pct >= 90) return 'good';
+  if (pct >= 60) return 'warning';
+  return 'critical';
 }
 
 function shortName(name: string): string {
@@ -34,7 +39,7 @@ function SprintBar({
 }) {
   const committedH = maxValue > 0 ? Math.max(4, Math.round((committed / maxValue) * 100)) : 4;
   const completedH = maxValue > 0 ? Math.max(4, Math.round((completed / maxValue) * 100)) : 4;
-  const color = completionColor(completionPct);
+  const band = completionBand(completionPct);
 
   return (
     <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
@@ -42,21 +47,24 @@ function SprintBar({
       <div className="flex items-end gap-0.5 text-[9px] font-bold w-full justify-center">
         <span className="text-slate-400">{committed}</span>
         <span className="text-slate-300">/</span>
-        <span style={{ color }}>{completed}</span>
+        <span className={styles.completedValue} data-band={band}>{completed}</span>
       </div>
 
       {/* Bars */}
       <div className="relative w-full h-28 flex items-end justify-center gap-0.5">
         {/* Committed (gray background bar) */}
         <div
-          className="w-3 rounded-t transition-all"
-          style={{ height: `${committedH}%`, background: '#e2e8f0' }}
+          className={clsx('w-3 rounded-t transition-all', styles.barCommitted)}
+          // DYNAMIC CSS VARIABLE: bar height is normalized from runtime data.
+          style={{ '--bar-height': `${committedH}%` } as CSSVars}
           title={`Committed: ${committed} SP`}
         />
         {/* Completed (colored foreground bar) */}
         <div
-          className="w-3 rounded-t transition-all"
-          style={{ height: `${completedH}%`, background: color }}
+          className={clsx('w-3 rounded-t transition-all', styles.barCompleted)}
+          data-band={band}
+          // DYNAMIC CSS VARIABLE: bar height is normalized from runtime data.
+          style={{ '--bar-height': `${completedH}%` } as CSSVars}
           title={`Completed: ${completed} SP`}
         />
       </div>
@@ -94,8 +102,6 @@ export default function SprintVelocityChart({ summary }: Props) {
   const avgCompleted = Math.round(summary.averageThroughputPoints);
 
   // Trend arrow
-  const trendColor = summary.trendDirection === 'Improving' ? '#16a34a'
-    : summary.trendDirection === 'Declining' ? '#dc2626' : '#94a3b8';
   const trendIcon  = summary.trendDirection === 'Improving' ? 'arrowUp'
     : summary.trendDirection === 'Declining' ? 'arrowDown' : 'arrowRight';
 
@@ -123,7 +129,7 @@ export default function SprintVelocityChart({ summary }: Props) {
           </div>
           <div className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-center">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trend</p>
-            <p className="text-lg font-black leading-none" style={{ color: trendColor }}>
+            <p className={clsx('text-lg font-black leading-none', styles.trendValue)} data-trend={summary.trendDirection}>
               <SvgIcon name={trendIcon} size={14} style={{ display: 'inline-block', verticalAlign: '-2px', marginRight: 3 }} />
               <span className="text-xs">{summary.trendDirection}</span>
             </p>
