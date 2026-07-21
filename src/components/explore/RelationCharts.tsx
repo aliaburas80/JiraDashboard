@@ -1,9 +1,13 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 'use client';
+import type { CSSProperties } from 'react';
 import type { RelationNode } from '@/types/relations';
 import type { IssueTypeDefinition } from '@/types/issueTypeHierarchy';
 import { DEFAULT_ISSUE_TYPES } from '@/types/issueTypeHierarchy';
 import { buildNodeTypeConfig } from './nodeStyles';
+import styles from './RelationCharts.module.scss';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 const PALETTE = ['#2563eb','#16a34a','#dc2626','#f59e0b','#7c3aed','#0891b2','#f97316','#14b8a6'];
 
@@ -25,14 +29,14 @@ function Donut({ segs, size = 80, center }: {
     : '#e2e8f0';
   const hole = Math.round(size * 0.56);
   const off  = Math.round((size - hole) / 2);
+  // DYNAMIC CSS VARIABLE:
+  // Donut size and gradient stops are computed from runtime segment data.
+  const donutVars: CSSVars = { '--donut-size': `${size}px`, '--donut-gradient': gradient };
+  const holeVars: CSSVars = { '--hole-size': `${hole}px`, '--hole-offset': `${off}px` };
   return (
-    <div style={{ width: size, height: size, borderRadius: '50%', background: gradient, position: 'relative', flexShrink: 0 }}>
-      <div style={{
-        position: 'absolute', width: hole, height: hole, top: off, left: off,
-        borderRadius: '50%', background: '#fff',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {center && <span style={{ fontSize: 11, fontWeight: 900, color: '#1e293b' }}>{center}</span>}
+    <div className={styles.donut} style={donutVars}>
+      <div className={styles.donutHole} style={holeVars}>
+        {center && <span className={styles.donutCenterLabel}>{center}</span>}
       </div>
     </div>
   );
@@ -42,13 +46,16 @@ function Donut({ segs, size = 80, center }: {
 
 function HBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   const w = max > 0 ? Math.round((value / max) * 100) : 0;
+  // DYNAMIC CSS VARIABLE:
+  // Bar width is normalized from runtime data; color is caller-supplied per series.
+  const fillVars: CSSVars = { '--bar-width': `${w}%`, '--bar-color': color };
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
-      <span style={{ fontSize: 12, color: '#475569', width: 110, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
-      <div style={{ flex: 1, height: 8, borderRadius: 999, background: '#f1f5f9', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${w}%`, background: color, borderRadius: 999 }} />
+    <div className={styles.hBarRow}>
+      <span className={styles.hBarLabel}>{label}</span>
+      <div className={styles.hBarTrack}>
+        <div className={styles.hBarFill} style={fillVars} />
       </div>
-      <span style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', width: 28, textAlign: 'right', flexShrink: 0 }}>{value}</span>
+      <span className={styles.hBarVal}>{value}</span>
     </div>
   );
 }
@@ -57,8 +64,8 @@ function HBar({ label, value, max, color }: { label: string; value: number; max:
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">{title}</p>
+    <div className={styles.chartCard}>
+      <p className={styles.chartCardTitle}>{title}</p>
       {children}
     </div>
   );
@@ -66,15 +73,20 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 
 function Legend({ segs, total }: { segs: { label: string; value: number; color: string }[]; total: number }) {
   return (
-    <div style={{ flex: 1, minWidth: 0 }}>
-      {segs.filter(s => s.value > 0).map(s => (
-        <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
-          <span style={{ width: 10, height: 10, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-          <span style={{ fontSize: 11, color: '#475569', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.label}</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#1e293b' }}>{s.value}</span>
-          <span style={{ fontSize: 10, color: '#94a3b8', width: 30, textAlign: 'right' }}>{total > 0 ? Math.round(s.value / total * 100) : 0}%</span>
-        </div>
-      ))}
+    <div className={styles.legend}>
+      {segs.filter(s => s.value > 0).map(s => {
+        // DYNAMIC CSS VARIABLE:
+        // Dot color is caller-supplied per series and cannot be a fixed class.
+        const dotVars: CSSVars = { '--dot-color': s.color };
+        return (
+          <div key={s.label} className={styles.legendRow}>
+            <span className={styles.legendDot} style={dotVars} />
+            <span className={styles.legendLabel}>{s.label}</span>
+            <span className={styles.legendValue}>{s.value}</span>
+            <span className={styles.legendPct}>{total > 0 ? Math.round(s.value / total * 100) : 0}%</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -142,7 +154,7 @@ export default function RelationCharts({ nodes, orphanNodes, issueTypes = DEFAUL
 
         {/* Completion donut */}
         <ChartCard title="Completion Status">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div className={styles.donutRow}>
             <Donut segs={completionSegs} center={`${Math.round(done / total * 100)}%`} />
             <Legend segs={completionSegs} total={total} />
           </div>
@@ -150,7 +162,7 @@ export default function RelationCharts({ nodes, orphanNodes, issueTypes = DEFAUL
 
         {/* Health distribution donut */}
         <ChartCard title="Health Distribution">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div className={styles.donutRow}>
             <Donut segs={healthSegs} center={`${all.length}`} />
             <Legend segs={healthSegs} total={total} />
           </div>
@@ -158,7 +170,7 @@ export default function RelationCharts({ nodes, orphanNodes, issueTypes = DEFAUL
 
         {/* Issue types donut */}
         <ChartCard title="Issue Types">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div className={styles.donutRow}>
             <Donut segs={typeSegs} center={`${typeSegs.length}`} />
             <Legend segs={typeSegs} total={total} />
           </div>
@@ -185,7 +197,7 @@ export default function RelationCharts({ nodes, orphanNodes, issueTypes = DEFAUL
         {/* Orphan/broken hierarchy */}
         {orphanNodes.length > 0 && (
           <ChartCard title="Orphan & Data Quality">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div className={styles.donutRow}>
               <Donut
                 segs={[
                   { label: 'Linked', value: nodes.length, color: '#16a34a' },
@@ -194,8 +206,8 @@ export default function RelationCharts({ nodes, orphanNodes, issueTypes = DEFAUL
                 center={`${orphanNodes.length}`}
               />
               <div>
-                <p style={{ fontSize: 11, color: '#f97316', fontWeight: 700 }}>{orphanNodes.length} orphan item{orphanNodes.length !== 1 ? 's' : ''}</p>
-                <p style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>Not connected to Epic or Parent</p>
+                <p className={styles.orphanNote}>{orphanNodes.length} orphan item{orphanNodes.length !== 1 ? 's' : ''}</p>
+                <p className={styles.orphanSubnote}>Not connected to Epic or Parent</p>
               </div>
             </div>
           </ChartCard>
