@@ -1,0 +1,20 @@
+// © 2026 Ali Abu Ras — KpiCard styles
+
+.card {
+  background: var(--dc-s2, #fff);
+  border: 1px solid var(--dc-bdr, rgba(203, 213, 225, 0.5));
+  border-left: 4px solid var(--kpi-accent);
+}
+
+.label {
+  color: var(--dc-p2, #64748b);
+}
+
+.value {
+  font-family: var(--font-mono, monospace);
+  color: var(--dc-p1, #0f172a);
+}
+
+.detail {
+  color: var(--dc-p2, #64748b);
+}

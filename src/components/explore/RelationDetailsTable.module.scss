@@ -1,0 +1,7 @@
+// © 2026 Ali Abu Ras — Relation Details Table styles
+
+// Issue-key/type-label text color is the admin-configured per-issue-type
+// color (arbitrary, open-ended), not a fixed enum (CLAUDE.md §14.2).
+.typeColor {
+  color: var(--type-color);
+}
