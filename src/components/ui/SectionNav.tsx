@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { scrollToSection } from "@/lib/utils";
+import styles from "./SectionNav.module.scss";
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 interface Section {
   id: string;
@@ -69,8 +73,11 @@ export default function SectionNav({ sections }: SectionNavProps) {
                 "pointer-events-none select-none",
                 "transition-all duration-150",
                 isHovered ? "opacity-100 translate-x-0" : "opacity-0 translate-x-1",
+                styles.label,
               ].join(" ")}
-              style={{ color }}
+              // DYNAMIC CSS VARIABLE: section color is an arbitrary
+              // caller-supplied value per page.
+              style={{ "--section-color": color } as CSSVars}
             >
               {label}
             </span>
@@ -84,17 +91,15 @@ export default function SectionNav({ sections }: SectionNavProps) {
                 "relative flex items-center justify-center rounded-full transition-all duration-200",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
                 isActive ? "w-3 h-3" : "w-2 h-2 hover:w-2.5 hover:h-2.5",
+                styles.dot,
               ].join(" ")}
-              style={
-                isActive
-                  ? {
-                      backgroundColor: color,
-                      boxShadow: `0 0 0 3px ${color}33, 0 0 8px 2px ${color}66`,
-                    }
-                  : {
-                      backgroundColor: isHovered ? color : `${color}99`,
-                    }
-              }
+              data-active={isActive}
+              // DYNAMIC CSS VARIABLE: section color is an arbitrary
+              // caller-supplied value per page.
+              style={{
+                "--section-bg": isActive || isHovered ? color : `${color}99`,
+                "--section-shadow": `0 0 0 3px ${color}33, 0 0 8px 2px ${color}66`,
+              } as CSSVars}
             />
           </div>
         );

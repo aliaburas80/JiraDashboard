@@ -1,0 +1,15 @@
+// © 2026 Ali Abu Ras — Column Mapping Preview styles
+
+.scoreRing {
+  border-color: #dc2626;
+
+  &[data-band='strong'] { border-color: #16a34a; }
+  &[data-band='good']   { border-color: #d97706; }
+}
+
+.scoreValue {
+  color: #dc2626;
+
+  &[data-band='strong'] { color: #16a34a; }
+  &[data-band='good']   { color: #d97706; }
+}
