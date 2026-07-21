@@ -195,12 +195,10 @@ JiraDashboard/
 │   │   │   └── BackupRestoreSettings.tsx
 │   │   ├── dc-shell/
 │   │   │   ├── navigation.ts            # DC_NAV_GROUPS — single source of truth for all nav items
-│   │   │   ├── DCTopbar.tsx             # Generic topbar shell component
-│   │   │   ├── DCPageSidebar.tsx        # Generic page sidebar shell component
 │   │   │   ├── DCKpiCard.tsx            # KPI metric card
-│   │   │   ├── DCStatusChip.tsx         # Status chip (uses .chip + variant classes)
-│   │   │   ├── DCActionBoard.tsx        # Action board panel
-│   │   │   └── DeliveryClarityShell.tsx # Composite shell (topbar + sidebar + main)
+│   │   │   └── DCStatusChip.tsx         # Status chip (uses .chip + variant classes)
+│   │   │   # DCTopbar.tsx/DCPageSidebar.tsx/DCActionBoard.tsx/DeliveryClarityShell.tsx
+│   │   │   # removed 2026-07-21 (ORPHAN-05) — dead code, never mounted by any route
 │   │   ├── auth/
 │   │   │   └── UserMenu.tsx      # Avatar dropdown (name, role badge, sign out)
 │   │   ├── admin/
