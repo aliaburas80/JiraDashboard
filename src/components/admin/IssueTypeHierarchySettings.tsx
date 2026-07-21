@@ -1,6 +1,7 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 'use client';
 import { useState, type CSSProperties } from 'react';
+import clsx from 'clsx';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { IssueTypeDefinition, IssueTypeHierarchyConfig } from '@/types/issueTypeHierarchy';
 import { buildIssueTypeId } from '@/types/issueTypeHierarchy';
@@ -122,7 +123,14 @@ export default function IssueTypeHierarchySettings({ config, onSave }: Props) {
 
         <div className="space-y-3">
           {sorted.map(t => (
-            <div key={t.id} className="border border-slate-200 rounded-xl p-4" style={{ background: t.bg, borderColor: t.border }}>
+            <div
+              key={t.id}
+              className={clsx('border border-slate-200 rounded-xl p-4', styles.typeRow)}
+              // DYNAMIC CSS VARIABLE: row background/border are the admin's
+              // freely-chosen per-type colors, which can't be predefined
+              // classes (CLAUDE.md §14.2).
+              style={{ '--type-bg': t.bg, '--type-border': t.border } as CSSVariableProperties}
+            >
               <div className="flex items-start gap-3 flex-wrap">
                 <div className="flex flex-col items-center gap-1 shrink-0">
                   <button type="button" onClick={() => moveLevel(t.id, -1)} title="Move up one level"
@@ -136,7 +144,12 @@ export default function IssueTypeHierarchySettings({ config, onSave }: Props) {
                   </button>
                 </div>
 
-                <div className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0" style={{ background: '#fff', border: `1px solid ${t.border}` }}>
+                <div
+                  className={clsx('flex items-center justify-center w-9 h-9 rounded-lg shrink-0', styles.typeIconTile)}
+                  // DYNAMIC CSS VARIABLE: border is the admin's freely-chosen
+                  // per-type color (CLAUDE.md §14.2).
+                  style={{ '--type-border': t.border } as CSSVariableProperties}
+                >
                   <SvgIcon name={t.icon} size={16} style={{ color: t.color }} />
                 </div>
 
@@ -146,8 +159,10 @@ export default function IssueTypeHierarchySettings({ config, onSave }: Props) {
                       type="text"
                       value={t.label}
                       onChange={e => updateType(t.id, { label: e.target.value })}
-                      className="font-bold text-sm bg-white border border-slate-200 rounded-lg px-2 py-1 flex-1 min-w-[120px]"
-                      style={{ color: t.color }}
+                      className={clsx('font-bold text-sm bg-white border border-slate-200 rounded-lg px-2 py-1 flex-1 min-w-[120px]', styles.typeLabelInput)}
+                      // DYNAMIC CSS VARIABLE: text color is the admin's
+                      // freely-chosen per-type color (CLAUDE.md §14.2).
+                      style={{ '--type-color': t.color } as CSSVariableProperties}
                       placeholder="Display label"
                     />
                     {t.builtIn && (
@@ -181,8 +196,10 @@ export default function IssueTypeHierarchySettings({ config, onSave }: Props) {
                         type="button"
                         title={preset.color}
                         onClick={() => updateType(t.id, preset)}
-                        className={`w-5 h-5 rounded-full border-2 ${t.color === preset.color ? 'border-slate-700' : 'border-white'}`}
-                        style={{ background: preset.color }}
+                        className={clsx('w-5 h-5 rounded-full border-2', styles.presetSwatch, t.color === preset.color ? 'border-slate-700' : 'border-white')}
+                        // DYNAMIC CSS VARIABLE: swatch shows a fixed preset
+                        // color, but the presets are plain data (CLAUDE.md §14.2).
+                        style={{ '--preset-color': preset.color } as CSSVariableProperties}
                       />
                     ))}
                     <span className="w-px h-4 bg-slate-200 mx-0.5" aria-hidden="true" />
