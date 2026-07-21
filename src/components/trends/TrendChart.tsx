@@ -2,6 +2,11 @@
 // Pure SVG line chart for upload-to-upload trend visualisation.
 'use client';
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
+import clsx from 'clsx';
+import styles from './TrendChart.module.scss';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 export interface TrendDataPoint {
   label:  string;   // short x-axis label
@@ -61,7 +66,6 @@ export default function TrendChart({ title, unit = '', color, data, yMin, yMax, 
   const trendDir = Math.abs(last - first) < 0.5 ? 'stable'
     : (trendUp && higherIsBetter) || (!trendUp && !higherIsBetter) ? 'positive' : 'negative';
 
-  const trendColor = trendDir === 'positive' ? '#16a34a' : trendDir === 'negative' ? '#dc2626' : '#94a3b8';
   const trendIcon  = trendDir === 'positive' ? '↑' : trendDir === 'negative' ? '↓' : '→';
 
   const hov = hovered !== null ? data[hovered] : null;
@@ -71,14 +75,18 @@ export default function TrendChart({ title, unit = '', color, data, yMin, yMax, 
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-black uppercase tracking-widest text-slate-500">{title}</p>
-        <span className="flex items-center gap-1 text-xs font-bold" style={{ color: trendColor }}>
+        <span className={clsx('flex items-center gap-1 text-xs font-bold', styles.trendLabel)} data-trend={trendDir}>
           {trendIcon}
           {Math.abs(Math.round((last - first) * 10) / 10)}{unit} vs first
         </span>
       </div>
 
       {/* SVG chart */}
-      <div className="relative" style={{ height }}>
+      <div
+        className={styles.chartWrap}
+        // DYNAMIC CSS VARIABLE: height is a runtime prop set per caller.
+        style={{ '--chart-height': `${height}px` } as CSSVars}
+      >
         <svg viewBox={`0 0 ${W} ${H + PY * 2}`} className="w-full h-full" preserveAspectRatio="none">
           {/* Grid lines */}
           {[0, 0.25, 0.5, 0.75, 1].map(t => {
@@ -119,7 +127,7 @@ export default function TrendChart({ title, unit = '', color, data, yMin, yMax, 
               fill={hovered === i ? color : '#fff'}
               stroke={color}
               strokeWidth="2"
-              style={{ cursor: 'pointer', transition: 'r 0.1s' }}
+              className={styles.dot}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
             />
@@ -140,13 +148,10 @@ export default function TrendChart({ title, unit = '', color, data, yMin, yMax, 
         {/* Hover tooltip */}
         {hov && hovered !== null && (
           <div
-            className="absolute bg-slate-900 text-white rounded-xl px-3 py-2 text-xs shadow-xl pointer-events-none z-10"
-            style={{
-              left: `${(hovered / (data.length - 1)) * 100}%`,
-              top: '0',
-              transform: 'translateX(-50%)',
-              whiteSpace: 'nowrap',
-            }}
+            className={clsx('bg-slate-900 text-white rounded-xl px-3 py-2 text-xs shadow-xl pointer-events-none z-10', styles.tooltip)}
+            // DYNAMIC CSS VARIABLE: horizontal position tracks the hovered
+            // data point's index, which varies per render.
+            style={{ '--tooltip-left': `${(hovered / (data.length - 1)) * 100}%` } as CSSVars}
           >
             <p className="font-black">{hov.value}{unit}</p>
             <p className="text-slate-400 text-[10px]">{hov.date}</p>
@@ -158,7 +163,7 @@ export default function TrendChart({ title, unit = '', color, data, yMin, yMax, 
       {/* Min / Max / Latest */}
       <div className="flex justify-between text-[10px] text-slate-400 mt-2">
         <span>Min: <strong className="text-slate-600">{Math.min(...values)}{unit}</strong></span>
-        <span>Latest: <strong style={{ color }}>{last}{unit}</strong></span>
+        <span>Latest: <strong className={styles.latestValue} style={{ '--chart-color': color } as CSSVars}>{last}{unit}</strong></span>
         <span>Max: <strong className="text-slate-600">{Math.max(...values)}{unit}</strong></span>
       </div>
     </div>
