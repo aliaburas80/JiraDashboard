@@ -3439,12 +3439,72 @@ the type lookup now wraps `SvgIcon` in a `data-type`-carrying `<span>` that reso
 `TODO-List.md` `STYLE-05` entries for exact per-file before/after counts). Repo-wide: 807 → 658
 warnings, 70 → 68 files. See branch `refactor/style-05-tier4-standalone-pages`.
 
-## 60.5a Refactor priority — Tier 5: remaining shared components (158 warnings) — NOT STARTED
+## 60.5a Refactor priority — Tier 5: remaining shared components — RESOLVED 2026-07-22
 
 `src/components/explore/**`, `src/components/admin/**`, `src/components/dc-shell/**`,
-`src/components/tour/**`, and the long tail of files at ≤7 warnings each. See `TODO-List.md`
-`STYLE-06` for the full file list. Not part of the `STYLE-05` pass above — Tier 5 targets
-`src/components/**`, a distinct scope from Tier 4's `app/**` standalone pages.
+`src/components/tour/**`, and the long tail of files at ≤7 warnings each. Not part of the
+`STYLE-05` pass above — Tier 5 targets `src/components/**`, a distinct scope from Tier 4's
+`app/**` standalone pages.
+
+**Resolved 2026-07-22.** A fresh re-audit found the real scope was 338 warnings/62 files
+repo-wide (not the stale 158/? figure this section previously named), of which the
+`src/components/**` share was roughly 20 files. Converted: `DataRetentionSettings.tsx`
+(23→0), `AdminConsoleLayout.tsx` (13→2, shared by 6 admin pages — each page's arbitrary
+stat-card tone/color destructured into `--tone-bg`/`--tone-color`/`--value-color`
+internally, no caller changes needed), `ThemeCustomizerPanel.tsx` (7→2, also fixed a
+latent `var(--dc-accent,#2563eb)14` invalid-CSS-concatenation bug — a `var()` call with a
+literal alpha suffix silently concatenated onto it, replaced with `color-mix()`),
+`DCKpiCard.tsx` (6→0, extended the pre-existing global `.dc-kpi-*` utility classes in
+`app/globals.scss` rather than introducing a parallel module), `IssueTypeHierarchySettings.tsx`
+(5→5, all now sanctioned per-issue-type admin-color exceptions), `TrendChart.tsx` (5→3),
+`ChartCustomizerPanel.tsx`+`SprintVelocityChart.tsx` (4→0, 4→2 — the latter's
+`completionColor()` threshold function renamed to `completionBand()` returning a
+`'good'|'warning'|'critical'` union instead of a hex string, consumed via `data-band`),
+`RelationDetailsTable.tsx`/`RelationLegend.tsx`/`OnboardingChecklist.tsx`/`DataSourceBadge.tsx`/
+`KpiCard.tsx`/`MetricConfidenceBadge.tsx`/`SectionNav.tsx`/`ColumnMappingPreview.tsx` (batch
+of small files, each 2-4 warnings). `RelationCharts.tsx`/`WorkItemGraph.tsx` were converted
+in the same pass but originally counted under this repo's earlier Tier-5 estimate.
+
+**`ORPHAN-05`**: `DCTopbar.tsx`/`DCActionBoard.tsx`/`DCPageSidebar.tsx`/`DeliveryClarityShell.tsx`
+(13+6+4 = 23 of Tier 5's tracked warnings) turned out to be dead code — confirmed zero live
+callers via `grep`, presented to the owner, deleted rather than converted. `navigation.ts`,
+`DCKpiCard.tsx`, and `DCStatusChip.tsx` in the same directory remain live and were converted
+normally.
+
+A second audit pass of the files still showing 1 warning each (assumed to already be
+sanctioned exceptions from earlier tiers) found 5 were actually real, unconverted
+violations: `NotificationBell.tsx` (a fully static `top: 56` value with no runtime
+dependency), `AppShell.tsx` (a `STATUS_DOT` hex lookup via inline `style` — the same
+pattern already fixed for `DashboardTopbar.tsx`'s equivalent dot in `STYLE-04`, fixed
+identically here), `RelationStatsCards.tsx` (a generic `StatCard`'s `color` prop passed as
+a raw `style={{ color }}` instead of a `--*` custom property), and
+`DataQualitySummary.tsx`/`MissingFieldImpactPanel.tsx` (both had a genuinely dynamic
+`width: pct%` that was never actually routed through the required CSS-variable exception —
+CLAUDE.md §14.2 requires even runtime-computed values to go through a `--*` property, not
+a raw one). `ProductTour.tsx`, `DashboardNavSidebar.tsx`, `DashboardPageShell.tsx`, and
+`DashboardTopbar.tsx`'s remaining 1-warning-each were re-verified as genuinely already
+correct, documented exceptions from earlier tiers — no change needed.
+
+**`SvgIcon.tsx`'s 1 warning is deliberately left unconverted.** It's the base icon-mask
+primitive nearly every component in the codebase renders through, and its `style` prop
+merges caller-supplied styling (`...style`) with internally computed, genuinely
+per-instance values (icon-mask URL from the `name` prop, width/height from the `size`
+prop) — CLAUDE.md §14.3 prohibits object spread in the style exception, and there is no
+way to preserve this component's public API (which the entire codebase's "generic
+component color passthrough via `style={{ color }}`" pattern depends on) without either
+redesigning it — a cross-cutting change touching dozens of call sites, well beyond a
+single-file conversion — or silently restructuring the merge to dodge the linter's AST
+check without fixing the underlying architectural tension. Left as accepted, documented
+technical debt pending a dedicated design decision, not silently converted.
+
+**Confirmed separately, not fixed in this pass:** the `app/**` standalone pages Tier 4
+(§60.5) claimed resolved down to ~30 warnings on 2026-07-19 have drifted back up to ~195
+warnings across the same files (`forecast` 56, `sprint-kanban` 22, `charts` 13, `portfolio`
+13, `customer` 12, `delivery-mix` 11, `roadmap` 9, and smaller amounts in a dozen more) —
+new feature work landed on these pages since Tier 4 closed and reintroduced inline styles.
+Explicitly deferred as a separate follow-up per an explicit owner decision (finish Tier 5
+first) — not part of this closure. Repo-wide `react/forbid-dom-props`: 338 → 217 across
+62 → 50 files.
 
 ## 60.6 Resolved: legacy `frontend/` Create React App (removed 2026-07-14)
 
