@@ -2,6 +2,7 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 
 import { useState, useEffect, useCallback } from 'react';
+import clsx from 'clsx';
 import styles from './page.module.scss';
 
 // ─── Bash syntax highlighter ──────────────────────────────────────────────────
@@ -1494,9 +1495,9 @@ export default function DeveloperPage() {
             navOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           ].join(' ')}
         >
-          <div id="tour-section-developer-nav" className="px-3 pb-3 mb-2" style={{ borderBottom: '1px solid var(--color-border, #e2e8f0)' }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-p1, #F2F2F2)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Developer Portal</p>
-            <p style={{ fontSize: 11, color: 'var(--dc-p2, #909090)', marginTop: 2 }}>Delivery Clarity v4.6</p>
+          <div id="tour-section-developer-nav" className={clsx('px-3 pb-3 mb-2', styles.navHeaderDivider)}>
+            <p className={styles.navTitle}>Developer Portal</p>
+            <p className={styles.navSubtitle}>Delivery Clarity v4.6</p>
             {/* Global search */}
             <div id="tour-section-developer-search" className="relative mt-2">
               <input
@@ -1508,15 +1509,14 @@ export default function DeveloperPage() {
               />
               {globalSearch && (
                 <button type="button" onClick={() => setGlobalSearch('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs"
-                  style={{ color: 'var(--dc-p3, #505050)' }}>✕</button>
+                  className={clsx('absolute right-2 top-1/2 -translate-y-1/2 text-xs', styles.searchClearBtn)}>✕</button>
               )}
             </div>
           </div>
 
           {groups.map(group => (
             <div key={group} className="mb-3">
-              <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.09em', padding: '4px 12px' }}>{group}</p>
+              <p className={styles.navGroupLabel}>{group}</p>
               {SECTIONS.filter(s => s.group === group).map(s => {
                 const isActive = active === s.id;
                 return (
@@ -1524,11 +1524,6 @@ export default function DeveloperPage() {
                     key={s.id}
                     onClick={() => go(s.id)}
                     className={`w-full text-left py-2 rounded-lg text-xs font-medium mb-0.5 transition-all ${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
-                    style={{
-                      borderLeft: '2px solid transparent',
-                      paddingLeft: 12,
-                      paddingRight: 12,
-                    }}
                   >
                     {s.label}
                   </button>
@@ -1537,9 +1532,9 @@ export default function DeveloperPage() {
             </div>
           ))}
 
-          <div className="mt-auto pt-3 px-3" style={{ borderTop: '1px solid var(--color-border, #e2e8f0)' }}>
-            <p style={{ fontSize: 10, color: 'var(--dc-p3, #505050)' }}>© 2026 Ali Abu Ras</p>
-            <p className="truncate" style={{ fontSize: 10, color: 'var(--dc-p3, #505050)' }}>ali.aburas@deliveryclarity.app</p>
+          <div className={clsx('mt-auto pt-3 px-3', styles.navFooterDivider)}>
+            <p className={styles.footerCopy}>© 2026 Ali Abu Ras</p>
+            <p className={clsx('truncate', styles.footerCopy)}>ali.aburas@deliveryclarity.app</p>
           </div>
         </aside>
 
@@ -1571,28 +1566,24 @@ export default function DeveloperPage() {
             return (
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <h2 style={{ fontSize: 14, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)' }}>Search results for &quot;{globalSearch}&quot;</h2>
-                  <span style={{ fontSize: 12, color: 'var(--dc-p3, #505050)' }}>{total} match{total !== 1 ? 'es' : ''}</span>
+                  <h2 className={styles.searchResultsTitle}>Search results for &quot;{globalSearch}&quot;</h2>
+                  <span className={styles.searchResultsCount}>{total} match{total !== 1 ? 'es' : ''}</span>
                   <button type="button" onClick={() => setGlobalSearch('')}
-                    className="ml-auto text-xs font-semibold"
-                    style={{ color: 'var(--dc-acc2, #FF8A4C)' }}>Clear search</button>
+                    className={clsx('ml-auto text-xs font-semibold', styles.searchClearLink)}>Clear search</button>
                 </div>
 
                 {total === 0 && (
-                  <div className="py-8 text-center" style={{ fontSize: 13, color: 'var(--dc-p3, #505050)' }}>No results found for &quot;{globalSearch}&quot;</div>
+                  <div className={clsx('py-8 text-center', styles.searchEmpty)}>No results found for &quot;{globalSearch}&quot;</div>
                 )}
 
                 {matchedSects.length > 0 && (
                   <div className="mb-5">
-                    <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Sections ({matchedSects.length})</p>
+                    <p className={styles.searchGroupLabel}>Sections ({matchedSects.length})</p>
                     <div className="flex flex-wrap gap-2">
                       {matchedSects.map(s => (
                         <button key={s.id} type="button"
                           onClick={() => { setGlobalSearch(''); go(s.id); }}
-                          className="text-xs font-semibold rounded-lg px-3 py-1.5 transition-all"
-                          style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }}
-                          onMouseEnter={e => { e.currentTarget.style.color = 'var(--dc-acc2, #FF8A4C)'; e.currentTarget.style.border = '1px solid rgba(232,93,18,0.22)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.color = 'var(--dc-p2, #909090)'; e.currentTarget.style.border = '1px solid var(--dc-bdr, rgba(255,255,255,0.07))'; }}
+                          className={clsx('text-xs font-semibold rounded-lg px-3 py-1.5 transition-all', styles.searchResultChip)}
                         >
                           {s.label}
                         </button>
@@ -1603,22 +1594,19 @@ export default function DeveloperPage() {
 
                 {matchedCalcs.length > 0 && (
                   <div className="mb-5">
-                    <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Calculations ({matchedCalcs.length})</p>
+                    <p className={styles.searchGroupLabel}>Calculations ({matchedCalcs.length})</p>
                     <div className="space-y-2">
                       {matchedCalcs.map(c => (
                         <button key={c.name} type="button"
                           onClick={() => { setGlobalSearch(''); setExpandedCalc(c.name); go('calculations'); }}
-                          className="w-full text-left rounded-xl p-3 transition-all"
-                          style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
-                          onMouseEnter={e => (e.currentTarget.style.border = '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))')}
-                          onMouseLeave={e => (e.currentTarget.style.border = '1px solid var(--dc-bdr, rgba(255,255,255,0.07))')}
+                          className={clsx('w-full text-left rounded-xl p-3 transition-all', styles.searchResultCard)}
                         >
                           <div className="flex items-center gap-2 mb-1">
-                            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)' }}>{c.name}</span>
-                            <span className="chip c-nt" style={{ fontSize: 9, borderRadius: 4 }}>{c.category}</span>
-                            <span className={c.status === 'Implemented' ? 'chip c-gr' : 'chip c-am'} style={{ fontSize: 9, borderRadius: 4, marginLeft: 'auto' }}>{c.status}</span>
+                            <span className={styles.searchResultCalcName}>{c.name}</span>
+                            <span className={clsx('chip c-nt', styles.chipSm)}>{c.category}</span>
+                            <span className={clsx(c.status === 'Implemented' ? 'chip c-gr' : 'chip c-am', styles.chipSm, styles['chipSm--auto'])}>{c.status}</span>
                           </div>
-                          <p style={{ fontSize: 10, color: 'var(--dc-p3, #505050)', fontFamily: 'var(--font-mono, monospace)' }} className="truncate">{c.formula.slice(0, 80)}</p>
+                          <p className={clsx(styles.formulaPreview, 'truncate')}>{c.formula.slice(0, 80)}</p>
                         </button>
                       ))}
                     </div>
@@ -1627,22 +1615,19 @@ export default function DeveloperPage() {
 
                 {matchedPkgs.length > 0 && (
                   <div className="mb-5">
-                    <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Packages ({matchedPkgs.length})</p>
+                    <p className={styles.searchGroupLabel}>Packages ({matchedPkgs.length})</p>
                     <div className="space-y-2">
                       {matchedPkgs.map(p => (
                         <button key={p.name} type="button"
                           onClick={() => { setGlobalSearch(''); setPkgSearch(p.name); go('packages'); }}
-                          className="w-full text-left rounded-xl p-3 transition-all"
-                          style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
-                          onMouseEnter={e => (e.currentTarget.style.border = '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))')}
-                          onMouseLeave={e => (e.currentTarget.style.border = '1px solid var(--dc-bdr, rgba(255,255,255,0.07))')}
+                          className={clsx('w-full text-left rounded-xl p-3 transition-all', styles.searchResultCard)}
                         >
                           <div className="flex items-center gap-2 mb-1">
-                            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--dc-acc2, #FF8A4C)', fontFamily: 'var(--font-mono, monospace)' }}>{p.name}</span>
-                            <span style={{ fontSize: 11, color: 'var(--dc-p3, #505050)' }}>{p.version}</span>
-                            <span className={p.status === 'Installed' ? 'chip c-gr' : 'chip c-am'} style={{ fontSize: 9, borderRadius: 4, marginLeft: 'auto' }}>{p.status}</span>
+                            <span className={styles.searchResultPkgName}>{p.name}</span>
+                            <span className={styles.searchResultMeta}>{p.version}</span>
+                            <span className={clsx(p.status === 'Installed' ? 'chip c-gr' : 'chip c-am', styles.chipSm, styles['chipSm--auto'])}>{p.status}</span>
                           </div>
-                          <p style={{ fontSize: 11, color: 'var(--dc-p2, #909090)' }} className="truncate">{p.usedFor}</p>
+                          <p className={clsx(styles.searchResultDesc, 'truncate')}>{p.usedFor}</p>
                         </button>
                       ))}
                     </div>
@@ -1654,15 +1639,14 @@ export default function DeveloperPage() {
 
           {/* Breadcrumb — always visible */}
           {!globalSearch.trim() && (
-          <div className="flex items-center gap-2 mb-5 flex-wrap" style={{ fontSize: 12 }}>
-            <span style={{ fontWeight: 500, color: 'var(--dc-p2, #909090)' }}>Developer Portal</span>
-            <span style={{ color: 'var(--dc-p3, #505050)' }}>›</span>
-            <span style={{ fontWeight: 600, color: 'var(--dc-p1, #F2F2F2)' }}>
+          <div className={clsx('flex items-center gap-2 mb-5 flex-wrap', styles.breadcrumbWrap)}>
+            <span className={styles.breadcrumbLabel}>Developer Portal</span>
+            <span className={styles.breadcrumbSep}>›</span>
+            <span className={styles.breadcrumbCurrent}>
               {SECTIONS.find(s => s.id === active)?.label ?? active}
             </span>
             {DOC_SLUGS.has(active) && (
-              <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(232,93,18,0.10)', border: '1px solid rgba(232,93,18,0.20)', color: 'var(--dc-acc2, #FF8A4C)' }}>
+              <span className={clsx('ml-auto text-xs font-semibold px-2 py-0.5 rounded-full', styles.breadcrumbBadge)}>
                 From product/
               </span>
             )}
@@ -1671,49 +1655,43 @@ export default function DeveloperPage() {
 
           {!globalSearch.trim() && <>
           {loading && (
-            <div className="flex items-center gap-3 py-16 justify-center" style={{ color: 'var(--dc-p3, #505050)' }}>
-              <div className="w-6 h-6 rounded-full animate-spin"
-                style={{ border: '2px solid rgba(232,93,18,0.2)', borderTopColor: 'var(--dc-acc, #E85D12)' }} />
-              <span style={{ fontSize: 13, fontWeight: 500 }}>Loading document…</span>
+            <div className={clsx('flex items-center gap-3 py-16 justify-center', styles.loadingRow)}>
+              <div className={clsx('w-6 h-6 rounded-full animate-spin', styles.loadingSpinner)} />
+              <span className={styles.loadingText}>Loading document…</span>
             </div>
           )}
 
           {error && !loading && (
-            <div className="rounded-xl p-5 my-4"
-              style={{ background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.18)' }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#fca5a5', marginBottom: 4 }}>⚠ Failed to load document</p>
-              <p style={{ fontSize: 13, color: '#fca5a5' }}>{error}</p>
+            <div className={clsx('rounded-xl p-5 my-4', styles.errorBanner)}>
+              <p className={styles.errorTitle}>⚠ Failed to load document</p>
+              <p className={styles.errorBody}>{error}</p>
             </div>
           )}
 
           {/* ── Package Reference ── */}
           {active === 'packages' && (
             <div className="max-w-5xl">
-              <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)', marginBottom: 4 }}>Package Reference</h2>
-              <p style={{ fontSize: 13, color: 'var(--dc-p2, #909090)', marginBottom: 14 }}>All packages used by Delivery Clarity — version, purpose, scope, and risk if removed.</p>
+              <h2 className={styles.refHeading}>Package Reference</h2>
+              <p className={styles.refSubheading}>All packages used by Delivery Clarity — version, purpose, scope, and risk if removed.</p>
               {/* Filters */}
               <div className="flex flex-wrap gap-3 mb-4">
                 <input type="text" placeholder="Search packages…" value={pkgSearch} onChange={e => setPkgSearch(e.target.value)}
-                  className="flex-1 min-w-[180px] px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[rgba(232,93,18,0.3)]"
-                  style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, color: 'var(--dc-p1, #F2F2F2)' }} />
+                  className={clsx('flex-1 min-w-[180px] px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[rgba(232,93,18,0.3)]', styles.refInput)} />
                 <select value={pkgScope} onChange={e => setPkgScope(e.target.value)}
-                  className="px-3 py-1.5 text-sm outline-none"
-                  style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, color: 'var(--dc-p2, #909090)' }}>
+                  className={clsx('px-3 py-1.5 text-sm outline-none', styles.refSelect)}>
                   {['all','Client','Server','Shared','Dev-only'].map(s => <option key={s} value={s}>{s === 'all' ? 'All scopes' : s}</option>)}
                 </select>
                 <select value={pkgStatus} onChange={e => setPkgStatus(e.target.value)}
-                  className="px-3 py-1.5 text-sm outline-none"
-                  style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, color: 'var(--dc-p2, #909090)' }}>
+                  className={clsx('px-3 py-1.5 text-sm outline-none', styles.refSelect)}>
                   {['all','Installed','Planned'].map(s => <option key={s} value={s}>{s === 'all' ? 'All statuses' : s}</option>)}
                 </select>
               </div>
-              <div className="overflow-x-auto rounded-2xl"
-                style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+              <div className={clsx('overflow-x-auto rounded-2xl', styles.refTableWrap)}>
                 <table className="w-full text-xs">
                   <thead>
-                    <tr style={{ background: 'var(--dc-s1, #141414)', borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))' }}>
+                    <tr className={styles.refTableHeadRow}>
                       {['Package','Version','Used For','Feature / Area','Scope','Status','Risk if Removed'].map(h => (
-                        <th key={h} style={{ padding: '10px 12px', fontSize: 10, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', textAlign: 'left' }}>{h}</th>
+                        <th key={h} className={styles.refTableHeadCell}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -1723,52 +1701,40 @@ export default function DeveloperPage() {
                       (pkgScope === 'all' || p.scope === pkgScope) &&
                       (pkgStatus === 'all' || p.status === pkgStatus)
                     ).map(p => (
-                      <tr key={p.name}
-                        style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--dc-s3)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                      >
-                        <td style={{ padding: '8px 12px', fontFamily: 'var(--font-mono,monospace)', fontWeight: 700, color: 'var(--dc-acc2, #FF8A4C)', whiteSpace: 'nowrap' }}>{p.name}</td>
-                        <td style={{ padding: '8px 12px', fontFamily: 'var(--font-mono,monospace)', color: 'var(--dc-p3, #505050)', whiteSpace: 'nowrap' }}>{p.version}</td>
-                        <td style={{ padding: '8px 12px', color: 'var(--dc-p2, #909090)', maxWidth: 200 }}>{p.usedFor}</td>
-                        <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
-                          <span style={{ background: 'rgba(232,93,18,0.10)', color: 'var(--dc-acc2, #FF8A4C)', padding: '1px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>{p.feature}</span>
+                      <tr key={p.name} className={styles.refTableRow}>
+                        <td className={styles.refCellMono}>{p.name}</td>
+                        <td className={styles.refCellMonoMuted}>{p.version}</td>
+                        <td className={styles.refCell}>{p.usedFor}</td>
+                        <td className={styles.refCellNowrap}>
+                          <span className={styles.featureBadge}>{p.feature}</span>
                         </td>
-                        <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
-                          <span style={{
-                            fontSize: 10, fontWeight: 700, padding: '1px 8px', borderRadius: 4,
-                            ...(p.scope === 'Client'   ? { background: 'rgba(34,197,94,0.10)',  color: '#4ade80'  } :
-                                p.scope === 'Server'   ? { background: 'rgba(124,58,237,0.10)', color: '#c4b5fd' } :
-                                p.scope === 'Dev-only' ? { background: 'rgba(255,255,255,0.06)', color: 'var(--dc-p3, #505050)' } :
-                                                         { background: 'rgba(20,184,166,0.10)', color: '#5eead4' }),
-                          }}>{p.scope}</span>
+                        <td className={styles.refCellNowrap}>
+                          <span className={styles.scopeBadge} data-scope={p.scope}>{p.scope}</span>
                         </td>
-                        <td style={{ padding: '8px 12px' }}>
-                          <span className={p.status === 'Installed' ? 'chip c-gr' : 'chip c-am'} style={{ borderRadius: 4 }}>{p.status}</span>
+                        <td className={styles.refCellTight}>
+                          <span className={p.status === 'Installed' ? 'chip c-gr' : 'chip c-am'}>{p.status}</span>
                         </td>
-                        <td style={{ padding: '8px 12px', color: 'var(--dc-p2, #909090)', maxWidth: 200, fontSize: 11 }}>{p.risk}</td>
+                        <td className={clsx(styles.refCell, styles['refCell--sm'])}>{p.risk}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <p style={{ fontSize: 11, color: 'var(--dc-p3, #505050)', marginTop: 10 }}>{PACKAGES.filter(p => p.status === 'Installed').length} installed · {PACKAGES.filter(p => p.status === 'Planned').length} planned</p>
+              <p className={styles.refFootnote}>{PACKAGES.filter(p => p.status === 'Installed').length} installed · {PACKAGES.filter(p => p.status === 'Planned').length} planned</p>
             </div>
           )}
 
           {/* ── Calculation Reference ── */}
           {active === 'calculations' && (
             <div className="max-w-5xl">
-              <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)', marginBottom: 4 }}>Calculation Reference</h2>
-              <p style={{ fontSize: 13, color: 'var(--dc-p2, #909090)', marginBottom: 14 }}>Every major metric, formula, and calculation used by Delivery Clarity — with purpose, assumptions, and code location.</p>
+              <h2 className={styles.refHeading}>Calculation Reference</h2>
+              <p className={styles.refSubheading}>Every major metric, formula, and calculation used by Delivery Clarity — with purpose, assumptions, and code location.</p>
               {/* Filters */}
               <div className="flex flex-wrap gap-3 mb-5">
                 <input type="text" placeholder="Search metrics…" value={calcSearch} onChange={e => setCalcSearch(e.target.value)}
-                  className="flex-1 min-w-[200px] px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[rgba(232,93,18,0.3)]"
-                  style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, color: 'var(--dc-p1, #F2F2F2)' }} />
+                  className={clsx('flex-1 min-w-[200px] px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[rgba(232,93,18,0.3)]', styles.refInput)} />
                 <select value={calcCategory} onChange={e => setCalcCategory(e.target.value)}
-                  className="px-3 py-1.5 text-sm outline-none"
-                  style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, color: 'var(--dc-p2, #909090)' }}>
+                  className={clsx('px-3 py-1.5 text-sm outline-none', styles.refSelect)}>
                   <option value="all">All categories</option>
                   {CALC_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -1780,36 +1746,31 @@ export default function DeveloperPage() {
                 ).map(calc => {
                   const isExpanded = expandedCalc === calc.name;
                   return (
-                    <div key={calc.name} className="rounded-xl overflow-hidden"
-                      style={{ background: 'var(--dc-s2, #1E1E1E)', border: isExpanded ? '1px solid rgba(232,93,18,0.2)' : '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+                    <div key={calc.name} className={clsx('rounded-xl overflow-hidden', styles.calcCard)} data-expanded={isExpanded}>
                       <button type="button" onClick={() => setExpandedCalc(isExpanded ? null : calc.name)}
-                        className="w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors"
-                        onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = 'var(--dc-s3)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
+                        className={clsx('w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors', styles.calcCardHeader)}>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)' }}>{calc.name}</span>
-                            <span className="chip c-nt" style={{ fontSize: 9, borderRadius: 4 }}>{calc.category}</span>
-                            <span className={calc.status === 'Implemented' ? 'chip c-gr' : 'chip c-am'} style={{ fontSize: 9, borderRadius: 4 }}>{calc.status}</span>
+                            <span className={styles.calcName}>{calc.name}</span>
+                            <span className={clsx('chip c-nt', styles.chipSm)}>{calc.category}</span>
+                            <span className={clsx(calc.status === 'Implemented' ? 'chip c-gr' : 'chip c-am', styles.chipSm)}>{calc.status}</span>
                           </div>
-                          <p style={{ fontSize: 10, color: 'var(--dc-p3, #505050)', fontFamily: 'var(--font-mono,monospace)', marginTop: 2 }} className="truncate">{calc.formula.split('\n')[0]}</p>
+                          <p className={clsx(styles.formulaPreview, styles['formulaPreview--spaced'], 'truncate')}>{calc.formula.split('\n')[0]}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <button type="button" onClick={e => { e.stopPropagation(); navigator.clipboard?.writeText(calc.formula).catch(() => {}); }}
-                            className="text-[10px] font-bold rounded px-2 py-0.5 transition-colors"
-                            style={{ background: 'var(--dc-s3, #282828)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }}
+                            className={clsx('text-[10px] font-bold rounded px-2 py-0.5 transition-colors', styles.copyFormulaBtn)}
                             title="Copy formula">
                             Copy formula
                           </button>
-                          <span style={{ color: 'var(--dc-p3, #505050)', transition: 'transform 0.15s', display: 'inline-block', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+                          <span className={styles.expandCaret}>▾</span>
                         </div>
                       </button>
                       {isExpanded && (
-                        <div className="px-5 pb-5 pt-4 space-y-3"
-                          style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', background: 'var(--dc-s1, #141414)' }}>
+                        <div className={clsx('px-5 pb-5 pt-4 space-y-3', styles.calcBody)}>
                           <div>
-                            <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>Formula</p>
-                            <pre style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, padding: '10px 14px', fontSize: 11, fontFamily: 'var(--font-mono,monospace)', color: 'var(--dc-p1, #F2F2F2)', whiteSpace: 'pre-wrap' }}>{calc.formula}</pre>
+                            <p className={clsx(styles.fieldLabel, styles['fieldLabel--formula'])}>Formula</p>
+                            <pre className={styles.formulaPre}>{calc.formula}</pre>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {[
@@ -1822,19 +1783,19 @@ export default function DeveloperPage() {
                               ['Limitations', calc.limitations],
                             ].map(([label, value]) => (
                               <div key={label as string}>
-                                <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>{label}</p>
-                                <p style={{ fontSize: 11, color: 'var(--dc-p2, #909090)', lineHeight: 1.5 }}>{value}</p>
+                                <p className={styles.fieldLabel}>{label}</p>
+                                <p className={styles.fieldValue}>{value}</p>
                               </div>
                             ))}
                           </div>
-                          <div className="flex flex-wrap gap-4 pt-2" style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+                          <div className={clsx('flex flex-wrap gap-4 pt-2', styles.calcBodyDivider)}>
                             <div>
-                              <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Related File</p>
-                              <code style={{ fontSize: 10, fontFamily: 'var(--font-mono,monospace)', color: 'var(--dc-acc2, #FF8A4C)', background: 'rgba(232,93,18,0.08)', padding: '1px 6px', borderRadius: 3 }}>{calc.file}</code>
+                              <p className={styles.fieldLabel}>Related File</p>
+                              <code className={styles.fileCode}>{calc.file}</code>
                             </div>
                             <div>
-                              <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--dc-p3, #505050)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Reference</p>
-                              <p style={{ fontSize: 11, color: 'var(--dc-p2, #909090)' }}>{calc.ref}</p>
+                              <p className={styles.fieldLabel}>Reference</p>
+                              <p className={styles.fieldValue}>{calc.ref}</p>
                             </div>
                           </div>
                         </div>
@@ -1843,7 +1804,7 @@ export default function DeveloperPage() {
                   );
                 })}
               </div>
-              <p style={{ fontSize: 11, color: 'var(--dc-p3, #505050)', marginTop: 14 }}>{CALCULATIONS.length} calculations documented · {CALCULATIONS.filter(c => c.status === 'Implemented').length} implemented</p>
+              <p className={clsx(styles.refFootnote, styles['refFootnote--spaced'])}>{CALCULATIONS.length} calculations documented · {CALCULATIONS.filter(c => c.status === 'Implemented').length} implemented</p>
             </div>
           )}
 
