@@ -3,7 +3,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
+import clsx from 'clsx';
+import styles from './ThemeCustomizerPanel.module.scss';
 import {
   ACCENT_PRESETS,
   RADIUS_PRESETS,
@@ -20,6 +23,8 @@ import {
   type FontSizeId,
   type PaletteId,
 } from '@/lib/themeCustomizer';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 export default function ThemeCustomizerPanel() {
   const [open,     setOpen]     = useState(false);
@@ -54,7 +59,7 @@ export default function ThemeCustomizerPanel() {
   }
 
   return (
-    <div ref={panelRef} style={{ position: 'relative' }}>
+    <div ref={panelRef} className={styles.wrapper}>
       {/* Trigger button */}
       <button
         type="button"
@@ -72,13 +77,7 @@ export default function ThemeCustomizerPanel() {
       {/* Panel */}
       {open && (
         <div
-          style={{
-            position: 'absolute', right: 0, top: 'calc(100% + 8px)',
-            width: 260, background: '#fff', border: '1px solid #e2e8f0',
-            borderRadius: 16, boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
-            zIndex: 9999, padding: 16,
-          }}
-          className="dark:bg-slate-800 dark:border-slate-700"
+          className={clsx(styles.panel, 'dark:bg-slate-800 dark:border-slate-700')}
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Theme</p>
@@ -94,30 +93,33 @@ export default function ThemeCustomizerPanel() {
             <div className="grid grid-cols-5 gap-1.5 mb-1">
               {(Object.entries(PALETTE_PRESETS) as [PaletteId, typeof PALETTE_PRESETS[PaletteId]][]).map(([id, p]) => {
                 const active = settings.palette === id;
+                // DYNAMIC CSS VARIABLE:
+                // Palette colors are per-preset (open-ended, admin-configurable
+                // set) and cannot be expressed as a fixed class.
+                const swatchVars: CSSVars = {
+                  '--swatch-gradient': `linear-gradient(135deg, ${p.swatches[0]} 50%, ${p.acc} 50%)`,
+                  '--swatch-active-color': p.acc,
+                };
                 return (
                   <button
                     key={id}
                     type="button"
                     title={p.label}
                     onClick={() => update({ palette: id })}
-                    style={{
-                      width: '100%', aspectRatio: '1', borderRadius: 6,
-                      background: `linear-gradient(135deg, ${p.swatches[0]} 50%, ${p.acc} 50%)`,
-                      border: active ? `2px solid ${p.acc}` : '2px solid transparent',
-                      boxShadow: active ? `0 0 0 1px ${p.acc}` : 'none',
-                      cursor: 'pointer', transition: 'all 150ms',
-                    }}
+                    className={styles.swatch}
+                    data-active={active}
+                    style={swatchVars}
                     aria-label={`Set palette to ${p.label}`}
                     aria-pressed={active}
                   />
                 );
               })}
             </div>
-            <p style={{ fontSize: 9, color: '#94a3b8', marginBottom: 2 }}>
+            <p className={styles.paletteHint}>
               {PALETTE_PRESETS[settings.palette]?.label ?? 'Default'}
             </p>
             <Link href="/admin/theme" onClick={() => setOpen(false)}
-              style={{ fontSize: 9, color: 'var(--dc-accent, #2563eb)', textDecoration: 'none', fontWeight: 700 }}>
+              className={styles.paletteLink}>
               Full theme configurator →
             </Link>
           </div>
@@ -127,27 +129,24 @@ export default function ThemeCustomizerPanel() {
             <div className="mb-4">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Accent colour</p>
               <div className="flex flex-wrap gap-2">
-                {(Object.entries(ACCENT_PRESETS) as [AccentId, typeof ACCENT_PRESETS[AccentId]][]).map(([id, preset]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    title={preset.label}
-                    onClick={() => update({ accent: id })}
-                    style={{
-                      width: 28, height: 28,
-                      borderRadius: '50%',
-                      background: preset.hex,
-                      border: settings.accent === id ? '3px solid #fff' : '2px solid transparent',
-                      boxShadow: settings.accent === id
-                        ? `0 0 0 2px ${preset.hex}`
-                        : '0 1px 3px rgba(0,0,0,0.15)',
-                      cursor: 'pointer',
-                      transition: 'box-shadow 150ms, border 150ms',
-                    }}
-                    aria-label={`Set accent to ${preset.label}`}
-                    aria-pressed={settings.accent === id}
-                  />
-                ))}
+                {(Object.entries(ACCENT_PRESETS) as [AccentId, typeof ACCENT_PRESETS[AccentId]][]).map(([id, preset]) => {
+                  // DYNAMIC CSS VARIABLE:
+                  // Accent color is per-preset and cannot be a fixed class.
+                  const accentVars: CSSVars = { '--accent-color': preset.hex };
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      title={preset.label}
+                      onClick={() => update({ accent: id })}
+                      className={styles.accentDot}
+                      data-active={settings.accent === id}
+                      style={accentVars}
+                      aria-label={`Set accent to ${preset.label}`}
+                      aria-pressed={settings.accent === id}
+                    />
+                  );
+                })}
               </div>
             </div>
           )}
@@ -161,17 +160,9 @@ export default function ThemeCustomizerPanel() {
                   key={id}
                   type="button"
                   onClick={() => update({ radius: id })}
-                  style={{
-                    flex: 1, padding: '8px 4px', fontSize: 11, fontWeight: 700,
-                    borderRadius: id === 'sharp' ? 4 : id === 'rounded' ? 14 : 8,
-                    border: settings.radius === id
-                      ? '2px solid var(--dc-accent, #2563eb)'
-                      : '1px solid #e2e8f0',
-                    background: settings.radius === id ? 'var(--dc-accent, #2563eb)14' : 'transparent',
-                    color: settings.radius === id ? 'var(--dc-accent, #2563eb)' : '#64748b',
-                    cursor: 'pointer',
-                    transition: 'all 150ms',
-                  }}
+                  className={styles.presetBtn}
+                  data-radius={id}
+                  data-active={settings.radius === id}
                   aria-pressed={settings.radius === id}
                 >
                   {preset.label}
@@ -189,18 +180,9 @@ export default function ThemeCustomizerPanel() {
                   key={id}
                   type="button"
                   onClick={() => update({ fontSize: id })}
-                  style={{
-                    flex: 1, padding: '8px 4px', fontWeight: 700,
-                    fontSize: id === 'sm' ? 11 : id === 'lg' ? 14 : 12,
-                    borderRadius: 8,
-                    border: settings.fontSize === id
-                      ? '2px solid var(--dc-accent, #2563eb)'
-                      : '1px solid #e2e8f0',
-                    background: settings.fontSize === id ? 'var(--dc-accent, #2563eb)14' : 'transparent',
-                    color: settings.fontSize === id ? 'var(--dc-accent, #2563eb)' : '#64748b',
-                    cursor: 'pointer',
-                    transition: 'all 150ms',
-                  }}
+                  className={styles.presetBtn}
+                  data-size={id}
+                  data-active={settings.fontSize === id}
                   aria-pressed={settings.fontSize === id}
                 >
                   {preset.label}
