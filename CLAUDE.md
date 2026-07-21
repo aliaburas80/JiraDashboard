@@ -3302,15 +3302,29 @@ badge was added).
 Full per-file ticket breakdown is tracked in `TODO-List.md` Section 18f (`STYLE-01`–`08`). This section
 holds the prioritized summary; TODO-List.md holds the working checklist.
 
-## 60.2 Refactor priority — Tier 1: highest-volume standalone pages (374 warnings)
+## 60.2 Refactor priority — Tier 1: highest-volume standalone pages — RESOLVED 2026-07-21
 
-`app/retro/page.tsx` is done (112 → 0) and dropped from this list.
+~~`app/retro/page.tsx` is done (112 → 0) and dropped from this list.~~
 
-1. `app/help/page.tsx` (98)
-2. `app/developer/page.tsx` (80)
-3. `app/data-quality/page.tsx` (71)
-4. `app/flow-health/page.tsx` (66)
-5. `app/forecast/page.tsx` (59)
+~~1. `app/help/page.tsx` (98)~~
+~~2. `app/developer/page.tsx` (80)~~
+~~3. `app/data-quality/page.tsx` (71)~~
+~~4. `app/flow-health/page.tsx` (66)~~
+~~5. `app/forecast/page.tsx` (59)~~
+
+**Resolved 2026-07-21.** This tier stalled for several weeks after `app/retro/page.tsx` while Tiers 2–4
+(§60.3–60.5) were completed instead. All 5 remaining files converted: `help.tsx` (98→0) and
+`developer.tsx` (80→0) each needed new/extended SCSS modules covering real interactive component state
+(accordion open/hover, search-result hover, calc-card expand) — all converted from JS `onMouseEnter`/
+`onMouseLeave` style mutation and ternary color-picking to `data-*` attributes resolved via CSS `:hover`
+and attribute selectors, per §28. `data-quality.tsx` (71→1) and `flow-health.tsx` (66→2) each had genuine
+business-logic color lookups (`BAND_COLOR`/`SEV_COLOR`, bottleneck/aging bar tones) converted to
+`data-band`/`data-severity`/`data-tone` attributes; both files' only remaining warnings are documented
+`--score-width`/`--bar-width` CSS-variable exceptions. `forecast.tsx` (59→56) turned out to already be
+mostly converted from an earlier, undocumented pass — only 4 real violations remained (an SVG
+`verticalAlign`, a `trend.color` ternary, two static `marginBottom` overrides), all fixed; the other 56
+warnings were already-legitimate exceptions. Repo-wide `react/forbid-dom-props`: 658 → 338 across 62
+files. See `TODO-List.md` `STYLE-02` for full per-file detail and branch names.
 
 ## 60.3 Refactor priority — Tier 2: `app/dashboard/*/page.tsx` (269 warnings, 8 files)
 
