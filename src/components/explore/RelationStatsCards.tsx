@@ -1,7 +1,11 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 'use client';
+import type { CSSProperties } from 'react';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { RelationStats } from '@/types/relations';
+import styles from './RelationStatsCards.module.scss';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 interface Props { stats: RelationStats }
 
@@ -9,7 +13,7 @@ function StatCard({ label, value, color, sub }: { label: string; value: string |
   return (
     <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{label}</p>
-      <p className="text-2xl font-black leading-none" style={{ color }}>{value}</p>
+      <p className={`text-2xl font-black leading-none ${styles.value}`} style={{ '--stat-color': color } as CSSVars}>{value}</p>
       {sub && <p className="text-xs text-slate-400 mt-0.5">{sub}</p>}
     </div>
   );

@@ -268,12 +268,19 @@
   color: var(--color-text-muted, #94a3b8);
 }
 
-// EXCEPTION (CLAUDE.md Rule 1): dot color is data-driven from item.status
+// Color is resolved from item.status (a fixed status union) via data-status,
+// not passed through JS — see CLAUDE.md §28.
 .dropdownDot {
   width: 7px;
   height: 7px;
   border-radius: var(--radius-full, 9999px);
   flex-shrink: 0;
+  background: var(--color-text-muted, #cbd5e1);
+
+  &[data-status='critical'] { background: var(--color-danger, #f87171); }
+  &[data-status='warning']  { background: var(--color-warning, #f59e0b); }
+  &[data-status='success']  { background: var(--color-success, #22c55e); }
+  &[data-status='info']     { background: var(--color-info, #3b82f6); }
 }
 
 // ── Mobile hamburger ───────────────────────────────────────────────────────────
