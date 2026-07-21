@@ -5,6 +5,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import LoadingState from '@/components/ui/LoadingState';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { computeTeamHealth, type TeamHealthEntry } from '@/lib/teamHealth';
@@ -155,6 +156,7 @@ function CompareBar({ label, value, maxValue, color, unit = '' }: {
 export default function TeamsPage() {
   const router = useRouter();
   const [teams, setTeams]     = useState<TeamHealthEntry[]>([]);
+  const [loading, setLoading] = useState(true);
   const [noData, setNoData]   = useState(false);
   // 09-ux §4 (silent redirect / conflated error state): a genuine fetch
   // failure previously rendered the identical "No team data available"
@@ -175,7 +177,7 @@ export default function TeamsPage() {
     if (!capacity.length) { setNoData(true); return; }
     setTeams(computeTeamHealth(capacity, flowItems));
     }
-    load().catch(() => { if (!cancelled) setLoadError(true); });
+    load().catch(() => { if (!cancelled) setLoadError(true); }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []);
 
@@ -188,6 +190,8 @@ export default function TeamsPage() {
   const criticalCount   = teams.filter(t => t.band === 'Critical').length;
 
   const avgTier: Tier = avgHealth >= 70 ? 'good' : avgHealth >= 40 ? 'warning' : 'critical';
+
+  if (loading) return <AppShell showNav><LoadingState message="Loading team health…" /></AppShell>;
 
   if (loadError) {
     return (

@@ -2,6 +2,7 @@
 import { CSSProperties, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import LoadingState from '@/components/ui/LoadingState';
 import { loadMetricsWithSource } from '@/lib/storage';
 import type { DashboardMetrics } from '@/types/metrics';
 import styles from './page.module.scss';
@@ -86,6 +87,8 @@ export default function ColumnMappingPage() {
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, [router]);
+
+  if (loading) return <AppShell showNav><LoadingState message="Loading column mapping…" /></AppShell>;
 
   const detectedCols: string[] = (metrics as any)?._rawColumns ?? [];
   const hasUpload = metrics !== null;

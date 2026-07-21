@@ -6,6 +6,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
+import LoadingState from '@/components/ui/LoadingState';
 import { loadMetricsWithSource } from '@/lib/storage';
 import {
   computePortfolioSummary,
@@ -239,7 +240,7 @@ export default function PortfolioPage() {
       </div>
     </AppShell>
   );
-  if (!summary) return null;
+  if (!summary) return <AppShell showNav><LoadingState message="Loading portfolio…" /></AppShell>;
 
   const ringOffset = RING_CIRC * (1 - summary.portfolioScore / 100);
 

@@ -6,6 +6,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
+import LoadingState from '@/components/ui/LoadingState';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 import type { DashboardMetrics } from '@/types/metrics';
@@ -359,7 +360,7 @@ export default function SprintKanbanPage() {
     return () => { cancelled = true; };
   }, [router]);
 
-  if (loading || !metrics) return null;
+  if (loading || !metrics) return <AppShell showNav><LoadingState message="Loading sprint & kanban data…" /></AppShell>;
 
   // ── Data ──────────────────────────────────────────────────────────────────
   const tp           = metrics.throughput;

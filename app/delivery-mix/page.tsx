@@ -6,6 +6,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
+import LoadingState from '@/components/ui/LoadingState';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { redirectWithLoadError } from '@/lib/loadErrorSignal';
 import { exportDeliveryMixToCsv } from '@/services/export/deliveryMixExport.service';
@@ -109,7 +110,7 @@ export default function DeliveryMixPage() {
     return () => { cancelled = true; };
   }, [router]);
 
-  if (!metrics) return null;
+  if (!metrics) return <AppShell showNav><LoadingState message="Loading delivery mix…" /></AppShell>;
 
   // ── Data ──────────────────────────────────────────────────────────────────
   const typeEntries = ((metrics.types ?? []) as TypeEntry[])
