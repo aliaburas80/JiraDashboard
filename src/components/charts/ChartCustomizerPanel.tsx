@@ -18,6 +18,7 @@ import {
   type ChartSpan,
 } from '@/lib/chartCustomizer';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import styles from './ChartCustomizerPanel.module.scss';
 
 interface Props {
   onPrefsChange: (prefs: ChartPref[]) => void;
@@ -75,15 +76,7 @@ export default function ChartCustomizerPanel({ onPrefsChange }: Props) {
 
       {/* Panel */}
       {open && (
-        <div
-          style={{
-            position: 'absolute', right: 0, top: 'calc(100% + 8px)',
-            width: 300, maxHeight: '75vh',
-            background: '#fff', border: '1px solid #e2e8f0',
-            borderRadius: 16, boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
-            zIndex: 999, display: 'flex', flexDirection: 'column',
-          }}
-        >
+        <div className={styles.panel}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 pt-4 pb-2">
             <div>
@@ -134,10 +127,8 @@ export default function ChartCustomizerPanel({ onPrefsChange }: Props) {
                       aria-pressed={pref.visible}
                       aria-label={pref.visible ? `Hide ${meta.label}` : `Show ${meta.label}`}
                     >
-                      <div className="w-9 h-5 rounded-full flex items-center transition-colors"
-                        style={{ background: pref.visible ? 'var(--dc-accent,#2563eb)' : '#cbd5e1', padding: 2 }}>
-                        <div className="w-4 h-4 rounded-full bg-white shadow-sm transition-transform"
-                          style={{ transform: pref.visible ? 'translateX(16px)' : 'translateX(0)' }} />
+                      <div className={styles.toggleTrack} data-checked={pref.visible}>
+                        <div className={styles.toggleKnob} />
                       </div>
                     </button>
                   </div>
@@ -150,14 +141,8 @@ export default function ChartCustomizerPanel({ onPrefsChange }: Props) {
                         <button key={s} type="button"
                           onClick={() => apply(chartSetSpan(prefs, pref.id, s))}
                           aria-pressed={pref.span === s}
-                          style={{
-                            fontSize: 10, fontWeight: 700, padding: '2px 8px',
-                            borderRadius: 6,
-                            border: pref.span === s ? '2px solid var(--dc-accent,#2563eb)' : '1px solid #e2e8f0',
-                            background: pref.span === s ? 'var(--dc-accent,#2563eb)14' : 'transparent',
-                            color: pref.span === s ? 'var(--dc-accent,#2563eb)' : '#94a3b8',
-                            cursor: 'pointer', transition: 'all 120ms',
-                          }}
+                          className={styles.spanBtn}
+                          data-active={pref.span === s}
                         >
                           {s === 1 ? '1/3' : s === 2 ? '2/3' : 'Full'}
                         </button>

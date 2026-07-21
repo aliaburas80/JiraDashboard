@@ -1,0 +1,28 @@
+// © 2026 Ali Abu Ras — Sprint Velocity Chart styles
+
+.completedValue {
+  color: #dc2626;
+
+  &[data-band='good']    { color: #16a34a; }
+  &[data-band='warning'] { color: #f59e0b; }
+}
+
+.barCommitted {
+  height: var(--bar-height, 4%);
+  background: #e2e8f0;
+}
+
+.barCompleted {
+  height: var(--bar-height, 4%);
+  background: #dc2626;
+
+  &[data-band='good']    { background: #16a34a; }
+  &[data-band='warning'] { background: #f59e0b; }
+}
+
+.trendValue {
+  color: #94a3b8;
+
+  &[data-trend='Improving'] { color: #16a34a; }
+  &[data-trend='Declining'] { color: #dc2626; }
+}
