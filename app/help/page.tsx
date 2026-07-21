@@ -2,8 +2,10 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import styles from './page.module.scss';
 
 interface Item { q: string; a: string | React.ReactNode; }
 interface Section { id: string; icon: string; title: string; items: Item[]; }
@@ -185,12 +187,12 @@ const SECTIONS: Section[] = [
       {
         q: 'Step-by-step export instructions',
         a: (
-          <ol style={{ paddingLeft: 18, margin: 0, color: 'var(--dc-p2, #909090)', fontSize: 12, lineHeight: 1.8 }}>
-            <li>In Jira, navigate to your project and open the <strong style={{ color: 'var(--dc-p1, #F2F2F2)', fontWeight: 700 }}>Backlog</strong> view (not the Board view).</li>
-            <li>Click the three-dot menu (<strong style={{ color: 'var(--dc-p1, #F2F2F2)', fontWeight: 700 }}>…</strong>) in the top-right corner of the backlog.</li>
-            <li>Choose <strong style={{ color: 'var(--dc-p1, #F2F2F2)', fontWeight: 700 }}>Export</strong> → <strong style={{ color: 'var(--dc-p1, #F2F2F2)', fontWeight: 700 }}>Export Excel XML</strong> (for .xls) or <strong style={{ color: 'var(--dc-p1, #F2F2F2)', fontWeight: 700 }}>Export to CSV (all fields)</strong>.</li>
+          <ol className={styles.stepList}>
+            <li>In Jira, navigate to your project and open the <strong className={styles.strongLight}>Backlog</strong> view (not the Board view).</li>
+            <li>Click the three-dot menu (<strong className={styles.strongLight}>…</strong>) in the top-right corner of the backlog.</li>
+            <li>Choose <strong className={styles.strongLight}>Export</strong> → <strong className={styles.strongLight}>Export Excel XML</strong> (for .xls) or <strong className={styles.strongLight}>Export to CSV (all fields)</strong>.</li>
             <li>If prompted to select columns, ensure the recommended columns below are included.</li>
-            <li>Save the file to your computer. The file will be named something like <em style={{ color: 'var(--dc-p2, #909090)' }}>Jira.csv</em> or <em style={{ color: 'var(--dc-p2, #909090)' }}>Jira.xls</em>.</li>
+            <li>Save the file to your computer. The file will be named something like <em className={styles.emphasisMuted}>Jira.csv</em> or <em className={styles.emphasisMuted}>Jira.xls</em>.</li>
             <li>Return to Delivery Clarity and drop the file on the upload screen.</li>
           </ol>
         ),
@@ -198,7 +200,7 @@ const SECTIONS: Section[] = [
       {
         q: 'Recommended columns to include',
         a: (
-          <ul style={{ paddingLeft: 18, margin: 0, color: 'var(--dc-p2, #909090)', fontSize: 12, lineHeight: 1.8, columns: 2 }}>
+          <ul className={styles.columnList}>
             <li>Summary</li><li>Issue Key</li><li>Issue Type</li><li>Status</li>
             <li>Priority</li><li>Assignee</li><li>Sprint</li><li>Story Points</li>
             <li>Created</li><li>Updated</li><li>Resolved</li><li>Due Date</li>
@@ -217,12 +219,12 @@ const SECTIONS: Section[] = [
       {
         q: 'Supported alias mappings',
         a: (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+          <div className={styles.tableWrap}>
+            <table className={styles.docTable}>
               <thead>
-                <tr style={{ background: 'var(--dc-s1, #141414)', borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))' }}>
-                  <th style={{ textAlign: 'left', padding: '8px 12px', color: 'var(--dc-p2, #909090)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Canonical field</th>
-                  <th style={{ textAlign: 'left', padding: '8px 12px', color: 'var(--dc-p2, #909090)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Accepted aliases</th>
+                <tr className={styles.docTableHeadRow}>
+                  <th className={styles.docTableHeadCell}>Canonical field</th>
+                  <th className={styles.docTableHeadCell}>Accepted aliases</th>
                 </tr>
               </thead>
               <tbody>
@@ -236,9 +238,9 @@ const SECTIONS: Section[] = [
                   ['Labels','Labels, Label, Tags, Tag'],['Epic Link','Epic Link, Epic, Epic Name, Epic/Theme, Parent Epic'],
                   ['Linked Issues','Linked Issues, Links, Issue Links, Outward issue link'],['Blocked','Blocked, Is Blocked, Flagged, Impediment'],
                 ].map(([canonical, aliases]) => (
-                  <tr key={canonical} style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-                    <td style={{ padding: '7px 12px', color: 'var(--dc-acc2, #FF8A4C)', fontWeight: 600, fontFamily: 'var(--font-mono, monospace)', whiteSpace: 'nowrap', fontSize: 11 }}>{canonical}</td>
-                    <td style={{ padding: '7px 12px', color: 'var(--dc-p2, #909090)', fontSize: 11 }}>{aliases}</td>
+                  <tr key={canonical} className={styles.docTableRow}>
+                    <td className={styles.docTableKeyCell}>{canonical}</td>
+                    <td className={styles.docTableCell}>{aliases}</td>
                   </tr>
                 ))}
               </tbody>
@@ -254,13 +256,13 @@ const SECTIONS: Section[] = [
       {
         q: 'Available API endpoints',
         a: (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+          <div className={styles.tableWrap}>
+            <table className={styles.docTable}>
               <thead>
-                <tr style={{ background: 'var(--dc-s1, #141414)', borderBottom: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))' }}>
-                  <th style={{ textAlign: 'left', padding: '8px 12px', color: 'var(--dc-p2, #909090)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Method</th>
-                  <th style={{ textAlign: 'left', padding: '8px 12px', color: 'var(--dc-p2, #909090)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Route</th>
-                  <th style={{ textAlign: 'left', padding: '8px 12px', color: 'var(--dc-p2, #909090)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Description</th>
+                <tr className={styles.docTableHeadRow}>
+                  <th className={styles.docTableHeadCell}>Method</th>
+                  <th className={styles.docTableHeadCell}>Route</th>
+                  <th className={styles.docTableHeadCell}>Description</th>
                 </tr>
               </thead>
               <tbody>
@@ -273,12 +275,12 @@ const SECTIONS: Section[] = [
                   ['GET','/api/backend-view','JSON overview of import statistics (total, successful, failed), up to 50 recent import logs, and a list of all API endpoints.'],
                   ['GET','/api/developer-view','Developer wiki — architecture notes, service descriptions, and data-flow documentation for contributors.'],
                 ].map(([method, route, desc]) => (
-                  <tr key={route} style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-                    <td style={{ padding: '7px 12px' }}>
-                      <span style={{ display: 'inline-block', padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700, color: '#fff', background: method === 'POST' ? '#16a34a' : '#2563eb' }}>{method}</span>
+                  <tr key={route} className={styles.docTableRow}>
+                    <td className={styles.docTableCellTight}>
+                      <span className={styles.methodBadge} data-method={method}>{method}</span>
                     </td>
-                    <td style={{ padding: '7px 12px', color: 'var(--dc-acc2, #FF8A4C)', fontFamily: 'var(--font-mono, monospace)', fontSize: 11, whiteSpace: 'nowrap' }}>{route}</td>
-                    <td style={{ padding: '7px 12px', color: 'var(--dc-p2, #909090)', fontSize: 11, lineHeight: 1.6 }}>{desc}</td>
+                    <td className={styles.docTableKeyCell}>{route}</td>
+                    <td className={styles.docTableDescCell}>{desc}</td>
                   </tr>
                 ))}
               </tbody>
@@ -337,17 +339,17 @@ const SECTIONS: Section[] = [
       {
         q: 'Where does my data come from — and how do I know?',
         a: (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12 }}>
-            <p style={{ color: 'var(--dc-p2, #909090)', margin: 0 }}>Every page shows a <strong style={{ color: 'var(--dc-p1, #F2F2F2)', fontWeight: 700 }}>data source badge</strong> in the top navigation bar indicating where the current data came from:</p>
-            <ul style={{ paddingLeft: 16, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#FF8A4C' }}><SvgIcon name="cloud" size={12} /> S3</span> — loaded or cached from Amazon S3</li>
-              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#60a5fa' }}><SvgIcon name="cloud" size={12} /> Azure</span> — loaded or cached from Azure Blob Storage</li>
-              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#4ade80' }}><SvgIcon name="globe" size={12} /> GCP</span> — loaded or cached from Google Cloud Storage</li>
-              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 700, color: 'var(--dc-p2, #909090)' }}><SvgIcon name="save" size={12} /> Local cache</span> — cloud provider is set but data served from local cache (no re-fetch needed)</li>
-              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#c084fc' }}><SvgIcon name="upload" size={12} /> Jira upload</span> — data came from a fresh Jira CSV upload in this browser session</li>
-              <li style={{ color: 'var(--dc-p2, #909090)' }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#fcd34d' }}><SvgIcon name="warning" size={12} /> localStorage fallback</span> — bucket/server metrics were unavailable; data came from this browser&apos;s saved fallback copy</li>
+          <div className={styles.stackSm}>
+            <p className={styles.mutedPara}>Every page shows a <strong className={styles.strongLight}>data source badge</strong> in the top navigation bar indicating where the current data came from:</p>
+            <ul className={styles.plainList}>
+              <li className={styles.mutedListItem}><span className={styles.providerLabel} data-provider="s3"><SvgIcon name="cloud" size={12} /> S3</span> — loaded or cached from Amazon S3</li>
+              <li className={styles.mutedListItem}><span className={styles.providerLabel} data-provider="azure"><SvgIcon name="cloud" size={12} /> Azure</span> — loaded or cached from Azure Blob Storage</li>
+              <li className={styles.mutedListItem}><span className={styles.providerLabel} data-provider="gcp"><SvgIcon name="globe" size={12} /> GCP</span> — loaded or cached from Google Cloud Storage</li>
+              <li className={styles.mutedListItem}><span className={styles.providerLabel}><SvgIcon name="save" size={12} /> Local cache</span> — cloud provider is set but data served from local cache (no re-fetch needed)</li>
+              <li className={styles.mutedListItem}><span className={styles.providerLabel} data-provider="jira"><SvgIcon name="upload" size={12} /> Jira upload</span> — data came from a fresh Jira CSV upload in this browser session</li>
+              <li className={styles.mutedListItem}><span className={styles.providerLabel} data-provider="fallback"><SvgIcon name="warning" size={12} /> localStorage fallback</span> — bucket/server metrics were unavailable; data came from this browser&apos;s saved fallback copy</li>
             </ul>
-            <p style={{ color: 'var(--dc-p2, #909090)', margin: 0, marginTop: 4 }}>When data is actively loading from the cloud, a blue <strong style={{ color: 'var(--dc-p1, #F2F2F2)', fontWeight: 700 }}>loading banner</strong> appears at the top of the page: <em>&ldquo;Loading data from Amazon S3…&rdquo;</em></p>
+            <p className={clsx(styles.mutedPara, styles['mutedPara--spaced'])}>When data is actively loading from the cloud, a blue <strong className={styles.strongLight}>loading banner</strong> appears at the top of the page: <em>&ldquo;Loading data from Amazon S3…&rdquo;</em></p>
           </div>
         ),
       },
@@ -469,9 +471,9 @@ const SECTIONS: Section[] = [
       {
         q: 'What sheets are included in the main Excel export (17 sheets)?',
         a: (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11 }}>
-            <p style={{ fontWeight: 700, color: 'var(--dc-p1, #F2F2F2)', margin: '0 0 6px' }}>Main workbook — triggered from the Export button or Overview page:</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <div className={styles.stackXs}>
+            <p className={styles.sectionLabel}>Main workbook — triggered from the Export button or Overview page:</p>
+            <div className={styles.tightStack}>
               {[
                 ['01 Executive Summary','Health score, completion rate, velocity, top 5 recommendations, executive narrative'],
                 ['02 Project Health','9 health metrics with scores and interpretation'],
@@ -491,9 +493,9 @@ const SECTIONS: Section[] = [
                 ['16 Metric Dictionary','Formula for every metric in the workbook — the "how it\'s calculated" reference'],
                 ['17 Raw Data Reference','Complete issue-level data export with all fields'],
               ].map(([sheet, desc]) => (
-                <div key={sheet} style={{ display: 'flex', gap: 10 }}>
-                  <span style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: 'var(--dc-p2, #909090)', flexShrink: 0, width: 176, fontSize: 10 }}>{sheet}</span>
-                  <span style={{ color: 'var(--dc-p3, #505050)', fontSize: 10 }}>{desc}</span>
+                <div key={sheet} className={styles.sheetRow}>
+                  <span className={clsx(styles.sheetName, styles['sheetName--wide'])}>{sheet}</span>
+                  <span className={styles.sheetDesc}>{desc}</span>
                 </div>
               ))}
             </div>
@@ -503,9 +505,9 @@ const SECTIONS: Section[] = [
       {
         q: 'What sheets are in the Work Item Explorer Excel export (5 sheets)?',
         a: (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11 }}>
-            <p style={{ fontWeight: 700, color: 'var(--dc-p1, #F2F2F2)', margin: '0 0 6px' }}>Explorer workbook — triggered from the Export button on /explore after a graph is loaded:</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <div className={styles.stackXs}>
+            <p className={styles.sectionLabel}>Explorer workbook — triggered from the Export button on /explore after a graph is loaded:</p>
+            <div className={styles.tightStack}>
               {[
                 ['01 Summary','Focus key, delivery stats, confidence score, largest unfinished branch, insights'],
                 ['02 All Issues','All connected nodes + orphans with 17 columns: key, summary, type, status, health, blocked, risk-path, role'],
@@ -513,9 +515,9 @@ const SECTIONS: Section[] = [
                 ['04 Orphans','Orphan items only (no epic or parent link)'],
                 ['05 Insights','Generated insight bullets for the explored issue'],
               ].map(([sheet, desc]) => (
-                <div key={sheet} style={{ display: 'flex', gap: 10 }}>
-                  <span style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: 'var(--dc-p2, #909090)', flexShrink: 0, width: 112, fontSize: 10 }}>{sheet}</span>
-                  <span style={{ color: 'var(--dc-p3, #505050)', fontSize: 10 }}>{desc}</span>
+                <div key={sheet} className={styles.sheetRow}>
+                  <span className={clsx(styles.sheetName, styles['sheetName--narrow'])}>{sheet}</span>
+                  <span className={styles.sheetDesc}>{desc}</span>
                 </div>
               ))}
             </div>
@@ -667,8 +669,6 @@ const HERO_CARDS = [
 function AccordionItem({ item, isOpen, onToggle, query }: {
   item: Item; isOpen: boolean; onToggle: () => void; query?: string;
 }) {
-  const [hovered, setHovered] = useState(false);
-
   function highlight(text: string) {
     if (!query) return <>{text}</>;
     const idx = text.toLowerCase().indexOf(query.toLowerCase());
@@ -676,7 +676,7 @@ function AccordionItem({ item, isOpen, onToggle, query }: {
     return (
       <>
         {text.slice(0, idx)}
-        <mark style={{ background: 'rgba(232,93,18,0.3)', color: 'var(--dc-p1, #F2F2F2)', borderRadius: 2, padding: '0 2px' }}>
+        <mark className={styles.searchHighlight}>
           {text.slice(idx, idx + query.length)}
         </mark>
         {text.slice(idx + query.length)}
@@ -685,38 +685,25 @@ function AccordionItem({ item, isOpen, onToggle, query }: {
   }
 
   return (
-    <div style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+    <div className={styles.accordionItemWrap} data-open={isOpen}>
       <button
-        style={{
-          width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
-          gap: 10, padding: '5px 8px', margin: '2px 0',
-          background: hovered ? 'rgba(255,255,255,0.04)' : 'transparent',
-          border: 'none', cursor: 'pointer', transition: 'background 120ms', textAlign: 'left',
-          borderRadius: 6,
-        }}
+        className={styles.accordionButton}
         onClick={onToggle}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
         aria-expanded={isOpen}
       >
-        <span style={{ fontSize: 11, fontWeight: 600, color: isOpen ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p2, #909090)', lineHeight: 1.5, flex: 1 }}>
+        <span className={styles.accordionQuestion}>
           {highlight(item.q)}
         </span>
-        <span style={{
-          color: isOpen ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p2, #909090)',
-          fontSize: 10, flexShrink: 0, marginTop: 2,
-          display: 'inline-block',
-          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms',
-        }} aria-hidden>▾</span>
+        <span className={styles.accordionCaret} aria-hidden>▾</span>
       </button>
       {isOpen && (
-        <div style={{ padding: '4px 8px 12px 8px' }}>
+        <div className={styles.accordionBody}>
           {typeof item.a === 'string' ? (
-            <p style={{ fontSize: 13, color: 'var(--dc-p2, #909090)', lineHeight: 1.75, margin: 0 }}>
+            <p className={styles.accordionAnswer}>
               {highlight(item.a)}
             </p>
           ) : (
-            <div style={{ fontSize: 13, color: 'var(--dc-p2, #909090)', lineHeight: 1.75 }}>{item.a}</div>
+            <div className={styles.accordionAnswerNode}>{item.a}</div>
           )}
         </div>
       )}
@@ -732,44 +719,22 @@ function SectionCard({ section, expandedItem, onToggleItem, forceOpen = false, q
   const [open, setOpen] = useState(false);
   const isOpen = forceOpen || open;
 
-  const containerStyle = isOpen ? {
-    background: 'rgba(232,93,18,0.03)',
-    border: '1px solid rgba(232,93,18,0.14)',
-    borderLeft: '2px solid var(--dc-acc2, #FF8A4C)',
-    borderRadius: '0 9px 9px 0' as const,
-    overflow: 'hidden' as const,
-  } : {
-    background: 'var(--dc-s2, #1E1E1E)',
-    border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
-    borderRadius: 9,
-    overflow: 'hidden' as const,
-  };
-
   return (
-    <div style={containerStyle}>
+    <div className={styles.sectionCard} data-open={isOpen}>
       <button
-        style={{
-          width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px',
-          background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'background 120ms',
-        }}
-        onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = 'var(--dc-s3, #282828)'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+        className={styles.sectionCardButton}
         onClick={() => setOpen(v => !v)}
         aria-expanded={isOpen}
       >
-        <SvgIcon name={section.icon} size={18} style={{ color: isOpen ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p2, #909090)' }} />
-        <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: isOpen ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p1, #F2F2F2)' }}>{section.title}</span>
-        <span style={{ fontSize: 10, color: 'var(--dc-p2, #909090)', flexShrink: 0, marginRight: 6 }}>
+        <SvgIcon name={section.icon} size={18} className={styles.sectionCardIcon} />
+        <span className={styles.sectionCardTitle}>{section.title}</span>
+        <span className={styles.sectionCardCount}>
           {section.items.length} {section.items.length === 1 ? 'topic' : 'topics'}
         </span>
-        <span style={{
-          color: isOpen ? 'var(--dc-acc2, #FF8A4C)' : 'var(--dc-p2, #909090)',
-          fontSize: 10, flexShrink: 0,
-          display: 'inline-block', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms',
-        }} aria-hidden>▾</span>
+        <span className={styles.sectionCardCaret} aria-hidden>▾</span>
       </button>
       {isOpen && (
-        <div style={{ borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', padding: '4px 8px 8px' }}>
+        <div className={styles.sectionCardBody}>
           {section.items.map((item, i) => {
             const key = `${section.id}-${i}`;
             return (
@@ -815,48 +780,46 @@ export default function HelpPage() {
 
   return (
     <AppShell showNav>
-      <div style={{ maxWidth: 760, margin: '0 auto', paddingBottom: 48 }}>
+      <div className={styles.page}>
 
         {/* Hero */}
-        <div style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 16, padding: '28px 28px 24px', marginBottom: 24 }}>
-          <span className="chip c-acc" style={{ borderRadius: 100, fontSize: 9, letterSpacing: '0.08em', display: 'inline-flex' }}>HELP &amp; DOCS</span>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--dc-p1, #F2F2F2)', letterSpacing: -0.5, margin: '8px 0 6px' }}>
+        <div className={styles.hero}>
+          <span className={clsx('chip c-acc', styles.heroChip)}>HELP &amp; DOCS</span>
+          <h1 className={styles.heroTitle}>
             Help &amp; Documentation
           </h1>
-          <p style={{ fontSize: 13, color: 'var(--dc-p2, #909090)', margin: '0 0 20px', lineHeight: 1.6 }}>
+          <p className={styles.heroDesc}>
             Everything you need to get value from Delivery Clarity.
           </p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <div className={styles.heroStats}>
             {[
               { label: 'Topics',   value: String(totalTopics) },
               { label: 'Sections', value: String(SECTIONS.length) },
               { label: 'Groups',   value: String(SECTION_GROUPS.length) },
             ].map(stat => (
-              <div key={stat.label} style={{ background: 'var(--dc-s1, #141414)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 8, padding: '10px 18px', textAlign: 'center', minWidth: 72 }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--dc-acc2, #FF8A4C)', lineHeight: 1, fontFamily: 'var(--font-mono, monospace)' }}>{stat.value}</div>
-                <div style={{ fontSize: 10, color: 'var(--dc-p3, #505050)', marginTop: 3 }}>{stat.label}</div>
+              <div key={stat.label} className={styles.heroStatCard}>
+                <div className={styles.heroStatValue}>{stat.value}</div>
+                <div className={styles.heroStatLabel}>{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Search */}
-        <div id="tour-section-help-search" style={{ position: 'relative', marginBottom: 20 }}>
-          <SvgIcon name="search" size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--dc-p3, #505050)', pointerEvents: 'none' }} />
+        <div id="tour-section-help-search" className={styles.searchWrap}>
+          <SvgIcon name="search" size={14} className={styles.searchIcon} />
           <input
             type="search"
             placeholder="Search help topics..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ width: '100%', boxSizing: 'border-box', padding: '11px 14px 11px 40px', fontSize: 13, color: 'var(--dc-p1, #F2F2F2)', background: 'var(--dc-s2, #1E1E1E)', border: '1.5px solid var(--dc-bdr, rgba(255,255,255,0.07))', borderRadius: 12, outline: 'none' }}
-            onFocus={e => { e.target.style.borderColor = 'rgba(232,93,18,0.5)'; e.target.style.boxShadow = '0 0 0 3px rgba(232,93,18,0.12)'; }}
-            onBlur={e  => { e.target.style.borderColor = 'var(--dc-bdr, rgba(255,255,255,0.07))'; e.target.style.boxShadow = 'none'; }}
+            className={styles.searchInput}
           />
         </div>
 
         {/* 4 Hero Entry Cards */}
         {!isSearching && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginBottom: 20 }}>
+          <div className={styles.heroCardGrid}>
             {HERO_CARDS.map(card => {
               const isActive = card.groupIds.includes(activeGroupId);
               const pills = card.groupIds
@@ -869,28 +832,17 @@ export default function HelpPage() {
                 <button
                   key={card.title}
                   onClick={() => setActiveGroupId(card.groupIds[0])}
-                  style={{
-                    background: isActive ? 'var(--dc-s3, #282828)' : 'var(--dc-s2, #1E1E1E)',
-                    border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
-                    borderTop: '2px solid var(--dc-acc, #E85D12)',
-                    borderRadius: 10, padding: '16px 18px', textAlign: 'left', cursor: 'pointer',
-                    transition: 'all 150ms',
-                    boxShadow: isActive ? '0 0 0 1px rgba(232,93,18,0.18)' : 'none',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--dc-s3, #282828)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = isActive ? 'var(--dc-s3, #282828)' : 'var(--dc-s2, #1E1E1E)'; }}
+                  className={styles.heroCard}
+                  data-active={isActive}
                 >
-                  <SvgIcon name={card.icon} size={22} style={{ color: 'var(--dc-acc2, #FF8A4C)', marginBottom: 6 }} />
-                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--dc-p1, #F2F2F2)', marginBottom: 4 }}>{card.title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--dc-p2, #909090)', marginBottom: 10, lineHeight: 1.5 }}>{card.desc}</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                  <SvgIcon name={card.icon} size={22} className={styles.heroCardIcon} />
+                  <div className={styles.heroCardTitle}>{card.title}</div>
+                  <div className={styles.heroCardDesc}>{card.desc}</div>
+                  <div className={styles.heroCardPills}>
                     {pills.map(t => (
                       <span
                         key={t}
-                        className="chip c-nt"
-                        style={{ borderRadius: 999, cursor: 'default', transition: 'all 120ms' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(232,93,18,0.12)'; e.currentTarget.style.color = 'var(--dc-acc2, #FF8A4C)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = ''; }}
+                        className={clsx('chip c-nt', styles.heroCardPill)}
                       >{t}</span>
                     ))}
                   </div>
@@ -902,21 +854,15 @@ export default function HelpPage() {
 
         {/* Group Filter Pills */}
         {!isSearching && (
-          <div id="tour-section-help-pills" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20 }}>
+          <div id="tour-section-help-pills" className={styles.groupPills}>
             {[{ id: 'all', label: 'All topics', icon: 'book' }, ...SECTION_GROUPS].map(g => {
               const isActive = activeGroupId === g.id;
               return (
                 <button
                   key={g.id}
                   onClick={() => setActiveGroupId(g.id)}
-                  className={isActive ? 'chip c-acc' : 'chip c-nt'}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 4,
-                    padding: '4px 12px', borderRadius: 100, cursor: 'pointer',
-                    fontSize: 11, fontWeight: isActive ? 700 : 500,
-                    border: isActive ? 'none' : '1px solid var(--dc-bdr, rgba(255,255,255,0.07))',
-                    transition: 'all 150ms',
-                  }}
+                  className={clsx(isActive ? 'chip c-acc' : 'chip c-nt', styles.groupPill)}
+                  data-active={isActive}
                 >
                   <SvgIcon name={g.icon} size={11} />
                   {g.label}
@@ -928,13 +874,13 @@ export default function HelpPage() {
 
         {/* Sections */}
         {visibleSections.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--dc-p3, #505050)' }}>
-            <SvgIcon name="search" size={40} style={{ margin: '0 auto 12px', color: 'var(--dc-p3, #505050)' }} />
-            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--dc-p2, #909090)', marginBottom: 4 }}>No results for &ldquo;{search}&rdquo;</div>
-            <div style={{ fontSize: 13 }}>Try a different keyword or clear the search box.</div>
+          <div className={styles.emptyState}>
+            <SvgIcon name="search" size={40} className={styles.emptyStateIcon} />
+            <div className={styles.emptyStateTitle}>No results for &ldquo;{search}&rdquo;</div>
+            <div className={styles.emptyStateBody}>Try a different keyword or clear the search box.</div>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className={styles.sectionList}>
             {visibleSections.map(section => (
               <SectionCard
                 key={section.id} section={section}
@@ -946,14 +892,14 @@ export default function HelpPage() {
         )}
 
         {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: 40, paddingTop: 24, borderTop: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+        <div className={styles.footer}>
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: 'var(--dc-acc, #E85D12)', color: '#fff', fontSize: 12, fontWeight: 700, borderRadius: 8, border: 'none', cursor: 'pointer' }}
+            className={styles.backToTopBtn}
           >
             ↑ Back to Top
           </button>
-          <p style={{ fontSize: 11, color: 'var(--dc-p3, #505050)', marginTop: 14 }}>
+          <p className={styles.footerNote}>
             Delivery Clarity v4.6 · © 2026 Ali Abu Ras · ali.aburas@deliveryclarity.app
           </p>
         </div>
