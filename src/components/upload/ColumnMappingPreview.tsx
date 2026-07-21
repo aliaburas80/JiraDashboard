@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { ColumnMappingResult, ColumnStatus } from '@/types/columnMapping';
+import styles from './ColumnMappingPreview.module.scss';
 
 const STATUS_CONFIG: Record<ColumnStatus, { label: string; chip: string; icon: string }> = {
   mapped:       { label: 'Mapped',        chip: 'bg-green-100 text-green-800 border-green-200', icon: 'check' },
@@ -29,11 +30,11 @@ const STATUS_CONFIG: Record<ColumnStatus, { label: string; chip: string; icon: s
 // removes the vocabulary collision without touching either score's values.
 // See docs/product-audit/08-metric-dictionary.md CP3-019.
 function ScoreBadge({ score }: { score: number }) {
-  const color = score >= 80 ? '#16a34a' : score >= 60 ? '#d97706' : '#dc2626';
+  const band = score >= 80 ? 'strong' : score >= 60 ? 'good' : 'weak';
   const label = score >= 80 ? 'Strong Match' : score >= 60 ? 'Good Match' : score >= 40 ? 'Partial Match' : 'Weak Match';
   return (
-    <div className="flex flex-col items-center justify-center w-16 h-16 rounded-full border-4 shrink-0" style={{ borderColor: color }}>
-      <span className="text-lg font-black leading-none" style={{ color }}>{score}</span>
+    <div className={`flex flex-col items-center justify-center w-16 h-16 rounded-full border-4 shrink-0 ${styles.scoreRing}`} data-band={band}>
+      <span className={`text-lg font-black leading-none ${styles.scoreValue}`} data-band={band}>{score}</span>
       <span className="text-[9px] font-bold text-slate-400 text-center leading-tight">{label}</span>
     </div>
   );

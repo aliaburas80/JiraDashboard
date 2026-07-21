@@ -3,8 +3,12 @@
 // Uses a React portal so the tooltip escapes any overflow:hidden parent.
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import type { CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import type { MetricConfidence, ConfidenceBand } from '@/types/metricConfidence';
+import styles from './MetricConfidenceBadge.module.scss';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 const BAND_STYLE: Record<ConfidenceBand, { chip: string; dot: string; label: string }> = {
   High:       { chip: 'bg-green-50 text-green-700 border-green-200',    dot: 'bg-green-500',  label: 'High'       },
@@ -65,14 +69,10 @@ export default function MetricConfidenceBadge({ confidence, size = 'sm', showLab
       {/* Portal tooltip — renders at document.body, escapes all overflow:hidden */}
       {open && mounted && createPortal(
         <div
-          style={{
-            position:  'absolute',
-            top:       coords.top - 8,
-            left:      coords.left,
-            transform: 'translate(-50%, -100%)',
-            zIndex:    9999,
-            pointerEvents: 'none',
-          }}
+          className={styles.tooltipWrap}
+          // DYNAMIC CSS VARIABLE: position tracks the trigger button's live
+          // bounding rect, measured on hover/focus.
+          style={{ '--tooltip-top': `${coords.top - 8}px`, '--tooltip-left': `${coords.left}px` } as CSSVars}
         >
           <div className="bg-slate-900 text-white rounded-xl px-3 py-2.5 shadow-2xl w-64">
             <div className="flex items-center gap-2 mb-1.5">
@@ -89,15 +89,7 @@ export default function MetricConfidenceBadge({ confidence, size = 'sm', showLab
             )}
           </div>
           {/* Arrow pointing down */}
-          <div
-            className="mx-auto"
-            style={{
-              width: 0, height: 0,
-              borderLeft:  '6px solid transparent',
-              borderRight: '6px solid transparent',
-              borderTop:   '6px solid #0f172a',
-            }}
-          />
+          <div className={styles.tooltipArrow} />
         </div>,
         document.body,
       )}

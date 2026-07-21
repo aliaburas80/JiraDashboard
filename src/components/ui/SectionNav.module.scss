@@ -1,0 +1,14 @@
+// © 2026 Ali Abu Ras — SectionNav styles
+// Section color is an arbitrary caller-supplied value per page (CLAUDE.md §14.2).
+
+.label {
+  color: var(--section-color);
+}
+
+.dot {
+  background-color: var(--section-bg);
+
+  &[data-active='true'] {
+    box-shadow: var(--section-shadow);
+  }
+}
