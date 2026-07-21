@@ -2,7 +2,11 @@
 'use client';
 
 import type { CSSProperties, ReactNode } from 'react';
+import clsx from 'clsx';
 import { SvgIcon } from '@/components/ui/SvgIcon';
+import styles from './AdminConsoleLayout.module.scss';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 export interface AdminConsoleStat {
   icon: string;
@@ -33,12 +37,12 @@ export function AdminConsoleLayout({
 }) {
   return (
     <>
-      <header className="mb-7 rounded-[14px] px-5 py-4" style={{ background: 'var(--color-surface, #fff)', border: '1px solid var(--color-border, #e2e8f0)', boxShadow: '0 1px 4px rgb(0 0 0 / 6%)' }}>
+      <header className={styles.header}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-2 text-sm font-bold" style={{ color: 'var(--color-text-secondary, #64748b)' }}>
+          <div className={clsx('flex items-center gap-2 text-sm font-bold', styles.breadcrumb)}>
             <span>Admin Console</span>
-            <span style={{ color: 'var(--color-border, #e2e8f0)' }}>/</span>
-            <span style={{ color: 'var(--color-text-primary, #0f172a)' }}>{title}</span>
+            <span className={styles.breadcrumbSep}>/</span>
+            <span className={styles.breadcrumbCurrent}>{title}</span>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             {actions}
@@ -48,31 +52,42 @@ export function AdminConsoleLayout({
 
       <section id={headerId} className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--color-text-primary, #0f172a)' }}>{title}</h1>
-          <p className="mt-2 text-base" style={{ color: 'var(--color-text-secondary, #64748b)' }}>{description}</p>
+          <h1 className={clsx('text-3xl font-black tracking-tight', styles.pageTitle)}>{title}</h1>
+          <p className={clsx('text-base', styles.pageDescription)}>{description}</p>
         </div>
-        <div className="chip c-gr" style={{ borderRadius: 100, fontSize: 13, padding: '6px 14px', fontWeight: 800 }}>
-          <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: '#22C55E', marginRight: 6 }} />
+        <div className={clsx('chip c-gr', styles.statusChip)}>
+          <span className={styles.statusDot} />
           {statusLabel}
         </div>
       </section>
 
       {stats.length > 0 && (
         <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Administration summary">
-          {stats.map(card => (
-            <article key={card.label} className="min-h-[88px] rounded-[14px] p-4" style={{ background: 'var(--color-surface, #fff)', border: '1px solid var(--color-border, #e2e8f0)', boxShadow: '0 1px 4px rgb(0 0 0 / 6%)' }}>
-              <div className="flex items-center gap-4">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-lg" style={card.toneStyle ?? { background: 'var(--color-subtle, #f1f5f9)', color: 'var(--color-text-secondary, #64748b)' }}>
-                  <SvgIcon name={card.icon} size={18} />
-                </span>
-                <span className="min-w-0">
-                  <strong className="block truncate text-2xl font-black tracking-tight" style={{ color: card.color ?? 'var(--color-text-primary, #0f172a)' }}>{card.value}</strong>
-                  <span className="mt-1 block truncate text-sm font-bold" style={{ color: 'var(--color-text-secondary, #64748b)' }}>{card.label}</span>
-                  <span className="mt-1 block truncate text-xs font-semibold" style={{ color: 'var(--color-text-muted, #94a3b8)' }}>{card.note}</span>
-                </span>
-              </div>
-            </article>
-          ))}
+          {stats.map(card => {
+            // DYNAMIC CSS VARIABLE:
+            // Each admin page supplies its own arbitrary icon tone / value
+            // color per stat card; this cannot be a fixed class. Keys are
+            // omitted entirely (rather than set to empty strings) so the
+            // SCSS var() fallback applies when a card doesn't set them.
+            const toneVars: CSSVars = {};
+            if (card.toneStyle?.background) toneVars['--tone-bg'] = String(card.toneStyle.background);
+            if (card.toneStyle?.color) toneVars['--tone-color'] = String(card.toneStyle.color);
+            if (card.color) toneVars['--value-color'] = card.color;
+            return (
+              <article key={card.label} className={clsx('min-h-[88px] rounded-[14px] p-4', styles.statCard)}>
+                <div className="flex items-center gap-4">
+                  <span className={clsx('grid h-11 w-11 shrink-0 place-items-center rounded-xl text-lg', styles.statIcon)} style={toneVars}>
+                    <SvgIcon name={card.icon} size={18} />
+                  </span>
+                  <span className="min-w-0">
+                    <strong className={clsx('block truncate text-2xl font-black tracking-tight', styles.statValue)} style={toneVars}>{card.value}</strong>
+                    <span className={clsx('mt-1 block truncate text-sm font-bold', styles.statLabel)}>{card.label}</span>
+                    <span className={clsx('mt-1 block truncate text-xs font-semibold', styles.statNote)}>{card.note}</span>
+                  </span>
+                </div>
+              </article>
+            );
+          })}
         </section>
       )}
 
