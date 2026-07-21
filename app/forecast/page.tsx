@@ -3,6 +3,7 @@
 'use client';
 import { CSSProperties, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import LoadingState from '@/components/ui/LoadingState';
 import { SvgIcon } from '@/components/ui/SvgIcon';
@@ -587,7 +588,7 @@ export default function ForecastPage() {
                 </div>
                 {result.status === 'complete' ? (
                   <p className={styles.bannerBody}>
-                    All {result.totalIssues.toLocaleString()} issues are complete. <SvgIcon name="party" size={14} style={{ verticalAlign: '-2px' }} />
+                    All {result.totalIssues.toLocaleString()} issues are complete. <SvgIcon name="party" size={14} className={styles.partyIcon} />
                   </p>
                 ) : (
                   <p className={styles.bannerBody}>
@@ -834,7 +835,7 @@ export default function ForecastPage() {
                 <div className={styles.chartLegend}>
                   <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#FF8A4C' } as CSSProperties} /> Last 3</span>
                   <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#323232' } as CSSProperties} /> Earlier</span>
-                  <span className={styles.legendItem} style={{ color: trend.color }}><SvgIcon name={trend.icon} size={12} /> {trend.label}</span>
+                  <span className={styles.legendItem} data-trend={result.velocityTrend}><SvgIcon name={trend.icon} size={12} /> {trend.label}</span>
                 </div>
               </div>
               <VelocityChart points={result.sprintPoints} avg={result.avgThroughput} />
@@ -1033,7 +1034,7 @@ export default function ForecastPage() {
             {/* ── Next Quarter Plan ── */}
             <div className={styles.chartCard} style={{ '--anim-delay': '0.34s' } as CSSProperties}>
               <h2 className={styles.chartTitle}><SvgIcon name="calendar" size={18} /> Next Quarter Plan</h2>
-              <p className={styles.chartSubtitle} style={{ marginBottom: 16 }}>
+              <p className={clsx(styles.chartSubtitle, styles['chartSubtitle--mb16'])}>
                 At {result.avgThroughput} items/sprint average, how much of the remaining backlog can fit within one quarter (6 sprints)?
               </p>
               {result.avgThroughput > 0 ? (
@@ -1090,7 +1091,7 @@ export default function ForecastPage() {
             {/* ── Recommendations ── */}
             <div className={styles.chartCard} style={{ '--anim-delay': '0.40s' } as CSSProperties}>
               <h2 className={styles.chartTitle}><SvgIcon name="lightbulb" size={18} /> Recommendations</h2>
-              <p className={styles.chartSubtitle} style={{ marginBottom: 12 }}>
+              <p className={clsx(styles.chartSubtitle, styles['chartSubtitle--mb12'])}>
                 Actionable steps to improve forecast confidence and reduce delivery risk.
               </p>
               <div className={styles.recList}>
