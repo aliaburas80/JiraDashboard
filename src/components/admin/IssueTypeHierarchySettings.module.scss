@@ -3,3 +3,23 @@
 .colorSwatch {
   background: var(--swatch-color, transparent);
 }
+
+// Issue-type row/icon-tile/label-input/preset-swatch backgrounds and
+// borders are all per-type, admin-freely-chosen colors (CLAUDE.md §14.2).
+.typeRow {
+  background: var(--type-bg);
+  border-color: var(--type-border);
+}
+
+.typeIconTile {
+  background: #fff;
+  border: 1px solid var(--type-border);
+}
+
+.typeLabelInput {
+  color: var(--type-color);
+}
+
+.presetSwatch {
+  background: var(--preset-color);
+}
