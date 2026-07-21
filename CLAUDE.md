@@ -2726,6 +2726,14 @@ ESLint must enforce, where technically possible:
 
 The project should use a custom local rule for the controlled `style` exception when standard rules cannot express it.
 
+**Implemented 2026-07-22 (`STYLE-09`):** `eslint-local-rules/index.js`'s
+`local-rules/forbid-non-css-var-style` is this rule — it replaced the standard
+`react/forbid-dom-props` config for `style` (which could only detect the prop's presence,
+not inspect its contents) with real AST resolution: only flags `style` on native/intrinsic
+elements when the resolved object (literal, same-file variable, or same-file helper
+function) contains a key that isn't `--`-prefixed, or contains object spread. See CLAUDE.md
+§60.5a and `TODO-List.md` `STYLE-09` for the full writeup.
+
 ---
 
 # 50. Stylelint Enforcement
@@ -3497,14 +3505,32 @@ single-file conversion — or silently restructuring the merge to dodge the lint
 check without fixing the underlying architectural tension. Left as accepted, documented
 technical debt pending a dedicated design decision, not silently converted.
 
-**Confirmed separately, not fixed in this pass:** the `app/**` standalone pages Tier 4
-(§60.5) claimed resolved down to ~30 warnings on 2026-07-19 have drifted back up to ~195
-warnings across the same files (`forecast` 56, `sprint-kanban` 22, `charts` 13, `portfolio`
-13, `customer` 12, `delivery-mix` 11, `roadmap` 9, and smaller amounts in a dozen more) —
-new feature work landed on these pages since Tier 4 closed and reintroduced inline styles.
-Explicitly deferred as a separate follow-up per an explicit owner decision (finish Tier 5
-first) — not part of this closure. Repo-wide `react/forbid-dom-props`: 338 → 217 across
-62 → 50 files.
+**What looked like `app/**` Tier 4 drift turned out to be a false alarm (`STYLE-09`,
+resolved 2026-07-22).** The `app/**` standalone pages Tier 4 (§60.5) claimed resolved down
+to ~30 warnings on 2026-07-19 showed ~195 warnings on a fresh raw count (`forecast` 56,
+`sprint-kanban` 22, `charts` 13, `portfolio` 13, `customer` 12, `delivery-mix` 11, `roadmap`
+9, plus smaller amounts elsewhere) — initially assumed to mean new feature work had
+reintroduced real inline styles. A full manual audit of every flagged line in all of these
+files found every one was already a correctly-implemented `--*`-only CSS-variable exception;
+the raw count simply scales with how much data renders (more sprints/epics/KPIs means more
+per-item animated bars, each needing its own delay/color variable) — not with real debt.
+The actual problem was tooling, not application code: `react/forbid-dom-props` can only
+detect that a `style` prop exists, not inspect what's inside it, so it flags a sanctioned
+exception identically to a real violation. Fixed by building a genuine local ESLint rule
+(`eslint-local-rules/index.js`, `local-rules/forbid-non-css-var-style`, via the new
+`eslint-plugin-local-rules` devDependency) that resolves the `style` value — a literal
+object, a same-file variable, or a same-file helper function's returned object — and only
+flags it when a key isn't `--`-prefixed or object spread is present (§14.3); it's also
+scoped to native/intrinsic elements only, matching the original rule's behavior (custom
+components like `SvgIcon`/`Reveal` declare `style` as their own typed prop — a separate,
+intentional passthrough pattern, not something this rule governs). Repo-wide:
+`react/forbid-dom-props` 338 → 217 (§60.5a's own conversions), then 217 → 3 real
+`local-rules/forbid-non-css-var-style` warnings after the rule replaced it — the remaining
+3 are `SvgIcon.tsx` (accepted debt, above), a cross-file helper call the rule doesn't
+attempt to resolve, and a `useState`-driven value set imperatively in a `useLayoutEffect`
+(both already manually verified correct). `npm run lint` (§4.6/§52) now runs
+`eslint . --max-warnings=8` (the 3 above plus 5 pre-existing, unrelated
+`@next/next/no-img-element` warnings) — see `STYLE-07`.
 
 ## 60.6 Resolved: legacy `frontend/` Create React App (removed 2026-07-14)
 
