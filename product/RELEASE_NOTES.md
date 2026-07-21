@@ -5,6 +5,18 @@
 
 ---
 
+## Fixed: Blank-Page Flash on Portfolio, Teams, Sprint & Kanban, Delivery Mix, and Column Mapping (2026-07-21)
+
+Five pages could briefly show either a completely blank white screen or an empty-looking page while
+their data was still loading, with no indication anything was happening: `/portfolio` and
+`/delivery-mix` rendered nothing at all (no navigation, no header) until data arrived; `/sprint-kanban`
+had the same gap despite tracking a loading flag internally; `/teams` silently showed a real "0 teams"
+grid instead of a loading state; `/column-mapping` showed its header but an empty body. All five now
+show the same branded loading indicator used elsewhere in the app. No data or calculation changed —
+this only adds visible feedback during the moment data is being fetched.
+
+---
+
 ## Added: Branded Loading Screens Across the App (2026-07-21)
 
 Every full-page and every-route first-load now shows a consistent branded loading indicator (the
