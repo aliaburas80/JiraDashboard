@@ -1,7 +1,8 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import clsx from 'clsx';
 import AppShell from '@/components/layout/AppShell';
 import DCKpiCard from '@/components/dc-shell/DCKpiCard';
 import DCStatusChip from '@/components/dc-shell/DCStatusChip';
@@ -9,16 +10,21 @@ import LoadingState from '@/components/ui/LoadingState';
 import type { DashboardMetrics, FlowItem } from '@/types/metrics';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { redirectWithLoadError } from '@/lib/loadErrorSignal';
+import styles from './page.module.scss';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 const DONE = new Set(['done', 'closed', 'resolved']);
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
 
-const AGE_BRACKETS = [
-  { label: '0–3 days',   min: 0,  max: 3  },
-  { label: '4–7 days',   min: 4,  max: 7  },
-  { label: '8–14 days',  min: 8,  max: 14 },
-  { label: '15–30 days', min: 15, max: 30 },
-  { label: '30+ days',   min: 31, max: Infinity },
+type AgingTone = 'success' | 'warning' | 'critical';
+
+const AGE_BRACKETS: { label: string; min: number; max: number; tone: AgingTone }[] = [
+  { label: '0–3 days',   min: 0,  max: 3,        tone: 'success'  },
+  { label: '4–7 days',   min: 4,  max: 7,        tone: 'success'  },
+  { label: '8–14 days',  min: 8,  max: 14,       tone: 'success'  },
+  { label: '15–30 days', min: 15, max: 30,       tone: 'warning'  },
+  { label: '30+ days',   min: 31, max: Infinity, tone: 'critical' },
 ];
 
 export default function FlowHealthPage() {
@@ -84,32 +90,32 @@ export default function FlowHealthPage() {
   return (
     <AppShell showNav>
       {/* Page header */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <span style={{ width: 20, height: 2, background: 'var(--blue)', display: 'inline-block' }} />
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--blue)', textTransform: 'uppercase' }}>Delivery</span>
+      <div className={styles.pageHeader}>
+        <div className={styles.pageHeaderKicker}>
+          <span className={styles.kickerBar} />
+          <span className={styles.kickerLabel}>Delivery</span>
         </div>
-        <h1 id="tour-header-flow-health" style={{ fontSize: 26, fontWeight: 700, color: 'var(--n900)', margin: '0 0 4px', letterSpacing: '-0.02em' }}>Flow Health</h1>
-        <p style={{ fontSize: 13, color: 'var(--n500)', margin: '0 0 12px' }}>
+        <h1 id="tour-header-flow-health" className={styles.pageTitle}>Flow Health</h1>
+        <p className={styles.pageDesc}>
           {flow.critical > 0
             ? `${flow.critical} critical item${flow.critical !== 1 ? 's' : ''} are blocking flow. Address blockers first to restore delivery pace.`
             : 'Flow is stable. Monitor aging WIP and maintain lead time targets.'}
         </p>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className={styles.headerActions}>
           <DCStatusChip label={flow.critical > 0 ? 'Flow Risk' : 'Flow Stable'} tone={flow.critical > 0 ? 'critical' : 'success'} size="md" />
           {blockers.length > 0 && <DCStatusChip label={`${blockers.length} Blockers`} tone="critical" size="md" />}
           {oldItems.length > 0 && <DCStatusChip label={`${oldItems.length} Aging`} tone="warning" size="md" />}
-          <button type="button" className="dc-btn-ghost" style={{ marginLeft: 'auto' }} onClick={() => openDrawer('All Flow Items', activeItems)}>
+          <button type="button" className={clsx('dc-btn-ghost', styles.viewAllBtn)} onClick={() => openDrawer('All Flow Items', activeItems)}>
             View all items ({activeItems.length})
           </button>
-          <Link href="/work-explorer" className="dc-btn-action" style={{ textDecoration: 'none' }}>
+          <Link href="/work-explorer" className={clsx('dc-btn-action', styles.explorerLink)}>
             Work Explorer →
           </Link>
         </div>
       </div>
 
       {/* KPI strip */}
-      <section id="tour-section-flow-health-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }} aria-label="Flow metrics">
+      <section id="tour-section-flow-health-1" className={styles.kpiGrid} aria-label="Flow metrics">
         {/* AUDIT-CP3-002/CP3-004: a zero-sample average previously rendered as
             a green "success" tone with no reliability signal. Both the tone
             and an explicit confidence badge now reflect the real sample size. */}
@@ -120,44 +126,46 @@ export default function FlowHealthPage() {
       </section>
 
       {/* Two-column content */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) 320px', gap: 20 }}>
+      <div className={styles.columns}>
 
         {/* Left: Bottleneck map */}
-        <div className="dc-card" style={{ padding: 22 }}>
-          <div id="tour-section-flow-health-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+        <div className={clsx('dc-card', styles.cardPad)}>
+          <div id="tour-section-flow-health-2" className={styles.cardHead}>
             <div>
-              <h2 style={{ fontSize: 15, fontWeight: 900, color: 'var(--dc-text)', margin: 0 }}>Bottleneck Map</h2>
-              <p style={{ fontSize: 12, color: 'var(--dc-text-2)', margin: '3px 0 0' }}>Active work distribution by stage</p>
+              <h2 className={styles.cardTitle}>Bottleneck Map</h2>
+              <p className={styles.cardSubtitle}>Active work distribution by stage</p>
             </div>
           </div>
 
           {statusEntries.length === 0 ? (
-            <p style={{ fontSize: 13, color: 'var(--dc-text-3)', padding: '32px 0', textAlign: 'center' }}>No active work items</p>
+            <p className={styles.emptyRow}>No active work items</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className={styles.bottleneckList}>
               {statusEntries.map(([status, data]) => {
                 const pct = Math.round((data.count / maxCount) * 100);
                 const hasCrit = data.critCount > 0;
                 const hasWarn = data.warnCount > 0;
-                const barColor = hasCrit ? 'var(--dc-critical)' : hasWarn ? 'var(--dc-warning)' : 'var(--dc-brand)';
+                const tone = hasCrit ? 'critical' : hasWarn ? 'warning' : undefined;
                 return (
                   <div key={status}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--dc-text)', textTransform: 'capitalize' }}>{status}</span>
+                    <div className={styles.bottleneckHead}>
+                      <div className={styles.bottleneckLabelRow}>
+                        <span className={styles.bottleneckLabel}>{status}</span>
                         {hasCrit && <DCStatusChip label={`${data.critCount} critical`} tone="critical" />}
                         {!hasCrit && hasWarn && <DCStatusChip label={`${data.warnCount} warning`} tone="warning" />}
                       </div>
                       <button
                         type="button"
                         onClick={() => openDrawer(`${status} items`, data.items)}
-                        style={{ fontSize: 12, fontWeight: 800, color: barColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                        className={styles.bottleneckCountBtn}
+                        data-tone={tone}
                       >
                         {data.count} →
                       </button>
                     </div>
-                    <div style={{ height: 10, background: 'var(--dc-line)', borderRadius: 5, overflow: 'hidden' }}>
-                      <div style={{ width: `${pct}%`, height: '100%', background: barColor, borderRadius: 5, transition: 'width 600ms ease-out' }} />
+                    <div className={styles.barTrack}>
+                      {/* DYNAMIC CSS VARIABLE: bar width is this status's share of the busiest status, cannot be predefined. */}
+                      <div className={styles.barFill} data-tone={tone} style={{ '--bar-width': `${pct}%` } as CSSVars} />
                     </div>
                   </div>
                 );
@@ -167,22 +175,22 @@ export default function FlowHealthPage() {
         </div>
 
         {/* Right: Aging distribution + blockers */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className={styles.rightCol}>
           {/* Aging distribution */}
-          <div className="dc-card" style={{ padding: 20 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 900, color: 'var(--dc-text)', margin: '0 0 14px' }}>Aging Distribution</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className={clsx('dc-card', styles.cardPadSm)}>
+            <h2 className={styles.cardTitleSm}>Aging Distribution</h2>
+            <div className={styles.agingList}>
               {agingData.map(b => {
                 const pct = Math.round((b.count / maxAging) * 100);
-                const tone = b.min >= 30 ? 'var(--dc-critical)' : b.min >= 15 ? 'var(--dc-warning)' : 'var(--dc-success)';
                 return (
                   <div key={b.label}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--dc-text-2)' }}>{b.label}</span>
-                      <span style={{ fontSize: 12, fontWeight: 900, color: tone }}>{b.count}</span>
+                    <div className={styles.agingHead}>
+                      <span className={styles.agingLabel}>{b.label}</span>
+                      <span className={styles.agingCount} data-tone={b.tone}>{b.count}</span>
                     </div>
-                    <div style={{ height: 7, background: 'var(--dc-line)', borderRadius: 4 }}>
-                      <div style={{ width: `${pct}%`, height: '100%', background: tone, borderRadius: 4, transition: 'width 600ms ease-out' }} />
+                    <div className={styles.agingBarTrack}>
+                      {/* DYNAMIC CSS VARIABLE: bar width is this bracket's share of the largest bracket, cannot be predefined. */}
+                      <div className={styles.agingBarFill} data-tone={b.tone} style={{ '--bar-width': `${pct}%` } as CSSVars} />
                     </div>
                   </div>
                 );
@@ -192,24 +200,21 @@ export default function FlowHealthPage() {
 
           {/* Top blockers */}
           {blockers.length > 0 && (
-            <div className="dc-card" style={{ padding: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <h2 style={{ fontSize: 14, fontWeight: 900, color: 'var(--dc-text)', margin: 0 }}>Blockers</h2>
-                <button type="button" onClick={() => openDrawer('All blockers', blockers)} style={{ fontSize: 11, fontWeight: 800, color: 'var(--dc-brand)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <div className={clsx('dc-card', styles.cardPadSm)}>
+              <div className={styles.cardHead}>
+                <h2 className={styles.cardTitleFlex}>Blockers</h2>
+                <button type="button" onClick={() => openDrawer('All blockers', blockers)} className={clsx(styles.viewAllLink, styles['viewAllLink--critical'])}>
                   View all ({blockers.length})
                 </button>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div className={styles.listGap8}>
                 {blockers.slice(0, 5).map(item => (
-                  <div key={item.key} style={{
-                    padding: '10px 12px', borderRadius: 10,
-                    background: 'var(--dc-critical-soft)', border: '1px solid rgba(244,63,94,0.2)',
-                  }}>
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 3 }}>
-                      <span style={{ fontSize: 11, fontWeight: 900, color: 'var(--dc-critical)', fontFamily: 'monospace' }}>{item.key}</span>
+                  <div key={item.key} className={styles.blockerCard}>
+                    <div className={styles.blockerHead}>
+                      <span className={styles.blockerKey}>{item.key}</span>
                       <DCStatusChip label={item.status} tone="critical" />
                     </div>
-                    <p style={{ fontSize: 12, color: 'var(--dc-text)', margin: 0, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <p className={styles.blockerSummary}>
                       {item.summary}
                     </p>
                   </div>
@@ -220,19 +225,19 @@ export default function FlowHealthPage() {
 
           {/* Critical items */}
           {critItems.length > 0 && (
-            <div className="dc-card" style={{ padding: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <h2 style={{ fontSize: 14, fontWeight: 900, color: 'var(--dc-text)', margin: 0 }}>Critical Items</h2>
-                <button type="button" onClick={() => openDrawer('Critical items', critItems)} style={{ fontSize: 11, fontWeight: 800, color: 'var(--dc-critical)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <div className={clsx('dc-card', styles.cardPadSm)}>
+              <div className={styles.cardHead}>
+                <h2 className={styles.cardTitleFlex}>Critical Items</h2>
+                <button type="button" onClick={() => openDrawer('Critical items', critItems)} className={styles.viewAllLink}>
                   View all ({critItems.length})
                 </button>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className={styles.listGap6}>
                 {critItems.slice(0, 5).map(item => (
-                  <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, background: 'var(--dc-surface-soft)', border: '1px solid var(--dc-line)' }}>
-                    <span style={{ fontSize: 11, fontWeight: 900, color: 'var(--dc-brand)', fontFamily: 'monospace', flexShrink: 0 }}>{item.key}</span>
-                    <span style={{ fontSize: 12, color: 'var(--dc-text)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.summary}</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--dc-text-3)', flexShrink: 0 }}>{item.ageDays ?? 0}d</span>
+                  <div key={item.key} className={styles.criticalItemRow}>
+                    <span className={styles.criticalItemKey}>{item.key}</span>
+                    <span className={styles.criticalItemSummary}>{item.summary}</span>
+                    <span className={styles.criticalItemAge}>{item.ageDays ?? 0}d</span>
                   </div>
                 ))}
               </div>
@@ -243,35 +248,31 @@ export default function FlowHealthPage() {
 
       {/* Drawer */}
       {drawerOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex' }}>
-          <div style={{ flex: 1, background: 'rgba(6,26,51,0.5)' }} onClick={() => setDrawerOpen(false)} aria-hidden="true" />
-          <div style={{
-            width: 600, background: 'white', overflowY: 'auto', height: '100%',
-            padding: 24, display: 'flex', flexDirection: 'column', gap: 16,
-            boxShadow: 'var(--dc-shadow-panel)',
-          }} role="dialog" aria-label={drawerTitle}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h2 style={{ fontSize: 16, fontWeight: 900, color: 'var(--dc-text)', margin: 0 }}>{drawerTitle}</h2>
-              <button type="button" onClick={() => setDrawerOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--dc-text-2)' }} aria-label="Close">×</button>
+        <div className={styles.drawerOverlay}>
+          <div className={styles.drawerScrim} onClick={() => setDrawerOpen(false)} aria-hidden="true" />
+          <div className={styles.drawerPanel} role="dialog" aria-label={drawerTitle}>
+            <div className={styles.drawerHead}>
+              <h2 className={styles.drawerTitle}>{drawerTitle}</h2>
+              <button type="button" onClick={() => setDrawerOpen(false)} className={styles.drawerCloseBtn} aria-label="Close">×</button>
             </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+            <div className={styles.drawerTableWrap}>
+              <table className={styles.drawerTable}>
                 <thead>
-                  <tr style={{ borderBottom: '2px solid var(--dc-line)' }}>
+                  <tr className={styles.drawerHeadRow}>
                     {['Key', 'Summary', 'Status', 'Type', 'Age (d)', 'Health'].map(h => (
-                      <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontSize: 11, fontWeight: 900, color: 'var(--dc-text-3)', whiteSpace: 'nowrap' }}>{h}</th>
+                      <th key={h} className={styles.drawerHeadCell}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {drawerItems.map((item, i) => (
-                    <tr key={item.key} style={{ borderBottom: '1px solid var(--dc-line)', background: i % 2 ? 'var(--dc-surface-soft)' : 'white' }}>
-                      <td style={{ padding: '7px 10px', fontFamily: 'monospace', fontWeight: 800, color: 'var(--dc-brand)', whiteSpace: 'nowrap' }}>{item.key}</td>
-                      <td style={{ padding: '7px 10px', color: 'var(--dc-text)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.summary}</td>
-                      <td style={{ padding: '7px 10px', whiteSpace: 'nowrap' }}><DCStatusChip label={item.status} tone="neutral" /></td>
-                      <td style={{ padding: '7px 10px', color: 'var(--dc-text-2)', whiteSpace: 'nowrap' }}>{item.type}</td>
-                      <td style={{ padding: '7px 10px', fontWeight: 800, color: Number(item.ageDays ?? 0) > 14 ? 'var(--dc-critical)' : 'var(--dc-text-2)', textAlign: 'right' }}>{item.ageDays ?? 0}</td>
-                      <td style={{ padding: '7px 10px', whiteSpace: 'nowrap' }}>
+                  {drawerItems.map(item => (
+                    <tr key={item.key} className={styles.drawerRow}>
+                      <td className={styles.drawerCellKey}>{item.key}</td>
+                      <td className={styles.drawerCellSummary}>{item.summary}</td>
+                      <td className={styles.drawerCellNowrap}><DCStatusChip label={item.status} tone="neutral" /></td>
+                      <td className={styles.drawerCellType}>{item.type}</td>
+                      <td className={styles.drawerCellAge} data-aging={Number(item.ageDays ?? 0) > 14}>{item.ageDays ?? 0}</td>
+                      <td className={styles.drawerCellNowrap}>
                         <DCStatusChip label={item.health} tone={item.health === 'critical' ? 'critical' : item.health === 'warning' ? 'warning' : 'success'} />
                       </td>
                     </tr>

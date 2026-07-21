@@ -1,0 +1,445 @@
+// © 2026 Ali Abu Ras — Flow Health page styles
+// All visual identity; global .dc-card/.dc-btn-*/.chip classes handle shared chrome.
+
+// ── Page header ──────────────────────────────────────────────────────────────
+
+.pageHeader {
+  margin-bottom: 20px;
+}
+
+.pageHeaderKicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.kickerBar {
+  width: 20px;
+  height: 2px;
+  background: var(--blue);
+  display: inline-block;
+}
+
+.kickerLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--blue);
+  text-transform: uppercase;
+}
+
+.pageTitle {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--n900);
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
+}
+
+.pageDesc {
+  font-size: 13px;
+  color: var(--n500);
+  margin: 0 0 12px;
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.viewAllBtn {
+  margin-left: auto;
+}
+
+.explorerLink {
+  text-decoration: none;
+}
+
+// ── KPI strip ─────────────────────────────────────────────────────────────────
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+// ── Two-column layout ────────────────────────────────────────────────────────
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) 320px;
+  gap: 20px;
+}
+
+.cardPad {
+  padding: 22px;
+}
+
+.cardPadSm {
+  padding: 20px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.cardTitle {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--dc-text);
+  margin: 0;
+}
+
+.cardTitleSm {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--dc-text);
+  margin: 0 0 14px;
+}
+
+.cardTitleFlex {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--dc-text);
+  margin: 0;
+}
+
+.cardSubtitle {
+  font-size: 12px;
+  color: var(--dc-text-2);
+  margin: 3px 0 0;
+}
+
+.rightCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ── Bottleneck map ────────────────────────────────────────────────────────────
+
+.emptyRow {
+  font-size: 13px;
+  color: var(--dc-text-3);
+  padding: 32px 0;
+  text-align: center;
+}
+
+.bottleneckList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bottleneckHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.bottleneckLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bottleneckLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dc-text);
+  text-transform: capitalize;
+}
+
+.bottleneckCountBtn {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--dc-brand);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+
+  &[data-tone='critical'] { color: var(--dc-critical); }
+  &[data-tone='warning']  { color: var(--dc-warning); }
+}
+
+.barTrack {
+  height: 10px;
+  background: var(--dc-line);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.barFill {
+  width: var(--bar-width, 0%);
+  height: 100%;
+  border-radius: 5px;
+  transition: width 600ms ease-out;
+  background: var(--dc-brand);
+
+  &[data-tone='critical'] { background: var(--dc-critical); }
+  &[data-tone='warning']  { background: var(--dc-warning); }
+}
+
+// ── Aging distribution ───────────────────────────────────────────────────────
+
+.agingList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.agingHead {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.agingLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--dc-text-2);
+}
+
+.agingCount {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--dc-success);
+
+  &[data-tone='critical'] { color: var(--dc-critical); }
+  &[data-tone='warning']  { color: var(--dc-warning); }
+}
+
+.agingBarTrack {
+  height: 7px;
+  background: var(--dc-line);
+  border-radius: 4px;
+}
+
+.agingBarFill {
+  width: var(--bar-width, 0%);
+  height: 100%;
+  border-radius: 4px;
+  transition: width 600ms ease-out;
+  background: var(--dc-success);
+
+  &[data-tone='critical'] { background: var(--dc-critical); }
+  &[data-tone='warning']  { background: var(--dc-warning); }
+}
+
+// ── Blockers / critical items lists ───────────────────────────────────────────
+
+.listGap8 {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.listGap6 {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.viewAllLink {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--dc-brand);
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &--critical {
+    color: var(--dc-critical);
+  }
+}
+
+.blockerCard {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--dc-critical-soft);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+}
+
+.blockerHead {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.blockerKey {
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--dc-critical);
+  font-family: monospace;
+}
+
+.blockerSummary {
+  font-size: 12px;
+  color: var(--dc-text);
+  margin: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.criticalItemRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--dc-surface-soft);
+  border: 1px solid var(--dc-line);
+}
+
+.criticalItemKey {
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--dc-brand);
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+.criticalItemSummary {
+  font-size: 12px;
+  color: var(--dc-text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.criticalItemAge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dc-text-3);
+  flex-shrink: 0;
+}
+
+// ── Drawer ────────────────────────────────────────────────────────────────────
+
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+}
+
+.drawerScrim {
+  flex: 1;
+  background: rgba(6, 26, 51, 0.5);
+}
+
+.drawerPanel {
+  width: 600px;
+  background: #fff;
+  overflow-y: auto;
+  height: 100%;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--dc-shadow-panel);
+}
+
+.drawerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drawerTitle {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--dc-text);
+  margin: 0;
+}
+
+.drawerCloseBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--dc-text-2);
+}
+
+.drawerTableWrap {
+  overflow-x: auto;
+}
+
+.drawerTable {
+  width: 100%;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+
+.drawerHeadRow {
+  border-bottom: 2px solid var(--dc-line);
+}
+
+.drawerHeadCell {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--dc-text-3);
+  white-space: nowrap;
+}
+
+.drawerRow {
+  border-bottom: 1px solid var(--dc-line);
+  background: #fff;
+
+  &:nth-child(even) {
+    background: var(--dc-surface-soft);
+  }
+}
+
+.drawerCellKey {
+  padding: 7px 10px;
+  font-family: monospace;
+  font-weight: 800;
+  color: var(--dc-brand);
+  white-space: nowrap;
+}
+
+.drawerCellSummary {
+  padding: 7px 10px;
+  color: var(--dc-text);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drawerCellNowrap {
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+
+.drawerCellType {
+  padding: 7px 10px;
+  color: var(--dc-text-2);
+  white-space: nowrap;
+}
+
+.drawerCellAge {
+  padding: 7px 10px;
+  font-weight: 800;
+  color: var(--dc-text-2);
+  text-align: right;
+
+  &[data-aging='true'] {
+    color: var(--dc-critical);
+  }
+}
