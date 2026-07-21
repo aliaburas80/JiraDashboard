@@ -1,0 +1,74 @@
+// © 2026 Ali Abu Ras — Admin Console shared layout styles
+
+.header {
+  margin-bottom: 28px;
+  border-radius: 14px;
+  padding: 16px 20px;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 6%);
+}
+
+.breadcrumb {
+  color: var(--color-text-secondary, #64748b);
+}
+
+.breadcrumbSep {
+  color: var(--color-border, #e2e8f0);
+}
+
+.breadcrumbCurrent {
+  color: var(--color-text-primary, #0f172a);
+}
+
+.pageTitle {
+  color: var(--color-text-primary, #0f172a);
+}
+
+.pageDescription {
+  margin-top: 8px;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.statusChip {
+  border-radius: 100px;
+  font-size: 13px;
+  padding: 6px 14px;
+  font-weight: 800;
+}
+
+.statusDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dc-green, #22c55e);
+  margin-right: 6px;
+}
+
+.statCard {
+  border-radius: 14px;
+  padding: 16px;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 6%);
+}
+
+.statIcon {
+  background: var(--tone-bg, var(--color-subtle, #f1f5f9));
+  color: var(--tone-color, var(--color-text-secondary, #64748b));
+}
+
+.statValue {
+  color: var(--value-color, var(--color-text-primary, #0f172a));
+}
+
+.statLabel {
+  margin-top: 4px;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.statNote {
+  margin-top: 4px;
+  color: var(--color-text-muted, #94a3b8);
+}
