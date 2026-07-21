@@ -1,8 +1,10 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 'use client';
 import { useState } from 'react';
+import clsx from 'clsx';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import type { RetentionSettings, RetentionStats, RetentionPeriod } from '@/types/settings';
+import styles from './DataRetentionSettings.module.scss';
 
 const PERIODS: { value: RetentionPeriod; label: string }[] = [
   { value: 7,   label: '7 days'      },
@@ -24,33 +26,18 @@ function Toggle({ label, description, checked, onChange }: {
   label: string; description: string; checked: boolean; onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 py-3 last:border-0"
-      style={{ borderBottom: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
+    <div className={clsx('flex items-start justify-between', styles.toggleRow)}>
       <div>
-        <p className="text-sm font-semibold" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>{label}</p>
-        <p className="text-xs mt-0.5" style={{ color: 'var(--dc-p2, #909090)' }}>{description}</p>
+        <p className={styles.toggleLabel}>{label}</p>
+        <p className={clsx('mt-0.5', styles.toggleDesc)}>{description}</p>
       </div>
       <button
         type="button"
         onClick={() => onChange(!checked)}
-        className="relative shrink-0 rounded-full transition-colors"
-        style={{
-          width: 34,
-          height: 18,
-          background: checked ? 'var(--dc-acc, #E85D12)' : 'var(--dc-s4, #323232)',
-          border: checked ? 'none' : '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))',
-        }}
+        className={styles.toggleSwitch}
+        data-checked={checked}
       >
-        <span
-          className="absolute top-0.5 rounded-full transition-transform"
-          style={{
-            width: 14,
-            height: 14,
-            background: checked ? '#fff' : 'var(--dc-p3, #505050)',
-            left: 2,
-            transform: checked ? 'translateX(16px)' : 'translateX(0)',
-          }}
-        />
+        <span className={styles.toggleKnob} data-checked={checked} />
       </button>
     </div>
   );
@@ -101,19 +88,18 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: 'Total Import Logs',    value: stats.totalLogs,         color: 'var(--dc-p1, #F2F2F2)' },
-            { label: 'Eligible for Deletion', value: stats.logsEligible,      color: stats.logsEligible > 0 ? 'var(--dc-red, #F87171)' : '#22C55E' },
-            { label: 'Total Snapshots',       value: stats.totalSnapshots,    color: 'var(--dc-p1, #F2F2F2)' },
-            { label: 'Snapshots Eligible',    value: stats.snapshotsEligible, color: stats.snapshotsEligible > 0 ? 'var(--dc-red, #F87171)' : '#22C55E' },
+            { label: 'Total Import Logs',    value: stats.totalLogs,         tone: 'neutral' as const },
+            { label: 'Eligible for Deletion', value: stats.logsEligible,      tone: stats.logsEligible > 0 ? 'alert' as const : 'ok' as const },
+            { label: 'Total Snapshots',       value: stats.totalSnapshots,    tone: 'neutral' as const },
+            { label: 'Snapshots Eligible',    value: stats.snapshotsEligible, tone: stats.snapshotsEligible > 0 ? 'alert' as const : 'ok' as const },
           ].map(s => (
-            <div key={s.label} className="rounded-xl p-4"
-              style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-              <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--dc-p3, #505050)' }}>{s.label}</p>
-              <p className="text-2xl font-black" style={{ color: s.color }}>{s.value}</p>
+            <div key={s.label} className={styles.statCard}>
+              <p className={styles.statLabel}>{s.label}</p>
+              <p className={styles.statValue} data-tone={s.tone}>{s.value}</p>
             </div>
           ))}
           {stats.oldestLogDate && (
-            <div className="col-span-2 sm:col-span-4 text-xs text-right" style={{ color: 'var(--dc-p3, #505050)' }}>
+            <div className={clsx('col-span-2 sm:col-span-4 text-xs text-right', styles.oldestLogNote)}>
               Oldest log: {new Date(stats.oldestLogDate).toLocaleDateString()} ·
               Newest: {stats.newestLogDate ? new Date(stats.newestLogDate).toLocaleDateString() : '—'}
             </div>
@@ -122,9 +108,8 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
       )}
 
       {/* Storage settings card */}
-      <div className="rounded-2xl p-6"
-        style={{ background: 'var(--dc-s2, #1E1E1E)', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))' }}>
-        <h3 className="text-xs font-black uppercase tracking-wider mb-4" style={{ color: 'var(--dc-p3, #505050)' }}>Storage Settings</h3>
+      <div className={styles.settingsCard}>
+        <h3 className={styles.sectionLabel}>Storage Settings</h3>
 
         <Toggle
           label="Store upload logs"
@@ -153,7 +138,7 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
 
         {/* Retention period */}
         <div className="mt-5">
-          <p className="text-sm font-semibold mb-3" style={{ color: 'var(--dc-p1, #F2F2F2)' }}>Retention period</p>
+          <p className={styles.retentionLabel}>Retention period</p>
           <div className="flex flex-wrap gap-2">
             {PERIODS.map(p => {
               const active = form.retentionDays === p.value;
@@ -162,11 +147,8 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
                   key={p.value}
                   type="button"
                   onClick={() => setForm(f => ({ ...f, retentionDays: p.value }))}
-                  className="text-xs font-bold transition-colors"
-                  style={active
-                    ? { padding: '5px 14px', borderRadius: 100, background: 'rgba(232,93,18,0.12)', border: '1.5px solid rgba(232,93,18,0.3)', color: 'var(--dc-acc2, #FF8A4C)' }
-                    : { padding: '5px 14px', borderRadius: 100, background: 'transparent', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }
-                  }
+                  className={clsx('text-xs font-bold transition-colors', styles.periodPill)}
+                  data-active={active}
                 >
                   {p.label}
                 </button>
@@ -174,7 +156,7 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
             })}
           </div>
           {form.retentionDays !== -1 && (
-            <p className="text-xs mt-2 italic" style={{ color: 'var(--dc-p3, #505050)' }}>
+            <p className={styles.periodNote}>
               Logs and snapshots older than {period.label} will be eligible for deletion.
             </p>
           )}
@@ -186,13 +168,15 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex h-[38px] items-center rounded-[9px] px-5 text-sm font-extrabold text-white transition disabled:opacity-50"
-            style={{ background: 'var(--dc-acc, #E85D12)' }}
+            className={clsx(
+              'inline-flex h-[38px] items-center rounded-[9px] px-5 text-sm font-extrabold text-white transition disabled:opacity-50',
+              styles.saveBtn,
+            )}
           >
             {saving ? 'Saving…' : 'Save Settings'}
           </button>
           {msg && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: msg.ok ? '#4ade80' : '#fca5a5' }}>
+            <span className={clsx('inline-flex items-center gap-1 text-xs font-semibold', styles.saveMsg)} data-ok={msg.ok}>
               <SvgIcon name={msg.ok ? 'checkCircle' : 'warning'} size={12} />
               {msg.text}
             </span>
@@ -201,17 +185,18 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
       </div>
 
       {/* Cleanup actions */}
-      <div className="rounded-2xl p-6"
-        style={{ background: 'rgba(232,93,18,0.04)', border: '1px solid rgba(232,93,18,0.12)' }}>
-        <h3 className="text-xs font-black uppercase tracking-wider mb-4" style={{ color: 'var(--dc-p3, #505050)' }}>Cleanup Actions</h3>
+      <div className={styles.cleanupCard}>
+        <h3 className={styles.sectionLabel}>Cleanup Actions</h3>
 
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
             onClick={handleCleanup}
             disabled={cleaning || form.retentionDays === -1}
-            className="inline-flex h-[38px] items-center rounded-[100px] px-4 text-sm font-extrabold transition disabled:opacity-40"
-            style={{ background: 'transparent', border: '1px solid var(--dc-bdr2, rgba(255,255,255,0.13))', color: 'var(--dc-p1, #F2F2F2)' }}
+            className={clsx(
+              'inline-flex h-[38px] items-center rounded-[100px] px-4 text-sm font-extrabold transition disabled:opacity-40',
+              styles.cleanupBtn,
+            )}
           >
             {cleaning ? 'Running…' : `Apply Retention Policy (${period.label})`}
           </button>
@@ -220,32 +205,31 @@ export default function DataRetentionSettings({ settings, stats, onSave, onClean
             type="button"
             onClick={handleClearAll}
             disabled={clearing}
-            className="inline-flex h-[38px] items-center gap-1.5 rounded-[100px] px-4 text-sm font-extrabold transition disabled:opacity-50"
-            style={confirmClear
-              ? { background: 'rgba(248,113,113,0.20)', border: '1px solid rgba(248,113,113,0.40)', color: '#fca5a5' }
-              : { background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.20)', color: '#fca5a5' }
-            }
+            className={clsx(
+              'inline-flex h-[38px] items-center gap-1.5 rounded-[100px] px-4 text-sm font-extrabold transition disabled:opacity-50',
+              styles.clearBtn,
+            )}
+            data-confirm={confirmClear}
           >
             {clearing ? 'Clearing…' : confirmClear ? <><SvgIcon name="warning" size={14} /> Confirm — Delete ALL data</> : 'Clear All Data'}
           </button>
 
           {confirmClear && (
             <button type="button" onClick={() => setConfirmClear(false)}
-              className="inline-flex h-[38px] items-center rounded-[100px] px-4 text-sm font-extrabold transition"
-              style={{ background: 'transparent', border: '1px solid var(--dc-bdr, rgba(255,255,255,0.07))', color: 'var(--dc-p2, #909090)' }}>
+              className={clsx('inline-flex h-[38px] items-center rounded-[100px] px-4 text-sm font-extrabold transition', styles.cancelBtn)}>
               Cancel
             </button>
           )}
         </div>
 
-        <p className="text-xs mt-3 italic" style={{ color: 'var(--dc-p3, #505050)' }}>
+        <p className={styles.cleanupNote}>
           &quot;Clear All Data&quot; permanently deletes all import logs and snapshots for all users. This cannot be undone.
         </p>
       </div>
 
       {/* Last updated */}
       {settings.updatedAt && (
-        <p className="text-xs text-right" style={{ color: 'var(--dc-p3, #505050)' }}>
+        <p className={clsx('text-xs text-right', styles.lastUpdated)}>
           Last updated {new Date(settings.updatedAt).toLocaleString()} by {settings.updatedBy}
         </p>
       )}
