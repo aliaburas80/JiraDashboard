@@ -1,0 +1,185 @@
+// © 2026 Ali Abu Ras — Data Retention settings panel styles
+
+.toggleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.toggleLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dc-p1, #f2f2f2);
+}
+
+.toggleDesc {
+  font-size: 11px;
+  margin-top: 2px;
+  color: var(--dc-p2, #909090);
+}
+
+.toggleSwitch {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 18px;
+  border-radius: 100px;
+  transition: background-color 150ms ease, border-color 150ms ease;
+  background: var(--dc-s4, #323232);
+  border: 1px solid var(--dc-bdr2, rgba(255, 255, 255, 0.13));
+
+  &[data-checked='true'] {
+    background: var(--dc-acc, #e85d12);
+    border: none;
+  }
+}
+
+.toggleKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 100px;
+  transition: transform 150ms ease, background-color 150ms ease;
+  background: var(--dc-p3, #505050);
+  transform: translateX(0);
+
+  [data-checked='true'] & {
+    background: #fff;
+    transform: translateX(16px);
+  }
+}
+
+.statCard {
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+}
+
+.statLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+  color: var(--dc-p3, #505050);
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--dc-p1, #f2f2f2);
+
+  &[data-tone='alert'] { color: var(--dc-red, #f87171); }
+  &[data-tone='ok']    { color: var(--dc-green, #22c55e); }
+}
+
+.oldestLogNote {
+  color: var(--dc-p3, #505050);
+}
+
+.settingsCard {
+  border-radius: 16px;
+  padding: 24px;
+  background: var(--dc-s2, #1e1e1e);
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+}
+
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+  color: var(--dc-p3, #505050);
+}
+
+.retentionLabel {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--dc-p1, #f2f2f2);
+}
+
+.periodPill {
+  padding: 5px 14px;
+  border-radius: 100px;
+  background: transparent;
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+  color: var(--dc-p2, #909090);
+
+  &[data-active='true'] {
+    background: rgba(232, 93, 18, 0.12);
+    border: 1.5px solid rgba(232, 93, 18, 0.3);
+    color: var(--dc-acc2, #ff8a4c);
+  }
+}
+
+.periodNote {
+  font-size: 11px;
+  font-style: italic;
+  margin-top: 8px;
+  color: var(--dc-p3, #505050);
+}
+
+.saveBtn {
+  background: var(--dc-acc, #e85d12);
+}
+
+.saveMsg {
+  color: var(--dc-red, #fca5a5);
+
+  &[data-ok='true'] {
+    color: #4ade80;
+  }
+}
+
+.cleanupCard {
+  border-radius: 16px;
+  padding: 24px;
+  background: rgba(232, 93, 18, 0.04);
+  border: 1px solid rgba(232, 93, 18, 0.12);
+}
+
+.cleanupBtn {
+  background: transparent;
+  border: 1px solid var(--dc-bdr2, rgba(255, 255, 255, 0.13));
+  color: var(--dc-p1, #f2f2f2);
+}
+
+.clearBtn {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  color: #fca5a5;
+
+  &[data-confirm='true'] {
+    background: rgba(248, 113, 113, 0.2);
+    border: 1px solid rgba(248, 113, 113, 0.4);
+  }
+}
+
+.cancelBtn {
+  background: transparent;
+  border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
+  color: var(--dc-p2, #909090);
+}
+
+.cleanupNote {
+  font-size: 11px;
+  font-style: italic;
+  margin-top: 12px;
+  color: var(--dc-p3, #505050);
+}
+
+.lastUpdated {
+  color: var(--dc-p3, #505050);
+}
