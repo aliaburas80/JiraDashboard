@@ -5,6 +5,20 @@
 
 ---
 
+## Added: Branded Loading Screens Across the App (2026-07-21)
+
+Every full-page and every-route first-load now shows a consistent branded loading indicator (the
+Delivery Clarity logo mark with a pulse animation and a progress track) instead of a mix of generic
+gray spinners, plain "Loading..." text, and ad hoc pulsing boxes. This covers route transitions
+(`app/loading.tsx`), the admin console pages (users, audit, diagnostics, feedback, logs, security,
+settings), charts, snapshots, trends, forecast, roadmap, profile, and several admin/settings panels.
+Deliberately left unchanged: content-shaped skeleton placeholders (they preview the real layout, which
+a generic mark can't do), the `/customer` and `/developer` pages' fixed dark themes (contrast mismatch
+with the branded mark's light styling), and `/verify-email` (already shows the logo once on screen).
+No data, calculation, or navigation behavior changed — this is a visual consistency fix only.
+
+---
+
 ## Added: Sample-Size Badge on the Data Quality Score (2026-07-19)
 
 `/data-quality` and `/dashboard/data-quality` now show a small reliability badge next to the Data Quality

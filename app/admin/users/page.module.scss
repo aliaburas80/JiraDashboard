@@ -9,15 +9,6 @@
 .row[data-role="c_level"]       { --role-color: #A78BFA; }
 .row[data-role="user"]          { --role-color: #94A3B8; }
 
-// ── Loading state ─────────────────────────────────────────────────────────────
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 240px;
-  color: var(--dc-p3, #505050);
-}
-
 // ── Add-user action button ────────────────────────────────────────────────────
 .addUserBtn {
   display: inline-flex;

@@ -4,6 +4,7 @@
 import { CSSProperties, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/layout/AppShell';
+import LoadingState from '@/components/ui/LoadingState';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { redirectWithLoadError } from '@/lib/loadErrorSignal';
@@ -521,11 +522,7 @@ export default function ForecastPage() {
     load().catch(() => redirectWithLoadError(router));
   }, [router]);
 
-  if (loading) return (
-    <AppShell showNav>
-      <div className={styles.loading}>Computing forecast…</div>
-    </AppShell>
-  );
+  if (loading) return <AppShell showNav><LoadingState message="Computing forecast…" /></AppShell>;
   if (!result) return null;
 
   const meta  = STATUS_META[result.status];

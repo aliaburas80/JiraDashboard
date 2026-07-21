@@ -1519,6 +1519,34 @@ Set `hideFlowPanel: true` on a `DashboardView` in `src/types/dashboardView.ts` t
 const XLSX = await import("xlsx");
 const { downloadInsightWorkbook } = await import("@/services/export/excelInsightExport.service");
 ```
+
+### Branded Preloader / LoadingState (Implemented — 2026-07-21)
+
+`src/components/ui/Preloader.tsx` is the single branded loading indicator: the Delivery Clarity logo
+mark with a pulse animation, a wordmark, an indeterminate progress track (no fake percentage), and an
+optional message. It's used two ways:
+
+- **`app/loading.tsx`** — Next.js's automatic per-route Suspense fallback (`fullScreen` variant, fires
+  on first load of every route). Do not add a competing full-page spinner in an individual page; the
+  route-level fallback already covers first navigation.
+- **`src/components/ui/LoadingState.tsx`** — a thin wrapper (`{ message?: string }`) for in-page data
+  loading gates (`if (loading) return <LoadingState message="..." />`). Use this for any new full-page
+  or section-level "waiting for data" state instead of a one-off spinner or `animate-pulse` div.
+
+**When *not* to use it:**
+- Button-level or badge-level spinners (e.g. a submit button, a small status dot) — `Preloader` is
+  block-level and centered; there is no compact/inline variant today. Building one is future work if a
+  real need shows up (see CLAUDE.md §5.4 Rule of Three).
+- Content-shaped skeleton placeholders that mimic the final layout (`DashboardPageShell`'s
+  `PageLoading`, `/members`' grid skeleton, the row-skeletons in `JiraConnectionsPanel`/
+  `UserAddRequestsPanel`) — these reduce layout shift by pre-echoing real content shape, which a
+  generic branded mark can't do. Keep them as-is.
+- Pages with a fixed, non-standard visual theme that the light-token `Preloader` would clash with
+  (`/customer`'s dark violet report theme, `/developer`'s dark code-pane content area) — left on their
+  existing local loading treatment.
+- Places that already show the DC logo prominently elsewhere on the same screen (`/verify-email`) —
+  adding `Preloader` there would duplicate the branding rather than help it.
+
 ---
 
 ## 12. Deployment

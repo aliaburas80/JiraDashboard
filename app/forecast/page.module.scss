@@ -9,11 +9,6 @@
   to   { opacity: 1; transform: scale(1); }
 }
 
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.5; }
-  50%       { opacity: 1; }
-}
-
 @keyframes drawPath {
   from { stroke-dashoffset: 1; }
   to   { stroke-dashoffset: 0; }
@@ -61,17 +56,6 @@
   max-width: 920px;
   margin: 0 auto;
   padding-bottom: 48px;
-}
-
-/* ── Loading ───────────────────────────────────────────────────────────────── */
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 256px;
-  font-size: 14px;
-  color: var(--dc-p3, #505050);
-  animation: pulseGlow 1.4s ease-in-out infinite;
 }
 
 /* ── Page header ───────────────────────────────────────────────────────────── */

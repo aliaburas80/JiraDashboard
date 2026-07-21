@@ -2,8 +2,8 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import clsx from 'clsx';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
+import LoadingState from '@/components/ui/LoadingState';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import { paginate } from '@/lib/pagination';
 import styles from './page.module.scss';
@@ -153,11 +153,7 @@ export default function SystemErrorsPage() {
     { icon: 'retry',        label: 'Retried',       value: String(logs.filter(l => l.resolution.startsWith('retried')).length), note: 'Manually retried', toneStyle: { background: 'rgba(96,165,250,0.12)', color: '#60A5FA' } },
   ];
 
-  if (loading) return (
-    <div className={clsx('flex items-center justify-center h-64', styles.loadingState)}>
-      Loading system errors…
-    </div>
-  );
+  if (loading) return <LoadingState message="Loading system errors…" />;
 
   return (
     <>

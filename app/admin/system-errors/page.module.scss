@@ -1,11 +1,7 @@
 // System Errors page — SCSS module
 // All visual identity; Tailwind handles layout utilities in the TSX.
 
-// ── Loading / status ────────────────────────────────────────────────────────
-
-.loadingState {
-  color: var(--dc-p3, #505050);
-}
+// ── Status ──────────────────────────────────────────────────────────────────
 
 .statusMsg {
   padding: 10px 14px;
