@@ -2,6 +2,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -19,8 +20,11 @@ import type { RelationGraph, RelationNode, RelationEdge, NodeTypeConfig } from '
 import type { IssueTypeDefinition } from '@/types/issueTypeHierarchy';
 import { DEFAULT_ISSUE_TYPES } from '@/types/issueTypeHierarchy';
 import { SvgIcon } from '@/components/ui/SvgIcon';
-import { buildNodeTypeConfig, EDGE_TYPE_CONFIG, ORPHAN_STYLE } from './nodeStyles';
+import { buildNodeTypeConfig, EDGE_TYPE_CONFIG } from './nodeStyles';
 import RelationLegend from './RelationLegend';
+import styles from './WorkItemGraph.module.scss';
+
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
 
 // ── Dagre layout (async to avoid SSR) ────────────────────────────────────────
 
@@ -54,88 +58,73 @@ function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number
   const isOrphan = data.isOrphan;
   const isRiskPath    = data.isOnRiskPath && !data.isFocusNode;
   const isBranchRoot  = data.isLargestBranch && !data.isOnRiskPath && !data.isFocusNode && !data.isDone;
-  const border   = isOrphan
-    ? `2px dashed ${ORPHAN_STYLE.badgeColor}`
-    : isRiskPath && !data.isDone
-    ? `2px solid #dc2626`
-    : isBranchRoot
-    ? `2px solid #7c3aed`
-    : `2px solid ${data.isFocusNode ? cfg.color : cfg.border}`;
-  const bg = isOrphan ? ORPHAN_STYLE.bg
-    : isRiskPath && !data.isDone ? '#fff5f5'
-    : isBranchRoot ? '#faf5ff'
-    : cfg.bg;
-  const w  = data._w;
+  const tone = isOrphan ? 'orphan' : isRiskPath && !data.isDone ? 'risk' : isBranchRoot ? 'branch' : undefined;
+
+  // DYNAMIC CSS VARIABLE:
+  // Card width is per-node-size-tier; border/background/badge colors come
+  // from the admin-configured issue-type palette (cfg), which is arbitrary
+  // per type and cannot be expressed as a fixed class.
+  const cardVars: CSSVars = {
+    '--node-width': `${data._w}px`,
+    '--node-border-color': data.isFocusNode ? cfg.color : cfg.border,
+    '--node-bg': cfg.bg,
+    '--node-type-color': cfg.color,
+    '--node-focus-shadow': `${cfg.color}40`,
+  };
 
   return (
-    <div style={{
-      width: w, border, background: bg, borderRadius: 12,
-      padding: '10px 12px', cursor: 'pointer',
-      boxShadow: data.isFocusNode
-        ? `0 0 0 3px ${cfg.color}40, 0 2px 8px rgba(0,0,0,.12)`
-        : isRiskPath && !data.isDone
-        ? '0 0 0 3px rgba(220,38,38,0.15), 0 2px 8px rgba(220,38,38,0.10)'
-        : '0 1px 4px rgba(0,0,0,.08)',
-    }}>
+    <div className={styles.card} data-tone={tone} data-focus={data.isFocusNode} style={cardVars}>
       {/* Connection points — required for React Flow to anchor edge paths to this node */}
-      <Handle type="target" position={Position.Top} isConnectable={false} style={{ opacity: 0, width: 1, height: 1 }} />
-      <Handle type="source" position={Position.Bottom} isConnectable={false} style={{ opacity: 0, width: 1, height: 1 }} />
+      <Handle type="target" position={Position.Top} isConnectable={false} className={styles.handle} />
+      <Handle type="source" position={Position.Bottom} isConnectable={false} className={styles.handle} />
 
       {/* Type + badges */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5, flexWrap: 'wrap' }}>
+      <div className={styles.badgeRow}>
         <SvgIcon name={cfg.icon} size={13} style={{ color: cfg.color }} />
-        <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em', color: cfg.color, flex: 1 }}>
+        <span className={styles.typeLabel}>
           {data.type}
         </span>
         {data.isFocusNode && (
-          <span style={{ fontSize: 9, background: cfg.color, color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>FOCUS</span>
+          <span className={styles.focusBadge}>FOCUS</span>
         )}
         {isRiskPath && !data.isDone && !data.isFocusNode && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, background: '#dc2626', color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>
+          <span className={styles.riskBadge}>
             <SvgIcon name="warning" size={9} />
             RISK PATH
           </span>
         )}
         {isBranchRoot && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, background: '#7c3aed', color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>
+          <span className={styles.branchBadge}>
             <SvgIcon name="chartBar" size={9} />
             MOST WORK
           </span>
         )}
         {isOrphan && (
-          <span style={{ fontSize: 9, background: ORPHAN_STYLE.badgeColor, color: '#fff', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>ORPHAN</span>
+          <span className={styles.orphanBadge}>ORPHAN</span>
         )}
       </div>
 
       {/* Key */}
-      <p style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: cfg.color, margin: '0 0 3px' }}>
+      <p className={styles.issueKey}>
         {data.issueKey}
       </p>
 
       {/* Summary */}
-      <p style={{
-        fontSize: 11, color: '#334155', lineHeight: 1.4, margin: '0 0 6px',
-        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-      }}>
+      <p className={styles.summary}>
         {data.summary}
       </p>
 
       {/* Chips */}
-      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{
-          fontSize: 9, borderRadius: 999, padding: '1px 6px', fontWeight: 600,
-          background: data.isDone ? '#dcfce7' : '#f1f5f9',
-          color:      data.isDone ? '#15803d' : '#475569',
-          border:     '1px solid ' + (data.isDone ? '#bbf7d0' : '#e2e8f0'),
-        }}>{data.status}</span>
+      <div className={styles.chipsRow}>
+        <span className={styles.statusChip} data-done={data.isDone}>{data.status}</span>
         {data.isBlocked && (
-          <span style={{ fontSize: 9, background: '#fef2f2', color: '#b91c1c', borderRadius: 999, padding: '1px 6px', fontWeight: 700, border: '1px solid #fecaca' }}>
+          <span className={styles.blockedChip}>
             <SvgIcon name="priorityBlocker" size={9} style={{ display: 'inline-block', verticalAlign: '-1px', marginRight: 3 }} />
             Blocked
           </span>
         )}
         {(data.storyPoints ?? 0) > 0 && (
-          <span style={{ fontSize: 9, background: '#f5f3ff', color: '#7c3aed', borderRadius: 999, padding: '1px 6px', fontWeight: 600, border: '1px solid #ddd6fe' }}>
+          <span className={styles.pointsChip}>
             {data.storyPoints}pt
           </span>
         )}
@@ -143,7 +132,7 @@ function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number
 
       {/* Assignee */}
       {data.assignee && data.assignee !== 'Unassigned' && (
-        <p style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: '#94a3b8', margin: '4px 0 0' }}>
+        <p className={styles.assigneeRow}>
           <SvgIcon name="person" size={10} />
           {data.assignee}
         </p>
@@ -153,11 +142,7 @@ function IssueNodeCard({ data }: { data: RelationNode & { _w: number; _h: number
       {data.childCount > 0 && !data.isExpanded && (
         <button
           onClick={e => { e.stopPropagation(); data.onToggle?.(data.id); }}
-          style={{
-            marginTop: 6, width: '100%', fontSize: 10, fontWeight: 700,
-            background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6,
-            padding: '2px 0', color: '#475569', cursor: 'pointer',
-          }}
+          className={styles.expandBtn}
         >
           +{data.childCount} children
         </button>
@@ -262,7 +247,7 @@ export default function WorkItemGraph({ graph, onNodeFocus, dimNonRiskPath = fal
   }, [onNodeFocus]);
 
   return (
-    <div className="relative w-full" style={{ height: isMobile ? 380 : 540, background: '#f8fafc', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+    <div className={styles.graphWrap}>
       <ReactFlow
         nodes={rfNodes}
         edges={rfEdges}
