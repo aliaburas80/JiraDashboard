@@ -5,6 +5,18 @@
 
 ---
 
+## Added: Automated Cross-Browser/Responsive Smoke Testing and a CI/CD Design Doc (2026-07-22)
+
+Set up an end-to-end test suite (Playwright) that automatically checks the app's core path — signing
+in, uploading a Jira export, and reaching a populated dashboard — on three browser engines (Chrome,
+Firefox, Safari) and two device profiles (tablet, mobile), catching engine- or viewport-specific
+breakage before it reaches production. Extended the existing CI pipeline to run the full lint gate (not
+just a partial one) and documented the whole pipeline design end-to-end, including how it connects to
+production deployment. No user-facing behavior changed — this is internal quality-process
+infrastructure.
+
+---
+
 ## Fixed: Critical Next.js Security Advisory, Dependency Health Check Established (2026-07-22)
 
 Updated Next.js from a version with a known, actively-flagged critical security vulnerability to a

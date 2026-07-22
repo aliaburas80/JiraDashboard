@@ -49,7 +49,10 @@ jobs:
       - name: Lint styles
         run: npm run lint:css
 
-      - name: Lint deployment changes
+      - name: Lint (repo-wide)
+        run: npm run lint
+
+      - name: Lint deployment changes (zero-warning gate)
         run: >
           npx eslint
           app/api/health/route.ts

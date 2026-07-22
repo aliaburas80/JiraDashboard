@@ -1086,15 +1086,30 @@ must be flagged for explicit review, never applied silently, per CLAUDE.md §4.7
 
 A merge must not be created when any check is red. Pre-existing test failures must be identified by name (not waved away as "probably pre-existing") before a merge is allowed.
 
+### Critical-path E2E suite (`QA-GATE-05`/`06`, added 2026-07-22)
+
+`npm run test:e2e` (Playwright, `playwright.config.ts`, `tests/e2e/`) runs the one true critical path —
+login → forced password change → upload a Jira export → land on a populated dashboard — across 5
+projects: **Desktop Chrome, Desktop Firefox, Desktop Safari** (cross-browser, `QA-GATE-05`) and
+**Tablet** (`iPad Pro 11`), **Mobile** (`iPhone 13`) (responsive/cross-platform, `QA-GATE-06`). This is
+deliberately one narrow smoke spec, not a feature-coverage suite — per-feature behavior belongs in the
+Jest suite (`npm test`).
+
+Locally, `npm run test:e2e` needs a real Postgres reachable via `DATABASE_URL` and a seeded admin
+account (`npm run db:seed`, using `ADMIN_EMAIL`/`ADMIN_PASSWORD`) — it boots the app with
+`npm run start` (production mode) via Playwright's `webServer` config, not `npm run dev`. In CI,
+`.github/workflows/e2e.yml` provisions an ephemeral `postgres:16` service, migrates, seeds, builds, and
+runs the suite — this is the only environment guaranteed to have every prerequisite available; don't
+assume a local run without Postgres will work.
+
 ### Future gate additions (not yet wired)
 
 These additional checks will be added as the infrastructure matures:
 
-- `eslint . --max-warnings=0` — once `STYLE-07` clears
-- `npm run test:e2e` — once Playwright is installed
-- `npm run test:a11y` — once accessibility test suite is set up
+- `npm run test:a11y` — once an accessibility test suite is set up
 - `npm run config:validate` — once a config validation script exists
-- `npm audit` — dependency security scan before merge
+- GitHub branch-protection required-status-checks for `quality`/`e2e` — see `QA-GATE-07`, a manual
+  one-time step in GitHub's own settings UI that this repo's tooling cannot perform
 
 ---
 
@@ -1570,6 +1585,73 @@ optional message. It's used two ways:
 
 ---
 
+## 11b. CI/CD Pipeline Design (`ARCH-01`, added 2026-07-22)
+
+The pipeline has two independent stages, triggered by two different events:
+
+```text
+git push / PR opened
+        │
+        ▼
+┌─────────────────────────────────────────────────────┐
+│ GitHub Actions — .github/workflows/quality.yml       │
+│ (runs on every push to main AND every PR)            │
+│                                                       │
+│  checkout → setup Node (.nvmrc) → npm ci             │
+│  → prisma generate → typecheck → lint:css            │
+│  → lint (repo-wide, ≤8 warnings)                     │
+│  → lint (deployment-critical files, 0 warnings)      │
+│  → test (full Jest suite)  → build                   │
+└─────────────────────────────────────────────────────┘
+        │  (only reached if the above is green AND the push
+        │   landed on main — PRs stop here, they don't deploy)
+        ▼
+┌─────────────────────────────────────────────────────┐
+│ Render (render.yaml, autoDeploy: true)               │
+│ watches the main branch directly — independent of    │
+│ GitHub Actions' pass/fail today (see gap below)      │
+│                                                       │
+│  npm ci --include=dev && npm run build → npm run start│
+│  → healthCheckPath: /api/health                      │
+└─────────────────────────────────────────────────────┘
+```
+
+**Stages:**
+1. **Lint** — `lint:css` (Stylelint, 0 warnings), `lint` (repo-wide ESLint, ≤8 accepted warnings —
+   see CLAUDE.md §60.1), a stricter 0-warning ESLint pass on deployment-critical files
+   (`app/api/health`, `app/api/ready`, `app/api/upload`, `src/lib/env/server.ts`, `src/lib/logger.ts`,
+   `src/lib/prisma.ts`, `src/services/storage/storageProvider.ts`).
+2. **Test** — full Jest suite (`npm run test`), no changed-file filtering (`QA-GATE-01`).
+3. **Build** — `next build` via `npm run build`, confirms the production bundle actually compiles.
+4. **Docker image** — `Dockerfile`/`docker-compose.yml` exist and are exercised locally (§12) and by
+   the `docker` deployment target, but are **not** built or pushed by GitHub Actions — Render's own
+   build (`npm ci --include=dev && npm run build`) is what actually ships to production today, not a
+   container image. Treat the Dockerfile as a self-host/local-parity path, not the production build
+   artifact.
+5. **Deploy** — Render's `autoDeploy: true` watches `main` directly and deploys on every push,
+   independent of the GitHub Actions workflow's result.
+
+**Branch/PR gates:** `quality.yml` runs on both `push: branches: [main]` and every `pull_request`, so a
+PR shows pass/fail before merge. **Known gap (`QA-GATE-07`, tracked in `TODO-List.md`):** GitHub's
+branch-protection "required status checks" is not turned on for `main` — the workflow reports a result,
+but it is not currently enforced as a hard merge blocker, and Render's auto-deploy does not wait on it
+either. Turning this on is a one-time manual step in GitHub's own UI (Settings → Branches → branch
+protection rule for `main` → Require status checks to pass → select the `quality` job) — it cannot be
+done through this repo's files or CI tooling, and no `gh` CLI or GitHub API token is available in this
+environment to script it. Until it's enabled, treat `quality.yml` failing as a strong signal to not
+merge, not as something that structurally prevents it.
+
+**Secrets handling:** the CI job needs no real secrets — `DATABASE_URL`, `SESSION_SECRET`, and
+`CONFIG_ENCRYPTION_KEY` in `quality.yml`'s `env:` block are hardcoded, non-sensitive, CI-only dummy
+values (a local Postgres URL that only exists inside the ephemeral runner, and placeholder strings that
+satisfy each variable's minimum-length validation — see `src/lib/env/server.ts`). No GitHub Actions
+Secrets are configured or required for this workflow. Real production secrets (database credentials,
+storage provider keys, session secret) live only in Render's own environment-variable dashboard —
+`render.yaml`'s `sync: false` on `DATABASE_URL` means exactly that: set it there, never commit it, never
+pass it through GitHub Actions.
+
+---
+
 ## 12. Deployment
 
 See **`product/DEPLOYMENT_GUIDE.md`** for the full guide. Summary:
@@ -1578,8 +1660,9 @@ See **`product/DEPLOYMENT_GUIDE.md`** for the full guide. Summary:
 
 | Target | Command | Persistence | Recommended |
 |--------|---------|------------|-------------|
-| **Docker** | `docker compose up -d --build` | Volume mount | ✅ Production |
-| **VPS / PM2** | `pm2 start npm -- start` | Local filesystem | ✅ Production |
+| **Render** | `git push` to `main` → `render.yaml` auto-deploy | Managed Postgres + object storage | ✅ **Current production target** |
+| **Docker** | `docker compose up -d --build` | Volume mount | ✅ Self-host |
+| **VPS / PM2** | `pm2 start npm -- start` | Local filesystem | ✅ Self-host |
 | **Vercel** | `git push` → auto-deploy | ❌ Ephemeral | Demo only |
 
 ### Key files
