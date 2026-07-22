@@ -273,13 +273,13 @@ SCSS      →  all component appearance (color, border, shadow, animation, typog
 ```
 
 ### Rules
-- **Zero inline `style` props** — ESLint `react/forbid-dom-props` enforces this. Exception: CSS custom properties only (`--prefixed-keys`) for data-driven values (e.g. `style={{ '--bar-width': `${pct}%` } as CSSProperties}`).
+- **Zero inline `style` props** — a custom local ESLint rule, `local-rules/forbid-non-css-var-style` (`eslint-local-rules/index.js`), enforces this. It resolves the actual `style` value (inline object, same-file variable, or same-file helper function's returned object) and only flags it when a key isn't `--`-prefixed or object spread is used — unlike the stock `react/forbid-dom-props` rule it replaced, it can tell a sanctioned CSS-variable exception apart from a real violation. Exception: CSS custom properties only (`--prefixed-keys`) for data-driven values (e.g. `style={{ '--bar-width': `${pct}%` } as CSSProperties}`). Scoped to native/intrinsic elements only — components that declare `style` as their own typed prop (`SvgIcon`, `Reveal`) are a separate passthrough pattern, not covered by this rule.
 - **SCSS modules** — one `ComponentName.module.scss` per component with custom styling.
 - **Design tokens** — all values from `src/styles/_tokens.scss`. Never hardcode hex, px dimensions, or z-indices.
 - **`clsx`** — for conditional class composition.
 - **`DC_NAV_GROUPS`** (`src/components/dc-shell/navigation.ts`) — single source of truth for all nav items. Both `AppShell` and `DashboardTopbar` consume this config.
 
-**Known status (2026-06-27):** the zero-inline-style rule is enforced for new code, but the existing codebase is not yet compliant — a repo-wide audit found 1,524 `react/forbid-dom-props` warnings across 86 files. This is tracked, tiered, prioritized debt, not an unknown problem: see CLAUDE.md §60 for the file-by-file breakdown and `TODO-List.md` Section 18f (`STYLE-01`–`08`) for remediation status. Do not add *new* inline styles to a file just because it already has some.
+**Status (2026-07-22): remediation complete.** The repo-wide inline-style backlog (a 2026-06-27 audit peak of 1,524 warnings across 86 files) has been fully paid down — see CLAUDE.md §60 for the current enforcement mechanism and the established `data-*`-attribute/CSS-token patterns, and `TODO-List.md` `STYLE-01`–`09` for the full remediation history. `npm run lint` (`eslint . --max-warnings=8`) now fails on any new inline-style violation; the 8-warning ceiling covers only accepted, documented exceptions plus unrelated pre-existing `@next/next/no-img-element` warnings.
 
 ### Layout injection patterns
 
@@ -299,14 +299,19 @@ All analytics pages are React Client Components (`'use client'`). They call `loa
 
 ### Navigation structure
 
-Navigation items are defined in `DC_NAV_GROUPS` (`src/components/dc-shell/navigation.ts`) — the single source of truth consumed by both `AppShell` and `DashboardTopbar`. Groups:
+Navigation items are defined in `DC_NAV_GROUPS` (`src/components/dc-shell/navigation.ts`) — the single source of truth consumed by both `AppShell` and `DashboardTopbar`. Groups, in render order:
 - **Analytics**: `/summary`, `/dashboard`, `/charts`, `/trends`, `/teams`, `/portfolio`
-- **Reference**: `/glossary`, `/developer`, `/help`
-- **Delivery**: `/readiness`, `/explore`, `/customer`, `/column-mapping`, `/data-quality`, `/delivery-mix`, `/flow-health`, `/release-readiness`, `/sprint-kanban`, `/work-explorer`
+- **Delivery**: `/release-readiness`, `/flow-health`, `/sprint-kanban`, `/delivery-mix`, `/explore`, `/customer`
 - **Planning**: `/roadmap`, `/forecast`, `/retro`
-- **Data**: `/snapshots`, `/backend`
+- **Data**: `/work-explorer`, `/data-quality`, `/snapshots`, `/column-mapping`, `/backend`
+- **Directory**: `/members` (gated by `isSuperAdmin`, not role — see TC-NAV-08/09/10 below)
+- **Developer Tools**: `/developer` (admin-only)
+- **Reference**: `/landing`, `/glossary`, `/help`
+- **Administration** (admin-only; renders last — configuration destinations are lower priority than day-to-day content): Activity (`/admin/audit`, `/admin/logs`, `/admin/feedback`), Observability (`/admin/system-errors`, `/admin/diagnostics`, `/admin/security`), Configure (`/admin/users`, `/admin/theme`)
 
-**EP-019 note (2026-07-04):** raw `DC_NAV_GROUPS` should not be rendered directly anymore — call `getNavGroupsForRole(role)` (same file) instead, which filters both groups and items through `canAccessRoute()` (`@/lib/roles`) and drops any group left empty. Both `AppShell.tsx` and `DashboardTopbar.tsx` fetch the current role via `GET /api/auth/me` and filter through it before rendering the nav — previously every group/item was shown to every role regardless of access, including `/developer`, which is admin-only at the middleware level. `DCTopbar.tsx`/`DCPageSidebar.tsx` (`src/components/dc-shell/`) also consume `DC_NAV_GROUPS` but are unused dead code (no import anywhere in `app/`) and were not updated.
+**EP-019 note (2026-07-04):** raw `DC_NAV_GROUPS` should not be rendered directly anymore — call `getNavGroupsForRole(role)` (same file) instead, which filters both groups and items through `canAccessRoute()` (`@/lib/roles`) and drops any group left empty. Both `AppShell.tsx` and `DashboardTopbar.tsx` fetch the current role via `GET /api/auth/me` and filter through it before rendering the nav — previously every group/item was shown to every role regardless of access, including `/developer`, which is admin-only at the middleware level. `DCTopbar.tsx`/`DCPageSidebar.tsx`/`DCActionBoard.tsx`/`DeliveryClarityShell.tsx` also used to consume `DC_NAV_GROUPS` but were confirmed dead code (no import anywhere in `app/`) and were deleted — see `ORPHAN-05`.
+
+**2026-07-22 note:** the `administration` group (admin/config destinations) now renders last in `DC_NAV_GROUPS`, after `reference`, instead of ahead of `directory` — configuration destinations are lower priority than day-to-day content. The Admin sidebar's "Settings" sub-item was also removed from `DC_NAV_GROUPS` (the redundant nav entry only — `/admin/settings` itself, and its direct links such as `NotificationBell`'s pending-request banner, are unaffected and still reachable). `getCachedUser()`'s in-memory cache (`src/lib/currentUser.ts`) is now mirrored to `sessionStorage`, so a hard page reload no longer briefly renders the nav filtered for "no role" before `/api/auth/me` resolves.
 
 Mobile: hamburger button opens a 2-column grid panel below the header.
 
@@ -1041,12 +1046,13 @@ Every branch must pass the merge gate before it is merged to `main`. This is not
 | Script | Command | When to use |
 |---|---|---|
 | `npm run typecheck` | `tsc --noEmit` | Any TypeScript change |
+| `npm run lint` | `eslint . --max-warnings=8` | Any JS/TS/JSX change |
 | `npm run lint:css` | Stylelint on `src/**/*.scss` and `app/**/*.scss` | Any SCSS change |
 | `npm run test` | Jest full suite | Any logic change |
 | `npm run check:fast` | typecheck + lint:css + test | Pre-commit quick gate |
 | `npm run check:ci` | typecheck + lint:css + test + build | **Pre-merge gate — required** |
 
-**Note on `npm run lint`:** The `lint` script currently runs `next lint`, which is prohibited by CLAUDE.md §4.6. It is kept as-is because switching to `eslint . --max-warnings=0` would fail immediately on 1,524 existing warnings (`STYLE-07` — blocked until the inline-style backlog is paid down). Run `npm run lint:css` (Stylelint) instead as part of the gate.
+**Note on `npm run lint` (updated 2026-07-22):** the `lint` script runs the direct ESLint CLI (`eslint . --max-warnings=8`), per CLAUDE.md §4.6 — not `next lint`. The 8-warning ceiling is fully accounted for (3 accepted inline-style exceptions plus 5 unrelated `@next/next/no-img-element` warnings, see CLAUDE.md §60.1) and is empirically verified to fail at 7 and pass at 8. `STYLE-07` (the ticket that previously blocked this) is closed.
 
 ### Pre-merge checklist
 

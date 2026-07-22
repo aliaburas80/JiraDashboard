@@ -5,6 +5,34 @@
 
 ---
 
+## Resolved: Inline-Style Technical Debt Fully Remediated (2026-07-22)
+
+The repo-wide inline-style backlog tracked since 2026-06-27 (a peak of 1,524 warnings across 86 files)
+is now fully paid down to 3 accepted, documented exceptions. All custom appearance across the app now
+lives in SCSS Modules consuming design tokens, with business-logic color/state decisions expressed as
+semantic `data-*` attributes rather than JavaScript-computed colors. `npm run lint` now runs the direct
+ESLint CLI (`eslint . --max-warnings=8`, per the project's engineering standards) instead of a
+placeholder gate that never actually failed on new violations, backed by a new custom ESLint rule
+(`local-rules/forbid-non-css-var-style`) that can tell a legitimate CSS-variable exception apart from a
+real inline-style violation — the previous stock rule could not. No user-facing behavior changed; this
+is an internal code-quality and maintainability closure. See CLAUDE.md §60 and `TODO-List.md`
+`STYLE-01`–`09` for full detail.
+
+---
+
+## Fixed: Admin Nav Ordering, Redundant Settings Link, and a Brief Menu Flash on Reload (2026-07-22)
+
+The top navigation's Administration section (admin/config destinations) now renders last, after
+Reference, instead of ahead of the Directory group — configuration items are lower priority than
+day-to-day content. The Admin menu's "Settings" sub-item has been removed since it duplicated
+destinations already reachable elsewhere in the admin console; the Settings page itself is unaffected
+and still reachable directly (including via the existing pending-request notification link). Also fixed
+a brief nav flash right after a full page reload, where the menu would momentarily show as if you had no
+role before snapping to the correct set of items — your role is now remembered across the reload instead
+of being re-fetched from scratch every time.
+
+---
+
 ## Fixed: Blank-Page Flash on Portfolio, Teams, Sprint & Kanban, Delivery Mix, and Column Mapping (2026-07-21)
 
 Five pages could briefly show either a completely blank white screen or an empty-looking page while
