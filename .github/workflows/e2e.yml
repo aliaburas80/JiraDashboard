@@ -1,0 +1,83 @@
+name: E2E
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: e2e
+          POSTGRES_PASSWORD: e2e
+          POSTGRES_DB: delivery_clarity_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U e2e -d delivery_clarity_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://e2e:e2e@localhost:5432/delivery_clarity_e2e?sslmode=disable
+      SESSION_SECRET: e2e-session-secret-value-at-least-32-chars
+      CONFIG_ENCRYPTION_KEY: e2e-config-secret-value-at-least-32-chars
+      STORAGE_DRIVER: temporary
+      MAX_UPLOAD_MB: 20
+      LOG_LEVEL: info
+      NODE_ENV: production
+      ADMIN_EMAIL: e2e-admin@deliveryclarity.app
+      ADMIN_PASSWORD: E2E-admin-password-1
+      ADMIN_NAME: E2E Admin
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Run database migrations
+        run: npx prisma migrate deploy
+
+      - name: Seed the E2E admin account
+        run: npm run db:seed
+
+      - name: Build
+        run: npm run build
+
+      - name: Run critical-path E2E suite
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
