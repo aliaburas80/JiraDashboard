@@ -77,29 +77,6 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
       { id: 'backend',        title: 'Backend',        desc: 'Import logs & raw data',  href: '/backend',        status: 'neutral', icon: 'database'      },
     ],
   },
-  // ── Administration ────────────────────────────────────────────────────────
-  // Single source of truth for every admin-only destination — also drives
-  // AdminNavSidebar.tsx's sectioned rendering (grouped by `section` below,
-  // in array order) so the topbar dropdown, global search, and the admin
-  // sidebar can never drift into three independently-maintained lists again.
-  {
-    id: 'administration',
-    label: 'Administration',
-    items: [
-      // Activity
-      { id: 'admin-audit',       title: 'Audit Events',     desc: 'Admin action audit trail',    href: '/admin/audit',        status: 'neutral', icon: 'clipboard', section: 'Activity' },
-      { id: 'admin-logs',        title: 'Import Logs',      desc: 'All user import activity',    href: '/admin/logs',         status: 'neutral', icon: 'archive',   section: 'Activity' },
-      { id: 'admin-feedback',    title: 'User Feedback',    desc: 'Submitted feedback & reports', href: '/admin/feedback',    status: 'neutral', icon: 'email',     section: 'Activity' },
-      // Observability
-      { id: 'admin-syserrors',   title: 'System Errors',    desc: 'Logged application errors',   href: '/admin/system-errors', status: 'warning', icon: 'warning',   section: 'Observability' },
-      { id: 'admin-diagnostics', title: 'Diagnostics',      desc: 'System health & admin stats', href: '/admin/diagnostics',  status: 'info',    icon: 'statusInfo', section: 'Observability' },
-      { id: 'admin-security',    title: 'Security',         desc: 'Production security checks',  href: '/admin/security',     status: 'warning', icon: 'shield',    section: 'Observability' },
-      // Configure
-      { id: 'admin-users',       title: 'User Management',  desc: 'Accounts & roles',            href: '/admin/users',        status: 'neutral', icon: 'people',    section: 'Configure' },
-      { id: 'admin-settings',    title: 'Settings',         desc: 'Users, storage, retention',   href: '/admin/settings',     status: 'neutral', icon: 'tools',     section: 'Configure' },
-      { id: 'admin-theme',       title: 'Branding',         desc: 'Logo, favicon & app name',    href: '/admin/theme',        status: 'neutral', icon: 'tag',       section: 'Configure' },
-    ],
-  },
   // ── Directory ─────────────────────────────────────────────────────────────
   // Split out of the former 'reference' group — 07-information-architecture.md
   // §D flagged 'Reference' as mixing a people directory, marketing, end-user
@@ -137,6 +114,29 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
       { id: 'landing',   title: 'About',    desc: 'Product overview & features', href: '/landing',  status: 'neutral', icon: 'info'    },
       { id: 'glossary',  title: 'Glossary', desc: 'Term & abbreviation guide',   href: '/glossary',  status: 'neutral', icon: 'book'    },
       { id: 'help',      title: 'Help',     desc: 'How to use this app',         href: '/help',      status: 'info',    icon: 'support' },
+    ],
+  },
+  // ── Administration ────────────────────────────────────────────────────────
+  // Single source of truth for every admin-only destination — also drives
+  // AdminNavSidebar.tsx's sectioned rendering (grouped by `section` below,
+  // in array order) so the topbar dropdown, global search, and the admin
+  // sidebar can never drift into three independently-maintained lists again.
+  // Positioned last: configuration/admin destinations, not day-to-day content.
+  {
+    id: 'administration',
+    label: 'Administration',
+    items: [
+      // Activity
+      { id: 'admin-audit',       title: 'Audit Events',     desc: 'Admin action audit trail',    href: '/admin/audit',        status: 'neutral', icon: 'clipboard', section: 'Activity' },
+      { id: 'admin-logs',        title: 'Import Logs',      desc: 'All user import activity',    href: '/admin/logs',         status: 'neutral', icon: 'archive',   section: 'Activity' },
+      { id: 'admin-feedback',    title: 'User Feedback',    desc: 'Submitted feedback & reports', href: '/admin/feedback',    status: 'neutral', icon: 'email',     section: 'Activity' },
+      // Observability
+      { id: 'admin-syserrors',   title: 'System Errors',    desc: 'Logged application errors',   href: '/admin/system-errors', status: 'warning', icon: 'warning',   section: 'Observability' },
+      { id: 'admin-diagnostics', title: 'Diagnostics',      desc: 'System health & admin stats', href: '/admin/diagnostics',  status: 'info',    icon: 'statusInfo', section: 'Observability' },
+      { id: 'admin-security',    title: 'Security',         desc: 'Production security checks',  href: '/admin/security',     status: 'warning', icon: 'shield',    section: 'Observability' },
+      // Configure
+      { id: 'admin-users',       title: 'User Management',  desc: 'Accounts & roles',            href: '/admin/users',        status: 'neutral', icon: 'people',    section: 'Configure' },
+      { id: 'admin-theme',       title: 'Branding',         desc: 'Logo, favicon & app name',    href: '/admin/theme',        status: 'neutral', icon: 'tag',       section: 'Configure' },
     ],
   },
 ];
