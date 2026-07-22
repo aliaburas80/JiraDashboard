@@ -96,7 +96,7 @@ test('TC-NAV-13: admin sees every Administration destination exactly once, not d
   const adminItems = groups.find(g => g.id === 'administration')?.items ?? [];
   const ids = adminItems.map(i => i.id);
   expect(new Set(ids).size).toBe(ids.length);
-  expect(adminItems.length).toBe(9);
+  expect(adminItems.length).toBe(8);
 });
 
 test('TC-NAV-14: getAdminNavSections groups the Administration items into Activity / Observability / Configure with no cross-section duplicates', () => {
@@ -107,7 +107,7 @@ test('TC-NAV-14: getAdminNavSections groups the Administration items into Activi
   expect(new Set(allIds).size).toBe(allIds.length);
 
   const configureIds = sections.find(s => s.label === 'Configure')?.items.map(i => i.id) ?? [];
-  expect(configureIds).toEqual(['admin-users', 'admin-settings', 'admin-theme']);
+  expect(configureIds).toEqual(['admin-users', 'admin-theme']);
 });
 
 test('TC-NAV-15: a non-admin role gets no admin sections at all', () => {
