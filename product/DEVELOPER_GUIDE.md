@@ -1060,12 +1060,29 @@ Run `npm run check:ci` and confirm all four stages pass before merging:
 
 ```
 □  npm run typecheck          passes (0 errors)
+□  npm run lint                passes (≤8 warnings, 0 errors — see note above)
 □  npm run lint:css           passes (0 warnings)
 □  npm run test               passes (all suites green)
 □  npm run build              passes (no build errors)
 □  product/ docs updated      (SRS, RELEASE_NOTES, and any affected files)
 □  TODO-List.md Last-updated  header reflects this version
 ```
+
+### Dependency health check (`QA-GATE-03`/`04`, added 2026-07-22)
+
+Whenever `package.json` or `package-lock.json` changes — and periodically even when they don't — run:
+
+```
+npm outdated   # flag anything a major version behind; do not silently bump
+npm audit      # flag any new vulnerability; note severity and whether a non-breaking fix exists
+npm ci         # confirm the lockfile installs cleanly from scratch (catches drift before main)
+```
+
+Apply only fixes that don't require `--force` (non-breaking, within `package.json`'s existing ranges)
+without asking first. Anything `npm audit fix` reports as requiring `--force` — a semver-major bump —
+must be flagged for explicit review, never applied silently, per CLAUDE.md §4.7/§4.8. See `TODO-List.md`
+`QA-GATE-03`/`DEP-DEFERRED-01`/`DEP-UPGRADE-NEXT16` for the currently tracked, reviewed exceptions
+(`nodemailer`, `xlsx`, `@google-cloud/storage`'s `uuid` chain, and the full Next.js 16.x major upgrade).
 
 A merge must not be created when any check is red. Pre-existing test failures must be identified by name (not waved away as "probably pre-existing") before a merge is allowed.
 

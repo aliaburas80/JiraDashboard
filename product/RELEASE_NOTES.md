@@ -5,6 +5,20 @@
 
 ---
 
+## Fixed: Critical Next.js Security Advisory, Dependency Health Check Established (2026-07-22)
+
+Updated Next.js from a version with a known, actively-flagged critical security vulnerability to a
+patched release (still the same major version — no behavior change expected). Applied several
+additional non-breaking security patches to transitive dependencies. A small number of remaining
+issues — a `nodemailer` CVE requiring a major-version bump, a `xlsx` (Excel import) CVE with no upstream
+fix currently available, and two lower-severity Next.js advisories that require a future major upgrade
+to fully close — have been reviewed and are being tracked deliberately rather than left unnoticed; none
+require action from users of the app today. This change also establishes a routine dependency-health
+check (`npm outdated`/`npm audit`/`npm ci`) as a standing part of the pre-merge process going forward.
+No user-facing behavior changed.
+
+---
+
 ## Resolved: Inline-Style Technical Debt Fully Remediated (2026-07-22)
 
 The repo-wide inline-style backlog tracked since 2026-06-27 (a peak of 1,524 warnings across 86 files)
