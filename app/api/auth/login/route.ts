@@ -137,7 +137,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // entirely just locked people out of an account they legitimately own.
 
     // Use cookies() from next/headers — correct App Router approach for iron-session v8
-    const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+    const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
     session.userId             = user.id;
     session.email              = user.email;
     session.name               = user.name;

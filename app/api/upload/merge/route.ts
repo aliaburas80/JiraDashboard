@@ -26,7 +26,7 @@ function ext(name: string): string {
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // P0A-04: file upload and metrics writes are not public — require an active session.
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }

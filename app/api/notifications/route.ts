@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 
 export async function GET() {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }

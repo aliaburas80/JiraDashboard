@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   // P0A-04: import status is not public — require an active session.
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }

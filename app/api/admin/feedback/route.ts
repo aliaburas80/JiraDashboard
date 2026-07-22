@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn || session.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }

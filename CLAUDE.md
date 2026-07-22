@@ -188,30 +188,28 @@ The Quality Engineering Lead ensures that:
 **Current pinned baseline (2026-07-22):**
 
 ```text
-Next.js: 14.2.35
+Next.js: 16.2.11
 Router: App Router
 Language: TypeScript
 Rendering model: React Server Components by default
-React: 18.3.1
-Minimum Node.js supported by this Next.js version: 18.18
+Development bundler: Webpack (deliberate opt-out from Turbopack via --webpack —
+  see product/DEVELOPER_GUIDE.md §11c ADR for why)
+React: 19.2.8
+Minimum Node.js supported by this Next.js version: 20.9 (already satisfied —
+  package.json engines already required >=20.9 <21 before this upgrade)
 Package manager: npm unless the repository explicitly standardizes another manager
 ```
 
-**Target baseline — not yet started:** a major upgrade to Next.js 16.x (App Router, Turbopack, React 19,
-Node.js 20.9 minimum) is planned future work, not yet begun. Two high-severity Next.js DoS advisories
-(GHSA-9g9p-9gw9-jx7f, GHSA-h25m-26qc-wcjf) remain unpatched even at the current 14.2.35 and require this
-major upgrade to fully close — see `TODO-List.md` `QA-GATE-03` for the dependency-audit detail and
-`DEP-UPGRADE-NEXT16` for the upgrade ticket itself. Do not treat 16.x as already in place anywhere in
-this document or in code comments until that upgrade actually lands — CLAUDE.md §4.8's full major-update
-process (dedicated branch, migration review, codemods, architecture review, full regression, ADR) applies
-before it does.
+This is the project's approved target baseline, reached via the major upgrade tracked as
+`DEP-UPGRADE-NEXT16` in `TODO-List.md` — see `product/DEVELOPER_GUIDE.md` §11c for the full Architecture
+Decision Record (what broke, what didn't, what was deliberately deferred, and why).
 
 The exact Next.js version must be pinned in `package.json`.
 
 ```json
 {
   "dependencies": {
-    "next": "14.2.35"
+    "next": "16.2.11"
   }
 }
 ```

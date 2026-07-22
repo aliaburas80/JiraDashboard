@@ -102,7 +102,7 @@ test('TC-NOTIF-03: PATCH /api/notifications/[id]/read — marks notification as 
 
   const { PATCH } = await import('../../app/api/notifications/[id]/read/route');
 
-  const res = await PATCH(makeReq(null), { params: { id: 'notif-1' } });
+  const res = await PATCH(makeReq(null), { params: Promise.resolve({ id: 'notif-1' }) });
   const body = await res.json();
 
   expect(res.status).toBe(200);
@@ -119,7 +119,7 @@ test('TC-NOTIF-04: PATCH /api/notifications/[id]/read — unauthenticated return
 
   const { PATCH } = await import('../../app/api/notifications/[id]/read/route');
 
-  const res = await PATCH(makeReq(null), { params: { id: 'notif-1' } });
+  const res = await PATCH(makeReq(null), { params: Promise.resolve({ id: 'notif-1' }) });
   const body = await res.json();
 
   expect(res.status).toBe(401);
@@ -136,7 +136,7 @@ test('TC-NOTIF-05: PATCH /api/notifications/[id]/read — cannot mark another us
 
   const { PATCH } = await import('../../app/api/notifications/[id]/read/route');
 
-  const res = await PATCH(makeReq(null), { params: { id: 'notif-1' } });
+  const res = await PATCH(makeReq(null), { params: Promise.resolve({ id: 'notif-1' }) });
   const body = await res.json();
 
   expect(res.status).toBe(404);

@@ -32,7 +32,7 @@ function reqFor(pathname: string) {
 
 test('TC-PW-07a: middleware redirects every protected route to /change-password while mustChangePassword is true', async () => {
   mockSession.mustChangePassword = true;
-  const { middleware } = await import('../../middleware');
+  const { proxy: middleware } = await import('../../proxy');
 
   for (const pathname of ['/dashboard', '/admin/settings', '/members', '/profile']) {
     const response = await middleware(reqFor(pathname));
@@ -43,7 +43,7 @@ test('TC-PW-07a: middleware redirects every protected route to /change-password 
 
 test('TC-PW-07b: middleware does not redirect-loop on /change-password itself while mustChangePassword is true', async () => {
   mockSession.mustChangePassword = true;
-  const { middleware } = await import('../../middleware');
+  const { proxy: middleware } = await import('../../proxy');
 
   const response = await middleware(reqFor('/change-password'));
 
@@ -53,7 +53,7 @@ test('TC-PW-07b: middleware does not redirect-loop on /change-password itself wh
 
 test('TC-PW-07c: middleware does not redirect to /change-password when mustChangePassword is false', async () => {
   mockSession.mustChangePassword = false;
-  const { middleware } = await import('../../middleware');
+  const { proxy: middleware } = await import('../../proxy');
 
   const response = await middleware(reqFor('/dashboard'));
 
@@ -62,7 +62,7 @@ test('TC-PW-07c: middleware does not redirect to /change-password when mustChang
 
 test('TC-A-10: middleware redirects an unauthenticated request on a protected route to /login?redirect=<path>', async () => {
   mockSession.isLoggedIn = false;
-  const { middleware } = await import('../../middleware');
+  const { proxy: middleware } = await import('../../proxy');
 
   const response = await middleware(reqFor('/dashboard'));
 
@@ -75,7 +75,7 @@ test('TC-A-10: middleware redirects an unauthenticated request on a protected ro
 describe('SEC-2026-07-18: /api/* backstop', () => {
   test('a non-public API route with no session is rejected with 401 JSON, not a redirect', async () => {
     mockSession.isLoggedIn = false;
-    const { middleware } = await import('../../middleware');
+    const { proxy: middleware } = await import('../../proxy');
 
     const response = await middleware(reqFor('/api/imports'));
 
@@ -86,7 +86,7 @@ describe('SEC-2026-07-18: /api/* backstop', () => {
 
   test('a non-public API route with a valid session passes through', async () => {
     mockSession.isLoggedIn = true;
-    const { middleware } = await import('../../middleware');
+    const { proxy: middleware } = await import('../../proxy');
 
     const response = await middleware(reqFor('/api/imports'));
 
@@ -110,7 +110,7 @@ describe('SEC-2026-07-18: /api/* backstop', () => {
     '/api/backend-view',
   ])('public API route %s remains reachable with no session', async (pathname) => {
     mockSession.isLoggedIn = false;
-    const { middleware } = await import('../../middleware');
+    const { proxy: middleware } = await import('../../proxy');
 
     const response = await middleware(reqFor(pathname));
 
@@ -124,7 +124,7 @@ describe('SEC-2026-07-18: /api/* backstop', () => {
     // (or duplicate) each admin route's own requireAdmin() check.
     mockSession.isLoggedIn = true;
     mockSession.role = 'scrum_master';
-    const { middleware } = await import('../../middleware');
+    const { proxy: middleware } = await import('../../proxy');
 
     const response = await middleware(reqFor('/api/admin/users'));
 

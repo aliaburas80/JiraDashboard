@@ -34,7 +34,10 @@ function findFreePort(port) {
   }
 
   const nextBin = require.resolve('next/dist/bin/next');
-  const child = spawn(process.execPath, [nextBin, mode, '-p', String(port)], {
+  // NEXT-16-UPGRADE: Turbopack is now next's default bundler; --webpack keeps
+  // the custom externals config in next.config.js working — see the comment
+  // there for why this wasn't migrated to Turbopack in this pass.
+  const child = spawn(process.execPath, [nextBin, mode, '-p', String(port), '--webpack'], {
     stdio: 'inherit',
     env: { ...process.env, PORT: String(port) },
   });

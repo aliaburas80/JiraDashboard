@@ -16,7 +16,7 @@ import { resolveActiveJiraConnection, runJiraConnectionSync } from '@/services/j
 import { getWorkspaceForUser } from '@/lib/workspace';
 
 export async function POST() {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   // EP-020: only resolve a connection this caller created or that belongs

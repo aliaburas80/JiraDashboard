@@ -8,15 +8,15 @@ import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 
 export async function PATCH(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
 
   const notification = await prisma.notification.findUnique({
-    where: { id: params.id },
+    where: { id: (await params).id },
   });
 
   if (!notification || notification.recipientUserId !== session.userId) {
@@ -24,7 +24,7 @@ export async function PATCH(
   }
 
   await prisma.notification.update({
-    where: { id: params.id },
+    where: { id: (await params).id },
     data: { readAt: new Date() },
   });
 

@@ -10,13 +10,13 @@ import { readPersonaPreviewSettingsFromDb, writePersonaPreviewSettingsToDb } fro
 import { safeAuditEvent } from '@/lib/system-error-logger';
 
 export async function GET() {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   return NextResponse.json({ settings: await readPersonaPreviewSettingsFromDb() });
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   if (!session.isSuperAdmin) {
     return NextResponse.json({ error: 'Only the super-admin can control the persona preview switcher.' }, { status: 403 });

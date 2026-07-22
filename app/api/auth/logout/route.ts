@@ -8,7 +8,7 @@ import { prisma } from '@/lib/prisma';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
 
   if (session.isLoggedIn && session.userId) {
     await prisma.auditEvent.create({ data: {
