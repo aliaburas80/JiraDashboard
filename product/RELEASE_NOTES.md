@@ -5,6 +5,19 @@
 
 ---
 
+## Upgraded: Next.js 16 and React 19 (2026-07-22)
+
+Upgraded the app's core framework from Next.js 14 to Next.js 16, and React from 18 to 19 — the version
+already documented as this project's target. This closes out the last of the security advisories found
+in this week's dependency review, including two that had no fix available on Next.js 14 at all. No
+user-facing behavior is intended to change. One area worth a manual double-check if you notice anything
+odd: uploading a file, then immediately uploading another before the first fully loads, could very
+briefly show the previous upload's data on the dashboard — a platform-level caching change narrowed (but
+didn't eliminate) an existing safeguard against this. See `product/DEVELOPER_GUIDE.md` §11c for the full
+technical writeup of what changed and why.
+
+---
+
 ## Added: Automated Cross-Browser/Responsive Smoke Testing and a CI/CD Design Doc (2026-07-22)
 
 Set up an end-to-end test suite (Playwright) that automatically checks the app's core path — signing

@@ -298,10 +298,10 @@ At the highest level, Delivery Clarity performs the following functions:
 ### 2.5 Design and Implementation Constraints
 
 1. **Database:** SQLite via Prisma 5 at `data/delivery_clarity.db`. Stores User, ImportLog, DashboardSnapshot, AuditEvent. Import history is no longer a flat JSON file.
-2. **Authentication:** Full auth layer implemented via iron-session (HTTP-only, SameSite=strict cookies). All routes protected by `middleware.ts`. User and admin roles enforced.
+2. **Authentication:** Full auth layer implemented via iron-session (HTTP-only, SameSite=strict cookies). All routes protected by `proxy.ts` (renamed from `middleware.ts` in the Next.js 16 upgrade — see `DEP-UPGRADE-NEXT16`). User and admin roles enforced.
 3. **File processing:** Synchronous within the Next.js API route lifecycle. For datasets ≤ 5,000 issues, processing completes in < 500ms (optimised with parseDate memo cache and flowItemByKey Map). For exports > 5,000 issues, the top 5,000 highest-risk items are stored; all aggregate metrics use the full dataset.
 4. The `xlsx` package (SheetJS) is used for all file reading; handles `.csv`, `.xlsx`, and `.xls` formats.
-5. The application is a Next.js 14 App Router multi-page application. Pages are separate routes with server and client components.
+5. The application is a Next.js 16 App Router multi-page application. Pages are separate routes with server and client components.
 6. Computed metrics are stored server-side in `data/latest-metrics.json`, included in cloud backup bundles, and cached in browser `localStorage` (key prefix `dc_`) for fallback. The `FLOW_ITEMS_CAP` is 5,000 items for browser-side `flow.items`.
 7. All uploaded file bytes are processed in memory and discarded after the response is sent. No file is written to disk.
 8. The standalone Express backend (`backend/`) is a v1 legacy artifact. It is not used in the production v4 Next.js build.
@@ -327,10 +327,10 @@ At the highest level, Delivery Clarity performs the following functions:
 ┌────────────────────────────────────────────────────────────────────┐
 │                     Delivery Clarity v4.0                          │
 │                                                                    │
-│  Browser                     Next.js 14 App Router (port 3000)     │
+│  Browser                     Next.js 16 App Router (port 3000)     │
 │  ┌────────────────────┐      ┌─────────────────────────────────┐   │
 │  │  React Client       │ ──► │  app/ pages (SSR + Client)      │   │
-│  │  (localStorage)     │ ◄── │  middleware.ts (auth guard)      │   │
+│  │  (localStorage)     │ ◄── │  proxy.ts (auth guard)           │   │
 │  │  - dashboard data   │      │  app/api/ (Route Handlers)      │   │
 │  │  - filter prefs     │      │  ├── auth/login, logout, me     │   │
 │  │  - view state       │      │  ├── upload (POST)              │   │
@@ -360,7 +360,7 @@ At the highest level, Delivery Clarity performs the following functions:
 
 > **Note:** The `frontend/` (Create React App) and `backend/` (Express) directories are v1 legacy artifacts preserved for historical reference. They are NOT used in the production v4 Next.js build.
 
-### 3.2 Frontend — Next.js 14 App Router (v4.0)
+### 3.2 Frontend — Next.js 16 App Router (v4.0)
 
 All pages are Next.js App Router routes under `app/`. Client components are marked `'use client'`. Server components handle data fetching and rendering.
 

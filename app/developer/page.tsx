@@ -193,11 +193,11 @@ Inward issue link (Blocks)                   (relations)
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 14 — App Router |
+| Framework | Next.js 16 — App Router |
 | Language | TypeScript 5.x (strict: false) |
 | Styling | Tailwind CSS 3 + SCSS |
 | Testing | Jest + ts-jest |
-| Runtime | Node.js 18+ |
+| Runtime | Node.js 20.9+ |
 
 ## Directory Structure
 

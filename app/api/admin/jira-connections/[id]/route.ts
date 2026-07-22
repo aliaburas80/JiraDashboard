@@ -9,7 +9,7 @@ import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { safeAuditEvent } from '@/lib/system-error-logger';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   if (session.role !== 'admin') return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
   return session;
@@ -17,13 +17,13 @@ async function requireAdmin(): Promise<SessionData | NextResponse> {
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await requireAdmin();
   if (session instanceof NextResponse) return session;
 
   const connection = await prisma.jiraConnection.findUnique({
-    where: { id: params.id },
+    where: { id: (await params).id },
     select: { id: true, name: true, baseUrl: true },
   });
 

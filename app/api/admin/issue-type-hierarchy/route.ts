@@ -17,7 +17,7 @@ import type { IssueTypeDefinition, IssueTypeHierarchyConfig } from '@/types/issu
 import { DEFAULT_ISSUE_TYPES } from '@/types/issueTypeHierarchy';
 
 export async function GET() {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   return NextResponse.json({ config: await readIssueTypeHierarchyForUser(session.userId) });
 }
@@ -55,7 +55,7 @@ function validateTypes(types: unknown): string | null {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   if (session.role !== 'admin') return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
 

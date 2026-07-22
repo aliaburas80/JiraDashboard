@@ -11,7 +11,7 @@ import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { testUserStorageProvider } from '@/services/storage/userStorageProvider.service';
 
 export async function POST() {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   const result = await testUserStorageProvider(session.userId);

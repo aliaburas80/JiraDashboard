@@ -80,7 +80,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   let userEmail: string | undefined;
   let userName: string | undefined;
   try {
-    const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+    const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
     if (session.isLoggedIn) {
       userId    = session.userId;
       userEmail = canContact ? session.email : undefined;

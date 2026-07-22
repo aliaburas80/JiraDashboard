@@ -9,7 +9,7 @@ import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { deleteAllUserLogs } from '@/services/settings/dataRetention.service';
 
 export async function DELETE(req: NextRequest) {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   const isAdmin  = session.role === 'admin';

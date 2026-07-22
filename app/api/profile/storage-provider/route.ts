@@ -18,7 +18,7 @@ import {
 const VALID_PROVIDERS: UserStorageProviderType[] = ['s3', 'azure', 'gcp'];
 
 async function requireSession(): Promise<SessionData | NextResponse> {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   return session;
 }

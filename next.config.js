@@ -19,20 +19,19 @@ const DIST_DIR = process.env.NEXT_DIST_DIR
 
 const nextConfig = {
   distDir: DIST_DIR,
-  eslint: {
-    // Linting is enforced as a dedicated CI step. Keep `next build` focused on
-    // compilation so it does not duplicate the tracked legacy inline-style
-    // warning backlog in GitHub Actions logs.
-    ignoreDuringBuilds: true,
-  },
+  // The `eslint` config option was removed entirely in Next.js 16 — linting
+  // is enforced as its own dedicated CI step (see .github/workflows/quality.yml
+  // and product/DEVELOPER_GUIDE.md §11a), so `next build` never needed to
+  // duplicate it.
+  //
+  // NEXT-16-UPGRADE (DEP-UPGRADE-NEXT16): `serverComponentsExternalPackages`
+  // was renamed to a top-level, no-longer-experimental `serverExternalPackages`
+  // in Next.js 15+.
+  serverExternalPackages: [
+    'xlsx', 'prisma', '@prisma/client', 'bcryptjs',
+    ...CLOUD_EXTERNALS,
+  ],
   experimental: {
-    serverComponentsExternalPackages: [
-      'xlsx', 'prisma', '@prisma/client', 'bcryptjs',
-      ...CLOUD_EXTERNALS,
-    ],
-    // Disable the instrumentation hook to avoid generating edge-instrumentation
-    // bundles that execute eval() in a sandboxed context (causes EvalError).
-    instrumentationHook: false,
     // Bug fix, 2026-07-08: every /dashboard/* page is a 'use client' page that
     // loads its data once via useEffect-on-mount (loadMetricsWithSource()).
     // None of them set `dynamic = 'force-dynamic'`, so the App Router's
@@ -44,8 +43,31 @@ const nextConfig = {
     // data had loaded the first time, no matter what was just uploaded.
     // Forcing both stale-time tiers to 0 makes every dashboard navigation
     // re-fetch a fresh payload and remount, so the load effect always reruns.
-    staleTimes: { dynamic: 0, static: 0 },
+    //
+    // NEXT-16-UPGRADE: Next.js 16 rejects `static: 0` outright ("Number must
+    // be greater than or equal to 30") — `static` now has a hard floor of 30
+    // seconds; only `dynamic` can still be 0. This is a real, flagged
+    // regression risk for the original 2026-07-08 bug this config exists to
+    // fix: a soft navigation to the exact same dashboard URL (e.g. two
+    // uploads in a row, both redirecting to `/dashboard?fresh=1`) within that
+    // 30-second window could once again show stale, already-mounted data.
+    // The fully correct fix is adding `export const dynamic = 'force-dynamic'`
+    // to each /dashboard/* page (hinted at, never done, in the original fix)
+    // so these routes stop being bucketed as "static" at all — that's a
+    // broader, separately-scoped change, not bundled into this dependency
+    // upgrade. See TODO-List.md `DEP-UPGRADE-NEXT16` for the follow-up.
+    staleTimes: { dynamic: 0, static: 30 },
   },
+  // NEXT-16-UPGRADE: Turbopack is the default bundler for both `next dev` and
+  // `next build` as of v16. A project with a custom `webpack()` function (like
+  // the one below, which marks cloud-storage SDKs as server-only CJS externals
+  // so they're never bundled client-side) makes `next build` fail outright
+  // rather than risk silently misapplying it. Deliberately opted to keep
+  // Webpack for now via the `--webpack` flag in package.json's `build`/`dev`
+  // scripts, rather than blind-porting this externals logic to Turbopack's
+  // `turbopack.resolveAlias`/`serverExternalPackages` equivalents with no way
+  // to verify real S3/Azure/GCP storage behavior in this environment. See
+  // TODO-List.md `DEP-UPGRADE-NEXT16` for the follow-up Turbopack migration.
   webpack: (config, { isServer }) => {
     // Client: mark Node built-ins as false (not available).
     // Server bundles must keep normal Node resolution for fs/path/etc.

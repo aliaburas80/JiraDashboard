@@ -14,14 +14,14 @@ import { resetUserData } from '@/services/settings/userReset.service';
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   if (session.role !== 'admin') return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
 
   try {
-    const result = await resetUserData(params.id, session.userId);
+    const result = await resetUserData((await params).id, session.userId);
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 409 });
     }

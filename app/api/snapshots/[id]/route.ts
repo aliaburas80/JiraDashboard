@@ -12,9 +12,9 @@ import { getWorkspaceForUser } from '@/lib/workspace';
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   // EP-008: workspace-scoped lookup — admins may view any, users only their workspace.
@@ -23,11 +23,11 @@ export async function GET(
   const isAdmin = session.role === 'admin';
   let snap;
   if (isAdmin) {
-    snap = await prisma.dashboardSnapshot.findUnique({ where: { id: params.id } });
+    snap = await prisma.dashboardSnapshot.findUnique({ where: { id: (await params).id } });
   } else {
     const workspace = await getWorkspaceForUser(session.userId);
     snap = await prisma.dashboardSnapshot.findFirst({
-      where: { id: params.id, workspaceId: workspace?.id ?? '__no_workspace__' },
+      where: { id: (await params).id, workspaceId: workspace?.id ?? '__no_workspace__' },
     });
   }
   if (!snap) return NextResponse.json({ error: 'Snapshot not found.' }, { status: 404 });
@@ -42,14 +42,14 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   const isAdminDel = session.role === 'admin';
   const workspaceDel = isAdminDel ? null : await getWorkspaceForUser(session.userId).catch(() => null);
-  const result = await deleteDashboardSnapshot(params.id, session.userId, isAdminDel, workspaceDel?.id);
+  const result = await deleteDashboardSnapshot((await params).id, session.userId, isAdminDel, workspaceDel?.id);
   if (!result.success) return NextResponse.json({ error: result.error }, { status: result.error?.includes('not found') ? 404 : 403 });
 
   return NextResponse.json({ ok: true });

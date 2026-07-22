@@ -11,14 +11,14 @@ import { getWorkspaceForUser } from '@/lib/workspace';
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   const isAdmin = session.role === 'admin';
   const workspace = isAdmin ? null : await getWorkspaceForUser(session.userId).catch(() => null);
-  const result = await deleteImportLog(params.id, session.userId, isAdmin, workspace?.id);
+  const result = await deleteImportLog((await params).id, session.userId, isAdmin, workspace?.id);
   if (!result.success) return NextResponse.json({ error: result.error }, { status: result.error?.includes('not found') ? 404 : 403 });
 
   return NextResponse.json({ ok: true });

@@ -15,7 +15,7 @@ import { buildJiraAuthHeader, jiraMyselfPath } from '@/services/jira/auth';
 import { resolveJiraConnectionToken } from '@/services/jira/connectionCredentials';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   if (session.role !== 'admin') return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
   return session;
@@ -30,12 +30,12 @@ interface JiraMyselfResponse {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await requireAdmin();
   if (session instanceof NextResponse) return session;
 
-  const connection = await prisma.jiraConnection.findUnique({ where: { id: params.id } });
+  const connection = await prisma.jiraConnection.findUnique({ where: { id: (await params).id } });
   if (!connection) {
     return NextResponse.json({ error: 'Connection not found.' }, { status: 404 });
   }

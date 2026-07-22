@@ -13,7 +13,7 @@ import path from 'path';
 const DB_PATH = path.join(process.cwd(), 'data', 'delivery_clarity.db');
 
 async function requireAdmin(): Promise<{ session: SessionData } | NextResponse> {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn)      return NextResponse.json({ error: 'Not authenticated.' },     { status: 401 });
   if (session.role !== 'admin') return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
   return { session };

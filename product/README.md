@@ -139,7 +139,7 @@ docker-compose up --build
 
 ```
 JiraDashboard/
-├── app/                          # Next.js 14 App Router (all production code)
+├── app/                          # Next.js 16 App Router (all production code)
 │   ├── page.tsx                  # Upload page (/)
 │   ├── summary/page.tsx
 │   ├── charts/page.tsx
@@ -206,9 +206,9 @@ JiraDashboard/
 2. `POST /api/upload` parses the file, computes all metrics via `calculateDashboardMetrics()`, saves an `ImportLog` to SQLite, returns metrics + warnings.
 3. Computed metrics are written to `data/latest-metrics.json` on the server and cached in browser `localStorage` for fast fallback.
 4. All dashboard pages load metrics through `loadMetricsWithSource()`: bucket-backed `/api/metrics/latest` first, then browser `localStorage` fallback.
-5. `middleware.ts` enforces auth on all routes — unauthenticated users are redirected to `/login`.
+5. `proxy.ts` (renamed from `middleware.ts` in the Next.js 16 upgrade) enforces auth on all routes — unauthenticated users are redirected to `/login`.
 
-**Tech stack:** Next.js 14 (App Router) · React 18 · TypeScript · Tailwind CSS · Prisma 5 · SQLite · iron-session · bcryptjs · ReactFlow · @dagrejs/dagre · XLSX · Recharts
+**Tech stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS · Prisma 5 · SQLite · iron-session · bcryptjs · ReactFlow · @dagrejs/dagre · XLSX · Recharts
 
 ---
 

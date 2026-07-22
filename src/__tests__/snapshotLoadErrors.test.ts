@@ -28,7 +28,7 @@ jest.mock('@/lib/workspace', () => ({
 }));
 
 function ctx(id: string) {
-  return { params: { id } };
+  return { params: Promise.resolve({ id }) };
 }
 
 beforeEach(() => {

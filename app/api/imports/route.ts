@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   // counts, and health scores. There is no legitimate case where this route
   // should ever answer without a valid session or with unscoped data — fail
   // closed instead of silently falling back to the unscoped store.
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }

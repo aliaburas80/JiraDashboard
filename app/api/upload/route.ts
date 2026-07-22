@@ -68,7 +68,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const maxFileSizeBytes = MAX_UPLOAD_MB * 1024 * 1024;
 
   // --- Auth first (P0A-02/P0A-04): reject unauthenticated before touching the body ---
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }

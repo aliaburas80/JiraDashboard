@@ -1652,6 +1652,117 @@ pass it through GitHub Actions.
 
 ---
 
+## 11c. Architecture Decision Record: Next.js 16 / React 19 Upgrade (`DEP-UPGRADE-NEXT16`)
+
+**Title:** Upgrade Next.js 14.2.35 → 16.2.11 and React 18.3.1 → 19.2.8
+
+**Status:** Accepted, merged 2026-07-22
+
+**Date:** 2026-07-22
+
+**Context:** `DEP-DEFERRED-01`/`QA-GATE-03` (2026-07-22) found the pinned `next@14.2.5` carried a critical,
+actively-flagged security advisory, plus two high-severity DoS advisories unpatched even at the latest
+14.x point release — full remediation required the major upgrade already documented (but never started)
+as this project's approved baseline in CLAUDE.md §4.1.
+
+**Decision:** Upgrade directly to `next@16.2.11` (latest at the time) and its required `react@19.2.8`/
+`react-dom@19.2.8`, rather than an intermediate stop at 15.x, since 16 was already the long-standing
+documented target and no code in this app depended on 15-only behavior.
+
+**What broke, and what didn't (verified, not assumed):**
+- **`getIronSession(cookies(), SESSION_OPTIONS)` — 62 files.** Next 16 fully removes synchronous
+  `cookies()`/`headers()`/`draftMode()` access (v15's "temporary" sync-compat proxy is gone). Every one
+  of these call sites passed `cookies()` directly to `getIronSession`'s first overload, which expects a
+  synchronous `CookieStore`, not a `Promise` — confirmed via `iron-session`'s own type declarations
+  before writing a single fix, not assumed from the advisory text alone. Fixed uniformly to
+  `getIronSession<SessionData>(await cookies(), SESSION_OPTIONS)` across all 62 files (`getIronSession`
+  is called directly in each route, with no shared wrapper to fix once). Confirmed zero test-file changes
+  were needed — every test mocks `iron-session`/`cookies` at the module level, so `await` on a mocked
+  return value is a no-op behaviorally.
+- **13 dynamic route handlers (`app/api/**/[id]/...`) typed `params` synchronously.** Route `params` are
+  now `Promise`-only. Fixed all 13 (`{ params }: { params: Promise<{ id: string }> }`, `params.id` →
+  `(await params).id` or `const { id } = await params;`), plus 5 test files that called these handlers
+  directly with a synchronous `{ params: { id } }` object (`Promise.resolve({ id })` instead — one shared
+  `ctx()` test helper covered 4 of those call sites in a single edit).
+- **`middleware.ts` → `proxy.ts`.** Deprecated filename/export rename. Renamed the file, the exported
+  function (`middleware` → `proxy`), and the one test file that dynamically imported it by path
+  (`src/__tests__/middleware.test.ts`, via `const { proxy: middleware } = await import('../../proxy')` to
+  avoid renaming every call site in the file). No `edge` runtime usage, no `skipMiddlewareUrlNormalize`
+  config — neither of the two other proxy-migration risk points applied.
+- **`next.config.js`: the `eslint` option is removed entirely** in v16 (deleted the
+  `ignoreDuringBuilds` block; linting was already enforced as its own CI step, so nothing was lost).
+  **`experimental.serverComponentsExternalPackages` renamed** to a top-level, no-longer-experimental
+  `serverExternalPackages` (mechanical rename, same package list).
+  **`experimental.staleTimes.static: 0` is now rejected** — v16 enforces a hard floor of 30 seconds on
+  the `static` tier (only `dynamic` can still be 0). This is a **real, flagged regression risk**, not a
+  cosmetic config tweak: the original 2026-07-08 fix this config exists for (dashboard pages showing
+  stale data after a fresh upload) relied on `static: 0` too. Set to the new minimum (`static: 30`) rather
+  than removed; the fully correct fix (`export const dynamic = 'force-dynamic'` on every `/dashboard/*`
+  page, hinted at but never done in the original fix) was judged out of scope for a dependency upgrade
+  and is tracked as its own follow-up, not silently dropped.
+- **Turbopack is now the default bundler** for both `next dev` and `next build`, and a project with a
+  custom `webpack()` function (this one has one, to mark cloud-storage SDKs as server-only externals so
+  they're never bundled client-side) fails the build outright rather than risk silently ignoring it.
+  Deliberately kept Webpack via the `--webpack` flag (`package.json`'s `build` script, `scripts/
+  start-server.js`'s spawned `next dev`/`next start` args) instead of blind-porting this externals logic
+  to Turbopack's `resolveAlias`/`serverExternalPackages` equivalents with no way to verify real S3/Azure/
+  GCP storage behavior in the sandbox this upgrade was built in. Tracked as a separate future migration,
+  not attempted here.
+- **`sharp` (a new transitive dependency of `next@16` itself, used for image optimization) carried
+  libvips CVEs below `0.35.0`.** Not something the project previously depended on directly. Forced to the
+  latest stable (`0.35.3`) via a `package.json` `overrides` entry — a clean, standard fix, not a
+  workaround. A similar attempt to override `next`'s internally bundled `postcss@8.4.31` (one remaining
+  moderate advisory, build-time-only XSS in CSS stringification, not a runtime/user-facing exposure) did
+  **not** resolve cleanly — npm reported it as `invalid` rather than actually replacing the nested copy —
+  and was reverted rather than left in a broken state. Documented as a deferred, low-risk, build-time-only
+  item, not silently dropped.
+
+**What did *not* break (verified via targeted greps before assuming safety, not by hoping):** no legacy
+React patterns anywhere in the codebase (`ReactDOM.render`, `findDOMNode`, class-component `propTypes`/
+`defaultProps`) — nothing to migrate for React 19. No component-rendering test library (`@testing-library/
+react`, `enzyme`) is in use at all — the 1082 Jest tests are pure service/domain-logic tests, so React's
+internal version had no test-suite blast radius. No parallel routes (`@slot` folders), no `sitemap.ts`/
+`opengraph-image`/`twitter-image` files, no `next/cache` usage (`revalidateTag`/`cacheLife`/`cacheTag`),
+no `serverRuntimeConfig`/`publicRuntimeConfig`, no `next/legacy/image`, no AMP config, no global
+`scroll-behavior: smooth` on `<html>` (the one instance found is scoped to a `page.module.scss` class,
+not the root element) — every one of these v16 breaking-change categories from the official migration
+guide was checked and confirmed not applicable, not skipped on the assumption it probably didn't apply.
+
+**Deliberately deferred, not bundled into this upgrade:**
+- `eslint-config-next` stays pinned at `14.2.5` (not bumped to a 16.x-matching version). Next.js does not
+  enforce version lockstep between these packages — confirmed via a clean `npm ls eslint-config-next`
+  with no peer-conflict warnings after the Next 16 install. Bumping it would cascade into ESLint 9/10's
+  mandatory Flat Config migration (this repo still uses `.eslintrc.json`), which would in turn require
+  adapting the custom `local-rules/forbid-non-css-var-style` plugin to the Flat Config plugin-registration
+  model — a substantial, separately-scoped project, not a side effect of a runtime dependency bump.
+- Migrating the custom `webpack()` config to Turbopack equivalents (see above) — tracked as a follow-up,
+  not attempted without a way to verify cloud-storage behavior.
+- `export const dynamic = 'force-dynamic'` on `/dashboard/*` pages, to fully restore the pre-v16
+  `staleTimes.static: 0` guarantee (see above) — tracked as a follow-up.
+
+**Consequences:** the project is now on its long-documented approved baseline (CLAUDE.md §4.1 updated to
+match) with zero known critical or high-severity Next.js-specific advisories (down from one critical +
+two high at the start of this ADR). `npm audit`: 15 → 15 total but composition shifted meaningfully
+(critical eliminated, `sharp`'s high-severity libvips CVEs newly introduced-and-then-fixed within the
+same change, `next` itself dropped from high to moderate severity). Full verification: `typecheck`
+clean, `lint` unchanged at 8/8, `test` 113/113 suites / 1082/1082 tests, `build` clean with zero warnings
+(previously had a stale-config warning until the `staleTimes` fix landed).
+
+**Alternatives considered:** staying on a patched 14.x indefinitely (rejected — two high-severity
+advisories have no 14.x fix, and CLAUDE.md already named 16.x as the approved target); stopping at an
+intermediate Next 15 (rejected — no code in this app was 15-specific, and 16 was already the documented
+destination, so an intermediate stop would have meant migrating the same breaking changes twice).
+
+**Migration impact:** no database schema change, no user-facing behavior change intended. The one
+tracked behavior-risk is the `staleTimes.static` floor (see above) — worth a manual smoke check of the
+"upload → immediately re-upload → dashboard shows the latest data" path after this ships, since automated
+coverage for that specific timing window doesn't exist.
+
+**Review date:** revisit when `eslint-config-next`/Flat Config migration or the Turbopack `webpack()`
+migration is picked up — both are natural opportunities to re-check this ADR's deferred items.
+
+---
+
 ## 12. Deployment
 
 See **`product/DEPLOYMENT_GUIDE.md`** for the full guide. Summary:

@@ -91,7 +91,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // Resolve session userId — best-effort, not required.
   let userId: string | undefined;
   try {
-    const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+    const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
     if (session.isLoggedIn) userId = session.userId;
   } catch { /* ignore — session unavailable is fine */ }
 

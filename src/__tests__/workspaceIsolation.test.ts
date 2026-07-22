@@ -141,7 +141,7 @@ test('TC-ISO-03: GET /api/snapshots/[id] returns 404 when snapshot belongs to an
   mockFindFirst.mockResolvedValueOnce(null);
 
   const { GET } = await import('../../app/api/snapshots/[id]/route');
-  const res  = await GET({} as any, { params: { id: SNAP_B_ID } });
+  const res  = await GET({} as any, { params: Promise.resolve({ id: SNAP_B_ID }) });
   const body = await res.json();
 
   expect(res.status).toBe(404);
@@ -155,7 +155,7 @@ test('TC-ISO-04: GET /api/snapshots/[id] queries with workspaceId scope', async 
   mockFindFirst.mockResolvedValueOnce(null);
 
   const { GET } = await import('../../app/api/snapshots/[id]/route');
-  await GET({} as any, { params: { id: SNAP_B_ID } });
+  await GET({} as any, { params: Promise.resolve({ id: SNAP_B_ID }) });
 
   // The findFirst call must include workspaceId in WHERE
   expect(mockFindFirst).toHaveBeenCalledWith(
@@ -172,7 +172,7 @@ test('TC-ISO-05: DELETE /api/imports/[id] returns 404 when import belongs to ano
   mockFindFirst.mockResolvedValueOnce(null);
 
   const { DELETE } = await import('../../app/api/imports/[id]/route');
-  const res  = await DELETE({} as any, { params: { id: IMPORT_B_ID } });
+  const res  = await DELETE({} as any, { params: Promise.resolve({ id: IMPORT_B_ID }) });
   const body = await res.json();
 
   // Service returns 'not found' → route returns 404

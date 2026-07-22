@@ -11,7 +11,7 @@ import { getWorkspaceForUser } from '@/lib/workspace';
 
 
 export async function GET() {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   // EP-008: scope by workspaceId so only snapshots within the user's workspace are listed.
@@ -26,7 +26,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+  const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   let body: { snapshotName?: string; metricsJson?: string; importLogId?: string };

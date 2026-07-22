@@ -305,7 +305,7 @@ test('TC-REQ-10: PATCH accept — creates user, marks request accepted, creates 
 
   const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
 
-  const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: { id: 'req-1' } });
+  const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: Promise.resolve({ id: 'req-1' }) });
   const body = await res.json();
 
   expect(res.status).toBe(200);
@@ -338,7 +338,7 @@ test('TC-REQ-10b: PATCH accept — emailSent false with no throw reports "not co
   (prisma.userAddRequest.update as jest.Mock).mockResolvedValue({ ...pendingRequest(), status: 'accepted' });
 
   const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
-  const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: { id: 'req-1' } });
+  const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: Promise.resolve({ id: 'req-1' }) });
   const body = await res.json();
 
   expect(body.emailSent).toBe(false);
@@ -359,7 +359,7 @@ test('TC-REQ-10c: PATCH accept — a thrown Resend error is surfaced as its real
     (prisma.userAddRequest.update as jest.Mock).mockResolvedValue({ ...pendingRequest(), status: 'accepted' });
 
     const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
-    const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: { id: 'req-1' } });
+    const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: Promise.resolve({ id: 'req-1' }) });
     const body = await res.json();
 
     expect(body.emailSent).toBe(false);
@@ -384,7 +384,7 @@ test('TC-REQ-11: PATCH accept — returns 404 when request does not exist', asyn
 
   const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
 
-  const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: { id: 'nonexistent' } });
+  const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: Promise.resolve({ id: 'nonexistent' }) });
   expect(res.status).toBe(404);
 });
 
@@ -399,7 +399,7 @@ test('TC-REQ-12: PATCH accept — returns 409 when request is already accepted o
 
   const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
 
-  const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: { id: 'req-1' } });
+  const res = await PATCH(makeReq({ tempPassword: 'ValidPass1' }), { params: Promise.resolve({ id: 'req-1' }) });
   const body = await res.json();
 
   expect(res.status).toBe(409);
@@ -421,7 +421,7 @@ test('TC-REQ-13: PATCH reject — marks request rejected and creates notificatio
 
   const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/reject/route');
 
-  const res = await PATCH(makeReq({ decisionNote: 'Role not approved at this time.' }), { params: { id: 'req-1' } });
+  const res = await PATCH(makeReq({ decisionNote: 'Role not approved at this time.' }), { params: Promise.resolve({ id: 'req-1' }) });
   const body = await res.json();
 
   expect(res.status).toBe(200);
@@ -447,7 +447,7 @@ test('TC-REQ-14: PATCH reject — returns 409 when request is not pending', asyn
 
   const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/reject/route');
 
-  const res = await PATCH(makeReq({}), { params: { id: 'req-1' } });
+  const res = await PATCH(makeReq({}), { params: Promise.resolve({ id: 'req-1' }) });
   const body = await res.json();
 
   expect(res.status).toBe(409);
@@ -461,7 +461,7 @@ test('TC-REQ-15: PATCH accept — returns 400 when tempPassword is not supplied'
 
   const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
 
-  const res = await PATCH(makeReq({}), { params: { id: 'req-1' } });
+  const res = await PATCH(makeReq({}), { params: Promise.resolve({ id: 'req-1' }) });
   const body = await res.json();
 
   expect(res.status).toBe(400);
@@ -477,7 +477,7 @@ test('TC-REQ-16: PATCH accept — returns 400 when tempPassword fails strength v
 
   const { PATCH } = await import('../../app/api/admin/user-add-requests/[id]/accept/route');
 
-  const res = await PATCH(makeReq({ tempPassword: 'weak' }), { params: { id: 'req-1' } });
+  const res = await PATCH(makeReq({ tempPassword: 'weak' }), { params: Promise.resolve({ id: 'req-1' }) });
   const body = await res.json();
 
   expect(res.status).toBe(400);

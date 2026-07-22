@@ -108,7 +108,7 @@ const ENDPOINTS = [
 export async function GET(req: NextRequest): Promise<NextResponse> {
   // ── Session-aware DB path ─────────────────────────────────────────────────
   try {
-    const session = await getIronSession<SessionData>(cookies(), SESSION_OPTIONS);
+    const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
 
     if (session.isLoggedIn) {
       const isAdmin = session.role === 'admin';
