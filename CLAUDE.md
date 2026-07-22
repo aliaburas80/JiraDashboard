@@ -185,24 +185,33 @@ The Quality Engineering Lead ensures that:
 
 ## 4.1 Current framework baseline
 
-The approved framework baseline is:
+**Current pinned baseline (2026-07-22):**
 
 ```text
-Next.js: 16.2.9
+Next.js: 14.2.35
 Router: App Router
 Language: TypeScript
 Rendering model: React Server Components by default
-Development bundler: Turbopack
-Minimum Node.js supported by Next.js: 20.9
+React: 18.3.1
+Minimum Node.js supported by this Next.js version: 18.18
 Package manager: npm unless the repository explicitly standardizes another manager
 ```
+
+**Target baseline — not yet started:** a major upgrade to Next.js 16.x (App Router, Turbopack, React 19,
+Node.js 20.9 minimum) is planned future work, not yet begun. Two high-severity Next.js DoS advisories
+(GHSA-9g9p-9gw9-jx7f, GHSA-h25m-26qc-wcjf) remain unpatched even at the current 14.2.35 and require this
+major upgrade to fully close — see `TODO-List.md` `QA-GATE-03` for the dependency-audit detail and
+`DEP-UPGRADE-NEXT16` for the upgrade ticket itself. Do not treat 16.x as already in place anywhere in
+this document or in code comments until that upgrade actually lands — CLAUDE.md §4.8's full major-update
+process (dedicated branch, migration review, codemods, architecture review, full regression, ADR) applies
+before it does.
 
 The exact Next.js version must be pinned in `package.json`.
 
 ```json
 {
   "dependencies": {
-    "next": "16.2.9"
+    "next": "14.2.35"
   }
 }
 ```
