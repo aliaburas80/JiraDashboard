@@ -3284,283 +3284,75 @@ An exception for one library is not permission to use inline styles elsewhere.
 
 ---
 
-# 60. Known Technical Debt — Inline Styles
+# 60. Inline-Style Remediation — Resolved 2026-07-22
 
-The following legacy areas contain inline styling from before these standards.
+Delivery Clarity previously carried significant inline-style technical debt (a repo-wide peak of 1,524
+`react/forbid-dom-props` warnings across 86 files, audited 2026-06-27). That debt has been fully
+remediated in five tiers (`TODO-List.md` `STYLE-02`–`06`) plus one tooling correction (`STYLE-09`). This
+section records the current, permanent state and the rules that keep it that way. Full historical
+per-file detail, before/after counts, and branch names for each tier live in `TODO-List.md`
+(`STYLE-01`–`09`, `ORPHAN-01`/`02`/`05`) — this section does not repeat them.
 
-Do not add new inline styling to them.
+Do not add new inline styling anywhere in the codebase. The enforcement mechanism below (§60.2) will
+catch it.
 
-## 60.1 Audited scope (2026-07-19)
+## 60.1 Current state
 
-The lists below were re-audited on 2026-07-19 via `eslint . --max-warnings=-1 -f json` (direct ESLint
-CLI, not `next lint` — `package.json`'s `lint` script still runs the §4.6-prohibited `next lint`; see
-`TODO-List.md` `STYLE-07` for why it can't simply be switched yet). Re-run that command before trusting
-these counts; they drift every time a file is touched.
+Repo-wide `local-rules/forbid-non-css-var-style` (see §60.2) reports **3 warnings, 0 errors**. All three
+are accepted, documented exceptions, not remaining violations:
 
-**Result (re-audited same day after STYLE-05 closed): 658 warnings, 0 errors, across 68 files.**
-All warnings are `react/forbid-dom-props` (this rule's CLAUDE.md Rule 1 message). The drop from the
-2026-07-12 count (1,276/87) is primarily `STYLE-03`/Tier 2 closing (§60.3 — 269 warnings across 8 files
-down to 17), `STYLE-04`/Tier 3 closing (§60.4 — 94 warnings across 7 files down to 3, of which 90
-warnings across 4 files were dead code deleted rather than refactored), and `STYLE-05`/Tier 4 closing
-(§60.5 — 277 warnings across 12 large files down to ~30, all legitimate documented CSS-variable
-exceptions), plus incidental drift from unrelated fixes landed in between (e.g.
-`app/dashboard/data-quality/page.tsx` gained one new legitimate exception when its CP3-017 sample-size
-badge was added).
+* `SvgIcon.tsx` — the base icon-mask primitive nearly every component renders through; its `style` prop
+  merges caller-supplied styling with internally computed values via object spread, which §14.3
+  prohibits in the strict sense but which the component's public API (depended on codebase-wide) cannot
+  drop without a cross-cutting redesign. Left as accepted debt pending a dedicated design decision.
+* `app/dashboard/key-metrics/page.tsx` — calls `barCssVars()`, a legitimate `--*`-only helper imported
+  from `DashboardPageShell.tsx`. The rule does not resolve cross-file function calls (judged not worth
+  the added rule complexity for one residual warning).
+* `ProductTour.tsx` — `style={vars}` where `vars` is `useState` set imperatively inside a
+  `useLayoutEffect`; not statically provable by the rule, manually verified correct.
 
-Full per-file ticket breakdown is tracked in `TODO-List.md` Section 18f (`STYLE-01`–`08`). This section
-holds the prioritized summary; TODO-List.md holds the working checklist.
+`npm run lint` runs `eslint . --max-warnings=8` — the 3 above plus 5 pre-existing, unrelated
+`@next/next/no-img-element` warnings (a `next/image` migration concern, out of scope for style
+remediation). The gate is empirically verified to fail at 7 and pass at 8.
 
-## 60.2 Refactor priority — Tier 1: highest-volume standalone pages — RESOLVED 2026-07-21
+## 60.2 Enforcement mechanism
 
-~~`app/retro/page.tsx` is done (112 → 0) and dropped from this list.~~
+The stock `react/forbid-dom-props` ESLint rule can only detect that a `style` prop exists on a JSX
+element — it cannot inspect its contents, so it flags a sanctioned `--*`-only CSS-variable exception
+(§14.2) identically to a real violation. This made the raw warning count scale with how much data a page
+rendered (more items = more per-item animated bars, each needing its own `--delay`/`--color` variable),
+not with real technical debt — a false "Tier 4 drift" alarm (`STYLE-09`) traced back to exactly this.
 
-~~1. `app/help/page.tsx` (98)~~
-~~2. `app/developer/page.tsx` (80)~~
-~~3. `app/data-quality/page.tsx` (71)~~
-~~4. `app/flow-health/page.tsx` (66)~~
-~~5. `app/forecast/page.tsx` (59)~~
+The fix: a real local ESLint rule, `local-rules/forbid-non-css-var-style`
+(`eslint-local-rules/index.js`, loaded via the `eslint-plugin-local-rules` devDependency, configured in
+`.eslintrc.json`). It resolves the actual `style` value — an inline object literal, a same-file variable,
+or a same-file helper function's returned object (unwrapping `TSAsExpression`/`TSTypeAssertion` first) —
+and only flags it when a key isn't `--`-prefixed or object spread is present (§14.3). It is scoped to
+native/intrinsic JSX elements only (tag name starting with a lowercase letter), matching the original
+rule's scope — custom components (`SvgIcon`, `Reveal`) declare `style` as their own typed prop, a
+separate, intentional passthrough pattern this rule does not govern.
 
-**Resolved 2026-07-21.** This tier stalled for several weeks after `app/retro/page.tsx` while Tiers 2–4
-(§60.3–60.5) were completed instead. All 5 remaining files converted: `help.tsx` (98→0) and
-`developer.tsx` (80→0) each needed new/extended SCSS modules covering real interactive component state
-(accordion open/hover, search-result hover, calc-card expand) — all converted from JS `onMouseEnter`/
-`onMouseLeave` style mutation and ternary color-picking to `data-*` attributes resolved via CSS `:hover`
-and attribute selectors, per §28. `data-quality.tsx` (71→1) and `flow-health.tsx` (66→2) each had genuine
-business-logic color lookups (`BAND_COLOR`/`SEV_COLOR`, bottleneck/aging bar tones) converted to
-`data-band`/`data-severity`/`data-tone` attributes; both files' only remaining warnings are documented
-`--score-width`/`--bar-width` CSS-variable exceptions. `forecast.tsx` (59→56) turned out to already be
-mostly converted from an earlier, undocumented pass — only 4 real violations remained (an SVG
-`verticalAlign`, a `trend.color` ternary, two static `marginBottom` overrides), all fixed; the other 56
-warnings were already-legitimate exceptions. Repo-wide `react/forbid-dom-props`: 658 → 338 across 62
-files. See `TODO-List.md` `STYLE-02` for full per-file detail and branch names.
+## 60.3 Patterns established during remediation
 
-## 60.3 Refactor priority — Tier 2: `app/dashboard/*/page.tsx` (269 warnings, 8 files)
+These are the reusable techniques the five tiers converged on — apply them to any new component that
+would otherwise need an inline style:
 
-As of 2026-07-11, `delivery-controls`, `visual-analytics`, and `kanban-health` were **removed** in a nav
-consolidation (see RELEASE_NOTES.md) — every widget on those three pages duplicated a chart, table, or
-KPI card already shown on a more specific page, so removing them lost no data. `delivery-composition`
-and `ownership` were trimmed of their duplicate widgets in the same change (their counts below reflect
-that trim, not remediation); `epic-readiness` gained two columns absorbed from `ownership`'s removed
-epic table, so its count rose slightly.
-
-A second same-day pass merged two more pairs: `actions` (Smart Actions) into `priority-attention` — both
-answered "what needs action right now," one as raw signal tables, the other as generated recommendations
-from the same signals — and `sprint-status` + `quarter-statistics` into a single `trends` page with a
-Sprints/Quarters toggle, since both answered "how are we trending over time" at different granularity.
-12 routed pages became 10.
-
-A third pass on 2026-07-12 merged `delivery-composition` into `data-quality` as a second section (both
-were compact single-widget pages; `data-quality`'s count absorbed the donut's warnings). 10 routed pages
-became 9.
-
-~~1. `app/dashboard/flow-health/page.tsx` (52)~~
-~~2. `app/dashboard/labels/page.tsx` (49)~~
-~~3. `app/dashboard/data-quality/page.tsx` (45)~~
-~~4. `app/dashboard/epic-readiness/page.tsx` (44)~~
-~~5. `app/dashboard/trends/page.tsx` (41)~~
-~~6. `app/dashboard/priority-attention/page.tsx` (24)~~
-~~7. `app/dashboard/ownership/page.tsx` (13)~~
-~~8. `app/dashboard/key-metrics/page.tsx` (1)~~
-
-**Resolved 2026-07-19 — all 8 files converted to SCSS Modules + design tokens.** 269 warnings → 17,
-every one of the 17 a legitimate, documented CSS-variable exception (a `--bar-width`/`--bar-delay`/
-similar runtime-computed geometry value, per §14.2) — none are unaddressed violations.
-`app/dashboard/key-metrics/page.tsx` needed no change at all: its sole warning was already the correct,
-documented exception via the shared `barCssVars()` helper. `app/dashboard/priority-attention/page.tsx`
-had a partial prior conversion (`.actionCard`/`.actionList` etc. already existed, unused by parts of the
-page) — finished rather than restarted. Business-logic color-picking (`HEALTH_COLORS`, `TYPE_COLORS`,
-per-threshold hex ternaries) was replaced with semantic `data-*` attributes resolved entirely in SCSS,
-per §28 — JS no longer returns color values anywhere in this tier except where a CSS custom property was
-the only way to express genuinely dynamic values (bar widths, conic-gradient stops, stagger delays), and
-even those pass `var(--token)` references, never raw hex. Added a new `--chart-series-1..6` token set to
-`src/styles/_tokens.scss` for `labels`'s issue-type rotating palette — the first token layer entry for
-"categorical, non-status" chart colors (§34). See branch `refactor/style-03-tier2-dashboard-pages`.
-
-## 60.4 Refactor priority — Tier 3: shared `src/components/dashboard/**` — RESOLVED 2026-07-19
-
-~~Higher leverage than a single page — these render inside multiple dashboard routes, so one fix
-benefits several pages at once. They also carry broader regression risk for the same reason: changes
-here need manual verification across every page that mounts the component, not just one route.~~
-
-~~`SprintThroughputPanel.tsx` (33), `KanbanThroughputPanel.tsx` (31), `MidSprintDeliveryPanel.tsx` (21)~~
-
-**Resolved 2026-07-19.** A fresh re-audit found the real scope was 94 warnings/7 files, not the stale
-160/14 figure above — most of that gap had already closed via unrelated work between audits. Of those 94,
-**90 lived in four components with zero live callers** (`SprintThroughputPanel.tsx` 33,
-`KanbanThroughputPanel.tsx` 31, `MidSprintDeliveryPanel.tsx` 21, `DataQualityCard.tsx` 5 — confirmed via
-`grep` for both the component name and its import path; the only matches were prose mentions in
-`/developer`, not JSX usage). Same shape as `ORPHAN-02`: presented to the owner, who chose deletion over
-refactoring dead code. All four removed; their underlying domain types and calculation services
-(`throughput.service.ts`, `kanbanFlow.service.ts`, `midSprint.service.ts`) remain live and in active use
-by `/forecast`, `/sprint-kanban`, and `SprintVelocityChart` — only the orphaned presentational panels were
-deleted, not the domain layer.
-
-The remaining 4 warnings across the 3 actually-live files: `DashboardTopbar.tsx`'s nav-dropdown status dot
-was a real violation — a `STATUS_DOT` hex lookup keyed by a fixed `DCShellNavStatus` union
-(`critical`/`warning`/`success`/`info`/`neutral`) passed through inline `style={{ background }}`. Replaced
-with a `data-status` attribute resolved in SCSS against existing `--color-danger`/`--color-warning`/
-`--color-success`/`--color-info` tokens (§28) — the neutral fallback maps to `--color-text-muted` (closest
-existing token; no exact prior match existed). `DashboardTopbar.tsx`'s `--drop-top`/`--drop-left` panel
-position and `DashboardNavSidebar.tsx`'s `--progress-width` health bar were already correct, documented
-`--*`-only exceptions (§14.2) — verified, not changed. `DashboardPageShell.tsx`'s shared `MiniKpiCard`
-(`--kpi-bg`/`--kpi-border`/`--kpi-color`/`--delay`) is a generic component taking `color`/`bg`/`border` as
-caller-supplied props, not a fixed enum — also a correct exception, verified, not changed.
-
-94 → 3 warnings; all 3 are legitimate exceptions, not remaining violations. `SprintComparePanel.tsx` and
-the two files formerly tracked here as orphaned (`DashboardSectionSwitcher.tsx`, `LayoutBuilderPanel.tsx`)
-had already dropped out of this tier on 2026-07-18 — deleted as dead code, not refactored — see §60.6a.
-See branch `refactor/style-04-tier3-orphans-and-shared-components`.
-
-## 60.5 Refactor priority — Tier 4: remaining standalone pages — RESOLVED 2026-07-19
-
-~~256 warnings across the remaining standalone pages under `app/`. See `TODO-List.md` `STYLE-05` for
-the full file list.~~
-
-**Resolved 2026-07-19.** A fresh re-audit found the real scope was 12 large files (sprint-kanban 39,
-members 32, portfolio 30, glossary 26, delivery-mix 23, customer 20, charts 18, roadmap 16, teams 14,
-release-readiness 13, trends 6 — 277 warnings) plus a ~10-file small remainder at ≤3 warnings each
-(admin/audit, column-mapping, summary, work-explorer, promo/**, and all 7 `landing/components/**`
-files). All 12 large files converted from JS color lookups (finite health/verdict/status/category
-enums) to `data-*` attributes resolved in SCSS (§28), following the same pattern established in
-§60.3/§60.4 — `data-tier`/`data-band`/`data-verdict`/`data-status`/`data-health`/`data-cat` depending
-on the page's domain vocabulary. Two pages (`sprint-kanban`, `portfolio`) already had partial
-CSS-var-exception scaffolding from a prior pass but were piping *colors* through it rather than
-resolving them via selectors — fixed to match the established convention (CSS vars reserved for
-genuinely runtime-computed geometry only). `charts.tsx` and `teams.tsx` each contain generic,
-reusable chart primitives (`HBar`/`VBar`/`AnimatedDonut`/`MiniBar`/`CompareBar`) that take `color` as
-a caller-supplied prop from several non-unifiable threshold schemes — left as the sanctioned
-"generic component" exception (§14.2), the same treatment already given to `DashboardPageShell`'s
-`MiniKpiCard`.
-
-Auditing the small remainder found all of it — `admin/audit`, `column-mapping`, `summary`, and all 7
-`landing/components/**` files — was **already** using the correct, documented `--*`-only CSS-variable
-exception pattern; zero changes needed (same outcome as `key-metrics/page.tsx` in §60.3).
-`promo/page.tsx` and `promo/PromoNav.tsx`'s only warnings are unrelated `@next/next/no-img-element`,
-out of scope. `work-explorer/page.tsx` had one tracked warning (already a correct exception) plus two
-*untracked* violations the audit surfaced by hand: `style=` passed to the custom `SvgIcon` component
-isn't caught by `react/forbid-dom-props` (the rule only inspects native DOM elements), so a 9-way
-issue-type color lookup and a static brand-color icon had slipped through undetected. Both fixed —
-the type lookup now wraps `SvgIcon` in a `data-type`-carrying `<span>` that resolves color via
-`currentColor`; the static color moved directly into its SCSS class.
-
-277 → ~30 warnings across the 12 large files (all legitimate documented exceptions — see individual
-`TODO-List.md` `STYLE-05` entries for exact per-file before/after counts). Repo-wide: 807 → 658
-warnings, 70 → 68 files. See branch `refactor/style-05-tier4-standalone-pages`.
-
-## 60.5a Refactor priority — Tier 5: remaining shared components — RESOLVED 2026-07-22
-
-`src/components/explore/**`, `src/components/admin/**`, `src/components/dc-shell/**`,
-`src/components/tour/**`, and the long tail of files at ≤7 warnings each. Not part of the
-`STYLE-05` pass above — Tier 5 targets `src/components/**`, a distinct scope from Tier 4's
-`app/**` standalone pages.
-
-**Resolved 2026-07-22.** A fresh re-audit found the real scope was 338 warnings/62 files
-repo-wide (not the stale 158/? figure this section previously named), of which the
-`src/components/**` share was roughly 20 files. Converted: `DataRetentionSettings.tsx`
-(23→0), `AdminConsoleLayout.tsx` (13→2, shared by 6 admin pages — each page's arbitrary
-stat-card tone/color destructured into `--tone-bg`/`--tone-color`/`--value-color`
-internally, no caller changes needed), `ThemeCustomizerPanel.tsx` (7→2, also fixed a
-latent `var(--dc-accent,#2563eb)14` invalid-CSS-concatenation bug — a `var()` call with a
-literal alpha suffix silently concatenated onto it, replaced with `color-mix()`),
-`DCKpiCard.tsx` (6→0, extended the pre-existing global `.dc-kpi-*` utility classes in
-`app/globals.scss` rather than introducing a parallel module), `IssueTypeHierarchySettings.tsx`
-(5→5, all now sanctioned per-issue-type admin-color exceptions), `TrendChart.tsx` (5→3),
-`ChartCustomizerPanel.tsx`+`SprintVelocityChart.tsx` (4→0, 4→2 — the latter's
-`completionColor()` threshold function renamed to `completionBand()` returning a
-`'good'|'warning'|'critical'` union instead of a hex string, consumed via `data-band`),
-`RelationDetailsTable.tsx`/`RelationLegend.tsx`/`OnboardingChecklist.tsx`/`DataSourceBadge.tsx`/
-`KpiCard.tsx`/`MetricConfidenceBadge.tsx`/`SectionNav.tsx`/`ColumnMappingPreview.tsx` (batch
-of small files, each 2-4 warnings). `RelationCharts.tsx`/`WorkItemGraph.tsx` were converted
-in the same pass but originally counted under this repo's earlier Tier-5 estimate.
-
-**`ORPHAN-05`**: `DCTopbar.tsx`/`DCActionBoard.tsx`/`DCPageSidebar.tsx`/`DeliveryClarityShell.tsx`
-(13+6+4 = 23 of Tier 5's tracked warnings) turned out to be dead code — confirmed zero live
-callers via `grep`, presented to the owner, deleted rather than converted. `navigation.ts`,
-`DCKpiCard.tsx`, and `DCStatusChip.tsx` in the same directory remain live and were converted
-normally.
-
-A second audit pass of the files still showing 1 warning each (assumed to already be
-sanctioned exceptions from earlier tiers) found 5 were actually real, unconverted
-violations: `NotificationBell.tsx` (a fully static `top: 56` value with no runtime
-dependency), `AppShell.tsx` (a `STATUS_DOT` hex lookup via inline `style` — the same
-pattern already fixed for `DashboardTopbar.tsx`'s equivalent dot in `STYLE-04`, fixed
-identically here), `RelationStatsCards.tsx` (a generic `StatCard`'s `color` prop passed as
-a raw `style={{ color }}` instead of a `--*` custom property), and
-`DataQualitySummary.tsx`/`MissingFieldImpactPanel.tsx` (both had a genuinely dynamic
-`width: pct%` that was never actually routed through the required CSS-variable exception —
-CLAUDE.md §14.2 requires even runtime-computed values to go through a `--*` property, not
-a raw one). `ProductTour.tsx`, `DashboardNavSidebar.tsx`, `DashboardPageShell.tsx`, and
-`DashboardTopbar.tsx`'s remaining 1-warning-each were re-verified as genuinely already
-correct, documented exceptions from earlier tiers — no change needed.
-
-**`SvgIcon.tsx`'s 1 warning is deliberately left unconverted.** It's the base icon-mask
-primitive nearly every component in the codebase renders through, and its `style` prop
-merges caller-supplied styling (`...style`) with internally computed, genuinely
-per-instance values (icon-mask URL from the `name` prop, width/height from the `size`
-prop) — CLAUDE.md §14.3 prohibits object spread in the style exception, and there is no
-way to preserve this component's public API (which the entire codebase's "generic
-component color passthrough via `style={{ color }}`" pattern depends on) without either
-redesigning it — a cross-cutting change touching dozens of call sites, well beyond a
-single-file conversion — or silently restructuring the merge to dodge the linter's AST
-check without fixing the underlying architectural tension. Left as accepted, documented
-technical debt pending a dedicated design decision, not silently converted.
-
-**What looked like `app/**` Tier 4 drift turned out to be a false alarm (`STYLE-09`,
-resolved 2026-07-22).** The `app/**` standalone pages Tier 4 (§60.5) claimed resolved down
-to ~30 warnings on 2026-07-19 showed ~195 warnings on a fresh raw count (`forecast` 56,
-`sprint-kanban` 22, `charts` 13, `portfolio` 13, `customer` 12, `delivery-mix` 11, `roadmap`
-9, plus smaller amounts elsewhere) — initially assumed to mean new feature work had
-reintroduced real inline styles. A full manual audit of every flagged line in all of these
-files found every one was already a correctly-implemented `--*`-only CSS-variable exception;
-the raw count simply scales with how much data renders (more sprints/epics/KPIs means more
-per-item animated bars, each needing its own delay/color variable) — not with real debt.
-The actual problem was tooling, not application code: `react/forbid-dom-props` can only
-detect that a `style` prop exists, not inspect what's inside it, so it flags a sanctioned
-exception identically to a real violation. Fixed by building a genuine local ESLint rule
-(`eslint-local-rules/index.js`, `local-rules/forbid-non-css-var-style`, via the new
-`eslint-plugin-local-rules` devDependency) that resolves the `style` value — a literal
-object, a same-file variable, or a same-file helper function's returned object — and only
-flags it when a key isn't `--`-prefixed or object spread is present (§14.3); it's also
-scoped to native/intrinsic elements only, matching the original rule's behavior (custom
-components like `SvgIcon`/`Reveal` declare `style` as their own typed prop — a separate,
-intentional passthrough pattern, not something this rule governs). Repo-wide:
-`react/forbid-dom-props` 338 → 217 (§60.5a's own conversions), then 217 → 3 real
-`local-rules/forbid-non-css-var-style` warnings after the rule replaced it — the remaining
-3 are `SvgIcon.tsx` (accepted debt, above), a cross-file helper call the rule doesn't
-attempt to resolve, and a `useState`-driven value set imperatively in a `useLayoutEffect`
-(both already manually verified correct). `npm run lint` (§4.6/§52) now runs
-`eslint . --max-warnings=8` (the 3 above plus 5 pre-existing, unrelated
-`@next/next/no-img-element` warnings) — see `STYLE-07`.
-
-## 60.6 Resolved: legacy `frontend/` Create React App (removed 2026-07-14)
-
-`frontend/` was a second, fully standalone Create React App project (own `package.json`, `node_modules`,
-`build`, `react-scripts`) — not part of the Next.js app, not imported by or referenced from `app/` or
-`src/` anywhere, last touched 2026-05-30. Running ESLint from the repo root reached into it anyway (since
-nothing excluded it) and applied this project's Next.js-oriented rules to a project that wasn't one — it
-contributed 59 of the then-1,281 warnings under that mismatch. **Resolved via `TODO-List.md` `ORPHAN-01`**
-during the full-application product audit (`docs/product-audit/04-remove-merge-keep.md` R-10): explicit
-owner decision made to remove `frontend/`, `backend/` (a second, separate Express API server, discovered
-alongside `frontend/` during the same audit), and `promotion/` (static marketing assets, unrelated to the
-live `app/promo/` route) — all three confirmed unreferenced by the live app, `render.yaml`,
-`docker-compose.yml`, or any CI config before deletion. Removing `frontend/` also resolved the 59-warning
-lint-scope mismatch as a side effect — the §60.1 baseline warning count no longer needs to exclude it.
-
-## 60.6a Resolved: orphaned dashboard components deleted (2026-07-18)
-
-`src/components/dashboard/DashboardSectionSwitcher.tsx` and `LayoutBuilderPanel.tsx` (and the
-`section-*` ids in `src/lib/dashboardSections.ts` they read) were not imported or mounted by any route
-under `app/` — discovered while auditing `app/dashboard/*` for the 2026-07-11 nav consolidation above.
-A later pass found four more files in the same directory with zero live callers:
-`DraggableMetricTable.tsx`, `SaveSnapshotButton.tsx`, `SprintComparePanel.tsx`, `WhatChangedPanel.tsx`.
-**Resolved 2026-07-18**: explicit owner decision made to delete all six (1,118 lines), plus
-`src/lib/dashboardSections.ts` and `src/lib/layoutBuilder.ts` (fully orphaned once their only two
-consumers were gone) and their 2 dedicated test files — re-verified zero references before deleting.
-See `TODO-List.md` `ORPHAN-02` for full detail and the branch name.
-`src/components/dashboard/DashboardSidebarNav.tsx` was deliberately left untouched — it was never part
-of this finding's scope, and its SCSS module turned out to still be live (imported by the current
-`DashboardNavSidebar.tsx` under the old filename) — that `.tsx`-only orphan question remains open,
-tracked separately in `ORPHAN-02`.
+* **Finite business states → `data-*` attributes, resolved in SCSS.** Any JS conditional that previously
+  returned a color/class string (health bands, verdict tiers, status dots, issue-type palettes) instead
+  sets a semantic `data-tone`/`data-status`/`data-band`/`data-verdict`/`data-health`/`data-cat` attribute,
+  with the actual color resolved via CSS attribute selectors against design tokens (§28).
+* **Genuinely runtime-computed geometry → the `--*`-only CSS-variable exception**, and nothing else —
+  bar widths, conic-gradient stops, stagger delays. Never pipe a *color* through this exception once a
+  finite `data-*` attribute can express it instead (two tiers had to fix cases of this precise mistake).
+* **Generic, caller-parameterized components** (`MiniKpiCard`, `HBar`/`VBar`/`AnimatedDonut`/`MiniBar`/
+  `CompareBar` in `charts.tsx`/`teams.tsx`) may accept `color`/`bg`/`border` as typed props when the
+  values come from several non-unifiable caller threshold schemes — this is a sanctioned exception
+  class, not a `data-*` conversion target.
+* **Dead code surfaces during refactors.** Four tiers found components with zero live callers
+  (`SprintThroughputPanel`, `KanbanThroughputPanel`, `MidSprintDeliveryPanel`, `DataQualityCard`,
+  `DCTopbar`, `DCActionBoard`, `DCPageSidebar`, `DeliveryClarityShell` — see `ORPHAN-05`) — always
+  confirm via grep for both the component name and its import path, present the finding, and let the
+  owner choose deletion vs. refactor rather than converting dead code by default.
 
 When refactoring a page:
 
