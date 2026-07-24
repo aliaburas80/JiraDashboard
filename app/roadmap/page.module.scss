@@ -346,6 +346,11 @@
   gap: 6px;
   padding-right: var(--space-3, 12px);
   overflow: hidden;
+  // Pinned while the row scrolls horizontally on narrow viewports.
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--color-surface, #fff);
 }
 
 .ganttAxisLabel {
@@ -357,6 +362,10 @@
   letter-spacing: 0.07em;
   color: var(--color-text-muted, #94a3b8);
   padding-right: var(--space-3, 12px);
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--color-surface, #fff);
 }
 
 .healthDot {
@@ -636,6 +645,12 @@
   color: var(--color-text-muted, #94a3b8);
 }
 
+// Horizontal-scroll wrapper: the grid below has a fixed minimum width
+// (5 columns, several with fixed px widths) that overflows below ~600px.
+.forecastScroll {
+  overflow-x: auto;
+}
+
 // Column header row
 .forecastColRow {
   display: grid;
@@ -645,6 +660,7 @@
   background: color-mix(in srgb, var(--color-border, #e2e8f0) 30%, transparent);
   border-bottom: 1px solid var(--color-border, #e2e8f0);
   gap: var(--space-3, 12px);
+  min-width: max-content;
 }
 
 .forecastColLabel {
@@ -653,6 +669,14 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-muted, #94a3b8);
+
+  // First column (Epic) is pinned while the row scrolls horizontally.
+  &:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--color-surface, #fff);
+  }
 }
 
 // Data row
@@ -664,6 +688,7 @@
   border-bottom: 1px solid color-mix(in srgb, var(--color-border, #e2e8f0) 50%, transparent);
   gap: var(--space-3, 12px);
   transition: background var(--transition-fast, 120ms ease);
+  min-width: max-content;
 
   &:last-child { border-bottom: none; }
 
@@ -677,6 +702,11 @@
   align-items: center;
   gap: 6px;
   overflow: hidden;
+  // Pinned while the row scrolls horizontally on narrow viewports.
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--color-surface, #fff);
 }
 
 .forecastEpicName {
