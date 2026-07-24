@@ -1,9 +1,8 @@
-# Release notes — Dashboard visual polish
+# Release Notes
 
-- Polished dashboard UI with animated KPI cards and hover tooltips.
-- Detail drill-down modal with keyboard accessibility and copy/open item actions.
-- Epic health & release readiness panel showing at-risk epics and dependency callouts.
-- Sticky quick-filter chips for common workflows (high-risk, blocked, needs review).
-- Improved mobile responsiveness and keyboard focus visuals.
+The maintained release notes for this project live at
+**[`product/RELEASE_NOTES.md`](product/RELEASE_NOTES.md)**.
 
-_See PR for full details and testing instructions._
+This root-level file was a stale, orphaned stub from an early PR description
+(superseded content, no longer accurate) — kept as a redirect rather than
+deleted in case anything still links here. See `TODO-List.md` `P0A-08`.

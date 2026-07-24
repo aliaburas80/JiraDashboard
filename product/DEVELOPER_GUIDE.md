@@ -1814,6 +1814,46 @@ migration is picked up — both are natural opportunities to re-check this ADR's
 
 ---
 
+## 11d. P0-A Gate: Repository & Documentation Audit Report (`P0A-01`, added 2026-07-25)
+
+The Soft Launch Master Plan's P0-A gate (`TODO-List.md` §29.1) requires "an audit report and
+traceability matrix" mapping current features, incomplete TODOs, migrations, tests, and known defects
+to the master plan, approved before P0-B work starts. Rather than re-doing that audit from scratch,
+this report **cites the audit work that already exists** and adds what was genuinely missing.
+
+**Existing audit coverage (already done, cited not repeated):**
+
+- `TODO-List.md` §12 (Traceability Rule) contains a full FR→UC→SCN→UJ→TC traceability matrix
+  (`TRACE-01`), closed 2026-06-08 with an explicit "zero `GAP — not found` cells, zero ID collisions"
+  sign-off, plus Appendix B (FR→UC Ownership Index).
+- `TODO-List.md` §13 (Current Verified/Existing Feature Inventory) is a per-feature status table
+  (Throughput Analytics, Work Item Explorer, Auth/Users/Database, Smart Excel Export, UX/Dashboard)
+  cross-referenced to the traceability matrix, each row anchored to specific FR/UC/test-case IDs.
+- `TRACE-02` (also §12) is a full-app route/feature coverage survey — all 22 `COVER-XX` areas closed
+  2026-06-08, including a from-scratch API route inventory (`SRS.md` §8.1, 36 routes).
+- Test suite at the time of this report: 113 suites / 1082 tests passing (`npm test`, verified during
+  `MOBILE-05`/`MOBILE-07` work this week).
+
+**New findings from this pass (genuine staleness caught, not previously flagged):**
+
+1. `TODO-List.md` §13's Feature 3 table (F3-02/F3-03) still describes the database as
+   "SQLite database created: `data/delivery_clarity.db`" — stale since the Postgres/Neon migration
+   (`DEP-UPGRADE-NEXT16`'s era; Neon was provisioned 2026-06-29). Recorded here for the next §13 pass
+   to correct; not fixed in this PR to keep this documentation-only change narrowly scoped.
+2. §12 below's "Minimum production env vars" example still shows
+   `DATABASE_URL=file:./data/delivery_clarity.db` — same staleness, same reasoning for not touching it
+   here (see `P0A-06` in `TODO-List.md`, which tracks the underlying Postgres backup/restore gap this
+   connects to).
+3. Nine "Soft Launch P0-A" gate items (`TODO-List.md` §29.1) were labeled far more incomplete than
+   their actual code/test/doc state — see the corrected status rows in that section, each citing the
+   specific files and tests that already satisfy most of the item's intent.
+
+**Conclusion:** the audit and traceability-matrix deliverable P0A-01 asks for already exists and passes
+its own closure criteria; this report is the "approved" artifact citing it, plus the incremental
+findings above. No further audit work needed for `P0A-01` itself.
+
+---
+
 ## 12. Deployment
 
 See **`product/DEPLOYMENT_GUIDE.md`** for the full guide. Summary:
@@ -1855,6 +1895,36 @@ Set `client_max_body_size 25M;` in the nginx site config. Without this, Jira CSV
 2. Visit `/admin/security` and aim for score ≥ 80
 3. Test file upload with a real Jira export
 4. Set up cron backups (see DEPLOYMENT_GUIDE.md §11)
+
+### Rollback procedure (`P0A-08`, added 2026-07-25)
+
+If a deploy introduces a regression:
+
+1. **Application code (no migration involved):** on Render, use the dashboard's "Rollback to previous
+   deploy" on the affected service, or `git revert` the merge commit on `main` and push — `render.yaml`'s
+   `autoDeploy` picks it up the same way a forward deploy does. Self-hosted (Docker/VPS): re-deploy the
+   previous image tag / `git checkout` the prior release commit and re-run the standard deploy steps
+   (§2 Quick Start's build + start commands).
+2. **A Prisma migration shipped with the bad deploy:** roll back the application code first (step 1).
+   Only then consider the database:
+   - If the migration was purely additive (new table/column, no data transformation, nothing dropped)
+     and nothing yet depends on it, it is usually safe to leave it in place — a rolled-back app version
+     simply won't reference the new column/table. Confirm this case by reading the migration's SQL
+     before deciding.
+   - If the migration is genuinely unsafe to leave (dropped/renamed a column still read by the rolled-
+     back app version), write and apply a new, forward-only migration that reverses the change — do
+     **not** hand-edit `prisma/migrations/` history or use `prisma migrate reset` against production
+     data. Prisma's migration history is append-only by design; reversal is itself a new migration.
+3. **Verify:** confirm `/api/health` (see §12 above) reports the expected `version`, and re-run the
+   smoke checks in "Post-deploy" above.
+4. **Record it:** add an entry to `product/RELEASE_NOTES.md` describing what broke and what the
+   rollback restored, per CLAUDE.md §57's release/change-management requirement.
+
+**Known gap, tracked separately:** this procedure covers application/migration rollback. A true
+point-in-time *data* restore (recovering rows after a bad migration or bad data write, not just
+reverting code) needs a real Postgres/Neon backup mechanism — the current in-app "Backup & Restore"
+feature and this guide's §11 cron example both target a SQLite file that no longer exists now that
+production runs on Postgres/Neon; see `TODO-List.md` `P0A-06` for the tracked, unstarted fix.
 
 ### Product Tour
 
