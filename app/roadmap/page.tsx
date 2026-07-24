@@ -137,7 +137,7 @@ function GanttTimeline({ timelines }: { timelines: EpicTimeline[] }) {
 
   return (
     <>
-      <div className={styles.ganttGrid}>
+      <div className={styles.ganttGrid} data-testid="gantt-scroll">
         {/* ── Axis header row ── */}
         <div className={clsx(styles.ganttRow, styles.axisRow)}>
           <div className={styles.ganttAxisLabel}>Epic</div>
@@ -167,7 +167,7 @@ function GanttTimeline({ timelines }: { timelines: EpicTimeline[] }) {
 
           return (
             <div key={i} className={styles.ganttRow}>
-              <div className={styles.ganttLabel}>
+              <div className={styles.ganttLabel} data-testid="gantt-label">
                 <div className={styles.healthDot} data-health={epic.health} aria-hidden="true" />
                 <span className={styles.epicName} title={epic.name}>{epic.name}</span>
               </div>
@@ -229,57 +229,60 @@ function GanttTimeline({ timelines }: { timelines: EpicTimeline[] }) {
           <span className={styles.forecastSectionHint}>All epics · sorted by earliest forecast</span>
         </div>
 
-        {/* Column headers */}
-        <div className={styles.forecastColRow}>
-          <span className={styles.forecastColLabel}>Epic</span>
-          <span className={styles.forecastColLabel}>Progress</span>
-          <span className={styles.forecastColLabel}>Done</span>
-          <span className={styles.forecastColLabel}>Est. date</span>
-          <span className={styles.forecastColLabel}>Epic Timeline Confidence</span>
+        {/* Wide grid on small screens: scrolls horizontally with the Epic column pinned */}
+        <div className={styles.forecastScroll} data-testid="forecast-scroll">
+          {/* Column headers */}
+          <div className={styles.forecastColRow}>
+            <span className={styles.forecastColLabel}>Epic</span>
+            <span className={styles.forecastColLabel}>Progress</span>
+            <span className={styles.forecastColLabel}>Done</span>
+            <span className={styles.forecastColLabel}>Est. date</span>
+            <span className={styles.forecastColLabel}>Epic Timeline Confidence</span>
+          </div>
+
+          {/* Data rows — ALL epics sorted by forecast date */}
+          {[...timelines]
+            .sort((a, b) => (getForecastMs(a) ?? Infinity) - (getForecastMs(b) ?? Infinity))
+            .map((epic, i) => {
+              const ms      = getForecastMs(epic);
+              const isDone  = epic.progress >= 100;
+              return (
+                <div key={i} className={styles.forecastRow}>
+                  {/* Epic name + health dot */}
+                  <div className={styles.forecastEpicCell} data-testid="forecast-epic-cell">
+                    <div className={styles.healthDot} data-health={epic.health} aria-hidden="true" />
+                    <span className={styles.forecastEpicName} title={epic.name}>{epic.name}</span>
+                  </div>
+
+                  {/* Mini progress bar */}
+                  <div className={styles.forecastMiniTrack}>
+                    <div
+                      className={styles.forecastMiniFill}
+                      data-health={epic.health}
+                      style={{ '--fill-w': `${Math.min(100, epic.progress)}%`, '--bar-delay': `${i * 30}ms` } as CSSProperties}
+                    />
+                  </div>
+
+                  {/* % complete */}
+                  <span className={styles.forecastPctCell}>{Math.round(epic.progress)}%</span>
+
+                  {/* Estimated completion date chip */}
+                  <span
+                    className={styles.forecastDateChip}
+                    data-health={isDone ? undefined : epic.health}
+                    data-status={isDone ? 'done' : undefined}
+                  >
+                    {isDone ? '✓ Done' : fmtMonthYear(ms)}
+                  </span>
+
+                  {/* Confidence badge */}
+                  <span className={styles.forecastConfChip} data-conf={isDone ? 'done' : epic.confidence}>
+                    {isDone ? 'done' : epic.confidence}
+                  </span>
+                </div>
+              );
+            })}
         </div>
-
-        {/* Data rows — ALL epics sorted by forecast date */}
-        {[...timelines]
-          .sort((a, b) => (getForecastMs(a) ?? Infinity) - (getForecastMs(b) ?? Infinity))
-          .map((epic, i) => {
-            const ms      = getForecastMs(epic);
-            const isDone  = epic.progress >= 100;
-            return (
-              <div key={i} className={styles.forecastRow}>
-                {/* Epic name + health dot */}
-                <div className={styles.forecastEpicCell}>
-                  <div className={styles.healthDot} data-health={epic.health} aria-hidden="true" />
-                  <span className={styles.forecastEpicName} title={epic.name}>{epic.name}</span>
-                </div>
-
-                {/* Mini progress bar */}
-                <div className={styles.forecastMiniTrack}>
-                  <div
-                    className={styles.forecastMiniFill}
-                    data-health={epic.health}
-                    style={{ '--fill-w': `${Math.min(100, epic.progress)}%`, '--bar-delay': `${i * 30}ms` } as CSSProperties}
-                  />
-                </div>
-
-                {/* % complete */}
-                <span className={styles.forecastPctCell}>{Math.round(epic.progress)}%</span>
-
-                {/* Estimated completion date chip */}
-                <span
-                  className={styles.forecastDateChip}
-                  data-health={isDone ? undefined : epic.health}
-                  data-status={isDone ? 'done' : undefined}
-                >
-                  {isDone ? '✓ Done' : fmtMonthYear(ms)}
-                </span>
-
-                {/* Confidence badge */}
-                <span className={styles.forecastConfChip} data-conf={isDone ? 'done' : epic.confidence}>
-                  {isDone ? 'done' : epic.confidence}
-                </span>
-              </div>
-            );
-          })}
       </div>
     </>
   );

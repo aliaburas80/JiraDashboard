@@ -18,6 +18,20 @@ tap targets or stack correctly on narrow screens. No change on tablet or desktop
 
 ---
 
+## Fixed: Roadmap and Work Explorer Now Scroll Correctly on Phones (2026-07-23)
+
+Two dense pages didn't handle narrow (phone-width) screens correctly: the Roadmap page's "Estimated
+Completion" forecast table had no way to scroll at all below about 600px wide — it would spill off the
+edge of the screen — and the Work Explorer's issue table clipped extra columns instead of letting you
+scroll to see them. Both now scroll horizontally as expected, with the leftmost identifying column
+(Epic name on Roadmap, issue Key on Work Explorer) staying pinned in view while you scroll right, so you
+never lose track of which row you're looking at. This also establishes the general pattern (documented
+in `product/DEVELOPER_GUIDE.md` §11a) other dense tables/charts should follow going forward. No other
+page changed. See `TODO-List.md` `MOBILE-05` for the full per-route review that identified these two as
+the only genuine bugs among the routes surveyed.
+
+---
+
 ## Upgraded: Next.js 16 and React 19 (2026-07-22)
 
 Upgraded the app's core framework from Next.js 14 to Next.js 16, and React from 18 to 19 — the version
