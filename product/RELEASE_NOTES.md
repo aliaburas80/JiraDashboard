@@ -5,6 +5,19 @@
 
 ---
 
+## Fixed: Upload, Retro, and Admin Forms Now Usable One-Handed on a Phone (2026-07-24)
+
+Several forms didn't adapt to narrow phone screens: worst was the in-app Sprint Retrospective form,
+where the "Action Items" row (text, owner, due date, priority) squeezed into unusably tiny slivers
+below about 640px wide, including a native date picker you could barely tap. That row and the
+"Sprint Context" fields above it now stack into a single, easy-to-read column on phones. Also fixed:
+the upload page's "Merge multiple files" / "Try a sample first" buttons and its file-remove (×)
+button, the Request Add Member modal's close (×) button, the admin add-member panel's
+Generate/show-password buttons, and the admin SMTP settings' Host/Port fields — all now have proper
+tap targets or stack correctly on narrow screens. No change on tablet or desktop.
+
+---
+
 ## Upgraded: Next.js 16 and React 19 (2026-07-22)
 
 Upgraded the app's core framework from Next.js 14 to Next.js 16, and React from 18 to 19 — the version

@@ -116,7 +116,7 @@ export default function RequestAddMemberModal({ onClose, onSuccess }: Props) {
               <button
                 type="button"
                 onClick={onClose}
-                className="text-slate-400 hover:text-slate-700 text-xl leading-none mt-0.5 transition-colors"
+                className="p-2 -m-2 text-slate-400 hover:text-slate-700 text-xl leading-none transition-colors"
                 aria-label="Close"
               >
                 ×
