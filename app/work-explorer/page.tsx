@@ -294,7 +294,7 @@ export default function WorkExplorerPage() {
               </div>
             ) : (
               <>
-                <div className={styles.tableWrap}>
+                <div className={styles.tableWrap} data-testid="explorer-table-scroll">
                   <table className={styles.table}>
                     <thead id="tour-section-work-explorer-2" className={styles.tableHead}>
                       <tr>
@@ -325,7 +325,7 @@ export default function WorkExplorerPage() {
                             aria-label={`${item.key}: ${item.summary}`}
                             onKeyDown={e => e.key === 'Enter' && setSelected(isSelected ? null : item)}
                           >
-                            <td className={styles.keyCell}>{item.key}</td>
+                            <td className={styles.keyCell} data-testid="explorer-key-cell">{item.key}</td>
 
                             <td className={styles.prioCell}>
                               <span

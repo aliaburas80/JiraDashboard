@@ -1102,6 +1102,38 @@ account (`npm run db:seed`, using `ADMIN_EMAIL`/`ADMIN_PASSWORD`) — it boots t
 runs the suite — this is the only environment guaranteed to have every prerequisite available; don't
 assume a local run without Postgres will work.
 
+### Mobile dense-table scroll strategy (`MOBILE-05`, added 2026-07-23)
+
+Dense charts/tables must not just "shrink to fit" at phone width (CLAUDE.md §5, `TODO-List.md`
+`MOBILE-05`). The codebase has two established patterns — pick per route, don't invent a third:
+
+1. **Horizontal-scroll wrapper with a pinned first column** — for content that's inherently wide
+   (many columns, a timeline) and can't reasonably become a card. `overflow-x: auto` on the scroll
+   container, `position: sticky; left: 0; z-index: 1;` plus a solid `background` (so scrolled content
+   doesn't show through) on the first column. Used by `app/roadmap` (Gantt epic label, forecast table
+   epic cell) and `app/work-explorer` (issue table's Key column). Pre-existing examples without the
+   sticky column: `app/portfolio`, `app/teams`, `app/forecast`.
+2. **Simplified mobile card list** — for tables whose columns map naturally to label/value pairs.
+   `src/components/explore/RelationDetailsTable.tsx` is the reference implementation: a `md:hidden`
+   card view alongside a `hidden md:block overflow-x-auto` table.
+
+**A real bug this closed:** `app/roadmap`'s forecast table (`.forecastColRow`/`.forecastRow`, a
+5-column CSS grid with several fixed-px columns) had **no overflow wrapper at all** — it hard-overflowed
+the page below ~600px (this was part of what `MOBILE-01`'s audit flagged as "broken"). Now wrapped in
+`.forecastScroll { overflow-x: auto; }`. `app/work-explorer`'s `.tableWrap` was `overflow: hidden`
+(silently clipping, no scroll escape hatch) — changed to `overflow-x: auto`.
+
+**Sticky-column caveat:** giving the first column a solid background necessarily covers whatever
+row-level background/box-shadow effect (hover tint, selection accent) would otherwise show through it.
+Where a row state is purely decorative (hover tint), this is an accepted minor cosmetic trade-off. Where
+it's a functional indicator (`app/work-explorer`'s `data-selected='true']` left accent bar), the state is
+redrawn on the sticky cell itself (`.tableRow[data-selected='true'] .keyCell`) rather than dropped.
+
+Covered by `tests/e2e/mobile-dense-tables.spec.ts` (`Mobile` project, iPhone 13) — asserts real
+horizontal overflow exists and the first column keeps `position: sticky` at that viewport. `MOBILE-06`
+(mobile performance budget) and `MOBILE-08` (visual regression suite) are separate, still-open,
+greenfield tickets — not covered by this work.
+
 ### Future gate additions (not yet wired)
 
 These additional checks will be added as the infrastructure matures:
