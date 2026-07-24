@@ -13,13 +13,27 @@ const NEW_PASSWORD = 'E2e-rotated-password-2';
  * ensures a Jira export is uploaded so the dashboard (and any route reading
  * dashboard data) is populated. Idempotent — safe to call on a repeat run.
  */
+// CI runs against a freshly booted `next start` process on every job: the
+// first hit to any given route pays a one-time cost that later requests
+// don't (Next.js loading that route's dynamically-imported chunks for the
+// first time, Prisma's query engine opening its first connection to the
+// Postgres service container, bcryptjs doing a synchronous 12-round hash on
+// a shared CI vCPU). Login is the very first authenticated request of the
+// whole suite, so it eats the full cold-start cost — observed timing out at
+// the previous 15s/20s budgets in real GitHub Actions runs even though the
+// same flow is fast against an already-warm server. These budgets are
+// intentionally generous rather than tuned tight, since this is test-infra
+// tolerance for one-time warm-up cost, not a product performance SLA.
+const COLD_START_NAV_TIMEOUT_MS = 30_000;
+const UPLOAD_NAV_TIMEOUT_MS     = 40_000;
+
 export async function loginAndEnsureData(page: Page): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Email address').fill(ADMIN_EMAIL);
   await page.getByLabel('Password', { exact: true }).fill(ADMIN_PASSWORD);
   await page.getByRole('button', { name: /sign in/i }).click();
 
-  await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: 15_000 });
+  await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: COLD_START_NAV_TIMEOUT_MS });
 
   if (page.url().includes('/change-password')) {
     const passwordFields = page.locator('input[type="password"]');
@@ -27,7 +41,7 @@ export async function loginAndEnsureData(page: Page): Promise<void> {
     await passwordFields.nth(1).fill(NEW_PASSWORD);
     await passwordFields.nth(2).fill(NEW_PASSWORD);
     await page.getByRole('button', { name: /set new password/i }).click();
-    await page.waitForURL(url => !url.pathname.startsWith('/change-password'), { timeout: 15_000 });
+    await page.waitForURL(url => !url.pathname.startsWith('/change-password'), { timeout: COLD_START_NAV_TIMEOUT_MS });
   }
 
   if (page.url().includes('/dashboard')) {
@@ -47,5 +61,5 @@ export async function loginAndEnsureData(page: Page): Promise<void> {
     await proceedButton.click();
   }
 
-  await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
+  await page.waitForURL(/\/dashboard/, { timeout: UPLOAD_NAV_TIMEOUT_MS });
 }

@@ -6,7 +6,10 @@ const baseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3100';
 
 export default defineConfig({
   testDir: './tests/e2e',
-  timeout: 60_000,
+  // Generous enough that the per-step waits in tests/e2e/helpers/auth.ts
+  // (up to 40s for a cold-start upload→dashboard redirect) are always the
+  // real constraint, never this outer test-level budget.
+  timeout: 120_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
