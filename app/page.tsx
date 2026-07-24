@@ -248,7 +248,7 @@ export default function HomePage() {
 
         {/* ── Secondary actions: merge files / try sample ── */}
         {!columnMapping && (
-          <div className="w-full max-w-md grid grid-cols-2 gap-3">
+          <div className="w-full max-w-md grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setMergeOpen(o => !o)}

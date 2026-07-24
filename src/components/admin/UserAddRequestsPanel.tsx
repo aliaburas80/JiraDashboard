@@ -266,7 +266,7 @@ export default function UserAddRequestsPanel() {
                               setShowAdminPw(s => ({ ...s, [req.id]: true }));
                               setPwError(er => ({ ...er, [req.id]: '' }));
                             }}
-                            className="px-2.5 py-2 rounded-[8px] border border-amber-300 bg-amber-50 text-amber-800 text-[11px] font-bold hover:bg-amber-100 transition-colors shrink-0"
+                            className="px-2.5 py-2.5 rounded-[8px] border border-amber-300 bg-amber-50 text-amber-800 text-[11px] font-bold hover:bg-amber-100 transition-colors shrink-0"
                             title="Auto-generate a strong password"
                           >
                             Generate
@@ -274,7 +274,7 @@ export default function UserAddRequestsPanel() {
                           <button
                             type="button"
                             onClick={() => setShowAdminPw(s => ({ ...s, [req.id]: !s[req.id] }))}
-                            className="px-2 py-2 rounded-[8px] border border-amber-200 bg-white text-amber-700 text-xs hover:bg-amber-50 transition-colors shrink-0"
+                            className="px-2 py-2.5 rounded-[8px] border border-amber-200 bg-white text-amber-700 text-xs hover:bg-amber-50 transition-colors shrink-0"
                             aria-label={showAdminPw[req.id] ? 'Hide password' : 'Show password'}
                           >
                             {showAdminPw[req.id] ? '🙈' : '👁'}

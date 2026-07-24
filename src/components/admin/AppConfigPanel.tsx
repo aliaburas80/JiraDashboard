@@ -311,7 +311,7 @@ export default function AppConfigPanel() {
           editing={editingSmtp}
           onToggleEdit={() => setEditingSmtp(v => !v)}
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="SMTP Host"    value={host}   onChange={setHost}   placeholder="smtp.gmail.com" disabled={!editingSmtp} />
           <Field label="SMTP Port"    value={port}   onChange={setPort}   placeholder="587" disabled={!editingSmtp} />
         </div>

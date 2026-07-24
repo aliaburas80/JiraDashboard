@@ -119,12 +119,17 @@
 .removeBtn {
   font-size: 18px;
   color: var(--dc-p3);
-  padding: 0 4px;
   background: none;
   border: none;
   cursor: pointer;
   font-family: inherit;
   line-height: 1;
+  // Real tap target instead of a bare glyph with minimal padding.
+  min-width: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 // ── Menu cards ─────────────────────────────────────────────────────────────────

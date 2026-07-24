@@ -174,6 +174,12 @@
 
 .fileChipRemove {
   color: #6b6b6b;
+  // Real tap target instead of a bare glyph with no padding.
+  min-width: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   &:hover { color: #f87171; }
 }
 

@@ -369,13 +369,13 @@ export default function RetroPage() {
           {/* Context */}
           <div className={styles.card}>
             <h2 className={clsx(styles.sectionTitle, 'mb-4')}>📋 Sprint Context</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" data-testid="retro-context-grid">
+              <div data-testid="retro-context-field">
                 <label className={styles.label}>Sprint Name *</label>
                 <input type="text" value={form.sprintName} placeholder="e.g. Sprint 42"
                   onChange={e => patchForm({ sprintName: e.target.value })} className={styles.input} />
               </div>
-              <div>
+              <div data-testid="retro-context-field">
                 <label className={styles.label}>Team Name</label>
                 <input type="text" value={form.teamName} placeholder="e.g. Backend Team"
                   onChange={e => patchForm({ teamName: e.target.value })} className={styles.input} />
@@ -415,19 +415,19 @@ export default function RetroPage() {
             <h2 className={clsx(styles.sectionTitle, 'mb-3')}>✅ Action Items</h2>
             <div className="space-y-3">
               {form.actions.map((a, i) => (
-                <div key={i} className="grid grid-cols-12 gap-2 items-start">
+                <div key={i} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-start" data-testid="retro-action-row">
                   <input type="text" value={a.text} placeholder="Action…"
                     onChange={e => { const next = [...form.actions]; next[i] = { ...next[i], text: e.target.value }; patchForm({ actions: next }); }}
-                    className={clsx(styles.input, 'col-span-4')} />
+                    className={clsx(styles.input, 'sm:col-span-4')} data-testid="retro-action-field" />
                   <input type="text" value={a.owner} placeholder="Owner"
                     onChange={e => { const next = [...form.actions]; next[i] = { ...next[i], owner: e.target.value }; patchForm({ actions: next }); }}
-                    className={clsx(styles.input, 'col-span-3')} />
+                    className={clsx(styles.input, 'sm:col-span-3')} data-testid="retro-action-field" />
                   <input type="date" value={a.dueDate}
                     onChange={e => { const next = [...form.actions]; next[i] = { ...next[i], dueDate: e.target.value }; patchForm({ actions: next }); }}
-                    className={clsx(styles.input, 'col-span-3')} />
+                    className={clsx(styles.input, 'sm:col-span-3')} />
                   <select value={a.priority}
                     onChange={e => { const next = [...form.actions]; next[i] = { ...next[i], priority: e.target.value as ActionItem['priority'] }; patchForm({ actions: next }); }}
-                    className={clsx(styles.input, styles.prioritySelect, 'col-span-1')}>
+                    className={clsx(styles.input, styles.prioritySelect, 'sm:col-span-1')}>
                     <option value="high">H</option><option value="medium">M</option><option value="low">L</option>
                   </select>
                   {form.actions.length > 1 && (

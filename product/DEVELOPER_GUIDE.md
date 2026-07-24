@@ -1134,6 +1134,25 @@ horizontal overflow exists and the first column keeps `position: sticky` at that
 (mobile performance budget) and `MOBILE-08` (visual regression suite) are separate, still-open,
 greenfield tickets — not covered by this work.
 
+### Mobile forms and upload flow touch targets (`MOBILE-07`, added 2026-07-24)
+
+Five forms named in `TODO-List.md` `MOBILE-07` had no phone-width responsive handling at all — worst
+was the in-app retro form's Action Items row (`app/retro/page.tsx`), a hardcoded `grid-cols-12` that
+crushed a native date input into an unusable ~27px sliver at 375px. Fix pattern, reused across all five:
+
+- **Multi-column grids** (`grid grid-cols-N`) → `grid grid-cols-1 sm:grid-cols-N` (and each
+  `col-span-N` → `sm:col-span-N`), so fields stack to one column on phones and unstack at `sm`/640px —
+  matching the `sm:grid-cols-2` convention already used in `UserAddRequestsPanel.tsx`.
+- **Bare icon-only remove/close buttons** (an `×` glyph with little or no padding) →
+  `min-width: 40px; min-height: 40px;` with flex-centering (SCSS) or `p-2 -m-2` (Tailwind, negative
+  margin keeps the visual glyph position unchanged while expanding the hit area) — a real tap target
+  instead of a near-zero one.
+
+Covered by `tests/e2e/mobile-forms.spec.ts` (`Mobile` project, iPhone 13) — asserts the retro form's
+Sprint Context and Action Items fields render as a stacked single column (different bounding-box `y`
+positions) at that viewport, using `data-testid` hooks rather than relying on compiled Tailwind class
+names. `MOBILE-06`/`MOBILE-08` remain separate, still-open, greenfield tickets — not covered here.
+
 ### Future gate additions (not yet wired)
 
 These additional checks will be added as the infrastructure matures:
