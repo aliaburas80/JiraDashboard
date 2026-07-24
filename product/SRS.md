@@ -436,6 +436,21 @@ All pages are Next.js App Router routes under `app/`. Client components are mark
 | `AuditEvent` | id, userId, eventType, eventDescription, ipAddress, userAgent, createdAt |
 | `SystemErrorLog` | id, errorCode, errorMessage, prismaModel, operation, context, payload (JSON), resolution (`logged`/`auto-fixed`/`retried`/`resolved`/`skipped`), retryCount, lastRetriedAt, resolvedAt, createdAt |
 | `UserAddRequest` | id, requestedEmail, requestedByUserId, status (`pending`/`approved`/`rejected`/`cancelled`), adminDecisionNote, createdAt |
+| `Entitlement` (EP-015) | id, userId (unique), workspaceId, status (`eligible`/`processing`/`consumed`/`expired`/`suspended`/`restored`), consumedAt, expiresAt, importLogId, restoredBy, restoredAt, restoredNote, createdAt |
+| `Workspace` (EP-006) | id, name, slug (unique), status (`active`/`suspended`/`deleted`), ownerUserId (unique — one workspace per user in MVP), createdAt |
+| `WorkspaceMember` | id, workspaceId, userId, accessRole (`owner`/`member` — member reserved for future multi-member workspaces), createdAt |
+| `UserIssueTypeHierarchy` | id, userId (unique), configJson, createdAt, updatedAt |
+| `AppSetting` | id, ownerId (default `"global"`), key, valueJson, updatedBy, createdAt |
+| `Session` | id, userId, sessionTokenHash (unique), expiresAt, createdAt, userAgent, ipAddress |
+| `Notification` | id, recipientUserId, type, title, message, relatedEntityType, relatedEntityId, readAt, createdAt |
+| `UserStorageProvider` (EP-024 "Bring Your Own Cloud") | id, userId (unique), provider (`s3`/`azure`/`gcp`), configJson, credentialsEnc (AES-256-GCM encrypted), verified, verifiedAt, lastError, createdAt |
+| `JiraConnection` (ARCH-05) | id, name, deploymentType (`cloud`/`server`), baseUrl, authEmail, apiTokenEncrypted, projectFilters (JSON), fieldMapping (JSON), refreshMode (`manual`/`scheduled`), lastSyncAt, lastSyncStatus, createdByUserId, workspaceId, createdAt |
+| `Feedback` (P0B-09) | id, category, message, impactLevel (`Minor`/`Affects My Work`/`Blocks Me`), canContact, page, appVersion, status (`New`/`Reviewing`/`Accepted`/`Planned`/`In Progress`/`Released`/`Rejected`), userId, userEmail, createdAt |
+| `AppError` (P0B-08) | id, fingerprint (dedup hash of message+page+component), message, stack (sanitised, no PII/paths), severity (`error`/`warning`/`critical`), page, component, userId, releaseVersion, count, firstSeenAt, lastSeenAt, resolvedAt |
+| `LoginAttempt` | id, ip, attemptedAt — persistent rate-limiter table, rows older than 10 min purged on each attempt |
+| `SmtpSettings` | id, host, port, username, passEncrypted (AES-256-GCM), fromAddress, updatedByUserId, createdAt |
+
+All 19 Prisma models are now documented (previously 6 of 19 — see `TODO-List.md` `P0A-10`).
 
 ---
 
