@@ -5,6 +5,21 @@
 
 ---
 
+## Fixed: E2E CI Pipeline Now Actually Runs (2026-07-25)
+
+No user-facing change — this is an internal quality-gate fix. The automated cross-browser/responsive
+smoke test suite (`QA-GATE-05`/`06`, added 2026-07-22) has been failing on every single run since it
+was introduced, for reasons unrelated to any of the three PRs merged since (mobile scroll/form fixes,
+the P0-A documentation gate) — the pipeline itself was broken, not the code it was checking. Two bugs,
+both in the CI workflow configuration: it accidentally told `npm install` to skip a package the build
+needs (`tailwindcss`), and — once that was fixed — it would have hit a second issue where the app's own
+production-safety check (which exists to stop real deployments from silently losing uploaded files)
+correctly rejected the test environment's disposable storage setting. Both fixed without touching any
+production behavior; see `TODO-List.md` `QA-GATE-09` for the full root-cause writeup and
+`product/ERRORS.md` ERR-004 for the CI-only exception this introduced.
+
+---
+
 ## Fixed: Upload, Retro, and Admin Forms Now Usable One-Handed on a Phone (2026-07-24)
 
 Several forms didn't adapt to narrow phone screens: worst was the in-app Sprint Retrospective form,

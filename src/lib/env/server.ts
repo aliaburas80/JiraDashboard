@@ -29,6 +29,15 @@ function read(name: string): string | undefined {
   return value ? value : undefined;
 }
 
+// CI/E2E-only escape hatch from the persistent-storage-in-production guard
+// (ERR-004 in product/ERRORS.md). Doubly gated so a real Render deploy can
+// never trip it: `CI=true` is set automatically by GitHub Actions and is
+// never present in the Render runtime, and ALLOW_TEMPORARY_STORAGE_IN_CI is
+// only ever set in .github/workflows/e2e.yml.
+function isEphemeralCiRun(): boolean {
+  return process.env.CI === 'true' && process.env.ALLOW_TEMPORARY_STORAGE_IN_CI === 'true';
+}
+
 function requireInProduction(name: string, value: string | undefined, errors: string[]): string {
   if (process.env.NODE_ENV === 'production' && !value) {
     errors.push(`${name} is required in production.`);
@@ -61,7 +70,7 @@ export function getServerEnv(): ServerEnv {
     if ((read('DATABASE_URL') ?? '').startsWith('file:')) {
       errors.push('DATABASE_URL must be a PostgreSQL connection string in production.');
     }
-    if (storageDriver === 'temporary') {
+    if (storageDriver === 'temporary' && !isEphemeralCiRun()) {
       errors.push('STORAGE_DRIVER must use persistent object storage in production.');
     }
   }

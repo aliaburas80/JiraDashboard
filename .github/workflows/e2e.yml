@@ -39,9 +39,14 @@ jobs:
       SESSION_SECRET: e2e-session-secret-value-at-least-32-chars
       CONFIG_ENCRYPTION_KEY: e2e-config-secret-value-at-least-32-chars
       STORAGE_DRIVER: temporary
+      # CI/E2E-only: skips the persistent-storage requirement that a real
+      # production boot enforces (see ERR-004 in product/ERRORS.md). Doubly
+      # gated on `CI=true` (set automatically by GitHub Actions) in both
+      # src/lib/env/server.ts and scripts/start-production.mjs, so it can
+      # never trip on a real Render deploy.
+      ALLOW_TEMPORARY_STORAGE_IN_CI: 'true'
       MAX_UPLOAD_MB: 20
       LOG_LEVEL: info
-      NODE_ENV: production
       ADMIN_EMAIL: e2e-admin@deliveryclarity.app
       ADMIN_PASSWORD: E2E-admin-password-1
       ADMIN_NAME: E2E Admin

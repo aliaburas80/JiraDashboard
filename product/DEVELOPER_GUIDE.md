@@ -1854,6 +1854,56 @@ findings above. No further audit work needed for `P0A-01` itself.
 
 ---
 
+## 11e. E2E CI Pipeline Fix (`QA-GATE-09`, added 2026-07-25)
+
+`.github/workflows/e2e.yml` (stood up by `QA-GATE-05`/`06`, 2026-07-22) had never actually passed —
+confirmed via `gh run view --log-failed` across the three most recent PRs, same failure every time,
+unrelated to any of their own changes. §11b's pipeline diagram above only documents `quality.yml`;
+`e2e.yml` is a second, independent workflow that also runs on every push to `main` and every PR, and is
+not yet a required branch-protection check (same open gap as `QA-GATE-07`).
+
+**Bug 1 — `npm ci` silently skipped `tailwindcss`.** The job set `NODE_ENV: production` at job level,
+which was therefore also active during the `npm ci` step. `npm ci` respects `NODE_ENV=production` and
+skips `devDependencies`, where `tailwindcss` lives — so `next build` failed immediately with
+`Cannot find module 'tailwindcss'`. Fix: delete the line. Next's own CLI (`node_modules/next/dist/bin/next`)
+already defaults `NODE_ENV` to `production` for `next build`/`next start` when it isn't already set, so
+this cost nothing — it just stopped poisoning the earlier `npm ci`/`npx playwright install` steps. This
+matches `quality.yml`, which never set this line and has always built cleanly.
+
+**Bug 2 — the production storage guard correctly rejected CI's disposable storage.** Once Bug 1 is
+fixed, the workflow's `webServer` step (`npm run start`, via `scripts/start-production.mjs`) would still
+fail to boot: that script's `validateEnvironment()` unconditionally requires `STORAGE_DRIVER` to be
+`s3`/`azure`/`gcp`, and the identical guard exists in `src/lib/env/server.ts`'s `getServerEnv()` (called
+broadly at server runtime) — both entirely correctly, since Render's disk really is ephemeral and this
+is what stops a real deploy from silently losing uploaded files/backups (see `product/ERRORS.md`
+ERR-004). But `e2e.yml` sets `STORAGE_DRIVER: temporary`, which is the right choice for a single-use CI
+Postgres container with nothing to lose — so the two goals are legitimately in conflict, not a case of
+CI being "wrong."
+
+Resolved with a narrow, explicit, **doubly-gated** bypass rather than loosening the guard itself:
+
+```ts
+// src/lib/env/server.ts and scripts/start-production.mjs (mirrored)
+function isEphemeralCiRun() {
+  return process.env.CI === 'true' && process.env.ALLOW_TEMPORARY_STORAGE_IN_CI === 'true';
+}
+```
+
+`CI=true` is set automatically by GitHub Actions and is never present in Render's runtime;
+`ALLOW_TEMPORARY_STORAGE_IN_CI` is set only in `.github/workflows/e2e.yml`. Both must be true, so a real
+production deploy cannot trip this — there is no single env var that, if leaked or copy-pasted into
+Render's dashboard by mistake, would silently disable the guard. `src/__tests__/serverEnv.test.ts` (new,
+5 tests) proves: the guard still throws with `CI=true` alone, still throws with
+`ALLOW_TEMPORARY_STORAGE_IN_CI=true` alone, passes with both, and that the bypass doesn't relax the
+unrelated `DATABASE_URL`-must-not-be-`file:` check.
+
+**Verification:** local `typecheck`/`lint`/`lint:css`/`test` (114/114 suites, 1087/1087 tests)/`build`
+all clean; actual `e2e` CI pass confirmed via `gh pr checks` on the fix's own PR, not assumed from local
+runs alone (this sandbox has no local Postgres/Docker, so the real DB-backed critical path has never
+been runnable locally — see `QA-GATE-05`'s original verification-boundary note).
+
+---
+
 ## 12. Deployment
 
 See **`product/DEPLOYMENT_GUIDE.md`** for the full guide. Summary:
