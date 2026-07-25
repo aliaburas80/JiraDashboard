@@ -27,11 +27,34 @@ const NEW_PASSWORD = 'E2e-rotated-password-2';
 const COLD_START_NAV_TIMEOUT_MS = 30_000;
 const UPLOAD_NAV_TIMEOUT_MS     = 40_000;
 
+// Every test in the suite shares one seeded admin row in the same CI
+// Postgres database (only the browser context is fresh per test, not the
+// account) — so once any earlier test in this run completes the forced
+// password-change flow below, the account's real password is NEW_PASSWORD,
+// not the original ADMIN_PASSWORD. This was the actual root cause of every
+// test after the first one deterministically failing at this exact login
+// step (confirmed via the login API's own response status, not just a UI
+// timeout): they kept trying the now-stale original password, which the
+// server correctly rejects, so the page never leaves /login no matter how
+// long you wait. Try the original password first (matches a fresh seed),
+// and fall back to the rotated one if the server says it was wrong.
+async function attemptLogin(page: Page, password: string): Promise<boolean> {
+  await page.getByLabel('Password', { exact: true }).fill(password);
+  const [response] = await Promise.all([
+    page.waitForResponse(res => res.url().includes('/api/auth/login') && res.request().method() === 'POST'),
+    page.getByRole('button', { name: /sign in/i }).click(),
+  ]);
+  return response.ok();
+}
+
 export async function loginAndEnsureData(page: Page): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Email address').fill(ADMIN_EMAIL);
-  await page.getByLabel('Password', { exact: true }).fill(ADMIN_PASSWORD);
-  await page.getByRole('button', { name: /sign in/i }).click();
+
+  const loggedIn = await attemptLogin(page, ADMIN_PASSWORD);
+  if (!loggedIn) {
+    await attemptLogin(page, NEW_PASSWORD);
+  }
 
   await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: COLD_START_NAV_TIMEOUT_MS });
 
