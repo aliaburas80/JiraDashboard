@@ -17,7 +17,14 @@ concurrency:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Was 20 — a run that hits real per-request slowness on a shared runner
+    # got SIGKILLed mid-suite by this ceiling with no time left to even
+    # upload the Playwright report, destroying the one diagnostic artifact
+    # that would explain why. 30 gives genuine headroom to either finish or
+    # fail cleanly with a report, now that playwright.config.ts's
+    # MOBILE_ONLY_SPECS scoping also cut the suite from 20 full login+upload
+    # cycles down to 8.
+    timeout-minutes: 30
 
     services:
       postgres:

@@ -4,6 +4,19 @@ import { defineConfig, devices } from '@playwright/test';
 
 const baseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3100';
 
+// MOBILE-05/07/09: these specs assert phone-width-only CSS behavior (the
+// dense-table sticky-scroll pattern only activates below ~640px; the
+// stacked-grid form pattern targets the `sm` 640px breakpoint) and were
+// always intended to run against the `Mobile` project only — their own file
+// header comments already said so. Nothing enforced that until now, so they
+// were silently also running on Desktop Chrome/Firefox/Safari/Tablet, each
+// repeating the full login+password-change+upload setup from scratch for an
+// assertion that's meaningless (or, at Tablet's 834px width, potentially
+// wrong) outside the Mobile viewport — 2.5x more full auth+upload cycles
+// than the suite needs, which is what pushed a slow run past the job's
+// timeout-minutes ceiling with nothing left over to even upload a report.
+const MOBILE_ONLY_SPECS = ['**/mobile-dense-tables.spec.ts', '**/mobile-forms.spec.ts'];
+
 export default defineConfig({
   testDir: './tests/e2e',
   // Generous enough that the per-step waits in tests/e2e/helpers/auth.ts
@@ -27,10 +40,10 @@ export default defineConfig({
   // QA-GATE-05: Chromium, Firefox, and WebKit at a shared desktop viewport.
   // QA-GATE-06: the same critical path at tablet and mobile viewports/devices.
   projects: [
-    { name: 'Desktop Chrome',  use: { ...devices['Desktop Chrome'] } },
-    { name: 'Desktop Firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'Desktop Safari',  use: { ...devices['Desktop Safari'] } },
-    { name: 'Tablet',          use: { ...devices['iPad Pro 11'] } },
+    { name: 'Desktop Chrome',  testIgnore: MOBILE_ONLY_SPECS, use: { ...devices['Desktop Chrome'] } },
+    { name: 'Desktop Firefox', testIgnore: MOBILE_ONLY_SPECS, use: { ...devices['Desktop Firefox'] } },
+    { name: 'Desktop Safari',  testIgnore: MOBILE_ONLY_SPECS, use: { ...devices['Desktop Safari'] } },
+    { name: 'Tablet',          testIgnore: MOBILE_ONLY_SPECS, use: { ...devices['iPad Pro 11'] } },
     { name: 'Mobile',          use: { ...devices['iPhone 13'] } },
   ],
 
