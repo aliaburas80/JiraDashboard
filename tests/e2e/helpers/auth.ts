@@ -31,13 +31,27 @@ const UPLOAD_NAV_TIMEOUT_MS     = 40_000;
 // Postgres database (only the browser context is fresh per test, not the
 // account) — so once any earlier test in this run completes the forced
 // password-change flow below, the account's real password is NEW_PASSWORD,
-// not the original ADMIN_PASSWORD. This was the actual root cause of every
-// test after the first one deterministically failing at this exact login
-// step (confirmed via the login API's own response status, not just a UI
-// timeout): they kept trying the now-stale original password, which the
-// server correctly rejects, so the page never leaves /login no matter how
-// long you wait. Try the original password first (matches a fresh seed),
-// and fall back to the rotated one if the server says it was wrong.
+// not the original ADMIN_PASSWORD.
+//
+// The first fix attempt here tried ADMIN_PASSWORD and fell back to
+// NEW_PASSWORD on a rejected attempt — technically correct, but it doubled
+// the number of login POSTs for every test after the first, which combined
+// with Playwright's own `retries: 1` was enough to exhaust the login route's
+// rate limiter (5 attempts/60s — see app/api/auth/login/route.ts). All these
+// requests share one bucket: there's no reverse proxy in front of this CI
+// server, so every request's `x-forwarded-for` is absent and the limiter
+// keys on the literal string 'unknown' for every single test. A 429 is
+// rejected the same way a wrong password is (no navigation away from
+// /login), which is what made that fix look like it hadn't worked.
+//
+// `workers: 1` + `fullyParallel: false` means every test in this file runs
+// sequentially in one persistent Node process (true across Playwright's own
+// retries too, not just normal sequential tests) — so a module-level
+// variable reliably remembers the real current password across the whole
+// run, and every test can log in correctly on the first attempt. Zero wasted
+// attempts, no rate-limit exposure.
+let currentPassword = ADMIN_PASSWORD;
+
 async function attemptLogin(page: Page, password: string): Promise<boolean> {
   await page.getByLabel('Password', { exact: true }).fill(password);
   const [response] = await Promise.all([
@@ -51,20 +65,26 @@ export async function loginAndEnsureData(page: Page): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Email address').fill(ADMIN_EMAIL);
 
-  const loggedIn = await attemptLogin(page, ADMIN_PASSWORD);
+  const loggedIn = await attemptLogin(page, currentPassword);
   if (!loggedIn) {
-    await attemptLogin(page, NEW_PASSWORD);
+    // Defensive fallback only — should be unreachable in normal operation
+    // now that currentPassword is tracked, but cheaper to keep than to
+    // silently strand the page on /login if something unexpected happens.
+    const fallback = currentPassword === ADMIN_PASSWORD ? NEW_PASSWORD : ADMIN_PASSWORD;
+    await attemptLogin(page, fallback);
+    currentPassword = fallback;
   }
 
   await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: COLD_START_NAV_TIMEOUT_MS });
 
   if (page.url().includes('/change-password')) {
     const passwordFields = page.locator('input[type="password"]');
-    await passwordFields.nth(0).fill(ADMIN_PASSWORD);
+    await passwordFields.nth(0).fill(currentPassword);
     await passwordFields.nth(1).fill(NEW_PASSWORD);
     await passwordFields.nth(2).fill(NEW_PASSWORD);
     await page.getByRole('button', { name: /set new password/i }).click();
     await page.waitForURL(url => !url.pathname.startsWith('/change-password'), { timeout: COLD_START_NAV_TIMEOUT_MS });
+    currentPassword = NEW_PASSWORD;
   }
 
   if (page.url().includes('/dashboard')) {
