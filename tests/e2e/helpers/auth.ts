@@ -95,6 +95,17 @@ export async function loginAndEnsureData(page: Page): Promise<void> {
     if (alreadyHasData) return;
   }
 
+  // TEMPORARY (QA-GATE-09 bug 5 diagnosis): app/api/upload/route.ts's own
+  // step-timing log never appeared in the webServer output on the runs that
+  // hung here, meaning that handler is never even invoked — the hang is
+  // upstream of it. Logging every request/response this page makes from
+  // here on to find out what the browser actually does (or doesn't) send.
+  page.on('request', r => console.log(`>> ${r.method()} ${r.url()}`));
+  page.on('response', r => console.log(`<< ${r.status()} ${r.url()}`));
+  page.on('requestfailed', r => console.log(`XX ${r.method()} ${r.url()} ${r.failure()?.errorText}`));
+  page.on('console', msg => console.log(`[console.${msg.type()}] ${msg.text()}`));
+  page.on('pageerror', err => console.log(`[pageerror] ${err.message}`));
+
   await page.goto('/');
   const fileInput = page.locator('input[type="file"]').first();
   await fileInput.setInputFiles('public/samples/sample-jira-export.csv');
