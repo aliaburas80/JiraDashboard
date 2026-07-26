@@ -6,6 +6,7 @@ export function validateIssueData(issues: Record<string, unknown>[]): { isValid:
 
   if (!Array.isArray(issues) || !issues.length) {
     errors.push('Uploaded file contains no issue rows.');
+    return { isValid: false, errors };
   }
 
   const headerFields = issues.length ? Object.keys(issues[0]) : [];
