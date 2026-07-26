@@ -5,6 +5,28 @@
 
 ---
 
+## Fixed: E2E CI Pipeline Now Actually Passes (2026-07-25 – 2026-07-26)
+
+No user-facing change — this is an internal quality-gate fix, but a substantial one. The automated
+cross-browser/responsive smoke test suite (`QA-GATE-05`/`06`, added 2026-07-22) had been failing on
+every single run since it was introduced, for reasons unrelated to any of the PRs merged since (mobile
+scroll/form fixes, the P0-A documentation gate) — the pipeline itself was broken, not the code it was
+checking. Chasing it down surfaced five separate, previously-unreachable bugs, each one only visible
+once the last was fixed: a CI config mistake that broke the build (`npm ci` skipping a needed package),
+the app's own production storage safety-check correctly rejecting the test environment's disposable
+storage, the workflow's own timeout killing runs before they could finish, a shared test account whose
+password one test permanently changes out from under every other test, and — the last and most
+convincing-looking "hang" — a seeded test account that was never marked email-verified, so every upload
+attempt was correctly rejected, plus a WebKit-specific cookie-security quirk over plain HTTP. None of
+these touch real production behavior. **Result:** the suite now genuinely runs the full
+login→upload→dashboard flow across every supported browser in CI, for the first time since it was
+written. Two small, real follow-ups came out of finally being able to run it for real: a
+feature-correctness question about the Roadmap Gantt chart's mobile scroll behavior, and one flaky test
+— both tracked separately, not CI-pipeline bugs. See `TODO-List.md` `QA-GATE-09` for the full
+root-cause writeup and `product/ERRORS.md` ERR-004 for the CI-only storage exception this introduced.
+
+---
+
 ## Fixed: Upload, Retro, and Admin Forms Now Usable One-Handed on a Phone (2026-07-24)
 
 Several forms didn't adapt to narrow phone screens: worst was the in-app Sprint Retrospective form,

@@ -102,6 +102,17 @@ Each entry includes: what triggers it, root cause, and the exact fix.
 
 **Fix:** Set `STORAGE_DRIVER=s3` and configure all required S3/R2 vars: `STORAGE_BUCKET`, `STORAGE_REGION` (use `auto` for Cloudflare R2), `STORAGE_ENDPOINT` (R2 endpoint), `STORAGE_ACCESS_KEY_ID`, `STORAGE_SECRET_ACCESS_KEY`.
 
+**CI/E2E exception:** `.github/workflows/e2e.yml` runs `npm run start` against an
+ephemeral, single-use Postgres container purely to serve Playwright's
+critical-path suite — there is no real data to lose. It sets
+`STORAGE_DRIVER=temporary` plus an explicit `ALLOW_TEMPORARY_STORAGE_IN_CI=true`,
+which `src/lib/env/server.ts` (`isEphemeralCiRun()`) and
+`scripts/start-production.mjs` both check *in addition to* GitHub Actions'
+own automatic `CI=true` before skipping this guard. Both conditions are
+required, and `ALLOW_TEMPORARY_STORAGE_IN_CI` is never set anywhere outside
+that one workflow file, so a real Render deploy cannot trip the bypass. See
+`TODO-List.md` `QA-GATE-09`.
+
 **Related:** ERR-005, ERR-072
 
 ---

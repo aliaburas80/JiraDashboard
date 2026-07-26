@@ -80,6 +80,14 @@ function loadEnvFiles() {
   }
 }
 
+// CI/E2E-only escape hatch — mirrors src/lib/env/server.ts's isEphemeralCiRun().
+// Doubly gated so a real Render deploy can never trip it: `CI=true` is set
+// automatically by GitHub Actions and is never present in the Render runtime,
+// and ALLOW_TEMPORARY_STORAGE_IN_CI is only ever set in .github/workflows/e2e.yml.
+function isEphemeralCiRun() {
+  return process.env.CI === 'true' && process.env.ALLOW_TEMPORARY_STORAGE_IN_CI === 'true';
+}
+
 function validateEnvironment() {
   const errors = [];
   const databaseUrl = requireEnv('DATABASE_URL', errors);
@@ -96,7 +104,7 @@ function validateEnvironment() {
   if (configEncryptionKey && configEncryptionKey.length < 32) {
     errors.push('CONFIG_ENCRYPTION_KEY must be at least 32 characters.');
   }
-  if (!['s3', 'azure', 'gcp'].includes(storageDriver)) {
+  if (!['s3', 'azure', 'gcp'].includes(storageDriver) && !isEphemeralCiRun()) {
     errors.push('STORAGE_DRIVER must be s3, azure, or gcp in production.');
   }
   if (storageDriver === 's3') {
