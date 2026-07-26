@@ -21,16 +21,6 @@ import {
   consumeEntitlement,
   revertEntitlement,
 } from '@/lib/entitlement';
-import { logServerEvent } from '@/lib/logger';
-
-// TEMPORARY (QA-GATE-09 bug 5 diagnosis): the first upload in a fresh CI run
-// never completes and appears to wedge the whole server for every request
-// after it. Bracketing every awaited step to find which one never returns —
-// remove once found, or fold into permanent P0A-09 perf instrumentation if
-// it proves generally useful.
-function markStep(reqId: string, step: string, t0: number): void {
-  logServerEvent('info', 'upload.step', { reqId, step, elapsedMs: Date.now() - t0 });
-}
 
 // ---------------------------------------------------------------------------
 // DB-backed rate limiter — 20 uploads per 15 minutes per user (P0A-02)
@@ -74,15 +64,11 @@ function getExtension(filename: string): string {
 // POST /api/upload
 // ---------------------------------------------------------------------------
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const reqId = Math.random().toString(36).slice(2, 8);
-  const t0 = Date.now();
-  markStep(reqId, 'start', t0);
   const { MAX_UPLOAD_MB } = getServerEnv();
   const maxFileSizeBytes = MAX_UPLOAD_MB * 1024 * 1024;
 
   // --- Auth first (P0A-02/P0A-04): reject unauthenticated before touching the body ---
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
-  markStep(reqId, 'session-resolved', t0);
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
@@ -101,7 +87,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // uploads rather than silently falling back to App storage, per explicit
   // product decision (never guess where "cloud" data should land).
   const storageProviderStatus = await getUserStorageProviderStatus(userId);
-  markStep(reqId, 'storage-provider-status-resolved', t0);
   if (storageProviderStatus === 'unverified') {
     return NextResponse.json(
       {
@@ -115,7 +100,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // Admins bypass — they can always upload.
   const isAdmin = session.role === 'admin';
   const entCheck = await checkUploadEntitlement(userId, isAdmin);
-  markStep(reqId, 'entitlement-checked', t0);
   if (!entCheck.allowed) {
     return NextResponse.json({ error: entCheck.message, reason: entCheck.reason }, { status: 403 });
   }
@@ -134,7 +118,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   // --- DB-backed rate limit by userId (20 uploads / 15 min, survives cold starts) ---
   const { limited, retryAfterSeconds } = await checkUploadRateLimit(userId);
-  markStep(reqId, 'upload-rate-limit-checked', t0);
   if (limited) {
     const mins = Math.floor(retryAfterSeconds / 60);
     const secs = retryAfterSeconds % 60;
@@ -149,7 +132,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   let formData: FormData;
   try {
     formData = await req.formData();
-    markStep(reqId, 'form-data-parsed', t0);
   } catch {
     return NextResponse.json({ error: 'Invalid multipart form data.' }, { status: 400 });
   }
@@ -200,7 +182,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // parser. Deliberately lenient for .xls/.csv — see src/lib/fileSignature.ts
   // for why a strict OLE-only .xls check would reject real Jira exports.
   const signatureError = validateFileSignature(buffer, ext);
-  markStep(reqId, 'file-signature-validated', t0);
   if (signatureError) {
     if (!isAdmin) await revertEntitlement(userId);
     return NextResponse.json({ error: signatureError }, { status: 400 });
@@ -210,7 +191,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   let parseResult: ReturnType<typeof parseJiraFile>;
   try {
     parseResult = parseJiraFile(fileArg);
-    markStep(reqId, 'file-parsed', t0);
   } catch (err) {
     // Parse failed — revert entitlement so user can try again
     if (!isAdmin) await revertEntitlement(userId);
@@ -222,7 +202,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   // --- Validate ---
   const validation = validateIssueData(issues);
-  markStep(reqId, 'issues-validated', t0);
 
   if (!validation.isValid) {
     // EP-015: validation failure does NOT consume entitlement — revert to eligible
@@ -245,24 +224,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const startTime = Date.now();
     const metrics   = calculateDashboardMetrics(issues);
-    markStep(reqId, 'metrics-calculated', t0);
     // EP-020: resolve the caller's workspace/user scope before writing the
     // live dashboard file — this is what keeps one cloud-mode user's upload
     // from ever overwriting another's dashboard. Reused below for the
     // ImportLog's workspaceId, so resolved once rather than via the shared
     // getMetricsScopeKeyForUser helper (which would re-query it).
     const workspace = await getWorkspaceForUser(userId).catch(() => null);
-    markStep(reqId, 'workspace-resolved', t0);
     const scopeKey   = workspace ? `ws:${workspace.id}` : `user:${userId}`;
     writeLatestMetrics(scopeKey, metrics, { source: 'file' });
-    markStep(reqId, 'latest-metrics-written', t0);
     // Mark pending synchronously, before the response even goes out — closes
     // the race where a near-immediate GET /api/metrics/latest (the dashboard
     // reloading right after this upload) could trigger a cloud restore that
     // overwrites this fresh write with an older bucket backup before the
     // non-blocking pushToCloud() below has finished pushing it.
     markPendingPush();
-    markStep(reqId, 'pending-push-marked', t0);
 
     // EP-024: verified users additionally get a durable copy pushed to their
     // own bucket — non-blocking, same pattern as the existing pushToCloud()
@@ -276,7 +251,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const importLog = appendImportLog(
       buildImportLog({ file: fileArg, parseResult, validation, metrics, status: 'success' }),
     );
-    markStep(reqId, 'import-log-appended', t0);
 
     // Save to DB if user is logged in — EP-015: consume entitlement atomically with ImportLog
     if (userId) {
@@ -324,7 +298,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         // Consume entitlement atomically — links entitlement to this ImportLog
         if (!isAdmin) await consumeEntitlement(tx, userId, log.id);
       }).catch(() => {});
-      markStep(reqId, 'import-log-transaction-settled', t0);
 
       // Push-on-change: sync new data to cloud immediately (non-blocking)
       import('@/services/storage/cloudSync')
@@ -336,7 +309,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if ((metrics.flow as any).itemsCapped) {
       warnings.push(`Large export: ${(metrics.flow as any).totalItemCount?.toLocaleString()} items detected. Dashboard shows top 5,000 highest-risk items. All aggregate metrics are accurate.`);
     }
-    markStep(reqId, 'responding', t0);
     return NextResponse.json({ metrics, warnings, importLog, columnMapping: parseResult.columnMapping });
   } catch (error) {
     // EP-015: server error — revert entitlement so user can retry

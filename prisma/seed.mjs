@@ -19,7 +19,14 @@ async function main() {
 
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await prisma.user.create({
-    data: { name, email, passwordHash, role: 'admin', mustChangePassword: true },
+    // emailVerified: true — this is the bootstrap admin account created by
+    // whoever is deploying the app; there's no inbound verification email to
+    // click at this point (SMTP may not even be configured yet), and EP-011
+    // blocks uploads for any account with emailVerified: false (schema
+    // default). Without this, the very first admin account on any fresh
+    // deployment — and the seeded E2E admin, whose critical-path test
+    // exercises exactly this upload flow — could never upload anything.
+    data: { name, email, passwordHash, role: 'admin', mustChangePassword: true, emailVerified: true },
   });
 
   console.log(`Admin created: ${user.email} (id: ${user.id})`);
