@@ -52,6 +52,11 @@ jobs:
       # src/lib/env/server.ts and scripts/start-production.mjs, so it can
       # never trip on a real Render deploy.
       ALLOW_TEMPORARY_STORAGE_IN_CI: 'true'
+      # CI/E2E-only: this job serves the app over plain http://127.0.0.1, not
+      # HTTPS, so a Secure session cookie is silently dropped by WebKit (see
+      # src/lib/session.ts's isEphemeralCiHttpRun for the full explanation and
+      # why this is safe — same doubly-gated pattern as the flag above).
+      E2E_ALLOW_INSECURE_COOKIES: 'true'
       MAX_UPLOAD_MB: 20
       LOG_LEVEL: info
       ADMIN_EMAIL: e2e-admin@deliveryclarity.app
