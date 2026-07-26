@@ -5,6 +5,20 @@
 
 ---
 
+## Fixed: Duplicate Rows in a Single Jira Export No Longer Double-Count (2026-07-26)
+
+If a Jira CSV/Excel export contained the same Issue Key twice — a re-exported or appended file, for
+example — every dashboard metric counted it twice. Uploading multiple files at once already merged
+overlapping issues correctly; a single-file upload now does the same thing, and tells you when it
+happened (a warning naming how many duplicate rows were merged). No action needed — this fixes itself
+retroactively the next time an affected file is re-uploaded. Also closed: a latent bug where an
+unexpected (non-list) upload payload could crash the request instead of showing a normal validation
+error, and added test coverage confirming admin-only report/diagnostics pages correctly reject
+non-admin accounts (no behavior change there — confirming existing protection, not a new fix). See
+`TODO-List.md` `P0A-02`/`P0A-04` for details.
+
+---
+
 ## Fixed: E2E CI Pipeline Now Actually Passes (2026-07-25 – 2026-07-26)
 
 No user-facing change — this is an internal quality-gate fix, but a substantial one. The automated

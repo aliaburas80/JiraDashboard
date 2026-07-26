@@ -1959,6 +1959,58 @@ Postgres/Docker, so the real DB-backed critical path has never been runnable loc
 
 ---
 
+## 11f. P0-A Gate Phase 2: Upload Dedup + Admin-Route Negative-Access Tests (closed 2026-07-26)
+
+Phase 1 (`§11d` above, `TODO-List.md` `P0A-01`–`10`) corrected 9 stale tracker rows and closed the
+small doc gaps. Two items were re-scoped rather than closed, each with a small, real, verified-in-code
+remaining gap. This pass (issue #22) closes both.
+
+**`P0A-02` — upload dedup:** the multi-file merge route (`app/api/upload/merge/route.ts`) already
+deduped by Issue Key via `mergeIssueArrays()` (`src/lib/mergeIssues.ts`); the single-file
+`/api/upload` route did not, so a CSV with a repeated Issue Key row double-counted in every metric.
+Fixed by calling `mergeIssueArrays([parseResult.issues])` on the single-file path too — one file's
+duplicate rows now merge the same way multiple files' overlapping rows always have. The merge is
+surfaced to the caller as a warning (`"N duplicate Issue Key row(s) were merged."`), consistent with
+CLAUDE.md §33's requirement that automatic corrections be recorded, not silently applied.
+`ImportLog.rowCount` intentionally still reports the *raw* parsed row count (what was actually in the
+file) rather than the deduped count — `parseResult.issues.length`, not the deduped `issues` variable —
+so the field keeps meaning "rows in the file" rather than silently changing to "unique issues after
+dedup" for existing consumers of that column.
+
+While adding direct tests for `src/services/jira/validation.ts` (previously exercised only through
+`jest.mock()` stubs, or one incidental happy-path assertion in `jiraApiAdapter.test.ts`), a real latent
+crash surfaced: `validateIssueData()` checked `Array.isArray(issues)` but then read `issues.length`
+unconditionally on the next line regardless of that check's result — a non-array `issues` argument
+(e.g. `null`/`undefined`) would throw a `TypeError` instead of returning a clean validation failure.
+Fixed with an early return. New tests: `src/__tests__/jiraValidation.test.ts` (5 tests — valid input,
+empty array, missing fields, non-array input, multi-row header handling) and
+`src/__tests__/uploadEdgeCases.test.ts` (3 tests — 413 size-limit rejection before parsing, empty-CSV
+422 through the real, unmocked `validateIssueData`, and the new dedup-warning behavior end-to-end
+through the route). The 413-limit and empty-CSV cases were previously untested at the route level
+(only the client-side `local` storage-mode path had an equivalent, in `localUpload.test.ts`); the
+corrupt/spoofed-signature case was already covered (`uploadUserId.test.ts` `SEC-2026-07-18a`) and
+wasn't duplicated.
+
+**`P0A-04` — admin-route audit:** every route under `app/api/admin/**` that runs an unscoped
+(non-`userId`/`workspaceId`-filtered) Prisma query was audited by hand: `admin/users`,
+`admin/diagnostics`, `admin/audit-events`, `admin/system-errors`, `admin/feedback`,
+`admin/jira-connections` (partially scoped — global only for `session.isSuperAdmin`), and
+`admin/user-add-requests`. All 7 are gated by an explicit `session.role !== 'admin'` (or
+`isSuperAdmin`) check ahead of the query — confirmed intentional global-admin-only design, not a
+missed per-user scope. No code fix was needed here. The real gap: 4 of those routes (`diagnostics`,
+`audit-events`, `system-errors`, `feedback`) had no test proving that guard actually rejects a
+non-admin caller before the query runs — only `admin/users` and `admin/jira-connections` had one.
+Closed via `src/__tests__/adminNegativeAccess.test.ts` (5 tests: one per previously-untested route,
+plus one confirming an unauthenticated caller is rejected too). The mocked `prisma` client in that
+suite throws if any query method is actually invoked, so a regression that accidentally removed or
+reordered a guard would fail loudly rather than silently passing on stale mock data.
+
+**Verification:** `typecheck`/`lint`/`lint:css`/`test`/`build` all clean; 13 new tests added across 3
+new files, zero existing tests changed in behavior (dedup only changes output for genuinely duplicate
+Issue Keys, which no existing fixture data contains).
+
+---
+
 ## 12. Deployment
 
 See **`product/DEPLOYMENT_GUIDE.md`** for the full guide. Summary:

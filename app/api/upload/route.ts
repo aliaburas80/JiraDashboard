@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseJiraFile } from '@/services/jira/parser';
 import { validateIssueData } from '@/services/jira/validation';
+import { mergeIssueArrays } from '@/lib/mergeIssues';
 import { calculateDashboardMetrics } from '@/services/metrics/metrics.service';
 import { appendImportLog, buildImportLog } from '@/services/imports/importLogs.service';
 import { computeReleaseConfidence } from '@/lib/releaseConfidence';
@@ -198,7 +199,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const { issues, warnings } = parseResult;
+  const { warnings } = parseResult;
+
+  // --- Dedupe by Issue Key (P0A-02) ---
+  // A single Jira export can legitimately contain a repeated Issue Key row
+  // (e.g. a re-exported/appended CSV) — without this, the same issue was
+  // counted twice in every metric. The multi-file merge route already
+  // deduped across files via mergeIssueArrays; this reuses the same logic
+  // within one file so a duplicate row is merged rather than double-counted.
+  const { merged: issues, stats: dedupStats } = mergeIssueArrays([parseResult.issues]);
+  if (dedupStats.duplicatesRemoved > 0) {
+    warnings.push(`${dedupStats.duplicatesRemoved} duplicate Issue Key row(s) were merged.`);
+  }
 
   // --- Validate ---
   const validation = validateIssueData(issues);
@@ -272,7 +284,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           fileName:        originalname,
           fileSize:        file.size,
           fileType:        ext.replace('.', ''),
-          rowCount:        issues.length,
+          // Raw row count from the file, not the deduped count below — rowCount
+          // reports what was in the export; metrics/totalIssues reflect unique issues.
+          rowCount:        parseResult.issues.length,
           status:          'success',
           warningsCount:   warnings.length,
           totalIssues:     metrics.totalIssues ?? 0,
