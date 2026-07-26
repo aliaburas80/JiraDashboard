@@ -1854,7 +1854,7 @@ findings above. No further audit work needed for `P0A-01` itself.
 
 ---
 
-## 11e. E2E CI Pipeline Fix (`QA-GATE-09`, added 2026-07-25)
+## 11e. E2E CI Pipeline Fix (`QA-GATE-09`, added 2026-07-25, closed 2026-07-26)
 
 `.github/workflows/e2e.yml` (stood up by `QA-GATE-05`/`06`, 2026-07-22) had never actually passed —
 confirmed via `gh run view --log-failed` across the three most recent PRs, same failure every time,
@@ -1862,25 +1862,30 @@ unrelated to any of their own changes. §11b's pipeline diagram above only docum
 `e2e.yml` is a second, independent workflow that also runs on every push to `main` and every PR, and is
 not yet a required branch-protection check (same open gap as `QA-GATE-07`).
 
+Five real, previously-unreachable bugs were found and fixed across 9 real CI runs. This is the key
+lesson worth carrying forward: **each bug only became visible once the one before it was fixed**, since
+the suite had never once run to completion before this — every fix moved the failure point one layer
+deeper rather than resolving it outright, which looked at each step like "the fix didn't work" until the
+report was read carefully enough to see it was a *different* failure than before. `gh run view
+--log-failed` and downloaded Playwright reports were used to find each one; none were guessed.
+
 **Bug 1 — `npm ci` silently skipped `tailwindcss`.** The job set `NODE_ENV: production` at job level,
-which was therefore also active during the `npm ci` step. `npm ci` respects `NODE_ENV=production` and
-skips `devDependencies`, where `tailwindcss` lives — so `next build` failed immediately with
-`Cannot find module 'tailwindcss'`. Fix: delete the line. Next's own CLI (`node_modules/next/dist/bin/next`)
-already defaults `NODE_ENV` to `production` for `next build`/`next start` when it isn't already set, so
-this cost nothing — it just stopped poisoning the earlier `npm ci`/`npx playwright install` steps. This
-matches `quality.yml`, which never set this line and has always built cleanly.
+active during `npm ci` too. `npm ci` respects `NODE_ENV=production` and skips `devDependencies`, where
+`tailwindcss` lives — so `next build` failed immediately with `Cannot find module 'tailwindcss'`. Fix:
+delete the line. Next's own CLI (`node_modules/next/dist/bin/next`) already defaults `NODE_ENV` to
+`production` for `next build`/`next start` when unset, so this cost nothing — it just stopped poisoning
+the earlier `npm ci`/`npx playwright install` steps. Matches `quality.yml`, which never set this line and
+has always built cleanly.
 
 **Bug 2 — the production storage guard correctly rejected CI's disposable storage.** Once Bug 1 is
 fixed, the workflow's `webServer` step (`npm run start`, via `scripts/start-production.mjs`) would still
 fail to boot: that script's `validateEnvironment()` unconditionally requires `STORAGE_DRIVER` to be
-`s3`/`azure`/`gcp`, and the identical guard exists in `src/lib/env/server.ts`'s `getServerEnv()` (called
-broadly at server runtime) — both entirely correctly, since Render's disk really is ephemeral and this
-is what stops a real deploy from silently losing uploaded files/backups (see `product/ERRORS.md`
-ERR-004). But `e2e.yml` sets `STORAGE_DRIVER: temporary`, which is the right choice for a single-use CI
-Postgres container with nothing to lose — so the two goals are legitimately in conflict, not a case of
-CI being "wrong."
-
-Resolved with a narrow, explicit, **doubly-gated** bypass rather than loosening the guard itself:
+`s3`/`azure`/`gcp`, and the identical guard exists in `src/lib/env/server.ts`'s `getServerEnv()` — both
+entirely correctly, since Render's disk really is ephemeral and this stops a real deploy from silently
+losing uploaded files/backups (see `product/ERRORS.md` ERR-004). But `e2e.yml` sets
+`STORAGE_DRIVER: temporary`, the right choice for a single-use CI Postgres container with nothing to
+lose — the two goals are legitimately in conflict, not a case of CI being "wrong." Resolved with a
+doubly-gated bypass rather than loosening the guard:
 
 ```ts
 // src/lib/env/server.ts and scripts/start-production.mjs (mirrored)
@@ -1889,18 +1894,68 @@ function isEphemeralCiRun() {
 }
 ```
 
-`CI=true` is set automatically by GitHub Actions and is never present in Render's runtime;
-`ALLOW_TEMPORARY_STORAGE_IN_CI` is set only in `.github/workflows/e2e.yml`. Both must be true, so a real
-production deploy cannot trip this — there is no single env var that, if leaked or copy-pasted into
-Render's dashboard by mistake, would silently disable the guard. `src/__tests__/serverEnv.test.ts` (new,
-5 tests) proves: the guard still throws with `CI=true` alone, still throws with
-`ALLOW_TEMPORARY_STORAGE_IN_CI=true` alone, passes with both, and that the bypass doesn't relax the
-unrelated `DATABASE_URL`-must-not-be-`file:` check.
+`CI=true` is set automatically by GitHub Actions and never present on Render; `ALLOW_TEMPORARY_STORAGE_IN_CI`
+is set only in `e2e.yml`. `src/__tests__/serverEnv.test.ts` (5 tests) proves the guard still holds with
+either flag alone.
 
-**Verification:** local `typecheck`/`lint`/`lint:css`/`test` (114/114 suites, 1087/1087 tests)/`build`
-all clean; actual `e2e` CI pass confirmed via `gh pr checks` on the fix's own PR, not assumed from local
-runs alone (this sandbox has no local Postgres/Docker, so the real DB-backed critical path has never
-been runnable locally — see `QA-GATE-05`'s original verification-boundary note).
+**Bug 3 — the job's own `timeout-minutes: 20` killed the run mid-suite with zero diagnostics.** Confirmed
+via the job's step timestamps showing `cancelled`, not `failure` — no Playwright report even got
+uploaded, destroying the one artifact that would explain why. Root cause:
+`mobile-dense-tables.spec.ts`/`mobile-forms.spec.ts`'s own file-header comments said "run against the
+Mobile project only," but nothing enforced that — they silently also ran on Desktop
+Chrome/Firefox/Safari/Tablet, 20 full login+upload cycles where 8 were intended. Fixed via `testIgnore`
+scoping in `playwright.config.ts` (`MOBILE_ONLY_SPECS`) plus `timeout-minutes: 20→30` headroom.
+
+**Bug 4 — every test after the first failed deterministically at the login step.** All 8 tests share one
+seeded admin row in the same CI Postgres database (only the browser context is fresh per test, not the
+account); the first test's forced password-change permanently rotates the real password, but
+`tests/e2e/helpers/auth.ts` kept trying the stale original constant. Fixed by tracking the account's
+actual current password in a module-level variable — safe because `workers:1`/`fullyParallel:false` runs
+the whole suite sequentially in one persistent Node process, including across Playwright's own retries.
+The first attempt at this fix (try the original password, fall back to the rotated one on rejection) was
+directionally right but briefly introduced a second real bug: doubled login POSTs exhausted the login
+route's 5-attempts/60s rate limiter, since every request in this CI setup shares one `'unknown'`-IP
+bucket (no reverse proxy sets `x-forwarded-for`) — a 429 looks identical to a wrong password from the
+test's point of view, which is why that first attempt looked like it hadn't worked.
+
+**Bug 5 — the last one blocking green, and the one that looked most like a genuine hang.** With Bugs 1-4
+fixed, test 1 still timed out waiting for the post-upload dashboard redirect, and every test after it
+failed at login again — 100% deterministic across 3 separate runs, which looked exactly like a single
+request permanently wedging the server (leading hypothesis at the time: an unreleased Prisma connection
+or open `$transaction`). Rather than keep guessing, temporary diagnostics were added in two places:
+step-timing logs in `app/api/upload/route.ts`, and — the one that actually found it — request/response
+logging directly in the test itself via `page.on('request'/'response', ...)`. That showed `POST
+/api/upload` returning a fast, correct **403 every single time** — not a hang at all.
+`app/page.tsx`'s `handleFile()` sets an error and returns without navigating anywhere on a non-ok
+response, so the old test code just sat in its final `waitForURL` for the full timeout with zero signal
+about why. Root cause: `prisma/seed.mjs` never set `emailVerified` on the account it creates, and the
+schema defaults it to `false` — EP-011's upload gate (`app/api/upload/route.ts`) correctly rejected every
+attempt. Fixed at the source: the seed script creates a deploy-time bootstrap admin, not a real signup —
+there's no verification email to click (SMTP may not even be configured yet) — so `emailVerified: true`
+is the correct value for real deployments too, not just CI.
+
+That alone got Desktop Chrome and Firefox passing. The remaining failures were WebKit-only (Safari,
+Tablet, Mobile — the latter two Playwright device presets both run on WebKit under the hood), a second,
+distinct issue: `src/lib/session.ts` set the session cookie's `Secure` flag from `NODE_ENV` alone, but
+this job serves the app over plain `http://127.0.0.1`, not HTTPS. Chromium and Firefox both tolerate a
+Secure cookie there; WebKit does not and silently drops it, so every request after an otherwise-successful
+login looked unauthenticated and bounced back to `/login`. Fixed with the same doubly-gated CI-only
+pattern (`E2E_ALLOW_INSECURE_COOKIES=true` alongside `CI=true`) — `src/__tests__/sessionCookieSecurity.test.ts`
+(5 tests) covers it. All temporary diagnostic instrumentation was reverted once each root cause was
+found; only the permanent fixes and their tests remain.
+
+**Confirmed result:** 6 of 8 tests green in real GitHub Actions, including the full cross-browser
+critical-path login→upload→dashboard flow, for the first time since the suite was written. The 2
+remaining items are a genuine feature-correctness question uncovered by the now-working suite — the
+Roadmap Gantt chart isn't actually overflowing at the real iPhone 13 viewport, so MOBILE-05's sticky-scroll
+pattern never engages there (tracked separately as `MOBILE-05-FOLLOWUP` in `TODO-List.md`) — plus one
+flaky retry on `mobile-forms.spec.ts`, not yet triaged. Neither is a CI-pipeline bug.
+
+**Verification:** local `typecheck`/`lint` (8/8 unchanged pre-existing warnings)/`lint:css`/`test`
+(115/115 suites, 1092/1092 tests)/`build` all clean throughout; every fix confirmed against a real `e2e`
+CI run via `gh run view`/`gh pr checks`, never assumed from local runs alone (this sandbox has no local
+Postgres/Docker, so the real DB-backed critical path has never been runnable locally — see
+`QA-GATE-05`'s original verification-boundary note).
 
 ---
 
