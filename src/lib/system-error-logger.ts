@@ -2,7 +2,7 @@
 // System error logging + retry utilities for Prisma operations.
 //
 // Usage:
-//   await safeAuditEvent({ userId, eventType, eventDescription });
+//   await safeAuditEvent({ userId, eventType, eventDescription, correlationId });
 //   await safeNotifications(data);
 //   const result = await withDbRetry(() => prisma.foo.create({ ... }), { context: 'route/action' });
 
@@ -11,13 +11,14 @@ import { prisma } from './prisma';
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface SysErrorPayload {
-  errorCode:    string;
-  errorMessage: string;
-  prismaModel?: string;
-  operation:    string;
-  context?:     string;
-  payload?:     unknown;
-  resolution?:  string;
+  errorCode:      string;
+  errorMessage:   string;
+  prismaModel?:   string;
+  operation:      string;
+  context?:       string;
+  payload?:       unknown;
+  resolution?:    string;
+  correlationId?: string;
 }
 
 // ── Core logger ───────────────────────────────────────────────────────────────
@@ -33,6 +34,7 @@ export async function logSystemError(opts: SysErrorPayload): Promise<void> {
         context:      opts.context ?? null,
         payload:      opts.payload ? JSON.stringify(opts.payload) : null,
         resolution:   opts.resolution ?? 'logged',
+        correlationId: opts.correlationId ?? null,
       },
     });
   } catch {
@@ -90,6 +92,7 @@ interface AuditEventData {
   eventDescription: string;
   ipAddress?:       string;
   userAgent?:       string;
+  correlationId?:   string;
 }
 
 export async function safeAuditEvent(data: AuditEventData): Promise<void> {
@@ -111,6 +114,7 @@ export async function safeAuditEvent(data: AuditEventData): Promise<void> {
           context:      data.eventType,
           payload:      data,
           resolution:   'auto-fixed: userId set to null',
+          correlationId: data.correlationId,
         });
       } catch (inner) {
         console.error('[safeAuditEvent] Could not write audit event even with null userId:', inner);
@@ -124,6 +128,7 @@ export async function safeAuditEvent(data: AuditEventData): Promise<void> {
         context:      data.eventType,
         payload:      data,
         resolution:   'logged',
+        correlationId: data.correlationId,
       });
     }
   }

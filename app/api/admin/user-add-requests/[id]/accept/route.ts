@@ -14,6 +14,7 @@ import { resolveRequestOrigin } from '@/lib/url';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { isAppRole, roleLabel } from '@/lib/roles';
 import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
@@ -137,6 +138,7 @@ export async function PATCH(
       eventType: 'user_add_request_welcome_email_failed',
       eventDescription: `Welcome email failed for ${newUser.email}: ${emailError}`,
       ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
+      correlationId: getRequestId(req),
     });
   }
 
@@ -146,6 +148,7 @@ export async function PATCH(
     eventDescription: `${session.email} accepted request ${requestId} — created user ${newUser.email} with role ${roleLabel(newUser.role)}.`,
     ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
     userAgent: req.headers.get('user-agent') ?? undefined,
+    correlationId: getRequestId(req),
   });
 
   return NextResponse.json({

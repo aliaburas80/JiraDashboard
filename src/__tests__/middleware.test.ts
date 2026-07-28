@@ -131,3 +131,67 @@ describe('SEC-2026-07-18: /api/* backstop', () => {
     expect(response.status).not.toBe(401);
   });
 });
+
+// P0A-07: per-request correlation ID — proxy.ts mints/forwards x-request-id
+// for every /api/* request so safeAuditEvent()/logSystemError() calls can be
+// tied back to the request that produced them.
+describe('P0A-07: /api/* correlation ID', () => {
+  test('a fresh UUID is set on the response when no inbound x-request-id was sent', async () => {
+    mockSession.isLoggedIn = true;
+    const { proxy: middleware } = await import('../../proxy');
+
+    const response = await middleware(reqFor('/api/imports'));
+
+    expect(response.headers.get('x-request-id')).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    );
+  });
+
+  test('an inbound x-request-id (e.g. set by an upstream load balancer) is preserved, not overwritten', async () => {
+    mockSession.isLoggedIn = true;
+    const { proxy: middleware } = await import('../../proxy');
+
+    const req = new NextRequest('http://localhost:3000/api/imports', {
+      headers: { 'x-request-id': 'upstream-id-123' },
+    });
+    const response = await middleware(req);
+
+    expect(response.headers.get('x-request-id')).toBe('upstream-id-123');
+  });
+
+  test('a public API route also gets a correlation ID on its response', async () => {
+    mockSession.isLoggedIn = false;
+    const { proxy: middleware } = await import('../../proxy');
+
+    const response = await middleware(reqFor('/api/health'));
+
+    expect(response.headers.get('x-request-id')).toBeTruthy();
+  });
+
+  test('a rejected (401) request still carries a correlation ID on the response', async () => {
+    mockSession.isLoggedIn = false;
+    const { proxy: middleware } = await import('../../proxy');
+
+    const response = await middleware(reqFor('/api/imports'));
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get('x-request-id')).toBeTruthy();
+  });
+
+  test('the request-id is forwarded to the downstream route handler, not just the response', async () => {
+    mockSession.isLoggedIn = true;
+    const { proxy: middleware } = await import('../../proxy');
+
+    const response = await middleware(reqFor('/api/health'));
+
+    // Next.js encodes a NextResponse.next({ request: { headers } }) header
+    // mutation via these internal response headers (verified directly against
+    // the installed next@16.2.11's own response.js) — this is how the
+    // forwarded request header actually reaches the route handler. This is an
+    // internal-but-currently-stable encoding, not part of Next's public API —
+    // treat this assertion as a "does the wiring work today" smoke test, not
+    // a guarantee that survives every future Next major version.
+    expect(response.headers.get('x-middleware-override-headers')).toContain('x-request-id');
+    expect(response.headers.get('x-middleware-request-x-request-id')).toBeTruthy();
+  });
+});

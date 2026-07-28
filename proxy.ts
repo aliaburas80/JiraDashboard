@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { canAccessRoute, fallbackRouteForRole } from '@/lib/roles';
+import { REQUEST_ID_HEADER, resolveRequestId } from '@/lib/requestId';
 
 const PROTECTED  = [
   '/', '/dashboard', '/summary', '/charts', '/explore', '/backend', '/profile',
@@ -66,12 +67,28 @@ export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (pathname.startsWith('/api/')) {
-    if (isPublicApi(pathname)) return NextResponse.next();
+    // P0A-07: per-request correlation ID. Reuse an inbound x-request-id if an
+    // upstream proxy/load balancer already set one, else mint a fresh one.
+    // Set on both the forwarded request (so route handlers can read it via
+    // getRequestId()) and every response (so a caller/support ticket can
+    // quote it back).
+    const requestId        = resolveRequestId(req.headers);
+    const forwardedHeaders = new Headers(req.headers);
+    forwardedHeaders.set(REQUEST_ID_HEADER, requestId);
 
-    const res     = NextResponse.next();
+    if (isPublicApi(pathname)) {
+      const res = NextResponse.next({ request: { headers: forwardedHeaders } });
+      res.headers.set(REQUEST_ID_HEADER, requestId);
+      return res;
+    }
+
+    const res = NextResponse.next({ request: { headers: forwardedHeaders } });
+    res.headers.set(REQUEST_ID_HEADER, requestId);
     const session = await getIronSession<SessionData>(req, res, SESSION_OPTIONS);
     if (!session.isLoggedIn) {
-      return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+      const unauthorized = NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+      unauthorized.headers.set(REQUEST_ID_HEADER, requestId);
+      return unauthorized;
     }
     return res;
   }

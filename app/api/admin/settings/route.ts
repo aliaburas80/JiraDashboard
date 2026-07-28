@@ -9,6 +9,7 @@ import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { readSettingsForUser, writeSettingsForUser } from '@/services/settings/settings.service';
 import { getRetentionStats } from '@/services/settings/dataRetention.service';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 import type { RetentionSettings } from '@/types/settings';
 
 async function requireAdmin(req: NextRequest): Promise<{ session: SessionData } | NextResponse> {
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest) {
     userId: session.userId,
     eventType: 'admin_retention_settings_updated',
     eventDescription: `${session.email} updated data retention settings.`,
+    correlationId: getRequestId(req),
   });
 
   return NextResponse.json({ ok: true, settings: updated });

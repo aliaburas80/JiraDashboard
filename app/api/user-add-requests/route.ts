@@ -11,6 +11,7 @@ import { isAppRole, isHighPrivilegeRole } from '@/lib/roles';
 const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const HIGH_PRIVILEGE_MIN_REASON_LENGTH = 20;
 import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 
 // Simple in-process rate limiter — 10 submissions per 10 minutes per requester.
 const RATE_WINDOW_MS = 10 * 60_000;
@@ -128,6 +129,7 @@ export async function POST(req: NextRequest) {
     eventDescription: `${session.email} submitted a request to add ${requestedEmail} as ${requestedRole}.`,
     ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
     userAgent: req.headers.get('user-agent') ?? undefined,
+    correlationId: getRequestId(req),
   });
 
   // Notify all active admins so they can review the pending request.

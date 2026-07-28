@@ -12,6 +12,7 @@ import { safeAuditEvent } from '@/lib/system-error-logger';
 import { PERSONAS, CURRENT_TERMS_VERSION, type Persona } from '@/lib/personas';
 import { createEntitlementForUser } from '@/lib/entitlement';
 import { resolveRequestOrigin } from '@/lib/url';
+import { getRequestId } from '@/lib/requestId';
 
 export const dynamic = 'force-dynamic';
 
@@ -125,6 +126,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     eventType:        'register',
     eventDescription: `New user registered: ${email} (persona: ${persona})`,
     ipAddress:        ip,
+    correlationId:    getRequestId(req),
   });
 
   // ── Verification email ────────────────────────────────────────────────────
@@ -141,6 +143,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       eventType:        'register_verification_email_failed',
       eventDescription: `Verification email failed to send for ${email}: ${err instanceof Error ? err.message : String(err)}`,
       ipAddress:        ip,
+      correlationId:    getRequestId(req),
     });
   }
 

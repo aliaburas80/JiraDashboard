@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { safeAuditEvent } from '@/lib/system-error-logger';
 import { sendEmail, buildVerificationThankYouEmail } from '@/lib/email';
+import { getRequestId } from '@/lib/requestId';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     eventType:        'email_verified',
     eventDescription: `Email verified for ${user.email}`,
     ipAddress:        req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown',
+    correlationId:    getRequestId(req),
   });
 
   // Best-effort — verification already succeeded and was persisted above;
@@ -64,6 +66,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       userId:           user.id,
       eventType:        'verification_thank_you_email_failed',
       eventDescription: `Thank-you email failed to send for ${user.email}: ${err instanceof Error ? err.message : String(err)}`,
+      correlationId:    getRequestId(req),
     });
   }
 

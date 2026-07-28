@@ -68,6 +68,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         eventDescription: payload.eventDescription ?? `Retried by ${session.email}`,
         ipAddress:        payload.ipAddress,
         userAgent:        payload.userAgent,
+        // Preserve the original request's correlation ID (not this retry
+        // call's) so the retried row still ties back to the request that
+        // originally failed to write it.
+        correlationId:    payload.correlationId,
       });
       retryResult = 'retried: auditEvent written';
     } else if (log.operation.includes('notification') && Array.isArray(payload)) {

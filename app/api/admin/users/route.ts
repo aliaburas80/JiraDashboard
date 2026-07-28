@@ -9,6 +9,7 @@ import { hashPassword, validatePasswordStrength } from '@/lib/auth';
 import { sendEmail, buildWelcomeEmail, describeSmtpError } from '@/lib/email';
 import { getAppConfig, invalidateConfig } from '@/lib/app-config';
 import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { ASSIGNABLE_ROLES, isAppRole, roleLabel, type AppRole } from '@/lib/roles';
 import { createWorkspaceForUser } from '@/lib/workspace';
@@ -130,6 +131,7 @@ export async function POST(req: NextRequest) {
     userId: session.userId,
     eventType: 'admin_user_create',
     eventDescription: `${session.email} created user ${email} with role ${roleLabel(role)}.`,
+    correlationId: getRequestId(req),
   });
   await pushUsersToCloudIfConfigured();
 
@@ -159,6 +161,7 @@ export async function POST(req: NextRequest) {
       userId: session.userId,
       eventType: 'admin_user_welcome_email_failed',
       eventDescription: `Welcome email failed for ${email}: ${emailError}`,
+      correlationId: getRequestId(req),
     });
   }
 
@@ -215,6 +218,7 @@ export async function PATCH(req: NextRequest) {
     userId: session.userId,
     eventType: 'admin_user_update',
     eventDescription: `${session.email} updated user ${user.email}.`,
+    correlationId: getRequestId(req),
   });
   await pushUsersToCloudIfConfigured();
 
@@ -257,6 +261,7 @@ export async function DELETE(req: NextRequest) {
     userId: session.userId,
     eventType: 'admin_user_delete',
     eventDescription: `${session.email} deleted user ${user.email}.`,
+    correlationId: getRequestId(req),
   });
   await pushUsersToCloudIfConfigured();
 

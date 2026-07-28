@@ -8,6 +8,7 @@ import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { readPersonaPreviewSettingsFromDb, writePersonaPreviewSettingsToDb } from '@/services/settings/personaPreview.service';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 
 export async function GET() {
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
     userId: session.userId,
     eventType: 'admin_persona_preview_toggled',
     eventDescription: `${session.email} ${body.enabled ? 'enabled' : 'disabled'} the persona preview switcher.`,
+    correlationId: getRequestId(req),
   });
 
   return NextResponse.json({ ok: true, settings: updated });

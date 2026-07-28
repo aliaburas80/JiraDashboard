@@ -20,6 +20,7 @@ import {
 } from '@/services/storage/storageProvider';
 import { createBackup } from '@/services/settings/backup.service';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 import type { StorageSettings } from '@/types/storage';
 
 type StorageSettingsUpdate = Partial<StorageSettings> & {
@@ -173,6 +174,7 @@ export async function POST(req: NextRequest) {
         userId: session.userId,
         eventType: 'admin_storage_backup_uploaded',
         eventDescription: `${session.email} uploaded a manual backup to ${settings.active} (${remoteKey}).`,
+        correlationId: getRequestId(req),
       });
       return NextResponse.json({ ok: true, key: remoteKey, provider: settings.active });
     } catch (e: unknown) {
@@ -193,6 +195,7 @@ export async function POST(req: NextRequest) {
     userId: session.userId,
     eventType: 'admin_storage_settings_updated',
     eventDescription: `${session.email} updated cloud storage settings (active provider: ${updated.active}).`,
+    correlationId: getRequestId(req),
   });
   return NextResponse.json({ ok: true });
 }

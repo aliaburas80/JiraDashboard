@@ -11,6 +11,7 @@ import { prisma } from '@/lib/prisma';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { runJiraConnectionSync } from '@/services/jira/connectionSyncRunner';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
@@ -36,6 +37,7 @@ export async function POST(
     userId: session.userId,
     eventType: 'admin_jira_connection_sync',
     eventDescription: `${session.email} triggered a manual sync for Jira connection "${connection.name}".`,
+    correlationId: getRequestId(req),
   });
   return NextResponse.json(result.body, { status: result.status });
 }
