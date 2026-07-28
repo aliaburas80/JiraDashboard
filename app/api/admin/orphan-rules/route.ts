@@ -8,6 +8,7 @@ import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { readOrphanRulesForUser, writeOrphanRulesForUser, invalidateOrphanCache } from '@/services/settings/orphanRules.service';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 import type { OrphanRules } from '@/types/orphanRules';
 
 export async function GET() {
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
     userId: session.userId,
     eventType: 'admin_orphan_rules_updated',
     eventDescription: `${session.email} updated orphan-detection rules.`,
+    correlationId: getRequestId(req),
   });
 
   return NextResponse.json({ ok: true, rules: updated });

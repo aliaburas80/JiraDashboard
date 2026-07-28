@@ -13,6 +13,7 @@ import {
   invalidateIssueTypeHierarchyCache,
 } from '@/services/settings/issueTypeHierarchy.service';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 import type { IssueTypeDefinition, IssueTypeHierarchyConfig } from '@/types/issueTypeHierarchy';
 import { DEFAULT_ISSUE_TYPES } from '@/types/issueTypeHierarchy';
 
@@ -99,6 +100,7 @@ export async function POST(req: NextRequest) {
     userId: session.userId,
     eventType: 'admin_issue_type_hierarchy_updated',
     eventDescription: `${session.email} updated the issue-type hierarchy configuration.`,
+    correlationId: getRequestId(req),
   });
 
   return NextResponse.json({ ok: true, config: updated });

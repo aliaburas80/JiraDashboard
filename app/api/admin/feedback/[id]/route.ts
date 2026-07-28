@@ -7,6 +7,7 @@ import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +49,7 @@ export async function PATCH(
     eventType:        'feedback_status_update',
     eventDescription: `Feedback ${id} status changed from ${existing.status} to ${status}`,
     ipAddress:        req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
+    correlationId:    getRequestId(req),
   });
 
   return NextResponse.json({ ok: true, feedback: updated });

@@ -1740,6 +1740,11 @@ documented target and no code in this app depended on 15-only behavior.
   (`src/__tests__/middleware.test.ts`, via `const { proxy: middleware } = await import('../../proxy')` to
   avoid renaming every call site in the file). No `edge` runtime usage, no `skipMiddlewareUrlNormalize`
   config — neither of the two other proxy-migration risk points applied.
+  **P0A-07 (2026-07-28) added per-request correlation IDs inside `proxy.ts`'s existing `/api/*` branch**
+  — see "System Error Logger" below for the full mechanism. `proxy.ts` runs on the Edge runtime by
+  default (still no `export const runtime` override), which is why the ID is minted with the global
+  Web Crypto `crypto.randomUUID()` rather than `node:crypto` — the same function in `src/lib/requestId.ts`
+  is reused unmodified from both `proxy.ts` (Edge) and route handlers (Node).
 - **`next.config.js`: the `eslint` option is removed entirely** in v16 (deleted the
   `ignoreDuringBuilds` block; linting was already enforced as its own CI step, so nothing was lost).
   **`experimental.serverComponentsExternalPackages` renamed** to a top-level, no-longer-experimental
@@ -2157,6 +2162,38 @@ await safeAuditEvent({ userId, eventType, ... });
 ### `safeNotifications(data, context?)`
 
 Drop-in replacement for `prisma.notification.createMany()`. Wraps with `withDbRetry` and logs failures to `SystemErrorLog`.
+
+### Correlation IDs (P0A-07, 2026-07-28)
+
+Both `AuditEventData` and `SysErrorPayload` accept an optional `correlationId?: string`, persisted as an
+additive nullable column on `AuditEvent` and `SystemErrorLog` (migration `20260728000001_add_correlation_id`).
+The ID is generated once per `/api/*` request by `proxy.ts` (see the ADR entry above), not by
+`safeAuditEvent`/`logSystemError` themselves — those two only pass through whatever they're given.
+
+Route handlers read it with `getRequestId(req)` (`src/lib/requestId.ts`) and pass it straight into the
+call:
+
+```ts
+import { getRequestId } from '@/lib/requestId';
+
+await safeAuditEvent({
+  userId, eventType, eventDescription,
+  correlationId: getRequestId(req),
+});
+```
+
+`getRequestId` reuses an inbound `x-request-id` header if `proxy.ts` (or an upstream proxy/load balancer
+in front of it) already set one, else mints a fresh UUID — and falls back to minting one on the spot if
+`req.headers` isn't a usable `Headers` instance at all, so it never throws when a test calls a route
+handler directly with a bare mock request object instead of a real `NextRequest`.
+
+**Coverage**: threaded through all `safeAuditEvent` call sites project-wide as of 2026-07-28 (36 calls
+across 24 files — see `TODO-List.md` §29.1 `P0A-07` for the full list). **Not covered**: 12 files that
+write audit rows via a raw `prisma.auditEvent.create(...).catch(() => {})` instead of `safeAuditEvent` —
+those keep a `null` correlationId until migrated onto the shared helper. One special case:
+`admin/system-errors`'s retry handler (`POST ?action=retry`) preserves the *original* failed request's
+correlationId from the stored `SystemErrorLog.payload`, not the retry call's own — a retried row should
+still point back to the request that originally failed to write it.
 
 ### Ghost Session Pattern
 

@@ -235,12 +235,14 @@ model AuditEvent {
   createdAt        DateTime @default(now())
   ipAddress        String?
   userAgent        String?
+  correlationId    String? // P0A-07: per-request ID, set by proxy.ts, threaded through safeAuditEvent()
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([createdAt])
   @@index([eventType, createdAt]) // fast admin filtering by event type
+  @@index([correlationId])
 }
 
 // ── User Add-Member Request Workflow (USERREQ-07–09) ─────────────────────────
@@ -353,10 +355,12 @@ model SystemErrorLog {
   lastRetriedAt DateTime?
   resolvedAt    DateTime?
   createdAt     DateTime  @default(now())
+  correlationId String? // P0A-07: per-request ID, populated when carried by the originating call
 
   @@index([errorCode])
   @@index([createdAt])
   @@index([resolution])
+  @@index([correlationId])
 }
 
 // ── User feedback (P0B-09) ────────────────────────────────────────────────────

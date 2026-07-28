@@ -8,6 +8,7 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 import {
   getUserStorageProviderSafe,
   saveUserStorageProvider,
@@ -60,12 +61,13 @@ export async function PUT(req: NextRequest) {
     userId:           session.userId,
     eventType:        'user_storage_provider_saved',
     eventDescription: `${session.email} saved a ${provider} storage provider configuration. Must be tested before uploads use it.`,
+    correlationId:    getRequestId(req),
   });
 
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
   const session = await requireSession();
   if (session instanceof NextResponse) return session;
 
@@ -75,6 +77,7 @@ export async function DELETE() {
     userId:           session.userId,
     eventType:        'user_storage_provider_removed',
     eventDescription: `${session.email} removed their own cloud storage provider configuration. Uploads revert to App storage.`,
+    correlationId:    getRequestId(req),
   });
 
   return NextResponse.json({ ok: true });

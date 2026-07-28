@@ -85,7 +85,7 @@ export interface UserResetResult {
 }
 
 /** Deletes the target user's workspace data. Never touches User/Session/Entitlement. */
-export async function resetUserData(userId: string, actorId: string): Promise<UserResetResult> {
+export async function resetUserData(userId: string, actorId: string, correlationId?: string): Promise<UserResetResult> {
   const preview = await previewUserReset(userId);
   if (preview.blocked) return { success: false, error: preview.blockedReason };
 
@@ -105,6 +105,7 @@ export async function resetUserData(userId: string, actorId: string): Promise<Us
     userId:           actorId,
     eventType:        'user_data_reset',
     eventDescription: `Reset workspace data for ${preview.email} (${userId}): ${logsRes.count} import logs, ${snapsRes.count} snapshots, ${connsRes.count} Jira connections deleted.`,
+    correlationId,
   });
 
   return {

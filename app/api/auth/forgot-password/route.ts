@@ -9,6 +9,7 @@ import { generateVerificationToken, PASSWORD_RESET_TTL_HOURS } from '@/lib/auth'
 import { sendEmail, buildPasswordResetEmail } from '@/lib/email';
 import { resolveRequestOrigin } from '@/lib/url';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,6 +74,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       eventType:        'forgot_password_email_failed',
       eventDescription: `Password reset email failed to send for ${email}: ${err instanceof Error ? err.message : String(err)}`,
       ipAddress:        ip,
+      correlationId:    getRequestId(req),
     });
   }
 
@@ -81,6 +83,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     eventType:        'forgot_password_requested',
     eventDescription: `Password reset requested for ${email}`,
     ipAddress:        ip,
+    correlationId:    getRequestId(req),
   });
 
   return NextResponse.json(GENERIC_RESPONSE);

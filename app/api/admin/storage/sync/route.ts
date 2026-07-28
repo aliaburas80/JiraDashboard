@@ -9,6 +9,7 @@ import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { getCacheMeta } from '@/services/storage/cloudSync';
 import { readStorageSettings } from '@/services/storage/storageProvider';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 
 async function requireAdmin(): Promise<{ session: SessionData } | NextResponse> {
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
         userId: session.userId,
         eventType: 'admin_storage_push',
         eventDescription: `${session.email} pushed the local data cache to cloud storage.`,
+        correlationId: getRequestId(req),
       });
       return NextResponse.json(result);
     }
@@ -65,6 +67,7 @@ export async function POST(req: NextRequest) {
         userId: session.userId,
         eventType: 'admin_storage_provider_switched',
         eventDescription: `${session.email} switched the active storage provider to ${readStorageSettings().active}.`,
+        correlationId: getRequestId(req),
       });
       return NextResponse.json(result);
     }

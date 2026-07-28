@@ -9,6 +9,7 @@ import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { readSettings } from '@/services/settings/settings.service';
 import { applyRetentionPolicy, clearAllData } from '@/services/settings/dataRetention.service';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 
 export async function POST(req: NextRequest) {
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
@@ -23,6 +24,7 @@ export async function POST(req: NextRequest) {
       userId: session.userId,
       eventType: 'admin_clear_all_data',
       eventDescription: `${session.email} triggered a manual clear-all-data operation.`,
+      correlationId: getRequestId(req),
     });
     return NextResponse.json({ ok: true, ...result });
   }
@@ -33,6 +35,7 @@ export async function POST(req: NextRequest) {
     userId: session.userId,
     eventType: 'admin_retention_cleanup_run',
     eventDescription: `${session.email} triggered a manual retention cleanup.`,
+    correlationId: getRequestId(req),
   });
   return NextResponse.json({ ok: true, ...result });
 }

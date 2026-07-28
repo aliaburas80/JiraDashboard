@@ -8,6 +8,7 @@ import { hashPassword, validatePasswordStrength } from '@/lib/auth';
 import { safeAuditEvent } from '@/lib/system-error-logger';
 import { sendEmail, buildPasswordChangedEmail } from '@/lib/email';
 import { resolveRequestOrigin } from '@/lib/url';
+import { getRequestId } from '@/lib/requestId';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     eventType:        'password_reset',
     eventDescription: `Password reset via emailed link for ${user.email}`,
     ipAddress:        req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown',
+    correlationId:    getRequestId(req),
   });
 
   try {

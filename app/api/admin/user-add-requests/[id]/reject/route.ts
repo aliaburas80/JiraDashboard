@@ -9,6 +9,7 @@ import { prisma } from '@/lib/prisma';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { roleLabel } from '@/lib/roles';
 import { safeAuditEvent, safeNotifications } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
@@ -75,6 +76,7 @@ export async function PATCH(
     eventDescription: `${session.email} rejected request ${requestId} for ${userAddRequest.requestedEmail}.`,
     ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
     userAgent: req.headers.get('user-agent') ?? undefined,
+    correlationId: getRequestId(req),
   });
 
   return NextResponse.json({ ok: true });

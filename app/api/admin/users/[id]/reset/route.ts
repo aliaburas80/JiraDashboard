@@ -11,9 +11,10 @@ import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { resetUserData } from '@/services/settings/userReset.service';
+import { getRequestId } from '@/lib/requestId';
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
@@ -21,7 +22,7 @@ export async function POST(
   if (session.role !== 'admin') return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
 
   try {
-    const result = await resetUserData((await params).id, session.userId);
+    const result = await resetUserData((await params).id, session.userId, getRequestId(req));
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 409 });
     }

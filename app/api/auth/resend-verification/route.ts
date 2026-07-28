@@ -7,6 +7,7 @@ import { EMAIL_VERIFICATION_TTL_HOURS, generateVerificationToken } from '@/lib/a
 import { sendEmail, buildVerificationEmail } from '@/lib/email';
 import { resolveRequestOrigin } from '@/lib/url';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,6 +80,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       eventType:        'verification_email_resend_failed',
       eventDescription: `Verification email resend failed for ${email}: ${err instanceof Error ? err.message : String(err)}`,
       ipAddress:        ip,
+      correlationId:    getRequestId(req),
     });
     return NextResponse.json(
       { error: 'Something went wrong sending the verification email. Please try again.' },
@@ -91,6 +93,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     eventType:        'verification_email_resent',
     eventDescription: `Verification email resent for ${email}`,
     ipAddress:        ip,
+    correlationId:    getRequestId(req),
   });
 
   return NextResponse.json({ ok: true, message: 'Verification email sent. Check your inbox and spam folder.' });

@@ -7,6 +7,7 @@ import { getIronSession } from 'iron-session';
 import { prisma } from '@/lib/prisma';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 
 async function requireAdmin(): Promise<SessionData | NextResponse> {
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
@@ -39,6 +40,7 @@ export async function DELETE(
     eventDescription: `${session.email} deleted Jira connection "${connection.name}" (${connection.baseUrl}).`,
     ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? undefined,
     userAgent: req.headers.get('user-agent') ?? undefined,
+    correlationId: getRequestId(req),
   });
 
   return NextResponse.json({ ok: true, deletedConnectionId: connection.id });
