@@ -2291,6 +2291,7 @@ FR-326–336 · BR-115–117 · UC-101–106 · UJ-036–038 · SCN-051–053
 ### P1 — UX & Mobile (2026-06-03, Completed)
 - **9.26** Mobile UX polish for `/explore` — search bar stacks on mobile, graph height 380px + MiniMap hidden, table replaced with card list below md breakpoint
 - **9.27** Performance optimisation for 5,000+ issues — `parseDate` memo cache (Map, reset per request), `flowItemByKey` Map replaces O(n×groups) filter scans in 7 builder functions, hoisted `today`, timing log on every upload
+- **9.27a** (2026-07-31, internal/dev-tooling, no user-facing change) P0A-09: per-leg upload timing (parse/merge+validate/metrics calc, in `ImportLog.metadataJson`), a synthetic 3k-7k row dataset generator (`scripts/generate-synthetic-jira-export.js`), and first-pass measured thresholds — see `product/PERFORMANCE.md` for the actual numbers and honest coverage caveats (9.27's "5,000+" claim above was prose-only until now)
 - **8.11** Register page guard — `NEXT_PUBLIC_ALLOW_REGISTER` wired to login link visibility and register page redirect; `.env` and `.env.example` aligned
 - **fix** Dashboard horizontal scroll eliminated — `overflow-x-hidden` on `<body>`, sticky filter bar restructured into 2 flex-wrap rows
 - **fix** Upload route `MAX_FILE_SIZE` corrected from 200 MB to 20 MB

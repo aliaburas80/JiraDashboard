@@ -702,6 +702,11 @@ export function buildInsightWorkbook(metrics: DashboardMetrics): XLSX.WorkBook {
 }
 
 export function downloadInsightWorkbook(metrics: DashboardMetrics, filename = 'delivery-clarity-report.xlsx'): void {
+  // P0A-09: dev-visibility timing for the 17-sheet workbook build — this
+  // export runs entirely client-side, so it's logged here rather than
+  // through the server-side structured logger. See product/PERFORMANCE.md.
+  const t0 = performance.now();
   const wb = buildInsightWorkbook(metrics);
+  console.log(`[export] buildInsightWorkbook: ${Math.round(performance.now() - t0)}ms for ${metrics.totalIssues} issues, ${filename}`);
   XLSX.writeFile(wb, filename);
 }

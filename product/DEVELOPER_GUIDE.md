@@ -1068,6 +1068,24 @@ Run `npm run check:ci` and confirm all four stages pass before merging:
 □  TODO-List.md Last-updated  header reflects this version
 ```
 
+## 11b. Performance Benchmarking (P0A-09)
+
+To re-run the upload-pipeline performance benchmark against a large synthetic dataset (the
+committed `public/samples/sample-jira-export.csv` is only 35 issues):
+
+```bash
+node scripts/generate-synthetic-jira-export.js --rows=5000 --out=data/synthetic-jira-export.csv --seed=1
+```
+
+Outputs to `data/` (gitignored). `--seed` makes runs reproducible; `--rows` accepts any count,
+1,000-20,000 is the typical range. Upload the generated file through the real UI (or the
+`buildRows`/`rowsToCsv` functions can be called directly for a scratch script that skips the HTTP
+layer) and read the new `parseTimeMs`/`mergeValidateTimeMs`/`metricsCalcTimeMs` fields from that
+upload's `ImportLog.metadataJson`, plus the `[export]`/`[dashboard]`/`[priority-attention]`
+`console.log` timing lines this pass added for the export and dashboard-render legs. See
+`product/PERFORMANCE.md` for methodology, the current measured thresholds, and what still isn't
+covered.
+
 ### Dependency health check (`QA-GATE-03`/`04`, added 2026-07-22)
 
 Whenever `package.json` or `package-lock.json` changes — and periodically even when they don't — run:
