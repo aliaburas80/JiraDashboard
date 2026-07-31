@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import DashboardTopbar from '@/components/dashboard/DashboardTopbar';
 import DashboardNavSidebar from '@/components/dashboard/DashboardNavSidebar';
@@ -16,6 +16,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // P0A-09: dev-visibility timing for metrics-loaded→committed-paint — see
+  // product/PERFORMANCE.md. Not a Web Vitals substitute, just a cheap
+  // approximation logged after this component's next commit.
+  const loadStartRef = useRef<number | null>(null);
 
   // Close mobile sidebar whenever the route changes.
   useEffect(() => { setSidebarOpen(false); }, [pathname]);
@@ -28,6 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (cancelled) return;
         const data = result.metrics as DashboardMetrics | null;
         if (!data) { router.replace('/'); return; }
+        loadStartRef.current = performance.now();
         setMetrics(data);
       } catch {
         if (!cancelled) redirectWithLoadError(router);
@@ -38,6 +43,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     load();
     return () => { cancelled = true; };
   }, [router]);
+
+  useEffect(() => {
+    if (metrics && loadStartRef.current !== null) {
+      console.log(`[dashboard] metrics-loaded→paint: ${Math.round(performance.now() - loadStartRef.current)}ms`);
+      loadStartRef.current = null;
+    }
+  }, [metrics]);
 
   return (
     <div className={styles.shell}>

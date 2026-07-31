@@ -43,6 +43,16 @@ export default function PriorityAttentionPage() {
     if (!loading && !metrics) router.replace('/');
   }, [loading, metrics, router]);
 
+  // P0A-09: dev-visibility timing for filter-change→re-render on this page's
+  // bounded table — see product/PERFORMANCE.md.
+  function handleQuickFilter(next: typeof quickFilter) {
+    const t0 = performance.now();
+    setQuickFilter(next);
+    requestAnimationFrame(() => {
+      console.log(`[priority-attention] filter→re-render: ${Math.round(performance.now() - t0)}ms`);
+    });
+  }
+
   const flowItems: FlowItem[] = useMemo(() => {
     const raw = metrics?.flow?.items ?? [];
     const seen = new Set<string>();
@@ -118,11 +128,11 @@ export default function PriorityAttentionPage() {
     <>
       {/* ── Sticky toolbar ── */}
       <StickyToolbar>
-        <FilterChip label="All" active={quickFilter === 'all'} onClick={() => setQuickFilter('all')} />
-        <FilterChip label={`Blocked (${blockers.length})`} active={quickFilter === 'blocked'} onClick={() => setQuickFilter('blocked')} dot={blockers.length > 0} />
-        <FilterChip label={`Overdue (${overdueItems.length})`} active={quickFilter === 'overdue'} onClick={() => setQuickFilter('overdue')} />
-        <FilterChip label={`Orphans (${orphans.length})`} active={quickFilter === 'orphans'} onClick={() => setQuickFilter('orphans')} />
-        <FilterChip label="Clear" active={false} onClick={() => setQuickFilter('all')} />
+        <FilterChip label="All" active={quickFilter === 'all'} onClick={() => handleQuickFilter('all')} />
+        <FilterChip label={`Blocked (${blockers.length})`} active={quickFilter === 'blocked'} onClick={() => handleQuickFilter('blocked')} dot={blockers.length > 0} />
+        <FilterChip label={`Overdue (${overdueItems.length})`} active={quickFilter === 'overdue'} onClick={() => handleQuickFilter('overdue')} />
+        <FilterChip label={`Orphans (${orphans.length})`} active={quickFilter === 'orphans'} onClick={() => handleQuickFilter('orphans')} />
+        <FilterChip label="Clear" active={false} onClick={() => handleQuickFilter('all')} />
         <ToolbarSpacer />
         <ToolbarButton label="Export" onClick={exportCSV} />
 

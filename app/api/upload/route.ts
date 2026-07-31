@@ -189,6 +189,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // --- Parse ---
+  // P0A-09: previously unmeasured leg — see metadataJson.parseTimeMs below.
+  const parseStart = Date.now();
   let parseResult: ReturnType<typeof parseJiraFile>;
   try {
     parseResult = parseJiraFile(fileArg);
@@ -199,6 +201,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
+  const parseTimeMs = Date.now() - parseStart;
   const { warnings } = parseResult;
 
   // --- Dedupe by Issue Key (P0A-02) ---
@@ -207,6 +210,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // counted twice in every metric. The multi-file merge route already
   // deduped across files via mergeIssueArrays; this reuses the same logic
   // within one file so a duplicate row is merged rather than double-counted.
+  // P0A-09: previously unmeasured leg — see metadataJson.mergeValidateTimeMs below.
+  const mergeValidateStart = Date.now();
   const { merged: issues, stats: dedupStats } = mergeIssueArrays([parseResult.issues]);
   if (dedupStats.duplicatesRemoved > 0) {
     warnings.push(`${dedupStats.duplicatesRemoved} duplicate Issue Key row(s) were merged.`);
@@ -214,6 +219,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   // --- Validate ---
   const validation = validateIssueData(issues);
+  const mergeValidateTimeMs = Date.now() - mergeValidateStart;
 
   if (!validation.isValid) {
     // EP-015: validation failure does NOT consume entitlement — revert to eligible
@@ -236,6 +242,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const startTime = Date.now();
     const metrics   = calculateDashboardMetrics(issues);
+    // P0A-09: same window as processingTimeMs below, kept as its own labeled
+    // field in metadataJson for per-leg visibility (parse / merge+validate /
+    // metrics calc) — see product/PERFORMANCE.md.
+    const metricsCalcTimeMs = Date.now() - startTime;
     // EP-020: resolve the caller's workspace/user scope before writing the
     // live dashboard file — this is what keeps one cloud-mode user's upload
     // from ever overwriting another's dashboard. Reused below for the
@@ -306,6 +316,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             avgSprintThroughput:     metrics.throughput?.sprint?.averageThroughputCount ?? null,
             trendDirection:          metrics.throughput?.sprint?.trendDirection ?? null,
             releaseConfidenceScore,
+            // P0A-09: per-leg upload-pipeline timing, additive/diagnostic only —
+            // see product/PERFORMANCE.md for methodology and measured thresholds.
+            parseTimeMs,
+            mergeValidateTimeMs,
+            metricsCalcTimeMs,
           }),
         }});
 
