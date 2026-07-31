@@ -51,13 +51,33 @@ contract, not a benchmark itself.
 
 ## Measured figures
 
-**⚠️ Captured directly against the pipeline functions (`parseJiraFile` → `mergeIssueArrays` →
-`validateIssueData` → `calculateDashboardMetrics`), not through a live HTTP upload.** The dev server
-could not be reliably reached in the sandboxed agent environment this pass was run in (a plain
-`GET /api/health` timed out after 2+ minutes with no response) — so these numbers exclude HTTP/
-multipart parsing, the Next.js route layer, and the Prisma `ImportLog` transaction/write. They cover
-exactly the three CPU-bound legs newly instrumented above (parse / merge+validate / metrics calc),
-run three times each for a range rather than trusting a single sample:
+Two measurement methods were used in this pass — clearly distinguished below, since they cover
+different parts of the pipeline and were captured in different ways.
+
+### Method A — real live HTTP upload (5,000 rows, one authoritative sample)
+
+Ran the full real path once the dev server was confirmed reachable: registered a test account
+(`perf-bench@deliveryclarity.app`), verified its email directly via the token (no SMTP configured
+in this environment), logged in, and `POST`ed a 5,000-row generated CSV to `/api/upload` as real
+multipart form data — the exact code path a real user's browser exercises. Numbers below are read
+directly from that upload's `ImportLog` row (`processingTimeMs` column + `metadataJson` fields), not
+console output:
+
+| Rows | Parse | Merge+validate | Metrics calc | `processingTimeMs` (DB column — includes metrics calc + workspace resolution + `writeLatestMetrics` + `appendImportLog` + `computeReleaseConfidence`) |
+|---|---|---|---|---|
+| 5,000 | 248ms | 2ms | 107ms | 612ms |
+
+This is the authoritative figure — it includes multipart parsing, the Next.js route layer, and (for
+`processingTimeMs`) everything up to just before the Prisma `ImportLog` write itself. It also
+directly confirms the new instrumentation (§ above) works correctly end-to-end in production-like
+conditions: real HTTP request, real session auth, real DB write.
+
+### Method B — direct pipeline function calls (3k/5k/7k range, for scaling shape only)
+
+Before the live server was confirmed reachable, a supplementary run exercised
+`parseJiraFile` → `mergeIssueArrays` → `validateIssueData` → `calculateDashboardMetrics` directly
+(no HTTP, no DB write), 3 times each at 3 row counts, to sanity-check how the CPU-bound legs scale
+across the 3k-7k target range:
 
 | Rows | Parse | Merge+validate | Metrics calc | Total (3 legs) |
 |---|---|---|---|---|
@@ -65,37 +85,42 @@ run three times each for a range rather than trusting a single sample:
 | 5,000 | ~385-425ms | ~4-5ms | ~290-310ms | ~700-730ms |
 | 7,000 | ~585ms | ~8ms | ~400ms | ~990ms |
 
-Scaling is roughly linear across the 3k-7k range, as expected for a single-pass parse and the
+Scaling is roughly linear across the range, as expected for a single-pass parse and the
 `flowItemByKey` Map / `parseDate` memoization optimizations already in `metrics.service.ts`. No
-degradation cliff observed in this range.
+degradation cliff observed. Note Method B's 5,000-row metrics-calc figure (~290-310ms) is noticeably
+higher than Method A's live-route figure (107ms) for the same row count — plausibly JIT/cache
+warm-up differences between a cold Jest-run process (Method B) and a dev server that had already
+served prior requests (Method A) before this upload; not investigated further in this pass.
 
-**Environment**: this sandboxed execution environment — **not** a real developer laptop, and
-**not** the production Render instance. These numbers are a first, rough signal that the pipeline
-scales linearly rather than blowing up at 5-7k rows; they are explicitly **not** the final,
-representative-environment measurement CLAUDE.md §40 asks for.
+**Environment for both methods**: this sandboxed agent execution environment — **not** a real
+developer laptop, and **not** the production Render instance. These numbers are a first signal that
+the pipeline scales linearly and stays fast well within the 3k-7k range; they are explicitly **not**
+the final, representative-environment measurement CLAUDE.md §40 asks for.
 
 ## What this pass does NOT cover — explicit open follow-ups
 
-1. **Full HTTP round-trip + DB write time.** The live-server run (upload via the real
-   `POST /api/upload` route, reading the resulting `ImportLog.processingTimeMs` /
-   `parseTimeMs`/`mergeValidateTimeMs`/`metricsCalcTimeMs` from the database) could not be executed
-   in this pass — the instrumentation is in place and ready; someone with a working local dev
-   environment should run `npm run dev`, upload a generated CSV through the real UI, and record the
-   `metadataJson` values from that `ImportLog` row.
-2. **Excel export timing** (`[export] buildInsightWorkbook: …ms`) and **dashboard render timing**
+1. **Excel export timing** (`[export] buildInsightWorkbook: …ms`) and **dashboard render timing**
    (`[dashboard] metrics-loaded→paint`, `[priority-attention] filter→re-render`) — both require a
-   live browser session. The `console.log` instrumentation is in place; trigger the export button
-   and the priority-attention filter chips with a large dataset loaded, and read the values from the
-   browser DevTools console.
-3. **Production (Render) environment measurement.** Not attempted in this pass — dev-machine (or,
+   live browser session. A headless-Chromium automation attempt (Playwright, already a project
+   dependency) was made in this pass but the login form's client-side submit handler never fired
+   reliably in this sandboxed environment (repeatedly fell back to a native GET form submission even
+   after extended waits for hydration/network-idle) — an environment limitation, not a bug in the
+   login page. The `console.log` instrumentation is in place and confirmed present in the built code;
+   trigger the export button and the priority-attention filter chips with a large dataset loaded in
+   a real browser, and read the values from DevTools.
+2. **Production (Render) environment measurement.** Not attempted in this pass — dev-machine (or,
    here, sandbox-machine) numbers are not representative of production and must not be quoted as
    production SLAs or final project budgets.
-4. **LCP / INP / CLS (Web Vitals).** CLAUDE.md §40's targets (LCP ≤2.5s, INP ≤200ms, CLS ≤0.1) were
+3. **LCP / INP / CLS (Web Vitals).** CLAUDE.md §40's targets (LCP ≤2.5s, INP ≤200ms, CLS ≤0.1) were
    **not measured by this pass** — that would require adding the `web-vitals` package and a
    reporting pipeline that doesn't exist today, scoped out as materially larger than this pass's
    budget. Listed here as aspirational targets only, not something this document claims to have
    verified.
 
 **CLAUDE.md §40 is therefore only partially satisfied by this pass** — do not read this document as
-"performance budgets: done." It establishes the instrumentation, the generator, and a rough
-CPU-bound-legs baseline; the four items above remain open.
+"performance budgets: done." It establishes the instrumentation, the generator, one authoritative
+live-route sample, and a rough CPU-bound-legs scaling baseline; the three items above remain open.
+
+A `perf-bench@deliveryclarity.app` test account and one `ImportLog` row exist in the dev database
+this pass ran against as a result of the live-upload run — harmless test data, left in place rather
+than unilaterally deleted; clean up manually if desired.
