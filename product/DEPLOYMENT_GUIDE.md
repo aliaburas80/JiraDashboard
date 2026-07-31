@@ -1,8 +1,8 @@
 # Delivery Clarity — Deployment Guide
 
-**Version:** 4.1  
+**Version:** 4.2  
 **Author:** Ali Abu Ras  
-**Date:** 2026-06-04  
+**Date:** 2026-07-31  
 **Status:** Current
 
 ---
@@ -26,8 +26,8 @@
 
 ## 1. Overview
 
-Delivery Clarity is a **Next.js 14** application using:
-- **SQLite** via Prisma for authentication and import logs
+Delivery Clarity is a **Next.js 16** application using:
+- **PostgreSQL** (Neon-hosted in production) via Prisma for authentication, import logs, and all application data
 - **iron-session** for encrypted cookie sessions
 - **Cloud-backed server metrics** via `data/latest-metrics.json` and `/api/metrics/latest`, with browser `localStorage` fallback
 - **Cloud storage providers**: Local filesystem, AWS S3/S3-compatible, Azure Blob Storage, and Google Cloud Storage
@@ -37,11 +37,12 @@ Delivery Clarity is a **Next.js 14** application using:
 
 | Target | Use case | Auth persistence | Recommended |
 |--------|----------|-----------------|-------------|
-| **Docker** | Self-hosted production | ✅ Yes (volume mount) | ✅ Yes |
-| **VPS / bare metal** | Self-hosted production | ✅ Yes | ✅ Yes |
-| **Vercel** | Demo / preview / staging | ⚠️ Ephemeral (no SQLite) | ❌ Not for production auth |
+| **Render** | Managed production (current target) | ✅ Yes (external Postgres/Neon) | ✅ Yes |
+| **Docker** | Self-hosted production | ✅ Yes (external Postgres/Neon) | ✅ Yes |
+| **VPS / bare metal** | Self-hosted production | ✅ Yes (external Postgres/Neon) | ✅ Yes |
+| **Vercel** | Demo / preview / staging | ✅ Yes (external Postgres/Neon) — but local config files reset | ⚠️ Limited, see §6 |
 
-> **Why not Vercel for production?** Vercel's serverless functions have no persistent filesystem. SQLite data and `data/latest-metrics.json` are lost between cold starts. Vercel works for previews when browser `localStorage` fallback is acceptable, but auth sessions, import logs, bucket cache metadata, and server-side latest metrics will not persist.
+> **Database persistence note:** the application database is external PostgreSQL (Neon or any Postgres-compatible host) — it persists regardless of deployment target, including on Vercel, since it isn't a local file. What *doesn't* persist without a mounted volume or Vercel-specific storage is a handful of **local JSON config/cache files** under `data/` (health thresholds, retention settings, orphan-detection rules, cloud-storage provider settings, and the `data/latest-metrics.json` cache) — see §6 for how this affects Vercel specifically.
 
 ---
 
@@ -65,7 +66,7 @@ Copy `.env.example` to `.env` (local) or `.env.local` (Next.js convention). All 
 |----------|----------|---------|-------------|
 | `SESSION_SECRET` | **Yes** | `change-me` | Cookie signing key — **must be ≥ 32 random characters**. Generate with: `openssl rand -hex 32` |
 | `SESSION_TTL_HOURS` | No | `8` | Session lifetime in hours |
-| `DATABASE_URL` | **Yes** | `file:./data/delivery_clarity.db` | SQLite file path. Use an absolute path in production |
+| `DATABASE_URL` | **Yes** | `postgresql://user:password@host-pooler.region.aws.neon.tech/delivery_clarity?sslmode=require` | PostgreSQL connection string. Production should use Neon's **pooled** URL. `scripts/start-production.mjs` refuses to start if this begins with `file:` |
 | `ALLOW_OPEN_REGISTRATION` | No | `false` | `true` = anyone can register. `false` = admin creates users only |
 | `NEXT_PUBLIC_ALLOW_REGISTER` | No | `false` | Must match `ALLOW_OPEN_REGISTRATION` — controls the UI link on the login page |
 | `ADMIN_EMAIL` | Yes (first run) | `admin@deliveryclarity.com` | Email for the seed admin account |
@@ -125,14 +126,14 @@ The multi-stage build produces a minimal production image:
 
 ### 4.3 Data persistence
 
-The `docker-compose.yml` mounts a named Docker volume (`delivery_data`) to `/app/data` inside the container. The SQLite database file lives at `/app/data/delivery_clarity.db`.
+The `docker-compose.yml` mounts a named Docker volume (`delivery_data`) to `/app/data` inside the container — this holds local configuration/cache files (health thresholds, retention settings, orphan-detection rules, cloud-storage provider settings, per-workspace metrics cache). **The application database itself is external PostgreSQL (Neon), configured via `DATABASE_URL` — it is not stored in this volume**, and losing the volume does not lose user accounts, import logs, or any Postgres-backed data.
 
 ```yaml
 volumes:
   - delivery_data:/app/data
 ```
 
-**Do not remove this volume** — it contains all user accounts and import logs.
+**Keep this volume** — losing it resets local admin-configurable settings and the metrics cache (rebuilt automatically on next login/upload), but does not cause data loss for anything stored in Postgres. See `product/DATABASE_BACKUP_RESTORE.md` for how the actual database is backed up and restored.
 
 ### 4.4 Healthcheck
 
@@ -157,7 +158,7 @@ docker compose logs -f
 # Shell into the container
 docker compose exec delivery-clarity sh
 
-# Check database
+# Check local config/cache files (the database itself is external Postgres, not here)
 docker compose exec delivery-clarity sh -c "ls -lh /app/data/"
 
 # Pull latest image and rebuild
@@ -202,7 +203,8 @@ cd /opt/delivery-clarity
 cp .env.example .env.local
 nano .env.local
 # → Set SESSION_SECRET (openssl rand -hex 32)
-# → Set DATABASE_URL=file:/opt/delivery-clarity/data/delivery_clarity.db
+# → Set DATABASE_URL to your PostgreSQL connection string (e.g. Neon's pooled URL — see Section 3).
+#   A local `file:` URL will not start — scripts/start-production.mjs refuses it.
 # → Set ADMIN_EMAIL and ADMIN_PASSWORD
 ```
 
@@ -254,7 +256,7 @@ pm2 restart delivery-clarity
 
 ## 6. Option C — Vercel (Preview / Demo Only)
 
-⚠️ **Not recommended for production.** Auth sessions and import logs will not persist between serverless cold starts because SQLite requires a persistent filesystem.
+⚠️ **Limited for production.** The application database (PostgreSQL/Neon) is external and persists correctly on Vercel — it is not a local file, so it survives serverless cold starts. What does **not** persist is a handful of local JSON files under `data/`: health thresholds, retention settings, orphan-detection rules, cloud-storage provider settings, and the `data/latest-metrics.json` cache — these reset on every cold start because Vercel's serverless functions have no persistent filesystem. Vercel is still not recommended for production because admins would find their configuration changes silently reverting, but this is a narrower, different limitation than the guide previously described.
 
 Use Vercel only for:
 - Public demo / staging builds
@@ -266,7 +268,7 @@ Use Vercel only for:
 2. Import the repo at [vercel.com/new](https://vercel.com/new)
 3. Set environment variables in the Vercel dashboard:
    - `SESSION_SECRET` — any 32-char string
-   - `DATABASE_URL` — `file:./data/delivery_clarity.db` (ephemeral on Vercel)
+   - `DATABASE_URL` — your PostgreSQL connection string (e.g. Neon's pooled URL — persists fine, it's external)
    - `ADMIN_EMAIL`, `ADMIN_PASSWORD`
 4. Deploy
 
@@ -274,12 +276,13 @@ Use Vercel only for:
 
 | Feature | Status on Vercel |
 |---------|-----------------|
-| CSV upload → dashboard | ✅ Works, with browser fallback; server latest metrics are ephemeral |
-| User registration / login | ⚠️ Works during session, lost on cold start |
-| Import logs / audit trail | ❌ Lost on cold start |
-| Admin user management | ❌ Ephemeral |
-| Trend data (requires DB) | ❌ Not persisted |
+| CSV upload → dashboard | ✅ Works, with browser fallback; server latest-metrics cache file is ephemeral |
+| User registration / login | ✅ Persists (external Postgres) |
+| Import logs / audit trail | ✅ Persists (external Postgres) |
+| Admin user management | ✅ Persists (external Postgres) |
+| Trend data (requires DB) | ✅ Persists (external Postgres) |
 | Bucket-first latest metrics | ⚠️ Route works, but local cache file is ephemeral unless the deployment has persistent storage |
+| Admin config (health thresholds, retention rules, cloud storage settings) | ❌ Local JSON files — reset on every cold start |
 
 ---
 
@@ -403,31 +406,13 @@ pm2 restart delivery-clarity
 
 ## 11. Backup & Restore
 
-The SQLite database at `data/delivery_clarity.db` contains all users, sessions, and import logs.
+The application database is external PostgreSQL (Neon in production) — it is **not** a local file, so none of the file-copy approaches from earlier versions of this guide apply. Full backup/restore procedure, including Neon's built-in automatic point-in-time restore (the primary recovery mechanism) and a supplementary scheduled `pg_dump`, now lives in its own document:
 
-### Docker — backup
-
-```bash
-# Copy database out of the Docker volume
-docker compose exec delivery-clarity sh -c "cp /app/data/delivery_clarity.db /app/data/backup-$(date +%Y%m%d).db"
-docker cp delivery-clarity:/app/data/backup-$(date +%Y%m%d).db ./backup.db
-```
-
-### VPS — backup
-
-```bash
-# Simple cron backup (add to crontab with `crontab -e`)
-# Runs every day at 2 AM
-0 2 * * * cp /opt/delivery-clarity/data/delivery_clarity.db /opt/backups/dc-$(date +\%Y\%m\%d).db
-
-# Restore from backup
-cp /opt/backups/dc-20260601.db /opt/delivery-clarity/data/delivery_clarity.db
-pm2 restart delivery-clarity
-```
+**→ See `product/DATABASE_BACKUP_RESTORE.md` for the full runbook.**
 
 ### In-app backup
 
-The app also includes a built-in backup feature at `/admin/settings` (Backup & Restore tab) — generates a `.bak` file for manual download.
+The built-in feature at `/admin/settings` (Backup & Restore tab) backs up **local configuration and diagnostic files only** (health thresholds, retention settings, orphan-detection rules, cloud-storage provider settings, metrics cache) — it does **not** back up the database. Use it to preserve admin-configured settings across a redeploy or volume loss; use `product/DATABASE_BACKUP_RESTORE.md` for actual data recovery.
 
 ---
 
@@ -442,7 +427,6 @@ The app also includes a built-in backup feature at `/admin/settings` (Backup & R
 | Import logs disappear after restart (Docker) | Volume not mounted | Check `docker compose ps` and `docker volume ls` |
 | "No data loaded" after login | No `data/latest-metrics.json` yet and no browser fallback copy | Upload a Jira file once; this creates the server latest-metrics file and browser fallback |
 | App slow on first request | Next.js cold start | Normal on first request; subsequent requests are fast |
-| DB locked error | Multiple processes writing to SQLite | Ensure only one process accesses the DB (single Docker container) |
 
 ---
 

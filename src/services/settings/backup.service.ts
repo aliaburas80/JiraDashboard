@@ -1,8 +1,14 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 //
-// Database backup and restore service.
-// Exports the SQLite database + JSON config files into a downloadable
-// backup bundle, and restores from a previously created backup.
+// Configuration and diagnostics backup/restore service.
+// Exports local admin-configurable JSON files (health thresholds, retention
+// settings, orphan-detection rules, cloud-storage provider settings, and
+// per-workspace metrics cache) into a downloadable bundle, and restores from
+// a previously created one.
+//
+// This does NOT back up the application database — the database is external
+// PostgreSQL (Neon in production); see product/DATABASE_BACKUP_RESTORE.md
+// for actual data recovery (P0A-06).
 //
 // EP-020: dashboard metrics moved from one shared `latest-metrics.json` file
 // to one file per workspace/user under `data/metrics/` — the fixed file list
@@ -18,7 +24,6 @@ const DATA_DIR = path.join(process.cwd(), 'data');
 // Fixed files included in every backup (excludes per-scope metrics files —
 // see METRICS_SCOPE_FILE_PATTERN below).
 const BACKUP_FILES = [
-  { name: 'delivery_clarity.db',     label: 'SQLite database'         },
   { name: 'health-thresholds.json',  label: 'Health threshold config' },
   { name: 'retention-settings.json', label: 'Retention settings'      },
   { name: 'orphan-rules.json',       label: 'Orphan detection rules'  },

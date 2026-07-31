@@ -183,9 +183,9 @@ function DbHealthBadge() {
     }`}>
       <SvgIcon name={health.healthy ? 'check' : 'warning'} size={11} />
       <span>
-        {health.dbExists
-          ? `Local DB: ${health.users} user${health.users !== 1 ? 's' : ''} · ${health.imports} import${health.imports !== 1 ? 's' : ''} · ${health.dbSizeKb}KB`
-          : 'Local DB: not found — restore from cloud needed'}
+        {health.dbConnected
+          ? `Database: ${health.users} user${health.users !== 1 ? 's' : ''} · ${health.imports} import${health.imports !== 1 ? 's' : ''}`
+          : 'Database unreachable'}
       </span>
     </div>
   );
@@ -228,30 +228,31 @@ function AutoRestoreSection({ setMsg }: {
     }
   }
 
-  const dbMissing = health && (!health.dbExists || !health.healthy);
+  const dbUnreachable = health && !health.dbConnected;
+  const dbEmpty        = health && health.dbConnected && !health.healthy;
+  const needsAttention = dbUnreachable || dbEmpty;
 
   return (
-    <div className={`rounded-xl border p-4 ${dbMissing ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+    <div className={`rounded-xl border p-4 ${needsAttention ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
       <div className="flex items-start gap-3 flex-wrap">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-black text-slate-800 mb-1">
             <span className="inline-flex items-center gap-1.5">
-              <SvgIcon name={dbMissing ? 'warning' : 'refresh'} size={12} />
-              {dbMissing ? 'Local database missing or empty — restore from cloud' : 'Disaster Recovery / Auto-restore'}
+              <SvgIcon name={needsAttention ? 'warning' : 'refresh'} size={12} />
+              {dbUnreachable ? 'Database unreachable' : dbEmpty ? 'No user data found — restore from cloud needed' : 'Configuration Recovery / Restore'}
             </span>
           </p>
           <p className="text-[10px] text-slate-600 leading-relaxed">
-            {dbMissing
-              ? 'The local database is empty or missing. Click "Restore from cloud" to download the latest backup from the cloud bucket and restore it automatically.'
-              : 'On a fresh server deployment with no database, the app automatically checks the cloud bucket at startup and restores the latest backup. You can also trigger this manually.'
+            {dbUnreachable
+              ? 'The app could not connect to the database. Check DATABASE_URL and database connectivity — restoring configuration will not fix this.'
+              : dbEmpty
+              ? 'The database has no user data yet. Click "Restore from cloud" to download the latest configuration backup from the cloud bucket — this restores local settings only, not the database itself. See product/DATABASE_BACKUP_RESTORE.md for actual database recovery.'
+              : 'Manually restore local configuration/diagnostic settings from your cloud bucket. This does not restore the database — see product/DATABASE_BACKUP_RESTORE.md for that.'
             }
-          </p>
-          <p className="text-[10px] text-slate-500 mt-1">
-            <strong>Startup behaviour:</strong> When the server starts with an empty database, it reads the latest backup from your cloud bucket and restores it automatically — no manual action needed.
           </p>
         </div>
         <div className="flex flex-col gap-2 shrink-0">
-          {dbMissing ? (
+          {needsAttention ? (
             <button type="button" onClick={() => setConfirmForce(true)} disabled={restoring}
               className="btn-warning px-4 py-2 text-xs font-bold">
               {restoring ? 'Restoring…' : <><SvgIcon name="refresh" size={12} /> Restore from cloud</>}
@@ -260,7 +261,7 @@ function AutoRestoreSection({ setMsg }: {
             <>
               <button type="button" onClick={() => setConfirmForce(false)} disabled={restoring}
                 className="btn-secondary px-4 py-2 text-xs">
-                {restoring ? 'Checking…' : <><SvgIcon name="refresh" size={12} /> Auto-restore (if empty DB)</>}
+                {restoring ? 'Checking…' : <><SvgIcon name="refresh" size={12} /> Restore config (if no users)</>}
               </button>
               <button type="button" onClick={() => setConfirmForce(true)} disabled={restoring}
                 className="btn-outline-danger px-4 py-2 text-xs">
@@ -272,10 +273,10 @@ function AutoRestoreSection({ setMsg }: {
       </div>
       {confirmForce !== null && (
         <ConfirmDeleteDialog
-          title={confirmForce ? 'Force restore from cloud?' : 'Auto-restore from cloud?'}
+          title={confirmForce ? 'Force restore from cloud?' : 'Restore configuration from cloud?'}
           message={confirmForce
-            ? 'This will overwrite your current local database with the LATEST backup from the cloud bucket. This cannot be undone.'
-            : 'Restore latest cloud backup to local database? Only runs if the local database is missing or empty.'}
+            ? 'This will overwrite your current configuration/settings files with the LATEST backup from the cloud bucket. This cannot be undone. This does not affect the database.'
+            : 'Restore the latest cloud configuration backup? Only runs if the database currently has no user data. This does not affect the database itself.'}
           confirmLabel={confirmForce ? 'Force restore' : 'Restore'}
           danger={confirmForce}
           onConfirm={() => { const force = confirmForce; setConfirmForce(null); handleAutoRestore(force); }}

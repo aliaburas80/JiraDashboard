@@ -34,7 +34,7 @@ Version 4.0 | 2026-06-02 | Author: Ali Abu Ras
 | Class merging | clsx + tailwind-merge | 2.x | Via `cn()` helper in `src/lib/utils.ts` |
 | Testing | Jest + ts-jest | 29.x | Node environment; no browser testing |
 
-There is no separate backend process. Everything runs inside Next.js Route Handlers (`app/api/*/route.ts`). Import logs and user accounts are persisted to `data/delivery_clarity.db` (SQLite via Prisma 5). The latest computed dashboard metrics are written server-side to `data/latest-metrics.json`, included in cloud backup bundles, and fetched through `/api/metrics/latest` before the browser falls back to `localStorage` key `dc_metrics_v2`. Browser storage still keeps a fast fallback copy with a 5,000-item cap on `flow.items`.
+There is no separate backend process. Everything runs inside Next.js Route Handlers (`app/api/*/route.ts`). Import logs and user accounts are persisted to PostgreSQL (Neon-hosted in production) via Prisma. The latest computed dashboard metrics are written server-side to `data/latest-metrics.json`, included in cloud backup bundles, and fetched through `/api/metrics/latest` before the browser falls back to `localStorage` key `dc_metrics_v2`. Browser storage still keeps a fast fallback copy with a 5,000-item cap on `flow.items`.
 
 ---
 
@@ -76,7 +76,7 @@ For production deployment, set these environment variables:
 |---|---|---|
 | `SESSION_SECRET` | `dev-secret-change-me` | iron-session cookie signing key — **change in production** |
 | `ALLOW_OPEN_REGISTRATION` | `false` | Kept false; public registration is inactive and users are admin-created |
-| `DATABASE_URL` | `file:./data/delivery_clarity.db` | SQLite DB path (Prisma). Relative `file:./data/...` or `file:../data/...` values are normalized to the app `data/` directory at runtime. |
+| `DATABASE_URL` | *(none — see `.env.example`)* | PostgreSQL connection string (Prisma). Production should use Neon's pooled URL — see `product/DEPLOYMENT_GUIDE.md` §3. |
 
 Run `npx prisma generate && npx prisma migrate deploy` after first install to create the database.
 
@@ -89,7 +89,7 @@ Run `npx prisma generate && npx prisma migrate deploy` after first install to cr
 5. `validateIssueData` (validation service) confirms required fields are present.
 6. `buildColumnMapping` produces the column-mapping preview.
 7. `calculateDashboardMetrics` (metrics service) computes all KPIs. `buildFlowMetrics()` caps `flow.items` at 5,000 (sorted critical-first); `totalItemCount` and `itemsCapped` flags are set when the cap fires.
-8. The route handler saves an `ImportLog` to SQLite (with `userId`) and returns `{ metrics, warnings, importLog, columnMapping }`.
+8. The route handler saves an `ImportLog` to PostgreSQL (with `userId`) and returns `{ metrics, warnings, importLog, columnMapping }`.
 9. The route handler writes `data/latest-metrics.json` via `writeLatestMetrics(metrics)` so the latest dashboard payload is part of the next cloud backup.
 10. The browser calls `saveMetrics(metrics)` (writes to `localStorage` key `dc_metrics_v2` and source key `dc_metrics_source_v1`). If `QuotaExceededError` fires it trims to 5,000 items, then falls back to clearing storage.
 11. The router pushes to `/dashboard?fresh=1`. On load, the `?fresh=1` param resets all 12 filters.
@@ -237,7 +237,8 @@ JiraDashboard/
 │   └── __tests__/                # Jest test suites (469 tests across 48 suites — verified 2026-06-07)
 │
 ├── data/
-│   └── delivery_clarity.db       # SQLite database (users, sessions, import logs, snapshots)
+│   └── (local config/cache JSON — health thresholds, retention settings, metrics cache;
+│        the application database itself is external PostgreSQL, not stored here)
 │
 ├── prisma/
 │   └── schema.prisma             # User, ImportLog, DashboardSnapshot, AuditEvent models
@@ -473,7 +474,7 @@ Each authenticated user edits their shared profile through `/profile`, backed by
 
 Role helpers live in `src/lib/roles.ts`. Admin, Manager, and C-level can request all import logs with `/api/imports?all=true`, while Scrum Master/Product Owner/user remain scoped to their own uploads. Assigned delivery roles are locked to their dashboard view, so saved browser preferences cannot switch a Scrum Master/Product Owner/Manager/C-level user into another role's dashboard view.
 
-When cloud storage is active, auth/admin user flows use cloud-backed SQLite authority rather than browser storage: login/admin user reads call `syncFromCloud()` before user lookup or mutation, and admin user create/update or password-change flows call `pushToCloud()` after the local DB change succeeds.
+When cloud storage is active, auth/admin user flows use cloud-backed database authority rather than browser storage: login/admin user reads call `syncFromCloud()` before user lookup or mutation, and admin user create/update or password-change flows call `pushToCloud()` after the database change succeeds.
 
 Public registration is inactive by product policy. `/register` remains as a future adjustment route but redirects to `/login`, `POST /api/auth/register` returns 403, and users can only be created through `/admin/settings → User Management`. Admin-created users are saved with `mustChangePassword=true`; after their first successful login, middleware forces them to `/change-password` until they replace the temporary password.
 
@@ -1296,7 +1297,12 @@ Last verified: 2026-06-02
 **Status:** Implemented and verified. Shipped in PR #3 (P3-01) and hardened in v4.2.1 (cloud restore hardening, credential persistence).
 
 ### Goal
-Back up the local SQLite database (users, import logs, snapshots, latest-metrics cache, config files) to a self-hosted or cloud storage destination so admins can restore after data loss, and serve user-uploaded profile images through cloud storage when configured.
+Back up local admin-configurable settings and diagnostic files (health thresholds, retention rules,
+orphan-detection rules, cloud-storage provider settings, latest-metrics cache) to a self-hosted or
+cloud storage destination so admins can restore configuration after data loss, and serve user-uploaded
+profile images through cloud storage when configured. **This does not back up the application database**
+(users, import logs, snapshots — all in PostgreSQL/Neon); see `product/DATABASE_BACKUP_RESTORE.md`
+(`P0A-06`) for actual database backup/restore.
 
 ### Storage Provider Interface (Implemented — `src/types/storage.ts`)
 ```typescript
@@ -1324,14 +1330,14 @@ Each cloud SDK is loaded dynamically (`storageProvider.ts` factory) so the app s
 - **Provider selection & credentials** — `/admin/settings → Cloud Storage` tab: provider picker (4 cards), per-provider credential forms, redacted display of saved secrets, Test Connection, Upload Backup Now
 - **Bucket-first metrics startup** — `/api/metrics/latest` reads `data/latest-metrics.json` from the active cloud provider before falling back to the local cache, so a fresh deployment can boot directly from a cloud backup
 - **Cloud-backed user authority** — `syncFromCloud()` runs before login/admin user reads or mutations when cloud storage is active; `pushToCloud()` runs after admin create/update and password-change operations so the user database stays in sync with the cloud backup
-- **Backup bundle** — one-click JSON backup of the SQLite DB plus config files (`storage-settings.json`, `latest-metrics.json`, thresholds, orphan rules); restore creates a `.bak` safety copy before overwriting
+- **Backup bundle** — one-click JSON backup of local config files (`storage-settings.json`, `latest-metrics.json`, thresholds, orphan rules) — not the database; restore creates a `.bak` safety copy before overwriting
 - **Restore hardening** — security allow-list on restorable file paths, `.bak` rollback on failed restore, auto-restore-on-boot guard (`autoRestore.ts`)
 - **Profile images** — when Amazon S3 is the active provider, `/profile` uploads (JPG/PNG/WebP/GIF) are stored under `images/profile/` and served through the authenticated `/api/profile/image` route
 
 ### Current Limitations
 - Only one provider can be active at a time (no multi-provider replication)
 - Profile image upload to cloud storage is implemented for Amazon S3 only; other providers fall back to local storage for images
-- No automatic scheduled backups — backups are triggered manually ("Upload Backup Now") or on data-changing admin actions (push-on-change)
+- No automatic scheduled backups of this config bundle — backups are triggered manually ("Upload Backup Now") or on data-changing admin actions (push-on-change). The **database** itself has a separate, automated backup story — Neon's built-in point-in-time restore plus a daily `pg_dump` to S3 (`.github/workflows/db-backup.yml`) — see `product/DATABASE_BACKUP_RESTORE.md`.
 
 ### Credential Security
 - Credentials are persisted server-side in `data/storage-settings.json` and are never returned to the browser in plaintext — API responses redact secret fields
@@ -1863,10 +1869,9 @@ this report **cites the audit work that already exists** and adds what was genui
    "SQLite database created: `data/delivery_clarity.db`" — stale since the Postgres/Neon migration
    (`DEP-UPGRADE-NEXT16`'s era; Neon was provisioned 2026-06-29). Recorded here for the next §13 pass
    to correct; not fixed in this PR to keep this documentation-only change narrowly scoped.
-2. §12 below's "Minimum production env vars" example still shows
-   `DATABASE_URL=file:./data/delivery_clarity.db` — same staleness, same reasoning for not touching it
-   here (see `P0A-06` in `TODO-List.md`, which tracks the underlying Postgres backup/restore gap this
-   connects to).
+2. §12 below's "Minimum production env vars" example showed `DATABASE_URL=file:./data/delivery_clarity.db`
+   — this and the related in-app "Backup & Restore" feature/§11 cron staleness were the real gap behind
+   `P0A-06` in `TODO-List.md`; both are now fixed — see `product/DATABASE_BACKUP_RESTORE.md`.
 3. Nine "Soft Launch P0-A" gate items (`TODO-List.md` §29.1) were labeled far more incomplete than
    their actual code/test/doc state — see the corrected status rows in that section, each citing the
    specific files and tests that already satisfy most of the item's intent.
@@ -2045,7 +2050,7 @@ See **`product/DEPLOYMENT_GUIDE.md`** for the full guide. Summary:
 | **Render** | `git push` to `main` → `render.yaml` auto-deploy | Managed Postgres + object storage | ✅ **Current production target** |
 | **Docker** | `docker compose up -d --build` | Volume mount | ✅ Self-host |
 | **VPS / PM2** | `pm2 start npm -- start` | Local filesystem | ✅ Self-host |
-| **Vercel** | `git push` → auto-deploy | ❌ Ephemeral | Demo only |
+| **Vercel** | `git push` → auto-deploy | ✅ DB persists (external Postgres); ❌ local config/cache files ephemeral | Demo only |
 
 ### Key files
 
@@ -2060,7 +2065,7 @@ See **`product/DEPLOYMENT_GUIDE.md`** for the full guide. Summary:
 
 ```bash
 SESSION_SECRET=<openssl rand -hex 32>   # REQUIRED — 32+ chars
-DATABASE_URL=file:./data/delivery_clarity.db
+DATABASE_URL=postgresql://user:password@host-pooler.region.aws.neon.tech/delivery_clarity?sslmode=require
 ADMIN_EMAIL=admin@yourdomain.com
 ADMIN_PASSWORD=<strong password>
 ```
@@ -2074,7 +2079,7 @@ Set `client_max_body_size 25M;` in the nginx site config. Without this, Jira CSV
 1. Log in and **change the admin password** immediately
 2. Visit `/admin/security` and aim for score ≥ 80
 3. Test file upload with a real Jira export
-4. Set up cron backups (see DEPLOYMENT_GUIDE.md §11)
+4. Confirm database backup/restore readiness — see `product/DATABASE_BACKUP_RESTORE.md`
 
 ### Rollback procedure (`P0A-08`, added 2026-07-25)
 
@@ -2100,11 +2105,13 @@ If a deploy introduces a regression:
 4. **Record it:** add an entry to `product/RELEASE_NOTES.md` describing what broke and what the
    rollback restored, per CLAUDE.md §57's release/change-management requirement.
 
-**Known gap, tracked separately:** this procedure covers application/migration rollback. A true
-point-in-time *data* restore (recovering rows after a bad migration or bad data write, not just
-reverting code) needs a real Postgres/Neon backup mechanism — the current in-app "Backup & Restore"
-feature and this guide's §11 cron example both target a SQLite file that no longer exists now that
-production runs on Postgres/Neon; see `TODO-List.md` `P0A-06` for the tracked, unstarted fix.
+**Data restore (`P0A-06`, closed 2026-07-31):** this procedure covers application/migration rollback.
+For a true point-in-time *data* restore (recovering rows after a bad migration or bad data write, not
+just reverting code), see **`product/DATABASE_BACKUP_RESTORE.md`** — Neon's built-in point-in-time
+restore is the primary mechanism, with a supplementary independent `pg_dump` (`.github/workflows/db-backup.yml`)
+as a second copy. The in-app "Backup & Restore" feature (`/admin/settings`) backs up local
+configuration/diagnostic files only, not the database — it never did, despite previously claiming
+otherwise.
 
 ### Product Tour
 
