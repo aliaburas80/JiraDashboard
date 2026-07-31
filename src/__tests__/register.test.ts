@@ -97,3 +97,55 @@ test('TC-REG-02: self-registration rejects an email that already has an account'
   expect(mockCreate).not.toHaveBeenCalled();
   expect(sendEmail).not.toHaveBeenCalled();
 });
+
+// P0B-01: secondary personas (master plan §4.1 — "one primary role and zero or more secondary roles")
+
+test('TC-REG-03: valid secondaryPersonas array persists deduped and filtered', async () => {
+  const { POST } = await import('../../app/api/auth/register/route');
+  const res = await POST(request({
+    ...validBody,
+    secondaryPersonas: ['Agile Coach', 'Team Lead', 'Agile Coach'],
+  }));
+
+  expect(res.status).toBe(200);
+  expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({
+    data: expect.objectContaining({ secondaryPersonas: ['Agile Coach', 'Team Lead'] }),
+  }));
+});
+
+test('TC-REG-04: an invalid secondaryPersonas value is silently dropped, not a 400', async () => {
+  const { POST } = await import('../../app/api/auth/register/route');
+  const res = await POST(request({
+    ...validBody,
+    secondaryPersonas: ['Agile Coach', 'Not A Real Persona'],
+  }));
+
+  expect(res.status).toBe(200);
+  expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({
+    data: expect.objectContaining({ secondaryPersonas: ['Agile Coach'] }),
+  }));
+});
+
+test('TC-REG-05: the chosen primary persona is excluded from secondaryPersonas', async () => {
+  const { POST } = await import('../../app/api/auth/register/route');
+  const res = await POST(request({
+    ...validBody,
+    persona: 'Scrum Master',
+    secondaryPersonas: ['Scrum Master', 'Consultant'],
+  }));
+
+  expect(res.status).toBe(200);
+  expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({
+    data: expect.objectContaining({ secondaryPersonas: ['Consultant'] }),
+  }));
+});
+
+test('TC-REG-06: missing secondaryPersonas defaults to an empty array', async () => {
+  const { POST } = await import('../../app/api/auth/register/route');
+  const res = await POST(request(validBody));
+
+  expect(res.status).toBe(200);
+  expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({
+    data: expect.objectContaining({ secondaryPersonas: [] }),
+  }));
+});

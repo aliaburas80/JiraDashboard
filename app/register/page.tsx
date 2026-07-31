@@ -1,5 +1,5 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
-// EP-011: Public registration page — name, email, password, primary persona.
+// EP-011: Public registration page — name, email, password, primary + secondary persona.
 'use client';
 
 import { useEffect, useRef, useState, FormEvent } from 'react';
@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [email,       setEmail]       = useState('');
   const [password,    setPassword]    = useState('');
   const [persona,     setPersona]     = useState('');
+  const [secondaryPersonas, setSecondaryPersonas] = useState<string[]>([]);
   const [consent,     setConsent]     = useState(false);
   const [error,       setError]       = useState('');
   const [loading,     setLoading]     = useState(false);
@@ -46,7 +47,7 @@ export default function RegisterPage() {
       const res  = await fetch('/api/auth/register', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ name, email, password, persona, consentAccepted: consent }),
+        body:    JSON.stringify({ name, email, password, persona, secondaryPersonas, consentAccepted: consent }),
       });
       const data = await res.json().catch(() => ({})) as { error?: string; code?: string };
       if (!res.ok) {
@@ -169,7 +170,10 @@ export default function RegisterPage() {
                   id="reg-persona"
                   className={styles.select}
                   value={persona}
-                  onChange={e => setPersona(e.target.value)}
+                  onChange={e => {
+                    setPersona(e.target.value);
+                    setSecondaryPersonas(prev => prev.filter(x => x !== e.target.value));
+                  }}
                   required
                   aria-required="true"
                 >
@@ -179,6 +183,23 @@ export default function RegisterPage() {
                   ))}
                 </select>
               </div>
+
+              {/* Secondary roles — EP-011, master plan §4.1 */}
+              <fieldset className={styles.field}>
+                <legend className={styles.label}>Secondary roles (optional)</legend>
+                {PERSONAS.filter(p => p !== persona).map(p => (
+                  <label key={p} className={styles.consentLabel}>
+                    <input
+                      type="checkbox"
+                      className={styles.consentCheck}
+                      checked={secondaryPersonas.includes(p)}
+                      onChange={() => setSecondaryPersonas(prev =>
+                        prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])}
+                    />
+                    <span className={styles.consentText}>{p}</span>
+                  </label>
+                ))}
+              </fieldset>
 
               {/* Consent — EP-014 */}
               <div className={styles.field}>

@@ -59,6 +59,36 @@ export const PERSONA_FOCUS: Record<Persona, PersonaFocusConfig> = {
       { title: 'Labels',               href: '/dashboard/labels' },
     ],
   },
+  'Agile Coach': {
+    persona: 'Agile Coach',
+    summary: 'Team health and continuous improvement — flow friction, blockers, and workload balance worth raising in retros.',
+    focusAreas: [
+      { title: 'Flow Health',          href: '/dashboard/flow-health' },
+      { title: 'Priority Attention',   href: '/dashboard/priority-attention' },
+      { title: 'Ownership',            href: '/dashboard/ownership' },
+      { title: 'Trends',               href: '/dashboard/trends' },
+    ],
+  },
+  'Delivery Manager': {
+    persona: 'Delivery Manager',
+    summary: 'Cross-team delivery risk — throughput trend, flow friction, and where capacity is stretched thin.',
+    focusAreas: [
+      { title: 'Key Metrics',          href: '/dashboard/key-metrics' },
+      { title: 'Trends',               href: '/dashboard/trends' },
+      { title: 'Flow Health',          href: '/dashboard/flow-health' },
+      { title: 'Ownership',            href: '/dashboard/ownership' },
+    ],
+  },
+  'Team Lead': {
+    persona: 'Team Lead',
+    summary: 'Day-to-day team execution and hygiene — what’s blocked, who’s carrying too much, and where the data needs cleanup.',
+    focusAreas: [
+      { title: 'Priority Attention',   href: '/dashboard/priority-attention' },
+      { title: 'Ownership',            href: '/dashboard/ownership' },
+      { title: 'Flow Health',          href: '/dashboard/flow-health' },
+      { title: 'Data Quality',         href: '/dashboard/data-quality' },
+    ],
+  },
   Executive: {
     persona: 'Executive',
     summary: 'The high-level picture — overall health, trend direction, and delivery mix at a glance.',
@@ -66,6 +96,34 @@ export const PERSONA_FOCUS: Record<Persona, PersonaFocusConfig> = {
       { title: 'Summary',              href: '/dashboard/summary' },
       { title: 'Trends',               href: '/dashboard/trends' },
       { title: 'Data Quality',         href: '/dashboard/data-quality' },
+    ],
+  },
+  'Jira Administrator': {
+    persona: 'Jira Administrator',
+    summary: 'Data hygiene and configuration health — where fields, labels, and epics need cleanup to keep reporting trustworthy.',
+    focusAreas: [
+      { title: 'Data Quality',         href: '/dashboard/data-quality' },
+      { title: 'Labels',               href: '/dashboard/labels' },
+      { title: 'Epic Readiness',       href: '/dashboard/epic-readiness' },
+      { title: 'Summary',              href: '/dashboard/summary' },
+    ],
+  },
+  Consultant: {
+    persona: 'Consultant',
+    summary: 'A fast, credible overview for engagements — overall health, trend direction, and data trustworthiness at a glance.',
+    focusAreas: [
+      { title: 'Summary',              href: '/dashboard/summary' },
+      { title: 'Trends',               href: '/dashboard/trends' },
+      { title: 'Data Quality',         href: '/dashboard/data-quality' },
+      { title: 'Key Metrics',          href: '/dashboard/key-metrics' },
+    ],
+  },
+  Other: {
+    persona: 'Other',
+    summary: 'A general starting point — overall health and trend direction, useful regardless of your specific role.',
+    focusAreas: [
+      { title: 'Summary',              href: '/dashboard/summary' },
+      { title: 'Trends',               href: '/dashboard/trends' },
     ],
   },
 };
