@@ -1,0 +1,70 @@
+# Scheduled, independent PostgreSQL backup — supplementary to Neon's own
+# built-in point-in-time restore (the primary recovery mechanism; see
+# product/DATABASE_BACKUP_RESTORE.md). Runs pg_dump against Neon's direct
+# (unpooled) connection and uploads it straight to a private S3 prefix,
+# never landing an unencrypted PII-bearing dump as a plain workflow artifact.
+#
+# REQUIRED SETUP BEFORE THIS CAN SUCCEED — see product/DATABASE_BACKUP_RESTORE.md §2.3:
+#   Repo Settings → Secrets and variables → Actions, add:
+#     NEON_DIRECT_DATABASE_URL      — Neon's UNPOOLED connection string (not the
+#                                      app's own pooled DATABASE_URL)
+#     DB_BACKUP_AWS_ACCESS_KEY_ID   — new IAM credential, scoped only to the
+#     DB_BACKUP_AWS_SECRET_ACCESS_KEY   db-backups/ prefix (not the app's own
+#                                      STORAGE_ACCESS_KEY_ID/SECRET)
+#     DB_BACKUP_S3_BUCKET           — e.g. jira-data-logs
+#     DB_BACKUP_S3_REGION           — e.g. us-west-2
+# Until these exist, every run of this workflow will fail at the dump/upload
+# step — expected, and fully decoupled from the running application.
+
+name: Database Backup
+
+on:
+  schedule:
+    # Daily, off the top of the hour to avoid GitHub Actions' scheduling congestion.
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  db-backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Dump database and upload to S3
+        env:
+          # ubuntu-latest ships pg_dump and the aws CLI preinstalled — no new
+          # runtime dependency (this repo's e2e.yml already relies on the
+          # same runner having pg_dump for its ephemeral postgres:16 service).
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_DATABASE_URL }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.DB_BACKUP_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.DB_BACKUP_AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.DB_BACKUP_S3_REGION }}
+          S3_BUCKET: ${{ secrets.DB_BACKUP_S3_BUCKET }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DATABASE_URL:-}" ] || [ -z "${S3_BUCKET:-}" ]; then
+            echo "::error::Required secrets are not set — see product/DATABASE_BACKUP_RESTORE.md §2.3 for setup."
+            exit 1
+          fi
+
+          DUMP_FILE="/tmp/delivery-clarity-$(date -u +%Y%m%dT%H%M%SZ).dump"
+
+          # --dbname carries the connection string; GitHub Actions automatically
+          # redacts any exact-match secret value from all logged output, so the
+          # connection string itself never appears in the run log.
+          pg_dump --format=custom --no-owner --no-privileges \
+            --dbname="$DATABASE_URL" \
+            -f "$DUMP_FILE"
+
+          aws s3 cp "$DUMP_FILE" "s3://${S3_BUCKET}/db-backups/$(basename "$DUMP_FILE")" \
+            --sse AES256
+
+          rm -f "$DUMP_FILE"

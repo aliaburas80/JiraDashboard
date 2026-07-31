@@ -89,8 +89,11 @@ export default function BackupRestoreSettings({ files }: Props) {
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
         <h3 className="text-sm font-black text-slate-700 mb-1">Create Backup</h3>
         <p className="text-xs text-slate-500 mb-4">
-          Downloads a JSON file containing the SQLite database and all configuration files.
-          Store it somewhere safe outside the server.
+          Downloads a JSON file containing configuration and diagnostic settings (health
+          thresholds, retention rules, cloud storage settings, metrics cache). This does{' '}
+          <strong>not</strong> back up the database — for actual data recovery, see{' '}
+          <code className="font-mono">product/DATABASE_BACKUP_RESTORE.md</code>.
+          Store this file somewhere safe outside the server.
         </p>
         <button type="button" onClick={handleBackup} disabled={creating}
           className="btn-primary px-5 py-2.5 disabled:opacity-50">
@@ -107,7 +110,7 @@ export default function BackupRestoreSettings({ files }: Props) {
         </p>
         <p className="text-xs text-red-600 font-semibold mb-4">
           <SvgIcon name="warning" size={13} style={{ display: 'inline-block', verticalAlign: '-2px', marginRight: 4 }} />
-          This will overwrite your current database and settings. Restart the server after restore.
+          This will overwrite your current configuration and settings (not the database).
         </p>
         <input ref={fileRef} type="file" accept=".json" className="hidden"
           onChange={e => { const f = e.target.files?.[0]; if (f) handleRestore(f); }} />
