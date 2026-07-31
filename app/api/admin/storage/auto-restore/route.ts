@@ -1,16 +1,14 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
-// POST /api/admin/storage/auto-restore — manually trigger auto-restore from cloud
-// GET  /api/admin/storage/auto-restore — check local DB health status
+// POST /api/admin/storage/auto-restore — manually trigger config/diagnostics
+//      restore from cloud (see src/services/settings/backup.service.ts —
+//      this restores local JSON config files, not the database)
+// GET  /api/admin/storage/auto-restore — check database connectivity
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import fs from 'fs';
-import path from 'path';
-
-const DB_PATH = path.join(process.cwd(), 'data', 'delivery_clarity.db');
 
 async function requireAdmin(): Promise<{ session: SessionData } | NextResponse> {
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
@@ -19,30 +17,24 @@ async function requireAdmin(): Promise<{ session: SessionData } | NextResponse> 
   return { session };
 }
 
-// ── GET — local DB health ─────────────────────────────────────────────────────
+// ── GET — database connectivity ───────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
   const check = await requireAdmin();
   if (check instanceof NextResponse) return check;
 
-  const dbExists = fs.existsSync(DB_PATH);
-  let dbSizeKb   = 0;
-  if (dbExists) {
-    try { dbSizeKb = Math.round(fs.statSync(DB_PATH).size / 1024); } catch {}
-  }
+  let dbConnected = false;
+  let users       = 0;
+  let imports     = 0;
+  let healthy     = false;
 
-  let users   = 0;
-  let imports = 0;
-  let healthy = false;
+  try {
+    [users, imports] = await Promise.all([prisma.user.count(), prisma.importLog.count()]);
+    dbConnected = true;
+    healthy     = users > 0;
+  } catch {}
 
-  if (dbExists) {
-    try {
-      [users, imports] = await Promise.all([prisma.user.count(), prisma.importLog.count()]);
-      healthy = users > 0;
-    } catch {}
-  }
-
-  return NextResponse.json({ dbExists, dbSizeKb, users, imports, healthy });
+  return NextResponse.json({ dbConnected, users, imports, healthy });
 }
 
 // ── POST — trigger auto-restore ───────────────────────────────────────────────

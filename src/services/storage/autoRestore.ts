@@ -1,13 +1,9 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
-// Auto-restore from cloud on startup.
+// Auto-restore local config/diagnostics files from cloud on startup.
 // Called once by instrumentation.ts when the Next.js server starts.
-// If the local database is missing or has no users, finds the latest
-// cloud backup and restores it automatically.
-
-import fs   from 'fs';
-import path from 'path';
-
-const DB_PATH = path.join(process.cwd(), 'data', 'delivery_clarity.db');
+// If the database has no users yet, finds the latest cloud backup (of the
+// local JSON config files — see src/services/settings/backup.service.ts,
+// this does not restore the database itself) and restores it automatically.
 
 export interface AutoRestoreResult {
   action:   'skipped' | 'no-provider' | 'no-backups' | 'restored' | 'failed';
@@ -18,17 +14,15 @@ export interface AutoRestoreResult {
 }
 
 export async function autoRestoreFromCloud(): Promise<AutoRestoreResult> {
-  // 1. Check if local DB already exists with data
-  if (fs.existsSync(DB_PATH)) {
-    try {
-      const { prisma } = await import('@/lib/prisma');
-      const count = await prisma.user.count();
-      if (count > 0) {
-        return { action: 'skipped', reason: `Local database exists with ${count} user(s). No restore needed.` };
-      }
-    } catch {
-      // DB exists but can't connect — try restore anyway
+  // 1. Check if the database already has data
+  try {
+    const { prisma } = await import('@/lib/prisma');
+    const count = await prisma.user.count();
+    if (count > 0) {
+      return { action: 'skipped', reason: `Database already has ${count} user(s). No restore needed.` };
     }
+  } catch {
+    // Can't connect — try restore anyway
   }
 
   // 2. Check if a cloud provider is configured

@@ -1,7 +1,7 @@
 // © 2025 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
-// Database backup and restore tests — TC-BK-01 to TC-BK-08
+// Configuration backup and restore tests — TC-BK-01 to TC-BK-09
 
-import { restoreBackup } from '../services/settings/backup.service';
+import { restoreBackup, getBackupStats } from '../services/settings/backup.service';
 import type { BackupBundle } from '../services/settings/backup.service';
 
 // TC-BK-01: Invalid manifest → failure
@@ -79,4 +79,12 @@ test('TC-BK-08: base64 encoding/decoding round-trips correctly', () => {
   const encoded  = Buffer.from(original).toString('base64');
   const decoded  = Buffer.from(encoded, 'base64').toString('utf-8');
   expect(decoded).toBe(original);
+});
+
+// TC-BK-09 (P0A-06 regression guard): this backup service covers local
+// config/diagnostics files only, never the SQLite file the tracker found it
+// silently no-op'ing against — assert the dead entry never reappears.
+test('TC-BK-09: backup file list never references the removed SQLite file', () => {
+  const stats = getBackupStats();
+  expect(stats.some(f => f.name === 'delivery_clarity.db')).toBe(false);
 });
