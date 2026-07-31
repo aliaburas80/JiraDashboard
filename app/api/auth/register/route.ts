@@ -69,6 +69,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!PERSONAS.includes(persona as Persona)) {
     return NextResponse.json({ error: 'Please select your primary role.' }, { status: 400 });
   }
+
+  // EP-011: secondary roles are optional ("zero or more" per master plan §4.1) and
+  // checkbox-driven in the real UI, so a missing/malformed value is never a user-facing
+  // error — invalid entries are silently dropped rather than rejected with a 400, since
+  // this field is analytics-only and a bad direct API call gains nothing from a hard error.
+  const rawSecondary = Array.isArray(body.secondaryPersonas) ? body.secondaryPersonas.slice(0, 50) : [];
+  const secondaryPersonas: Persona[] = Array.from(new Set(
+    rawSecondary
+      .map(v => String(v))
+      .filter((v): v is Persona => PERSONAS.includes(v as Persona) && v !== persona)
+  ));
+
   if (!consentAccepted) {
     return NextResponse.json(
       { error: 'You must accept the Terms of Use and Privacy Policy to create an account.' },
@@ -104,6 +116,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         emailVerificationToken:   verificationToken,
         emailVerificationExpires: verificationExpiresAt,
         persona,
+        secondaryPersonas,
         isActive:           true,
         mustChangePassword: false,
         termsAcceptedAt:    new Date(),

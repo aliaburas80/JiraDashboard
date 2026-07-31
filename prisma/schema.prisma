@@ -27,6 +27,7 @@ model User {
   passwordResetToken       String?   @unique
   passwordResetExpires     DateTime?
   persona                  String    @default("") // primary professional persona chosen at signup
+  secondaryPersonas        String[]  @default([]) // EP-011: zero or more secondary roles, master plan §4.1 — analytics only, no permissions
   // EP-014: consent and legal document acceptance
   termsAcceptedAt          DateTime? // when user accepted the Terms of Use + Privacy Policy
   termsVersion             String    @default("") // document version accepted e.g. "v1"

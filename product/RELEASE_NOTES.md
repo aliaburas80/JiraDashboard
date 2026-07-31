@@ -5,6 +5,19 @@
 
 ---
 
+## Registration Persona List Restored, Secondary Roles Added (2026-07-31, P0)
+
+The "Your primary role" list at `/register` is back to its original 11 options (Scrum Master, Agile
+Coach, Product Owner, Project Manager, Delivery Manager, Engineering Manager, Team Lead, Executive,
+Jira Administrator, Consultant, Other) — reversing the trim to 5 from three weeks ago
+(2026-07-05), per explicit instruction and to match the soft-launch master plan's persona spec
+(§4.1). Signup also now captures optional **secondary roles** — pick any number of additional roles
+you also identify with, via a new checkbox group under the primary-role dropdown. Persona remains
+purely an analytics attribute — it has never affected, and still doesn't affect, what you can see or
+do in the app. See `TODO-List.md` `P0B-01` for details.
+
+---
+
 ## Fixed: Duplicate Rows in a Single Jira Export No Longer Double-Count (2026-07-26)
 
 If a Jira CSV/Excel export contained the same Issue Key twice — a re-exported or appended file, for

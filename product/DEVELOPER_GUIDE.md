@@ -75,7 +75,7 @@ For production deployment, set these environment variables:
 | Variable | Default | Purpose |
 |---|---|---|
 | `SESSION_SECRET` | `dev-secret-change-me` | iron-session cookie signing key — **change in production** |
-| `ALLOW_OPEN_REGISTRATION` | `false` | Kept false; public registration is inactive and users are admin-created |
+| `ALLOW_OPEN_REGISTRATION` | `true` | Read only by `checkRegistrationLocked()` (a diagnostics/security-report flag, `/admin/security`) — it does **not** gate `POST /api/auth/register`, which is a live public endpoint regardless of this value (P0B-01) |
 | `DATABASE_URL` | *(none — see `.env.example`)* | PostgreSQL connection string (Prisma). Production should use Neon's pooled URL — see `product/DEPLOYMENT_GUIDE.md` §3. |
 
 Run `npx prisma generate && npx prisma migrate deploy` after first install to create the database.
@@ -149,7 +149,7 @@ JiraDashboard/
 │   │   └── page.module.scss      # .wiki class remaps all --dc-* tokens to light values
 │   ├── help/page.tsx             # /help — FAQ / help guide
 │   ├── login/page.tsx            # /login — Authentication
-│   ├── register/page.tsx         # /register — Reserved; redirects to login
+│   ├── register/page.tsx         # /register — Live public signup form (P0B-01)
 │   ├── change-password/page.tsx  # /change-password — First-login password change
 │   ├── profile/page.tsx          # /profile — Editable member profile
 │   ├── members/page.tsx          # /members — Team member directory
@@ -169,7 +169,7 @@ JiraDashboard/
 │       ├── snapshots/[id]/route.ts # DELETE /api/snapshots/:id
 │       ├── auth/login/route.ts   # POST /api/auth/login
 │       ├── auth/logout/route.ts  # POST /api/auth/logout
-│       ├── auth/register/route.ts # POST /api/auth/register (inactive / 403)
+│       ├── auth/register/route.ts # POST /api/auth/register — live public signup (EP-011)
 │       ├── auth/change-password/route.ts
 │       ├── auth/me/route.ts      # GET  /api/auth/me
 │       ├── profile/route.ts      # GET/PATCH /api/profile
@@ -476,7 +476,7 @@ Role helpers live in `src/lib/roles.ts`. Admin, Manager, and C-level can request
 
 When cloud storage is active, auth/admin user flows use cloud-backed database authority rather than browser storage: login/admin user reads call `syncFromCloud()` before user lookup or mutation, and admin user create/update or password-change flows call `pushToCloud()` after the database change succeeds.
 
-Public registration is inactive by product policy. `/register` remains as a future adjustment route but redirects to `/login`, `POST /api/auth/register` returns 403, and users can only be created through `/admin/settings → User Management`. Admin-created users are saved with `mustChangePassword=true`; after their first successful login, middleware forces them to `/change-password` until they replace the temporary password.
+Public registration is live at `/register` (P0B-01, EP-011) — a real signup form (name, email, password, primary + secondary persona, consent), rate-limited 5/IP/hour, creating a `User` + `Workspace` + trial `Entitlement` in one transaction, then sending a verification email (best-effort — registration still succeeds if no email provider is configured). Self-registered accounts default to `dataStorageMode: 'local'`, `role: 'user'` (hardcoded server-side regardless of the submitted persona), and do not auto-login — the user must separately sign in after registering. Unverified email does not block sign-in (a deliberate reversal, see `product/SRS.md` FR-398), but it does block file upload (`app/api/upload/route.ts`) until verified. Admins can also create users directly through `/admin/settings → User Management`; those accounts are saved with `mustChangePassword=true`, and middleware forces them to `/change-password` on first login until they replace the temporary password.
 
 Route visibility is role-scoped through the same helper module: `allowedRoutePrefixesForRole()`, `canAccessRoute()`, and `fallbackRouteForRole()`. `AppShell` fetches `/api/auth/me` and filters nav items before rendering; `middleware.ts` enforces the same matrix for protected page routes and redirects disallowed direct URL access to the role fallback route.
 
