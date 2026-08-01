@@ -231,6 +231,37 @@ test('admin users API returns 404 when the PATCH target does not exist', async (
   expect(body.error).toBe('User not found.');
 });
 
+// P0B-04: reactivating a user (isActive: true) must cancel any pending
+// self-service deletion request — otherwise the grace-period purge job
+// would still delete them out from under the admin's own reactivation.
+
+test('admin users API clears deletionRequestedAt when reactivating a user', async () => {
+  const { prisma } = await import('@/lib/prisma');
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user-1', isSuperAdmin: false });
+  (prisma.user.update as jest.Mock).mockResolvedValue(user({ isActive: true }));
+  const { PATCH } = await import('../../app/api/admin/users/route');
+
+  const response = await PATCH(request({ id: 'user-1', isActive: true }));
+  expect(response.status).toBe(200);
+
+  expect(prisma.user.update).toHaveBeenCalledWith(expect.objectContaining({
+    data: expect.objectContaining({ isActive: true, deletionRequestedAt: null }),
+  }));
+});
+
+test('admin users API does not touch deletionRequestedAt when disabling a user', async () => {
+  const { prisma } = await import('@/lib/prisma');
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user-2', isSuperAdmin: false });
+  (prisma.user.update as jest.Mock).mockResolvedValue(user({ id: 'user-2', isActive: false }));
+  const { PATCH } = await import('../../app/api/admin/users/route');
+
+  const response = await PATCH(request({ id: 'user-2', isActive: false }));
+  expect(response.status).toBe(200);
+
+  const call = (prisma.user.update as jest.Mock).mock.calls[0][0];
+  expect(call.data).not.toHaveProperty('deletionRequestedAt');
+});
+
 test('admin users API blocks another admin from deleting a super-admin', async () => {
   const { prisma } = await import('@/lib/prisma');
   (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'super-1', isSuperAdmin: true, name: 'Ali', email: 'ali@test.com' });

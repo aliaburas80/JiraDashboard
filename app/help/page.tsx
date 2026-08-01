@@ -391,7 +391,9 @@ const SECTIONS: Section[] = [
     items: [
       { q: 'Where do I see what I agreed to?', a: 'Go to /profile (Settings) → Privacy to see your Terms of Use / Privacy Policy acceptance record — which version you accepted and when — plus links to the current Terms of Use and Privacy Policy.' },
       { q: 'What is the Analytics toggle in Settings → Privacy?', a: 'An opt-in preference for anonymous product-usage analytics, off by default. Delivery Clarity does not currently collect any product analytics at all, so this toggle has no effect today — your choice will be honored once analytics collection exists.' },
-      { q: 'Can I withdraw my Terms & Privacy consent?', a: 'That consent is required to use Delivery Clarity and can\'t be withdrawn while keeping your account active. To withdraw it, email ali.aburas@deliveryclarity.app to request account deletion.' },
+      { q: 'Can I withdraw my Terms & Privacy consent?', a: 'That consent is required to use Delivery Clarity and can\'t be withdrawn while keeping your account active. To withdraw it, delete your account (Settings → Privacy → "Delete my account"), or email ali.aburas@deliveryclarity.app if you\'re unable to use self-service deletion.' },
+      { q: 'How do I export my data?', a: 'Go to /profile (Settings) → Privacy → "Export my data" to download a single JSON file with everything Delivery Clarity has stored about your account: profile, consent history, entitlement status, import logs, dashboard snapshots, and your current live metrics.' },
+      { q: 'How do I delete my account, and what actually happens?', a: 'Go to /profile (Settings) → Privacy → "Delete my account," re-enter your password, and confirm. Your account is locked out immediately (you\'re signed out and can\'t log back in) and permanently deleted 7 days later. Contact ali.aburas@deliveryclarity.app during that window if you want to cancel the deletion.' },
     ],
   },
   {

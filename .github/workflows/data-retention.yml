@@ -1,0 +1,58 @@
+# P0B-04: scheduled data-lifecycle enforcement — hard-deletes accounts past
+# their self-service deletion grace period, purges expired AuditEvent/AppError
+# records per the Privacy Policy's already-published retention windows, and
+# applies the existing (previously manual-only) ImportLog/DashboardSnapshot
+# retention policy. Runs scripts/purge-expired-data.mjs directly against the
+# database — same reasoning as db-backup.yml: Render's free-tier web service
+# has no cron infra of its own, so this repo's scheduled jobs run here instead.
+#
+# Reuses the NEON_DIRECT_DATABASE_URL secret already added for db-backup.yml
+# (P0A-06) — no new secret required. That's Neon's unpooled connection string;
+# fine here too, since these are plain deleteMany/delete calls, not a bulk dump.
+
+name: Data Retention
+
+on:
+  schedule:
+    # Daily, off the top of the hour — same convention as db-backup.yml.
+    - cron: '15 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-retention
+  cancel-in-progress: false
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      DATABASE_URL: ${{ secrets.NEON_DIRECT_DATABASE_URL }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run retention/purge job
+        run: |
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "::error::DATABASE_URL secret is not set."
+            exit 1
+          fi
+          node scripts/purge-expired-data.mjs

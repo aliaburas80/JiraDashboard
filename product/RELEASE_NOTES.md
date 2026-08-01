@@ -5,6 +5,18 @@
 
 ---
 
+## Self-Service Account Deletion and Data Export (2026-08-02, P0)
+
+**Settings → Privacy** now has a "Your Data" section with two new self-service actions. **Export my
+data** downloads a single JSON file with everything Delivery Clarity has stored about your account
+— profile, consent history, entitlement status, import logs, dashboard snapshots, and your current
+live metrics. **Delete my account** requires re-entering your password, then immediately signs you
+out and locks your account; it's permanently deleted 7 days later (an administrator can cancel this
+within that window if you change your mind). This replaces the previous email-only deletion request.
+See `TODO-List.md` `P0B-04` for details.
+
+---
+
 ## New Settings → Privacy Tab: Consent Records and an Analytics Choice (2026-08-01, P0)
 
 You can now see your Terms of Use / Privacy Policy acceptance record and control an optional
