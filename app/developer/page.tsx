@@ -326,6 +326,30 @@ Entitlement checks, rate limiting, \`ImportLog\`/\`DashboardSnapshot\` writes, a
 
 ---
 
+## Data Lifecycle — Deletion, Export, Retention (P0B-04)
+
+**Deletion is soft-then-hard, not immediate.** \`POST /api/account/delete\` (password-verified via \`verifyPassword\`, same rate-limit bar as \`change-password\`) sets \`User.isActive: false\` + \`deletionRequestedAt: new Date()\` in one update and destroys the session. This alone locks the account out everywhere — \`GET /api/auth/me\`'s existing EP-010 check already destroys any session for a \`!isActive\` user on its next call, so no new gating logic was needed. The row is hard-deleted 7 days later by a scheduled job, not synchronously — well inside the Privacy Policy's published "deleted within 30 days" SLA, while leaving a real admin-cancelable window.
+
+**\`src/lib/accountLifecycle.ts\`:**
+- \`requestAccountDeletion(userId)\` / \`cancelAccountDeletion(userId)\` — the two state transitions above; \`cancelAccountDeletion\` is called from \`PATCH /api/admin/users\` whenever an admin sets \`isActive: true\`.
+- \`exportAccountData(userId)\` — assembles the full export object (profile minus \`passwordHash\`/tokens, full \`Consent\` history, entitlement, workspace, \`ImportLog\` metadata, full \`DashboardSnapshot\` rows, and \`readLatestMetrics()\` via \`getMetricsScopeKeyForUser()\` — the same scope-key resolution the upload routes use).
+
+**\`GET\`/\`POST /api/account/export\`, \`/api/account/delete\`** — both session-authenticated. Export returns \`Content-Disposition: attachment\` JSON, not CSV (avoids the CLAUDE.md §38.5 formula-injection surface entirely rather than defending against it).
+
+**Scheduled purge — \`scripts/purge-expired-data.mjs\` + \`.github/workflows/data-retention.yml\`:** a daily GitHub Actions cron, same shape as \`db-backup.yml\` (P0A-06) and reusing its \`NEON_DIRECT_DATABASE_URL\` secret. **Important:** this script does NOT import \`accountLifecycle.ts\` — this repo has no \`ts-node\`/\`tsx\` wired for standalone scripts (see \`prisma/seed.mjs\`, which follows the same pattern), so it's a fully self-contained script with its own \`new PrismaClient()\` and its own inline queries, matching \`seed.mjs\`'s established convention. It runs four jobs in sequence, logging each count independently:
+1. Hard-deletes any \`User\` whose \`deletionRequestedAt\` is more than 7 days old (cascades handle everything else — 12 of 14 \`User\`-FK'd models are \`onDelete: Cascade\`; \`AuditEvent\` is \`SetNull\` by design, \`Feedback\`/\`AppError\` have no FK).
+2. Purges \`AuditEvent\` rows older than 12 months.
+3. Purges \`AppError\` rows whose \`lastSeenAt\` (not \`firstSeenAt\`) is older than 90 days — an actively-recurring error is never purged.
+4. Applies the existing \`applyRetentionPolicy()\`-equivalent logic (\`ImportLog\`/\`DashboardSnapshot\`) using whatever retention settings an admin has saved globally (reads the \`AppSetting\` row directly, \`ownerId: 'global'\`, \`key: 'retention-settings'\`) — a safe no-op by default (\`DEFAULT_SETTINGS.retentionDays === -1\`).
+
+Deliberately not purged: \`Consent\` (6-year horizon, no near-term gap) and \`LoginAttempt\` (already self-pruning inline on every login/register call).
+
+**Also fixed while touching this area:** \`app/api/admin/cleanup/route.ts\` (the manual "Run cleanup now" admin button) was reading retention settings via the legacy filesystem-only \`readSettings()\`, disconnected from what the Settings UI actually saves (\`readSettingsForUser\`/\`writeSettingsForUser\`, DB-backed) — fixed to read from the same source the new cron script uses.
+
+**Uploaded originals:** confirmed by tracing both upload routes in full — raw file bytes are never persisted server-side, only the computed \`DashboardMetrics\` (a filesystem JSON write). Nothing to purge for this category.
+
+---
+
 ## GET /api/imports
 
 Returns full import log history.

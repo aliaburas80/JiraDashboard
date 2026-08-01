@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
-import { readSettings } from '@/services/settings/settings.service';
+import { readSettingsForUser } from '@/services/settings/settings.service';
 import { applyRetentionPolicy, clearAllData } from '@/services/settings/dataRetention.service';
 import { safeAuditEvent } from '@/lib/system-error-logger';
 import { getRequestId } from '@/lib/requestId';
@@ -29,7 +29,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, ...result });
   }
 
-  const settings = readSettings();
+  // P0B-04: was reading the legacy filesystem-only readSettings() here, which
+  // is disconnected from what an admin actually saves via the Settings UI
+  // (POST /api/admin/settings writes through readSettingsForUser's DB-backed
+  // store) — a real pre-existing inconsistency, fixed while this file was
+  // already being touched for the scheduled-purge-job work below.
+  const settings = await readSettingsForUser(session.userId);
   const result   = await applyRetentionPolicy(settings, session.userId);
   await safeAuditEvent({
     userId: session.userId,

@@ -40,6 +40,12 @@ model User {
   bio                      String?
   isActive                 Boolean   @default(true)
   mustChangePassword       Boolean   @default(false)
+  // P0B-04: set on self-service account-deletion request — isActive is flipped
+  // false in the same write, locking the account out immediately (reuses the
+  // existing EP-010 session-ejection check in GET /api/auth/me). A scheduled
+  // job hard-deletes the row once this is older than the grace period; an
+  // admin reactivating the account (isActive: true) clears this back to null.
+  deletionRequestedAt      DateTime?
   // EP-017: per-user privacy choice — "cloud" (default, current behavior) keeps uploaded
   // Jira data + computed metrics server-side; "local" keeps them in the user's own browser
   // only (never uploaded to this server), traded off against no admin visibility, no

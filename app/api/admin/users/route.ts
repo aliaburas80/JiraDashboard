@@ -203,10 +203,16 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Super admin accounts can only be modified by themselves.' }, { status: 403 });
   }
 
-  const data: { name?: string; role?: AppRole; isActive?: boolean } = {};
+  const data: { name?: string; role?: AppRole; isActive?: boolean; deletionRequestedAt?: null } = {};
   if (body.name?.trim()) data.name = body.name.trim();
   if (body.role) data.role = body.role;
-  if (typeof body.isActive === 'boolean') data.isActive = body.isActive;
+  if (typeof body.isActive === 'boolean') {
+    data.isActive = body.isActive;
+    // P0B-04: reactivating a user cancels any pending self-service deletion
+    // request — otherwise the grace-period purge job would still delete them
+    // out from under the admin's own reactivation.
+    if (body.isActive === true) data.deletionRequestedAt = null;
+  }
 
   const user = await prisma.user.update({
     where: { id: body.id },
