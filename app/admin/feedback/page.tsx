@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { AdminConsoleLayout } from '@/components/admin/AdminConsoleLayout';
@@ -24,6 +25,7 @@ interface FeedbackItem {
   userId:       string | null;
   userEmail:    string | null;
   createdAt:    string;
+  hasScreenshot: boolean;
 }
 
 const STATUS_OPTIONS = ['New', 'Reviewing', 'Accepted', 'Planned', 'In Progress', 'Released', 'Rejected'] as const;
@@ -54,9 +56,36 @@ function FeedbackRow({ item, onStatusChange }: {
   item:           FeedbackItem;
   onStatusChange: (id: string, status: string) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded]     = useState(false);
+  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [loadingScreenshot, setLoadingScreenshot] = useState(false);
+
+  // P0B-09: fetched lazily, one at a time, only when an admin explicitly
+  // clicks — the list response never carries raw screenshot bytes (see
+  // GET /api/admin/feedback's select).
+  async function viewScreenshot() {
+    setLoadingScreenshot(true);
+    try {
+      const res  = await fetch(`/api/admin/feedback/${item.id}/screenshot`);
+      const data = await res.json();
+      if (res.ok && data.screenshot) setScreenshot(data.screenshot);
+    } catch {
+      // Silently no-op — the "View" link simply stays clickable to retry.
+    } finally {
+      setLoadingScreenshot(false);
+    }
+  }
 
   return (
+    <>
+      {screenshot && typeof document !== 'undefined' && createPortal(
+        <div className={styles.lightboxBackdrop} role="dialog" aria-modal="true" onClick={() => setScreenshot(null)}>
+          <button type="button" className={styles.lightboxClose} onClick={() => setScreenshot(null)}>Close</button>
+          {/* eslint-disable-next-line @next/next/no-img-element -- a stored data URI, not an optimizable remote asset */}
+          <img src={screenshot} alt="Feedback screenshot" className={styles.lightboxImage} onClick={e => e.stopPropagation()} />
+        </div>,
+        document.body,
+      )}
     <tr>
       <td>
         <span className={clsx(styles.catPill, categoryClass(item.category))}>
@@ -107,10 +136,18 @@ function FeedbackRow({ item, onStatusChange }: {
           {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </td>
+      <td className={styles.muted}>
+        {item.hasScreenshot ? (
+          <button type="button" className={styles.screenshotLink} onClick={viewScreenshot} disabled={loadingScreenshot}>
+            {loadingScreenshot ? 'Loading…' : '📷 View'}
+          </button>
+        ) : '—'}
+      </td>
       <td className={`${styles.muted} ${styles.nowrap}`}>
         {new Date(item.createdAt).toLocaleDateString()}
       </td>
     </tr>
+    </>
   );
 }
 
@@ -238,6 +275,7 @@ export default function AdminFeedbackPage() {
                   <th>Page</th>
                   <th>Contact</th>
                   <th>Status</th>
+                  <th>Screenshot</th>
                   <th>Date</th>
                 </tr>
               </thead>

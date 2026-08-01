@@ -186,6 +186,70 @@
   color:        var(--dc-acc2, #FF8A4C);
 }
 
+// ── Screenshot capture (P0B-09) ─────────────────────────────────────────────────
+.screenshotBtn {
+  inline-size:   100%;
+  padding:       8px 10px;
+  border-radius: 8px;
+  border:        1px dashed var(--dc-bdr, rgba(255,255,255,0.15));
+  background:    transparent;
+  color:         var(--dc-p2, #909090);
+  font-size:     12px;
+  font-weight:   600;
+  cursor:        pointer;
+  font-family:   inherit;
+  transition:    background 0.1s, color 0.1s, border-color 0.1s;
+
+  &:hover:not(:disabled) { background: var(--dc-s3); color: var(--dc-p1); border-color: var(--dc-accent, #e85d12); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &:focus-visible {
+    outline:        2px solid var(--dc-accent, #e85d12);
+    outline-offset: 2px;
+  }
+}
+
+.screenshotPreviewWrap {
+  position:      relative;
+  border-radius: 8px;
+  overflow:      hidden;
+  border:        1px solid var(--dc-bdr2, rgba(255,255,255,0.08));
+}
+
+.screenshotPreview {
+  display:      block;
+  inline-size:  100%;
+  block-size:   auto;
+  max-block-size: 120px;
+  object-fit:   cover;
+}
+
+.screenshotRemoveBtn {
+  position:      absolute;
+  inset-block-start: 6px;
+  inset-inline-end:  6px;
+  padding:       2px 8px;
+  border-radius: 100px;
+  border:        none;
+  background:    rgba(0,0,0,0.6);
+  color:         #fff;
+  font-size:     10px;
+  font-weight:   700;
+  cursor:        pointer;
+  font-family:   inherit;
+
+  &:focus-visible {
+    outline:        2px solid #fff;
+    outline-offset: 2px;
+  }
+}
+
+.screenshotNote {
+  font-size:        11px;
+  color:            var(--dc-p3, #505050);
+  margin-block-start: 4px;
+}
+
 // ── Contact checkbox ───────────────────────────────────────────────────────────
 .checkRow {
   display:     flex;

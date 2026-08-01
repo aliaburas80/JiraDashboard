@@ -143,6 +143,59 @@
   &:hover { text-decoration: underline; }
 }
 
+// ── Screenshot view link + lightbox (P0B-09) ─────────────────────────────────
+.screenshotLink {
+  display:         inline-flex;
+  align-items:     center;
+  gap:             4px;
+  color:           var(--dc-accent, #e85d12);
+  background:      none;
+  border:          none;
+  padding:         0;
+  font-size:       11px;
+  font-weight:     600;
+  cursor:          pointer;
+  font-family:     inherit;
+
+  &:hover { text-decoration: underline; }
+  &:focus-visible { outline: 2px solid var(--dc-accent); outline-offset: 2px; }
+}
+
+.lightboxBackdrop {
+  position:        fixed;
+  inset:           0;
+  z-index:         var(--z-modal, 9999);
+  background:      rgba(0,0,0,0.75);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         24px;
+}
+
+.lightboxImage {
+  max-inline-size: 100%;
+  max-block-size:  90vh;
+  border-radius:   8px;
+  box-shadow:      0 20px 40px rgba(0,0,0,0.5);
+}
+
+.lightboxClose {
+  position:      fixed;
+  inset-block-start: 20px;
+  inset-inline-end:  20px;
+  padding:       6px 14px;
+  border-radius: 100px;
+  border:        none;
+  background:    #fff;
+  color:         #0f172a;
+  font-size:     12px;
+  font-weight:   700;
+  cursor:        pointer;
+  font-family:   inherit;
+
+  &:focus-visible { outline: 2px solid var(--dc-accent); outline-offset: 2px; }
+}
+
 // ── Status select ──────────────────────────────────────────────────────────────
 .statusSelect {
   padding:       4px 8px;

@@ -350,6 +350,16 @@ Deliberately not purged: \`Consent\` (6-year horizon, no near-term gap) and \`Lo
 
 ---
 
+## Feedback Screenshot Capture (P0B-09)
+
+**Client capture** (\`src/components/feedback/FeedbackButton.tsx\`, \`handleCaptureScreenshot()\`): opt-in only — the user clicks "📷 Add a screenshot" inside the already-open feedback modal. Dynamically \`import('html2canvas')\` (code-split; most submissions never trigger it), captures \`document.body\` at \`{ scale: 0.6 }\`, re-encodes via \`canvas.toDataURL('image/jpeg', 0.6)\` to keep the payload small. Shown as a thumbnail preview with a "Remove" option before the form can be submitted — never sent automatically. This is the resolution to the "do NOT auto-attach Jira data" constraint: a screenshot of a dashboard page visually contains Jira-derived content, but nothing is captured or attached without an explicit user action and a visible preview first, which is categorically different from a silent automatic data-attachment.
+
+**Storage:** \`Feedback.screenshotData String?\` — a plain blob column (like \`DashboardSnapshot.metricsJson\`), not a separate attachment table or object-storage service. \`POST /api/feedback\` validates it starts with \`data:image/\` and is under \`MAX_SCREENSHOT_LENGTH\` (~2MB), rejecting (never truncating) anything else.
+
+**Admin list payload guard — important if touching \`GET /api/admin/feedback\` again:** that route's \`findMany\` uses an explicit \`select\` that fetches \`screenshotData\` but the response handler immediately strips it and replaces it with \`hasScreenshot: boolean\` before returning JSON — do not change this to a bare \`findMany()\` without re-adding that strip, or a 30-row admin page load will ship tens of MB of base64 image data. The actual image is served only by \`GET /api/admin/feedback/[id]/screenshot\` (admin-only, 404 if none), fetched lazily by \`app/admin/feedback/page.tsx\`'s "View" link, rendered in a \`createPortal\`-based lightbox (portalled to \`document.body\` — a raw \`<div>\` sibling of \`<tr>\` inside \`<tbody>\` is invalid table markup).
+
+---
+
 ## GET /api/imports
 
 Returns full import log history.

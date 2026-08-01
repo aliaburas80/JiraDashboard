@@ -641,6 +641,15 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    id: 'feedback-widget', icon: 'email', title: 'Sending Feedback',
+    items: [
+      { q: 'How do I send feedback?', a: 'Click the "💬 Feedback" button in the bottom-right corner of any page (it\'s hidden on login/registration pages). Pick a category, write your message, and optionally rate how much it affects your work.' },
+      { q: 'Can I attach a screenshot?', a: 'Yes — click "📷 Add a screenshot" inside the feedback form. You\'ll see a preview of exactly what was captured before you submit, with a "Remove" option. Nothing is captured or sent unless you explicitly click that button.' },
+      { q: 'Does feedback ever include my Jira data automatically?', a: 'No. Feedback only auto-includes the page you were on, your browser, the app version, and — if you\'re logged in and opt to be contacted — your account email. A screenshot is only attached if you explicitly choose to add one and preview it first; nothing is ever attached automatically.' },
+      { q: 'What happens after I submit feedback?', a: 'It\'s recorded immediately and reviewed by the team, who can update its status (New → Reviewing → Accepted/Planned/In Progress → Released, or Rejected). If you opted to be contacted, you\'ll get a confirmation email, and may hear back at the email on your account.' },
+    ],
+  },
+  {
     id: 'troubleshooting', icon: 'tools', title: 'Troubleshooting',
     items: [
       { q: '"No file uploaded" or upload button does nothing', a: 'Check that your browser allows file access (some corporate security tools block file dialogs). Ensure the file is a .csv, .xls, or .xlsx — PDF and Word exports are not supported. Check that the file is under 20 MB. If you are on a slow connection, wait for the progress indicator to complete before navigating away.' },
@@ -665,7 +674,7 @@ const SECTION_GROUPS: { id: string; label: string; icon: string; sectionIds: str
   { id: 'ux',       label: 'Customization',   icon: 'palette', sectionIds: ['chart-customization','layout-builder','theme-customization','product-tour'] },
   { id: 'delivery', label: 'Delivery Intel',  icon: 'roadmap', sectionIds: ['roadmap','forecast','retro'] },
   { id: 'people',   label: 'People',          icon: 'people', sectionIds: ['member-requests','rec-owners'] },
-  { id: 'support',  label: 'Troubleshooting', icon: 'tools', sectionIds: ['troubleshooting'] },
+  { id: 'support',  label: 'Troubleshooting', icon: 'tools', sectionIds: ['feedback-widget', 'troubleshooting'] },
 ];
 
 const HERO_CARDS = [

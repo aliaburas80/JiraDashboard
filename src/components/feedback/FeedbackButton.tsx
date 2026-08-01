@@ -20,6 +20,11 @@ const CATEGORIES = [
 type ImpactLevel = 'Minor' | 'Affects My Work' | 'Blocks Me';
 const IMPACTS: ImpactLevel[] = ['Minor', 'Affects My Work', 'Blocks Me'];
 
+// P0B-09: reduced-scale JPEG at moderate quality keeps the capture small —
+// this is a submitted-with-the-report screenshot, not an archival copy.
+const SCREENSHOT_SCALE   = 0.6;
+const SCREENSHOT_QUALITY = 0.6;
+
 function getBrowserFamily(): string {
   if (typeof navigator === 'undefined') return '';
   const ua = navigator.userAgent;
@@ -40,6 +45,9 @@ export function FeedbackButton() {
   const [message,     setMessage]     = useState('');
   const [impact,      setImpact]      = useState<ImpactLevel>('Minor');
   const [canContact,  setCanContact]  = useState(false);
+  const [screenshot,  setScreenshot]  = useState<string | null>(null);
+  const [capturing,   setCapturing]   = useState(false);
+  const [screenshotError, setScreenshotError] = useState('');
   const firstFieldRef = useRef<HTMLSelectElement>(null);
   const triggerRef    = useRef<HTMLButtonElement>(null);
   const isAuthPage = [
@@ -74,8 +82,28 @@ export function FeedbackButton() {
     setMessage('');
     setImpact('Minor');
     setCanContact(false);
+    setScreenshot(null);
+    setScreenshotError('');
     setError('');
     setSubmitted(false);
+  }
+
+  // P0B-09: user-initiated, previewed capture — never automatic. The modal is
+  // already open and the user explicitly clicks this button; nothing is
+  // captured or sent without that action, and the resulting thumbnail is
+  // shown before submission so the user can remove/retake it.
+  async function handleCaptureScreenshot() {
+    setScreenshotError('');
+    setCapturing(true);
+    try {
+      const { default: html2canvas } = await import('html2canvas');
+      const canvas = await html2canvas(document.body, { scale: SCREENSHOT_SCALE, logging: false });
+      setScreenshot(canvas.toDataURL('image/jpeg', SCREENSHOT_QUALITY));
+    } catch {
+      setScreenshotError("Couldn't capture a screenshot. You can still submit without one.");
+    } finally {
+      setCapturing(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -94,6 +122,7 @@ export function FeedbackButton() {
           canContact,
           page:          window.location.pathname,
           browserFamily: getBrowserFamily(),
+          screenshot:    screenshot ?? undefined,
         }),
       });
       if (!res.ok) {
@@ -209,6 +238,34 @@ export function FeedbackButton() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                {/* Screenshot (P0B-09) — opt-in, previewed before submit; never automatic */}
+                <div className={styles.field}>
+                  <p className={styles.label}>Screenshot (optional)</p>
+                  {screenshot ? (
+                    <div className={styles.screenshotPreviewWrap}>
+                      {/* eslint-disable-next-line @next/next/no-img-element -- a locally captured data URI, not an optimizable remote asset */}
+                      <img src={screenshot} alt="Captured screenshot preview" className={styles.screenshotPreview} />
+                      <button
+                        type="button"
+                        className={styles.screenshotRemoveBtn}
+                        onClick={() => setScreenshot(null)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.screenshotBtn}
+                      onClick={handleCaptureScreenshot}
+                      disabled={capturing}
+                    >
+                      {capturing ? 'Capturing…' : '📷 Add a screenshot'}
+                    </button>
+                  )}
+                  {screenshotError && <p className={styles.screenshotNote}>{screenshotError}</p>}
                 </div>
 
                 {/* Contact opt-in */}
