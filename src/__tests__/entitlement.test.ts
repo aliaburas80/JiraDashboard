@@ -26,6 +26,12 @@ import {
   checkUploadEntitlement,
   beginUploadEntitlement,
   revertEntitlement,
+  beginReplacementUpload,
+  revertReplacementUpload,
+  consumeReplacementUpload,
+  consumeEntitlement,
+  createEntitlementForUser,
+  restoreEntitlement,
 } from '../lib/entitlement';
 
 beforeEach(() => jest.clearAllMocks());
@@ -41,8 +47,11 @@ test('TC-ENT-01: checkUploadEntitlement returns allowed=true for eligible user',
 // ── TC-ENT-02: consumed user is blocked ───────────────────────────────────────
 
 test('TC-ENT-02: checkUploadEntitlement returns allowed=false for consumed user within window', async () => {
-  const expiresAt = new Date(Date.now() + 10 * 86_400_000); // 10 days remaining
-  mockFindUnique.mockResolvedValueOnce({ status: 'consumed', expiresAt, consumedAt: new Date(), updatedAt: new Date() });
+  const expiresAt  = new Date(Date.now() + 10 * 86_400_000); // 10 days remaining
+  // 5 days ago — well outside the 24h replacement window (P0B-02), so this
+  // exercises the plain "already consumed" block, not a replacement.
+  const consumedAt = new Date(Date.now() - 5 * 86_400_000);
+  mockFindUnique.mockResolvedValueOnce({ status: 'consumed', expiresAt, consumedAt, replacementUsedAt: null, updatedAt: new Date() });
   const result = await checkUploadEntitlement('user-2', false);
   expect(result.allowed).toBe(false);
   if (!result.allowed) expect(result.reason).toBe('consumed');
@@ -137,4 +146,140 @@ test('TC-ENT-10: getEntitlementForUser recovers a stuck processing state older t
   expect(mockUpdate).toHaveBeenCalledWith(
     expect.objectContaining({ data: expect.objectContaining({ status: 'eligible' }) }),
   );
+});
+
+// ── P0B-02: replacement upload (master plan §4.1 — one replacement within 24h) ─
+
+test('TC-ENT-11: checkUploadEntitlement allows a replacement within the 24h window with no prior replacement', async () => {
+  const consumedAt = new Date(Date.now() - 60_000); // 1 minute ago
+  const expiresAt  = new Date(Date.now() + 29 * 86_400_000);
+  mockFindUnique.mockResolvedValueOnce({ status: 'consumed', expiresAt, consumedAt, replacementUsedAt: null, updatedAt: new Date() });
+  const result = await checkUploadEntitlement('user-9', false);
+  expect(result.allowed).toBe(true);
+  expect(result.isReplacement).toBe(true);
+});
+
+test('TC-ENT-12: checkUploadEntitlement blocks a replacement attempt past the 24h window', async () => {
+  const consumedAt = new Date(Date.now() - 25 * 3600_000); // 25 hours ago
+  const expiresAt  = new Date(Date.now() + 29 * 86_400_000);
+  mockFindUnique.mockResolvedValueOnce({ status: 'consumed', expiresAt, consumedAt, replacementUsedAt: null, updatedAt: new Date() });
+  const result = await checkUploadEntitlement('user-10', false);
+  expect(result.allowed).toBe(false);
+  if (!result.allowed) expect(result.reason).toBe('consumed');
+});
+
+test('TC-ENT-13: checkUploadEntitlement blocks a second replacement attempt once already used', async () => {
+  const consumedAt        = new Date(Date.now() - 60_000);
+  const expiresAt         = new Date(Date.now() + 29 * 86_400_000);
+  const replacementUsedAt = new Date(Date.now() - 30_000);
+  mockFindUnique.mockResolvedValueOnce({ status: 'consumed', expiresAt, consumedAt, replacementUsedAt, updatedAt: new Date() });
+  const result = await checkUploadEntitlement('user-11', false);
+  expect(result.allowed).toBe(false);
+  if (!result.allowed) expect(result.reason).toBe('consumed');
+});
+
+test('TC-ENT-14: beginReplacementUpload locks via replacementUsedAt and returns true', async () => {
+  mockUpdateMany.mockResolvedValueOnce({ count: 1 });
+  const result = await beginReplacementUpload('user-12');
+  expect(result).toBe(true);
+  expect(mockUpdateMany).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: expect.objectContaining({ status: 'consumed', replacementUsedAt: null }),
+      data:  expect.objectContaining({ replacementUsedAt: expect.any(Date) }),
+    }),
+  );
+  // Regression guard: locking a replacement must never touch status.
+  const call = mockUpdateMany.mock.calls[0][0];
+  expect(call.data).not.toHaveProperty('status');
+});
+
+test('TC-ENT-15: beginReplacementUpload returns false when already used or outside the window', async () => {
+  mockUpdateMany.mockResolvedValueOnce({ count: 0 });
+  const result = await beginReplacementUpload('user-13');
+  expect(result).toBe(false);
+});
+
+test('TC-ENT-16: revertReplacementUpload clears replacementUsedAt and never touches status', async () => {
+  mockUpdateMany.mockResolvedValueOnce({ count: 1 });
+  await revertReplacementUpload('user-14');
+  expect(mockUpdateMany).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: expect.objectContaining({ userId: 'user-14', status: 'consumed' }),
+      data:  { replacementUsedAt: null },
+    }),
+  );
+  // Regression guard: a failed replacement must leave status at 'consumed' —
+  // flipping it to 'eligible' would wrongly grant a fresh 30-day trial.
+  const call = mockUpdateMany.mock.calls[0][0];
+  expect(call.data).not.toHaveProperty('status');
+});
+
+test('TC-ENT-17: consumeReplacementUpload only updates importLogId, never consumedAt/expiresAt/status', async () => {
+  const mockTxUpdate = jest.fn(async (_args: { where: unknown; data: Record<string, unknown> }) => ({}));
+  const tx = { entitlement: { update: mockTxUpdate } } as any;
+
+  await consumeReplacementUpload(tx, 'user-15', 'importlog-99');
+
+  expect(mockTxUpdate).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: { userId: 'user-15' },
+      data:  expect.objectContaining({ importLogId: 'importlog-99' }),
+    }),
+  );
+  const call = mockTxUpdate.mock.calls[0][0];
+  expect(call.data).not.toHaveProperty('consumedAt');
+  expect(call.data).not.toHaveProperty('expiresAt');
+  expect(call.data).not.toHaveProperty('status');
+});
+
+// ── Closing pre-existing coverage gaps ──────────────────────────────────────────
+
+test('TC-ENT-18: consumeEntitlement sets status, consumedAt, expiresAt (+30d), and importLogId', async () => {
+  const mockTxUpdate = jest.fn(async (_args: { where: unknown; data: Record<string, any> }) => ({}));
+  const tx = { entitlement: { update: mockTxUpdate } } as any;
+
+  const before = Date.now();
+  await consumeEntitlement(tx, 'user-16', 'importlog-1');
+  const after = Date.now();
+
+  expect(mockTxUpdate).toHaveBeenCalledWith(expect.objectContaining({
+    where: { userId: 'user-16' },
+    data: expect.objectContaining({
+      status:      'consumed',
+      importLogId: 'importlog-1',
+    }),
+  }));
+  const data = mockTxUpdate.mock.calls[0][0].data;
+  expect(data.consumedAt.getTime()).toBeGreaterThanOrEqual(before);
+  expect(data.consumedAt.getTime()).toBeLessThanOrEqual(after);
+  expect(data.expiresAt.getTime() - data.consumedAt.getTime()).toBe(30 * 86_400_000);
+});
+
+test('TC-ENT-19: createEntitlementForUser creates an eligible row for the given user/workspace', async () => {
+  const mockTxCreate = jest.fn(async () => ({}));
+  const tx = { entitlement: { create: mockTxCreate } } as any;
+
+  await createEntitlementForUser(tx, 'user-17', 'ws-1');
+
+  expect(mockTxCreate).toHaveBeenCalledWith({
+    data: { userId: 'user-17', workspaceId: 'ws-1', status: 'eligible' },
+  });
+});
+
+test('TC-ENT-20: restoreEntitlement resets status/consumedAt/expiresAt/importLogId/replacementUsedAt', async () => {
+  mockUpdate.mockResolvedValueOnce({});
+  await restoreEntitlement('user-18', 'admin-1', 'goodwill reset');
+
+  expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
+    where: { userId: 'user-18' },
+    data: expect.objectContaining({
+      status:            'eligible',
+      consumedAt:        null,
+      expiresAt:         null,
+      importLogId:       null,
+      replacementUsedAt: null,
+      restoredBy:        'admin-1',
+      restoredNote:      'goodwill reset',
+    }),
+  }));
 });

@@ -16,7 +16,28 @@ jest.mock('@/services/storage/userStorageProvider.service', () => ({
   getVerifiedUserStorageProviderInstance: jest.fn(async () => null),
 }));
 jest.mock('@/lib/workspace', () => ({
-  getMetricsScopeKeyForUser: jest.fn(async () => 'user:user-1'),
+  getWorkspaceForUser: jest.fn(async () => null),
+}));
+// P0B-02: this route now goes through the same trial-entitlement gate as
+// the single-file upload route — mock at the prisma boundary (not
+// @/lib/entitlement) so the real state-machine logic still runs, matching
+// the pattern already used by uploadEdgeCases.test.ts/uploadUserId.test.ts.
+jest.mock('@/lib/prisma', () => ({
+  prisma: {
+    importLog: { create: jest.fn(async () => ({ id: 'il-1' })) },
+    entitlement: {
+      findUnique: jest.fn(async () => ({ id: 'ent-1', status: 'eligible', expiresAt: null, consumedAt: null, replacementUsedAt: null, updatedAt: new Date() })),
+      update:     jest.fn(async () => ({})),
+      updateMany: jest.fn(async () => ({ count: 1 })),
+    },
+    $transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => {
+      const tx = {
+        importLog:   { create: jest.fn(async () => ({ id: 'il-tx-1' })) },
+        entitlement: { update: jest.fn(async () => ({})) },
+      };
+      return fn(tx);
+    }),
+  },
 }));
 jest.mock('@/services/metrics/latestMetricsStorage', () => ({
   writeLatestMetrics: jest.fn(),

@@ -5,6 +5,18 @@
 
 ---
 
+## Free Trial: Replacement Upload, and a Real Expiry (2026-08-01, P0)
+
+Two changes to the free trial. First, if something goes wrong with your one free analysis — wrong
+file, need to re-run it — you now get one replacement upload within 24 hours of your original
+successful analysis, at no cost to your 30-day access window. Second, once your 30-day trial
+window actually ends, your dashboard now correctly stops showing your data (previously it kept
+working indefinitely after expiry — only starting a brand new upload was blocked). You'll be
+redirected to the upload page with an explanation; "Try a sample first" there always works, free,
+regardless of your trial status. See `TODO-List.md` `P0B-02` for details.
+
+---
+
 ## Registration Persona List Restored, Secondary Roles Added (2026-07-31, P0)
 
 The "Your primary role" list at `/register` is back to its original 11 options (Scrum Master, Agile

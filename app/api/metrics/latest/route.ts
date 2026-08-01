@@ -8,6 +8,7 @@ import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { readLatestMetrics, writeLatestMetrics } from '@/services/metrics/latestMetricsStorage';
 import { getMetricsScopeKeyForUser } from '@/lib/workspace';
 import { getVerifiedUserStorageProviderInstance } from '@/services/storage/userStorageProvider.service';
+import { getEntitlementForUser } from '@/lib/entitlement';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,21 @@ export async function GET() {
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+  }
+
+  // EP-015/P0B-02: master plan §4.1 — after expiry, disable access to the
+  // private workspace (preserve access to the demo dataset instead, via '/'
+  // — see app/page.tsx's handleSampleData()). This is the one true chokepoint
+  // every dashboard page funnels through via loadMetricsWithSource().
+  if (session.role !== 'admin') {
+    const ent = await getEntitlementForUser(session.userId).catch(() => null);
+    if (ent?.status === 'expired') {
+      return NextResponse.json({
+        available: false,
+        reason:    'expired',
+        message:   'Your 30-day free trial has expired.',
+      });
+    }
   }
 
   let sync: any = null;
