@@ -38,6 +38,9 @@ jest.mock('@/lib/workspace', () => ({
 jest.mock('@/lib/entitlement', () => ({
   createEntitlementForUser: jest.fn(async () => ({})),
 }));
+jest.mock('@/lib/consent', () => ({
+  recordConsent: jest.fn(async () => ({})),
+}));
 jest.mock('@/lib/system-error-logger', () => ({
   safeAuditEvent: jest.fn(async () => {}),
 }));
@@ -148,4 +151,24 @@ test('TC-REG-06: missing secondaryPersonas defaults to an empty array', async ()
   expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({
     data: expect.objectContaining({ secondaryPersonas: [] }),
   }));
+});
+
+// P0B-03: a "terms_and_privacy" Consent row must be recorded alongside the
+// existing flat User.termsAcceptedAt/termsVersion fields, inside the same
+// registration transaction.
+
+test('TC-REG-07: registration records a terms_and_privacy consent row', async () => {
+  const { recordConsent } = await import('@/lib/consent');
+  const { POST } = await import('../../app/api/auth/register/route');
+
+  const res = await POST(request(validBody));
+  expect(res.status).toBe(200);
+
+  expect(recordConsent).toHaveBeenCalledWith(
+    'user-1',
+    'terms_and_privacy',
+    true,
+    expect.objectContaining({ source: 'registration', ipAddress: '127.0.0.1' }),
+    expect.anything(),
+  );
 });

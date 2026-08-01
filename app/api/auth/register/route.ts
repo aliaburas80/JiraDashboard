@@ -11,6 +11,7 @@ import { createWorkspaceForUser } from '@/lib/workspace';
 import { safeAuditEvent } from '@/lib/system-error-logger';
 import { PERSONAS, CURRENT_TERMS_VERSION, type Persona } from '@/lib/personas';
 import { createEntitlementForUser } from '@/lib/entitlement';
+import { recordConsent } from '@/lib/consent';
 import { resolveRequestOrigin } from '@/lib/url';
 import { getRequestId } from '@/lib/requestId';
 
@@ -131,6 +132,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     });
     const ws = await createWorkspaceForUser(tx, created.id, created.name);
     await createEntitlementForUser(tx, created.id, ws.id);
+    // P0B-03: append-only consent record, alongside the existing flat
+    // termsAcceptedAt/termsVersion fields on User (kept unchanged above).
+    await recordConsent(created.id, 'terms_and_privacy', true, {
+      version:   CURRENT_TERMS_VERSION,
+      source:    'registration',
+      ipAddress: ip,
+    }, tx);
     return { user: created };
   });
 

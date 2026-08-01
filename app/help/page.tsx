@@ -387,6 +387,14 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    id: 'privacy-consent', icon: 'lock', title: 'Privacy & Consent',
+    items: [
+      { q: 'Where do I see what I agreed to?', a: 'Go to /profile (Settings) → Privacy to see your Terms of Use / Privacy Policy acceptance record — which version you accepted and when — plus links to the current Terms of Use and Privacy Policy.' },
+      { q: 'What is the Analytics toggle in Settings → Privacy?', a: 'An opt-in preference for anonymous product-usage analytics, off by default. Delivery Clarity does not currently collect any product analytics at all, so this toggle has no effect today — your choice will be honored once analytics collection exists.' },
+      { q: 'Can I withdraw my Terms & Privacy consent?', a: 'That consent is required to use Delivery Clarity and can\'t be withdrawn while keeping your account active. To withdraw it, email ali.aburas@deliveryclarity.app to request account deletion.' },
+    ],
+  },
+  {
     id: 'workspace-reset', icon: 'delete', title: 'Resetting a User\'s Workspace Data (Admin)',
     items: [
       { q: 'What does "Reset data" do on Admin → User Management?', a: 'It clears a user\'s uploaded workspace data — their import logs, dashboard snapshots, Jira connections, and dashboard metrics file — back to an empty state. It never touches the account itself: their login, role, and profile stay exactly as they were, and they can sign in and upload again immediately afterward.' },
@@ -651,7 +659,7 @@ const SECTION_GROUPS: { id: string; label: string; icon: string; sectionIds: str
   { id: 'planning', label: 'Planning',        icon: 'calendar', sectionIds: ['quarters','kanban','sprint','ownership','epic-readiness','release-readiness'] },
   { id: 'analysis', label: 'Analysis',        icon: 'search', sectionIds: ['justification','flow','labels','relations','teams','portfolio','release-confidence','filter-bar'] },
   { id: 'export',   label: 'Export & Data',   icon: 'upload', sectionIds: ['export-guide','aliases','api','explorer-export','export-sheets','executive-pdf'] },
-  { id: 'system',   label: 'System',          icon: 'cloud', sectionIds: ['cloud-sync','cloud-storage','data-storage-mode','diagnostics','deployment','about','branding'] },
+  { id: 'system',   label: 'System',          icon: 'cloud', sectionIds: ['cloud-sync','cloud-storage','data-storage-mode','privacy-consent','diagnostics','deployment','about','branding'] },
   { id: 'ux',       label: 'Customization',   icon: 'palette', sectionIds: ['chart-customization','layout-builder','theme-customization','product-tour'] },
   { id: 'delivery', label: 'Delivery Intel',  icon: 'roadmap', sectionIds: ['roadmap','forecast','retro'] },
   { id: 'people',   label: 'People',          icon: 'people', sectionIds: ['member-requests','rec-owners'] },

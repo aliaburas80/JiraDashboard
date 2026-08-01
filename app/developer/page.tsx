@@ -306,6 +306,26 @@ Entitlement checks, rate limiting, \`ImportLog\`/\`DashboardSnapshot\` writes, a
 
 ---
 
+## Consent & Privacy Controls (P0B-03)
+
+**Purpose:** Append-only consent record per purpose, replacing the old single overwrite-once \`User.termsAcceptedAt\`/\`termsVersion\` pair (EP-014) as the actual audit-grade record the privacy policy already promises ("Consent records: lifetime of account plus 6 years").
+
+**Model:** \`Consent\` (\`prisma/schema.prisma\`) — \`id\`, \`userId\`, \`purpose\` (\`"terms_and_privacy" | "analytics"\`), \`granted\`, \`version\`, \`source\` (\`"registration" | "settings"\`), \`ipAddress\`, \`userAgent\`, \`createdAt\`. **Never updated in place** — one row per grant/withdrawal event; current status for a purpose is always the latest row for \`(userId, purpose)\`.
+
+**\`src/lib/consent.ts\`:**
+- \`recordConsent(userId, purpose, granted, opts, tx?)\` — inserts a row. Accepts an optional transaction client (same pattern as \`src/lib/entitlement.ts\`'s \`consumeEntitlement\`), so it can be called inside \`prisma.$transaction\` at registration.
+- \`getConsentStatus(userId)\` — reads the latest row per purpose. For \`terms_and_privacy\` only, **falls back to the legacy \`User.termsAcceptedAt\`/\`termsVersion\` fields when no \`Consent\` row exists** — true for every account that registered before this shipped. \`analytics.decided\` distinguishes "never asked" (\`false\`, no row) from "explicitly declined" (\`false\` + \`decided: true\`).
+
+**\`POST /api/auth/register\`:** writes a \`terms_and_privacy\` consent row inside the same \`prisma.$transaction\` as user creation, alongside the unchanged legacy \`User\` field writes.
+
+**\`GET\`/\`POST /api/consent\`** (session-authenticated): \`GET\` returns \`getConsentStatus()\`. \`POST\` accepts only \`{purpose: 'analytics', granted: boolean}\` — \`purpose: 'terms_and_privacy'\` is rejected with 400, since withdrawing required consent while keeping the account active isn't a state this endpoint models (that's account deletion, \`P0B-04\`). A successful \`POST\` writes an \`AuditEvent\` (\`eventType: 'consent_update'\`).
+
+**UI:** \`/profile\` (Settings) → **Privacy** tab (\`src/components/settings/PrivacyTab.tsx\`) shows the terms-acceptance record and an Analytics opt-in toggle (default off). The toggle's copy is explicit that no analytics collection exists yet in this repo — it has zero functional effect today; it exists so \`P1-06\` (GA4 integration, which explicitly depends on \`P0B-03\`) has a real consent record to honor once analytics collection ships.
+
+**Out of scope (this ticket):** account deletion/export jobs and automated retention-purge for any data category (\`P0B-04\`); forced re-consent on a \`termsVersion\` bump; any GA4/cookie-consent-banner UI; editing the 7-language \`legal-i18n\` policy text.
+
+---
+
 ## GET /api/imports
 
 Returns full import log history.
