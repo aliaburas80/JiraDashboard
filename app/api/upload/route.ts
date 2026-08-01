@@ -21,6 +21,9 @@ import {
   beginUploadEntitlement,
   consumeEntitlement,
   revertEntitlement,
+  beginReplacementUpload,
+  consumeReplacementUpload,
+  revertReplacementUpload,
 } from '@/lib/entitlement';
 
 // ---------------------------------------------------------------------------
@@ -104,11 +107,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!entCheck.allowed) {
     return NextResponse.json({ error: entCheck.message, reason: entCheck.reason }, { status: 403 });
   }
+  // EP-015: master plan §4.1 — one replacement upload allowed within 24h of
+  // the original successful analysis. A replacement never touches
+  // status/consumedAt/expiresAt — see src/lib/entitlement.ts.
+  const isReplacement = !isAdmin && entCheck.isReplacement === true;
 
   // Mark entitlement as 'processing' (optimistic lock — prevents duplicate submissions).
-  // Admins skip this step.
+  // Admins skip this step. A replacement locks via replacementUsedAt instead
+  // of status, since status must stay 'consumed' throughout.
   if (!isAdmin) {
-    const locked = await beginUploadEntitlement(userId);
+    const locked = isReplacement ? await beginReplacementUpload(userId) : await beginUploadEntitlement(userId);
     if (!locked) {
       return NextResponse.json(
         { error: 'An upload is already in progress. Please wait a moment and try again.' },
@@ -120,6 +128,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // --- DB-backed rate limit by userId (20 uploads / 15 min, survives cold starts) ---
   const { limited, retryAfterSeconds } = await checkUploadRateLimit(userId);
   if (limited) {
+    if (!isAdmin) await (isReplacement ? revertReplacementUpload(userId) : revertEntitlement(userId));
     const mins = Math.floor(retryAfterSeconds / 60);
     const secs = retryAfterSeconds % 60;
     const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
@@ -134,12 +143,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     formData = await req.formData();
   } catch {
+    // P0B-02: every early return after the entitlement lock must revert it —
+    // a stuck 'processing' self-heals after 10 minutes, but a stuck
+    // replacementUsedAt has no such recovery (it permanently forecloses the
+    // one-time replacement grant), so this can't be left to self-heal.
+    if (!isAdmin) await (isReplacement ? revertReplacementUpload(userId) : revertEntitlement(userId));
     return NextResponse.json({ error: 'Invalid multipart form data.' }, { status: 400 });
   }
 
   const file = formData.get('file');
 
   if (!file || !(file instanceof Blob)) {
+    if (!isAdmin) await (isReplacement ? revertReplacementUpload(userId) : revertEntitlement(userId));
     return NextResponse.json(
       { error: 'No file uploaded. Please upload a Jira Excel or CSV export.' },
       { status: 400 },
@@ -151,6 +166,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const ext = getExtension(originalname);
 
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    if (!isAdmin) await (isReplacement ? revertReplacementUpload(userId) : revertEntitlement(userId));
     return NextResponse.json(
       {
         error: `Unsupported file type "${ext}". Upload a .csv, .xlsx, or .xls Jira export.`,
@@ -161,6 +177,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   // --- File size check ---
   if (file.size > maxFileSizeBytes) {
+    if (!isAdmin) await (isReplacement ? revertReplacementUpload(userId) : revertEntitlement(userId));
     return NextResponse.json(
       {
         error:
@@ -184,7 +201,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // for why a strict OLE-only .xls check would reject real Jira exports.
   const signatureError = validateFileSignature(buffer, ext);
   if (signatureError) {
-    if (!isAdmin) await revertEntitlement(userId);
+    if (!isAdmin) await (isReplacement ? revertReplacementUpload(userId) : revertEntitlement(userId));
     return NextResponse.json({ error: signatureError }, { status: 400 });
   }
 
@@ -196,7 +213,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     parseResult = parseJiraFile(fileArg);
   } catch (err) {
     // Parse failed — revert entitlement so user can try again
-    if (!isAdmin) await revertEntitlement(userId);
+    if (!isAdmin) await (isReplacement ? revertReplacementUpload(userId) : revertEntitlement(userId));
     const message = err instanceof Error ? err.message : 'Unable to process Jira export file.';
     return NextResponse.json({ error: message }, { status: 400 });
   }
@@ -223,7 +240,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   if (!validation.isValid) {
     // EP-015: validation failure does NOT consume entitlement — revert to eligible
-    if (!isAdmin) await revertEntitlement(userId);
+    if (!isAdmin) await (isReplacement ? revertReplacementUpload(userId) : revertEntitlement(userId));
     const importLog = appendImportLog(
       buildImportLog({
         file: fileArg,
@@ -325,7 +342,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         }});
 
         // Consume entitlement atomically — links entitlement to this ImportLog
-        if (!isAdmin) await consumeEntitlement(tx, userId, log.id);
+        if (!isAdmin) await (isReplacement ? consumeReplacementUpload(tx, userId, log.id) : consumeEntitlement(tx, userId, log.id));
       }).catch(() => {});
 
       // Push-on-change: sync new data to cloud immediately (non-blocking)
@@ -338,10 +355,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if ((metrics.flow as any).itemsCapped) {
       warnings.push(`Large export: ${(metrics.flow as any).totalItemCount?.toLocaleString()} items detected. Dashboard shows top 5,000 highest-risk items. All aggregate metrics are accurate.`);
     }
-    return NextResponse.json({ metrics, warnings, importLog, columnMapping: parseResult.columnMapping });
+    return NextResponse.json({ metrics, warnings, importLog, columnMapping: parseResult.columnMapping, isReplacement });
   } catch (error) {
     // EP-015: server error — revert entitlement so user can retry
-    if (!isAdmin) await revertEntitlement(userId).catch(() => {});
+    if (!isAdmin) await (isReplacement ? revertReplacementUpload(userId) : revertEntitlement(userId)).catch(() => {});
     appendImportLog(
       buildImportLog({ file: fileArg, status: 'failed', error: error instanceof Error ? error.message : String(error) }),
     );

@@ -81,6 +81,8 @@ model Entitlement {
   expiresAt   DateTime? // consumedAt + 30 days
   importLogId String? // the ImportLog that consumed the entitlement
 
+  replacementUsedAt DateTime? // EP-015: set when the one 24h-window replacement upload is used
+
   restoredBy   String? // admin userId who manually restored
   restoredAt   DateTime?
   restoredNote String? // reason for restoration

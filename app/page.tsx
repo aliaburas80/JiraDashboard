@@ -122,22 +122,42 @@ export default function HomePage() {
     finally { setLoading(false); }
   }, [resolveDataStorageMode, router]);
 
-  // ── Multi-file merge ──────────────────────────────────────────────────────
+  // ── Sample dataset ─────────────────────────────────────────────────────────
+  // P0B-02: always processed client-side via processFileLocally(), regardless
+  // of dataStorageMode — trying the sample must never touch /api/upload, since
+  // that route both consumes the real trial entitlement and overwrites the
+  // caller's real server-side dashboard data. A "demo dataset" preview has to
+  // be free and non-destructive for the master plan's post-expiry fallback
+  // (§4.1: "preserve access to a demo dataset") to mean anything.
   const handleSampleData = useCallback(async function handleSampleData() {
-    setLoadingSample(true); setError(null);
+    setLoadingSample(true); setError(null); setMergeStats(null);
+    setDataQuality(null); setFieldImpacts(null); setColumnMapping(null); setPendingMetrics(null);
     try {
       const res  = await fetch('/samples/sample-jira-export.csv');
       const blob = await res.blob();
       const file = new File([blob], 'sample-jira-export.csv', { type: 'text/csv' });
       // Track onboarding
       try { const { markStepDone } = await import('@/lib/onboarding'); markStepDone('upload_file'); } catch {}
-      await handleFile(file);
+
+      const result = await processFileLocally(file);
+      if ('error' in result) { setError(result.error); return; }
+
+      if (result.columnMapping) {
+        setPendingMetrics(result.metrics);
+        setColumnMapping(result.columnMapping);
+        setDataQuality(result.metrics?.dataQuality ?? null);
+        setFieldImpacts(result.metrics?.fieldImpacts ?? null);
+      } else {
+        clearMetrics(); // old sample/import data must not survive a fresh sample load
+        await saveMetrics(result.metrics);
+        router.push('/dashboard?fresh=1');
+      }
     } catch {
       setError('Failed to load sample data. Please try uploading your own file.');
     } finally {
       setLoadingSample(false);
     }
-  }, [handleFile]);
+  }, [router]);
 
   // Landing page's "Try Sample Dataset" CTA links here with ?sample=1 so the
   // sample loads immediately instead of requiring an extra click.

@@ -2,6 +2,7 @@
 
 import { fetchCurrentUser } from '@/lib/currentUser';
 import { setStoredOwner, tagCurrentOwner as tagOwner, isOwnedByCurrentUser } from '@/lib/localDataOwnership';
+import { setLoadErrorSignal } from '@/lib/loadErrorSignal';
 
 const STORAGE_KEY = "dc_metrics_v2";
 const SOURCE_KEY  = "dc_metrics_source_v1";
@@ -137,6 +138,23 @@ export async function loadMetricsWithSource(): Promise<LoadMetricsResult> {
   try {
     const res = await fetch('/api/metrics/latest', { cache: 'no-store' });
     const data = await res.json().catch(() => null);
+
+    // P0B-02: an authoritative "expired" block must never fall through to a
+    // stale localStorage copy below — that would make the server-side expiry
+    // check a no-op for any returning user (consuming a trial requires having
+    // already loaded the dashboard at least once, so nearly every expired
+    // user has exactly this cache). Every other "no data yet" case is a
+    // legitimate resilience fallback; this one specifically is not.
+    if (res.ok && data?.available === false && data?.reason === 'expired') {
+      const message = data.message ?? 'Your 30-day free trial has expired.';
+      // Guarantees the explanation survives regardless of whether the calling
+      // page redirects via redirectWithLoadError(router) or a bare
+      // router.replace('/') on null metrics — not every page uses the former.
+      setLoadErrorSignal(message);
+      const info: MetricsSourceInfo = { source: 'none', status: 'error', error: message, message };
+      saveSource(info);
+      return { ...info, metrics: null, fallbackUsed: false };
+    }
 
     if (res.ok && data?.available === false) {
       cloudError = data?.message ?? 'No bucket/server metrics are available yet.';

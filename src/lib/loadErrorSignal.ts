@@ -22,10 +22,14 @@ interface RouterLike {
 }
 
 /**
- * Call from a data-load catch block instead of a bare router.replace('/').
- * Records a message for the upload page to show, then performs the redirect.
+ * Records a message for the upload page to show, without navigating. Exposed
+ * separately from redirectWithLoadError() so code with no router reference
+ * (e.g. loadMetricsWithSource(), which many pages call before deciding how to
+ * redirect on null data — some via redirectWithLoadError, others via a bare
+ * router.replace('/')) can still guarantee the message survives the redirect
+ * regardless of which pattern the caller uses.
  */
-export function redirectWithLoadError(router: RouterLike, message?: string): void {
+export function setLoadErrorSignal(message?: string): void {
   try {
     sessionStorage.setItem(
       KEY,
@@ -35,6 +39,14 @@ export function redirectWithLoadError(router: RouterLike, message?: string): voi
     // sessionStorage unavailable (private browsing, etc.) — redirect still proceeds,
     // just without the explanatory banner.
   }
+}
+
+/**
+ * Call from a data-load catch block instead of a bare router.replace('/').
+ * Records a message for the upload page to show, then performs the redirect.
+ */
+export function redirectWithLoadError(router: RouterLike, message?: string): void {
+  setLoadErrorSignal(message);
   router.replace('/');
 }
 
