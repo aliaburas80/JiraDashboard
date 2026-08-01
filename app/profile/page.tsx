@@ -8,6 +8,7 @@ import { SvgIcon } from '@/components/ui/SvgIcon';
 import ProfileTab, { type ProfileFields } from '@/components/settings/ProfileTab';
 import StorageTab from '@/components/settings/StorageTab';
 import SecurityTab from '@/components/settings/SecurityTab';
+import PrivacyTab from '@/components/settings/PrivacyTab';
 import type { AppRole } from '@/lib/roles';
 
 interface Profile extends ProfileFields {
@@ -34,11 +35,12 @@ const EMPTY_PROFILE: Profile = {
 // Settings side-menu — each entry only shows for roles listed in `roles`; omitting
 // `roles` means visible to everyone. Nothing is currently role-restricted, but the
 // gate is built in from the start so a future role-scoped setting doesn't need a rewrite.
-interface SettingsTab { id: 'profile' | 'storage' | 'security'; label: string; icon: string; roles?: AppRole[] }
+interface SettingsTab { id: 'profile' | 'storage' | 'security' | 'privacy'; label: string; icon: string; roles?: AppRole[] }
 const SETTINGS_TABS: SettingsTab[] = [
   { id: 'profile',  label: 'Profile',  icon: 'person' },
   { id: 'storage',  label: 'Storage',  icon: 'cloud' },
   { id: 'security', label: 'Security', icon: 'lock' },
+  { id: 'privacy',  label: 'Privacy',  icon: 'shield' },
 ];
 const VALID_SETTINGS_TABS: SettingsTab['id'][] = SETTINGS_TABS.map(t => t.id);
 
@@ -203,6 +205,7 @@ export default function ProfilePage() {
               />
             )}
             {activeTab === 'security' && <SecurityTab onToast={showToast} />}
+            {activeTab === 'privacy' && <PrivacyTab onToast={showToast} />}
           </div>
         </div>
       </div>

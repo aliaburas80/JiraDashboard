@@ -61,6 +61,30 @@ model User {
   entitlement          Entitlement?
   storageProvider      UserStorageProvider?
   issueTypeHierarchy   UserIssueTypeHierarchy?
+  consents             Consent[]
+}
+
+// ── Consent (P0B-03) ────────────────────────────────────────────────────────
+// Append-only consent record — one row per grant/withdrawal event, never
+// updated in place. Current status for a purpose = the latest row for
+// (userId, purpose). Satisfies the privacy policy's "consent records...
+// retained" promise (src/lib/legal-i18n/en.ts §6), which the old flat
+// User.termsAcceptedAt/termsVersion write-once fields never actually did.
+
+model Consent {
+  id        String   @id @default(cuid())
+  userId    String
+  purpose   String // "terms_and_privacy" | "analytics"
+  granted   Boolean
+  version   String   @default("") // e.g. CURRENT_TERMS_VERSION for terms_and_privacy; "" for analytics
+  source    String // "registration" | "settings"
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, createdAt])
 }
 
 // ── Trial Entitlement (EP-015) ─────────────────────────────────────────────────

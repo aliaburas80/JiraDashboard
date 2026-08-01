@@ -5,6 +5,18 @@
 
 ---
 
+## New Settings → Privacy Tab: Consent Records and an Analytics Choice (2026-08-01, P0)
+
+You can now see your Terms of Use / Privacy Policy acceptance record and control an optional
+analytics preference from **Settings → Privacy** (`/profile`). Your Terms & Privacy consent is
+required and unchanged — accepted once at signup, as before — but is now a real, retained record
+rather than just a timestamp, and the page shows you exactly what version you accepted and when. A
+new **Analytics** toggle (off by default) lets you opt in or out of anonymous product-usage
+analytics ahead of time; we don't collect any product analytics yet, so this has no effect today,
+but your choice will be honored once we do. See `TODO-List.md` `P0B-03` for details.
+
+---
+
 ## Free Trial: Replacement Upload, and a Real Expiry (2026-08-01, P0)
 
 Two changes to the free trial. First, if something goes wrong with your one free analysis — wrong
