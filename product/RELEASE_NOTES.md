@@ -5,6 +5,15 @@
 
 ---
 
+## Feedback: Attach a Screenshot (2026-08-02, P0)
+
+The feedback popup (bottom-right corner on every page) now lets you attach a screenshot to your
+report. Click "Add a screenshot" inside the feedback form — you'll see a preview of exactly what
+was captured before you submit, with the option to remove it and try again. Nothing is captured or
+sent unless you explicitly click that button. See `TODO-List.md` `P0B-09` for details.
+
+---
+
 ## Self-Service Account Deletion and Data Export (2026-08-02, P0)
 
 **Settings → Privacy** now has a "Your Data" section with two new self-service actions. **Export my

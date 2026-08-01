@@ -31,6 +31,12 @@ const VALID_CATEGORIES = [
 
 const VALID_IMPACTS = ['Minor', 'Affects My Work', 'Blocks Me'] as const;
 
+// P0B-09: ~2MB of base64 comfortably covers a reduced-scale (0.6x), moderate-
+// quality (0.6) JPEG capture of a typical page — generous for the intended
+// use, small enough not to be a payload-abuse vector on an already
+// rate-limited (10/IP/15min) endpoint.
+const MAX_SCREENSHOT_LENGTH = 2 * 1024 * 1024;
+
 async function isFeedbackRateLimited(ip: string): Promise<boolean> {
   const key         = `fb:${ip}`;
   const WINDOW_MS   = 15 * 60_000;
@@ -75,6 +81,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Feedback message is too short.' }, { status: 400 });
   }
 
+  // P0B-09: optional, user-initiated screenshot — rejected outright (never
+  // silently truncated/dropped) if present but malformed or oversized.
+  let screenshotData: string | undefined;
+  if (body.screenshot !== undefined) {
+    const screenshot = String(body.screenshot);
+    if (!screenshot.startsWith('data:image/')) {
+      return NextResponse.json({ error: 'Invalid screenshot data.' }, { status: 400 });
+    }
+    if (screenshot.length > MAX_SCREENSHOT_LENGTH) {
+      return NextResponse.json({ error: 'Screenshot is too large.' }, { status: 400 });
+    }
+    screenshotData = screenshot;
+  }
+
   // Resolve session — best effort.
   let userId: string | undefined;
   let userEmail: string | undefined;
@@ -100,6 +120,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       userId,
       userEmail,
       status: 'New',
+      screenshotData,
     },
   });
 

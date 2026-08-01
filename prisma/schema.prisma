@@ -413,6 +413,11 @@ model Feedback {
   statusNote    String? // admin note on the current status
   userId        String? // populated if user was logged in
   userEmail     String? // email for contact if canContact = true
+  // P0B-09: optional, user-initiated screenshot capture — data:image/jpeg;base64,...
+  // Never sent automatically; the user explicitly opts in and previews it before
+  // submitting. GET /api/admin/feedback must never select this field in bulk
+  // (see app/api/admin/feedback/[id]/screenshot/route.ts for the lazy fetch).
+  screenshotData String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

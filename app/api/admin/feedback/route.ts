@@ -26,12 +26,20 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     ...(category ? { category } : {}),
   };
 
-  const [items, total, statusCounts] = await Promise.all([
+  const [rows, total, statusCounts] = await Promise.all([
     prisma.feedback.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       skip:    (page - 1) * limit,
       take:    limit,
+      // P0B-09: never select screenshotData in bulk here — a page of 30 rows
+      // could otherwise carry tens of MB of base64 image data. Full images
+      // are fetched lazily, one at a time, via GET /api/admin/feedback/[id]/screenshot.
+      select: {
+        id: true, category: true, message: true, impactLevel: true, canContact: true,
+        page: true, appVersion: true, browserFamily: true, status: true, statusNote: true,
+        userId: true, userEmail: true, createdAt: true, screenshotData: true,
+      },
     }),
     prisma.feedback.count({ where }),
     prisma.feedback.groupBy({
@@ -39,6 +47,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       _count: { status: true },
     }),
   ]);
+
+  const items = rows.map(({ screenshotData, ...rest }) => ({ ...rest, hasScreenshot: !!screenshotData }));
 
   const counts: Record<string, number> = {};
   for (const row of statusCounts) {

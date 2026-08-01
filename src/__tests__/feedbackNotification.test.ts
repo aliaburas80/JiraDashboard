@@ -133,6 +133,50 @@ test('TC-FB-07: invalid feedback (too short) is rejected before any email is sen
   expect(mockSendEmail).not.toHaveBeenCalled();
 });
 
+// P0B-09: optional, user-initiated screenshot capture.
+
+test('TC-FB-11: a valid screenshot data URI is stored on the Feedback row', async () => {
+  const screenshot = `data:image/jpeg;base64,${'A'.repeat(100)}`;
+  const { POST } = await import('../../app/api/feedback/route');
+  const res = await POST(request({ ...validBody, screenshot }));
+
+  expect(res.status).toBe(200);
+  expect(mockFeedbackCreate).toHaveBeenCalledWith(expect.objectContaining({
+    data: expect.objectContaining({ screenshotData: screenshot }),
+  }));
+});
+
+test('TC-FB-12: submission without a screenshot still works unchanged', async () => {
+  const { POST } = await import('../../app/api/feedback/route');
+  const res = await POST(request(validBody));
+
+  expect(res.status).toBe(200);
+  expect(mockFeedbackCreate).toHaveBeenCalledWith(expect.objectContaining({
+    data: expect.objectContaining({ screenshotData: undefined }),
+  }));
+});
+
+test('TC-FB-13: a malformed screenshot value (not a data:image/ URI) is rejected with 400', async () => {
+  const { POST } = await import('../../app/api/feedback/route');
+  const res = await POST(request({ ...validBody, screenshot: 'not-a-data-uri' }));
+  const body = await res.json();
+
+  expect(res.status).toBe(400);
+  expect(body.error).toMatch(/screenshot/i);
+  expect(mockFeedbackCreate).not.toHaveBeenCalled();
+});
+
+test('TC-FB-14: an oversized screenshot is rejected with 400, never silently truncated', async () => {
+  const oversized = `data:image/jpeg;base64,${'A'.repeat(3 * 1024 * 1024)}`;
+  const { POST } = await import('../../app/api/feedback/route');
+  const res = await POST(request({ ...validBody, screenshot: oversized }));
+  const body = await res.json();
+
+  expect(res.status).toBe(400);
+  expect(body.error).toMatch(/too large/i);
+  expect(mockFeedbackCreate).not.toHaveBeenCalled();
+});
+
 describe('buildFeedbackNotificationEmail', () => {
   test('TC-FB-08: HTML-escapes user-supplied message content to prevent injection', () => {
     const result = buildFeedbackNotificationEmail({
