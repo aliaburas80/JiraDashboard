@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PasswordInput } from '@/components/ui/PasswordInput';
+import { setAnalyticsConsentCache } from '@/lib/analytics';
 
 interface ConsentStatus {
   termsAndPrivacy: { granted: boolean; version: string; acceptedAt: string | null };
@@ -42,6 +43,7 @@ export default function PrivacyTab({ onToast }: PrivacyTabProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Could not update your preference.');
       setConsent(data.consent);
+      setAnalyticsConsentCache(data.consent.analytics.granted);
       onToast(granted ? 'Analytics sharing enabled.' : 'Analytics sharing disabled.');
     } catch (error) {
       onToast(error instanceof Error ? error.message : 'Failed to update your preference.');

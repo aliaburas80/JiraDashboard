@@ -5,6 +5,16 @@
 
 ---
 
+## Product Analytics Foundation (2026-08-02, P0 — internal, no visible change)
+
+We've laid the groundwork for understanding how Delivery Clarity is actually used, so future
+improvements can be based on evidence rather than guesswork. This release adds the internal event
+catalog and the client-side building blocks — nothing is collected or sent anywhere yet, and your
+Settings → Privacy analytics preference continues to be honored exactly as before: if you haven't
+opted in, nothing changes for you. See `TODO-List.md` `P0B-05` for details.
+
+---
+
 ## Feedback: Attach a Screenshot (2026-08-02, P0)
 
 The feedback popup (bottom-right corner on every page) now lets you attach a screenshot to your
