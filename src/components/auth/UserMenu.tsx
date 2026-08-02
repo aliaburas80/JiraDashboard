@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import { roleLabel } from '@/lib/roles';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { getCachedUser, fetchCurrentUser, clearCachedUser, type CurrentUser } from '@/lib/currentUser';
+import { clearAnalyticsConsentCache } from '@/lib/analytics';
 import styles from './UserMenu.module.scss';
 
 export default function UserMenu() {
@@ -36,6 +37,7 @@ export default function UserMenu() {
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
     clearCachedUser();
+    clearAnalyticsConsentCache();
     setMe(null);
     router.push('/login');
     router.refresh();

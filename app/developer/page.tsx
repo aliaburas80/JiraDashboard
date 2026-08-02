@@ -360,6 +360,20 @@ Deliberately not purged: \`Consent\` (6-year horizon, no near-term gap) and \`Lo
 
 ---
 
+## Analytics Event Taxonomy and SDK (P0B-05)
+
+**Scope: envelope construction only, nothing is delivered anywhere yet.** \`src/lib/analytics/\` builds and consent-gates events per the master plan's §4.2 taxonomy / §6.2 envelope, but the transport is an injectable stub (\`configureAnalyticsTransport()\`, defaulting to \`console.debug\` in development, a true no-op in production). \`P0B-06\` (IndexedDB batching queue) and \`P0B-07\` (server ingestion) are separate, dependent tickets — when either lands, only the default transport needs to change; no call site does.
+
+**Public API:** \`import { trackEvent } from '@/lib/analytics'\`. \`trackEvent(name, properties?, context?)\` — \`name\` must be one of the 30 taxonomy events in \`eventTaxonomy.ts\` (\`AnalyticsEventName\`); an unrecognized string is dropped with a dev-only \`console.warn\`, never thrown. \`properties\` is a flat \`Record<string, string|number|boolean|null>\`; \`context\` optionally sets \`section\`/\`component\`/\`resultStatus\`/\`durationMs\` on the envelope.
+
+**Consent gate — do not bypass this when wiring a new call site.** \`trackEvent()\` always checks \`getAnalyticsConsent()\` (\`src/lib/analytics/consentGate.ts\`) before invoking the transport; it resolves \`false\` (no-op) for anyone unauthenticated, undecided, or explicitly declined in Settings → Privacy. \`PrivacyTab.tsx\`'s toggle handler and \`UserMenu.tsx\`'s \`logout()\` keep this client-side cache in sync — if you add another place that changes or invalidates the user's session/consent state, update this cache there too, or a stale \`true\`/\`false\` will persist until reload.
+
+**Why only \`feedback_opened\`/\`feedback_submitted\` are wired today:** every other taxonomy event is real but not yet called from anywhere — wiring the other ~28 now, while the transport goes nowhere, would touch a large number of files for no observable effect. Add real \`trackEvent()\` calls to a feature area when you're already there for another reason, or in bulk once P0B-06/P0B-07 give the pipeline something to actually deliver to.
+
+**Envelope fields you get for free** (see \`AnalyticsEvent\` in \`track.ts\`): \`event_id\` (UUID), \`schema_version\`, \`occurred_at\`, \`user_id\`/\`role\` (from the existing \`currentUser.ts\` cache), \`anonymous_id\`/\`session_id\` (new — \`clientContext.ts\`, \`localStorage\`/\`sessionStorage\` respectively), \`page\`, \`app_version\`, \`browser_family\`/\`browser_major\`, \`os_family\`, \`device_category\`. You only need to pass \`properties\` and, if relevant, \`context\`.
+
+---
+
 ## GET /api/imports
 
 Returns full import log history.

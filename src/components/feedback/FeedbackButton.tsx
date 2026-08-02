@@ -5,6 +5,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { trackEvent, getBrowserContext } from '@/lib/analytics';
 import styles from './FeedbackButton.module.scss';
 
 const CATEGORIES = [
@@ -24,16 +25,6 @@ const IMPACTS: ImpactLevel[] = ['Minor', 'Affects My Work', 'Blocks Me'];
 // this is a submitted-with-the-report screenshot, not an archival copy.
 const SCREENSHOT_SCALE   = 0.6;
 const SCREENSHOT_QUALITY = 0.6;
-
-function getBrowserFamily(): string {
-  if (typeof navigator === 'undefined') return '';
-  const ua = navigator.userAgent;
-  if (ua.includes('Chrome'))  return 'Chrome';
-  if (ua.includes('Firefox')) return 'Firefox';
-  if (ua.includes('Safari'))  return 'Safari';
-  if (ua.includes('Edge'))    return 'Edge';
-  return 'Other';
-}
 
 export function FeedbackButton() {
   const pathname = usePathname();
@@ -121,7 +112,7 @@ export function FeedbackButton() {
           impactLevel:   impact,
           canContact,
           page:          window.location.pathname,
-          browserFamily: getBrowserFamily(),
+          browserFamily: getBrowserContext().browserFamily,
           screenshot:    screenshot ?? undefined,
         }),
       });
@@ -131,6 +122,7 @@ export function FeedbackButton() {
         return;
       }
       setSubmitted(true);
+      trackEvent('feedback_submitted', { category, impactLevel: impact, hasScreenshot: !!screenshot });
     } catch {
       setError('Network error. Check your connection and try again.');
     } finally {
@@ -147,7 +139,7 @@ export function FeedbackButton() {
         ref={triggerRef}
         type="button"
         className={styles.trigger}
-        onClick={() => { reset(); setOpen(true); }}
+        onClick={() => { reset(); setOpen(true); trackEvent('feedback_opened'); }}
         aria-label="Open feedback form"
         aria-haspopup="dialog"
       >
