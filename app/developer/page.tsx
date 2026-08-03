@@ -362,7 +362,7 @@ Deliberately not purged: \`Consent\` (6-year horizon, no near-term gap) and \`Lo
 
 ## Analytics Event Taxonomy and SDK (P0B-05)
 
-**Scope: envelope construction only, nothing is delivered anywhere yet.** \`src/lib/analytics/\` builds and consent-gates events per the master plan's §4.2 taxonomy / §6.2 envelope, but the transport is an injectable stub (\`configureAnalyticsTransport()\`, defaulting to \`console.debug\` in development, a true no-op in production). \`P0B-06\` (IndexedDB batching queue) and \`P0B-07\` (server ingestion) are separate, dependent tickets — when either lands, only the default transport needs to change; no call site does.
+**Scope: envelope construction only — delivery is a separate module.** \`src/lib/analytics/\` builds and consent-gates events per the master plan's §4.2 taxonomy / §6.2 envelope; the transport is injectable (\`configureAnalyticsTransport()\`). As of \`P0B-06\`, the default transport enqueues to the IndexedDB queue (see the next section below) instead of the original \`console.debug\`-only stub — no call site changed when that landed. \`P0B-07\` (real server-side validation/dedup/storage) is still a separate, dependent ticket.
 
 **Public API:** \`import { trackEvent } from '@/lib/analytics'\`. \`trackEvent(name, properties?, context?)\` — \`name\` must be one of the 30 taxonomy events in \`eventTaxonomy.ts\` (\`AnalyticsEventName\`); an unrecognized string is dropped with a dev-only \`console.warn\`, never thrown. \`properties\` is a flat \`Record<string, string|number|boolean|null>\`; \`context\` optionally sets \`section\`/\`component\`/\`resultStatus\`/\`durationMs\` on the envelope.
 
@@ -371,6 +371,22 @@ Deliberately not purged: \`Consent\` (6-year horizon, no near-term gap) and \`Lo
 **Why only \`feedback_opened\`/\`feedback_submitted\` are wired today:** every other taxonomy event is real but not yet called from anywhere — wiring the other ~28 now, while the transport goes nowhere, would touch a large number of files for no observable effect. Add real \`trackEvent()\` calls to a feature area when you're already there for another reason, or in bulk once P0B-06/P0B-07 give the pipeline something to actually deliver to.
 
 **Envelope fields you get for free** (see \`AnalyticsEvent\` in \`track.ts\`): \`event_id\` (UUID), \`schema_version\`, \`occurred_at\`, \`user_id\`/\`role\` (from the existing \`currentUser.ts\` cache), \`anonymous_id\`/\`session_id\` (new — \`clientContext.ts\`, \`localStorage\`/\`sessionStorage\` respectively), \`page\`, \`app_version\`, \`browser_family\`/\`browser_major\`, \`os_family\`, \`device_category\`. You only need to pass \`properties\` and, if relevant, \`context\`.
+
+---
+
+## IndexedDB Event Queue (P0B-06)
+
+**Two modules, one responsibility each.** \`src/lib/analytics/eventQueue.ts\` is a pure IndexedDB CRUD adapter (\`enqueueEvent\`/\`getQueuedEvents\`/\`deleteEvents\`/\`countQueuedEvents\`/\`pruneExpiredEvents\`/\`enforceMaxQueueSize\`) — no network, no timers. \`src/lib/analytics/eventFlush.ts\` owns triggers/delivery/retry and imports the queue; \`initAnalyticsQueue()\` (called once from \`AnalyticsQueueInit.tsx\`, mounted in \`app/layout.tsx\`) wires \`configureAnalyticsTransport()\` to enqueue instead of console-log.
+
+**Flush triggers:** 10s interval; a 30-event threshold right after enqueue; the \`online\` event; \`visibilitychange\` when the page goes hidden (via \`sendBeacon\`); immediately on any quality-domain event (\`client_error\`/\`api_error\`).
+
+**\`sendBeacon\` never deletes on send — this is intentional, not a bug.** It has no response, so the page-hidden/exit flush path can't know what was accepted; those events stay queued and are only deleted once a later \`fetch\`-based flush gets a real acknowledgement. If you're debugging "why didn't this event get deleted after the tab closed," this is why — check the *next* session's initial flush instead.
+
+**Retry/backoff is a passive gate, not a timer — do not reintroduce a self-scheduling \`setTimeout\` here.** \`eventFlush.ts\` checks \`Date.now() < nextAttemptAllowedAt\` at the top of \`flushQueue()\` rather than scheduling its own retry. A self-scheduling timer was the first implementation and caused a real bug: it outlives a test's synchronous assertions and fires into a later, unrelated test. It's also redundant — the 10s interval/online/threshold triggers already re-attempt regularly.
+
+**\`POST /api/events\` — ack-only, persists nothing, by design.** Validates each event's shape (\`event_id\`, \`schema_version\`, \`event_name\` ∈ \`isAnalyticsEventName()\`) and rate-limits (same \`LoginAttempt\`-table pattern as \`/api/events/error\`, key prefix \`ev:\`, 120/15min), returning \`{accepted, rejected}\` — but writes nothing to the database. **If you're building \`P0B-07\`:** this is exactly the contract to extend — add real validation depth, deduplication (by \`event_id\`), and durable storage (a new \`ProductEvent\`/\`EventBatch\`-shaped Prisma model per master plan §6.1) behind this same response shape. Don't change the response contract itself; the client queue already depends on it.
+
+**Testing an IndexedDB-touching module?** Use \`fake-indexeddb/auto\` (devDependency, added for this ticket) — see \`analyticsEventQueue.test.ts\`/\`analyticsEventFlush.test.ts\`. Do not combine it with \`jest.useFakeTimers()\` — \`fake-indexeddb\` depends on real timers internally to simulate IndexedDB's async request model, and faking them hangs every test in the file (confirmed the hard way while building this ticket).
 
 ---
 

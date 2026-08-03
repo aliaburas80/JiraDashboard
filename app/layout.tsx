@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.scss';
 import { DataSourceProvider, CloudLoadingBanner } from '@/components/ui/DataSourceBadge';
 import { GlobalErrorHandler } from '@/components/ui/GlobalErrorHandler';
+import { AnalyticsQueueInit } from '@/components/ui/AnalyticsQueueInit';
 import { FeedbackButton } from '@/components/feedback/FeedbackButton';
 import { EmailVerificationBanner } from '@/components/auth/EmailVerificationBanner';
 import ProductTour from '@/components/tour/ProductTour';
@@ -75,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <DataSourceProvider>
           <GlobalErrorHandler />
+          <AnalyticsQueueInit />
           <CloudLoadingBanner />
           <EmailVerificationBanner />
           {children}
