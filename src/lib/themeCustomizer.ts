@@ -68,9 +68,9 @@ export interface PaletteTokens {
 
 export const PALETTE_PRESETS: Record<PaletteId, PaletteTokens> = {
   none: {
-    label:     'Default (Light)',
+    label:     'Classic Blue',
     tagline:   'Tailwind white base · Blue accent · Standard SaaS look',
-    badge:     'Current default',
+    badge:     'Legacy',
     mode:      'light',
     acc:       '#2563eb', acc2:      '#3b82f6',
     bg:        '#f8fafc', s1:        '#ffffff',
@@ -145,7 +145,7 @@ export const PALETTE_PRESETS: Record<PaletteId, PaletteTokens> = {
   mediterranean: {
     label:     'Mediterranean Intelligence',
     tagline:   'Warm sand base · Deep teal accent · Light, distinctive',
-    badge:     'New',
+    badge:     'Default',
     mode:      'light',
     acc:       '#087F8C', acc2:      '#2C7BE5',
     bg:        '#F5F6F4', s1:        '#FFFFFF',
@@ -177,7 +177,7 @@ export const DEFAULT_THEME: ThemeCustom = {
   accent:   'blue',
   radius:   'default',
   fontSize: 'md',
-  palette:  'none',
+  palette:  'mediterranean',
 };
 
 export const DEFAULT_BRANDING: BrandingConfig = {

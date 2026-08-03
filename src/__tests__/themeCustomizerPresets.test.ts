@@ -12,6 +12,7 @@ import {
   PALETTE_PRESETS,
   applyThemeCustom,
   initThemeCustom,
+  loadThemeCustom,
   DEFAULT_THEME,
   type ThemeCustom,
 } from '../lib/themeCustomizer';
@@ -117,4 +118,19 @@ test('TC-TCP-08: initThemeCustom coerces a stored dark palette to none, but leav
   lsStore['dc_theme_custom'] = JSON.stringify({ ...DEFAULT_THEME, palette: 'mediterranean' });
   const medResult = initThemeCustom();
   expect(medResult.palette).toBe('mediterranean');
+});
+
+test('TC-TCP-09: mediterranean is the real default (THEME-03 — was "none"/Classic Blue)', () => {
+  expect(DEFAULT_THEME.palette).toBe('mediterranean');
+});
+
+test('TC-TCP-10: loadThemeCustom on empty storage returns mediterranean', () => {
+  const settings = loadThemeCustom();
+  expect(settings.palette).toBe('mediterranean');
+});
+
+test('TC-TCP-11: initThemeCustom on a fresh browser (no stored preference) does not coerce mediterranean away', () => {
+  const result = initThemeCustom();
+  expect(result.palette).toBe('mediterranean');
+  expect(fakeRoot._classes.has('dark')).toBe(false);
 });

@@ -62,7 +62,13 @@ const websiteJsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    // data-palette hardcoded to the real default (mediterranean, THEME-03) so
+    // the html[data-palette] token-remap block in globals.scss is active
+    // from first paint, not just after client-side initThemeCustom() runs
+    // on mount — avoids a flash of the old default look on every page load.
+    // initThemeCustom() re-asserts this on mount (idempotent) unless the
+    // user has a different saved preference.
+    <html lang="en" data-palette="mediterranean">
       <body className="antialiased overflow-x-hidden">
         <script
           type="application/ld+json"

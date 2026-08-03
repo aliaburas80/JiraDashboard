@@ -13,6 +13,10 @@
 .value {
   font-family: var(--font-mono, monospace);
   color: var(--dc-p1, #0f172a);
+  // Was Tailwind's text-2xl (24px) on the element — moved into the token
+  // scale (THEME-03's --text-4xl, added for exactly this metric-value
+  // context, matching Figma's documented 26-36px hierarchy).
+  font-size: var(--text-4xl, 26px);
 }
 
 .detail {

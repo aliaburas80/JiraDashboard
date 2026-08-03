@@ -5,13 +5,15 @@
 
 ---
 
-## New Logo, New "Mediterranean" Theme Option (2026-08-03, P2)
+## New Logo and New Default Look — "Mediterranean Intelligence" (2026-08-03, P2)
 
 Delivery Clarity has a new logo — a teal-and-blue "DC" mark — visible everywhere the previous one
-appeared (login, sign-up, the dashboard header, and elsewhere). There's also a new icon in the
-dashboard header, next to the notification bell, that lets you switch the app's look. Try
-**Mediterranean Intelligence** for a warm, teal-accented alternative to the default light theme —
-your choice is remembered on this device. Everything else about how the app works is unchanged.
+appeared (login, sign-up, the dashboard header, and elsewhere). The app's default look has also
+changed: a warm, teal-accented "Mediterranean Intelligence" theme, applied across navigation,
+buttons, badges, and status colors throughout the dashboard. If you preferred the previous blue
+look, it's still available — open the new icon in the dashboard header, next to the notification
+bell, and choose **Classic Blue**. Your choice is remembered on this device. Everything else about
+how the app works is unchanged.
 
 ---
 
