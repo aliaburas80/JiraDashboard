@@ -5,6 +5,16 @@
 
 ---
 
+## Product Analytics Delivery Queue (2026-08-03, P0 — internal, no visible change)
+
+A follow-up to the analytics foundation below: events that opt-in users generate are now queued
+durably on-device (via the browser's IndexedDB) and delivered in small batches instead of being
+discarded. This is still purely internal plumbing — it only affects events from users who have
+already opted in under Settings → Privacy, and there's nothing to see or configure differently.
+See `TODO-List.md` `P0B-06` for details.
+
+---
+
 ## Product Analytics Foundation (2026-08-02, P0 — internal, no visible change)
 
 We've laid the groundwork for understanding how Delivery Clarity is actually used, so future
