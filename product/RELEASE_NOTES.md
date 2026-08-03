@@ -5,6 +5,16 @@
 
 ---
 
+## New Logo, New "Mediterranean" Theme Option (2026-08-03, P2)
+
+Delivery Clarity has a new logo — a teal-and-blue "DC" mark — visible everywhere the previous one
+appeared (login, sign-up, the dashboard header, and elsewhere). There's also a new icon in the
+dashboard header, next to the notification bell, that lets you switch the app's look. Try
+**Mediterranean Intelligence** for a warm, teal-accented alternative to the default light theme —
+your choice is remembered on this device. Everything else about how the app works is unchanged.
+
+---
+
 ## Product Analytics Delivery Queue (2026-08-03, P0 — internal, no visible change)
 
 A follow-up to the analytics foundation below: events that opt-in users generate are now queued

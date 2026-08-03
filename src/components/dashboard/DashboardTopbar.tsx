@@ -8,6 +8,7 @@ import { DC_NAV_GROUPS, getNavGroupsForRole } from '@/components/dc-shell/naviga
 import { getCachedRole, getCachedIsSuperAdmin, fetchCurrentUser } from '@/lib/currentUser';
 import UserMenu from '@/components/auth/UserMenu';
 import NotificationBell from '@/components/auth/NotificationBell';
+import ThemeCustomizerPanel from '@/components/ui/ThemeCustomizerPanel';
 import { DataSourceBadge } from '@/components/ui/DataSourceBadge';
 import { PersonaPreviewSwitcher } from './PersonaPreviewSwitcher';
 import GlobalSearch from '@/components/search/GlobalSearch';
@@ -215,6 +216,8 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
           {/* Persona preview — soft-launch, hidden unless the super-admin enables it */}
           <PersonaPreviewSwitcher />
 
+          {/* Theme customizer */}
+          <ThemeCustomizerPanel />
           {/* Notification bell */}
           <NotificationBell />
           {/* User menu */}

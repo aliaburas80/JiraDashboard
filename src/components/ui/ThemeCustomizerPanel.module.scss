@@ -4,22 +4,35 @@
   position: relative;
 }
 
+.trigger {
+  padding: 8px;
+  border-radius: 8px;
+  color: var(--dc-p2, #64748b);
+  transition: background-color 150ms, color 150ms;
+
+  &:hover {
+    background: var(--dc-s2, #f1f5f9);
+    color: var(--dc-p1, #0f172a);
+  }
+}
+
 .panel {
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
   width: 260px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--dc-s1, #fff);
+  border: 1px solid var(--dc-bdr, #e2e8f0);
   border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-dropdown, 0 12px 40px rgba(0, 0, 0, 0.12));
   z-index: var(--z-modal, 9999);
   padding: 16px;
+  color: var(--dc-p1, #0f172a);
 }
 
 .paletteHint {
   font-size: 9px;
-  color: #94a3b8;
+  color: var(--dc-p3, #94a3b8);
   margin-bottom: 2px;
 }
 
@@ -56,7 +69,7 @@
   transition: box-shadow 150ms, border 150ms;
 
   &[data-active='true'] {
-    border: 3px solid #fff;
+    border: 3px solid var(--dc-s1, #fff);
     box-shadow: 0 0 0 2px var(--accent-color);
   }
 }
@@ -67,9 +80,9 @@
   font-size: 11px;
   font-weight: 700;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--dc-bdr, #e2e8f0);
   background: transparent;
-  color: #64748b;
+  color: var(--dc-p2, #64748b);
   cursor: pointer;
   transition: all 150ms;
 

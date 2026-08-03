@@ -5,7 +5,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
-import clsx from 'clsx';
 import styles from './ThemeCustomizerPanel.module.scss';
 import {
   ACCENT_PRESETS,
@@ -65,7 +64,7 @@ export default function ThemeCustomizerPanel() {
         type="button"
         onClick={() => setOpen(o => !o)}
         title="Customise theme"
-        className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        className={styles.trigger}
         aria-label="Open theme customizer"
         aria-expanded={open}
       >
@@ -76,11 +75,9 @@ export default function ThemeCustomizerPanel() {
 
       {/* Panel */}
       {open && (
-        <div
-          className={clsx(styles.panel, 'dark:bg-slate-800 dark:border-slate-700')}
-        >
+        <div className={styles.panel}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Theme</p>
+            <p className="text-xs font-black uppercase tracking-widest text-slate-500">Theme</p>
             <button type="button" onClick={handleReset}
               className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors">
               Reset

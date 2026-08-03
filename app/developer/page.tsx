@@ -390,6 +390,18 @@ Deliberately not purged: \`Consent\` (6-year horizon, no near-term gap) and \`Lo
 
 ---
 
+## Theme Customizer / Palette Presets
+
+**The real default is light, not dark — don't assume otherwise.** \`src/lib/themeCustomizer.ts\`'s \`PALETTE_PRESETS\` includes 4 dark presets (\`gold\`/\`copper\`/\`sage\`/\`orange\`) left over from an earlier design exploration, but a 2026-07-09 product decision removed the admin UI to select them, and \`initThemeCustom()\` (called once from \`AppShell.tsx\`) actively force-converts any browser with a previously-saved dark palette back to \`'none'\` on every load. Dark mode cannot currently be reached by any live code path. The enforced default is \`'none'\` — blue accent, white surfaces.
+
+**Adding a new palette? Every preset needs \`mode: 'light' | 'dark'\`.** \`applyThemeCustom()\` reads this field to decide whether to add the \`.dark\` class to \`<html>\` — it does **not** infer mode from "is this \`'none'\`." (An earlier version did exactly that, which broke the moment a second light preset — \`mediterranean\` — was added; see \`TODO-List.md\` \`THEME-01\`.) \`initThemeCustom()\`'s dark-palette coercion is also \`mode\`-driven, so a new dark preset is automatically covered by the "always enforce light" rule with no extra code.
+
+**The picker (\`src/components/ui/ThemeCustomizerPanel.tsx\`) is mounted in \`DashboardTopbar.tsx\`**, next to \`NotificationBell\`/\`UserMenu\` — that's the only live entry point today; \`app/admin/theme/page.tsx\` deliberately only exposes branding (logo/favicon/app-name), not palette selection, per the same 2026-07-09 decision.
+
+**Logo assets** (\`public/logo/delivery-clarity-logo-icon.svg\`, \`delivery-clarity-logo-horizontal.svg\`, \`delivery_clarity_mark_128.png\`, \`public/favicon.svg\`/\`.ico\`) are referenced by filename from ~12 pages — replace file contents in place to change the mark everywhere at once, don't rename. macOS's built-in \`sips\` can rasterize an SVG and write \`.ico\` directly (\`sips -s format ico in.png --out favicon.ico\`) if you ever need to regenerate the fallback icon — no extra tooling required.
+
+---
+
 ## GET /api/imports
 
 Returns full import log history.

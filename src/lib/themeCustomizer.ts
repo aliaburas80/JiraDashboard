@@ -12,7 +12,7 @@ const BRANDING_KEY = 'dc_branding';
 export type AccentId   = 'blue' | 'purple' | 'teal' | 'orange' | 'indigo' | 'rose' | 'slate';
 export type RadiusId   = 'sharp' | 'default' | 'rounded';
 export type FontSizeId = 'sm' | 'md' | 'lg';
-export type PaletteId  = 'none' | 'gold' | 'copper' | 'sage' | 'orange';
+export type PaletteId  = 'none' | 'gold' | 'copper' | 'sage' | 'orange' | 'mediterranean';
 
 export interface ThemeCustom {
   accent:   AccentId;
@@ -43,6 +43,11 @@ export interface PaletteTokens {
   label:      string;
   tagline:    string;
   badge:      string;
+  // Whether this preset renders as a light or dark UI — drives whether
+  // applyThemeCustom() adds the `.dark` class to <html>. Single source of
+  // truth (replaces a separately-maintained dark-palette id list, which
+  // could drift from the actual preset data).
+  mode:       'light' | 'dark';
   acc:        string;
   acc2:       string;
   bg:         string;
@@ -66,6 +71,7 @@ export const PALETTE_PRESETS: Record<PaletteId, PaletteTokens> = {
     label:     'Default (Light)',
     tagline:   'Tailwind white base · Blue accent · Standard SaaS look',
     badge:     'Current default',
+    mode:      'light',
     acc:       '#2563eb', acc2:      '#3b82f6',
     bg:        '#f8fafc', s1:        '#ffffff',
     s2:        '#f1f5f9', s3:        '#e2e8f0',
@@ -80,6 +86,7 @@ export const PALETTE_PRESETS: Record<PaletteId, PaletteTokens> = {
     label:     'A — Charcoal + Warm Gold',
     tagline:   'Pure charcoal base · Gold accent · Bloomberg-meets-delivery',
     badge:     'Most premium',
+    mode:      'dark',
     acc:       '#D4AC39', acc2:      '#EDD87A',
     bg:        '#080808', s1:        '#111111',
     s2:        '#1C1C1C', s3:        '#262626',
@@ -94,6 +101,7 @@ export const PALETTE_PRESETS: Record<PaletteId, PaletteTokens> = {
     label:     'B — Graphite + Rose Copper',
     tagline:   'Warm graphite base · Copper accent · Mediterranean clay',
     badge:     'Most distinctive',
+    mode:      'dark',
     acc:       '#C4845A', acc2:      '#E8B898',
     bg:        '#0D0B0A', s1:        '#171412',
     s2:        '#211D1A', s3:        '#2C2622',
@@ -108,6 +116,7 @@ export const PALETTE_PRESETS: Record<PaletteId, PaletteTokens> = {
     label:     'C — Dark Slate + Sage Green',
     tagline:   'Green-tinted slate base · Sage accent · Calm and grounded',
     badge:     'Most grounded',
+    mode:      'dark',
     acc:       '#6FAE7A', acc2:      '#B8D4BC',
     bg:        '#090C0A', s1:        '#131715',
     s2:        '#1C221E', s3:        '#252D27',
@@ -122,6 +131,7 @@ export const PALETTE_PRESETS: Record<PaletteId, PaletteTokens> = {
     label:     'D — Pure Grey + Orange Only',
     tagline:   'Neutral grey base · Orange the only accent · Max clarity',
     badge:     'Most confident',
+    mode:      'dark',
     acc:       '#E85D12', acc2:      '#FF8A4C',
     bg:        '#0A0A0A', s1:        '#151515',
     s2:        '#202020', s3:        '#2A2A2A',
@@ -131,6 +141,21 @@ export const PALETTE_PRESETS: Record<PaletteId, PaletteTokens> = {
     bdr2:      'rgba(255,255,255,0.13)',
     accHover:  '#c94e0d', accShadow: 'rgba(232,93,18,0.25)',
     swatches:  ['#0A0A0A','#151515','#202020','#E85D12','#F0F0F0','#FF8A4C'],
+  },
+  mediterranean: {
+    label:     'Mediterranean Intelligence',
+    tagline:   'Warm sand base · Deep teal accent · Light, distinctive',
+    badge:     'New',
+    mode:      'light',
+    acc:       '#087F8C', acc2:      '#2C7BE5',
+    bg:        '#F5F6F4', s1:        '#FFFFFF',
+    s2:        '#EEF5F4', s3:        '#FAFCFC',
+    s4:        '#E5F5F5', cta:       '#087F8C',
+    p1:        '#203038', p2:        '#65747A',
+    p3:        '#8A9FA5', bdr:       'rgba(223,229,227,0.7)',
+    bdr2:      'rgba(192,206,204,0.5)',
+    accHover:  '#066B76', accShadow: 'rgba(8,127,140,0.25)',
+    swatches:  ['#F5F6F4','#FFFFFF','#EEF5F4','#087F8C','#203038','#2C7BE5'],
   },
 };
 
@@ -230,8 +255,15 @@ export function applyThemeCustom(settings: ThemeCustom): void {
     root.style.setProperty('--dc-p3',            pal.p3);
     root.style.setProperty('--dc-bdr',           pal.bdr);
     root.style.setProperty('--dc-bdr2',          pal.bdr2);
-    root.classList.add('dark');
-    try { localStorage.setItem('dc-theme', 'dark'); } catch {}
+    // mode drives the `.dark` class, not "any preset besides none" — a
+    // light preset (e.g. mediterranean) must not force dark mode.
+    if (pal.mode === 'dark') {
+      root.classList.add('dark');
+      try { localStorage.setItem('dc-theme', 'dark'); } catch {}
+    } else {
+      root.classList.remove('dark');
+      try { localStorage.setItem('dc-theme', 'light'); } catch {}
+    }
   } else {
     root.removeAttribute('data-palette');
     const a = ACCENT_PRESETS[settings.accent] ?? ACCENT_PRESETS.blue;
@@ -248,6 +280,11 @@ export function applyThemeCustom(settings: ThemeCustom): void {
     root.style.setProperty('--dc-p3',            '#94a3b8');
     root.style.setProperty('--dc-bdr',           'rgba(203,213,225,0.7)');
     root.style.setProperty('--dc-bdr2',          'rgba(148,163,184,0.5)');
+    // Fixes a latent bug: previously neither branch ever removed `.dark`,
+    // so switching live from a dark palette back to 'none' (now reachable
+    // once ThemeCustomizerPanel is mounted) would leave it stuck applied.
+    root.classList.remove('dark');
+    try { localStorage.setItem('dc-theme', 'light'); } catch {}
   }
 
   root.style.setProperty('--radius-md',   r.md);
@@ -256,13 +293,14 @@ export function applyThemeCustom(settings: ThemeCustom): void {
   root.style.fontSize = f.px;
 }
 
-// Dark palette IDs — always coerced to 'none' to enforce the light theme.
-const DARK_PALETTES = new Set<PaletteId>(['gold', 'copper', 'sage', 'orange']);
-
 export function initThemeCustom(): ThemeCustom {
   const settings = loadThemeCustom();
-  // Enforce light mode: migrate any stored dark palette to 'none'.
-  const enforced: ThemeCustom = DARK_PALETTES.has(settings.palette)
+  // Enforce light mode: migrate any stored dark-mode palette to 'none'.
+  // Derived from each preset's own `mode` field (single source of truth —
+  // previously a separately-maintained id list that could drift from the
+  // actual preset data as new presets were added).
+  const isDarkPalette = settings.palette !== 'none' && PALETTE_PRESETS[settings.palette]?.mode === 'dark';
+  const enforced: ThemeCustom = isDarkPalette
     ? { ...settings, palette: 'none' }
     : settings;
   if (enforced.palette !== settings.palette) saveThemeCustom(enforced);
