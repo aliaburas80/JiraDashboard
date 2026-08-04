@@ -1,6 +1,7 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
-// Landing/upload page — always-dark animated hero matching /login and /register,
-// intentionally not theme-reactive (same precedent those two pages already set).
+// Landing/upload page — light animated hero matching /login and /register,
+// inherits the app's Mediterranean theme (THEME-04; previously an always-dark
+// hero intentionally not theme-reactive — see TODO-List.md THEME-03/THEME-04).
 
 // Bleeds edge-to-edge, breaking out of the shared AppShell `.main` container's
 // max-width/centering and top/bottom padding (see AppShell.module.scss's .main)
@@ -10,7 +11,7 @@
 .page {
   position: relative;
   overflow: hidden;
-  background: #050b16;
+  background: var(--dc-bg, #f5f6f4);
   block-size: 100%;
   min-block-size: 100%;
   inline-size: 100vw;
@@ -18,13 +19,13 @@
   margin-block: calc(-1 * (var(--header-height, 52px) + var(--space-6, 24px))) calc(-1 * var(--space-6, 24px));
 }
 
-// A subtle vignette darkens the edges so content reads clearly over the canvas —
+// A soft vignette darkens the edges so content reads clearly over the canvas —
 // mirrors login/register's .vignette treatment.
 .vignette {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: radial-gradient(ellipse 80% 70% at 50% 40%, transparent 40%, rgba(5, 5, 8, 0.6) 100%);
+  background: radial-gradient(ellipse 80% 70% at 50% 40%, transparent 40%, rgba(32, 48, 56, 0.08) 100%);
   pointer-events: none;
 }
 
@@ -35,28 +36,28 @@
 }
 
 .badge {
-  background: rgba(30, 30, 30, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ff8a4c;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--dc-bdr, rgba(223, 229, 227, 0.7));
+  color: var(--dc-accent-hover, #066b76);
   animation: badgeGlow 2.6s ease-out infinite;
   margin-top: 2.0rem;
 }
 
 @keyframes badgeGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 93, 18, 0.35); }
-  50%      { box-shadow: 0 0 0 7px rgba(232, 93, 18, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(8, 127, 140, 0.30); }
+  50%      { box-shadow: 0 0 0 7px rgba(8, 127, 140, 0); }
 }
 
 .heading {
-  color: #f5f5f5;
+  color: var(--dc-p1, #203038);
 }
 
 .subhead {
-  color: #a3a3a3;
+  color: var(--dc-p2, #65747a);
 }
 
 .link {
-  color: #ff8a4c;
+  color: var(--dc-accent, #087f8c);
   &:hover { text-decoration: underline; }
 }
 
@@ -64,29 +65,29 @@
 
 .dropzone {
   position: relative;
-  background: rgba(30, 30, 30, 0.7);
-  border: 2px dashed rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px dashed var(--dc-bdr, rgba(223, 229, 227, 0.7));
   transition: border-color 0.2s, background-color 0.2s, transform 0.2s;
   animation: dropzonePulse 3.2s ease-in-out infinite;
 
   &:hover {
-    border-color: #e85d12;
-    background: rgba(40, 40, 40, 0.85);
+    border-color: var(--dc-accent, #087f8c);
+    background: rgba(255, 255, 255, 0.92);
     transform: translateY(-2px);
   }
 }
 
 @keyframes dropzonePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 93, 18, 0.12); }
-  50%      { box-shadow: 0 0 0 10px rgba(232, 93, 18, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(8, 127, 140, 0.12); }
+  50%      { box-shadow: 0 0 0 10px rgba(8, 127, 140, 0); }
 }
 
 .dropzoneTitle {
-  color: #f5f5f5;
+  color: var(--dc-p1, #203038);
 }
 
 .dropzoneHint {
-  color: #a3a3a3;
+  color: var(--dc-p2, #65747a);
 }
 
 // The arrow travels down then springs back up in a continuous loop —
@@ -99,7 +100,7 @@
 
 .dropIcon {
   animation: arrowBounce 1.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  color: #ff7a3d;
+  color: var(--dc-accent, #087f8c);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -107,95 +108,95 @@
 }
 
 .spinnerTrack {
-  border: 4px solid #282828;
-  border-top-color: #e85d12;
+  border: 4px solid var(--dc-s3, #fafcfc);
+  border-top-color: var(--dc-accent, #087f8c);
 }
 
 .spinnerTrackSm {
-  border: 2px solid #282828;
-  border-top-color: #e85d12;
+  border: 2px solid var(--dc-s3, #fafcfc);
+  border-top-color: var(--dc-accent, #087f8c);
 }
 
 // ── Status banners (success / warning / error) ──────────────────────────────
 
 .successBanner {
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  color: #22c55e;
+  background: var(--color-success-soft, #e8f5ef);
+  border: 1px solid var(--color-success-border, rgb(38 138 90 / 25%));
+  color: var(--color-success, #268a5a);
 }
 
 .warningBanner {
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.25);
+  background: var(--color-warning-soft, #fdf3e3);
+  border: 1px solid var(--color-warning-border, rgb(197 122 24 / 25%));
 }
 
 .warningText {
-  color: #f59e0b;
+  color: var(--color-warning, #c57a18);
 }
 
 .errorBanner {
-  background: rgba(248, 113, 113, 0.1);
-  border: 1px solid rgba(248, 113, 113, 0.25);
-  color: #f87171;
+  background: var(--color-danger-soft, #fdedf0);
+  border: 1px solid var(--color-danger-border, rgb(200 68 82 / 25%));
+  color: var(--color-danger, #c84452);
 }
 
 // ── Secondary actions row ────────────────────────────────────────────────────
 
 .secondaryBtn {
-  background: rgba(30, 30, 30, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f5f5f5;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--dc-bdr, rgba(223, 229, 227, 0.7));
+  color: var(--dc-p1, #203038);
   transition: border-color 0.2s, transform 0.2s, background-color 0.2s;
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    background: rgba(40, 40, 40, 0.85);
+    border-color: var(--dc-bdr2, rgba(192, 206, 204, 0.5));
+    background: rgba(255, 255, 255, 0.92);
     transform: translateY(-2px);
   }
 }
 
 .secondaryBtnIcon {
-  color: #ff8a4c;
+  color: var(--dc-accent, #087f8c);
 }
 
 .secondaryBtnHint {
-  color: #6b6b6b;
+  color: var(--dc-p3, #8a9fa5);
 }
 
 .fileChip {
-  background: rgba(40, 40, 40, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f5f5f5;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--dc-bdr, rgba(223, 229, 227, 0.7));
+  color: var(--dc-p1, #203038);
 }
 
 .fileChipSize {
-  color: #6b6b6b;
+  color: var(--dc-p3, #8a9fa5);
 }
 
 .fileChipRemove {
-  color: #6b6b6b;
+  color: var(--dc-p3, #8a9fa5);
   // Real tap target instead of a bare glyph with no padding.
   min-width: 40px;
   min-height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  &:hover { color: #f87171; }
+  &:hover { color: var(--color-danger, #c84452); }
 }
 
 // ── Merge panel ──────────────────────────────────────────────────────────────
 
 .mergePanel {
-  background: rgba(30, 30, 30, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--dc-bdr, rgba(223, 229, 227, 0.7));
 }
 
 .mergeAddFile {
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border: 1px dashed var(--dc-bdr2, rgba(192, 206, 204, 0.5));
 }
 
 // ── Tagline ──────────────────────────────────────────────────────────────────
 
 .tagline {
-  color: #6b6b6b;
+  color: var(--dc-p3, #8a9fa5);
 }

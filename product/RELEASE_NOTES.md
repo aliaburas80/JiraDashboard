@@ -10,10 +10,11 @@
 Delivery Clarity has a new logo — a teal-and-blue "DC" mark — visible everywhere the previous one
 appeared (login, sign-up, the dashboard header, and elsewhere). The app's default look has also
 changed: a warm, teal-accented "Mediterranean Intelligence" theme, applied across navigation,
-buttons, badges, and status colors throughout the dashboard. If you preferred the previous blue
-look, it's still available — open the new icon in the dashboard header, next to the notification
-bell, and choose **Classic Blue**. Your choice is remembered on this device. Everything else about
-how the app works is unchanged.
+buttons, badges, and status colors throughout the dashboard — including the sign-in, sign-up, and
+upload pages, which previously used a separate dark design and now match the rest of the app. If
+you preferred the previous blue look, it's still available — open the new icon in the dashboard
+header, next to the notification bell, and choose **Classic Blue**. Your choice is remembered on
+this device. Everything else about how the app works is unchanged.
 
 ---
 

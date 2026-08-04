@@ -366,8 +366,8 @@ export default function HomePage() {
         )}
 
         {/* Column Mapping Preview — user confirms before going to dashboard. These
-            shared components keep their own light-card styling, so they sit in a
-            plain white card floating on this page's dark background. */}
+            shared components keep their own light-card styling, matching the
+            rest of this page's Mediterranean light theme (THEME-04). */}
         {columnMapping && !mergeStats && (
           <div className="w-full max-w-lg space-y-3 rounded-2xl bg-white p-1">
             <ColumnMappingPreview
