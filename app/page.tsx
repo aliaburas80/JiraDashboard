@@ -241,7 +241,7 @@ export default function HomePage() {
 
         {/* ── Single file drop zone ── */}
         <div
-          className={clsx(styles.dropzone, 'w-full max-w-md rounded-2xl p-10 text-center cursor-pointer animate-fade-in')}
+          className={clsx(styles.dropzone, 'w-full max-w-md p-10 text-center cursor-pointer animate-fade-in')}
           onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) handleFile(f); }}
           onDragOver={e => e.preventDefault()}
           onClick={() => !loading && inputRef.current?.click()}
@@ -256,7 +256,9 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">
-              <SvgIcon name="download" size={40} className={styles.dropIcon} />
+              <div className={styles.dropIconChip}>
+                <SvgIcon name="upload" size={26} className={styles.dropIcon} />
+              </div>
               <p className={clsx(styles.dropzoneTitle, 'font-bold')}>Drag it in, we&apos;ll take it from here</p>
               <p className={clsx(styles.dropzoneHint, 'text-sm')}>or click to browse — CSV, XLSX, XLS · Max 20 MB</p>
               <span className="btn-primary px-6 py-2 mt-1">
