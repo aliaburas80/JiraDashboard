@@ -224,10 +224,10 @@ export default function AdminFeedbackPage() {
   const resolved   = (counts['Released'] ?? 0) + (counts['Accepted'] ?? 0);
 
   const statCards = [
-    { icon: 'email',      label: 'Total Feedback',  value: String(totalCount), note: 'All time',        toneStyle: { background: 'rgba(232,93,18,0.1)',  color: 'var(--dc-accent,#e85d12)' } },
-    { icon: 'warning',    label: 'New',             value: String(newCount),   note: 'Needs triage',    toneStyle: { background: 'rgba(59,130,246,0.1)', color: '#3b82f6' } },
-    { icon: 'statusInfo', label: 'Reviewing',        value: String(reviewing),  note: 'In progress',     toneStyle: { background: 'rgba(245,158,11,0.1)', color: '#f59e0b' } },
-    { icon: 'checkCircle',label: 'Resolved',         value: String(resolved),   note: 'Accepted/Released', toneStyle: { background: 'rgba(34,197,94,0.1)',  color: '#22c55e' } },
+    { icon: 'email',      label: 'Total Feedback',  value: String(totalCount), note: 'All time',        toneStyle: { background: 'var(--color-info-soft, #eaf3fb)', color: 'var(--dc-accent, #087f8c)' } },
+    { icon: 'warning',    label: 'New',             value: String(newCount),   note: 'Needs triage',    toneStyle: { background: 'var(--color-info-soft, #eaf3fb)', color: 'var(--color-info, #2c7be5)' } },
+    { icon: 'statusInfo', label: 'Reviewing',        value: String(reviewing),  note: 'In progress',     toneStyle: { background: 'var(--color-warning-soft, #fdf3e3)', color: 'var(--color-warning, #c57a18)' } },
+    { icon: 'checkCircle',label: 'Resolved',         value: String(resolved),   note: 'Accepted/Released', toneStyle: { background: 'var(--color-success-soft, #e8f5ef)', color: 'var(--color-success, #268a5a)' } },
   ];
 
   return (
