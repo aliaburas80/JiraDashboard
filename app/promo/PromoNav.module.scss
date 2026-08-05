@@ -129,19 +129,19 @@
   cursor: pointer;
   border-radius: var(--radius-full, 9999px);
   background: linear-gradient(135deg, var(--p-accent), var(--p-accent-2));
-  color: #0a0b0d;
+  color: #fff;
   font-family: inherit;
   font-size: 0.875rem;
   font-weight: 700;
   text-decoration: none;
-  box-shadow: 0 8px 22px rgba(232, 93, 18, 0.3);
+  box-shadow: 0 8px 22px rgba(8, 127, 140, 0.3);
   transition:
     transform var(--transition-fast, 120ms ease),
     box-shadow var(--transition-fast, 120ms ease);
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 12px 30px rgba(232, 93, 18, 0.45);
+    box-shadow: 0 12px 30px rgba(8, 127, 140, 0.45);
   }
 
   &:focus-visible {
@@ -244,12 +244,12 @@
   cursor: pointer;
   border-radius: var(--radius-full, 9999px);
   background: linear-gradient(135deg, var(--p-accent), var(--p-accent-2));
-  color: #0a0b0d;
+  color: #fff;
   font-family: inherit;
   font-size: 1rem;
   font-weight: 700;
   text-decoration: none;
-  box-shadow: 0 8px 22px rgba(232, 93, 18, 0.3);
+  box-shadow: 0 8px 22px rgba(8, 127, 140, 0.3);
 
   &:focus-visible {
     outline: 2px solid var(--p-text);

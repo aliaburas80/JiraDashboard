@@ -147,8 +147,8 @@ export default function PromoPage() {
                   <svg className={styles.heroRingSvg} viewBox="0 0 120 120">
                     <defs>
                       <linearGradient id="heroRingGradient" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor="#ff8a4c" />
-                        <stop offset="100%" stopColor="#8b7bff" />
+                        <stop offset="0%" stopColor="#087f8c" />
+                        <stop offset="100%" stopColor="#2c7be5" />
                       </linearGradient>
                     </defs>
                     <circle className={styles.heroRingTrack} cx="60" cy="60" r="52" />
