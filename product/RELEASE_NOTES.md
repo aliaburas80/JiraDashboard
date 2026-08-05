@@ -20,6 +20,14 @@ this device. Everything else about how the app works is unchanged.
 
 ---
 
+## Fix: "Open the app" on the marketing page sent signed-in users back to login (2026-08-05, P0)
+
+If you were already signed in and clicked "Open the app" (or "Explore delivery insights") from the
+public marketing page, you were sent to the sign-in screen instead of straight to your dashboard.
+These links now check whether you're signed in and take you to your dashboard directly if you are.
+
+---
+
 ## Product Analytics Delivery Queue (2026-08-03, P0 — internal, no visible change)
 
 A follow-up to the analytics foundation below: events that opt-in users generate are now queued

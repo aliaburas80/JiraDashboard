@@ -11,6 +11,7 @@ import Reveal from './Reveal';
 import CountUp from './CountUp';
 import Marquee from './Marquee';
 import DemoRequest from './DemoRequest';
+import OpenAppLink from './OpenAppLink';
 import styles from './page.module.scss';
 
 export const metadata: Metadata = {
@@ -127,9 +128,9 @@ export default function PromoPage() {
 
             <div className={styles.heroActions}>
               <DemoRequest label="Request a demo" triggerClassName={styles.btnPrimary} />
-              <a className={styles.btnGhost} href="/login">
+              <OpenAppLink className={styles.btnGhost}>
                 Open the app <span aria-hidden="true">→</span>
-              </a>
+              </OpenAppLink>
             </div>
 
             <div className={styles.heroCard} aria-hidden="true">
@@ -259,9 +260,9 @@ export default function PromoPage() {
                 about it — forecasting where you will land, diagnosing the single weakest factor, and
                 coaching each role with evidence pulled straight from your own data.
               </p>
-              <a className={styles.btnGhost} href="/login">
+              <OpenAppLink className={styles.btnGhost}>
                 Explore delivery insights <span aria-hidden="true">→</span>
-              </a>
+              </OpenAppLink>
             </Reveal>
 
             <Reveal className={styles.splitPanel} variant="right" delayMs={120}>
@@ -354,9 +355,9 @@ export default function PromoPage() {
             </p>
             <div className={styles.heroActions}>
               <DemoRequest label="Request a demo" triggerClassName={styles.btnPrimary} />
-              <a className={styles.btnGhost} href="/login">
+              <OpenAppLink className={styles.btnGhost}>
                 Open the app <span aria-hidden="true">→</span>
-              </a>
+              </OpenAppLink>
             </div>
           </Reveal>
         </section>
