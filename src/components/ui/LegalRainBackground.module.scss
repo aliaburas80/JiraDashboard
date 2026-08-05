@@ -1,13 +1,14 @@
 // LegalRainBackground — fixed-viewport canvas for terms/privacy pages.
 // position: fixed keeps the rain visible at every scroll depth.
 // pointer-events: none so the user can still interact with the text above.
+// Background is light (THEME-05) — matches the rest of the app.
 
 .root {
   position:       fixed;
   inset:          0;
   z-index:        0;
   pointer-events: none;
-  background:     #050b16;
+  background:     var(--dc-bg, #f5f6f4);
 }
 
 .canvas {
