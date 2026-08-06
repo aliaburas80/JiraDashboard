@@ -19,19 +19,22 @@ export function buildNodeTypeConfig(issueTypes: IssueTypeDefinition[]): Record<s
 // Default-config fallback for callers that haven't loaded the live config yet.
 export const NODE_TYPE_CONFIG: Record<string, NodeTypeConfig> = buildNodeTypeConfig(DEFAULT_ISSUE_TYPES);
 
+// Edge colors reference design tokens (not raw hex) — a fixed, finite set of
+// relationship kinds (unlike per-issue-type node colors, which are legitimately
+// admin-configurable and therefore arbitrary; see IssueTypeDefinition).
 export const EDGE_TYPE_CONFIG: Record<RelationEdgeType, EdgeConfig> = {
-  'parent-child':   { strokeColor: '#64748b', strokeWidth: 2,   animated: false },
-  'epic-link':      { strokeColor: '#7c3aed', strokeWidth: 2,   animated: false },
-  'blocks':         { strokeColor: '#dc2626', strokeWidth: 2,   animated: true,  label: 'blocks' },
-  'is-blocked-by':  { strokeColor: '#dc2626', strokeWidth: 2,   strokeDasharray: '5,3', animated: false, label: 'blocked by' },
-  'depends-on':     { strokeColor: '#64748b', strokeWidth: 1.5, strokeDasharray: '4,4', animated: false, label: 'depends on' },
-  'relates-to':     { strokeColor: '#cbd5e1', strokeWidth: 1,   animated: false },
-  'orphan-link':    { strokeColor: '#f97316', strokeWidth: 1.5, strokeDasharray: '6,3', animated: false },
+  'parent-child':   { strokeColor: 'var(--color-text-secondary)', strokeWidth: 2,   animated: false },
+  'epic-link':      { strokeColor: 'var(--dc-purple)', strokeWidth: 2,   animated: false },
+  'blocks':         { strokeColor: 'var(--color-danger)', strokeWidth: 2,   animated: true,  label: 'blocks' },
+  'is-blocked-by':  { strokeColor: 'var(--color-danger)', strokeWidth: 2,   strokeDasharray: '5,3', animated: false, label: 'blocked by' },
+  'depends-on':     { strokeColor: 'var(--color-text-secondary)', strokeWidth: 1.5, strokeDasharray: '4,4', animated: false, label: 'depends on' },
+  'relates-to':     { strokeColor: 'var(--color-border-strong)', strokeWidth: 1,   animated: false },
+  'orphan-link':    { strokeColor: 'var(--dc-orange)', strokeWidth: 1.5, strokeDasharray: '6,3', animated: false },
 };
 
 export const ORPHAN_STYLE = {
-  border: '2px dashed #f97316',
-  bg: '#fff7ed',
+  border: '2px dashed var(--dc-orange)',
+  bg: 'color-mix(in srgb, var(--dc-orange) 8%, var(--dc-s1))',
   badgeText: 'Orphan Issue',
-  badgeColor: '#f97316',
+  badgeColor: 'var(--dc-orange)',
 };

@@ -13,8 +13,10 @@ changed: a warm, teal-accented "Mediterranean Intelligence" theme, applied acros
 buttons, badges, and status colors throughout the dashboard — including the sign-in, sign-up,
 upload, verification, password-reset, landing, privacy policy, terms of use, delivery forecast,
 work explorer, marketing, flow health, visual analytics, upload trends, release readiness, sprint
-and kanban, delivery mix, backend status, column mapping, and members pages, which previously used
-a separate dark or off-brand design and now match the rest of the app. If
+and kanban, delivery mix, backend status, column mapping, members, delivery summary, key metrics,
+team health, portfolio overview, relations explorer, snapshots, help & documentation, and
+forgot-password pages, which previously used a separate dark or off-brand design and now match the
+rest of the app. If
 you preferred the previous blue look, it's still available — open the new icon in the dashboard
 header, next to the notification bell, and choose **Classic Blue**. Your choice is remembered on
 this device. Everything else about how the app works is unchanged.
