@@ -23,6 +23,15 @@ this device. Everything else about how the app works is unchanged.
 
 ---
 
+## Removed the theme picker from the dashboard header (2026-08-06, P3)
+
+The palette-switcher icon next to the notification bell (used to switch back to the previous
+"Classic Blue" look) has been removed. The dashboard now always uses the Mediterranean Intelligence
+theme described above, with no in-app way to change it. If your browser already had Classic Blue
+selected before this change, it will keep showing until you clear your saved preference.
+
+---
+
 ## Fix: "Open the app" on the marketing page sent signed-in users back to login (2026-08-05, P0)
 
 If you were already signed in and clicked "Open the app" (or "Explore delivery insights") from the
