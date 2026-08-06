@@ -61,6 +61,25 @@ async function attemptLogin(page: Page, password: string): Promise<boolean> {
   return response.ok();
 }
 
+// Right after login/password-change/upload, the app is still working through
+// its own client-side router.push()+router.refresh() plus /dashboard's own
+// server redirect() to /dashboard/priority-attention. If a goto is issued
+// while that chain is still resolving, the browser cancels it in favor of
+// the app's own in-flight navigation and Playwright surfaces that as
+// "Navigation ... is interrupted by another navigation" (or, equivalently,
+// "Frame load interrupted"). By the time that happens the redirect storm has
+// already landed, so a single immediate retry succeeds — cheaper and more
+// reliable than trying to pre-emptively wait out a chain of unknown length.
+export async function gotoResilient(page: Page, url: string): Promise<void> {
+  try {
+    await page.goto(url);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!/interrupted by another navigation|Frame load interrupted/.test(message)) throw err;
+    await page.goto(url);
+  }
+}
+
 export async function loginAndEnsureData(page: Page): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Email address').fill(ADMIN_EMAIL);
@@ -76,14 +95,6 @@ export async function loginAndEnsureData(page: Page): Promise<void> {
   }
 
   await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: COLD_START_NAV_TIMEOUT_MS });
-  // The URL above may still be mid-redirect-chain (e.g. a client-side push to
-  // /dashboard that Next.js's own server redirect() then bounces on to
-  // /dashboard/priority-attention) — waiting for the predicate alone races
-  // the caller's next page.goto() against that still-in-flight navigation,
-  // which Playwright surfaces as "Navigation ... is interrupted by another
-  // navigation". Settling on network-idle here ensures the full chain has
-  // landed before any code below reads page.url() or navigates again.
-  await page.waitForLoadState('networkidle', { timeout: COLD_START_NAV_TIMEOUT_MS }).catch(() => {});
 
   if (page.url().includes('/change-password')) {
     const passwordFields = page.locator('input[type="password"]');
@@ -100,15 +111,10 @@ export async function loginAndEnsureData(page: Page): Promise<void> {
       .getByRole('heading', { name: 'Priority Attention' })
       .isVisible({ timeout: 10_000 })
       .catch(() => false);
-    if (alreadyHasData) {
-      // Same redirect-chain settling as above — the heading being visible
-      // doesn't guarantee every in-flight request/redirect has finished.
-      await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
-      return;
-    }
+    if (alreadyHasData) return;
   }
 
-  await page.goto('/');
+  await gotoResilient(page, '/');
   const fileInput = page.locator('input[type="file"]').first();
 
   // A bad response here (bug 5: the seeded admin's emailVerified defaulted to
@@ -132,7 +138,4 @@ export async function loginAndEnsureData(page: Page): Promise<void> {
   }
 
   await page.waitForURL(/\/dashboard/, { timeout: UPLOAD_NAV_TIMEOUT_MS });
-  // Same redirect-chain settling as above — /dashboard itself immediately
-  // server-redirects to /dashboard/priority-attention.
-  await page.waitForLoadState('networkidle', { timeout: UPLOAD_NAV_TIMEOUT_MS }).catch(() => {});
 }

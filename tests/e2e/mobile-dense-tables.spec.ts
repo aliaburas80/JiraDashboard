@@ -4,7 +4,7 @@
 // Run against the `Mobile` Playwright project (iPhone 13, 390×664) via
 // `npx playwright test mobile-dense-tables.spec.ts --project=Mobile`.
 import { test, expect } from '@playwright/test';
-import { loginAndEnsureData } from './helpers/auth';
+import { loginAndEnsureData, gotoResilient } from './helpers/auth';
 
 test.describe('dense tables scroll horizontally with a pinned first column at mobile width', () => {
   test.beforeEach(async ({ page }) => {
@@ -12,7 +12,7 @@ test.describe('dense tables scroll horizontally with a pinned first column at mo
   });
 
   test('roadmap Gantt and forecast table', async ({ page }) => {
-    await page.goto('/roadmap');
+    await gotoResilient(page, '/roadmap');
 
     const ganttScroll = page.getByTestId('gantt-scroll');
     await expect(ganttScroll).toBeVisible();
@@ -28,7 +28,7 @@ test.describe('dense tables scroll horizontally with a pinned first column at mo
   });
 
   test('work explorer issue table', async ({ page }) => {
-    await page.goto('/work-explorer');
+    await gotoResilient(page, '/work-explorer');
 
     const tableScroll = page.getByTestId('explorer-table-scroll');
     await expect(tableScroll).toBeVisible();
