@@ -76,6 +76,14 @@ export async function loginAndEnsureData(page: Page): Promise<void> {
   }
 
   await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: COLD_START_NAV_TIMEOUT_MS });
+  // The URL above may still be mid-redirect-chain (e.g. a client-side push to
+  // /dashboard that Next.js's own server redirect() then bounces on to
+  // /dashboard/priority-attention) — waiting for the predicate alone races
+  // the caller's next page.goto() against that still-in-flight navigation,
+  // which Playwright surfaces as "Navigation ... is interrupted by another
+  // navigation". Settling on network-idle here ensures the full chain has
+  // landed before any code below reads page.url() or navigates again.
+  await page.waitForLoadState('networkidle', { timeout: COLD_START_NAV_TIMEOUT_MS }).catch(() => {});
 
   if (page.url().includes('/change-password')) {
     const passwordFields = page.locator('input[type="password"]');
@@ -92,7 +100,12 @@ export async function loginAndEnsureData(page: Page): Promise<void> {
       .getByRole('heading', { name: 'Priority Attention' })
       .isVisible({ timeout: 10_000 })
       .catch(() => false);
-    if (alreadyHasData) return;
+    if (alreadyHasData) {
+      // Same redirect-chain settling as above — the heading being visible
+      // doesn't guarantee every in-flight request/redirect has finished.
+      await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
+      return;
+    }
   }
 
   await page.goto('/');
@@ -119,4 +132,7 @@ export async function loginAndEnsureData(page: Page): Promise<void> {
   }
 
   await page.waitForURL(/\/dashboard/, { timeout: UPLOAD_NAV_TIMEOUT_MS });
+  // Same redirect-chain settling as above — /dashboard itself immediately
+  // server-redirects to /dashboard/priority-attention.
+  await page.waitForLoadState('networkidle', { timeout: UPLOAD_NAV_TIMEOUT_MS }).catch(() => {});
 }
