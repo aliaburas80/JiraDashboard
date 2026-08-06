@@ -167,42 +167,42 @@ export default function TrendsPage() {
               <TrendChart
                 title="Health Score"
                 unit="/100"
-                color="#2563eb"
+                color="var(--color-info, #2c7be5)"
                 data={toChartData(points, 'healthScore')}
                 yMin={0} yMax={100}
               />
               <TrendChart
                 title="Completion %"
                 unit="%"
-                color="#16a34a"
+                color="var(--color-success, #268a5a)"
                 data={toChartData(points, 'completionRate')}
                 yMin={0} yMax={100}
               />
               <TrendChart
                 title="Blocked Items"
                 unit=""
-                color="#dc2626"
+                color="var(--color-danger, #c84452)"
                 data={toChartData(points, 'blockedIssues')}
                 higherIsBetter={false}
               />
               <TrendChart
                 title="Critical Items"
                 unit=""
-                color="#ea580c"
+                color="var(--dc-orange, #e85d12)"
                 data={toChartData(points, 'criticalCount')}
                 higherIsBetter={false}
               />
               <TrendChart
                 title="Avg Lead Time"
                 unit="d"
-                color="#7c3aed"
+                color="var(--dc-purple, #7c3aed)"
                 data={toChartData(points, 'avgLeadTimeDays')}
                 higherIsBetter={false}
               />
               <TrendChart
                 title="Avg Cycle Time"
                 unit="d"
-                color="#0891b2"
+                color="var(--chart-series-6, #0891b2)"
                 data={toChartData(points, 'avgCycleTimeDays')}
                 higherIsBetter={false}
               />
@@ -210,7 +210,7 @@ export default function TrendsPage() {
                 <TrendChart
                   title="Sprint Throughput"
                   unit=" issues/sprint"
-                  color="#14b8a6"
+                  color="var(--dc-accent, #087f8c)"
                   data={toChartData(points, 'avgSprintThroughput')}
                 />
               )}
@@ -218,7 +218,7 @@ export default function TrendsPage() {
                 <TrendChart
                   title="Data Quality Score"
                   unit="%"
-                  color="#f97316"
+                  color="var(--chart-series-3, #c57a18)"
                   data={toChartData(points, 'dataQualityScore')}
                   yMin={0} yMax={100}
                 />
@@ -227,7 +227,7 @@ export default function TrendsPage() {
                 <TrendChart
                   title="Release Confidence"
                   unit="%"
-                  color="#7c3aed"
+                  color="var(--dc-purple, #7c3aed)"
                   data={toChartData(points, 'releaseConfidenceScore')}
                   yMin={0} yMax={100}
                 />

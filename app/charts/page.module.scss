@@ -22,9 +22,9 @@
 // Shared by every GanttRow element whose color is resolved from data-health
 // (CLAUDE.md §28) — the row itself, its fill bar, % label, and health chip.
 @mixin health-color($prop: color) {
-  &[data-health='good']     { #{$prop}: #16a34a; }
-  &[data-health='warning']  { #{$prop}: #f59e0b; }
-  &[data-health='critical'] { #{$prop}: #dc2626; }
+  &[data-health='good']     { #{$prop}: var(--color-success, #268a5a); }
+  &[data-health='warning']  { #{$prop}: var(--color-warning, #c57a18); }
+  &[data-health='critical'] { #{$prop}: var(--color-danger, #c84452); }
 }
 
 @keyframes countUp {
@@ -116,12 +116,12 @@
   color: #fff;
   min-width: 76px;
   animation: countUp 400ms var(--pill-delay, 0ms) ease both;
-  background: linear-gradient(135deg, #16a34a, #14b8a6);
+  background: linear-gradient(135deg, var(--color-success, #268a5a), var(--dc-accent, #087f8c));
 
-  &[data-kpi='complete'] { background: linear-gradient(135deg, #16a34a, #14b8a6); }
-  &[data-kpi='critical'] { background: linear-gradient(135deg, #dc2626, #f97316); }
-  &[data-kpi='health']   { background: linear-gradient(135deg, #2563eb, #7c3aed); }
-  &[data-kpi='estdone']  { background: linear-gradient(135deg, #0891b2, #2563eb); }
+  &[data-kpi='complete'] { background: linear-gradient(135deg, var(--color-success, #268a5a), var(--dc-accent, #087f8c)); }
+  &[data-kpi='critical'] { background: linear-gradient(135deg, var(--color-danger, #c84452), var(--dc-orange, #e85d12)); }
+  &[data-kpi='health']   { background: linear-gradient(135deg, var(--color-info, #2c7be5), var(--dc-purple, #7c3aed)); }
+  &[data-kpi='estdone']  { background: linear-gradient(135deg, var(--chart-series-6, #0891b2), var(--color-info, #2c7be5)); }
 }
 
 .kpiVal {
@@ -467,7 +467,7 @@
   border-radius: var(--radius-full, 9999px);
   // EXCEPTION: width is genuinely runtime-computed (§14.2); color is data-health.
   width: var(--bar-w, 0%);
-  background: #22c55e;
+  background: var(--color-success, #268a5a);
   animation: barGrow 800ms var(--bar-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) both;
   @include health-color(background);
 }
@@ -498,7 +498,7 @@
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.02em;
-  color: #22c55e;
+  color: var(--color-success, #268a5a);
   @include health-color;
 }
 
@@ -524,9 +524,9 @@
   white-space: nowrap;
   @include health-color;
 
-  &[data-health='good']     { background: #dcfce7; }
-  &[data-health='warning']  { background: #fef9c3; }
-  &[data-health='critical'] { background: #fee2e2; }
+  &[data-health='good']     { background: var(--color-success-soft, #e8f5ef); }
+  &[data-health='warning']  { background: var(--color-warning-soft, #fdf3e3); }
+  &[data-health='critical'] { background: var(--color-danger-soft, #fdedf0); }
 }
 
 // ── SVG Donut (Circles tab) ───────────────────────────────────────────────────

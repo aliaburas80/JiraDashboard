@@ -12,8 +12,9 @@ appeared (login, sign-up, the dashboard header, and elsewhere). The app's defaul
 changed: a warm, teal-accented "Mediterranean Intelligence" theme, applied across navigation,
 buttons, badges, and status colors throughout the dashboard — including the sign-in, sign-up,
 upload, verification, password-reset, landing, privacy policy, terms of use, delivery forecast,
-work explorer, and marketing pages, which previously used a separate dark or off-brand design and
-now match the rest of the app. If
+work explorer, marketing, flow health, visual analytics, upload trends, release readiness, sprint
+and kanban, delivery mix, backend status, column mapping, and members pages, which previously used
+a separate dark or off-brand design and now match the rest of the app. If
 you preferred the previous blue look, it's still available — open the new icon in the dashboard
 header, next to the notification bell, and choose **Classic Blue**. Your choice is remembered on
 this device. Everything else about how the app works is unchanged.

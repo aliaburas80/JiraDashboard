@@ -94,8 +94,8 @@ export default function TrendChart({ title, unit = '', color, data, yMin, yMax, 
             const val = minVal + t * range;
             return (
               <g key={t}>
-                <line x1={PX} y1={y} x2={W - PX} y2={y} stroke="#f1f5f9" strokeWidth="1" />
-                <text x={PX - 4} y={y + 4} textAnchor="end" fontSize="9" fill="#94a3b8">
+                <line x1={PX} y1={y} x2={W - PX} y2={y} stroke="var(--color-border, #e2e8f0)" strokeWidth="1" />
+                <text x={PX - 4} y={y + 4} textAnchor="end" fontSize="9" fill="var(--dc-p3, #8a9fa5)">
                   {Math.round(val * 10) / 10}{unit}
                 </text>
               </g>
@@ -124,7 +124,7 @@ export default function TrendChart({ title, unit = '', color, data, yMin, yMax, 
               cx={xPos(i)}
               cy={yPos(d.value)}
               r={hovered === i ? 5 : 3.5}
-              fill={hovered === i ? color : '#fff'}
+              fill={hovered === i ? color : 'var(--color-surface, #fff)'}
               stroke={color}
               strokeWidth="2"
               className={styles.dot}
@@ -138,7 +138,7 @@ export default function TrendChart({ title, unit = '', color, data, yMin, yMax, 
             // Only show labels for first, last, and every ~3rd
             if (i !== 0 && i !== data.length - 1 && i % Math.max(1, Math.floor(data.length / 4)) !== 0) return null;
             return (
-              <text key={i} x={xPos(i)} y={PY + H + 16} textAnchor="middle" fontSize="8" fill="#94a3b8">
+              <text key={i} x={xPos(i)} y={PY + H + 16} textAnchor="middle" fontSize="8" fill="var(--dc-p3, #8a9fa5)">
                 {d.label}
               </text>
             );

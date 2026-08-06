@@ -24,10 +24,11 @@
   to   { opacity: 1; transform: scale(1); }
 }
 
-// Page-local orange: no existing token is a close match for this 5th distinct
-// hue (SprintGoalOutcome/SprintDeliveryPattern's "Behind Pace"/"Late Delivery
-// Risk" states), so it isn't collapsed into an existing warning/danger token.
-$dc-late-orange: #ea580c;
+// THEME-06 Phase 3: was a raw, never-tokenized literal (#ea580c, the old
+// pre-Mediterranean orange accent). "Late"/"Behind Pace" states are
+// warning-tier severity, so this now references the real warning token
+// instead of a hardcoded hex value.
+$dc-late-orange: var(--color-warning, #c57a18);
 
 // ── Tier/tone color mixins ────────────────────────────────────────────────────
 // Shared by every element whose color is resolved from a good/warning/critical
@@ -127,13 +128,13 @@ $dc-late-orange: #ea580c;
   animation: slideIn 300ms 40ms ease both;
 
   &[data-mode='sprint'] {
-    background: color-mix(in srgb, #2563eb 5%, transparent);
-    border-color: color-mix(in srgb, #2563eb 25%, transparent);
+    background: color-mix(in srgb, var(--dc-acc2, #2c7be5) 5%, transparent);
+    border-color: color-mix(in srgb, var(--dc-acc2, #2c7be5) 25%, transparent);
   }
 
   &[data-mode='kanban'] {
-    background: color-mix(in srgb, #0d9488 5%, transparent);
-    border-color: color-mix(in srgb, #0d9488 25%, transparent);
+    background: color-mix(in srgb, var(--dc-accent, #087f8c) 5%, transparent);
+    border-color: color-mix(in srgb, var(--dc-accent, #087f8c) 25%, transparent);
   }
 }
 
@@ -352,16 +353,16 @@ $dc-late-orange: #ea580c;
   border-radius: var(--radius-full, 9999px);
 
   &[data-type='carryover'] {
-    background: color-mix(in srgb, #f59e0b 12%, transparent);
-    color: #92400e;
+    background: var(--color-warning-soft, color-mix(in srgb, var(--color-warning, #c57a18) 12%, transparent));
+    color: var(--color-warning, #c57a18);
   }
   &[data-type='blocked'] {
-    background: color-mix(in srgb, #dc2626 10%, transparent);
-    color: #b91c1c;
+    background: var(--color-danger-soft, color-mix(in srgb, var(--color-danger, #c84452) 10%, transparent));
+    color: var(--color-danger-strong, #a6323f);
   }
   &[data-type='scope'] {
-    background: color-mix(in srgb, #8b5cf6 10%, transparent);
-    color: #6d28d9;
+    background: color-mix(in srgb, var(--dc-purple, #7c3aed) 10%, transparent);
+    color: var(--dc-purple, #7c3aed);
   }
 }
 
@@ -929,8 +930,8 @@ $dc-late-orange: #ea580c;
   animation: fadeUp 280ms var(--row-delay, 0ms) ease both;
 
   &[data-alert='true'] {
-    background: color-mix(in srgb, #dc2626 4%, transparent);
-    border-color: color-mix(in srgb, #dc2626 20%, transparent);
+    background: color-mix(in srgb, var(--color-danger, #c84452) 4%, transparent);
+    border-color: color-mix(in srgb, var(--color-danger, #c84452) 20%, transparent);
   }
 }
 

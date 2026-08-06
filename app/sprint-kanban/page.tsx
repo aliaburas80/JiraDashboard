@@ -443,11 +443,11 @@ export default function SprintKanbanPage() {
         {/* ── Mode banner ── */}
         <div id="tour-section-sprint-kanban-1" className={styles.modeBanner} data-mode={hasSprintData ? 'sprint' : 'kanban'}>
           {hasSprintData ? (
-            <svg className={styles.modeBannerIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" aria-hidden="true">
+            <svg className={styles.modeBannerIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--dc-acc2, #2c7be5)" strokeWidth="2" aria-hidden="true">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
             </svg>
           ) : (
-            <svg className={styles.modeBannerIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2" aria-hidden="true">
+            <svg className={styles.modeBannerIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--dc-accent, #087f8c)" strokeWidth="2" aria-hidden="true">
               <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
             </svg>
           )}

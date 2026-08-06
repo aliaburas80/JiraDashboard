@@ -44,14 +44,17 @@ const OPTIONAL  = FIELDS.filter(f => !f.required);
 
 // ── Field type icon ───────────────────────────────────────────────────────────
 
+// THEME-06 Phase 3: these were raw saturated hex values tuned for a dark
+// background — re-hued onto the approved token set (7 distinct hues) so
+// they read correctly on the light Mediterranean background.
 const TYPE_CFG: Record<FieldType, { fill: string; letter: string; label: string }> = {
-  text:   { fill: '#60A5FA', letter: 'T',  label: 'Text'     },
-  status: { fill: '#A78BFA', letter: '≡',  label: 'Category' },
-  user:   { fill: '#4ade80', letter: 'U',  label: 'User'     },
-  link:   { fill: '#FB923C', letter: '⛓',  label: 'Link'     },
-  number: { fill: '#FACC15', letter: '#',  label: 'Number'   },
-  date:   { fill: '#22D3EE', letter: 'D',  label: 'Date'     },
-  tag:    { fill: '#F472B6', letter: '⊞',  label: 'Multi'    },
+  text:   { fill: 'var(--dc-acc2, #2c7be5)',           letter: 'T',  label: 'Text'     },
+  status: { fill: 'var(--dc-purple, #7c3aed)',         letter: '≡',  label: 'Category' },
+  user:   { fill: 'var(--color-success, #268a5a)',     letter: 'U',  label: 'User'     },
+  link:   { fill: 'var(--dc-accent, #087f8c)',         letter: '⛓',  label: 'Link'     },
+  number: { fill: 'var(--color-warning, #c57a18)',     letter: '#',  label: 'Number'   },
+  date:   { fill: 'var(--chart-series-6, #0891b2)',    letter: 'D',  label: 'Date'     },
+  tag:    { fill: 'var(--color-danger, #c84452)',      letter: '⊞',  label: 'Multi'    },
 };
 
 function FieldTypeIcon({ type }: { type: FieldType }) {
@@ -131,8 +134,8 @@ export default function ColumnMappingPage() {
         <header className={styles.pageHeader}>
           <div className={styles.breadcrumb}>
             <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-              <rect width="18" height="18" rx="4" fill="#FF8A4C" opacity="0.18" />
-              <text x="9" y="13" textAnchor="middle" fontSize="10" fontWeight="900" fill="#FF8A4C">J</text>
+              <rect width="18" height="18" rx="4" fill="var(--dc-accent, #087f8c)" opacity="0.18" />
+              <text x="9" y="13" textAnchor="middle" fontSize="10" fontWeight="900" fill="var(--dc-accent, #087f8c)">J</text>
             </svg>
             <span className={styles.breadcrumbProject}>Project Setup</span>
             <span className={styles.breadcrumbSep}>/</span>
@@ -153,16 +156,16 @@ export default function ColumnMappingPage() {
                 val: `${requiredMapped} / ${REQUIRED.length}`,
                 label: 'Required fields mapped',
                 icon: requiredMapped === REQUIRED.length ? '✅' : '⚠️',
-                color: requiredMapped === REQUIRED.length ? '#4ade80' : '#fca5a5',
-                barColor: requiredMapped === REQUIRED.length ? '#22C55E' : '#F87171',
+                color: requiredMapped === REQUIRED.length ? 'var(--color-success, #268a5a)' : 'var(--color-danger, #c84452)',
+                barColor: requiredMapped === REQUIRED.length ? 'var(--color-success, #268a5a)' : 'var(--color-danger, #c84452)',
                 barWidth: `${Math.round(requiredMapped / REQUIRED.length * 100)}%`,
               },
               {
                 val: `${optionalMapped} / ${OPTIONAL.length}`,
                 label: 'Optional fields detected',
                 icon: '🔧',
-                color: optionalMapped > 0 ? '#93c5fd' : 'var(--dc-p3, #505050)',
-                barColor: '#60A5FA',
+                color: optionalMapped > 0 ? 'var(--color-info, #2c7be5)' : 'var(--dc-p3, #505050)',
+                barColor: 'var(--color-info, #2c7be5)',
                 barWidth: `${OPTIONAL.length > 0 ? Math.round(optionalMapped / OPTIONAL.length * 100) : 0}%`,
               },
               {
