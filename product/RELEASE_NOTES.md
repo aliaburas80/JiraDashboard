@@ -5,6 +5,15 @@
 
 ---
 
+## Fix: roadmap Gantt chart was cramped on narrow screens (2026-08-06, P2)
+
+On phone-width screens, the Epic Roadmap's Gantt timeline was squeezing every column into the
+available width instead of scrolling horizontally with the epic names pinned in place — making the
+month labels and delivery bars too narrow to read. It now scrolls sideways with the epic-name column
+staying visible, matching how the forecast table on the same page already worked.
+
+---
+
 ## New Logo and New Default Look — "Mediterranean Intelligence" (2026-08-03, P2)
 
 Delivery Clarity has a new logo — a teal-and-blue "DC" mark — visible everywhere the previous one
