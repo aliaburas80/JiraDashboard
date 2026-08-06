@@ -65,17 +65,20 @@ async function attemptLogin(page: Page, password: string): Promise<boolean> {
 // its own client-side router.push()+router.refresh() plus /dashboard's own
 // server redirect() to /dashboard/priority-attention. If a goto is issued
 // while that chain is still resolving, the browser cancels it in favor of
-// the app's own in-flight navigation and Playwright surfaces that as
-// "Navigation ... is interrupted by another navigation" (or, equivalently,
-// "Frame load interrupted"). By the time that happens the redirect storm has
-// already landed, so a single immediate retry succeeds — cheaper and more
-// reliable than trying to pre-emptively wait out a chain of unknown length.
+// the app's own in-flight navigation. Each engine reports that the same way
+// Playwright normally reports a cancelled navigation, just worded
+// differently per browser: Chromium says "Navigation ... is interrupted by
+// another navigation", WebKit says "Frame load interrupted", and Firefox
+// says "NS_BINDING_ABORTED". By the time any of these fire the redirect
+// storm has already landed, so a single immediate retry succeeds — cheaper
+// and more reliable than trying to pre-emptively wait out a chain of
+// unknown length.
 export async function gotoResilient(page: Page, url: string): Promise<void> {
   try {
     await page.goto(url);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    if (!/interrupted by another navigation|Frame load interrupted/.test(message)) throw err;
+    if (!/interrupted by another navigation|Frame load interrupted|NS_BINDING_ABORTED/.test(message)) throw err;
     await page.goto(url);
   }
 }
