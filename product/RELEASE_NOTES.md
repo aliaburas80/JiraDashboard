@@ -5,6 +5,17 @@
 
 ---
 
+## Fix: top navigation bar overflowed the page on phones (2026-08-07, P2)
+
+On narrow (phone-width) screens, the app's top navigation bar could force the whole page wider
+than the screen, requiring an awkward sideways scroll to see everything. The nav-group buttons
+(Analytics, Delivery, Admin, etc.) now scroll within their own bar instead. A smaller, separate
+overflow in the top-right icon cluster (search/sync/notifications) is still open — see
+`TODO-List.md` `MOBILE-TOPBAR-01`. Found and fixed while adding mobile test coverage for the
+add-member request screens (`TODO-List.md` `TEST-REQ-14`).
+
+---
+
 ## Fix: roadmap Gantt chart was cramped on narrow screens (2026-08-06, P2)
 
 On phone-width screens, the Epic Roadmap's Gantt timeline was squeezing every column into the
