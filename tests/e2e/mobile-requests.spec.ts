@@ -8,7 +8,7 @@
 // `npx playwright test mobile-requests.spec.ts --project=Mobile`.
 import { test, expect, devices, type Page } from '@playwright/test';
 import { PrismaClient } from '@prisma/client';
-import { loginAndEnsureData } from './helpers/auth';
+import { loginAndEnsureData, gotoResilient } from './helpers/auth';
 
 const prisma = new PrismaClient();
 
@@ -77,7 +77,7 @@ test.describe('add-member request UI stays usable at mobile width', () => {
       });
       expect(submitRes.ok).toBe(true);
 
-      await page.goto('/admin/settings');
+      await gotoResilient(page, '/admin/settings');
 
       // Scoped by the fixture's own text rather than `.first()` — this
       // settings page also renders an unrelated "how requests work"
@@ -160,7 +160,7 @@ test.describe('add-member request UI stays usable at mobile width', () => {
         await memberPage.getByRole('button', { name: /set new password/i }).click();
         await memberPage.waitForURL(url => !url.pathname.startsWith('/change-password'), { timeout: 30_000 });
 
-        await memberPage.goto('/members');
+        await gotoResilient(memberPage, '/members');
         const trigger = memberPage.getByRole('button', { name: /request add member/i });
         await expect(trigger).toBeVisible({ timeout: 10_000 });
         await trigger.click();
