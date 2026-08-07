@@ -1172,6 +1172,30 @@ Sprint Context and Action Items fields render as a stacked single column (differ
 positions) at that viewport, using `data-testid` hooks rather than relying on compiled Tailwind class
 names. `MOBILE-06`/`MOBILE-08` remain separate, still-open, greenfield tickets — not covered here.
 
+### Add-member request UI + topbar overflow (`TEST-REQ-14`/`MOBILE-TOPBAR-01`, added 2026-08-07)
+
+`RequestAddMemberModal.tsx`'s trigger only renders for the protected super-admin account holding a
+non-`'admin'` role (`app/members/page.tsx` redirects everyone else off `/members`), and `isSuperAdmin`
+has no API surface (EP-016) — it's set directly against the DB. `tests/e2e/mobile-requests.spec.ts`
+does the same for its own throwaway fixture user, via Prisma, then deletes it afterward. Setup calls
+(submitting a request, creating the fixture user) run through `page.evaluate(() => fetch(...))` —
+genuinely executed inside the already-authenticated tab — rather than Playwright's own `page.request`
+client, which didn't reliably forward this app's `Secure`-flagged session cookie against a plain-HTTP
+`127.0.0.1` origin during manual local verification.
+
+While manually verifying this test (`npm run start` against the live dev Postgres — no Docker/local
+Postgres in this environment, same limitation as `CI-E2E-01`), found a real, separate, previously
+undiscovered bug: `DashboardTopbar`'s `.nav` (the center Analytics/Delivery/etc. group buttons) never
+got `min-width: 0`, so per the default flex `min-width: auto` its content forced the whole fixed
+`.header` — and by extension the page — wider than the viewport at phone width. Same root-cause shape
+as `.ganttTrackArea` above, opposite direction (needed to shrink, not grow). Fixed: `.nav` now sets
+`min-width: 0` and scrolls horizontally within itself under `@media (max-width: 767px)` instead of
+forcing the header wider. A second, smaller overflow source in `.rightRail` (search/sync/notifications/
+user-menu) remains open — deferred as `MOBILE-TOPBAR-01` since closing it means deciding which
+right-rail elements to hide/collapse at phone width, a UI/UX call, not a mechanical CSS fix.
+`tests/e2e/mobile-requests.spec.ts`'s own overflow assertion is scoped to `#main-content`, not
+`document.documentElement`, to avoid coupling this ticket to that separate gap.
+
 ### Future gate additions (not yet wired)
 
 These additional checks will be added as the infrastructure matures:

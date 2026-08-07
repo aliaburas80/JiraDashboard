@@ -15,7 +15,7 @@ const baseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3100';
 // wrong) outside the Mobile viewport — 2.5x more full auth+upload cycles
 // than the suite needs, which is what pushed a slow run past the job's
 // timeout-minutes ceiling with nothing left over to even upload a report.
-const MOBILE_ONLY_SPECS = ['**/mobile-dense-tables.spec.ts', '**/mobile-forms.spec.ts'];
+const MOBILE_ONLY_SPECS = ['**/mobile-dense-tables.spec.ts', '**/mobile-forms.spec.ts', '**/mobile-requests.spec.ts'];
 
 export default defineConfig({
   testDir: './tests/e2e',
