@@ -36,12 +36,22 @@ function avatarIndex(name: string): number {
 
 type Tier = 'good' | 'warning' | 'critical' | 'neutral' | 'primary';
 
+// Token reference for a good/warning/critical tier — used only where a generic
+// component (MiniBar/CompareBar) needs a plain color string prop, not a
+// data-attribute. Single source of truth for both band-based and
+// threshold-based (completion %, load %, risk count) callers below.
+function tierColorVar(tier: 'good' | 'warning' | 'critical'): string {
+  if (tier === 'good') return 'var(--color-success, #268a5a)';
+  if (tier === 'warning') return 'var(--color-warning, #c57a18)';
+  return 'var(--color-danger-strong, #a6323f)';
+}
+
 // Token reference for a band — used only where a generic component (MiniBar/
 // CompareBar) needs a plain color string prop, not a data-attribute.
 function bandColorVar(band: TeamHealthEntry['band']): string {
-  if (band === 'Healthy') return 'var(--color-success, #16a34a)';
-  if (band === 'Team At Risk') return 'var(--color-warning, #f59e0b)';
-  return 'var(--color-danger-strong, #dc2626)';
+  if (band === 'Healthy') return tierColorVar('good');
+  if (band === 'Team At Risk') return tierColorVar('warning');
+  return tierColorVar('critical');
 }
 
 // ── Reusable mini-bar ─────────────────────────────────────────────────────────
@@ -309,7 +319,7 @@ export default function TeamsPage() {
                     label={t.assignee}
                     value={t.completionPct}
                     maxValue={100}
-                    color={t.completionPct >= 70 ? '#16a34a' : t.completionPct >= 40 ? '#f59e0b' : '#dc2626'}
+                    color={t.completionPct >= 70 ? tierColorVar('good') : t.completionPct >= 40 ? tierColorVar('warning') : tierColorVar('critical')}
                     unit="%"
                   />
                 ))}
@@ -324,7 +334,7 @@ export default function TeamsPage() {
                     label={t.assignee}
                     value={t.loadShare}
                     maxValue={Math.max(...teams.map(x => x.loadShare), 1)}
-                    color={t.loadShare > 35 ? '#dc2626' : t.loadShare > 20 ? '#f59e0b' : '#16a34a'}
+                    color={t.loadShare > 35 ? tierColorVar('critical') : t.loadShare > 20 ? tierColorVar('warning') : tierColorVar('good')}
                     unit="%"
                   />
                 ))}
@@ -342,7 +352,7 @@ export default function TeamsPage() {
                       label={t.assignee}
                       value={risk}
                       maxValue={maxRisk}
-                      color={risk > 3 ? '#dc2626' : risk > 0 ? '#f59e0b' : '#16a34a'}
+                      color={risk > 3 ? tierColorVar('critical') : risk > 0 ? tierColorVar('warning') : tierColorVar('good')}
                     />
                   );
                 })}

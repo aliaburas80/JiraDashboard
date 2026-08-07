@@ -19,31 +19,31 @@
 // attributes (CLAUDE.md §28) — used across a dozen+ call sites in this file
 // (Rule of Three, §5.4).
 @mixin verdict-color($prop: color) {
-  &[data-verdict='Go']                { #{$prop}: #16a34a; }
-  &[data-verdict='Conditional Go']    { #{$prop}: #d97706; }
-  &[data-verdict='No-Go']             { #{$prop}: #dc2626; }
-  &[data-verdict='Insufficient Data'] { #{$prop}: #64748b; }
+  &[data-verdict='Go']                { #{$prop}: var(--color-success, #268a5a); }
+  &[data-verdict='Conditional Go']    { #{$prop}: var(--color-warning, #c57a18); }
+  &[data-verdict='No-Go']             { #{$prop}: var(--color-danger, #c84452); }
+  &[data-verdict='Insufficient Data'] { #{$prop}: var(--color-text-muted, #8a9fa5); }
 }
 
 @mixin status-color($prop: color) {
-  &[data-status='pass'] { #{$prop}: #16a34a; }
-  &[data-status='warn'] { #{$prop}: #d97706; }
-  &[data-status='fail'] { #{$prop}: #dc2626; }
+  &[data-status='pass'] { #{$prop}: var(--color-success, #268a5a); }
+  &[data-status='warn'] { #{$prop}: var(--color-warning, #c57a18); }
+  &[data-status='fail'] { #{$prop}: var(--color-danger, #c84452); }
 }
 
 // Translucent "wash" background variant of verdict-color.
 @mixin verdict-wash($prop: background) {
-  &[data-verdict='Go']                { #{$prop}: color-mix(in srgb, #22c55e 8%, transparent); }
-  &[data-verdict='Conditional Go']    { #{$prop}: color-mix(in srgb, #f59e0b 8%, transparent); }
-  &[data-verdict='No-Go']             { #{$prop}: color-mix(in srgb, #dc2626 7%, transparent); }
-  &[data-verdict='Insufficient Data'] { #{$prop}: var(--color-subtle, #f8fafc); }
+  &[data-verdict='Go']                { #{$prop}: color-mix(in srgb, var(--color-success, #268a5a) 8%, transparent); }
+  &[data-verdict='Conditional Go']    { #{$prop}: color-mix(in srgb, var(--color-warning, #c57a18) 8%, transparent); }
+  &[data-verdict='No-Go']             { #{$prop}: color-mix(in srgb, var(--color-danger, #c84452) 7%, transparent); }
+  &[data-verdict='Insufficient Data'] { #{$prop}: var(--color-subtle, #eef5f4); }
 }
 
 @mixin tier-color($prop: color) {
-  &[data-tier='good']     { #{$prop}: var(--color-success, #16a34a); }
-  &[data-tier='warning']  { #{$prop}: var(--color-warning, #d97706); }
-  &[data-tier='critical'] { #{$prop}: var(--color-danger-strong, #dc2626); }
-  &[data-tier='neutral']  { #{$prop}: var(--color-text-muted, #94a3b8); }
+  &[data-tier='good']     { #{$prop}: var(--color-success, #268a5a); }
+  &[data-tier='warning']  { #{$prop}: var(--color-warning, #c57a18); }
+  &[data-tier='critical'] { #{$prop}: var(--color-danger-strong, #a6323f); }
+  &[data-tier='neutral']  { #{$prop}: var(--color-text-muted, #8a9fa5); }
 }
 
 // ── Page root ─────────────────────────────────────────────────────────────────
@@ -138,9 +138,9 @@
   margin-bottom: 28px;
   animation: fadeUp 320ms 60ms ease both;
 
-  &[data-verdict='Go']                { border-color: color-mix(in srgb, #22c55e 22%, transparent); }
-  &[data-verdict='Conditional Go']    { border-color: color-mix(in srgb, #f59e0b 22%, transparent); }
-  &[data-verdict='No-Go']             { border-color: color-mix(in srgb, #dc2626 22%, transparent); }
+  &[data-verdict='Go']                { border-color: color-mix(in srgb, var(--color-success, #268a5a) 22%, transparent); }
+  &[data-verdict='Conditional Go']    { border-color: color-mix(in srgb, var(--color-warning, #c57a18) 22%, transparent); }
+  &[data-verdict='No-Go']             { border-color: color-mix(in srgb, var(--color-danger, #c84452) 22%, transparent); }
 }
 
 // Left thick accent slab
@@ -149,10 +149,10 @@
   flex-shrink: 0;
   background: var(--color-border, #e2e8f0);
 
-  [data-verdict='Go'] &             { background: #16a34a; }
-  [data-verdict='Conditional Go'] & { background: #d97706; }
-  [data-verdict='No-Go'] &          { background: #dc2626; }
-  [data-verdict='Insufficient Data'] & { background: #64748b; }
+  [data-verdict='Go'] &             { background: var(--color-success, #268a5a); }
+  [data-verdict='Conditional Go'] & { background: var(--color-warning, #c57a18); }
+  [data-verdict='No-Go'] &          { background: var(--color-danger, #c84452); }
+  [data-verdict='Insufficient Data'] & { background: var(--color-text-muted, #8a9fa5); }
 }
 
 .verdictBody {
@@ -164,10 +164,10 @@
   background: var(--color-surface, #fff);
   flex-wrap: wrap;
 
-  [data-verdict='Go'] &             { background: color-mix(in srgb, #22c55e 8%, transparent); }
-  [data-verdict='Conditional Go'] & { background: color-mix(in srgb, #f59e0b 8%, transparent); }
-  [data-verdict='No-Go'] &          { background: color-mix(in srgb, #dc2626 7%, transparent); }
-  [data-verdict='Insufficient Data'] & { background: var(--color-subtle, #f8fafc); }
+  [data-verdict='Go'] &             { background: color-mix(in srgb, var(--color-success, #268a5a) 8%, transparent); }
+  [data-verdict='Conditional Go'] & { background: color-mix(in srgb, var(--color-warning, #c57a18) 8%, transparent); }
+  [data-verdict='No-Go'] &          { background: color-mix(in srgb, var(--color-danger, #c84452) 7%, transparent); }
+  [data-verdict='Insufficient Data'] & { background: var(--color-subtle, #eef5f4); }
 }
 
 .verdictLeft { flex: 1; min-width: 220px; }
@@ -185,10 +185,10 @@
   letter-spacing: -0.02em;
   color: var(--color-text-primary, #0f172a);
 
-  [data-verdict='Go'] &             { color: #16a34a; }
-  [data-verdict='Conditional Go'] & { color: #d97706; }
-  [data-verdict='No-Go'] &          { color: #dc2626; }
-  [data-verdict='Insufficient Data'] & { color: #64748b; }
+  [data-verdict='Go'] &             { color: var(--color-success, #268a5a); }
+  [data-verdict='Conditional Go'] & { color: var(--color-warning, #c57a18); }
+  [data-verdict='No-Go'] &          { color: var(--color-danger, #c84452); }
+  [data-verdict='Insufficient Data'] & { color: var(--color-text-muted, #8a9fa5); }
 }
 
 .verdictBadge {
@@ -293,19 +293,19 @@
   place-items: center;
   flex-shrink: 0;
   animation: iconPop 380ms var(--c-delay, 0ms) ease both;
-  background: #16a34a;
+  background: var(--color-success, #268a5a);
   border: 2px solid transparent;
 
-  &[data-status='pass'] { background: #16a34a; border-color: transparent; }
+  &[data-status='pass'] { background: var(--color-success, #268a5a); border-color: transparent; }
   &[data-status='warn'] {
-    background: color-mix(in srgb, #f59e0b 12%, transparent);
-    border-color: #f59e0b;
-    color: #d97706;
+    background: color-mix(in srgb, var(--color-warning, #c57a18) 12%, transparent);
+    border-color: var(--color-warning, #c57a18);
+    color: var(--color-warning, #c57a18);
   }
   &[data-status='fail'] {
-    background: color-mix(in srgb, #dc2626 10%, transparent);
-    border-color: #dc2626;
-    color: #dc2626;
+    background: color-mix(in srgb, var(--color-danger, #c84452) 10%, transparent);
+    border-color: var(--color-danger, #c84452);
+    color: var(--color-danger, #c84452);
   }
 }
 
@@ -325,9 +325,9 @@
   color: var(--color-text-secondary, #64748b);
   margin: 0;
 
-  [data-status='pass'] & { color: #16a34a; }
-  [data-status='warn'] & { color: #d97706; }
-  [data-status='fail'] & { color: #dc2626; }
+  [data-status='pass'] & { color: var(--color-success, #268a5a); }
+  [data-status='warn'] & { color: var(--color-warning, #c57a18); }
+  [data-status='fail'] & { color: var(--color-danger, #c84452); }
 }
 
 // Divider inside card
@@ -371,8 +371,8 @@
   border-radius: var(--radius-lg, 10px);
   background: var(--color-subtle, #f8fafc);
 
-  [data-status='warn'] & { background: color-mix(in srgb, #f59e0b 8%, transparent); }
-  [data-status='fail'] & { background: color-mix(in srgb, #dc2626 7%, transparent); }
+  [data-status='warn'] & { background: color-mix(in srgb, var(--color-warning, #c57a18) 8%, transparent); }
+  [data-status='fail'] & { background: color-mix(in srgb, var(--color-danger, #c84452) 7%, transparent); }
 }
 
 .checkCardActionLabel {
@@ -385,8 +385,8 @@
   flex-shrink: 0;
   color: var(--color-text-muted, #94a3b8);
 
-  [data-status='warn'] & { color: #d97706; }
-  [data-status='fail'] & { color: #dc2626; }
+  [data-status='warn'] & { color: var(--color-warning, #c57a18); }
+  [data-status='fail'] & { color: var(--color-danger, #c84452); }
 }
 
 .checkCardActionText {
@@ -409,9 +409,9 @@
   background: var(--color-subtle, #f1f5f9);
   color: var(--color-text-secondary, #475569);
 
-  &[data-status='pass'] { background: color-mix(in srgb, #22c55e 12%, transparent); color: #15803d; }
-  &[data-status='warn'] { background: color-mix(in srgb, #f59e0b 12%, transparent); color: #92400e; }
-  &[data-status='fail'] { background: color-mix(in srgb, #dc2626 10%, transparent); color: #b91c1c; }
+  &[data-status='pass'] { background: color-mix(in srgb, var(--color-success, #268a5a) 12%, transparent); color: var(--color-success, #268a5a); }
+  &[data-status='warn'] { background: color-mix(in srgb, var(--color-warning, #c57a18) 12%, transparent); color: var(--color-warning, #c57a18); }
+  &[data-status='fail'] { background: color-mix(in srgb, var(--color-danger, #c84452) 10%, transparent); color: var(--color-danger-strong, #a6323f); }
 }
 
 // ── Version layout (has fix-version data) ─────────────────────────────────────
@@ -464,10 +464,10 @@
   background: var(--color-surface, #fff);
   box-shadow: 0 2px 10px rgb(0 0 0 / 8%);
 
-  &[data-verdict='Go']                { border-color: #16a34a !important; }
-  &[data-verdict='Conditional Go']    { border-color: #d97706 !important; }
-  &[data-verdict='No-Go']             { border-color: #dc2626 !important; }
-  &[data-verdict='Insufficient Data'] { border-color: #64748b !important; }
+  &[data-verdict='Go']                { border-color: var(--color-success, #268a5a) !important; }
+  &[data-verdict='Conditional Go']    { border-color: var(--color-warning, #c57a18) !important; }
+  &[data-verdict='No-Go']             { border-color: var(--color-danger, #c84452) !important; }
+  &[data-verdict='Insufficient Data'] { border-color: var(--color-text-muted, #8a9fa5) !important; }
   @include verdict-wash;
 }
 
@@ -494,10 +494,10 @@
   background: var(--color-subtle, #f1f5f9);
   color: var(--color-text-secondary, #475569);
 
-  [data-verdict='Go'] &                { background: color-mix(in srgb, #22c55e 8%, transparent); color: #16a34a; }
-  [data-verdict='Conditional Go'] &    { background: color-mix(in srgb, #f59e0b 8%, transparent); color: #d97706; }
-  [data-verdict='No-Go'] &             { background: color-mix(in srgb, #dc2626 7%, transparent); color: #dc2626; }
-  [data-verdict='Insufficient Data'] & { background: var(--color-subtle, #f8fafc); color: #64748b; }
+  [data-verdict='Go'] &                { background: color-mix(in srgb, var(--color-success, #268a5a) 8%, transparent); color: var(--color-success, #268a5a); }
+  [data-verdict='Conditional Go'] &    { background: color-mix(in srgb, var(--color-warning, #c57a18) 8%, transparent); color: var(--color-warning, #c57a18); }
+  [data-verdict='No-Go'] &             { background: color-mix(in srgb, var(--color-danger, #c84452) 7%, transparent); color: var(--color-danger, #c84452); }
+  [data-verdict='Insufficient Data'] & { background: var(--color-subtle, #eef5f4); color: var(--color-text-muted, #8a9fa5); }
 }
 
 .vMeta {
@@ -509,7 +509,7 @@
   margin-bottom: 8px;
 }
 
-.vMetaBlocker { color: var(--color-danger, #dc2626); }
+.vMetaBlocker { color: var(--color-danger, #c84452); }
 
 .vBar {
   height: 4px;
@@ -692,19 +692,19 @@
   place-items: center;
   flex-shrink: 0;
   animation: iconPop 380ms var(--g-delay, 0ms) ease both;
-  background: #16a34a;
+  background: var(--color-success, #268a5a);
   border: 2px solid transparent;
 
-  &[data-status='pass'] { background: #16a34a; border-color: transparent; }
+  &[data-status='pass'] { background: var(--color-success, #268a5a); border-color: transparent; }
   &[data-status='warn'] {
-    background: color-mix(in srgb, #f59e0b 12%, transparent);
-    border-color: #f59e0b;
-    color: #d97706;
+    background: color-mix(in srgb, var(--color-warning, #c57a18) 12%, transparent);
+    border-color: var(--color-warning, #c57a18);
+    color: var(--color-warning, #c57a18);
   }
   &[data-status='fail'] {
-    background: color-mix(in srgb, #dc2626 10%, transparent);
-    border-color: #dc2626;
-    color: #dc2626;
+    background: color-mix(in srgb, var(--color-danger, #c84452) 10%, transparent);
+    border-color: var(--color-danger, #c84452);
+    color: var(--color-danger, #c84452);
   }
 }
 
@@ -729,9 +729,9 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  background: color-mix(in srgb, var(--color-danger, #dc2626) 10%, transparent);
-  color: var(--color-danger, #dc2626);
-  border: 1px solid color-mix(in srgb, var(--color-danger, #dc2626) 25%, transparent);
+  background: color-mix(in srgb, var(--color-danger, #c84452) 10%, transparent);
+  color: var(--color-danger, #c84452);
+  border: 1px solid color-mix(in srgb, var(--color-danger, #c84452) 25%, transparent);
   white-space: nowrap;
   margin-top: 2px;
 }

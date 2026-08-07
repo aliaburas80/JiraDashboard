@@ -103,9 +103,9 @@ function BarChart({ data }: { data: Array<{ date: string; count: number }> }) {
 // ── SVG Donut Chart — events by type ─────────────────────────────────────────
 
 const DONUT_COLORS = [
-  '#e85d12', '#3b82f6', '#22c55e', '#f59e0b',
-  '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6',
-  '#ec4899', '#64748b',
+  'var(--dc-accent, #087f8c)', 'var(--color-info, #2c7be5)', 'var(--color-success, #268a5a)', 'var(--color-warning, #c57a18)',
+  'var(--dc-purple, #7c3aed)', 'var(--chart-series-6, #0891b2)', 'var(--color-danger-strong, #a6323f)', 'var(--color-danger, #c84452)',
+  'var(--color-text-secondary, #64748b)', 'var(--color-text-muted, #94a3b8)',
 ];
 
 function DonutChart({ data, total }: { data: Array<{ type: string; count: number }>; total: number }) {
@@ -331,10 +331,10 @@ export default function AuditEventsPage() {
   if (loading) return <LoadingState message="Loading audit events…" />;
 
   const statCards = stats ? [
-    { icon: 'clipboard',   label: 'Total Events',   value: String(stats.total),        note: 'All time',          toneStyle: { background: 'rgba(232,93,18,0.1)', color: 'var(--dc-accent,#e85d12)' } },
-    { icon: 'statusInfo',  label: 'Today',          value: String(stats.todayCount),   note: 'Since midnight',    toneStyle: { background: 'rgba(59,130,246,0.1)', color: '#3b82f6' } },
-    { icon: 'people',      label: 'Active Users',   value: String(stats.uniqueUsers),  note: 'Last 30 days',      toneStyle: { background: 'rgba(34,197,94,0.1)',  color: '#22c55e' } },
-    { icon: 'warning',     label: 'Top Event',      value: stats.topEventType,         note: 'Most frequent type', toneStyle: { background: 'rgba(245,158,11,0.1)', color: '#f59e0b' } },
+    { icon: 'clipboard',   label: 'Total Events',   value: String(stats.total),        note: 'All time',          toneStyle: { background: 'var(--color-info-soft, #eaf3fb)', color: 'var(--dc-accent, #087f8c)' } },
+    { icon: 'statusInfo',  label: 'Today',          value: String(stats.todayCount),   note: 'Since midnight',    toneStyle: { background: 'var(--color-info-soft, #eaf3fb)', color: 'var(--color-info, #2c7be5)' } },
+    { icon: 'people',      label: 'Active Users',   value: String(stats.uniqueUsers),  note: 'Last 30 days',      toneStyle: { background: 'var(--color-success-soft, #e8f5ef)', color: 'var(--color-success, #268a5a)' } },
+    { icon: 'warning',     label: 'Top Event',      value: stats.topEventType,         note: 'Most frequent type', toneStyle: { background: 'var(--color-warning-soft, #fdf3e3)', color: 'var(--color-warning, #c57a18)' } },
   ] : [];
 
   const eventTypes = stats

@@ -3,18 +3,19 @@
 // to all children regardless of where in the DOM the portal lands.
 
 .overlay {
-  // Promo dark palette — mirrors page.module.scss .page variables exactly.
-  --p-bg: #0d1017;
-  --p-surface: #181c27;
-  --p-surface-2: #20253291;
-  --p-text: #f5f6f8;
-  --p-text-2: #b2b6c2;
-  --p-text-3: #7c8090;
-  --p-border: rgba(255, 255, 255, 0.1);
-  --p-border-strong: rgba(255, 255, 255, 0.2);
-  --p-accent: #ff8a4c;
-  --p-accent-2: #e85d12;
-  --p-violet: #8b7bff;
+  // Promo light palette — mirrors page.module.scss .page variables exactly
+  // (passthrough to the shared --dc-* design tokens).
+  --p-bg: var(--dc-bg, #f5f6f4);
+  --p-surface: var(--dc-s1, #fff);
+  --p-surface-2: color-mix(in srgb, var(--dc-s1, #fff) 88%, transparent);
+  --p-text: var(--dc-p1, #203038);
+  --p-text-2: var(--dc-p2, #65747a);
+  --p-text-3: var(--dc-p3, #8a9fa5);
+  --p-border: var(--dc-bdr, rgb(223 229 227 / 70%));
+  --p-border-strong: var(--dc-bdr2, rgb(192 206 204 / 50%));
+  --p-accent: var(--dc-accent, #087f8c);
+  --p-accent-2: var(--dc-accent-hover, #066b76);
+  --p-violet: var(--dc-acc2, #2c7be5);
 
   position: fixed;
   inset: 0;
@@ -22,7 +23,7 @@
   display: grid;
   place-items: center;
   padding: var(--space-5, 20px);
-  background: color-mix(in srgb, #05060a 78%, transparent);
+  background: color-mix(in srgb, var(--dc-p1, #203038) 45%, transparent);
   backdrop-filter: blur(6px);
   overflow-y: auto;
 }
@@ -36,10 +37,10 @@
   border-radius: var(--radius-2xl, 14px);
   border: 1px solid var(--p-border-strong);
   background:
-    radial-gradient(120% 80% at 0% 0%, rgba(255, 138, 76, 0.12), transparent 60%),
-    radial-gradient(120% 80% at 100% 100%, rgba(139, 123, 255, 0.14), transparent 60%),
+    radial-gradient(120% 80% at 0% 0%, rgba(8, 127, 140, 0.08), transparent 60%),
+    radial-gradient(120% 80% at 100% 100%, rgba(44, 123, 229, 0.08), transparent 60%),
     linear-gradient(180deg, var(--p-surface-2), var(--p-surface));
-  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 40px 90px rgba(32, 48, 56, 0.24);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -62,7 +63,7 @@
   place-items: center;
   border: 1px solid var(--p-border);
   border-radius: var(--radius-full, 9999px);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(32, 48, 56, 0.04);
   color: var(--p-text-2);
   cursor: pointer;
   transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
@@ -75,7 +76,7 @@
   &:hover {
     color: var(--p-text);
     border-color: var(--p-border-strong);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(32, 48, 56, 0.08);
   }
 
   &:focus-visible {
@@ -147,7 +148,7 @@
   padding: 12px 14px;
   border-radius: var(--radius-lg, 10px);
   border: 1px solid var(--p-border);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(32, 48, 56, 0.03);
   color: var(--p-text);
   font-family: inherit;
   font-size: 0.95rem;
@@ -160,7 +161,7 @@
   &:focus {
     outline: none;
     border-color: var(--p-accent);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(32, 48, 56, 0.05);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-accent) 28%, transparent);
   }
 }
@@ -175,9 +176,9 @@
   margin: 0;
   padding: 10px 14px;
   border-radius: var(--radius-lg, 10px);
-  border: 1px solid rgba(248, 113, 113, 0.4);
-  background: rgba(248, 113, 113, 0.12);
-  color: #fca5a5;
+  border: 1px solid var(--color-danger-border, rgb(200 68 82 / 25%));
+  background: var(--color-danger-soft, #fdedf0);
+  color: var(--color-danger, #c84452);
   font-size: 0.88rem;
 }
 
@@ -189,16 +190,16 @@
   border: none;
   border-radius: var(--radius-full, 9999px);
   background: linear-gradient(135deg, var(--p-accent), var(--p-accent-2));
-  color: #0a0b0d;
+  color: #fff;
   font-size: 0.98rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 12px 30px rgba(232, 93, 18, 0.32);
+  box-shadow: 0 12px 30px rgba(8, 127, 140, 0.32);
   transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
 
   &:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 18px 42px rgba(232, 93, 18, 0.44);
+    box-shadow: 0 18px 42px rgba(8, 127, 140, 0.44);
   }
 
   &:focus-visible {
@@ -240,8 +241,8 @@
   block-size: 64px;
   border-radius: var(--radius-full, 9999px);
   background: linear-gradient(135deg, var(--p-accent), var(--p-accent-2));
-  color: #0a0b0d;
-  box-shadow: 0 14px 34px rgba(232, 93, 18, 0.4);
+  color: #fff;
+  box-shadow: 0 14px 34px rgba(8, 127, 140, 0.4);
 
   svg {
     inline-size: 30px;

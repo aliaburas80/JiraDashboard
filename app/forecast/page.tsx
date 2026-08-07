@@ -23,15 +23,15 @@ function CompletionRing({ pct, color }: { pct: number; color: string }) {
   const fill = circ * (pct / 100);
   return (
     <svg viewBox="0 0 136 136" className={styles.ringCanvas}>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#323232" strokeWidth={stroke} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#dfe5e3" strokeWidth={stroke} />
       <circle
         cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={stroke}
         strokeDasharray={`${fill} ${circ - fill}`}
         strokeLinecap="round"
         transform={`rotate(-90 ${cx} ${cy})`}
       />
-      <text x={cx} y={cy - 8}  textAnchor="middle" fontSize="22" fontWeight="800" fontFamily="var(--font-mono, monospace)" fill="#F2F2F2">{pct}%</text>
-      <text x={cx} y={cy + 11} textAnchor="middle" fontSize="9"  fill="#505050">COMPLETE</text>
+      <text x={cx} y={cy - 8}  textAnchor="middle" fontSize="22" fontWeight="800" fontFamily="var(--font-mono, monospace)" fill="#203038">{pct}%</text>
+      <text x={cx} y={cy + 11} textAnchor="middle" fontSize="9"  fill="#8a9fa5">COMPLETE</text>
     </svg>
   );
 }
@@ -64,18 +64,18 @@ function VelocityChart({ points, avg }: { points: SprintPoint[]; avg: number }) 
         const y = PT + chartH * (1 - v);
         return (
           <g key={v}>
-            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-            <text x={PL - 4} y={y + 4} fontSize="9" fill="#505050" textAnchor="end">{Math.round(maxDone * v)}</text>
+            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="rgba(32,48,56,0.08)" strokeWidth="1" />
+            <text x={PL - 4} y={y + 4} fontSize="9" fill="#8a9fa5" textAnchor="end">{Math.round(maxDone * v)}</text>
           </g>
         );
       })}
       <line
         x1={PL} x2={W - PR} y1={avgY} y2={avgY}
-        stroke="#FF8A4C" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.7"
+        stroke="#087f8c" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.7"
         className={styles.pathFade}
         style={{ '--fade-delay': '1s' } as React.CSSProperties}
       />
-      <text x={W - PR - 4} y={avgY - 4} fontSize="9" fill="#FF8A4C" textAnchor="end">avg {avg}</text>
+      <text x={W - PR - 4} y={avgY - 4} fontSize="9" fill="#087f8c" textAnchor="end">avg {avg}</text>
       {points.map((p, i) => {
         const bh = barH(p.done);
         const by = barY(p.done);
@@ -85,7 +85,7 @@ function VelocityChart({ points, avg }: { points: SprintPoint[]; avg: number }) 
           <g key={i}>
             <rect
               x={barX(i)} y={by} width={barW} height={bh} rx="3"
-              fill={isRecent ? '#FF8A4C' : '#323232'} opacity="0.92"
+              fill={isRecent ? '#087f8c' : '#65747a'} opacity="0.92"
               className={styles.barAnim}
               style={{ '--bar-delay': delay } as React.CSSProperties}
             />
@@ -95,7 +95,7 @@ function VelocityChart({ points, avg }: { points: SprintPoint[]; avg: number }) 
               </text>
             )}
             {showLabel(i) && (
-              <text x={barX(i) + barW / 2} y={H - 8} fontSize="8" fill="#606060" textAnchor="middle">
+              <text x={barX(i) + barW / 2} y={H - 8} fontSize="8" fill="#8a9fa5" textAnchor="middle">
                 {p.sprint.replace(/sprint\s*/i, 'S').slice(0, 7)}
               </text>
             )}
@@ -179,13 +179,13 @@ function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }
       {/* ── Forecast date summary (top-left area, fades in last) ── */}
       {remaining > 0 && recentVel > 0 && (
         <g className={styles.pathFade} style={{ '--fade-delay': '1.5s' } as React.CSSProperties}>
-          <text x={PL + 6} y={16} fontSize="10" fill="#22C55E" textAnchor="start" fontWeight="700">
+          <text x={PL + 6} y={16} fontSize="10" fill="#268a5a" textAnchor="start" fontWeight="700">
             Best — {fmtDate(sprintsOpt)}
           </text>
-          <text x={PL + 6} y={32} fontSize="10" fill="#888" textAnchor="start" fontWeight="600">
+          <text x={PL + 6} y={32} fontSize="10" fill="#65747a" textAnchor="start" fontWeight="600">
             → Expected — {fmtDate(sprintsExp)}
           </text>
-          <text x={PL + 6} y={48} fontSize="10" fill="#F87171" textAnchor="start" fontWeight="700">
+          <text x={PL + 6} y={48} fontSize="10" fill="#c84452" textAnchor="start" fontWeight="700">
             Worst — {fmtDate(sprintsPess)}
           </text>
         </g>
@@ -195,8 +195,8 @@ function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }
       {[0, 0.25, 0.5, 0.75, 1].map(v => (
         <g key={v}>
           <line x1={PL} x2={W - PR} y1={yOf(total * v)} y2={yOf(total * v)}
-            stroke="rgba(128,128,128,0.13)" strokeWidth="1" />
-          <text x={PL - 10} y={yOf(total * v) + 4} fontSize="11" fill="#707070" textAnchor="end">
+            stroke="rgba(32,48,56,0.10)" strokeWidth="1" />
+          <text x={PL - 10} y={yOf(total * v) + 4} fontSize="11" fill="#65747a" textAnchor="end">
             {Math.round(total * v)}
           </text>
         </g>
@@ -204,7 +204,7 @@ function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }
 
       {/* ── X-axis baseline ── */}
       <line x1={PL} x2={W - PR} y1={baseY} y2={baseY}
-        stroke="rgba(128,128,128,0.2)" strokeWidth="1" />
+        stroke="rgba(32,48,56,0.16)" strokeWidth="1" />
 
       {/* ── Staggered sprint labels with tick marks ── */}
       {shownIdx.map((idx, li) => {
@@ -215,8 +215,8 @@ function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }
         return (
           <g key={idx}>
             <line x1={x} x2={x} y1={baseY} y2={tickY}
-              stroke="rgba(128,128,128,0.28)" strokeWidth="1" />
-            <text x={x} y={labelY} fontSize="10" fill="#606060" textAnchor="middle">
+              stroke="rgba(32,48,56,0.20)" strokeWidth="1" />
+            <text x={x} y={labelY} fontSize="10" fill="#8a9fa5" textAnchor="middle">
               {points[idx].sprint.slice(0, 13)}
             </text>
           </g>
@@ -225,31 +225,31 @@ function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }
 
       {/* ── Scope line + label ── */}
       <line x1={PL} x2={W - PR} y1={ty} y2={ty}
-        stroke="rgba(100,100,100,0.30)" strokeWidth="1.5" strokeDasharray="6 4" />
-      <text x={W - PR - 6} y={ty - 6} fontSize="11" fill="#888" textAnchor="end" fontWeight="600">
+        stroke="rgba(32,48,56,0.25)" strokeWidth="1.5" strokeDasharray="6 4" />
+      <text x={W - PR - 6} y={ty - 6} fontSize="11" fill="#65747a" textAnchor="end" fontWeight="600">
         Scope {total}
       </text>
 
       {/* ── Confidence band ── */}
       {remaining > 0 && bandPoly && (
-        <path d={bandPoly} fill="#FF8A4C" opacity="0.04"
+        <path d={bandPoly} fill="#087f8c" opacity="0.04"
           className={styles.pathFade} style={{ '--fade-delay': '1.05s' } as React.CSSProperties} />
       )}
 
       {/* ── Forecast lines ── */}
       {remaining > 0 && recentVel > 0 && (
         <line x1={lx} y1={ly} x2={pessX} y2={ty}
-          stroke="#F87171" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.6"
+          stroke="#c84452" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.6"
           className={styles.pathFade} style={{ '--fade-delay': '1.1s' } as React.CSSProperties} />
       )}
       {remaining > 0 && recentVel > 0 && (
         <line x1={lx} y1={ly} x2={optX} y2={ty}
-          stroke="#22C55E" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.65"
+          stroke="#268a5a" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.65"
           className={styles.pathFade} style={{ '--fade-delay': '1.15s' } as React.CSSProperties} />
       )}
       {remaining > 0 && recentVel > 0 && (
         <line x1={lx} y1={ly} x2={expX} y2={ty}
-          stroke="#888" strokeWidth="2" strokeDasharray="8 4" opacity="0.8"
+          stroke="#65747a" strokeWidth="2" strokeDasharray="8 4" opacity="0.8"
           className={styles.pathFade} style={{ '--fade-delay': '1.05s' } as React.CSSProperties} />
       )}
 
@@ -257,8 +257,8 @@ function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }
       {remaining > 0 && (
         <g>
           <line x1={lx} x2={lx} y1={PT} y2={baseY}
-            stroke="rgba(255,138,76,0.22)" strokeWidth="1.5" strokeDasharray="4 3" />
-          <text x={lx} y={PT - 6} fontSize="10" fill="rgba(200,100,0,0.75)" textAnchor="middle" fontWeight="700">
+            stroke="rgba(8,127,140,0.30)" strokeWidth="1.5" strokeDasharray="4 3" />
+          <text x={lx} y={PT - 6} fontSize="10" fill="rgba(6,107,118,0.85)" textAnchor="middle" fontWeight="700">
             Today
           </text>
         </g>
@@ -267,14 +267,14 @@ function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }
       {/* ── Actual area fill ── */}
       <path
         d={`${actualPath} L${lx.toFixed(1)},${baseY.toFixed(1)} L${xOf(0).toFixed(1)},${baseY.toFixed(1)} Z`}
-        fill="#FF8A4C" opacity="0.05"
+        fill="#087f8c" opacity="0.05"
         className={styles.pathFade} style={{ '--fade-delay': '0.3s' } as React.CSSProperties}
       />
 
       {/* ── Actual line — animated draw ── */}
       <path
         d={actualPath} pathLength="1"
-        stroke="#FF8A4C" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"
+        stroke="#087f8c" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"
         className={styles.pathDraw}
         style={{ '--draw-dur': '1.6s', '--draw-delay': '0.1s' } as React.CSSProperties}
       />
@@ -283,7 +283,7 @@ function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }
       {points.map((p, i) => (
         <circle key={i}
           cx={xOf(i)} cy={yOf(p.cumDone)} r="5"
-          fill="#FF8A4C" stroke="#fff" strokeWidth="2"
+          fill="#087f8c" stroke="#fff" strokeWidth="2"
           className={styles.dotPop}
           style={{ '--dot-delay': `${0.3 + i * 0.04}s` } as React.CSSProperties}
         />
@@ -293,8 +293,8 @@ function BurnUpChart({ points, total }: { points: SprintPoint[]; total: number }
       {points.length > 0 && (
         <g className={styles.pathFade} style={{ '--fade-delay': '1.7s' } as React.CSSProperties}>
           <rect x={lx + 10} y={calloutY - 15} width={82} height={22} rx="5"
-            fill="#FF8A4C" opacity="0.14" />
-          <text x={lx + 51} y={calloutY + 1} fontSize="11" fill="#c05000" textAnchor="middle" fontWeight="700">
+            fill="#087f8c" opacity="0.14" />
+          <text x={lx + 51} y={calloutY + 1} fontSize="11" fill="#066b76" textAnchor="middle" fontWeight="700">
             {last.cumDone.toLocaleString()} done
           </text>
         </g>
@@ -334,54 +334,54 @@ function CombinedBurnChart({ points, total }: { points: SprintPoint[]; total: nu
         const y = yOf(total * v);
         return (
           <g key={v}>
-            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="rgba(128,128,128,0.12)" strokeWidth="1" />
-            <text x={PL - 6} y={y + 4} fontSize="10" fill="#606060" textAnchor="end">{Math.round(total * v)}</text>
+            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="rgba(32,48,56,0.09)" strokeWidth="1" />
+            <text x={PL - 6} y={y + 4} fontSize="10" fill="#8a9fa5" textAnchor="end">{Math.round(total * v)}</text>
           </g>
         );
       })}
 
       {/* X-axis labels */}
       {points.map((p, i) => showLabel(i) && (
-        <text key={i} x={xOf(i)} y={H - 12} fontSize="9" fill="#606060" textAnchor="middle">
+        <text key={i} x={xOf(i)} y={H - 12} fontSize="9" fill="#8a9fa5" textAnchor="middle">
           {p.sprint.replace(/sprint\s*/i, 'S').slice(0, 8)}
         </text>
       ))}
 
       {/* Scope & zero lines */}
-      <line x1={PL} x2={W - PR} y1={scopeY} y2={scopeY} stroke="rgba(128,128,128,0.35)" strokeWidth="1.5" strokeDasharray="5 3" />
-      <line x1={PL} x2={W - PR} y1={zeroY}  y2={zeroY}  stroke="rgba(128,128,128,0.18)" strokeWidth="1" />
-      <text x={W - PR - 4} y={scopeY - 5} fontSize="10" fill="#707070" textAnchor="end" fontWeight="600">Scope {total}</text>
+      <line x1={PL} x2={W - PR} y1={scopeY} y2={scopeY} stroke="rgba(32,48,56,0.25)" strokeWidth="1.5" strokeDasharray="5 3" />
+      <line x1={PL} x2={W - PR} y1={zeroY}  y2={zeroY}  stroke="rgba(32,48,56,0.14)" strokeWidth="1" />
+      <text x={W - PR - 4} y={scopeY - 5} fontSize="10" fill="#65747a" textAnchor="end" fontWeight="600">Scope {total}</text>
 
       {/* Ideal burn-down */}
-      <path d={idealDown} stroke="#888" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" fill="none"
+      <path d={idealDown} stroke="#65747a" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" fill="none"
         className={styles.pathFade} style={{ '--fade-delay': '0.3s' } as React.CSSProperties} />
 
       {/* Area fills */}
       <path d={`${downPath} L${xOf(n - 1).toFixed(1)},${scopeY.toFixed(1)} L${xOf(0).toFixed(1)},${scopeY.toFixed(1)} Z`}
-        fill="#E85D12" opacity="0.05"
+        fill="#066b76" opacity="0.05"
         className={styles.pathFade} style={{ '--fade-delay': '0.2s' } as React.CSSProperties} />
       <path d={`${upPath} L${xOf(n - 1).toFixed(1)},${zeroY.toFixed(1)} L${xOf(0).toFixed(1)},${zeroY.toFixed(1)} Z`}
-        fill="#22C55E" opacity="0.07"
+        fill="#268a5a" opacity="0.07"
         className={styles.pathFade} style={{ '--fade-delay': '0.2s' } as React.CSSProperties} />
 
       {/* Burn-down line */}
       <path d={downPath} pathLength="1"
-        stroke="#E85D12" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
+        stroke="#066b76" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
         className={styles.pathDraw}
         style={{ '--draw-dur': '1.2s', '--draw-delay': '0.1s' } as React.CSSProperties} />
 
       {/* Burn-up line */}
       <path d={upPath} pathLength="1"
-        stroke="#22C55E" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
+        stroke="#268a5a" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
         className={styles.pathDraw}
         style={{ '--draw-dur': '1.2s', '--draw-delay': '0.25s' } as React.CSSProperties} />
 
       {/* Dots */}
       {points.map((p, i) => (
         <g key={i}>
-          <circle cx={xOf(i)} cy={yOf(p.cumDone)}         r="4" fill="#22C55E" stroke="#111" strokeWidth="1.5"
+          <circle cx={xOf(i)} cy={yOf(p.cumDone)}         r="4" fill="#268a5a" stroke="#fff" strokeWidth="1.5"
             className={styles.dotPop} style={{ '--dot-delay': `${0.4 + i * 0.04}s` } as React.CSSProperties} />
-          <circle cx={xOf(i)} cy={yOf(total - p.cumDone)} r="4" fill="#E85D12" stroke="#111" strokeWidth="1.5"
+          <circle cx={xOf(i)} cy={yOf(total - p.cumDone)} r="4" fill="#066b76" stroke="#fff" strokeWidth="1.5"
             className={styles.dotPop} style={{ '--dot-delay': `${0.5 + i * 0.04}s` } as React.CSSProperties} />
         </g>
       ))}
@@ -389,10 +389,10 @@ function CombinedBurnChart({ points, total }: { points: SprintPoint[]; total: nu
       {/* Completion marker */}
       {doneIdx >= 0 && (
         <g>
-          <circle cx={xOf(doneIdx)} cy={yOf(total / 2)} r="10" fill="#22C55E" opacity="0.15" />
-          <circle cx={xOf(doneIdx)} cy={yOf(total / 2)} r="5"  fill="#22C55E" />
+          <circle cx={xOf(doneIdx)} cy={yOf(total / 2)} r="10" fill="#268a5a" opacity="0.15" />
+          <circle cx={xOf(doneIdx)} cy={yOf(total / 2)} r="5"  fill="#268a5a" />
           <line x1={xOf(doneIdx)} x2={xOf(doneIdx)} y1={PT} y2={PT + chartH}
-            stroke="#22C55E" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.45" />
+            stroke="#268a5a" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.45" />
         </g>
       )}
     </svg>
@@ -428,8 +428,8 @@ function RiskScopeTrendChart({ points }: { points: { sprint: string; added: numb
         const y = PT + chartH * (1 - v);
         return (
           <g key={v}>
-            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-            <text x={PL - 4} y={y + 4} fontSize="9" fill="#505050" textAnchor="end">{Math.round(maxVal * v)}</text>
+            <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="rgba(32,48,56,0.08)" strokeWidth="1" />
+            <text x={PL - 4} y={y + 4} fontSize="9" fill="#8a9fa5" textAnchor="end">{Math.round(maxVal * v)}</text>
           </g>
         );
       })}
@@ -437,10 +437,10 @@ function RiskScopeTrendChart({ points }: { points: { sprint: string; added: numb
         const groupX = PL + i * groupW + groupW / 2;
         return (
           <g key={i}>
-            <rect x={groupX - barW - 1} y={barY(p.added)} width={barW} height={barH(p.added)} rx="2" fill="#F59E0B" opacity="0.85" />
-            <rect x={groupX + 1} y={barY(p.blocked)} width={barW} height={barH(p.blocked)} rx="2" fill="#F87171" opacity="0.85" />
+            <rect x={groupX - barW - 1} y={barY(p.added)} width={barW} height={barH(p.added)} rx="2" fill="#c57a18" opacity="0.85" />
+            <rect x={groupX + 1} y={barY(p.blocked)} width={barW} height={barH(p.blocked)} rx="2" fill="#c84452" opacity="0.85" />
             {showLabel(i) && (
-              <text x={groupX} y={H - 8} fontSize="8" fill="#606060" textAnchor="middle">
+              <text x={groupX} y={H - 8} fontSize="8" fill="#8a9fa5" textAnchor="middle">
                 {p.sprint.replace(/sprint\s*/i, 'S').slice(0, 7)}
               </text>
             )}
@@ -454,31 +454,31 @@ function RiskScopeTrendChart({ points }: { points: { sprint: string; added: numb
 // ── Metadata maps ──────────────────────────────────────────────────────────────
 
 const STATUS_META = {
-  on_track:          { label: 'On Track',         color: '#22C55E', bg: 'rgba(34,197,94,0.07)',    border: 'rgba(34,197,94,0.18)',    text: '#4ade80', icon: 'checkCircle' },
-  at_risk:           { label: 'Timeline At Risk',  color: '#F59E0B', bg: 'rgba(245,158,11,0.07)',   border: 'rgba(245,158,11,0.18)',   text: '#fcd34d', icon: 'warning' },
-  off_track:         { label: 'Off Track',         color: '#F87171', bg: 'rgba(248,113,113,0.07)',  border: 'rgba(248,113,113,0.18)',  text: '#fca5a5', icon: 'crossCircle' },
-  complete:          { label: 'Complete',          color: '#FF8A4C', bg: 'rgba(232,93,18,0.07)',    border: 'rgba(232,93,18,0.18)',    text: '#FF8A4C', icon: 'party' },
-  insufficient_data: { label: 'Insufficient Data', color: '#F59E0B', bg: 'rgba(245,158,11,0.05)',   border: 'rgba(245,158,11,0.18)',   text: '#F59E0B', icon: 'info' },
+  on_track:          { label: 'On Track',         color: '#268a5a', bg: 'rgba(38,138,90,0.08)',   border: 'rgba(38,138,90,0.25)',   text: '#268a5a', icon: 'checkCircle' },
+  at_risk:           { label: 'Timeline At Risk',  color: '#c57a18', bg: 'rgba(197,122,24,0.08)',  border: 'rgba(197,122,24,0.25)',  text: '#c57a18', icon: 'warning' },
+  off_track:         { label: 'Off Track',         color: '#c84452', bg: 'rgba(200,68,82,0.08)',   border: 'rgba(200,68,82,0.25)',   text: '#a6323f', icon: 'crossCircle' },
+  complete:          { label: 'Complete',          color: '#087f8c', bg: 'rgba(8,127,140,0.08)',   border: 'rgba(8,127,140,0.22)',   text: '#066b76', icon: 'party' },
+  insufficient_data: { label: 'Insufficient Data', color: '#c57a18', bg: 'rgba(197,122,24,0.06)',  border: 'rgba(197,122,24,0.22)',  text: '#c57a18', icon: 'info' },
 };
 
 const CONF_META: Record<string, { bg: string; color: string; border: string; label: string }> = {
-  high:   { bg: 'rgba(34,197,94,0.10)',   color: '#4ade80', border: 'rgba(34,197,94,0.25)',   label: 'High Forecast Reliability'   },
-  medium: { bg: 'rgba(245,158,11,0.10)',  color: '#fcd34d', border: 'rgba(245,158,11,0.25)',  label: 'Medium Forecast Reliability' },
-  low:    { bg: 'rgba(248,113,113,0.10)', color: '#fca5a5', border: 'rgba(248,113,113,0.25)', label: 'Low Forecast Reliability'    },
+  high:   { bg: 'rgba(38,138,90,0.10)',   color: '#268a5a', border: 'rgba(38,138,90,0.28)',   label: 'High Forecast Reliability'   },
+  medium: { bg: 'rgba(197,122,24,0.10)',  color: '#c57a18', border: 'rgba(197,122,24,0.28)',  label: 'Medium Forecast Reliability' },
+  low:    { bg: 'rgba(200,68,82,0.10)',   color: '#c84452', border: 'rgba(200,68,82,0.28)',   label: 'Low Forecast Reliability'    },
 };
 
 const TREND_META = {
-  improving: { icon: 'arrowUp', color: 'var(--dc-green, #22C55E)', label: 'Velocity improving' },
-  stable:    { icon: 'arrowRight', color: 'var(--dc-acc2, #FF8A4C)',  label: 'Velocity stable'    },
-  declining: { icon: 'arrowDown', color: 'var(--dc-red, #F87171)',   label: 'Velocity declining' },
+  improving: { icon: 'arrowUp', color: 'var(--dc-green, #268a5a)', label: 'Velocity improving' },
+  stable:    { icon: 'arrowRight', color: 'var(--dc-accent, #087f8c)', label: 'Velocity stable'    },
+  declining: { icon: 'arrowDown', color: 'var(--dc-red, #c84452)',   label: 'Velocity declining' },
 };
 
 const PATTERN_COLORS: Partial<Record<SprintDeliveryPattern, string>> = {
-  'Healthy Early Progress': '#22C55E',
-  'End-Loaded Sprint':      '#F59E0B',
-  'Scope Instability':      '#F87171',
-  'Blocked Sprint':         '#ef4444',
-  'Late Delivery Risk':     '#FF8A4C',
+  'Healthy Early Progress': '#268a5a',
+  'End-Loaded Sprint':      '#c57a18',
+  'Scope Instability':      '#c84452',
+  'Blocked Sprint':         '#a6323f',
+  'Late Delivery Risk':     '#087f8c',
 };
 
 // FCAST-20 — labels for the diagnosis card's weakest-factor headline.
@@ -629,19 +629,19 @@ export default function ForecastPage() {
             {/* ── KPI Row ── */}
             <div id="tour-section-forecast-2" className={styles.kpiGrid}>
               {[
-                { label: 'Total Issues',   value: result.totalIssues,   icon: 'clipboard', color: 'var(--dc-p1, #F2F2F2)',    delay: '0.08s' },
-                { label: `Done (${result.completionPct}%)`, value: result.doneIssues, icon: 'checkCircle', color: 'var(--dc-green, #22C55E)', delay: '0.12s' },
-                { label: 'Remaining',      value: result.remainingIssues, icon: 'clock', color: result.remainingIssues > 0 ? 'var(--dc-amber, #F59E0B)' : 'var(--dc-p3, #505050)', delay: '0.16s' },
-                { label: 'Avg / Sprint',   value: result.avgThroughput > 0 ? `${result.avgThroughput}` : '—', icon: 'priorityHigh', color: 'var(--dc-acc2, #FF8A4C)', delay: '0.20s' },
+                { label: 'Total Issues',   value: result.totalIssues,   icon: 'clipboard', color: 'var(--dc-p1, #203038)',    delay: '0.08s' },
+                { label: `Done (${result.completionPct}%)`, value: result.doneIssues, icon: 'checkCircle', color: 'var(--dc-green, #268a5a)', delay: '0.12s' },
+                { label: 'Remaining',      value: result.remainingIssues, icon: 'clock', color: result.remainingIssues > 0 ? 'var(--dc-amber, #c57a18)' : 'var(--dc-p3, #8a9fa5)', delay: '0.16s' },
+                { label: 'Avg / Sprint',   value: result.avgThroughput > 0 ? `${result.avgThroughput}` : '—', icon: 'priorityHigh', color: 'var(--dc-accent, #087f8c)', delay: '0.20s' },
                 {
                   label: 'Delivery Conf.',
                   value: throughput ? `${throughput.overallDeliveryConfidence}%` : `${result.completionPct}%`,
                   icon: 'target',
                   color: (throughput?.overallDeliveryConfidence ?? result.completionPct) >= 70
-                    ? 'var(--dc-green, #22C55E)'
+                    ? 'var(--dc-green, #268a5a)'
                     : (throughput?.overallDeliveryConfidence ?? result.completionPct) >= 40
-                      ? 'var(--dc-amber, #F59E0B)'
-                      : 'var(--dc-red, #F87171)',
+                      ? 'var(--dc-amber, #c57a18)'
+                      : 'var(--dc-red, #c84452)',
                   delay: '0.24s',
                 },
               ].map(c => (
@@ -671,27 +671,27 @@ export default function ForecastPage() {
                     {
                       label: 'Delivery Confidence', sub: throughput.overallDeliveryConfidence >= 70 ? 'Strong' : throughput.overallDeliveryConfidence >= 40 ? 'Moderate' : 'Needs work',
                       val: `${throughput.overallDeliveryConfidence}%`,
-                      color: throughput.overallDeliveryConfidence >= 70 ? 'var(--dc-green, #22C55E)' : throughput.overallDeliveryConfidence >= 40 ? 'var(--dc-amber, #F59E0B)' : 'var(--dc-red, #F87171)',
+                      color: throughput.overallDeliveryConfidence >= 70 ? 'var(--dc-green, #268a5a)' : throughput.overallDeliveryConfidence >= 40 ? 'var(--dc-amber, #c57a18)' : 'var(--dc-red, #c84452)',
                     },
                     {
                       label: 'Avg Completion', sub: 'of committed work',
                       val: `${Math.round(throughput.averageCompletionPct)}%`,
-                      color: throughput.averageCompletionPct >= 80 ? 'var(--dc-green, #22C55E)' : throughput.averageCompletionPct >= 60 ? 'var(--dc-amber, #F59E0B)' : 'var(--dc-red, #F87171)',
+                      color: throughput.averageCompletionPct >= 80 ? 'var(--dc-green, #268a5a)' : throughput.averageCompletionPct >= 60 ? 'var(--dc-amber, #c57a18)' : 'var(--dc-red, #c84452)',
                     },
                     {
                       label: 'Best Sprint', sub: throughput.bestSprintName || '—',
                       val: 'star',
-                      color: 'var(--dc-green, #22C55E)',
+                      color: 'var(--dc-green, #268a5a)',
                     },
                     {
                       label: 'End-Loaded', sub: `of ${throughput.totalSprints} sprints`,
                       val: throughput.endLoadedSprintCount,
-                      color: throughput.endLoadedSprintCount > 2 ? 'var(--dc-amber, #F59E0B)' : 'var(--dc-p1, #F2F2F2)',
+                      color: throughput.endLoadedSprintCount > 2 ? 'var(--dc-amber, #c57a18)' : 'var(--dc-p1, #203038)',
                     },
                     {
                       label: 'Blocked Sprints', sub: `of ${throughput.totalSprints} sprints`,
                       val: throughput.blockedSprintCount,
-                      color: throughput.blockedSprintCount > 0 ? 'var(--dc-red, #F87171)' : 'var(--dc-p1, #F2F2F2)',
+                      color: throughput.blockedSprintCount > 0 ? 'var(--dc-red, #c84452)' : 'var(--dc-p1, #203038)',
                     },
                   ].map(s => (
                     <div key={s.label} className={styles.healthStat}>
@@ -725,14 +725,14 @@ export default function ForecastPage() {
                     <div className={styles.throughputRow}>
                       <span className={styles.throughputRowLabel}>Current avg</span>
                       <div className={styles.throughputTrack}>
-                        <div className={styles.throughputFill} style={{ '--fill-width': `${Math.round((result.avgThroughput / maxVal) * 100)}%`, '--fill-color': 'var(--dc-acc2, #FF8A4C)' } as CSSProperties} />
+                        <div className={styles.throughputFill} style={{ '--fill-width': `${Math.round((result.avgThroughput / maxVal) * 100)}%`, '--fill-color': 'var(--dc-accent, #087f8c)' } as CSSProperties} />
                       </div>
                       <span className={styles.throughputRowVal}>{result.avgThroughput}/sprint</span>
                     </div>
                     <div className={styles.throughputRow}>
                       <span className={styles.throughputRowLabel}>Required (on track)</span>
                       <div className={styles.throughputTrack}>
-                        <div className={styles.throughputFill} style={{ '--fill-width': `${Math.round((requiredForOnTrack / maxVal) * 100)}%`, '--fill-color': requiredForOnTrack > result.avgThroughput ? 'var(--dc-red, #F87171)' : 'var(--dc-green, #22C55E)' } as CSSProperties} />
+                        <div className={styles.throughputFill} style={{ '--fill-width': `${Math.round((requiredForOnTrack / maxVal) * 100)}%`, '--fill-color': requiredForOnTrack > result.avgThroughput ? 'var(--dc-red, #c84452)' : 'var(--dc-green, #268a5a)' } as CSSProperties} />
                       </div>
                       <span className={styles.throughputRowVal}>{requiredForOnTrack.toFixed(1)}/sprint</span>
                     </div>
@@ -757,8 +757,8 @@ export default function ForecastPage() {
                     </p>
                   </div>
                   <div className={styles.chartLegend}>
-                    <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#F59E0B' } as CSSProperties} /> Scope added</span>
-                    <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#F87171' } as CSSProperties} /> Blocked</span>
+                    <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#c57a18' } as CSSProperties} /> Scope added</span>
+                    <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#c84452' } as CSSProperties} /> Blocked</span>
                   </div>
                 </div>
                 <RiskScopeTrendChart points={result.scopeTrend} />
@@ -771,14 +771,14 @@ export default function ForecastPage() {
                 <div className={styles.chartTitleGroup}>
                   <h2 className={styles.chartTitle}>Sprint Burn-up &amp; Burn-down</h2>
                   <p className={styles.chartSubtitle}>
-                    Green rises as work is completed (burn-up). Orange falls as remaining work decreases (burn-down).
+                    Green rises as work is completed (burn-up). Teal falls as remaining work decreases (burn-down).
                     The lines converge at project completion. The grey dashed line shows the ideal linear burn-down.
                   </p>
                 </div>
                 <div className={styles.chartLegend}>
-                  <span className={styles.legendItem}><span className={styles.legendLine} style={{ '--legend-color': '#22C55E' } as CSSProperties} /> Burn-up</span>
-                  <span className={styles.legendItem}><span className={styles.legendLine} style={{ '--legend-color': '#E85D12' } as CSSProperties} /> Burn-down</span>
-                  <span className={styles.legendItem}><span className={styles.legendLineDash} style={{ '--legend-color': '#505050' } as CSSProperties} /> Ideal</span>
+                  <span className={styles.legendItem}><span className={styles.legendLine} style={{ '--legend-color': '#268a5a' } as CSSProperties} /> Burn-up</span>
+                  <span className={styles.legendItem}><span className={styles.legendLine} style={{ '--legend-color': '#066b76' } as CSSProperties} /> Burn-down</span>
+                  <span className={styles.legendItem}><span className={styles.legendLineDash} style={{ '--legend-color': '#65747a' } as CSSProperties} /> Ideal</span>
                 </div>
               </div>
               <CombinedBurnChart points={result.sprintPoints} total={result.totalIssues} />
@@ -786,7 +786,7 @@ export default function ForecastPage() {
 
             {/* ── Ring + risk mini ── */}
             <div className={styles.ringCard} style={{ '--anim-delay': '0.16s' } as CSSProperties}>
-              <CompletionRing pct={result.completionPct} color="var(--dc-acc2, #FF8A4C)" />
+              <CompletionRing pct={result.completionPct} color="var(--dc-accent, #087f8c)" />
               <div className={styles.trendPill} style={{ '--trend-color': trend.color } as CSSProperties}>
                 <SvgIcon name={trend.icon} size={14} /> {trend.label}
               </div>
@@ -808,15 +808,15 @@ export default function ForecastPage() {
                 <div className={styles.chartTitleGroup}>
                   <h2 className={styles.chartTitle}>Burn-up Chart</h2>
                   <p className={styles.chartSubtitle}>
-                    Actual cumulative progress (orange line) vs. optimistic, expected, and pessimistic completion forecasts based on recent 3-sprint velocity.
+                    Actual cumulative progress (teal line) vs. optimistic, expected, and pessimistic completion forecasts based on recent 3-sprint velocity.
                     The shaded band shows the range of likely outcomes.
                   </p>
                 </div>
                 <div className={styles.chartLegend}>
-                  <span className={styles.legendItem}><span className={styles.legendLine} style={{ '--legend-color': '#FF8A4C' } as CSSProperties} /> Actual</span>
-                  <span className={styles.legendItem}><span className={styles.legendLineDash} style={{ '--legend-color': '#888' } as CSSProperties} /> Expected</span>
-                  <span className={styles.legendItem}><span className={styles.legendLine} style={{ '--legend-color': '#22C55E' } as CSSProperties} /> Optimistic</span>
-                  <span className={styles.legendItem}><span className={styles.legendLine} style={{ '--legend-color': '#F87171' } as CSSProperties} /> Pessimistic</span>
+                  <span className={styles.legendItem}><span className={styles.legendLine} style={{ '--legend-color': '#087f8c' } as CSSProperties} /> Actual</span>
+                  <span className={styles.legendItem}><span className={styles.legendLineDash} style={{ '--legend-color': '#65747a' } as CSSProperties} /> Expected</span>
+                  <span className={styles.legendItem}><span className={styles.legendLine} style={{ '--legend-color': '#268a5a' } as CSSProperties} /> Optimistic</span>
+                  <span className={styles.legendItem}><span className={styles.legendLine} style={{ '--legend-color': '#c84452' } as CSSProperties} /> Pessimistic</span>
                 </div>
               </div>
               <BurnUpChart points={result.sprintPoints} total={result.totalIssues} />
@@ -833,8 +833,8 @@ export default function ForecastPage() {
                   </p>
                 </div>
                 <div className={styles.chartLegend}>
-                  <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#FF8A4C' } as CSSProperties} /> Last 3</span>
-                  <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#323232' } as CSSProperties} /> Earlier</span>
+                  <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#087f8c' } as CSSProperties} /> Last 3</span>
+                  <span className={styles.legendItem}><span className={styles.legendDot} style={{ '--legend-color': '#65747a' } as CSSProperties} /> Earlier</span>
                   <span className={styles.legendItem} data-trend={result.velocityTrend}><SvgIcon name={trend.icon} size={12} /> {trend.label}</span>
                 </div>
               </div>
@@ -894,7 +894,7 @@ export default function ForecastPage() {
                         : result.sprintPoints.map((p, i) => {
                             const vs     = result.avgThroughput > 0 ? ((p.done - result.avgThroughput) / result.avgThroughput * 100) : 0;
                             const barPct = result.avgThroughput > 0 ? Math.min(100, (p.done / (result.avgThroughput * 1.5)) * 100) : 0;
-                            const paceCol = vs > 10 ? '#22C55E' : vs < -10 ? '#F87171' : '#FF8A4C';
+                            const paceCol = vs > 10 ? '#268a5a' : vs < -10 ? '#c84452' : '#087f8c';
                             return (
                               <tr key={i} className={styles.tableRow}>
                                 <td>{p.sprint.replace(/sprint\s*/i, 'Sprint ')}</td>
@@ -937,7 +937,7 @@ export default function ForecastPage() {
                           className={styles.patternFill}
                           style={{
                             '--fill-width': `${Math.round((count / maxPatternCount) * 100)}%`,
-                            '--pattern-color': PATTERN_COLORS[pattern as SprintDeliveryPattern] ?? '#505050',
+                            '--pattern-color': PATTERN_COLORS[pattern as SprintDeliveryPattern] ?? '#8a9fa5',
                           } as CSSProperties}
                         />
                       </div>
@@ -958,9 +958,9 @@ export default function ForecastPage() {
               const cut2 = Math.max(0, result.remainingIssues - Math.round(result.avgThroughput * TWO_YR));
               const cut5 = Math.max(0, result.remainingIssues - Math.round(result.avgThroughput * FIVE_YR));
               const gapColor = (gap: number) =>
-                gap <= 0 ? '#22C55E' : gap <= result.avgThroughput ? '#F59E0B' : '#F87171';
+                gap <= 0 ? '#268a5a' : gap <= result.avgThroughput ? '#c57a18' : '#c84452';
               const gapBg = (gap: number) =>
-                gap <= 0 ? 'rgba(34,197,94,0.12)' : 'rgba(248,113,113,0.08)';
+                gap <= 0 ? 'rgba(38,138,90,0.12)' : 'rgba(200,68,82,0.08)';
               return (
                 <div className={styles.chartCard} style={{ '--anim-delay': '0.32s' } as CSSProperties}>
                   <div className={styles.chartHead}>
@@ -1005,7 +1005,7 @@ export default function ForecastPage() {
                       { target: '5 Years', cut: cut5 },
                     ] as const).map(l => {
                       const pct = Math.round(l.cut / result.remainingIssues * 100);
-                      const col = l.cut === 0 ? '#22C55E' : pct <= 30 ? '#F59E0B' : '#F87171';
+                      const col = l.cut === 0 ? '#268a5a' : pct <= 30 ? '#c57a18' : '#c84452';
                       return (
                         <div key={l.target} className={styles.leverCard}
                           style={{ '--lever-color': col } as CSSProperties}>
@@ -1014,7 +1014,7 @@ export default function ForecastPage() {
                           <div className={styles.leverVal}>{l.cut === 0 ? '0' : l.cut.toLocaleString()}</div>
                           <div className={styles.leverUnit}>items from scope</div>
                           <div className={styles.leverGap}
-                            style={{ '--gap-bg': l.cut === 0 ? 'rgba(34,197,94,0.12)' : 'rgba(248,113,113,0.08)', '--gap-color': col } as CSSProperties}>
+                            style={{ '--gap-bg': l.cut === 0 ? 'rgba(38,138,90,0.12)' : 'rgba(200,68,82,0.08)', '--gap-color': col } as CSSProperties}>
                             {l.cut === 0 ? (
                               <><SvgIcon name="checkCircle" size={13} /> Achievable</>
                             ) : `${pct}% descope`}
@@ -1041,9 +1041,9 @@ export default function ForecastPage() {
                 <>
                   <div className={styles.quarterGrid}>
                     {[
-                      { label: 'Capacity (6 sprints)', value: Math.round(result.avgThroughput * 6), color: 'var(--dc-acc2, #FF8A4C)' },
-                      { label: 'Remaining backlog',    value: result.remainingIssues,               color: result.remainingIssues > result.avgThroughput * 6 ? 'var(--dc-red, #F87171)' : 'var(--dc-green, #22C55E)' },
-                      { label: 'Gap (items at risk)',  value: Math.max(0, result.remainingIssues - Math.round(result.avgThroughput * 6)), color: 'var(--dc-amber, #F59E0B)' },
+                      { label: 'Capacity (6 sprints)', value: Math.round(result.avgThroughput * 6), color: 'var(--dc-accent, #087f8c)' },
+                      { label: 'Remaining backlog',    value: result.remainingIssues,               color: result.remainingIssues > result.avgThroughput * 6 ? 'var(--dc-red, #c84452)' : 'var(--dc-green, #268a5a)' },
+                      { label: 'Gap (items at risk)',  value: Math.max(0, result.remainingIssues - Math.round(result.avgThroughput * 6)), color: 'var(--dc-amber, #c57a18)' },
                     ].map(s => (
                       <div key={s.label} className={styles.quarterStat}>
                         <p className={styles.quarterVal} style={{ '--q-color': s.color } as CSSProperties}>{s.value}</p>

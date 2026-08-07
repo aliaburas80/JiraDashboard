@@ -1,7 +1,10 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
-// Full-bleed dark hero — breaks out of AppShell's `.main` centering/padding
+// Full-bleed light hero — breaks out of AppShell's `.main` centering/padding
 // (same recipe as app/page.module.scss's `.page`) so it starts immediately
 // under the shared nav and spans the full viewport width.
+// Colors match the Mediterranean palette (THEME-04) — previously a bespoke
+// dark hero with its own sky-blue/orange identity, now built from the app's
+// actual accent/text tokens.
 
 .hero {
   position: relative;
@@ -10,7 +13,7 @@
   margin-inline: calc(50% - 50vw);
   margin-block-start: calc(-1 * (var(--header-height, 52px) + var(--space-6, 24px)));
   min-block-size: calc(100vh - var(--header-height, 52px));
-  background: #020817;
+  background: var(--dc-bg, #f5f6f4);
   display: flex;
   align-items: center;
 }
@@ -50,29 +53,29 @@
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 700;
-  background: rgba(37, 99, 235, 0.14);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  color: #38bdf8;
+  background: rgba(8, 127, 140, 0.10);
+  border: 1px solid rgba(8, 127, 140, 0.3);
+  color: var(--dc-accent, #087f8c);
   margin-block-end: 20px;
   margin-top: 2.0rem;
 }
 
 .title {
-  color: #f8fafc;
+  color: var(--dc-p1, #203038);
   font-weight: 900;
   letter-spacing: -0.02em;
 }
 
 // Glowing gradient highlight for the emphasized phrase.
 .highlight {
-  background: linear-gradient(90deg, #38bdf8, #f97316);
+  background: linear-gradient(90deg, var(--dc-accent, #087f8c), var(--dc-acc2, #2c7be5));
   background-clip: text;
   color: transparent;
-  text-shadow: 0 0 40px rgba(249, 115, 22, 0.25);
+  text-shadow: 0 0 30px rgba(8, 127, 140, 0.15);
 }
 
 .subhead {
-  color: #94a3b8;
+  color: var(--dc-p2, #65747a);
   margin-block-start: 16px;
   max-inline-size: 40rem;
   margin-inline: auto;
@@ -109,15 +112,15 @@
   white-space: nowrap;
   border-radius: 100px;
   font-weight: 800;
-  background: rgba(255, 255, 255, 0.06);
-  color: #f8fafc;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--dc-s2, #eef5f4);
+  color: var(--dc-p1, #203038);
+  border: 1px solid var(--dc-bdr, rgba(223, 229, 227, 0.7));
   transition: background-color 0.2s;
 
-  &:hover { background: rgba(255, 255, 255, 0.1); }
+  &:hover { background: var(--dc-s4, #e5f5f5); }
 
   &:focus-visible {
-    outline: var(--focus-ring-width, 2px) solid #38bdf8;
+    outline: var(--focus-ring-width, 2px) solid var(--dc-accent, #087f8c);
     outline-offset: var(--focus-ring-offset, 2px);
   }
 }
@@ -140,7 +143,7 @@
   gap: 6px;
   font-size: 12px;
   font-weight: 700;
-  color: #86efac;
+  color: var(--color-success, #268a5a);
 }
 
 // ── Dashboard mockup (CSS/HTML, no image) ──────────────────────────────────
@@ -156,10 +159,10 @@
   position: relative;
   border-radius: 20px;
   padding: 20px;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dc-bdr, rgba(223, 229, 227, 0.7));
   backdrop-filter: blur(14px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 24px 64px rgba(32, 48, 56, 0.14);
 }
 
 .mockupTitle {
@@ -168,7 +171,7 @@
   gap: 8px;
   font-size: 12px;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--dc-p1, #203038);
   margin-block-end: 14px;
 }
 
@@ -182,21 +185,21 @@
 .mockupKpi {
   border-radius: 12px;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--dc-s2, #eef5f4);
+  border: 1px solid var(--dc-bdr, rgba(223, 229, 227, 0.7));
 }
 
 .mockupKpiLabel {
   font-size: 10px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--dc-p2, #65747a);
 }
 
 .mockupKpiValue {
   font-size: 17px;
   font-weight: 900;
   font-family: var(--font-mono, monospace);
-  color: var(--kpi-color, #f8fafc);
+  color: var(--kpi-color, #203038);
   margin-block-start: 2px;
 }
 
@@ -209,14 +212,14 @@
 .mockupChartCard {
   border-radius: 12px;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--dc-s2, #eef5f4);
+  border: 1px solid var(--dc-bdr, rgba(223, 229, 227, 0.7));
 }
 
 .mockupChartLabel {
   font-size: 10px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--dc-p2, #65747a);
   margin-block-end: 6px;
 }
 
@@ -228,7 +231,7 @@
 
 .sparklinePath {
   fill: none;
-  stroke: #38bdf8;
+  stroke: var(--dc-accent, #087f8c);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -245,6 +248,6 @@
   flex: 1;
   block-size: var(--bar-height, 0%);
   border-radius: 3px 3px 0 0;
-  background: linear-gradient(180deg, #f97316, #fb923c);
+  background: linear-gradient(180deg, var(--dc-accent, #087f8c), var(--dc-acc2, #2c7be5));
   transform-origin: bottom;
 }

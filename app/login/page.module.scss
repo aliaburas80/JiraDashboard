@@ -1,4 +1,6 @@
-// Login page — visually aligned with the registration page's dark glass card.
+// Login page — visually aligned with the registration page's light glass card.
+// Colors match the Mediterranean palette (THEME-04) — see app/page.module.scss
+// and app/register/page.module.scss for the same mapping applied consistently.
 
 .wrapper {
   position:        relative;
@@ -6,7 +8,7 @@
   display:         flex;
   align-items:     center;
   justify-content: center;
-  background:      #050b16;
+  background:      var(--dc-bg, #f5f6f4);
   padding:         24px 16px;
   overflow:        hidden;
 }
@@ -15,7 +17,7 @@
 //   // inherits absolute inset:0 from AnimatedDataBackground
 // }
 
-// A subtle vignette darkens the edges so the card reads clearly
+// A soft vignette darkens the edges so the card reads clearly
 .vignette {
   position:   absolute;
   inset:      0;
@@ -23,7 +25,7 @@
   background: radial-gradient(
     ellipse 80% 70% at 50% 50%,
     transparent 40%,
-    rgba(5, 5, 8, 0.60) 100%
+    rgba(32, 48, 56, 0.08) 100%
   );
   pointer-events: none;
 }
@@ -33,16 +35,16 @@
   z-index:            1;
   inline-size:        100%;
   max-inline-size:    440px;
-  background:         rgba(8, 12, 26, 0.88);
+  background:         rgba(255, 255, 255, 0.9);
   backdrop-filter:    blur(32px);
-  border:             1px solid rgba(99, 130, 210, 0.14);
-  border-block-start: 2px solid rgba(232, 93, 18, 0.55);
+  border:             1px solid var(--dc-bdr, rgba(223, 229, 227, 0.7));
+  border-block-start: 2px solid rgba(8, 127, 140, 0.55);
   border-radius:      20px;
   padding:            clamp(28px, 5vw, 44px);
   box-shadow:
-    0 0 0 1px rgba(232, 93, 18, 0.05),
-    0 40px 100px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 0 0 1px rgba(8, 127, 140, 0.05),
+    0 24px 64px rgba(32, 48, 56, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .logo {
@@ -55,21 +57,21 @@
 .logoText {
   font-size:   16px;
   font-weight: 800;
-  color:       #f0f0f0;
+  color:       var(--dc-p1, #203038);
   line-height: 1;
 }
 
 .title {
   font-size:      22px;
   font-weight:    900;
-  color:          #f0f0f0;
+  color:          var(--dc-p1, #203038);
   margin:         0 0 6px;
   letter-spacing: -0.02em;
 }
 
 .subtitle {
   font-size: 13px;
-  color:     #545460;
+  color:     var(--dc-p3, #8a9fa5);
   margin:    0 0 24px;
 }
 
@@ -89,7 +91,7 @@
   display:        block;
   font-size:      11px;
   font-weight:    700;
-  color:          #a0a0a8;
+  color:          var(--dc-p2, #65747a);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -97,27 +99,27 @@
 .input {
   inline-size:   100%;
   padding:       10px 12px;
-  background:    #131318;
-  border:        1px solid rgba(255, 255, 255, 0.10);
+  background:    var(--dc-s3, #fafcfc);
+  border:        1px solid var(--dc-bdr, rgba(223, 229, 227, 0.7));
   border-radius: 10px;
-  color:         #f0f0f0;
+  color:         var(--dc-p1, #203038);
   font-size:     14px;
   font-family:   inherit;
   outline:       none;
   transition:    border-color 0.15s, box-shadow 0.15s;
 
-  &::placeholder { color: #38383f; }
+  &::placeholder { color: var(--dc-p3, #8a9fa5); }
 
   &:focus-visible,
   &:focus {
-    border-color: #e85d12;
-    box-shadow:   0 0 0 3px rgba(232, 93, 18, 0.18);
+    border-color: var(--dc-accent, #087f8c);
+    box-shadow:   0 0 0 3px rgba(8, 127, 140, 0.18);
     outline:      none;
   }
 }
 
 .inlineLink {
-  color:           #e85d12;
+  color:           var(--dc-accent, #087f8c);
   font-size:       11px;
   font-weight:     800;
   text-decoration: none;
@@ -131,7 +133,7 @@
   padding:            12px;
   border-radius:      10px;
   border:             none;
-  background:         #e85d12;
+  background:         var(--dc-accent, #087f8c);
   color:              #fff;
   font-size:          14px;
   font-weight:        800;
@@ -140,9 +142,9 @@
   margin-block-start: 8px;
   transition:         background 0.15s, opacity 0.15s;
 
-  &:hover:not(:disabled) { background: #ff8a4c; }
+  &:hover:not(:disabled) { background: var(--dc-accent-hover, #066b76); }
   &:disabled             { opacity: 0.5; cursor: not-allowed; }
-  &:focus-visible        { outline: 2px solid #fff; outline-offset: 2px; }
+  &:focus-visible        { outline: 2px solid var(--dc-accent, #087f8c); outline-offset: 2px; }
 
   @media (prefers-reduced-motion: reduce) { transition: none; }
 }
@@ -155,21 +157,21 @@
 }
 
 .warning {
-  background: rgba(245, 158, 11, 0.10);
-  border:     1px solid rgba(245, 158, 11, 0.25);
-  color:      #f59e0b;
+  background: var(--color-warning-soft, #fdf3e3);
+  border:     1px solid var(--color-warning-border, rgb(197 122 24 / 25%));
+  color:      var(--color-warning, #c57a18);
 }
 
 .error {
-  background: rgba(248, 113, 113, 0.10);
-  border:     1px solid rgba(248, 113, 113, 0.25);
-  color:      #f87171;
+  background: var(--color-danger-soft, #fdedf0);
+  border:     1px solid var(--color-danger-border, rgb(200 68 82 / 25%));
+  color:      var(--color-danger, #c84452);
 }
 
 .success {
-  background: rgba(34, 197, 94, 0.10);
-  border:     1px solid rgba(34, 197, 94, 0.25);
-  color:      #86efac;
+  background: var(--color-success-soft, #e8f5ef);
+  border:     1px solid var(--color-success-border, rgb(38 138 90 / 25%));
+  color:      var(--color-success, #268a5a);
 }
 
 .noticeTitle {
@@ -197,9 +199,9 @@
 .solution {
   margin-block-start: 8px;
   border-radius:      10px;
-  border:             1px solid rgba(34, 197, 94, 0.25);
-  background:         rgba(34, 197, 94, 0.10);
-  color:              #86efac;
+  border:             1px solid var(--color-success-border, rgb(38 138 90 / 25%));
+  background:         var(--color-success-soft, #e8f5ef);
+  color:              var(--color-success, #268a5a);
   padding:            8px 10px;
   font-size:          11px;
   line-height:        1.55;
@@ -213,17 +215,17 @@
 
 .resendButton {
   justify-self:     start;
-  border:           1px solid rgba(232, 93, 18, 0.42);
+  border:           1px solid rgba(8, 127, 140, 0.35);
   border-radius:    999px;
-  background:       rgba(232, 93, 18, 0.16);
-  color:            #ffb088;
+  background:       rgba(8, 127, 140, 0.10);
+  color:            var(--dc-accent-hover, #066b76);
   padding:          7px 12px;
   font-size:        11px;
   font-weight:      900;
   cursor:           pointer;
 
   &:hover:not(:disabled) {
-    background: rgba(232, 93, 18, 0.26);
+    background: rgba(8, 127, 140, 0.18);
   }
 
   &:disabled {
@@ -233,7 +235,7 @@
 }
 
 .resendMessage {
-  color:       #f3c09d;
+  color:       var(--dc-p2, #65747a);
   font-size:   11px;
   line-height: 1.5;
 }
@@ -246,10 +248,10 @@
 .registerLink {
   margin-block-start: 20px;
   font-size:          13px;
-  color:              #545460;
+  color:              var(--dc-p3, #8a9fa5);
 
   a {
-    color:           #e85d12;
+    color:           var(--dc-accent, #087f8c);
     font-weight:     700;
     text-decoration: none;
 
@@ -262,11 +264,11 @@
   font-size:          12px;
 
   a {
-    color:           #545460;
+    color:           var(--dc-p3, #8a9fa5);
     text-decoration: none;
 
     &:hover {
-      color:           #a0a0a8;
+      color:           var(--dc-p2, #65747a);
       text-decoration: underline;
     }
   }

@@ -2,10 +2,10 @@
 // Colors resolved from data-tier (CLAUDE.md §28). Tailwind utility classes
 // elsewhere on this page (layout, typography, borders) are pre-existing usage.
 @mixin tier-color($prop: color) {
-  &[data-tier='good']     { #{$prop}: var(--color-success, #16a34a); }
-  &[data-tier='warning']  { #{$prop}: var(--color-warning, #f59e0b); }
-  &[data-tier='critical'] { #{$prop}: var(--color-danger-strong, #dc2626); }
-  &[data-tier='neutral']  { #{$prop}: var(--color-text-muted, #94a3b8); }
+  &[data-tier='good']     { #{$prop}: var(--color-success, #268a5a); }
+  &[data-tier='warning']  { #{$prop}: var(--color-warning, #c57a18); }
+  &[data-tier='critical'] { #{$prop}: var(--color-danger-strong, #a6323f); }
+  &[data-tier='neutral']  { #{$prop}: var(--color-text-muted, #8a9fa5); }
 }
 
 .statDelta {
@@ -13,7 +13,7 @@
 }
 
 .timelineDot {
-  background: var(--color-danger-strong, #dc2626);
+  background: var(--color-danger-strong, #a6323f);
   @include tier-color(background);
 }
 

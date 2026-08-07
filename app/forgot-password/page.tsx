@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState, FormEvent } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import clsx from 'clsx';
 import { AnimatedDataBackground } from '@/components/ui/AnimatedDataBackground';
 import styles from './page.module.scss';
 
@@ -67,45 +68,45 @@ export default function ForgotPasswordPage() {
         </div>
 
         {state.status === 'sent' ? (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center space-y-3">
-            <p className="font-black text-slate-800">Check your inbox</p>
-            <p className="text-sm text-slate-500">If an account exists for {email}, a password reset link has been sent. The link expires in 1 hour.</p>
-            <Link href="/login" className="inline-block text-sm font-bold text-blue-600 underline underline-offset-2">
+          <div className={clsx(styles.card, 'text-center space-y-3')}>
+            <p className={styles.title}>Check your inbox</p>
+            <p className={styles.message}>If an account exists for {email}, a password reset link has been sent. The link expires in 1 hour.</p>
+            <Link href="/login" className={clsx('inline-block text-sm font-bold', styles.inlineLink)}>
               Back to sign in
             </Link>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} noValidate className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-4">
-            <p className="text-sm text-slate-500">Enter the email address on your account and we&apos;ll send you a link to reset your password.</p>
+          <form onSubmit={handleSubmit} noValidate className={clsx(styles.card, 'space-y-4')}>
+            <p className={styles.message}>Enter the email address on your account and we&apos;ll send you a link to reset your password.</p>
 
             {state.status === 'error' && (
-              <div ref={errorRef} className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700" role="alert">
+              <div ref={errorRef} className={styles.error} role="alert">
                 {state.message}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="mb-1.5 block text-xs font-bold text-slate-700">Email address</label>
+              <label htmlFor="email" className={styles.label}>Email address</label>
               <input
                 id="email"
                 type="email"
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={styles.input}
               />
             </div>
 
             <button
               type="submit"
               disabled={state.status === 'submitting'}
-              className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold py-2.5 text-sm"
+              className={styles.submit}
             >
               {state.status === 'submitting' ? 'Sending…' : 'Send reset link'}
             </button>
 
-            <p className="text-center text-sm text-slate-500">
-              <Link href="/login" className="font-bold text-blue-600 underline underline-offset-2">Back to sign in</Link>
+            <p className={clsx('text-center', styles.message)}>
+              <Link href="/login" className={clsx('font-bold', styles.inlineLink)}>Back to sign in</Link>
             </p>
           </form>
         )}

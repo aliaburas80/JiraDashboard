@@ -113,11 +113,11 @@
   color: #fff;
   background: linear-gradient(135deg, var(--color-primary, #2563eb), var(--color-primary-hover, #1d4ed8));
 
-  &[data-avatar='0'] { background: linear-gradient(135deg, var(--dc-acc, #e85d12), #8b2d00); }
-  &[data-avatar='1'] { background: linear-gradient(135deg, #7c3aed, #4c1d95); }
-  &[data-avatar='2'] { background: linear-gradient(135deg, #0284c7, #1e3a5f); }
-  &[data-avatar='3'] { background: linear-gradient(135deg, #0d9488, #134e4a); }
-  &[data-avatar='4'] { background: linear-gradient(135deg, #ca8a04, #78350f); }
+  &[data-avatar='0'] { background: linear-gradient(135deg, var(--dc-accent, #087f8c), color-mix(in srgb, var(--dc-accent, #087f8c) 50%, #000)); }
+  &[data-avatar='1'] { background: linear-gradient(135deg, var(--dc-purple, #7c3aed), color-mix(in srgb, var(--dc-purple, #7c3aed) 50%, #000)); }
+  &[data-avatar='2'] { background: linear-gradient(135deg, var(--dc-acc2, #2c7be5), color-mix(in srgb, var(--dc-acc2, #2c7be5) 50%, #000)); }
+  &[data-avatar='3'] { background: linear-gradient(135deg, var(--dc-green, #268a5a), color-mix(in srgb, var(--dc-green, #268a5a) 50%, #000)); }
+  &[data-avatar='4'] { background: linear-gradient(135deg, var(--dc-amber, #c57a18), color-mix(in srgb, var(--dc-amber, #c57a18) 50%, #000)); }
 }
 
 .memberName {
@@ -156,7 +156,7 @@
 
 .modalAvatarLg {
   color: #fff;
-  background: linear-gradient(135deg, var(--dc-acc, #e85d12), #8b2d00);
+  background: linear-gradient(135deg, var(--dc-accent, #087f8c), color-mix(in srgb, var(--dc-accent, #087f8c) 50%, #000));
 }
 
 .modalName {
@@ -194,4 +194,17 @@
 
 .detailValue {
   color: var(--color-text-primary, #0f172a);
+}
+
+// ── Pagination ────────────────────────────────────────────────────────────────
+// Tailwind handles layout/base color on these buttons (remapped to design
+// tokens via the html[data-palette] override in globals.scss — see the
+// MPE-02 note in page.tsx). `outline-orange-600` has no such remap anywhere
+// in globals.scss (only bg-/text-/border-blue-* are mapped), so it rendered
+// as Tailwind's raw legacy-orange default. Replaced with the real token here.
+.pagerBtn {
+  &:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--color-primary, #087f8c);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
 }
