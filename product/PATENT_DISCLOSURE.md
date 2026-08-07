@@ -174,3 +174,19 @@ The closest known prior art:
 ## Current Code Alignment — 2026-06-06
 
 Implementation now includes `data/latest-metrics.json` and `/api/metrics/latest` so returning sessions can load the latest computed dashboard payload from the bucket-backed server copy. This does not alter the zero-Jira-credential disclosure: cloud storage is used for Delivery Clarity backup/restore only.
+
+## Current Code Alignment — 2026-08-08 (`DOC-GATE-09`)
+
+Verified each §4 claim against the current implementation. Most hold precisely — flagging two that don't, for the inventor's own review before filing (claim-scope decisions are not made in this pass):
+
+**Accurate, verified against code:**
+- §4.3 Hierarchy reconstruction: `src/services/relations/hierarchy.service.ts` implements exactly the 4-signal inference described, with the exact confidence values quoted — `parent-key`/`epic-link` at `1.0`, `inferred-prefix` at `0.8`, `inferred-sprint` at `0.5`.
+- §4.7 Work item explorer: `reactflow` (^11.11.4) and `@dagrejs/dagre` (^3.0.0) are real, installed, in-use dependencies; orphan nodes and multi-type node styling both exist (`src/components/explore/nodeStyles.ts`).
+- §4.8 Statistical Excel export: `buildInsightWorkbook()` (`src/services/export/excelInsightExport.service.ts`) produces exactly 17 named sheets (`01 Executive Summary` … `17 Raw Data Reference`), matching the claimed count precisely.
+- §4.1 Zero-credential architecture: confirmed no Jira API call exists anywhere in the CSV/XLSX upload path.
+
+**Does not currently match the disclosure as written:**
+- §4.4 Orphan classification claims four distinct categories (`MISSING_EPIC`, `MISSING_PARENT`, `DANGLING_LINK`, `FULLY_ORPHANED`), each with its own impact statement. The current implementation has a single boolean `isOrphan` flag (`RelationNode.isOrphan`, `src/types/relations.ts`) with one general impact statement ("not connected to an Epic or Parent... will not appear in roadmap reporting" — `relationExplorer.service.ts`), not four distinguishable sub-classifications. No `MISSING_EPIC`/`DANGLING_LINK`/etc. identifiers exist anywhere in the codebase today.
+- §4.5 Health score: the claimed formula (`completion_rate ×0.25 + flow_health ×0.20 + velocity_trend ×0.15 + cycle_time_score ×0.15 + (1−blocked_ratio) ×0.15 + (1−orphan_ratio) ×0.10`) does not match `calculateHealthScore()` (`src/services/metrics/metrics.service.ts:1061`), which actually computes `completionRate ×0.28 + (1−criticalRatio) ×0.24 + (1−warningRatio) ×0.12 + latestSprintRate ×0.14 + (1−orphanRatio) ×0.12 + cycleScore ×0.10`. Differences: all six weights are different; the disclosure's single "flow_health" signal is two separate weighted terms in code (critical, warning); there is no `blocked_ratio` term in code at all; the disclosure's "velocity_trend (improving/stable/declining)" is, in code, the latest sprint's raw completion rate — not a trend classification.
+
+Not a code-vs-doc drift caused by any change made in this pass — this is exactly the gap `DOC-GATE-09` exists to surface before filing. Left for the inventor to decide: update the disclosure to match the shipped formula/classification, treat the current wording as a broader prophetic claim covering a planned refinement, or update the code to match the disclosure. No claim language was edited here.
