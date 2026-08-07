@@ -34,14 +34,14 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next-jira-dashboard/types/**/*.ts",
-    ".next-jira-dashboard/dev/types/**/*.ts"
+    ".next-jira-dashboard/dev/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "backend",
     "frontend",
     "UX Designer Portfolio",
-
     "src/__tests__",
     "**/__tests__/**",
     "**/*.test.ts",

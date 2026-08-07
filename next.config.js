@@ -12,10 +12,16 @@ const CLOUD_EXTERNALS = [
 
 const NODE_EXTERNALS = ['fs', 'path', 'http', 'https', 'stream', 'net', 'tls'];
 
-// Keep build output outside iCloud Drive — iCloud evicts files from the
-// Documents folder, destroying .next chunks while the server is running.
-const DIST_DIR = process.env.NEXT_DIST_DIR
-  || '.next-jira-dashboard';
+// Local dev keeps build output outside iCloud Drive — iCloud evicts files
+// from the Documents folder, destroying .next chunks while the server is
+// running. Hosted production builds (Hostinger and any other standard
+// Next.js host) must use the conventional `.next` directory instead: hosts
+// look for `.next` after `next build` and don't know about a custom name.
+const DIST_DIR =
+  process.env.NEXT_DIST_DIR ||
+  (process.env.NODE_ENV === 'production'
+    ? '.next'
+    : '.next-jira-dashboard');
 
 const nextConfig = {
   distDir: DIST_DIR,
