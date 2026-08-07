@@ -13,6 +13,8 @@ UX Designer Portfolio/
 .env.local
 .env.*.local
 !.env.example
+*.env
+DeliveryClarity_Hostinger_Import.env
 
 # OS
 .DS_Store
