@@ -40,6 +40,18 @@
     "node_modules",
     "backend",
     "frontend",
-    "UX Designer Portfolio"
+    "UX Designer Portfolio",
+
+    "src/__tests__",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "tests/**",
+    "e2e/**",
+    "playwright.config.ts",
+    "jest.config.js",
+    "jest.config.ts"
   ]
 }
