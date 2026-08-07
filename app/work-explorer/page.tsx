@@ -217,11 +217,11 @@ export default function WorkExplorerPage() {
         {items.length > 0 && (
           <div className={styles.statsStrip} role="list" aria-label="Project summary">
             {[
-              { label: 'Total Issues',   val: stats.total.toLocaleString(),   color: 'var(--dc-p1, #F2F2F2)' },
-              { label: `Done (${stats.donePct}%)`, val: stats.done.toLocaleString(), color: '#4ade80' },
-              { label: 'In Progress',    val: stats.inProg.toLocaleString(),  color: '#93c5fd' },
-              { label: 'At Risk',        val: stats.atRisk.toLocaleString(),  color: stats.atRisk > 0 ? '#fca5a5' : 'var(--dc-p1)' },
-              { label: 'Avg Age (days)', val: stats.avgAge > 0 ? String(stats.avgAge) : '—', color: stats.avgAge > 14 ? '#F59E0B' : 'var(--dc-p1)' },
+              { label: 'Total Issues',   val: stats.total.toLocaleString(),   color: 'var(--dc-p1, #203038)' },
+              { label: `Done (${stats.donePct}%)`, val: stats.done.toLocaleString(), color: 'var(--color-success, #268a5a)' },
+              { label: 'In Progress',    val: stats.inProg.toLocaleString(),  color: 'var(--color-info, #2c7be5)' },
+              { label: 'At Risk',        val: stats.atRisk.toLocaleString(),  color: stats.atRisk > 0 ? 'var(--color-danger, #c84452)' : 'var(--dc-p1)' },
+              { label: 'Avg Age (days)', val: stats.avgAge > 0 ? String(stats.avgAge) : '—', color: stats.avgAge > 14 ? 'var(--color-warning, #c57a18)' : 'var(--dc-p1)' },
             ].map(s => (
               <div key={s.label} className={styles.statChip} role="listitem">
                 <div className={styles.statVal} style={{ '--stat-color': s.color } as CSSProperties}>

@@ -25,7 +25,7 @@ function HealthBadge({ health }: { health: RelationNode['health'] }) {
     good:     'bg-teal-100 text-teal-800',
     warning:  'bg-amber-100 text-amber-800',
     critical: 'bg-red-100 text-red-800',
-    orphan:   'bg-orange-100 text-orange-800',
+    orphan:   'bg-amber-100 text-amber-800',
   };
   return (
     <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${map[health] ?? 'bg-slate-100 text-slate-600'}`}>
@@ -92,7 +92,7 @@ export default function RelationDetailsTable({ nodes, orphanNodes, onFocusNode, 
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={clsx('font-mono text-xs font-bold shrink-0', styles.typeColor)} style={{ '--type-color': cfg.color } as CSSVars}>{node.issueKey}</span>
                   {node.isFocusNode && <span className="text-[9px] bg-blue-600 text-white px-1.5 py-0.5 rounded shrink-0">focus</span>}
-                  {node.isOrphan && <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200 shrink-0">Orphan</span>}
+                  {node.isOrphan && <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 shrink-0">Orphan</span>}
                 </div>
                 <HealthBadge health={node.health} />
               </div>
@@ -164,7 +164,7 @@ export default function RelationDetailsTable({ nodes, orphanNodes, onFocusNode, 
                   <td className="py-2 px-2 text-xs text-center text-slate-700">{node.storyPoints ?? '—'}</td>
                   <td className="py-2 px-2"><HealthBadge health={node.health} /></td>
                   <td className="py-2 px-2 text-center">
-                    {node.isOrphan && <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">Orphan</span>}
+                    {node.isOrphan && <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">Orphan</span>}
                   </td>
                   <td className="py-2 px-2 pr-4 text-right">
                     <button className="text-xs text-blue-600 hover:underline font-semibold"

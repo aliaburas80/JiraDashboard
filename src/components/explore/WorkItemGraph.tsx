@@ -261,15 +261,15 @@ export default function WorkItemGraph({ graph, onNodeFocus, dimNonRiskPath = fal
         maxZoom={2}
         attributionPosition="bottom-left"
       >
-        <Background color="#e2e8f0" gap={20} />
+        <Background color="var(--color-border)" gap={20} />
         <Controls showInteractive={false} />
         {!isMobile && (
           <MiniMap
             nodeColor={n => {
               const cfg = nodeTypeConfig[n.data?.type as string];
-              return cfg?.color ?? '#94a3b8';
+              return cfg?.color ?? 'var(--color-text-muted)';
             }}
-            maskColor="rgba(248,250,252,0.7)"
+            maskColor="color-mix(in srgb, var(--dc-bg) 70%, transparent)"
           />
         )}
       </ReactFlow>

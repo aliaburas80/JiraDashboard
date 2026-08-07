@@ -16,6 +16,50 @@ add-member request screens (`TODO-List.md` `TEST-REQ-14`).
 
 ---
 
+## Fix: roadmap Gantt chart was cramped on narrow screens (2026-08-06, P2)
+
+On phone-width screens, the Epic Roadmap's Gantt timeline was squeezing every column into the
+available width instead of scrolling horizontally with the epic names pinned in place — making the
+month labels and delivery bars too narrow to read. It now scrolls sideways with the epic-name column
+staying visible, matching how the forecast table on the same page already worked.
+
+---
+
+## New Logo and New Default Look — "Mediterranean Intelligence" (2026-08-03, P2)
+
+Delivery Clarity has a new logo — a teal-and-blue "DC" mark — visible everywhere the previous one
+appeared (login, sign-up, the dashboard header, and elsewhere). The app's default look has also
+changed: a warm, teal-accented "Mediterranean Intelligence" theme, applied across navigation,
+buttons, badges, and status colors throughout the dashboard — including the sign-in, sign-up,
+upload, verification, password-reset, landing, privacy policy, terms of use, delivery forecast,
+work explorer, marketing, flow health, visual analytics, upload trends, release readiness, sprint
+and kanban, delivery mix, backend status, column mapping, members, delivery summary, key metrics,
+team health, portfolio overview, relations explorer, snapshots, help & documentation, and
+forgot-password pages, which previously used a separate dark or off-brand design and now match the
+rest of the app. If
+you preferred the previous blue look, it's still available — open the new icon in the dashboard
+header, next to the notification bell, and choose **Classic Blue**. Your choice is remembered on
+this device. Everything else about how the app works is unchanged.
+
+---
+
+## Removed the theme picker from the dashboard header (2026-08-06, P3)
+
+The palette-switcher icon next to the notification bell (used to switch back to the previous
+"Classic Blue" look) has been removed. The dashboard now always uses the Mediterranean Intelligence
+theme described above, with no in-app way to change it. If your browser already had Classic Blue
+selected before this change, it will keep showing until you clear your saved preference.
+
+---
+
+## Fix: "Open the app" on the marketing page sent signed-in users back to login (2026-08-05, P0)
+
+If you were already signed in and clicked "Open the app" (or "Explore delivery insights") from the
+public marketing page, you were sent to the sign-in screen instead of straight to your dashboard.
+These links now check whether you're signed in and take you to your dashboard directly if you are.
+
+---
+
 ## Product Analytics Delivery Queue (2026-08-03, P0 — internal, no visible change)
 
 A follow-up to the analytics foundation below: events that opt-in users generate are now queued

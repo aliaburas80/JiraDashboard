@@ -3,5 +3,8 @@
   "plugins": ["local-rules"],
   "rules": {
     "local-rules/forbid-non-css-var-style": "warn"
-  }
+  },
+  "ignorePatterns": [
+    "UX Designer Portfolio/**"
+  ]
 }

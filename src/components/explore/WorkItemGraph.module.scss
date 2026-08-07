@@ -4,10 +4,10 @@
   position: relative;
   width: 100%;
   height: 540px;
-  background: #f8fafc;
+  background: var(--color-muted);
   border-radius: 16px;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
 
   @media (max-width: 639px) {
     height: 380px;
@@ -29,22 +29,22 @@
   border-radius: 12px;
   padding: 10px 12px;
   cursor: pointer;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(32, 48, 56, 0.08);
 
   &[data-tone='risk'] {
-    border-color: #dc2626;
-    background: #fff5f5;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15), 0 2px 8px rgba(220, 38, 38, 0.10);
+    border-color: var(--color-danger);
+    background: var(--color-danger-soft);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 15%, transparent), 0 2px 8px color-mix(in srgb, var(--color-danger) 10%, transparent);
   }
 
   &[data-tone='branch'] {
-    border-color: #7c3aed;
-    background: #faf5ff;
+    border-color: var(--dc-purple);
+    background: var(--dc-purple-soft);
   }
 
   &[data-tone='orphan'] {
-    border: 2px dashed #f97316;
-    background: #fff7ed;
+    border: 2px dashed var(--dc-orange);
+    background: color-mix(in srgb, var(--dc-orange) 8%, var(--dc-s1));
   }
 
   &[data-focus='true'] {
@@ -83,7 +83,7 @@
   align-items: center;
   gap: 3px;
   font-size: 9px;
-  background: #dc2626;
+  background: var(--color-danger);
   color: #fff;
   border-radius: 999px;
   padding: 1px 6px;
@@ -95,7 +95,7 @@
   align-items: center;
   gap: 3px;
   font-size: 9px;
-  background: #7c3aed;
+  background: var(--dc-purple);
   color: #fff;
   border-radius: 999px;
   padding: 1px 6px;
@@ -104,7 +104,7 @@
 
 .orphanBadge {
   font-size: 9px;
-  background: #f97316;
+  background: var(--dc-orange);
   color: #fff;
   border-radius: 999px;
   padding: 1px 6px;
@@ -121,7 +121,7 @@
 
 .summary {
   font-size: 11px;
-  color: #334155;
+  color: var(--color-text-secondary);
   line-height: 1.4;
   margin: 0 0 6px;
   display: -webkit-box;
@@ -142,35 +142,35 @@
   border-radius: 999px;
   padding: 1px 6px;
   font-weight: 600;
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+  background: var(--color-subtle);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
 
   &[data-done='true'] {
-    background: #dcfce7;
-    color: #15803d;
-    border-color: #bbf7d0;
+    background: var(--color-success-soft);
+    color: var(--color-success);
+    border-color: var(--color-success-border);
   }
 }
 
 .blockedChip {
   font-size: 9px;
-  background: #fef2f2;
-  color: #b91c1c;
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
   border-radius: 999px;
   padding: 1px 6px;
   font-weight: 700;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--color-danger-border);
 }
 
 .pointsChip {
   font-size: 9px;
-  background: #f5f3ff;
-  color: #7c3aed;
+  background: var(--dc-purple-soft);
+  color: var(--dc-purple);
   border-radius: 999px;
   padding: 1px 6px;
   font-weight: 600;
-  border: 1px solid #ddd6fe;
+  border: 1px solid color-mix(in srgb, var(--dc-purple) 25%, transparent);
 }
 
 .assigneeRow {
@@ -178,7 +178,7 @@
   align-items: center;
   gap: 3px;
   font-size: 10px;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   margin: 4px 0 0;
 }
 
@@ -187,10 +187,10 @@
   width: 100%;
   font-size: 10px;
   font-weight: 700;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 2px 0;
-  color: #475569;
+  color: var(--color-text-secondary);
   cursor: pointer;
 }

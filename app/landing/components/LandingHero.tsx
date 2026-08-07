@@ -16,11 +16,14 @@ const TRUST_CHIPS = ['No API keys', 'No Jira credentials', 'No plugins'] as cons
 const SPARKLINE_POINTS = '0,32 16,26 32,28 48,18 64,20 80,10 96,14 112,4';
 const BARS = [40, 65, 50, 80, 60, 90, 70];
 
+// Colors match the app's semantic tokens (--color-success/info/warning,
+// THEME-03/04) rather than the arbitrary greens/blues/oranges this mockup
+// used before the light-theme conversion.
 const MOCKUP_KPIS = [
-  { label: 'Commitment',         value: '86%',     color: '#22c55e' },
-  { label: 'Cycle Time',         value: '4.2 days', color: '#38bdf8' },
-  { label: 'Blocked Items',      value: '23',      color: '#f97316' },
-  { label: 'Release Confidence', value: '78%',     color: '#22c55e' },
+  { label: 'Commitment',         value: '86%',     color: '#268a5a' },
+  { label: 'Cycle Time',         value: '4.2 days', color: '#2c7be5' },
+  { label: 'Blocked Items',      value: '23',      color: '#c57a18' },
+  { label: 'Release Confidence', value: '78%',     color: '#268a5a' },
 ] as const;
 
 export default function LandingHero() {

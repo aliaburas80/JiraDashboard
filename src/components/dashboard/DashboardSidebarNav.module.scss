@@ -153,8 +153,12 @@
   @apply bg-slate-100;
 }
 
+// Was bg-sky-600 (hardcoded blue, ignored the active palette's accent
+// entirely — a real pre-existing bug). Unified brand-teal nav accent
+// decision (THEME-03) needs this token-driven to take effect at all.
 .activeIndicator {
-  @apply absolute left-0 top-[18%] bottom-[18%] w-1 rounded-r-sm bg-sky-600;
+  @apply absolute left-0 top-[18%] bottom-[18%] w-1 rounded-r-sm;
+  background-color: var(--dc-accent, #2563eb);
 }
 
 .navIcon {
@@ -162,7 +166,7 @@
   color: #94a3b8;
 }
 
-.iconActive   { color: #2563eb; }
+.iconActive   { color: var(--dc-accent, #2563eb); }
 .iconInactive { color: #94a3b8; }
 
 .navTextTitle {
@@ -173,7 +177,7 @@
   @apply block text-[9px] text-slate-400 mt-[0.15rem];
 }
 
-.navTextActive   { color: #2563eb; }
+.navTextActive   { color: var(--dc-accent, #2563eb); }
 .navTextInactive { color: #64748b; }
 .navTextMetaInactive { color: #94a3b8; }
 
@@ -182,9 +186,13 @@
   @apply inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-[0.02em];
 }
 
-.chipCc { @apply bg-red-50 text-red-700; }
-.chipCw { @apply bg-amber-50 text-amber-700; }
-.chipCg { @apply bg-emerald-50 text-emerald-700; }
+// @apply on Tailwind colour utilities bakes the value into the compiled
+// class, bypassing the html[data-palette] token-remap block entirely — same
+// root cause as globals.scss's badge-*/btn-* (THEME-03) — so these use
+// direct token references instead.
+.chipCc { background-color: var(--color-danger-soft, #fdedf0); color: var(--color-danger, #c84452); }
+.chipCw { background-color: var(--color-warning-soft, #fdf3e3); color: var(--color-warning, #c57a18); }
+.chipCg { background-color: var(--color-success-soft, #e8f5ef); color: var(--color-success, #268a5a); }
 .chipCm { @apply bg-cyan-50 text-cyan-700; }
 .chipCn { @apply bg-slate-100 text-slate-600; }
 

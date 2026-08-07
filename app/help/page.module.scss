@@ -181,7 +181,7 @@
 }
 
 .searchHighlight {
-  background: rgba(232, 93, 18, 0.3);
+  background: color-mix(in srgb, var(--dc-accent) 30%, transparent);
   color: var(--dc-p1, #F2F2F2);
   border-radius: 2px;
   padding: 0 2px;
@@ -266,8 +266,8 @@
   overflow: hidden;
 
   &[data-open='true'] {
-    background: rgba(232, 93, 18, 0.03);
-    border: 1px solid rgba(232, 93, 18, 0.14);
+    background: color-mix(in srgb, var(--dc-accent) 3%, transparent);
+    border: 1px solid color-mix(in srgb, var(--dc-accent) 14%, transparent);
     border-left: 2px solid var(--dc-acc2, #FF8A4C);
     border-radius: 0 9px 9px 0;
   }
@@ -428,8 +428,8 @@
   outline: none;
 
   &:focus {
-    border-color: rgba(232, 93, 18, 0.5);
-    box-shadow: 0 0 0 3px rgba(232, 93, 18, 0.12);
+    border-color: color-mix(in srgb, var(--dc-accent) 50%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--dc-accent) 12%, transparent);
   }
 }
 
@@ -443,7 +443,7 @@
 .heroCard {
   background: var(--dc-s2, #1E1E1E);
   border: 1px solid var(--dc-bdr, rgba(255, 255, 255, 0.07));
-  border-top: 2px solid var(--dc-acc, #E85D12);
+  border-top: 2px solid var(--dc-accent, #087f8c);
   border-radius: 10px;
   padding: 16px 18px;
   text-align: left;
@@ -456,7 +456,7 @@
 
   &[data-active='true'] {
     background: var(--dc-s3, #282828);
-    box-shadow: 0 0 0 1px rgba(232, 93, 18, 0.18);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--dc-accent) 18%, transparent);
   }
 }
 
@@ -491,7 +491,7 @@
   transition: all 120ms;
 
   &:hover {
-    background: rgba(232, 93, 18, 0.12);
+    background: color-mix(in srgb, var(--dc-accent) 12%, transparent);
     color: var(--dc-acc2, #FF8A4C);
   }
 }
@@ -561,7 +561,7 @@
   align-items: center;
   gap: 6px;
   padding: 9px 18px;
-  background: var(--dc-acc, #E85D12);
+  background: var(--dc-accent, #087f8c);
   color: #fff;
   font-size: 12px;
   font-weight: 700;

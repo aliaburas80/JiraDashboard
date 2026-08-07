@@ -1,13 +1,17 @@
-<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Delivery Clarity favicon">
+<svg width="64" height="64" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Delivery Clarity favicon">
 <title>Delivery Clarity favicon</title>
-
-
-<rect width="64" height="64" rx="16" fill="#0B1B4D"/>
-<circle cx="29" cy="29" r="19" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
-<path d="M42 42L54 54" stroke="#14B8A6" stroke-width="6" stroke-linecap="round"/>
-<rect x="25" y="15" width="8" height="8" rx="2" fill="#14B8A6"/>
-<rect x="15" y="30" width="8" height="8" rx="2" fill="#2563EB"/>
-<rect x="35" y="30" width="8" height="8" rx="2" fill="#2563EB"/>
-<path d="M17 44C27 33 37 39 47 25" stroke="#14B8A6" stroke-width="4" stroke-linecap="round"/>
-
+<defs>
+<linearGradient id="teal" x1="70" y1="80" x2="280" y2="410"><stop stop-color="#13B8B0"/><stop offset="1" stop-color="#087F8C"/></linearGradient>
+<linearGradient id="blue" x1="230" y1="80" x2="440" y2="410"><stop stop-color="#2C7BE5"/><stop offset="1" stop-color="#1F5FD0"/></linearGradient>
+</defs>
+<rect width="512" height="512" rx="128" fill="#FFFFFF"/>
+<g transform="translate(42 54)">
+<circle cx="18" cy="205" r="8" fill="#13A9B3"/><rect x="32" y="199" width="72" height="12" rx="6" fill="#13A9B3"/><rect x="52" y="168" width="92" height="12" rx="6" fill="#13A9B3"/><rect x="24" y="232" width="114" height="12" rx="6" fill="#13A9B3"/>
+<path d="M112 84H170C239 84 286 127 286 194C286 261 239 304 170 304H112V268H166C211 268 246 240 246 194C246 148 211 120 166 120H112V84Z" fill="url(#teal)"/>
+<path d="M300 106C331 83 367 74 404 80C430 84 453 95 472 113L442 144C429 133 414 126 397 123C370 119 343 127 322 144L300 106Z" fill="url(#blue)"/>
+<path d="M322 244C343 261 370 269 397 265C414 262 429 255 442 244L472 275C453 293 430 304 404 308C367 314 331 305 300 282L322 244Z" fill="url(#blue)"/>
+<path d="M206 215C232 186 259 166 292 159C329 151 363 161 398 179" stroke="#2676DE" stroke-width="10" stroke-linecap="round"/>
+<path d="M398 179H455" stroke="#F06A4B" stroke-width="10" stroke-linecap="round"/><path d="M455 179L430 161V197L455 179Z" fill="#F06A4B"/>
+<rect x="315" y="227" width="18" height="36" rx="3" fill="#21B8A5"/><rect x="345" y="206" width="18" height="57" rx="3" fill="#F3C33C"/><rect x="375" y="180" width="18" height="83" rx="3" fill="#F0A11E"/>
+</g>
 </svg>

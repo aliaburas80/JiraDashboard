@@ -147,10 +147,10 @@ export default function SystemErrorsPage() {
   const { items: pageLogs, page: safePage, totalPages } = paginate(logs, page, PAGE_SIZE);
 
   const stats = [
-    { icon: 'warning',      label: 'Total Logged',  value: String(total),     note: 'All time',          toneStyle: { background: 'rgba(248,113,113,0.12)', color: '#F87171' } },
-    { icon: 'priorityHigh', label: 'Unresolved',    value: String(unresolved), note: 'Need attention',    toneStyle: { background: 'rgba(251,191,36,0.12)',   color: '#FBBF24' } },
-    { icon: 'checkCircle',  label: 'Auto-Fixed',    value: String(logs.filter(l => l.resolution === 'auto-fixed').length), note: 'System self-healed', toneStyle: { background: 'rgba(34,197,94,0.12)',  color: '#22C55E' } },
-    { icon: 'retry',        label: 'Retried',       value: String(logs.filter(l => l.resolution.startsWith('retried')).length), note: 'Manually retried', toneStyle: { background: 'rgba(96,165,250,0.12)', color: '#60A5FA' } },
+    { icon: 'warning',      label: 'Total Logged',  value: String(total),     note: 'All time',          toneStyle: { background: 'var(--color-danger-soft, #fdedf0)', color: 'var(--color-danger, #c84452)' } },
+    { icon: 'priorityHigh', label: 'Unresolved',    value: String(unresolved), note: 'Need attention',    toneStyle: { background: 'var(--color-warning-soft, #fdf3e3)', color: 'var(--color-warning, #c57a18)' } },
+    { icon: 'checkCircle',  label: 'Auto-Fixed',    value: String(logs.filter(l => l.resolution === 'auto-fixed').length), note: 'System self-healed', toneStyle: { background: 'var(--color-success-soft, #e8f5ef)', color: 'var(--color-success, #268a5a)' } },
+    { icon: 'retry',        label: 'Retried',       value: String(logs.filter(l => l.resolution.startsWith('retried')).length), note: 'Manually retried', toneStyle: { background: 'var(--color-info-soft, #eaf3fb)', color: 'var(--color-info, #2c7be5)' } },
   ];
 
   if (loading) return <LoadingState message="Loading system errors…" />;

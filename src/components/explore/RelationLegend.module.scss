@@ -19,8 +19,8 @@
     border-top-style: dashed;
   }
 
-  &[data-conn='parentChild'] { border-color: #64748b; }
-  &[data-conn='epicStory']   { border-color: #7c3aed; }
-  &[data-conn='blocks']      { border-color: #dc2626; }
-  &[data-conn='orphan']      { border-color: #f97316; }
+  &[data-conn='parentChild'] { border-color: var(--color-text-secondary); }
+  &[data-conn='epicStory']   { border-color: var(--dc-purple); }
+  &[data-conn='blocks']      { border-color: var(--color-danger); }
+  &[data-conn='orphan']      { border-color: var(--dc-orange); }
 }

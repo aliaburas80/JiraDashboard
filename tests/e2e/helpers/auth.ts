@@ -61,6 +61,28 @@ async function attemptLogin(page: Page, password: string): Promise<boolean> {
   return response.ok();
 }
 
+// Right after login/password-change/upload, the app is still working through
+// its own client-side router.push()+router.refresh() plus /dashboard's own
+// server redirect() to /dashboard/priority-attention. If a goto is issued
+// while that chain is still resolving, the browser cancels it in favor of
+// the app's own in-flight navigation. Each engine reports that the same way
+// Playwright normally reports a cancelled navigation, just worded
+// differently per browser: Chromium says "Navigation ... is interrupted by
+// another navigation", WebKit says "Frame load interrupted", and Firefox
+// says "NS_BINDING_ABORTED". By the time any of these fire the redirect
+// storm has already landed, so a single immediate retry succeeds — cheaper
+// and more reliable than trying to pre-emptively wait out a chain of
+// unknown length.
+export async function gotoResilient(page: Page, url: string): Promise<void> {
+  try {
+    await page.goto(url);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!/interrupted by another navigation|Frame load interrupted|NS_BINDING_ABORTED/.test(message)) throw err;
+    await page.goto(url);
+  }
+}
+
 export async function loginAndEnsureData(page: Page): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Email address').fill(ADMIN_EMAIL);
@@ -95,7 +117,7 @@ export async function loginAndEnsureData(page: Page): Promise<void> {
     if (alreadyHasData) return;
   }
 
-  await page.goto('/');
+  await gotoResilient(page, '/');
   const fileInput = page.locator('input[type="file"]').first();
 
   // A bad response here (bug 5: the seeded admin's emailVerified defaulted to

@@ -24,16 +24,16 @@
 // ── Avatar — hash-of-name rotates through a small fixed palette ────────────────
 .avatar {
   color: #fff;
-  background: #2563eb;
+  background: var(--color-primary, #087f8c);
 
-  &[data-avatar='0'] { background: #2563eb; }
-  &[data-avatar='1'] { background: #0891b2; }
-  &[data-avatar='2'] { background: #7c3aed; }
-  &[data-avatar='3'] { background: #16a34a; }
-  &[data-avatar='4'] { background: #f59e0b; }
-  &[data-avatar='5'] { background: #ea580c; }
-  &[data-avatar='6'] { background: #dc2626; }
-  &[data-avatar='7'] { background: #0d9488; }
+  &[data-avatar='0'] { background: var(--color-primary, #087f8c); }
+  &[data-avatar='1'] { background: var(--chart-series-6, #0891b2); }
+  &[data-avatar='2'] { background: var(--dc-purple, #7c3aed); }
+  &[data-avatar='3'] { background: var(--color-success, #268a5a); }
+  &[data-avatar='4'] { background: var(--color-warning, #c57a18); }
+  &[data-avatar='5'] { background: var(--dc-orange, #e85d12); }
+  &[data-avatar='6'] { background: var(--color-danger-strong, #a6323f); }
+  &[data-avatar='7'] { background: var(--color-info, #2c7be5); }
 }
 
 // ── Team card ─────────────────────────────────────────────────────────────────
@@ -41,9 +41,9 @@
   background: var(--color-subtle, #f1f5f9);
   @include band-color;
 
-  &[data-band='Healthy']      { background: #f0fdf4; }
-  &[data-band='Team At Risk'] { background: #fffbeb; }
-  &[data-band='Critical']     { background: #fef2f2; }
+  &[data-band='Healthy']      { background: var(--color-success-soft, #e8f5ef); }
+  &[data-band='Team At Risk'] { background: var(--color-warning-soft, #fdf3e3); }
+  &[data-band='Critical']     { background: var(--color-danger-soft, #fdedf0); }
 }
 
 .healthScore {

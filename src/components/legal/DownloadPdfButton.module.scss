@@ -1,4 +1,4 @@
-// PDF download button for legal pages
+// PDF download button for legal pages — light Mediterranean theme (THEME-05).
 
 .btn {
   display:       flex;
@@ -6,9 +6,9 @@
   gap:           6px;
   padding:       6px 14px;
   border-radius: 8px;
-  border:        1px solid rgba(232, 93, 18, 0.35);
-  background:    rgba(232, 93, 18, 0.10);
-  color:         #ff8a4c;
+  border:        1px solid rgba(8, 127, 140, 0.35);
+  background:    rgba(8, 127, 140, 0.10);
+  color:         var(--dc-accent, #087f8c);
   font-size:     12px;
   font-weight:   700;
   cursor:        pointer;
@@ -17,12 +17,12 @@
   transition:    background 0.15s, border-color 0.15s;
 
   &:hover {
-    background:   rgba(232, 93, 18, 0.20);
-    border-color: var(--dc-accent, #e85d12);
+    background:   rgba(8, 127, 140, 0.20);
+    border-color: var(--dc-accent, #087f8c);
   }
 
   &:focus-visible {
-    outline:        2px solid var(--dc-accent, #e85d12);
+    outline:        2px solid var(--dc-accent, #087f8c);
     outline-offset: 2px;
   }
 

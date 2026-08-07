@@ -337,12 +337,12 @@
 
 .drawerScrim {
   flex: 1;
-  background: rgba(6, 26, 51, 0.5);
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .drawerPanel {
   width: 600px;
-  background: #fff;
+  background: var(--dc-s1);
   overflow-y: auto;
   height: 100%;
   padding: 24px;
@@ -398,7 +398,7 @@
 
 .drawerRow {
   border-bottom: 1px solid var(--dc-line);
-  background: #fff;
+  background: var(--dc-s1);
 
   &:nth-child(even) {
     background: var(--dc-surface-soft);

@@ -390,6 +390,24 @@ Deliberately not purged: \`Consent\` (6-year horizon, no near-term gap) and \`Lo
 
 ---
 
+## Theme Customizer / Palette Presets
+
+**The real default is light, not dark — don't assume otherwise.** \`src/lib/themeCustomizer.ts\`'s \`PALETTE_PRESETS\` includes 4 dark presets (\`gold\`/\`copper\`/\`sage\`/\`orange\`) left over from an earlier design exploration, but a 2026-07-09 product decision removed the admin UI to select them, and \`initThemeCustom()\` (called once from \`AppShell.tsx\`) actively force-converts any browser with a previously-saved dark palette back to \`'none'\` on every load. Dark mode cannot currently be reached by any live code path. **The enforced default is \`'mediterranean'\`** (teal accent, warm sand/white surfaces) as of \`THEME-03\` (2026-08-03). \`'none'\` ("Classic Blue") still works if a browser already has it persisted from before the picker was removed (see below), but as of 2026-08-06 there is no UI anywhere to select it — new users can no longer opt into it.
+
+**Adding a new palette? Every preset needs \`mode: 'light' | 'dark'\`.** \`applyThemeCustom()\` reads this field to decide whether to add the \`.dark\` class to \`<html>\` — it does **not** infer mode from "is this \`'none'\`." (An earlier version did exactly that, which broke the moment a second light preset — \`mediterranean\` — was added; see \`TODO-List.md\` \`THEME-01\`.) \`initThemeCustom()\`'s dark-palette coercion is also \`mode\`-driven, so a new dark preset is automatically covered by the "always enforce light" rule with no extra code.
+
+**FOUC fix — the SSR \`<html>\` tag hardcodes \`data-palette="mediterranean"\`.** \`initThemeCustom()\` only runs client-side (a \`useEffect\` in \`AppShell.tsx\`, post-mount), so without this, every page load would flash the old default before JS caught up. \`app/globals.scss\`'s literal \`:root\` values were also rewritten to match \`PALETTE_PRESETS.mediterranean\` exactly — if you ever change what the default preset's values are, update both places together or first paint will mismatch what JS settles on.
+
+**\`html[data-palette]\` is split into \`html.dark[data-palette]\` and \`html[data-palette]:not(.dark)\` blocks.** This block remaps raw Tailwind color utility classes (\`bg-slate-900\`, \`text-red-700\`, etc.) onto the active palette's tokens — it's what lets pages using literal Tailwind classes (rather than \`.module.scss\` + \`var(--dc-*)\`) respond to the active palette at all. It was originally written only against the 4 dark presets and is **not safe to reuse as-is for a light palette** — dark-tuned shadow opacities (35-50% black) and status text colors (light pastels like \`#4ade80\`) are illegible/wrong on a white surface. If you add classes to this block, add the value to *both* the \`.dark\` and \`:not(.dark)\` variants, tuned appropriately for each.
+
+**\`@apply\` on a Tailwind color utility bakes the value into the compiled class — the \`html[data-palette]\` block can't touch it.** This bit \`.badge-success\`/\`.btn-danger\`/etc. in \`globals.scss\` and \`DashboardSidebarNav.module.scss\`'s \`.chipCc\`/\`.chipCw\`/\`.chipCg\` (all converted to direct \`var(--color-*)\` references in \`THEME-03\`) — the override block only matches literal classNames present in the rendered DOM, and \`@apply\`'d Tailwind classes never appear there. Any new shared component styled with \`@apply bg-red-600\` (etc.) has the same bug; use \`background-color: var(--color-danger)\` directly instead.
+
+**The palette picker was removed 2026-08-06** — \`src/components/ui/ThemeCustomizerPanel.tsx\` (previously mounted in \`DashboardTopbar.tsx\`, next to \`NotificationBell\`/\`UserMenu\`) and its \`.module.scss\` were deleted outright as dead code once unmounted; it had no other render site. \`app/admin/theme/page.tsx\` still deliberately only exposes branding (logo/favicon/app-name), not palette selection, per the 2026-07-09 decision — so there is currently **no UI anywhere** to change \`data-palette\`. \`src/lib/themeCustomizer.ts\` and its application in \`AppShell.tsx\` were left in place on purpose: they still need to apply whatever palette a returning browser already has persisted from before the removal, so removing them would be a separate, more disruptive behavior change than just removing the picker.
+
+**Logo assets** (\`public/logo/delivery-clarity-logo-icon.svg\`, \`delivery-clarity-logo-horizontal.svg\`, \`delivery_clarity_mark_128.png\`, \`public/favicon.svg\`/\`.ico\`) are referenced by filename from ~12 pages — replace file contents in place to change the mark everywhere at once, don't rename. macOS's built-in \`sips\` can rasterize an SVG and write \`.ico\` directly (\`sips -s format ico in.png --out favicon.ico\`) if you ever need to regenerate the fallback icon — no extra tooling required.
+
+---
+
 ## GET /api/imports
 
 Returns full import log history.

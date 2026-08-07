@@ -1,4 +1,4 @@
-// Language switcher for legal pages
+// Language switcher for legal pages — light Mediterranean theme (THEME-05).
 
 .wrap {
   position: relative;
@@ -11,10 +11,10 @@
   gap:           6px;
   padding:       6px 12px;
   border-radius: 8px;
-  border:        1px solid rgba(255, 255, 255, 0.12);
-  background:    rgba(10, 10, 14, 0.70);
+  border:        1px solid var(--dc-bdr, rgba(223, 229, 227, 0.7));
+  background:    rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(8px);
-  color:         #a0a0a8;
+  color:         var(--dc-p2, #65747a);
   font-size:     12px;
   font-weight:   600;
   cursor:        pointer;
@@ -23,13 +23,13 @@
   transition:    background 0.15s, color 0.15s;
 
   &:hover {
-    background: rgba(232, 93, 18, 0.15);
-    color:      #f0f0f0;
-    border-color: rgba(232, 93, 18, 0.4);
+    background: rgba(8, 127, 140, 0.12);
+    color:      var(--dc-p1, #203038);
+    border-color: rgba(8, 127, 140, 0.4);
   }
 
   &:focus-visible {
-    outline:        2px solid var(--dc-accent, #e85d12);
+    outline:        2px solid var(--dc-accent, #087f8c);
     outline-offset: 2px;
   }
 
@@ -48,13 +48,13 @@
   inset-block-start: calc(100% + 6px);
   inset-inline-start: 0;
   z-index:    200;
-  background: rgba(12, 12, 18, 0.96);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
-  border:     1px solid rgba(255, 255, 255, 0.10);
+  border:     1px solid var(--dc-bdr, rgba(223, 229, 227, 0.7));
   border-radius: 10px;
   padding:    6px;
   min-inline-size: 160px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 16px 40px rgba(32, 48, 56, 0.18);
 
   [dir='rtl'] & {
     inset-inline: auto 0;
@@ -69,7 +69,7 @@
   border-radius: 6px;
   border:        none;
   background:    none;
-  color:         #a0a0a8;
+  color:         var(--dc-p2, #65747a);
   font-size:     12px;
   font-weight:   600;
   cursor:        pointer;
@@ -80,17 +80,17 @@
   transition:    background 0.1s, color 0.1s;
 
   &:hover {
-    background: rgba(232, 93, 18, 0.12);
-    color:      #f0f0f0;
+    background: rgba(8, 127, 140, 0.10);
+    color:      var(--dc-p1, #203038);
   }
 
   &:focus-visible {
-    outline:        2px solid var(--dc-accent, #e85d12);
+    outline:        2px solid var(--dc-accent, #087f8c);
     outline-offset: -2px;
   }
 }
 
 .optionActive {
-  color:      var(--dc-accent, #e85d12);
-  background: rgba(232, 93, 18, 0.08);
+  color:      var(--dc-accent, #087f8c);
+  background: rgba(8, 127, 140, 0.08);
 }

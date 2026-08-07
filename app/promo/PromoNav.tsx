@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import DemoRequest from './DemoRequest';
+import OpenAppLink from './OpenAppLink';
 import styles from './PromoNav.module.scss';
 
 const LINKS = [
@@ -57,9 +58,9 @@ export default function PromoNav() {
         </nav>
 
         <div className={styles.actions}>
-          <a className={styles.loginLink} href="/login">
+          <OpenAppLink className={styles.loginLink}>
             Open the app
-          </a>
+          </OpenAppLink>
           <DemoRequest label="Request a demo" triggerClassName={styles.cta} />
           <button
             type="button"
@@ -83,9 +84,9 @@ export default function PromoNav() {
           </a>
         ))}
         <DemoRequest label="Request a demo" triggerClassName={styles.mobileCta} />
-        <a className={styles.mobileLogin} href="/login">
+        <OpenAppLink className={styles.mobileLogin}>
           Open the app
-        </a>
+        </OpenAppLink>
       </div>
     </header>
   );
