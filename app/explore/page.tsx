@@ -199,7 +199,7 @@ export default function ExplorePage() {
                   <span className="text-sm text-slate-500">·</span>
                   <span className="text-sm text-slate-500">{graph.nodes.length} connected items</span>
                   {graph.orphanNodes.length > 0 && (
-                    <span className="text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200 rounded-full px-3 py-0.5">
+                    <span className="text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-3 py-0.5">
                       {graph.orphanNodes.length} orphan{graph.orphanNodes.length > 1 ? 's' : ''} detected
                     </span>
                   )}

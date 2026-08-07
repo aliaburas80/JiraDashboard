@@ -2,6 +2,12 @@ node_modules/
 dist/
 build/
 
+# Standalone Figma Make prototype dropped into the repo root — a separate
+# Vite/Tailwind project (own package.json/node_modules), not part of this
+# Next.js app. Reference source for the Mediterranean theme/logo; never
+# meant to be committed or built as part of this repo.
+UX Designer Portfolio/
+
 # Real secrets — never commit these
 .env
 .env.local

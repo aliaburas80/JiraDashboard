@@ -16,9 +16,9 @@ const KPI_TOKENS = [
   { label: 'Completion',     color: 'var(--color-health-excellent-text)', bg: 'var(--color-success-soft)',    border: 'var(--color-success-border)'  },
   { label: 'Health Alerts',  color: 'var(--color-danger-strong)',          bg: 'var(--color-danger-soft)',     border: 'var(--color-danger-border)'   },
   { label: 'Active Work',    color: 'var(--color-warning)',                bg: 'var(--color-warning-soft)',    border: 'var(--color-warning-border)'  },
-  { label: 'Lead Time',      color: '#7c3aed',                             bg: 'rgb(124 58 237 / 10%)',        border: 'rgb(124 58 237 / 25%)'        },
+  { label: 'Lead Time',      color: 'var(--dc-purple)',                    bg: 'rgb(124 58 237 / 10%)',        border: 'rgb(124 58 237 / 25%)'        },
   { label: 'Cycle Time',     color: 'var(--color-primary)',                bg: 'var(--color-primary-soft)',    border: 'var(--color-primary-border)'  },
-  { label: 'Story Points',   color: '#0891b2',                             bg: 'rgb(8 145 178 / 10%)',         border: 'rgb(8 145 178 / 25%)'         },
+  { label: 'Story Points',   color: 'var(--chart-series-6)',               bg: 'rgb(8 145 178 / 10%)',         border: 'rgb(8 145 178 / 25%)'         },
 ];
 
 export default function KeyMetricsPage() {

@@ -186,7 +186,7 @@ export default function MembersPage() {
               type="button"
               onClick={() => setPage(safePage - 1)}
               disabled={safePage <= 1}
-              className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-default disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+              className={`rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-default disabled:opacity-40 ${styles.pagerBtn}`}
             >
               ← Prev
             </button>
@@ -197,7 +197,7 @@ export default function MembersPage() {
               type="button"
               onClick={() => setPage(safePage + 1)}
               disabled={safePage >= totalPages}
-              className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-default disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+              className={`rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-default disabled:opacity-40 ${styles.pagerBtn}`}
             >
               Next →
             </button>

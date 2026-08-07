@@ -35,7 +35,7 @@ export default function KpiCard({ label, value, detail, accent='var(--dc-acc2, #
         )}
       </div>
       <div>
-        <p className={cn('text-2xl font-black tracking-tight leading-none mt-2', styles.value)}>{value}</p>
+        <p className={cn('font-black tracking-tight leading-none mt-2', styles.value)}>{value}</p>
         {detail && <p className={cn('text-xs mt-1.5 font-medium', styles.detail)}>{detail}</p>}
       </div>
     </div>

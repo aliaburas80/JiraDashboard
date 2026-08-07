@@ -22,12 +22,26 @@ import styles from './page.module.scss';
 // ── Constants ─────────────────────────────────────────────────────────────────
 const DONE_ST   = ['done', 'closed', 'resolved'];
 const ACTIVE_ST = ['in progress', 'code review', 'qa', 'testing', 'uat'];
-const PALETTE   = ['#2563eb', '#14b8a6', '#f59e0b', '#7c3aed', '#0891b2', '#f97316', '#16a34a', '#dc2626'];
+// CLAUDE.md §34 "approved chart-series tokens" — categorical palette for
+// non-semantic groupings (issue type, label, link-type distribution). The
+// first six slots are the shared --chart-series-1..6 registry; the trailing
+// two extend it with the primary/secondary accents so 8 distinct categories
+// remain distinguishable without inventing new raw hex values.
+const PALETTE = [
+  'var(--chart-series-1, #087f8c)',
+  'var(--chart-series-2, #268a5a)',
+  'var(--chart-series-3, #c57a18)',
+  'var(--chart-series-4, #a6323f)',
+  'var(--chart-series-5, #7c3aed)',
+  'var(--chart-series-6, #0891b2)',
+  'var(--dc-accent, #087f8c)',
+  'var(--dc-acc2, #2c7be5)',
+];
 
 const HEALTH_CSS: Record<string, string> = {
-  good:     'var(--color-success, #22c55e)',
-  warning:  'var(--color-warning, #f59e0b)',
-  critical: 'var(--color-danger, #dc2626)',
+  good:     'var(--color-success, #268a5a)',
+  warning:  'var(--color-warning, #c57a18)',
+  critical: 'var(--color-danger, #c84452)',
 };
 
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
@@ -312,17 +326,17 @@ export default function ChartsPage() {
     const otherBucket    = Math.max(total - doneBucket - criticalBucket - warningBucket - activeBucket, 0);
 
     const deliverySegs: Seg[] = [
-      { label: 'Done',        value: doneBucket,     color: '#16a34a' },
-      { label: 'In Progress', value: activeBucket,   color: '#2563eb' },
-      { label: 'At Risk',     value: warningBucket,  color: '#f59e0b' },
-      { label: 'Critical',    value: criticalBucket, color: '#dc2626' },
-      { label: 'Backlog',     value: otherBucket,    color: '#cbd5e1' },
+      { label: 'Done',        value: doneBucket,     color: 'var(--color-success, #268a5a)' },
+      { label: 'In Progress', value: activeBucket,   color: 'var(--color-info, #2c7be5)' },
+      { label: 'At Risk',     value: warningBucket,  color: 'var(--color-warning, #c57a18)' },
+      { label: 'Critical',    value: criticalBucket, color: 'var(--color-danger, #c84452)' },
+      { label: 'Backlog',     value: otherBucket,    color: 'var(--dc-p3, #8a9fa5)' },
     ].filter(s => s.value > 0);
 
     const healthSegs: Seg[] = [
-      { label: 'Good',     value: flow.good     || 0, color: '#16a34a' },
-      { label: 'Warning',  value: flow.warning  || 0, color: '#f59e0b' },
-      { label: 'Critical', value: flow.critical || 0, color: '#dc2626' },
+      { label: 'Good',     value: flow.good     || 0, color: 'var(--color-success, #268a5a)' },
+      { label: 'Warning',  value: flow.warning  || 0, color: 'var(--color-warning, #c57a18)' },
+      { label: 'Critical', value: flow.critical || 0, color: 'var(--color-danger, #c84452)' },
     ].filter(s => s.value > 0);
 
     const typeList   = ((metrics?.types || []) as any[]).slice(0, 6);
@@ -331,7 +345,7 @@ export default function ChartsPage() {
 
     const spPct    = sp.pointCompletionRate || 0;
     const spSegs: Seg[] = sp.totalStoryPoints > 0
-      ? [{ label: 'Completed', value: sp.completedStoryPoints || 0, color: '#16a34a' }, { label: 'Remaining', value: sp.remainingStoryPoints || 0, color: '#e2e8f0' }]
+      ? [{ label: 'Completed', value: sp.completedStoryPoints || 0, color: 'var(--color-success, #268a5a)' }, { label: 'Remaining', value: sp.remainingStoryPoints || 0, color: 'var(--dc-p3, #8a9fa5)' }]
       : [];
 
     const sprints    = ((metrics?.sprint?.sprints || []) as any[]).slice(0, 7).reverse();
@@ -587,7 +601,7 @@ export default function ChartsPage() {
                 <div className={styles.vBarsWrap}>
                   {sprints.map((s: any, i: number) => {
                     const cr    = s.completionRate ?? 0;
-                    const color = cr >= 80 ? '#16a34a' : cr >= 60 ? '#f59e0b' : '#dc2626';
+                    const color = cr >= 80 ? 'var(--color-success, #268a5a)' : cr >= 60 ? 'var(--color-warning, #c57a18)' : 'var(--color-danger, #c84452)';
                     return (
                       <VBar
                         key={s.name}
@@ -601,7 +615,7 @@ export default function ChartsPage() {
                   })}
                 </div>
                 <div id="tour-section-charts-2" className={styles.legendRow}>
-                  {[['#16a34a','≥80% done'],['#f59e0b','≥60% done'],['#dc2626','<60% done']].map(([c,l]) => (
+                  {[['var(--color-success, #268a5a)','≥80% done'],['var(--color-warning, #c57a18)','≥60% done'],['var(--color-danger, #c84452)','<60% done']].map(([c,l]) => (
                     <span key={l} className={styles.legendItem}>
                       <span className={styles.legendDot} style={{ '--dot-color': c } as CSSProperties} />
                       {l}
@@ -623,7 +637,7 @@ export default function ChartsPage() {
               >
                 {capacity.map((c: any, i: number) => {
                   const share = c.loadShare || 0;
-                  const color = share > 35 ? '#dc2626' : share > 20 ? '#f59e0b' : '#16a34a';
+                  const color = share > 35 ? 'var(--color-danger, #c84452)' : share > 20 ? 'var(--color-warning, #c57a18)' : 'var(--color-success, #268a5a)';
                   return (
                     <HBar
                       key={c.assignee}
@@ -655,14 +669,14 @@ export default function ChartsPage() {
                       label={q.quarter}
                       valLabel={String(q.issues)}
                       pct={Math.max(3, Math.min(100, (q.issues / maxQ) * 100))}
-                      color="#2563eb"
+                      color="var(--color-info, #2c7be5)"
                       delay={i * 60}
                     />
                   ))}
                 </div>
                 <div className={styles.legendRow}>
                   <span className={styles.legendItem}>
-                    <span className={styles.legendDot} style={{ '--dot-color': '#2563eb' } as CSSProperties} />
+                    <span className={styles.legendDot} style={{ '--dot-color': 'var(--color-info, #2c7be5)' } as CSSProperties} />
                     Issues per quarter
                   </span>
                 </div>
@@ -680,7 +694,7 @@ export default function ChartsPage() {
                 delay={180}
               >
                 {kanbanTop.map((k: any, i: number) => {
-                  const color = k.critical > 0 ? '#dc2626' : k.warning > 0 ? '#f59e0b' : '#2563eb';
+                  const color = k.critical > 0 ? 'var(--color-danger, #c84452)' : k.warning > 0 ? 'var(--color-warning, #c57a18)' : 'var(--color-info, #2c7be5)';
                   return (
                     <HBar
                       key={k.name}

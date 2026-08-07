@@ -6,12 +6,12 @@
 // Run against the `Mobile` Playwright project (iPhone 13, 390×664) via
 // `npx playwright test mobile-forms.spec.ts --project=Mobile`.
 import { test, expect } from '@playwright/test';
-import { loginAndEnsureData } from './helpers/auth';
+import { loginAndEnsureData, gotoResilient } from './helpers/auth';
 
 test('retro form stacks Sprint Context and Action Items to a single column at mobile width', async ({ page }) => {
   await loginAndEnsureData(page);
 
-  await page.goto('/retro');
+  await gotoResilient(page, '/retro');
   await page.getByRole('button', { name: /fill in app/i }).click();
 
   const contextGrid = page.getByTestId('retro-context-grid');
