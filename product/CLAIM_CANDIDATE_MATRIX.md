@@ -120,3 +120,13 @@ A computer-implemented method for generating a statistical project export compri
 ## Current Code Alignment — 2026-06-06
 
 Cloud backup and bucket-first latest-metrics startup are now implemented. Patent/claim material remains focused on export-only delivery intelligence and does not claim a live Jira integration; the cloud bucket stores Delivery Clarity backups and latest computed metrics, not Jira credentials or live Jira data.
+
+## Current Code Alignment — 2026-08-08 (`DOC-GATE-09`)
+
+Same fact-check pass as `PATENT_DISCLOSURE.md`'s 2026-08-08 alignment note, applied to this file's draft claim text specifically (claim text is a stronger statement than disclosure prose — it's what would actually be filed):
+
+- **C-01** (zero-credential), **C-02** (hierarchy reconstruction), **C-06** (visual explorer), **C-07** (statistical export, 17 sheets): verified accurate against code as drafted.
+- **C-03** (orphan classification): the draft claim text names the same four categories as the disclosure (`MISSING_EPIC`/`MISSING_PARENT`/`DANGLING_LINK`/`FULLY_ORPHANED`). None exist in code — there is a single `isOrphan` boolean, not a four-way classification. Filing C-03 as currently drafted would claim functionality that isn't built.
+- **C-04** (six-signal health score): the draft claim text's six named signals (completion, flow health, **velocity trend**, cycle time, **blocked ratio**, orphan ratio) don't match `calculateHealthScore()` — there is no blocked-ratio signal in code at all, and the "velocity trend" signal is actually the latest sprint's raw completion rate, not a trend comparison. Filing C-04 as currently drafted has the same gap.
+
+Not a decision to make here — flagging so C-03/C-04 get resolved (code updated to match, or claim text narrowed to what's actually shipped) before any filing, same as noted in `PATENT_DISCLOSURE.md`.

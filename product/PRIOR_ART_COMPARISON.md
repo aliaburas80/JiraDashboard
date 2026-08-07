@@ -158,3 +158,9 @@ The following combinations of capabilities do not appear in any single prior-art
 ## Current Code Alignment — 2026-06-06
 
 Cloud backup and bucket-first latest-metrics loading are implemented as operational persistence features. The prior-art distinction remains the same: delivery intelligence is computed from static Jira exports without Jira OAuth/API access; bucket storage holds Delivery Clarity backups, not a live Jira connector.
+
+## Current Code Alignment — 2026-08-08 (`DOC-GATE-09`)
+
+Same fact-check pass as `PATENT_DISCLOSURE.md`'s 2026-08-08 alignment note. The comparison table's "Delivery Clarity" column and §"Summary of Novel Combinations" #2 both state "4-class + impact" orphan classification (naming `MISSING_EPIC`/`MISSING_PARENT`/`DANGLING_LINK`/`FULLY_ORPHANED`) and #3's "6-signal weighted score" — neither matches current code (single `isOrphan` boolean; six signals exist but with different weights and one different signal, see the disclosure's alignment note for specifics). Additionally, the table's "Field normalisation" row states "40+ alias mappings" — the actual `FIELD_ALIASES` table (`src/services/jira/parser.ts`) has 31 entries, not 40+.
+
+None of this changes the comparison's actual competitive conclusions (no identified prior-art tool does export-only operation, hierarchy reconstruction, or orphan-as-risk treatment at all, regardless of exactly how many classes/signals/aliases Delivery Clarity itself currently has) — but the specific counts/category names cited for Delivery Clarity's own column should be corrected to match shipped code, or the code should be extended to match, before this is used in a filing alongside the claim matrix.
