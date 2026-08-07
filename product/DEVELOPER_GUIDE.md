@@ -234,7 +234,7 @@ JiraDashboard/
 │   │   ├── relations.ts          # RelationNode (isOnRiskPath, isLargestBranch), RelationEdge, RelationStats
 │   │   ├── releaseReadiness.ts   # ReleaseReadinessResult, ReleaseReadinessSummary
 │   │   └── throughput.ts         # ThroughputMetrics, SprintEntry, etc.
-│   └── __tests__/                # Jest test suites (469 tests across 48 suites — verified 2026-06-07)
+│   └── __tests__/                # Jest test suites (1221 tests across 135 suites — verified 2026-08-07)
 │
 ├── data/
 │   └── (local config/cache JSON — health thresholds, retention settings, metrics cache;
@@ -1273,7 +1273,7 @@ Last verified: 2026-06-02
 | `@types/bcryptjs` | ^2.4.6 | TypeScript types for bcryptjs | F3 Authentication & Database | Dev-only | Installed | TypeScript errors in auth code |
 | `lucide-react` | ^0.427.0 | SVG icon components | UI/Icons | Client | Installed | Icons disappear (minor) |
 | `clsx` + `tailwind-merge` | ^2.1.1 / ^2.3.0 | Conditional className, conflict resolution | UI/Styling | Client | Installed | className logic errors |
-| `jest` + `ts-jest` | ^29.7.0 / ^29.2.2 | 469 automated tests across 48 test suites (verified 2026-06-07 via `npm test`) | Testing | Dev-only | Installed | No automated testing |
+| `jest` + `ts-jest` | ^29.7.0 / ^29.2.2 | 1221 automated tests across 135 test suites (verified 2026-08-07 via `npm test`) | Testing | Dev-only | Installed | No automated testing |
 
 ### Cloud Storage SDK Packages (Installed, Dynamically Loaded)
 

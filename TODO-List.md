@@ -2721,7 +2721,7 @@ Plan only unless explicitly approved.
 | ID | Task | Priority | Status | Details / Acceptance Criteria |
 |---|---|---:|---|---|
 | TEST-P0-01 | Validate documentation status consistency if script exists | P0 | ❌ Not started | Optional automation, required manual check otherwise. |
-| TEST-P0-02 | Validate test count reporting consistency | P0 | 🔍 Needs verification | Docs must all show same current test count. |
+| TEST-P0-02 | Validate test count reporting consistency | P0 | ✅ Done (2026-08-07) | Found a real, significant drift: `product/README.md`, `product/DEVELOPER_GUIDE.md` (×2), and `product/TEST_CASES.md` all still stated "469 automated tests across 48 test suites (verified 2026-06-07)" — the actual current count, confirmed via a full `npm test` run, is 1221 tests across 135 suites. Updated all 5 occurrences across the 3 files to the correct, current, dated count. (2 suites — `adminUsers.test.ts`, `analyticsEventFlush.test.ts` — hit a timeout under full-suite parallel load but pass cleanly 19/19 in isolation; not a real failure, not reflected in the stated count.) |
 | TEST-P0-03 | Validate product docs impact matrix is produced | P0 | ❌ Not started | Required before push. |
 
 ### Backend Gateway Tests
