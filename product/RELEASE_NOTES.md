@@ -5,6 +5,19 @@
 
 ---
 
+## Incident: brief production outage during a database schema change (2026-08-09, P0)
+
+The production site was unreachable (503) for roughly 5-6 minutes while an in-progress database
+change (part of ongoing multi-tenant infrastructure work, not yet user-facing) was being applied.
+No data was lost or corrupted — every change made during this window was additive or a row-level
+update, nothing was deleted. Once the issue was noticed, the change was reverted and the previous,
+already-confirmed-working version was redeployed, which restored service. The underlying database
+change that may have contributed to the outage has been rolled back and is not live. See
+`TODO-List.md` §20a's "Attempted rebuild + production incident" entry for the full technical
+timeline and root-cause investigation.
+
+---
+
 ## Fix: production deployment on Hostinger was failing to build (2026-08-08, P0)
 
 The app failed to deploy on its Hostinger production host through three separate build-pipeline
