@@ -252,7 +252,7 @@ JiraDashboard/
 │       └── delivery_clarity_mark_128.png         # 128×128 PNG mark
 │
 ├── product/                      # Product documentation (private — do not expose publicly)
-├── Dockerfile                    # Multi-stage build (node:20-alpine, non-root)
+├── Dockerfile                    # Multi-stage build (node:22-alpine, non-root)
 ├── docker-compose.yml            # Volume mount for data/, healthcheck
 ├── .dockerignore
 ├── package.json

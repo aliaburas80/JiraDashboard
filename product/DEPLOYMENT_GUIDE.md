@@ -52,7 +52,7 @@ Delivery Clarity is a **Next.js 16** application using:
 | Requirement | Version | Notes |
 |-------------|---------|-------|
 | Node.js | `>=20.19 <23` | Matches `package.json` `engines`; LTS recommended |
-| npm | 10+ | Bundled with Node 20 |
+| npm | `>=10 <12` | Matches `package.json` `engines`; bundled with Node 20-22 |
 | Git | Any | For cloning |
 | Docker + Docker Compose | 24+ / v2+ | Option A only |
 | Ubuntu/Debian or compatible | 20.04+ | Option B only |
@@ -117,9 +117,9 @@ The multi-stage build produces a minimal production image:
 
 | Stage | Base image | Purpose |
 |-------|-----------|---------|
-| `deps` | `node:20-alpine` | Install production dependencies only |
-| `builder` | `node:20-alpine` | Generate Prisma client + `npm run build` |
-| `runner` | `node:20-alpine` | Minimal runtime — only Next.js standalone output |
+| `deps` | `node:22-alpine` | Install production dependencies only |
+| `builder` | `node:22-alpine` | Generate Prisma client + `npm run build` |
+| `runner` | `node:22-alpine` | Minimal runtime — only Next.js standalone output |
 
 - Runs as a **non-root user** (`nextjs`, uid 1001) for security
 - Exposes port `3000`
@@ -178,12 +178,12 @@ Use this when you want full control over the server, or when Docker is not avail
 # Update system
 sudo apt update && sudo apt upgrade -y
 
-# Install Node.js 20 via NodeSource
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+# Install Node.js 22 via NodeSource
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 
 # Verify
-node --version   # v20.x.x
+node --version   # v22.x.x
 npm --version    # 10.x.x
 
 # Install PM2 (process manager)
