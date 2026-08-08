@@ -2071,10 +2071,20 @@ See **`product/DEPLOYMENT_GUIDE.md`** for the full guide. Summary:
 
 | Target | Command | Persistence | Recommended |
 |--------|---------|------------|-------------|
-| **Render** | `git push` to `main` → `render.yaml` auto-deploy | Managed Postgres + object storage | ✅ **Current production target** |
+| **Hostinger** | `git push` to `main` → Hostinger's own Next.js build pipeline (repo `aliaburas80/JiraDashboard`, `npm run build`, `npm run start`) | Managed Postgres + object storage | ✅ **Confirmed live in production 2026-08-08** at `deliveryclarity.app` |
+| **Render** | `git push` to `main` → `render.yaml` auto-deploy | Managed Postgres + object storage | ⚠️ `render.yaml` is still present and configured, but active/inactive status versus Hostinger was not reconfirmed as part of this update — verify before relying on this row |
 | **Docker** | `docker compose up -d --build` | Volume mount | ✅ Self-host |
 | **VPS / PM2** | `pm2 start npm -- start` | Local filesystem | ✅ Self-host |
 | **Vercel** | `git push` → auto-deploy | ✅ DB persists (external Postgres); ❌ local config/cache files ephemeral | Demo only |
+
+**Hostinger build requirements** (see `TODO-List.md` for the three fixes that made this work, and
+`product/RELEASE_NOTES.md`'s 2026-08-08 entry for the user-facing summary): Node.js `>=20.19 <23`
+(`package.json` `engines`), the CSS/TypeScript toolchain packages (`tailwindcss`, `autoprefixer`,
+`postcss`, `sass`, `typescript`, their `@types/*`) in `dependencies` not `devDependencies` since
+Hostinger's production install skips `devDependencies`, and the standard `.next` build output
+directory — `next.config.js`'s `distDir` only uses this project's custom `.next-jira-dashboard` name
+in non-production (`NODE_ENV !== 'production'`) local development, to avoid an iCloud Drive syncing
+conflict on this project's own dev machine.
 
 ### Key files
 

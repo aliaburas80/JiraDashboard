@@ -37,7 +37,8 @@ Delivery Clarity is a **Next.js 16** application using:
 
 | Target | Use case | Auth persistence | Recommended |
 |--------|----------|-----------------|-------------|
-| **Render** | Managed production (current target) | ✅ Yes (external Postgres/Neon) | ✅ Yes |
+| **Hostinger** | Managed production — confirmed live 2026-08-08 at `deliveryclarity.app` | ✅ Yes (external Postgres/Neon) | ✅ Yes — see `product/DEVELOPER_GUIDE.md` §12 for the Hostinger-specific build requirements (Node version, dependency placement, build output directory) |
+| **Render** | Managed production (`render.yaml` still present/configured; active/inactive status versus Hostinger not reconfirmed as part of this update) | ✅ Yes (external Postgres/Neon) | ✅ Yes |
 | **Docker** | Self-hosted production | ✅ Yes (external Postgres/Neon) | ✅ Yes |
 | **VPS / bare metal** | Self-hosted production | ✅ Yes (external Postgres/Neon) | ✅ Yes |
 | **Vercel** | Demo / preview / staging | ✅ Yes (external Postgres/Neon) — but local config files reset | ⚠️ Limited, see §6 |
@@ -50,7 +51,7 @@ Delivery Clarity is a **Next.js 16** application using:
 
 | Requirement | Version | Notes |
 |-------------|---------|-------|
-| Node.js | 20+ | LTS recommended |
+| Node.js | `>=20.19 <23` | Matches `package.json` `engines`; LTS recommended |
 | npm | 10+ | Bundled with Node 20 |
 | Git | Any | For cloning |
 | Docker + Docker Compose | 24+ / v2+ | Option A only |
