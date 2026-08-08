@@ -197,7 +197,7 @@ Inward issue link (Blocks)                   (relations)
 | Language | TypeScript 5.x (strict: false) |
 | Styling | Tailwind CSS 3 + SCSS |
 | Testing | Jest + ts-jest |
-| Runtime | Node.js 20.9+ |
+| Runtime | Node.js >=20.19 <23 |
 
 ## Directory Structure
 
