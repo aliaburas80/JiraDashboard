@@ -2,7 +2,8 @@
   "extends": "next/core-web-vitals",
   "plugins": ["local-rules"],
   "rules": {
-    "local-rules/forbid-non-css-var-style": "warn"
+    "local-rules/forbid-non-css-var-style": "warn",
+    "local-rules/no-direct-org-scoped-prisma": "error"
   },
   "ignorePatterns": [
     "UX Designer Portfolio/**"
