@@ -9,38 +9,8 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// ── Multi-Tenant Organization Management (ORG-01–59, Phase 1) ────────────────
-// See product/MULTI_TENANT_ORG_DESIGN.md §2.1/§2.2/§9. organizationId is added
-// nullable on every listed model first; a backfill script + a second migration
-// tightening to non-nullable follow once this migration itself has been
-// reviewed and applied — never a single non-nullable-FK-with-no-backfill step.
-
-model Organization {
-  id               String    @id @default(cuid())
-  name             String
-  domain           String    @unique // verified domain, e.g. "ali.com" — lowercase, no scheme
-  domainVerifiedAt DateTime? // null until ORG-12 verification completes
-  logoUrl          String?
-  maxSeats         Int       @default(6) // ORG-10: fixed at ASSIGNABLE_ROLES.length, never admin-editable
-  status           String    @default("active") // "active" | "suspended" — ORG-16, non-destructive
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-
-  users             User[]
-  importLogs        ImportLog[]
-  snapshots         DashboardSnapshot[]
-  auditEvents       AuditEvent[]
-  userAddRequests   UserAddRequest[]
-  notifications     Notification[]
-  jiraConnections   JiraConnection[]
-
-  @@index([domain])
-  @@index([status])
-}
-
 model User {
   id                       String    @id @default(cuid())
-  organizationId           String? // ORG-04 — nullable until the backfill migration tightens it
   name                     String
   email                    String    @unique
   passwordHash             String
@@ -85,7 +55,6 @@ model User {
   updatedAt                DateTime  @updatedAt
   lastLoginAt              DateTime?
 
-  organization         Organization?            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   sessions             Session[]
   importLogs           ImportLog[]
   snapshots            DashboardSnapshot[]
@@ -99,8 +68,6 @@ model User {
   storageProvider      UserStorageProvider?
   issueTypeHierarchy   UserIssueTypeHierarchy?
   consents             Consent[]
-
-  @@index([organizationId])
 }
 
 // ── Consent (P0B-03) ────────────────────────────────────────────────────────
@@ -243,7 +210,6 @@ model Session {
 
 model ImportLog {
   id               String   @id @default(cuid())
-  organizationId   String? // ORG-04 — nullable until the backfill migration tightens it
   userId           String
   // ARCH-05: file-sourced imports populate fileName/fileSize/fileType; API-sourced
   // imports (sourceType: "api") leave them null and populate jiraConnectionId instead.
@@ -265,7 +231,6 @@ model ImportLog {
 
   workspaceId String?
 
-  organization   Organization?       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   jiraConnection JiraConnection?     @relation(fields: [jiraConnectionId], references: [id], onDelete: SetNull)
   workspace      Workspace?          @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
@@ -273,15 +238,13 @@ model ImportLog {
   entitlements   Entitlement[]
 
   @@index([userId])
-  @@index([organizationId])
   @@index([jiraConnectionId])
   @@index([workspaceId])
   @@index([status, uploadedAt]) // fast "last successful import" query
 }
 
 model DashboardSnapshot {
-  id             String   @id @default(cuid())
-  organizationId String? // ORG-04 — nullable until the backfill migration tightens it
+  id           String   @id @default(cuid())
   userId       String
   importLogId  String?
   workspaceId  String?
@@ -289,19 +252,16 @@ model DashboardSnapshot {
   metricsJson  String
   createdAt    DateTime @default(now())
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   importLog ImportLog? @relation(fields: [importLogId], references: [id], onDelete: SetNull)
   workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
 
   @@index([userId])
-  @@index([organizationId])
   @@index([workspaceId])
 }
 
 model AuditEvent {
   id               String   @id @default(cuid())
-  organizationId   String? // ORG-04 — stays permanently nullable, mirroring userId (design doc §2.2)
   userId           String?
   eventType        String // "login" | "logout" | "upload" | "export" | "register"
   eventDescription String
@@ -310,11 +270,9 @@ model AuditEvent {
   userAgent        String?
   correlationId    String? // P0A-07: per-request ID, set by proxy.ts, threaded through safeAuditEvent()
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
-  @@index([organizationId])
   @@index([createdAt])
   @@index([eventType, createdAt]) // fast admin filtering by event type
   @@index([correlationId])
@@ -324,7 +282,6 @@ model AuditEvent {
 
 model UserAddRequest {
   id                String    @id @default(cuid())
-  organizationId    String? // ORG-04 — nullable until the backfill migration tightens it
   requestedName     String
   requestedEmail    String
   requestedRole     String
@@ -341,17 +298,14 @@ model UserAddRequest {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   requestedBy User @relation("UserAddRequestRequester", fields: [requestedByUserId], references: [id], onDelete: Cascade)
 
   @@index([requestedByUserId])
-  @@index([organizationId])
   @@index([status])
 }
 
 model Notification {
   id                String    @id @default(cuid())
-  organizationId    String? // ORG-04 — nullable until the backfill migration tightens it
   recipientUserId   String
   type              String
   title             String
@@ -361,11 +315,9 @@ model Notification {
   readAt            DateTime?
   createdAt         DateTime  @default(now())
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   recipient User @relation("UserNotifications", fields: [recipientUserId], references: [id], onDelete: Cascade)
 
   @@index([recipientUserId])
-  @@index([organizationId])
   @@index([readAt])
 }
 
@@ -396,7 +348,6 @@ model UserStorageProvider {
 
 model JiraConnection {
   id                     String    @id @default(cuid())
-  organizationId         String? // ORG-04 — nullable until the backfill migration tightens it
   name                   String // admin-facing label, e.g. "Production Jira"
   deploymentType         String // "cloud" | "server"
   baseUrl                String
@@ -414,13 +365,11 @@ model JiraConnection {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdBy  User        @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
   workspace  Workspace?  @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   importLogs ImportLog[]
 
   @@index([createdByUserId])
-  @@index([organizationId])
   @@index([workspaceId])
 }
 
