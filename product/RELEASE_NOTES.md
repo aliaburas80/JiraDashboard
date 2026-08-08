@@ -5,6 +5,33 @@
 
 ---
 
+## Fix: production deployment on Hostinger was failing to build (2026-08-08, P0)
+
+The app failed to deploy on its Hostinger production host through three separate build-pipeline
+issues, found and fixed one after another as each was uncovered by the one before it:
+
+1. **CSS/Tailwind wasn't available at build time.** `tailwindcss`, `autoprefixer`, `postcss`, `sass`,
+   `typescript`, and their `@types` packages lived in `devDependencies`, which Hostinger's production
+   install step skips — so the build failed immediately with a missing-module error. Moved to
+   `dependencies`; also widened the supported Node.js version range (`>=20.19 <23`) to match
+   Hostinger's actual runtime.
+2. **The production build was type-checking test files it should never have touched.** With the CSS
+   fix in place, the build got further but then failed on Jest/Playwright syntax (`expect`, `test`,
+   `describe`) inside test files, because those testing packages are correctly dev-only and aren't
+   installed in production. The production TypeScript configuration now excludes all test files —
+   Jest itself is unaffected and continues to type-check and run them normally in the dev/CI
+   environment.
+3. **The build's output folder had a non-standard name.** This project renames its local build output
+   to `.next-jira-dashboard` to avoid an unrelated iCloud Drive syncing problem during local
+   development — but Hostinger looks for the standard `.next` folder after a production build and,
+   finding a folder it didn't recognize, reported no build output at all. Production builds now use
+   the standard `.next` name; local development keeps its custom folder unchanged.
+
+Live and verified at `deliveryclarity.app` after each fix. No user-facing behavior, layout, or data
+changed — this was entirely about getting the existing, already-working app to actually deploy.
+
+---
+
 ## Fix: top navigation bar overflowed the page on phones (2026-08-07, P2)
 
 On narrow (phone-width) screens, the app's top navigation bar could force the whole page wider
