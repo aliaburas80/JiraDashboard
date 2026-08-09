@@ -1202,8 +1202,10 @@ These additional checks will be added as the infrastructure matures:
 
 - `npm run test:a11y` — once an accessibility test suite is set up
 - `npm run config:validate` — once a config validation script exists
-- GitHub branch-protection required-status-checks for `quality`/`e2e` — see `QA-GATE-07`, a manual
-  one-time step in GitHub's own settings UI that this repo's tooling cannot perform
+- ~~GitHub branch-protection required-status-checks for `quality`/`e2e`~~ — `quality` enabled
+  2026-08-09 (`QA-GATE-07`, done). `e2e` deliberately left out of the required set for now — it has a
+  real history of flakiness in this repo (see the `CI-E2E-*` rows and PR #21), and making a flaky
+  check a hard merge blocker would be its own new problem; add it once that's demonstrably stable.
 
 ---
 
@@ -1731,14 +1733,13 @@ git push / PR opened
    independent of the GitHub Actions workflow's result.
 
 **Branch/PR gates:** `quality.yml` runs on both `push: branches: [main]` and every `pull_request`, so a
-PR shows pass/fail before merge. **Known gap (`QA-GATE-07`, tracked in `TODO-List.md`):** GitHub's
-branch-protection "required status checks" is not turned on for `main` — the workflow reports a result,
-but it is not currently enforced as a hard merge blocker, and Render's auto-deploy does not wait on it
-either. Turning this on is a one-time manual step in GitHub's own UI (Settings → Branches → branch
-protection rule for `main` → Require status checks to pass → select the `quality` job) — it cannot be
-done through this repo's files or CI tooling, and no `gh` CLI or GitHub API token is available in this
-environment to script it. Until it's enabled, treat `quality.yml` failing as a strong signal to not
-merge, not as something that structurally prevents it.
+PR shows pass/fail before merge. **Enabled 2026-08-09 (`QA-GATE-07`):** GitHub's branch-protection
+"required status checks" is now turned on for `main`, requiring the `quality` job to pass before a PR
+can merge (`gh api repos/.../branches/main/protection`, `required_status_checks: {strict: false,
+contexts: ["quality"]}`). Deliberately configured with `enforce_admins: false` and no push
+restrictions — this only gates PR merges, not direct pushes to `main` by the repo owner, preserving
+the direct-push workflow this project actually uses day to day rather than silently changing it.
+Render's auto-deploy still does not wait on any check either way.
 
 **Secrets handling:** the CI job needs no real secrets — `DATABASE_URL`, `SESSION_SECRET`, and
 `CONFIG_ENCRYPTION_KEY` in `quality.yml`'s `env:` block are hardcoded, non-sensitive, CI-only dummy
