@@ -7,10 +7,10 @@
 | Field | Detail |
 |---|---|
 | **Document Title** | Delivery Clarity — Business Requirements Document |
-| **Version** | 4.13 |
-| **Date** | 2026-06-28 |
+| **Version** | 4.14 |
+| **Date** | 2026-08-08 |
 | **Author** | Ali Abu Ras |
-| **Status** | Approved — catch-up pass 2026-06-28: BR-118–BR-124 added, covering live Jira sync, admin-configurable issue hierarchy, role-based coaching insights, the retrospective insights engine, forecast engine v2, and the (design-only, not yet approved) multi-tenant organization initiative — see Revision Note below |
+| **Status** | Approved — 4.14 is a doc-accuracy correction only (stale BR-123 branch pointer); substantive content last changed in the 2026-06-28 catch-up pass: BR-118–BR-124 added, covering live Jira sync, admin-configurable issue hierarchy, role-based coaching insights, the retrospective insights engine, forecast engine v2, and the (design-only, not yet approved) multi-tenant organization initiative — see Revision Note below |
 | **Classification** | Internal |
 
 ### Revision History
@@ -25,6 +25,7 @@
 | 4.0 | 2026-06-03 | Ali Abu Ras | v4 Quality & Trust Layer; scope updated; auth and database now in scope; BR-070–BR-090 added |
 | 4.9.2 | 2026-06-16 | Ali Abu Ras | P0 doc pass: navigation architecture overhaul (11 routed dashboard pages, DashboardTopbar, AdminNavSidebar, developer wiki, DC shell library, unified DC_NAV_GROUPS, frontend standards enforced) reflected in scope and capabilities |
 | 4.13 | 2026-06-28 | Ali Abu Ras | Catch-up pass — BR-118–BR-124 added: live admin-configured Jira sync with fallback (BR-118), admin-configurable issue type hierarchy (BR-119), role-based delivery coaching insights (BR-120), retrospective insights engine (BR-121), forecast engine v2 — data-quality-aware confidence and risk diagnosis (BR-122), and the design-only multi-tenant organization initiative (BR-123/BR-124) |
+| 4.14 | 2026-08-08 | Ali Abu Ras | Doc-accuracy correction, no scope change — BR-123's branch pointer was stale (`feature/org-phase1-tenant-isolation` confirmed deleted); corrected to point at the rebuilt work's actual current location, `feature/org-phase1b-not-null-tighten`. See `TODO-List.md` §20a and `product/SRS.md` v4.41.0 for the full rebuild-and-incident history. |
 
 ---
 
@@ -850,6 +851,6 @@ This BRD had not recorded a new business requirement since v4.6 (2026-06-10), de
 
 **BR-122 (Should — P2 — Done 2026-06-27):** The forecast page's (`/forecast`) confidence rating SHOULD reflect data quality and per-metric confidence, not velocity history alone, and SHOULD name the single weakest factor holding confidence down rather than leaving the user to guess why a forecast reads "Low." An unexplained confidence label isn't actionable; naming the weakest factor turns it into something a team can actually go fix.
 
-**BR-123 (Should — Future / P2 — Design only, not approved for implementation as a whole; a first partial data-isolation slice is built and unit-tested on `feature/org-phase1-tenant-isolation`, unmerged):** The application SHOULD support multiple client organizations on one deployment, each with completely isolated data, storage, and membership — no organization can see another organization's data under any role. Joining the platform SHOULD go through a structured application and an explicit Platform-Owner approval step, with actionable rejection feedback so a rejected applicant knows exactly what to fix and can resubmit, rather than open self-registration. This is what turns the product from a single-tenant internal tool into something that can be safely offered to multiple separate client companies. Full design in `product/MULTI_TENANT_ORG_DESIGN.md`; not yet approved for implementation as a whole.
+**BR-123 (Should — Future / P2 — Design only, not approved for implementation as a whole; a first partial data-isolation slice is built and unit-tested on `feature/org-phase1b-not-null-tighten`, unmerged — rebuilt 2026-08-08 after the original `feature/org-phase1-tenant-isolation` branch was found deleted; see `TODO-List.md` §20a):** The application SHOULD support multiple client organizations on one deployment, each with completely isolated data, storage, and membership — no organization can see another organization's data under any role. Joining the platform SHOULD go through a structured application and an explicit Platform-Owner approval step, with actionable rejection feedback so a rejected applicant knows exactly what to fix and can resubmit, rather than open self-registration. This is what turns the product from a single-tenant internal tool into something that can be safely offered to multiple separate client companies. Full design in `product/MULTI_TENANT_ORG_DESIGN.md`; not yet approved for implementation as a whole.
 
 **BR-124 (Should — Future / P2 — Design only, not approved for implementation):** Within an organization, an individual user SHOULD be able to permanently delete their own data without affecting anyone else's, optionally route their own uploads to their own storage location instead of the organization's default, and explicitly share one specific piece of their data with one specific named colleague — never a blanket "share everything." As a narrow, explicitly-scoped exception, two individuals at *different* organizations who already know each other (e.g. two Scrum Masters who've never worked at the same company) SHOULD be able to mutually opt in to share aggregated results only, never raw data, with no admin approval gate on either side. This gives individual users real control over their own data without weakening the organization-level isolation BR-123 establishes. Full design in `product/MULTI_TENANT_ORG_DESIGN.md` §11; not yet approved for implementation.
