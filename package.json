@@ -9,14 +9,12 @@
   },
   "overrides": {
     "sharp": "^0.35.3",
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^9.0.9"
+    },
     "eslint-config-next": {
       "@next/eslint-plugin-next": {
         "glob": "^10.5.0"
-      },
-      "@typescript-eslint/parser": {
-        "@typescript-eslint/typescript-estree": {
-          "minimatch": "^9.0.9"
-        }
       }
     }
   },
