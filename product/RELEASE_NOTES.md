@@ -5,6 +5,19 @@
 
 ---
 
+## Fix: CI was failing on every push (2026-08-09, P1 — internal, no user-facing change)
+
+Both automated checks (`quality`, `e2e`) had been failing on every push since the prior day's
+dependency-security fix — a nested `package.json` override never actually matched the real
+dependency chain, leaving `package-lock.json` in a state that only the stricter `npm ci` (used in
+CI) caught, not everyday `npm install`. Corrected the override and regenerated the lockfile via a
+clean CI run (this session's own machine runs a newer Node version than the project supports, so a
+local regen couldn't be trusted) — verified the original security patch is still in effect
+(`npm audit` unchanged at 7 vulnerabilities, zero `minimatch`/`glob` findings) before adopting it.
+Both checks are green again. See `TODO-List.md` `DEP-DEFERRED-01` for the full investigation.
+
+---
+
 ## Incident: brief production outage during a database schema change (2026-08-09, P0)
 
 The production site was unreachable (503) for roughly 5-6 minutes while an in-progress database
