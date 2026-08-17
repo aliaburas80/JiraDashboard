@@ -5,6 +5,19 @@
 
 ---
 
+## Multi-Tenant Organization Phase 1a re-merged to `main` (2026-08-16, P1 — internal, no user-facing change)
+
+The `Organization` model, nullable `organizationId` isolation columns, `src/server/tenancy/scopedRepository.ts`,
+the `no-direct-org-scoped-prisma` ESLint boundary rule, and the 12 `TC-ORG-01–12` isolation tests — rebuilt
+2026-08-09 after the original branch carrying this work was found deleted (see the 2026-08-09 incident entry
+below) — are back on `main` via PR #40. This is Phase 1a only: purely additive, no `NOT NULL` constraint. The
+tightening step that correlated with that incident is deliberately not included and won't be retried until the
+sequencing fix described in `TODO-List.md` §20a is followed. No route yet reads or writes `organizationId` in a
+way a user would notice — every deployment still behaves as exactly one organization. Verified before and after:
+production (`https://deliveryclarity.app`) serving normally.
+
+---
+
 ## Fix: CI was failing on every push (2026-08-09, P1 — internal, no user-facing change)
 
 Both automated checks (`quality`, `e2e`) had been failing on every push since the prior day's
