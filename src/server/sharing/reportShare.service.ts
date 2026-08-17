@@ -1,35 +1,12 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 import 'server-only';
-import { z } from 'zod';
+import { randomUUID } from 'node:crypto';
 import { prisma } from '@/lib/prisma';
 import { generateShareToken, hashShareToken } from '@/lib/shareToken';
-import type { SharedReportPayload } from '@/services/export/sharedReportPayload.service';
+import type { SharedReportPayload, SharedRiskItem } from '@/services/export/sharedReportPayload.service';
 
 const SHARE_KEY_PREFIX = 'report-share:';
 const MAX_ACTIVE_SHARES = 50;
-
-const riskSchema = z.object({
-  key: z.string().max(80),
-  summary: z.string().max(500),
-  status: z.string().max(100),
-  assignee: z.string().max(200).optional(),
-  reason: z.string().max(500).optional(),
-});
-
-export const sharedReportSchema = z.object({
-  version: z.literal(1),
-  title: z.string().trim().min(1).max(120),
-  generatedAt: z.string().datetime(),
-  healthScore: z.number().finite(),
-  totalIssues: z.number().finite().nonnegative(),
-  doneIssues: z.number().finite().nonnegative(),
-  completionRate: z.number().finite(),
-  blockedIssues: z.number().finite().nonnegative(),
-  openDefects: z.number().finite().nonnegative(),
-  averageLeadTimeDays: z.number().finite().nonnegative(),
-  averageCycleTimeDays: z.number().finite().nonnegative(),
-  risks: z.array(riskSchema).max(25),
-});
 
 interface StoredShareRecord {
   id: string;
@@ -56,12 +33,80 @@ export type ResolveShareResult =
   | { state: 'active'; report: SharedReportPayload; expiresAt: string | null }
   | { state: 'expired' | 'revoked' | 'not_found' };
 
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function validString(value: unknown, max: number, allowEmpty = true): value is string {
+  return typeof value === 'string' && value.length <= max && (allowEmpty || value.trim().length > 0);
+}
+
+function validFinite(value: unknown, nonnegative = false): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && (!nonnegative || value >= 0);
+}
+
+function parseRisk(value: unknown): SharedRiskItem | null {
+  if (!isObject(value)) return null;
+  if (!validString(value.key, 80) || !validString(value.summary, 500) || !validString(value.status, 100)) return null;
+  if (value.assignee !== undefined && !validString(value.assignee, 200)) return null;
+  if (value.reason !== undefined && !validString(value.reason, 500)) return null;
+  return {
+    key: value.key,
+    summary: value.summary,
+    status: value.status,
+    assignee: value.assignee as string | undefined,
+    reason: value.reason as string | undefined,
+  };
+}
+
+export function parseSharedReport(value: unknown): SharedReportPayload | null {
+  if (!isObject(value) || value.version !== 1) return null;
+  if (!validString(value.title, 120, false)) return null;
+  if (!validString(value.generatedAt, 40, false) || !Number.isFinite(Date.parse(value.generatedAt))) return null;
+  if (!validFinite(value.healthScore)) return null;
+  if (!validFinite(value.totalIssues, true) || !validFinite(value.doneIssues, true)) return null;
+  if (!validFinite(value.completionRate)) return null;
+  if (!validFinite(value.blockedIssues, true) || !validFinite(value.openDefects, true)) return null;
+  if (!validFinite(value.averageLeadTimeDays, true) || !validFinite(value.averageCycleTimeDays, true)) return null;
+  if (!Array.isArray(value.risks) || value.risks.length > 25) return null;
+  const risks = value.risks.map(parseRisk);
+  if (risks.some(risk => risk === null)) return null;
+
+  return {
+    version: 1,
+    title: value.title.trim(),
+    generatedAt: value.generatedAt,
+    healthScore: value.healthScore,
+    totalIssues: value.totalIssues,
+    doneIssues: value.doneIssues,
+    completionRate: value.completionRate,
+    blockedIssues: value.blockedIssues,
+    openDefects: value.openDefects,
+    averageLeadTimeDays: value.averageLeadTimeDays,
+    averageCycleTimeDays: value.averageCycleTimeDays,
+    risks: risks as SharedRiskItem[],
+  };
+}
+
 function parseStored(value: string): StoredShareRecord | null {
   try {
-    const parsed = JSON.parse(value) as StoredShareRecord;
-    if (!parsed || typeof parsed.id !== 'string' || !parsed.report) return null;
-    const report = sharedReportSchema.parse(parsed.report);
-    return { ...parsed, report };
+    const parsed: unknown = JSON.parse(value);
+    if (!isObject(parsed) || !validString(parsed.id, 100, false)) return null;
+    const report = parseSharedReport(parsed.report);
+    if (!report || !validString(parsed.createdAt, 40, false)) return null;
+    if (parsed.expiresAt !== null && !validString(parsed.expiresAt, 40, false)) return null;
+    if (parsed.revokedAt !== null && !validString(parsed.revokedAt, 40, false)) return null;
+    if (parsed.lastAccessedAt !== null && !validString(parsed.lastAccessedAt, 40, false)) return null;
+    if (!validFinite(parsed.accessCount, true)) return null;
+    return {
+      id: parsed.id,
+      report,
+      createdAt: parsed.createdAt,
+      expiresAt: parsed.expiresAt as string | null,
+      revokedAt: parsed.revokedAt as string | null,
+      lastAccessedAt: parsed.lastAccessedAt as string | null,
+      accessCount: parsed.accessCount,
+    };
   } catch {
     return null;
   }
@@ -91,7 +136,9 @@ export async function createReportShare(input: {
   report: unknown;
   expiresInDays?: number | null;
 }): Promise<{ token: string; share: ReportShareSummary }> {
-  const report = sharedReportSchema.parse(input.report) as SharedReportPayload;
+  const report = parseSharedReport(input.report);
+  if (!report) throw new Error('INVALID_REPORT');
+
   const existing = await prisma.appSetting.findMany({
     where: { ownerId: input.userId, key: { startsWith: SHARE_KEY_PREFIX } },
     select: { valueJson: true },
@@ -109,7 +156,7 @@ export async function createReportShare(input: {
     ? new Date(createdAt.getTime() + input.expiresInDays * 24 * 60 * 60 * 1000).toISOString()
     : null;
   const record: StoredShareRecord = {
-    id: `share_${crypto.randomUUID()}`,
+    id: `share_${randomUUID()}`,
     report,
     createdAt: createdAt.toISOString(),
     expiresAt,
@@ -136,7 +183,10 @@ export async function listReportShares(userId: string): Promise<ReportShareSumma
     orderBy: { createdAt: 'desc' },
     select: { valueJson: true },
   });
-  return rows.map(row => parseStored(row.valueJson)).filter((row): row is StoredShareRecord => Boolean(row)).map(summaryOf);
+  return rows
+    .map(row => parseStored(row.valueJson))
+    .filter((row): row is StoredShareRecord => Boolean(row))
+    .map(summaryOf);
 }
 
 export async function revokeReportShare(userId: string, shareId: string): Promise<boolean> {
