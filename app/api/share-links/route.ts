@@ -2,16 +2,12 @@
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
-import { z } from 'zod';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { createReportShare, listReportShares } from '@/server/sharing/reportShare.service';
 
 export const dynamic = 'force-dynamic';
 
-const createSchema = z.object({
-  report: z.unknown(),
-  expiresInDays: z.union([z.literal(1), z.literal(7), z.literal(14), z.literal(30), z.literal(90), z.null()]).optional(),
-});
+const ALLOWED_EXPIRY_DAYS = new Set([1, 7, 14, 30, 90]);
 
 async function sessionOrNull(): Promise<SessionData | null> {
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
@@ -24,6 +20,14 @@ function sameOrigin(req: NextRequest): boolean {
   const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host');
   if (!host) return false;
   try { return new URL(origin).host === host; } catch { return false; }
+}
+
+function parseCreateRequest(value: unknown): { report: unknown; expiresInDays: number | null } | null {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
+  const body = value as Record<string, unknown>;
+  const expiry = body.expiresInDays;
+  if (expiry !== null && expiry !== undefined && (typeof expiry !== 'number' || !ALLOWED_EXPIRY_DAYS.has(expiry))) return null;
+  return { report: body.report, expiresInDays: expiry === undefined ? 30 : expiry };
 }
 
 export async function GET(): Promise<NextResponse> {
@@ -39,20 +43,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!sameOrigin(req)) return NextResponse.json({ error: 'Cross-origin request rejected.' }, { status: 403 });
 
   const json = await req.json().catch(() => null);
-  const parsed = createSchema.safeParse(json);
-  if (!parsed.success) return NextResponse.json({ error: 'Invalid share request.' }, { status: 400 });
+  const parsed = parseCreateRequest(json);
+  if (!parsed) return NextResponse.json({ error: 'Invalid share request.' }, { status: 400 });
 
   try {
-    const result = await createReportShare({ userId: session.userId, ...parsed.data });
-    return NextResponse.json({
-      share: result.share,
-      sharePath: `/share/${result.token}`,
-    }, { status: 201 });
+    const result = await createReportShare({ userId: session.userId, ...parsed });
+    return NextResponse.json({ share: result.share, sharePath: `/share/${result.token}` }, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.message === 'ACTIVE_SHARE_LIMIT') {
       return NextResponse.json({ error: 'Active share-link limit reached. Revoke an old link first.' }, { status: 409 });
     }
-    if (error instanceof z.ZodError) return NextResponse.json({ error: 'Report data is not shareable.' }, { status: 400 });
+    if (error instanceof Error && error.message === 'INVALID_REPORT') {
+      return NextResponse.json({ error: 'Report data is not shareable.' }, { status: 400 });
+    }
     throw error;
   }
 }
