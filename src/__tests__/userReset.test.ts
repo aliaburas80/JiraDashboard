@@ -1,14 +1,16 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
-// EP-023: manual admin reset for non-@deliveryclarity.app users — TC-RESET-01 to TC-RESET-10.
+// EP-023: manual admin reset for non-@deliveryclarity.app users — TC-RESET-01 to TC-RESET-14.
 
 const mockFindUnique   = jest.fn();
 const mockWorkspaceFindFirst = jest.fn();
 const mockImportLogCount = jest.fn();
 const mockSnapshotCount = jest.fn();
 const mockConnectionCount = jest.fn();
+const mockAppSettingCount = jest.fn();
 const mockImportLogDeleteMany = jest.fn();
 const mockSnapshotDeleteMany  = jest.fn();
 const mockConnectionDeleteMany = jest.fn();
+const mockAppSettingDeleteMany = jest.fn();
 const mockUserFindMany = jest.fn();
 const mockSafeAuditEvent = jest.fn();
 const mockExistsSync = jest.fn();
@@ -34,6 +36,10 @@ jest.mock('../lib/prisma', () => ({
     jiraConnection: {
       count:      (...a: unknown[]) => mockConnectionCount(...a),
       deleteMany: (...a: unknown[]) => mockConnectionDeleteMany(...a),
+    },
+    appSetting: {
+      count:      (...a: unknown[]) => mockAppSettingCount(...a),
+      deleteMany: (...a: unknown[]) => mockAppSettingDeleteMany(...a),
     },
   },
 }));
@@ -63,6 +69,8 @@ const INTERNAL_USER = { id: 'user-int-1', email: 'ali@deliveryclarity.app' };
 beforeEach(() => {
   jest.clearAllMocks();
   mockWorkspaceFindFirst.mockResolvedValue(null);
+  mockAppSettingCount.mockResolvedValue(0);
+  mockAppSettingDeleteMany.mockResolvedValue({ count: 0 });
   mockExistsSync.mockReturnValue(false);
 });
 
@@ -81,6 +89,7 @@ test('TC-RESET-02: previewUserReset reports correct counts for an external user'
   mockImportLogCount.mockResolvedValue(3);
   mockSnapshotCount.mockResolvedValue(2);
   mockConnectionCount.mockResolvedValue(1);
+  mockAppSettingCount.mockResolvedValue(2);
   mockExistsSync.mockReturnValue(true);
 
   const preview = await previewUserReset(EXTERNAL_USER.id);
@@ -88,6 +97,7 @@ test('TC-RESET-02: previewUserReset reports correct counts for an external user'
   expect(preview.importLogs).toBe(3);
   expect(preview.dashboardSnapshots).toBe(2);
   expect(preview.jiraConnections).toBe(1);
+  expect(preview.reportShares).toBe(2);
   expect(preview.hasScopedMetricsFile).toBe(true);
 });
 
@@ -106,17 +116,20 @@ test('TC-RESET-04: resetUserData refuses an internal @deliveryclarity.app accoun
   expect(mockImportLogDeleteMany).not.toHaveBeenCalled();
   expect(mockSnapshotDeleteMany).not.toHaveBeenCalled();
   expect(mockConnectionDeleteMany).not.toHaveBeenCalled();
+  expect(mockAppSettingDeleteMany).not.toHaveBeenCalled();
 });
 
 // TC-RESET-05: reset deletes the external user's data and logs an audit event
-test('TC-RESET-05: resetUserData deletes an external user\'s workspace data and audits it', async () => {
+test('TC-RESET-05: resetUserData deletes an external user\'s workspace data, public report shares, and audits it', async () => {
   mockFindUnique.mockResolvedValue(EXTERNAL_USER);
   mockImportLogCount.mockResolvedValue(4);
   mockSnapshotCount.mockResolvedValue(1);
   mockConnectionCount.mockResolvedValue(0);
+  mockAppSettingCount.mockResolvedValue(2);
   mockImportLogDeleteMany.mockResolvedValue({ count: 4 });
   mockSnapshotDeleteMany.mockResolvedValue({ count: 1 });
   mockConnectionDeleteMany.mockResolvedValue({ count: 0 });
+  mockAppSettingDeleteMany.mockResolvedValue({ count: 2 });
   mockExistsSync.mockReturnValue(true);
 
   const result = await resetUserData(EXTERNAL_USER.id, 'admin-1');
@@ -124,8 +137,12 @@ test('TC-RESET-05: resetUserData deletes an external user\'s workspace data and 
   expect(result.importLogsDeleted).toBe(4);
   expect(result.snapshotsDeleted).toBe(1);
   expect(result.jiraConnectionsDeleted).toBe(0);
+  expect(result.reportSharesDeleted).toBe(2);
   expect(mockImportLogDeleteMany).toHaveBeenCalledWith({ where: { userId: EXTERNAL_USER.id } });
   expect(mockConnectionDeleteMany).toHaveBeenCalledWith({ where: { createdByUserId: EXTERNAL_USER.id } });
+  expect(mockAppSettingDeleteMany).toHaveBeenCalledWith({
+    where: { ownerId: EXTERNAL_USER.id, key: { startsWith: 'report-share:' } },
+  });
   expect(mockUnlinkSync).toHaveBeenCalled();
   expect(mockSafeAuditEvent).toHaveBeenCalledWith(expect.objectContaining({
     userId: 'admin-1',
@@ -203,6 +220,7 @@ test('TC-RESET-12: resetUserData refuses the super-admin account and deletes not
   expect(result.success).toBe(false);
   expect(result.error).toContain('super-admin');
   expect(mockImportLogDeleteMany).not.toHaveBeenCalled();
+  expect(mockAppSettingDeleteMany).not.toHaveBeenCalled();
 });
 
 // TC-RESET-13: eligible-users list excludes the super-admin via the query itself
@@ -211,4 +229,19 @@ test('TC-RESET-13: listExternalUsersEligibleForReset queries excluding isSuperAd
   await listExternalUsersEligibleForReset();
   const callArg = mockUserFindMany.mock.calls[0][0];
   expect(callArg.where.isSuperAdmin).toBe(false);
+});
+
+// TC-RESET-14: preview scopes report-share count to the target user and report-share namespace
+test('TC-RESET-14: previewUserReset counts only the target user\'s report shares', async () => {
+  mockFindUnique.mockResolvedValue(EXTERNAL_USER);
+  mockImportLogCount.mockResolvedValue(0);
+  mockSnapshotCount.mockResolvedValue(0);
+  mockConnectionCount.mockResolvedValue(0);
+  mockAppSettingCount.mockResolvedValue(3);
+
+  const preview = await previewUserReset(EXTERNAL_USER.id);
+  expect(preview.reportShares).toBe(3);
+  expect(mockAppSettingCount).toHaveBeenCalledWith({
+    where: { ownerId: EXTERNAL_USER.id, key: { startsWith: 'report-share:' } },
+  });
 });
