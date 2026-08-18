@@ -31,7 +31,8 @@ export default function AdminLoginPage() {
       }
 
       const redirectTo = safeRedirect(new URLSearchParams(window.location.search).get('redirect'));
-      window.location.assign(redirectTo);
+      const mfaPath = body.enrollmentRequired ? '/mfa/enroll' : '/mfa/verify';
+      window.location.assign(`${mfaPath}?redirect=${encodeURIComponent(redirectTo)}`);
     } catch {
       setError('Unable to reach the admin service.');
     } finally {
@@ -44,7 +45,7 @@ export default function AdminLoginPage() {
       <section className="login-card" aria-labelledby="admin-login-title">
         <p className="eyebrow">Delivery Clarity</p>
         <h1 id="admin-login-title">Admin Console</h1>
-        <p className="muted">Administrator credentials are verified independently from the main application session.</p>
+        <p className="muted">Administrator access requires your password and a second factor.</p>
 
         <form className="form-grid" onSubmit={submit}>
           <label>
@@ -69,7 +70,7 @@ export default function AdminLoginPage() {
           </label>
           {error ? <div className="error" role="alert">{error}</div> : null}
           <button className="primary-button" type="submit" disabled={submitting}>
-            {submitting ? 'Signing in…' : 'Sign in to Admin'}
+            {submitting ? 'Checking password…' : 'Continue'}
           </button>
         </form>
       </section>
