@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { prisma } from '../../../../../src/lib/prisma';
 import { listMetricsScopeFiles, metricsScopeFileDir } from '../../../../../src/services/metrics/latestMetricsStorage';
 import { readStorageSettings, listCloudBackups } from '../../../../../src/services/storage/storageProvider';
 import { getCacheMeta } from '../../../../../src/services/storage/cloudSync';
+import { getOwnerDeploymentDiagnostics } from '../../../../../src/server/tenancy/adminOperationalRepository';
 import { requireOwnerAdmin } from '../../../../lib/adminGuard';
 
 export async function GET() {
@@ -12,37 +12,7 @@ export async function GET() {
   if (guard instanceof NextResponse) return guard;
 
   const now = new Date();
-  const [
-    totalUsers,
-    activeUsers,
-    adminUsers,
-    totalSessions,
-    activeSessions,
-    totalImports,
-    successImports,
-    failedImports,
-    avgHealthScore,
-    avgProcessingMs,
-    totalSnapshots,
-    totalAuditEvents,
-    unresolvedSystemErrors,
-    latestError,
-  ] = await Promise.all([
-    prisma.user.count(),
-    prisma.user.count({ where: { isActive: true } }),
-    prisma.user.count({ where: { role: 'admin' } }),
-    prisma.session.count(),
-    prisma.session.count({ where: { expiresAt: { gt: now } } }),
-    prisma.importLog.count(),
-    prisma.importLog.count({ where: { status: 'success' } }),
-    prisma.importLog.count({ where: { status: { in: ['failed', 'validation_failed'] } } }),
-    prisma.importLog.aggregate({ _avg: { healthScore: true }, where: { status: 'success' } }),
-    prisma.importLog.aggregate({ _avg: { processingTimeMs: true }, where: { status: 'success' } }),
-    prisma.dashboardSnapshot.count(),
-    prisma.auditEvent.count(),
-    prisma.systemErrorLog.count({ where: { resolvedAt: null } }),
-    prisma.systemErrorLog.findFirst({ orderBy: { createdAt: 'desc' } }),
-  ]);
+  const diagnostics = await getOwnerDeploymentDiagnostics();
 
   const env = {
     adminSessionSecretSet: (process.env.ADMIN_SESSION_SECRET ?? '').length >= 32,
@@ -58,7 +28,9 @@ export async function GET() {
   if (!env.databaseUrlSet) opsScore -= 30;
   if (!env.adminAppUrlSet) opsScore -= 10;
   if (!env.nodeEnvProduction) opsScore -= 5;
-  if (unresolvedSystemErrors > 0) opsScore -= Math.min(15, unresolvedSystemErrors);
+  if (diagnostics.unresolvedSystemErrors > 0) {
+    opsScore -= Math.min(15, diagnostics.unresolvedSystemErrors);
+  }
   opsScore = Math.max(0, opsScore);
 
   const scopeFiles = listMetricsScopeFiles();
@@ -89,22 +61,22 @@ export async function GET() {
   return NextResponse.json({
     generatedAt: now.toISOString(),
     opsScore,
-    users: { total: totalUsers, active: activeUsers, admins: adminUsers },
-    sessions: { total: totalSessions, active: activeSessions },
+    users: { total: diagnostics.totalUsers, active: diagnostics.activeUsers, admins: diagnostics.adminUsers },
+    sessions: { total: diagnostics.totalSessions, active: diagnostics.activeSessions },
     imports: {
-      total: totalImports,
-      successful: successImports,
-      failed: failedImports,
-      successRate: totalImports ? Math.round((successImports / totalImports) * 100) : 0,
-      avgHealthScore: Math.round((avgHealthScore._avg.healthScore ?? 0) * 10) / 10,
-      avgProcessingMs: Math.round(avgProcessingMs._avg.processingTimeMs ?? 0),
+      total: diagnostics.totalImports,
+      successful: diagnostics.successImports,
+      failed: diagnostics.failedImports,
+      successRate: diagnostics.totalImports ? Math.round((diagnostics.successImports / diagnostics.totalImports) * 100) : 0,
+      avgHealthScore: Math.round(diagnostics.avgHealthScore * 10) / 10,
+      avgProcessingMs: Math.round(diagnostics.avgProcessingMs),
     },
-    snapshots: { total: totalSnapshots },
-    auditEvents: { total: totalAuditEvents },
+    snapshots: { total: diagnostics.totalSnapshots },
+    auditEvents: { total: diagnostics.totalAuditEvents },
     systemErrors: {
-      unresolved: unresolvedSystemErrors,
-      latestAt: latestError?.createdAt?.toISOString() ?? null,
-      latestCode: latestError?.errorCode ?? null,
+      unresolved: diagnostics.unresolvedSystemErrors,
+      latestAt: diagnostics.latestError?.createdAt?.toISOString() ?? null,
+      latestCode: diagnostics.latestError?.errorCode ?? null,
     },
     metricsSync: {
       available: scopeFiles.length > 0,
