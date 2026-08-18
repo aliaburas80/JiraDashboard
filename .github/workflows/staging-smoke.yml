@@ -1,0 +1,55 @@
+name: Staging Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      user_app_url:
+        description: 'Deployed staging user-app origin, e.g. https://staging.example.com'
+        required: true
+        type: string
+      admin_app_url:
+        description: 'Deployed staging Admin origin, e.g. https://admin-staging.example.com'
+        required: true
+        type: string
+      expected_version:
+        description: 'Optional package version expected from both health endpoints'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-staging:
+    name: verify-staging
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+
+      - name: Verify deployed staging runtimes
+        env:
+          STAGING_APP_URL: ${{ inputs.user_app_url }}
+          STAGING_ADMIN_URL: ${{ inputs.admin_app_url }}
+          STAGING_EXPECTED_VERSION: ${{ inputs.expected_version }}
+        run: node scripts/verify-staging.mjs --report staging-verification.json
+
+      - name: Upload EP-028 verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ep-028-staging-verification
+          path: staging-verification.json
+          if-no-files-found: warn
+          retention-days: 14
