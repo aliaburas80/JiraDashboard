@@ -70,11 +70,12 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
     id: 'data',
     label: 'Data',
     items: [
-      { id: 'work-explorer',  title: 'Work Explorer',  desc: 'Issue table & detail',    href: '/work-explorer',  status: 'neutral', icon: 'workItems'     },
-      { id: 'data-quality',   title: 'Data Quality',   desc: 'Field confidence scores', href: '/data-quality',   status: 'success', icon: 'statusVerified' },
-      { id: 'snapshots',      title: 'Snapshots',      desc: 'Saved metric snapshots',  href: '/snapshots',      status: 'info',    icon: 'camera'        },
-      { id: 'column-mapping', title: 'Column Mapping', desc: 'Field mapping config',    href: '/column-mapping', status: 'neutral', icon: 'field'         },
-      { id: 'backend',        title: 'Backend',        desc: 'Import logs & raw data',  href: '/backend',        status: 'neutral', icon: 'database'      },
+      { id: 'work-explorer',  title: 'Work Explorer',      desc: 'Issue table & detail',          href: '/work-explorer',  status: 'neutral', icon: 'workItems'     },
+      { id: 'data-quality',   title: 'Data Quality',       desc: 'Field confidence scores',       href: '/data-quality',   status: 'success', icon: 'statusVerified' },
+      { id: 'reports',        title: 'Reports & Sharing',  desc: 'Excel, PDF & secure client links', href: '/reports',      status: 'info',    icon: 'table'         },
+      { id: 'snapshots',      title: 'Snapshots',          desc: 'Saved metric snapshots',        href: '/snapshots',      status: 'info',    icon: 'camera'        },
+      { id: 'column-mapping', title: 'Column Mapping',     desc: 'Field mapping config',          href: '/column-mapping', status: 'neutral', icon: 'field'         },
+      { id: 'backend',        title: 'Backend',            desc: 'Import logs & raw data',        href: '/backend',        status: 'neutral', icon: 'database'      },
     ],
   },
   // ── Directory ─────────────────────────────────────────────────────────────

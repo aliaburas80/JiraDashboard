@@ -39,7 +39,7 @@ export function isHighPrivilegeRole(role: string | null | undefined): boolean {
   return HIGH_PRIVILEGE_ROLES.includes(role as AppRole);
 }
 
-const COMMON_ROUTES    = ['/profile', '/members', '/help', '/glossary', '/landing', '/change-password'];
+const COMMON_ROUTES    = ['/profile', '/members', '/help', '/glossary', '/landing', '/change-password', '/reports'];
 const PLANNING_ROUTES  = ['/roadmap', '/forecast', '/retro'];
 const DELIVERY_ROUTES  = ['/release-readiness', '/readiness', '/flow-health', '/sprint-kanban', '/delivery-mix', '/explore', '/customer'];
 const DATA_ROUTES      = ['/work-explorer', '/data-quality', '/column-mapping', '/snapshots', '/backend'];

@@ -11,7 +11,7 @@ const PROTECTED  = [
   '/', '/dashboard', '/summary', '/charts', '/explore', '/backend', '/profile',
   '/members', '/customer', '/snapshots', '/trends', '/readiness', '/teams',
   '/portfolio', '/landing', '/glossary', '/developer', '/help', '/admin',
-  '/change-password',
+  '/change-password', '/reports',
   // Routes added v4.6–v4.9 — were missing from PROTECTED (unauthenticated access possible)
   '/roadmap', '/forecast', '/retro',
   '/data-quality', '/delivery-mix', '/flow-health', '/release-readiness',
@@ -130,7 +130,7 @@ export const config = {
     '/customer/:path*',  '/snapshots/:path*', '/trends/:path*', '/readiness/:path*',
     '/teams/:path*', '/portfolio/:path*', '/landing/:path*', '/glossary/:path*',
     '/', '/developer/:path*', '/help/:path*', '/admin/:path*',
-    '/change-password/:path*', '/members/:path*',
+    '/change-password/:path*', '/members/:path*', '/reports/:path*',
     '/roadmap/:path*', '/forecast/:path*', '/retro/:path*',
     '/data-quality/:path*', '/delivery-mix/:path*', '/flow-health/:path*',
     '/release-readiness/:path*', '/sprint-kanban/:path*', '/work-explorer/:path*',

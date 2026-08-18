@@ -2,6 +2,7 @@
 // Shared login/upload flow for E2E specs — extracted from critical-path.spec.ts
 // so mobile-viewport specs (MOBILE-09) don't duplicate it. Expects a
 // freshly-seeded admin account (prisma/seed.mjs) with mustChangePassword: true.
+import { randomBytes } from 'node:crypto';
 import type { Page } from '@playwright/test';
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'admin@deliveryclarity.com';
@@ -38,62 +39,74 @@ const UPLOAD_NAV_TIMEOUT_MS     = 40_000;
 // the number of login POSTs for every test after the first, which combined
 // with Playwright's own `retries: 1` was enough to exhaust the login route's
 // rate limiter (5 attempts/60s — see app/api/auth/login/route.ts). All these
-// requests share one bucket: there's no reverse proxy in front of this CI
-// server, so every request's `x-forwarded-for` is absent and the limiter
-// keys on the literal string 'unknown' for every single test. A 429 is
-// rejected the same way a wrong password is (no navigation away from
-// /login), which is what made that fix look like it hadn't worked.
+// requests used to share one bucket because there is no reverse proxy in
+// front of the CI server, so every request's `x-forwarded-for` was absent and
+// the limiter keyed on the literal string 'unknown'.
 //
-// `workers: 1` + `fullyParallel: false` means every test in this file runs
-// sequentially in one persistent Node process (true across Playwright's own
-// retries too, not just normal sequential tests) — so a module-level
-// variable reliably remembers the real current password across the whole
-// run, and every test can log in correctly on the first attempt. Zero wasted
-// attempts, no rate-limit exposure.
+// `workers: 1` + `fullyParallel: false` means normal tests are sequential,
+// but Playwright may restart a worker after a failure. A restarted worker
+// resets this module-level password variable to ADMIN_PASSWORD while the DB
+// still contains NEW_PASSWORD. That defensive fallback is therefore still
+// necessary. Each E2E page now gets a unique private test IP before login so
+// a legitimate fallback/retry can never consume another test's rate-limit
+// budget. Production rate-limit behavior is unchanged.
 let currentPassword = ADMIN_PASSWORD;
 
-async function attemptLogin(page: Page, password: string): Promise<boolean> {
+export async function isolateE2eLoginRateLimit(page: Page): Promise<void> {
+  const octets = randomBytes(3);
+  const ip = `10.${octets[0]}.${octets[1]}.${octets[2]}`;
+  await page.setExtraHTTPHeaders({ 'x-forwarded-for': ip });
+}
+
+async function attemptLogin(page: Page, password: string): Promise<{ ok: boolean; status: number }> {
   await page.getByLabel('Password', { exact: true }).fill(password);
   const [response] = await Promise.all([
     page.waitForResponse(res => res.url().includes('/api/auth/login') && res.request().method() === 'POST'),
     page.getByRole('button', { name: /sign in/i }).click(),
   ]);
-  return response.ok();
+  return { ok: response.ok(), status: response.status() };
 }
 
-// Right after login/password-change/upload, the app is still working through
-// its own client-side router.push()+router.refresh() plus /dashboard's own
-// server redirect() to /dashboard/priority-attention. If a goto is issued
-// while that chain is still resolving, the browser cancels it in favor of
-// the app's own in-flight navigation. Each engine reports that the same way
-// Playwright normally reports a cancelled navigation, just worded
-// differently per browser: Chromium says "Navigation ... is interrupted by
-// another navigation", WebKit says "Frame load interrupted", and Firefox
-// says "NS_BINDING_ABORTED". By the time any of these fire the redirect
-// storm has already landed, so a single immediate retry succeeds — cheaper
-// and more reliable than trying to pre-emptively wait out a chain of
-// unknown length.
+// Right after login/password-change/upload, the app can still be working
+// through client router.push()/router.refresh() plus server redirects. If a
+// goto is issued while that chain is resolving, the browser may cancel it in
+// favor of the app's own in-flight navigation. Chromium, WebKit, and Firefox
+// report that cancellation differently. A single retry was not sufficient in
+// CI when two redirects landed back-to-back, so retry a small bounded number
+// of times, yielding briefly between attempts. Unexpected navigation errors
+// still fail immediately.
 export async function gotoResilient(page: Page, url: string): Promise<void> {
-  try {
-    await page.goto(url);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (!/interrupted by another navigation|Frame load interrupted|NS_BINDING_ABORTED/.test(message)) throw err;
-    await page.goto(url);
+  const navigationCancellation = /interrupted by another navigation|Frame load interrupted|NS_BINDING_ABORTED/;
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      await page.goto(url);
+      return;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (!navigationCancellation.test(message) || attempt === 3) throw err;
+      await page.waitForTimeout(200);
+    }
   }
 }
 
 export async function loginAndEnsureData(page: Page): Promise<void> {
+  await isolateE2eLoginRateLimit(page);
   await page.goto('/login');
   await page.getByLabel('Email address').fill(ADMIN_EMAIL);
 
-  const loggedIn = await attemptLogin(page, currentPassword);
-  if (!loggedIn) {
-    // Defensive fallback only — should be unreachable in normal operation
-    // now that currentPassword is tracked, but cheaper to keep than to
-    // silently strand the page on /login if something unexpected happens.
+  const firstAttempt = await attemptLogin(page, currentPassword);
+  if (!firstAttempt.ok) {
+    // Defensive fallback for a restarted Playwright worker after the seeded
+    // account's forced password change has already persisted to PostgreSQL.
     const fallback = currentPassword === ADMIN_PASSWORD ? NEW_PASSWORD : ADMIN_PASSWORD;
-    await attemptLogin(page, fallback);
+    const fallbackAttempt = await attemptLogin(page, fallback);
+    if (!fallbackAttempt.ok) {
+      throw new Error(
+        `E2E login failed with statuses ${firstAttempt.status} and ${fallbackAttempt.status}; ` +
+        'the browser never received an authenticated session.',
+      );
+    }
     currentPassword = fallback;
   }
 
