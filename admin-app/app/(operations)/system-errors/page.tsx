@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 type SystemError = {
   id: string;
@@ -25,7 +25,7 @@ export default function SystemErrorsPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  async function load(filter = resolution) {
+  const load = useCallback(async (filter: string) => {
     setLoading(true);
     setError('');
     try {
@@ -42,9 +42,9 @@ export default function SystemErrorsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  useEffect(() => { void load(''); }, []);
+  useEffect(() => { void load(''); }, [load]);
 
   async function retry(id: string) {
     const response = await fetch('/api/ops/system-errors?action=retry', {
@@ -54,7 +54,7 @@ export default function SystemErrorsPage() {
     });
     const body = await response.json();
     if (!response.ok) { setError(body.error ?? 'Retry failed.'); return; }
-    await load();
+    await load(resolution);
   }
 
   async function resolve(id?: string) {
@@ -65,7 +65,7 @@ export default function SystemErrorsPage() {
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) { setError(body.error ?? 'Resolve failed.'); return; }
-    await load();
+    await load(resolution);
   }
 
   return (
