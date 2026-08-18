@@ -1,24 +1,15 @@
 import bcrypt from 'bcryptjs';
-import { prisma } from './prisma';
+import { prisma } from '../../src/lib/prisma';
+import {
+  createAdminBoundaryAudit,
+  findAdminIdentityByEmail,
+} from '../../src/server/tenancy/adminIdentityRepository';
 
 const DUMMY_ADMIN_PASSWORD_HASH = bcrypt.hashSync('not-a-real-admin-account-password', 12);
 
 export async function verifyAdminCredentials(email: string, password: string) {
   const normalizedEmail = email.trim().toLowerCase();
-  const user = normalizedEmail
-    ? await prisma.user.findUnique({
-        where: { email: normalizedEmail },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          isActive: true,
-          isSuperAdmin: true,
-          passwordHash: true,
-        },
-      })
-    : null;
+  const user = normalizedEmail ? await findAdminIdentityByEmail(normalizedEmail) : null;
 
   const passwordHash = user?.passwordHash ?? DUMMY_ADMIN_PASSWORD_HASH;
   const passwordValid = await bcrypt.compare(password, passwordHash);
@@ -27,6 +18,7 @@ export async function verifyAdminCredentials(email: string, password: string) {
 
   return {
     id: user.id,
+    organizationId: user.organizationId,
     email: user.email,
     name: user.name,
     isSuperAdmin: user.isSuperAdmin,
@@ -49,6 +41,7 @@ export async function isAdminLoginRateLimited(ip: string): Promise<boolean> {
 }
 
 export async function safeAdminAudit(data: {
+  organizationId?: string | null;
   userId?: string;
   eventType: string;
   eventDescription: string;
@@ -56,7 +49,7 @@ export async function safeAdminAudit(data: {
   userAgent?: string;
 }) {
   try {
-    await prisma.auditEvent.create({ data });
+    await createAdminBoundaryAudit(data);
   } catch (error) {
     console.error('[admin-audit] unable to persist audit event', error);
   }
