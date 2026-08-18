@@ -137,7 +137,7 @@ export async function safeAuditEvent(data: AuditEventData): Promise<void> {
 // ── Safe notification batch ───────────────────────────────────────────────────
 
 export async function safeNotifications(
-  data: Parameters<typeof prisma.notification.createMany>[0]['data'],
+  data: NonNullable<Parameters<typeof prisma.notification.createMany>[0]>['data'],
   context?: string,
 ): Promise<void> {
   try {
