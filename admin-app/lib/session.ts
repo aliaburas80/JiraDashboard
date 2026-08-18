@@ -4,6 +4,9 @@ export interface AdminSessionData {
   email: string;
   name: string;
   isSuperAdmin: boolean;
+  passwordVerified?: boolean;
+  mfaVerified?: boolean;
+  mfaEnrollmentRequired?: boolean;
   isLoggedIn: boolean;
 }
 
