@@ -1,5 +1,6 @@
 export interface AdminSessionData {
   userId: string;
+  organizationId?: string | null;
   email: string;
   name: string;
   isSuperAdmin: boolean;
