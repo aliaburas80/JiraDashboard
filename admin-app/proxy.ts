@@ -3,22 +3,41 @@ import { getIronSession } from 'iron-session';
 import { ADMIN_SESSION_OPTIONS, type AdminSessionData } from './lib/session';
 
 const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/health'];
+const PRE_MFA_PATHS = ['/mfa/enroll', '/mfa/verify', '/api/mfa', '/api/auth/logout'];
 
-function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`));
+function matches(pathname: string, paths: string[]): boolean {
+  return paths.some(path => pathname === path || pathname.startsWith(`${path}/`));
 }
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (isPublicPath(pathname)) return NextResponse.next();
+  if (matches(pathname, PUBLIC_PATHS)) return NextResponse.next();
 
   const res = NextResponse.next();
   const session = await getIronSession<AdminSessionData>(req, res, ADMIN_SESSION_OPTIONS);
 
-  if (!session.isLoggedIn || !session.userId) {
+  if (matches(pathname, PRE_MFA_PATHS)) {
+    if (!session.userId || !session.passwordVerified) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Administrator password verification required.' }, { status: 401 });
+      }
+      const login = req.nextUrl.clone();
+      login.pathname = '/login';
+      login.searchParams.set('redirect', '/');
+      return NextResponse.redirect(login);
+    }
+
+    if (session.isLoggedIn && session.mfaVerified && pathname.startsWith('/mfa/')) {
+      return NextResponse.redirect(new URL('/', req.url));
+    }
+
+    return res;
+  }
+
+  if (!session.isLoggedIn || !session.userId || !session.passwordVerified || !session.mfaVerified) {
     if (pathname.startsWith('/api/')) {
-      return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+      return NextResponse.json({ error: 'Multi-factor authenticated administrator session required.' }, { status: 401 });
     }
 
     const login = req.nextUrl.clone();
