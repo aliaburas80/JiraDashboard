@@ -1,14 +1,12 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 
 function safeRedirect(value: string | null): string {
   return value && value.startsWith('/') && !value.startsWith('//') ? value : '/';
 }
 
 export default function AdminLoginPage() {
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -32,7 +30,8 @@ export default function AdminLoginPage() {
         return;
       }
 
-      window.location.assign(safeRedirect(searchParams.get('redirect')));
+      const redirectTo = safeRedirect(new URLSearchParams(window.location.search).get('redirect'));
+      window.location.assign(redirectTo);
     } catch {
       setError('Unable to reach the admin service.');
     } finally {
