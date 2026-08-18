@@ -12,7 +12,21 @@ import {
   updateOrganizationUser,
 } from '../../../../../src/server/tenancy/adminOperationalRepository';
 
-function safeUser(user: any) {
+type SafeUserInput = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  isSuperAdmin?: boolean | null;
+  mustChangePassword?: boolean | null;
+  createdAt: Date;
+  updatedAt: Date;
+  lastLoginAt: Date | null;
+  _count?: { importLogs: number; snapshots: number };
+};
+
+function safeUser(user: SafeUserInput) {
   return {
     id: user.id,
     name: user.name,
