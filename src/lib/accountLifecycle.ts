@@ -8,10 +8,15 @@
 import { prisma } from '@/lib/prisma';
 import { getMetricsScopeKeyForUser } from '@/lib/workspace';
 import { readLatestMetrics } from '@/services/metrics/latestMetricsStorage';
+import { deleteReportSharesForUser } from '@/server/sharing/reportShareCleanup.service';
 
 // ── Request / cancel deletion ──────────────────────────────────────────────────
 
 export async function requestAccountDeletion(userId: string): Promise<void> {
+  // Report shares live in AppSetting without a User FK, so they would not be
+  // covered by the later cascade delete. Remove them before locking the account
+  // so an account-deletion request can never leave a public report reachable.
+  await deleteReportSharesForUser(userId);
   await prisma.user.update({
     where: { id: userId },
     data:  { isActive: false, deletionRequestedAt: new Date() },
