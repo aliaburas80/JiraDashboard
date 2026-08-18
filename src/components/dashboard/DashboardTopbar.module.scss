@@ -97,27 +97,15 @@
 // ── CENTER: Nav group buttons ─────────────────────────────────────────────────
 // align-self: stretch lets children use height: 100% to anchor the active bar
 // to the physical bottom of the header.
-// min-width: 0 is required for the overflow-x below to do anything — a flex
-// item's default min-width: auto stops it from ever shrinking below its
-// content's natural width, so without this the whole fixed .header (and the
-// page under it) gets forced wider than the viewport at phone widths instead
-// (found via TEST-REQ-14's E2E mobile pass — no page ever checked
-// document-level horizontal overflow before). Same fix shape as
-// .ganttTrackArea in app/roadmap/page.module.scss (CI-E2E-02).
+// min-width: 0 is required so the topbar can shrink safely before the mobile
+// breakpoint. At phone width the full desktop nav is hidden entirely because
+// the hamburger/sidebar is the canonical navigation surface.
 .nav {
   display: flex;
   align-self: stretch;
   align-items: center;
   gap: 0;
   min-width: 0;
-
-  @media (max-width: 767px) {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar { display: none; }
-  }
 }
 
 .navGroupBtn {
@@ -183,6 +171,12 @@
   align-items: center;
   gap: var(--space-2, 8px);
   margin-left: var(--space-3, 12px);
+}
+
+.desktopOnly {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
 }
 
 .separator {
@@ -387,4 +381,39 @@
   &[data-status='warning']  { background: var(--color-warning, #f59e0b); }
   &[data-status='success']  { background: var(--color-success, #22c55e); }
   &[data-status='info']     { background: var(--color-info, #3b82f6); }
+}
+
+// ── MOBILE-TOPBAR-01 ─────────────────────────────────────────────────────────
+// On phones the hamburger/sidebar is the primary navigation surface. Keep the
+// topbar intentionally compact so it never widens the document: logo icon,
+// search, notifications, and user menu only. Desktop-only actions remain
+// reachable from the sidebar / their destination pages.
+@media (max-width: 767px) {
+  .header {
+    padding-inline: var(--space-2, 8px);
+  }
+
+  .hamburger {
+    margin-inline-end: var(--space-1, 4px);
+  }
+
+  .logoName,
+  .logoVersion,
+  .nav,
+  .uploadBtn,
+  .syncWrap,
+  .desktopOnly {
+    display: none;
+  }
+
+  .spacer {
+    min-width: 0;
+  }
+
+  .rightRail {
+    min-width: 0;
+    flex-shrink: 0;
+    gap: var(--space-1, 4px);
+    margin-left: var(--space-2, 8px);
+  }
 }
