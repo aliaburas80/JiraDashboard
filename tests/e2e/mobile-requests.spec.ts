@@ -79,6 +79,18 @@ test.describe('add-member request UI stays usable at mobile width', () => {
 
       await gotoResilient(page, '/admin/settings');
 
+      // MOBILE-TOPBAR-01: phone width keeps only the compact navigation/search
+      // surface in the fixed header. Desktop actions stay in the DOM but are
+      // hidden, and the entire document must remain within the viewport.
+      await expect(page.getByRole('button', { name: 'Open navigation menu' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Search pages and features' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'New Upload' })).toBeHidden();
+      await expect(page.getByRole('button', { name: 'Sync new data from Jira' })).toBeHidden();
+      const documentHasHorizontalOverflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      );
+      expect(documentHasHorizontalOverflow).toBe(false);
+
       // Scoped by the fixture's own text rather than `.first()` — this
       // settings page also renders an unrelated "how requests work"
       // explainer panel using the same `rounded-[14px]` card styling above
@@ -101,12 +113,9 @@ test.describe('add-member request UI stays usable at mobile width', () => {
       expect(secondBox).not.toBeNull();
       expect(secondBox!.y).toBeGreaterThan(firstBox!.y + firstBox!.height / 2);
 
-      // The filter bar (`pending`/`all`/`decided`) must not force this panel's
-      // own content wider than the viewport — it's `flex flex-wrap`, so it
-      // should wrap. Scoped to #main-content rather than the whole document:
-      // DashboardTopbar's right-side icon cluster (search/sync/notifications)
-      // has its own separate, pre-existing mobile-overflow gap unrelated to
-      // this panel — see TODO-List.md MOBILE-TOPBAR-01 — out of scope here.
+      // The filter bar (`pending`/`all`/`decided`) must not force the settings
+      // content wider than the viewport — it is `flex flex-wrap`, so it should
+      // wrap independently of the now-compact topbar.
       const hasHorizontalOverflow = await page.evaluate(() => {
         const main = document.getElementById('main-content');
         return !!main && main.scrollWidth > main.clientWidth;
