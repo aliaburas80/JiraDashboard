@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { runSecurityChecks } from '../../../../../src/services/settings/securityCheck.service';
 import { requireOwnerAdmin } from '../../../../lib/adminGuard';
 import { safeAdminAudit } from '../../../../lib/auth';
+import { runAdminSecurityChecks } from '../../../../lib/securityChecks';
 
 export async function GET(req: NextRequest) {
   const guard = await requireOwnerAdmin();
   if (guard instanceof NextResponse) return guard;
 
-  const report = runSecurityChecks();
+  const report = runAdminSecurityChecks();
   await safeAdminAudit({
     organizationId: guard.admin.organizationId,
     userId: guard.admin.id,
