@@ -19,6 +19,7 @@ export default async function OperationsLayout({ children }: { children: React.R
           { href: '/system-errors', label: 'System Errors' },
           { href: '/diagnostics', label: 'Diagnostics' },
           { href: '/security', label: 'Security' },
+          { href: '/settings', label: 'Settings' },
         ]
       : []),
   ];
