@@ -21,9 +21,8 @@ jobs:
     # got SIGKILLed mid-suite by this ceiling with no time left to even
     # upload the Playwright report, destroying the one diagnostic artifact
     # that would explain why. 30 gives genuine headroom to either finish or
-    # fail cleanly with a report, now that playwright.config.ts's
-    # MOBILE_ONLY_SPECS scoping also cut the suite from 20 full login+upload
-    # cycles down to 8.
+    # fail cleanly with a report, now that playwright.config.ts scopes heavy
+    # DB-mutating benchmarks to one representative Chromium project.
     timeout-minutes: 30
 
     services:
@@ -44,18 +43,21 @@ jobs:
     env:
       DATABASE_URL: postgresql://e2e:e2e@localhost:5432/delivery_clarity_e2e?sslmode=disable
       SESSION_SECRET: e2e-session-secret-value-at-least-32-chars
+      ADMIN_SESSION_SECRET: e2e-admin-session-secret-value-at-least-32-chars
       CONFIG_ENCRYPTION_KEY: e2e-config-secret-value-at-least-32-chars
+      ADMIN_APP_URL: http://127.0.0.1:3101
+      ADMIN_E2E_BASE_URL: http://127.0.0.1:3101
       STORAGE_DRIVER: temporary
       # CI/E2E-only: skips the persistent-storage requirement that a real
       # production boot enforces (see ERR-004 in product/ERRORS.md). Doubly
       # gated on `CI=true` (set automatically by GitHub Actions) in both
       # src/lib/env/server.ts and scripts/start-production.mjs, so it can
-      # never trip on a real Render deploy.
+      # never trip on a real deployment.
       ALLOW_TEMPORARY_STORAGE_IN_CI: 'true'
-      # CI/E2E-only: this job serves the app over plain http://127.0.0.1, not
-      # HTTPS, so a Secure session cookie is silently dropped by WebKit (see
-      # src/lib/session.ts's isEphemeralCiHttpRun for the full explanation and
-      # why this is safe — same doubly-gated pattern as the flag above).
+      # CI/E2E-only: both production-built runtimes are served over plain
+      # http://127.0.0.1. The user and Admin session modules each require
+      # CI=true plus this explicit flag before dropping Secure from their
+      # test cookies; production remains Secure by default.
       E2E_ALLOW_INSECURE_COOKIES: 'true'
       MAX_UPLOAD_MB: 20
       LOG_LEVEL: info
@@ -85,10 +87,10 @@ jobs:
       - name: Seed the E2E admin account
         run: npm run db:seed
 
-      - name: Build
-        run: npm run build
+      - name: Build user and Admin runtimes
+        run: npm run build && npm run admin:build
 
-      - name: Run critical-path E2E suite
+      - name: Run critical-path and security E2E suite
         run: npm run test:e2e
 
       - name: Upload Playwright report
