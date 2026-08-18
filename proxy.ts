@@ -36,11 +36,11 @@ const ADMIN_ONLY = ['/admin'];
 // to be an intentionally public route: the pre-login auth flows (a logged-in
 // gate on the login/register endpoints themselves is a contradiction),
 // liveness/readiness probes, the public promo lead-gen form, the documented
-// pre-login client-error sink, the zero-sensitive-content status stub, and
-// backend-view (which does its own session-aware branching and must stay
-// reachable unauthenticated for its documented API-index purpose — see the
-// 2026-07-18 fix to its unauthenticated fallback in app/api/backend-view/
-// route.ts, which stopped that fallback returning real file-derived data).
+// pre-login client-error/product-analytics sinks, the zero-sensitive-content
+// status stub, and backend-view (which does its own session-aware branching
+// and must stay reachable unauthenticated for its documented API-index purpose
+// — see the 2026-07-18 fix to its unauthenticated fallback in app/api/backend-
+// view/route.ts, which stopped that fallback returning real file-derived data).
 // Every other /api/* route — including ones that already self-check, where
 // this is intentionally redundant-but-harmless — now requires a session.
 const PUBLIC_API = [
@@ -54,7 +54,10 @@ const PUBLIC_API = [
   '/api/health',
   '/api/ready',
   '/api/demo-request',
-  '/api/events/error',
+  // P0B-07: product analytics is intentionally public because the queue can
+  // contain anonymous/pre-login consented events. The handler performs strict
+  // envelope/taxonomy validation, rate limiting, and idempotent persistence.
+  '/api/events',
   '/api/dashboard',
   '/api/backend-view',
 ];
