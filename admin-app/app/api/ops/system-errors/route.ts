@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../../src/lib/prisma';
-import { safeAuditEvent, safeNotifications } from '../../../../../src/lib/system-error-logger';
+import {
+  retryAuditEventPayload,
+  retryNotificationPayload,
+} from '../../../../../src/server/tenancy/adminOperationalRepository';
 import { requireOwnerAdmin } from '../../../../lib/adminGuard';
 import { safeAdminAudit } from '../../../../lib/auth';
 
@@ -43,21 +46,12 @@ export async function POST(req: NextRequest) {
   if (!log) return NextResponse.json({ error: 'Error log not found.' }, { status: 404 });
 
   try {
-    const payload = log.payload ? JSON.parse(log.payload) : null;
+    const payload: unknown = log.payload ? JSON.parse(log.payload) : null;
     let result = 'skipped: no retry handler for this operation';
 
-    if (log.operation === 'auditEvent.create' && payload) {
-      await safeAuditEvent({
-        userId: payload.userId ?? guard.admin.id,
-        eventType: payload.eventType ?? 'retry',
-        eventDescription: payload.eventDescription ?? `Retried by ${guard.admin.email}`,
-        ipAddress: payload.ipAddress,
-        userAgent: payload.userAgent,
-        correlationId: payload.correlationId,
-      });
+    if (log.operation === 'auditEvent.create' && await retryAuditEventPayload(payload, guard.admin.id)) {
       result = 'retried: auditEvent written';
-    } else if (log.operation.includes('notification') && Array.isArray(payload)) {
-      await safeNotifications(payload, `retry of ${log.id}`);
+    } else if (log.operation.includes('notification') && await retryNotificationPayload(payload)) {
       result = 'retried: notifications sent';
     }
 
