@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { isAdminLoginRateLimited, safeAdminAudit, verifyAdminCredentials } from '../../../../lib/auth';
+import { getAdminMfaStatus } from '../../../../lib/mfaStore';
 import { ADMIN_SESSION_OPTIONS, type AdminSessionData } from '../../../../lib/session';
 
 export async function POST(req: NextRequest) {
@@ -30,27 +31,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid administrator credentials.' }, { status: 401 });
   }
 
+  const mfa = await getAdminMfaStatus(admin.id);
   const session = await getIronSession<AdminSessionData>(await cookies(), ADMIN_SESSION_OPTIONS);
   session.userId = admin.id;
   session.organizationId = admin.organizationId;
   session.email = admin.email;
   session.name = admin.name;
   session.isSuperAdmin = admin.isSuperAdmin;
-  session.isLoggedIn = true;
+  session.passwordVerified = true;
+  session.mfaVerified = false;
+  session.mfaEnrollmentRequired = !mfa.enabled;
+  session.isLoggedIn = false;
   await session.save();
 
   await safeAdminAudit({
     organizationId: admin.organizationId,
     userId: admin.id,
-    eventType: 'admin_console_login',
-    eventDescription: `${admin.email} signed in to the separate admin console.`,
+    eventType: 'admin_password_verified',
+    eventDescription: `${admin.email} passed the password step for the separate admin console.`,
     ipAddress: ip,
     userAgent: req.headers.get('user-agent') ?? undefined,
   });
 
   return NextResponse.json({
     ok: true,
-    admin: { name: admin.name, email: admin.email, isSuperAdmin: admin.isSuperAdmin },
+    mfaRequired: true,
+    enrollmentRequired: !mfa.enabled,
   });
 }
 

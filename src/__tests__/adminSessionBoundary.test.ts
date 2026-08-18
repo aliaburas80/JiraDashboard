@@ -1,5 +1,9 @@
-// EP-022: the admin application must never share the user-app session boundary.
-import { ADMIN_SESSION_OPTIONS } from '../../admin-app/lib/session';
+// EP-022/EP-023: the admin application must never share the user-app session
+// boundary, and a password-only admin session must never count as signed in.
+import {
+  ADMIN_SESSION_OPTIONS,
+  isFullyAuthenticatedAdminSession,
+} from '../../admin-app/lib/session';
 import { SESSION_OPTIONS } from '@/lib/session';
 
 describe('EP-022 separate admin session boundary', () => {
@@ -16,5 +20,39 @@ describe('EP-022 separate admin session boundary', () => {
     expect(ADMIN_SESSION_OPTIONS.cookieOptions.httpOnly).toBe(true);
     expect(ADMIN_SESSION_OPTIONS.cookieOptions.sameSite).toBe('strict');
     expect(ADMIN_SESSION_OPTIONS.cookieOptions.maxAge).toBeLessThan(SESSION_OPTIONS.cookieOptions.maxAge);
+  });
+});
+
+describe('EP-023 admin MFA boundary', () => {
+  const base = {
+    userId: 'admin-1',
+    email: 'owner@example.com',
+    name: 'Owner',
+    isSuperAdmin: true,
+  };
+
+  test('rejects a password-only pre-MFA session', () => {
+    expect(isFullyAuthenticatedAdminSession({
+      ...base,
+      passwordVerified: true,
+      mfaVerified: false,
+      isLoggedIn: false,
+    })).toBe(false);
+  });
+
+  test('requires password, MFA, and logged-in state together', () => {
+    expect(isFullyAuthenticatedAdminSession({
+      ...base,
+      passwordVerified: true,
+      mfaVerified: true,
+      isLoggedIn: true,
+    })).toBe(true);
+
+    expect(isFullyAuthenticatedAdminSession({
+      ...base,
+      passwordVerified: false,
+      mfaVerified: true,
+      isLoggedIn: true,
+    })).toBe(false);
   });
 });
