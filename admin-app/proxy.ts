@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
-import { ADMIN_SESSION_OPTIONS, type AdminSessionData } from './lib/session';
+import {
+  ADMIN_SESSION_OPTIONS,
+  isFullyAuthenticatedAdminSession,
+  type AdminSessionData,
+} from './lib/session';
 
 const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/health'];
 const PRE_MFA_PATHS = ['/mfa/enroll', '/mfa/verify', '/api/mfa', '/api/auth/logout'];
@@ -28,14 +32,14 @@ export async function proxy(req: NextRequest) {
       return NextResponse.redirect(login);
     }
 
-    if (session.isLoggedIn && session.mfaVerified && pathname.startsWith('/mfa/')) {
+    if (isFullyAuthenticatedAdminSession(session) && pathname.startsWith('/mfa/')) {
       return NextResponse.redirect(new URL('/', req.url));
     }
 
     return res;
   }
 
-  if (!session.isLoggedIn || !session.userId || !session.passwordVerified || !session.mfaVerified) {
+  if (!isFullyAuthenticatedAdminSession(session)) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Multi-factor authenticated administrator session required.' }, { status: 401 });
     }
