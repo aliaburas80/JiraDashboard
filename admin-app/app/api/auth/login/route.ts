@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
   await session.save();
 
   await safeAdminAudit({
+    organizationId: admin.organizationId,
     userId: admin.id,
     eventType: 'admin_console_login',
     eventDescription: `${admin.email} signed in to the separate admin console.`,
