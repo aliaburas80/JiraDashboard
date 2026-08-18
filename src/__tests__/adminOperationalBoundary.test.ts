@@ -38,6 +38,17 @@ describe('EP-024 separate Admin operational boundary', () => {
     }
   });
 
+  test('Owner-only pages are rejected in middleware before their UI renders', () => {
+    const proxy = source('admin-app/proxy.ts');
+    expect(proxy).toContain('OWNER_ONLY_PATHS');
+    expect(proxy).toContain("'/system-errors'");
+    expect(proxy).toContain("'/diagnostics'");
+    expect(proxy).toContain("'/security'");
+    expect(proxy).toContain("'/settings'");
+    expect(proxy).toContain('!session.isSuperAdmin');
+    expect(proxy).toContain("status: 403");
+  });
+
   test('organization-scoped database access stays inside the tenancy boundary', () => {
     const repository = source('src/server/tenancy/adminOperationalRepository.ts');
     const usersRoute = source('admin-app/app/api/ops/users/route.ts');
