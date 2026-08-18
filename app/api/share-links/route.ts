@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
+import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 import { createReportShare, listReportShares } from '@/server/sharing/reportShare.service';
 
 export const dynamic = 'force-dynamic';
@@ -53,12 +55,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!session) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   if (!sameOrigin(req)) return NextResponse.json({ error: 'Cross-origin request rejected.' }, { status: 403 });
 
+  // EP-017: local mode is an explicit browser-only privacy contract. A public
+  // share necessarily persists a report on the server, so fail closed rather
+  // than silently uploading a derivative of browser-local Jira data.
+  if (session.dataStorageMode === 'local') {
+    return NextResponse.json({
+      error: 'Client sharing is unavailable in local-storage mode because your report must remain in this browser.',
+    }, { status: 409 });
+  }
+
   const json = await req.json().catch(() => null);
   const parsed = parseCreateRequest(json);
   if (!parsed) return NextResponse.json({ error: 'Invalid share request.' }, { status: 400 });
 
   try {
     const result = await createReportShare({ userId: session.userId, ...parsed });
+    await safeAuditEvent({
+      userId: session.userId,
+      eventType: 'report_share_create',
+      eventDescription: `Created read-only report share ${result.share.id}${result.share.expiresAt ? ` expiring ${result.share.expiresAt}` : ' with no expiry'}.`,
+      correlationId: getRequestId(req),
+    });
     return NextResponse.json({ share: result.share, sharePath: `/share/${result.token}` }, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.message === 'ACTIVE_SHARE_LIMIT') {
