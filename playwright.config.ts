@@ -17,6 +17,14 @@ const baseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3100';
 // timeout-minutes ceiling with nothing left over to even upload a report.
 const MOBILE_ONLY_SPECS = ['**/mobile-dense-tables.spec.ts', '**/mobile-forms.spec.ts', '**/mobile-requests.spec.ts'];
 
+// EP-026: the 7,000-row capacity benchmark is intentionally one representative
+// browser run. Cross-browser correctness remains covered by the critical-path
+// suite; multiplying a heavy synthetic upload/export benchmark by five
+// projects would add CI cost without producing a more representative capacity
+// result. Staging/prod measurements remain separate from this CI regression gate.
+const DESKTOP_CHROME_ONLY_SPECS = ['**/performance-capacity.spec.ts'];
+const NON_CHROME_IGNORES = [...MOBILE_ONLY_SPECS, ...DESKTOP_CHROME_ONLY_SPECS];
+
 export default defineConfig({
   testDir: './tests/e2e',
   // Generous enough that the per-step waits in tests/e2e/helpers/auth.ts
@@ -41,10 +49,10 @@ export default defineConfig({
   // QA-GATE-06: the same critical path at tablet and mobile viewports/devices.
   projects: [
     { name: 'Desktop Chrome',  testIgnore: MOBILE_ONLY_SPECS, use: { ...devices['Desktop Chrome'] } },
-    { name: 'Desktop Firefox', testIgnore: MOBILE_ONLY_SPECS, use: { ...devices['Desktop Firefox'] } },
-    { name: 'Desktop Safari',  testIgnore: MOBILE_ONLY_SPECS, use: { ...devices['Desktop Safari'] } },
-    { name: 'Tablet',          testIgnore: MOBILE_ONLY_SPECS, use: { ...devices['iPad Pro 11'] } },
-    { name: 'Mobile',          use: { ...devices['iPhone 13'] } },
+    { name: 'Desktop Firefox', testIgnore: NON_CHROME_IGNORES, use: { ...devices['Desktop Firefox'] } },
+    { name: 'Desktop Safari',  testIgnore: NON_CHROME_IGNORES, use: { ...devices['Desktop Safari'] } },
+    { name: 'Tablet',          testIgnore: NON_CHROME_IGNORES, use: { ...devices['iPad Pro 11'] } },
+    { name: 'Mobile',          testIgnore: DESKTOP_CHROME_ONLY_SPECS, use: { ...devices['iPhone 13'] } },
   ],
 
   // Reused by CI (a real Postgres-backed server) and, optionally, local dev.
