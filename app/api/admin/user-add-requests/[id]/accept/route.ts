@@ -23,6 +23,13 @@ async function requireAdmin(): Promise<SessionData | NextResponse> {
   return session;
 }
 
+function isUniqueConstraintError(error: unknown): boolean {
+  return typeof error === 'object'
+    && error !== null
+    && 'code' in error
+    && (error as { code?: unknown }).code === 'P2002';
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -81,17 +88,32 @@ export async function PATCH(
 
   const passwordHash = await hashPassword(tempPassword);
 
-  // Atomic sequence: create user → update request → notify → audit.
-  const newUser = await prisma.user.create({
-    data: {
-      name: userAddRequest.requestedName,
-      email: userAddRequest.requestedEmail,
-      passwordHash,
-      role: userAddRequest.requestedRole,
-      mustChangePassword: true,
-    },
-    select: { id: true, name: true, email: true, role: true },
-  });
+  // TEST-REQ-12: two admins can reach this point concurrently after both read
+  // the same pending request and both observe no existing user. User.email is
+  // unique in Postgres, so exactly one create may win. Convert the losing
+  // P2002 into the same deterministic 409 used by the preflight duplicate
+  // check instead of leaking an internal 500 from the race window.
+  let newUser: { id: string; name: string; email: string; role: string };
+  try {
+    newUser = await prisma.user.create({
+      data: {
+        name: userAddRequest.requestedName,
+        email: userAddRequest.requestedEmail,
+        passwordHash,
+        role: userAddRequest.requestedRole,
+        mustChangePassword: true,
+      },
+      select: { id: true, name: true, email: true, role: true },
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return NextResponse.json(
+        { error: 'An account with this email already exists.' },
+        { status: 409 },
+      );
+    }
+    throw error;
+  }
 
   await prisma.userAddRequest.update({
     where: { id: requestId },
