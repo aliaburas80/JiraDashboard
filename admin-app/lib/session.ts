@@ -29,3 +29,12 @@ export const ADMIN_SESSION_OPTIONS = {
     maxAge: 60 * 60 * Number(process.env.ADMIN_SESSION_TTL_HOURS ?? 4),
   },
 };
+
+export function isFullyAuthenticatedAdminSession(session: Partial<AdminSessionData>): boolean {
+  return Boolean(
+    session.userId &&
+    session.isLoggedIn &&
+    session.passwordVerified &&
+    session.mfaVerified,
+  );
+}
