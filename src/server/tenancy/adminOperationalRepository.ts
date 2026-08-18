@@ -169,3 +169,66 @@ export async function createOrganizationAuditEvent(data: {
 }) {
   return prisma.auditEvent.create({ data });
 }
+
+type UnknownRecord = Record<string, unknown>;
+
+function asRecord(value: unknown): UnknownRecord | null {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? value as UnknownRecord
+    : null;
+}
+
+function optionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
+export async function retryAuditEventPayload(payload: unknown, fallbackUserId: string): Promise<boolean> {
+  const record = asRecord(payload);
+  if (!record) return false;
+
+  const eventType = optionalString(record.eventType) ?? 'retry';
+  const eventDescription = optionalString(record.eventDescription) ?? 'Retried from the separate Admin console.';
+  const userId = optionalString(record.userId) ?? fallbackUserId;
+  const organizationId = optionalString(record.organizationId) ?? null;
+
+  await prisma.auditEvent.create({
+    data: {
+      organizationId,
+      userId,
+      eventType,
+      eventDescription,
+      ipAddress: optionalString(record.ipAddress),
+      userAgent: optionalString(record.userAgent),
+      correlationId: optionalString(record.correlationId),
+    },
+  });
+  return true;
+}
+
+export async function retryNotificationPayload(payload: unknown): Promise<boolean> {
+  if (!Array.isArray(payload)) return false;
+
+  const rows = payload.flatMap(value => {
+    const record = asRecord(value);
+    if (!record) return [];
+    const recipientUserId = optionalString(record.recipientUserId);
+    const type = optionalString(record.type);
+    const title = optionalString(record.title);
+    const message = optionalString(record.message);
+    if (!recipientUserId || !type || !title || !message) return [];
+
+    return [{
+      organizationId: optionalString(record.organizationId),
+      recipientUserId,
+      type,
+      title,
+      message,
+      relatedEntityType: optionalString(record.relatedEntityType),
+      relatedEntityId: optionalString(record.relatedEntityId),
+    }];
+  });
+
+  if (rows.length === 0) return false;
+  await prisma.notification.createMany({ data: rows });
+  return true;
+}
