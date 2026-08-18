@@ -4,13 +4,14 @@
 
 export {};
 
-const mockUserUpdate         = jest.fn();
+const mockUserUpdate          = jest.fn();
 const mockUserFindUniqueThrow = jest.fn();
-const mockConsentFindMany    = jest.fn();
+const mockConsentFindMany     = jest.fn();
 const mockEntitlementFindUnique = jest.fn();
-const mockWorkspaceFindFirst = jest.fn();
-const mockImportLogFindMany  = jest.fn();
-const mockSnapshotFindMany   = jest.fn();
+const mockWorkspaceFindFirst  = jest.fn();
+const mockImportLogFindMany   = jest.fn();
+const mockSnapshotFindMany    = jest.fn();
+const mockAppSettingDeleteMany = jest.fn();
 
 jest.mock('@/lib/prisma', () => ({
   prisma: {
@@ -20,6 +21,7 @@ jest.mock('@/lib/prisma', () => ({
     workspace:         { findFirst: (...a: unknown[]) => mockWorkspaceFindFirst(...a) },
     importLog:         { findMany: (...a: unknown[]) => mockImportLogFindMany(...a) },
     dashboardSnapshot: { findMany: (...a: unknown[]) => mockSnapshotFindMany(...a) },
+    appSetting:        { deleteMany: (...a: unknown[]) => mockAppSettingDeleteMany(...a) },
   },
 }));
 jest.mock('@/lib/workspace', () => ({
@@ -43,13 +45,17 @@ beforeEach(() => {
   mockWorkspaceFindFirst.mockResolvedValue(null);
   mockImportLogFindMany.mockResolvedValue([]);
   mockSnapshotFindMany.mockResolvedValue([]);
+  mockAppSettingDeleteMany.mockResolvedValue({ count: 0 });
   mockReadLatestMetrics.mockReturnValue(null);
 });
 
-test('requestAccountDeletion deactivates the account and sets deletionRequestedAt', async () => {
+test('requestAccountDeletion removes public report shares, deactivates the account, and sets deletionRequestedAt', async () => {
   const { requestAccountDeletion } = await import('@/lib/accountLifecycle');
   await requestAccountDeletion('user-1');
 
+  expect(mockAppSettingDeleteMany).toHaveBeenCalledWith({
+    where: { ownerId: 'user-1', key: { startsWith: 'report-share:' } },
+  });
   expect(mockUserUpdate).toHaveBeenCalledWith({
     where: { id: 'user-1' },
     data:  { isActive: false, deletionRequestedAt: expect.any(Date) },
