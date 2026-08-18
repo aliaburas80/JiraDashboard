@@ -11,8 +11,10 @@ import path from 'path';
 import { prisma } from '@/lib/prisma';
 import { metricsScopeFileDir } from '@/services/metrics/latestMetricsStorage';
 import { safeAuditEvent } from '@/lib/system-error-logger';
+import { deleteReportSharesForUser } from '@/server/sharing/reportShareCleanup.service';
 
 const INTERNAL_EMAIL_DOMAIN = '@deliveryclarity.app';
+const REPORT_SHARE_KEY_PREFIX = 'report-share:';
 
 function isInternalEmail(email: string): boolean {
   return email.toLowerCase().endsWith(INTERNAL_EMAIL_DOMAIN);
@@ -30,6 +32,7 @@ export interface UserResetPreview {
   importLogs:           number;
   dashboardSnapshots:   number;
   jiraConnections:      number;
+  reportShares:         number;
   hasScopedMetricsFile: boolean;
   blocked:              boolean;
   blockedReason?:       string;
@@ -46,7 +49,7 @@ export async function previewUserReset(userId: string): Promise<UserResetPreview
   if (user.isSuperAdmin) {
     return {
       userId: user.id, email: user.email,
-      importLogs: 0, dashboardSnapshots: 0, jiraConnections: 0, hasScopedMetricsFile: false,
+      importLogs: 0, dashboardSnapshots: 0, jiraConnections: 0, reportShares: 0, hasScopedMetricsFile: false,
       blocked: true,
       blockedReason: `${user.email} is the protected super-admin account and cannot be reset through this tool.`,
     };
@@ -55,22 +58,23 @@ export async function previewUserReset(userId: string): Promise<UserResetPreview
   if (isInternalEmail(user.email)) {
     return {
       userId: user.id, email: user.email,
-      importLogs: 0, dashboardSnapshots: 0, jiraConnections: 0, hasScopedMetricsFile: false,
+      importLogs: 0, dashboardSnapshots: 0, jiraConnections: 0, reportShares: 0, hasScopedMetricsFile: false,
       blocked: true,
       blockedReason: `${user.email} is an internal ${INTERNAL_EMAIL_DOMAIN} account and cannot be reset through this tool.`,
     };
   }
 
-  const [importLogs, dashboardSnapshots, jiraConnections, scopedFilePath] = await Promise.all([
+  const [importLogs, dashboardSnapshots, jiraConnections, reportShares, scopedFilePath] = await Promise.all([
     prisma.importLog.count({ where: { userId } }),
     prisma.dashboardSnapshot.count({ where: { userId } }),
     prisma.jiraConnection.count({ where: { createdByUserId: userId } }),
+    prisma.appSetting.count({ where: { ownerId: userId, key: { startsWith: REPORT_SHARE_KEY_PREFIX } } }),
     resolveScopedFilePath(userId),
   ]);
 
   return {
     userId: user.id, email: user.email,
-    importLogs, dashboardSnapshots, jiraConnections,
+    importLogs, dashboardSnapshots, jiraConnections, reportShares,
     hasScopedMetricsFile: fs.existsSync(scopedFilePath),
     blocked: false,
   };
@@ -82,6 +86,7 @@ export interface UserResetResult {
   importLogsDeleted?:      number;
   snapshotsDeleted?:       number;
   jiraConnectionsDeleted?: number;
+  reportSharesDeleted?:    number;
 }
 
 /** Deletes the target user's workspace data. Never touches User/Session/Entitlement. */
@@ -91,10 +96,11 @@ export async function resetUserData(userId: string, actorId: string, correlation
 
   const scopedFilePath = await resolveScopedFilePath(userId);
 
-  const [logsRes, snapsRes, connsRes] = await Promise.all([
+  const [logsRes, snapsRes, connsRes, reportSharesDeleted] = await Promise.all([
     prisma.importLog.deleteMany({ where: { userId } }),
     prisma.dashboardSnapshot.deleteMany({ where: { userId } }),
     prisma.jiraConnection.deleteMany({ where: { createdByUserId: userId } }),
+    deleteReportSharesForUser(userId),
   ]);
 
   try {
@@ -104,7 +110,7 @@ export async function resetUserData(userId: string, actorId: string, correlation
   await safeAuditEvent({
     userId:           actorId,
     eventType:        'user_data_reset',
-    eventDescription: `Reset workspace data for ${preview.email} (${userId}): ${logsRes.count} import logs, ${snapsRes.count} snapshots, ${connsRes.count} Jira connections deleted.`,
+    eventDescription: `Reset workspace data for ${preview.email} (${userId}): ${logsRes.count} import logs, ${snapsRes.count} snapshots, ${connsRes.count} Jira connections, ${reportSharesDeleted} report shares deleted.`,
     correlationId,
   });
 
@@ -113,6 +119,7 @@ export async function resetUserData(userId: string, actorId: string, correlation
     importLogsDeleted: logsRes.count,
     snapshotsDeleted: snapsRes.count,
     jiraConnectionsDeleted: connsRes.count,
+    reportSharesDeleted,
   };
 }
 
