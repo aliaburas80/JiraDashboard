@@ -3,6 +3,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const baseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3100';
+const adminBaseURL = (process.env.ADMIN_E2E_BASE_URL ?? 'http://127.0.0.1:3101').replace(/\/$/, '');
 
 // MOBILE-05/07/09: these specs assert phone-width-only CSS behavior (the
 // dense-table sticky-scroll pattern only activates below ~640px; the
@@ -17,12 +18,16 @@ const baseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3100';
 // timeout-minutes ceiling with nothing left over to even upload a report.
 const MOBILE_ONLY_SPECS = ['**/mobile-dense-tables.spec.ts', '**/mobile-forms.spec.ts', '**/mobile-requests.spec.ts'];
 
-// EP-026: the 7,000-row capacity benchmark is intentionally one representative
-// browser run. Cross-browser correctness remains covered by the critical-path
-// suite; multiplying a heavy synthetic upload/export benchmark by five
-// projects would add CI cost without producing a more representative capacity
-// result. Staging/prod measurements remain separate from this CI regression gate.
-const DESKTOP_CHROME_ONLY_SPECS = ['**/performance-capacity.spec.ts'];
+// EP-026/027: the 7,000-row capacity benchmark and the separate-Admin
+// adversarial security regression are intentionally one representative
+// Chromium run. Cross-browser user-flow correctness remains covered by the
+// critical-path suite; multiplying DB-mutating capacity/security scenarios by
+// five projects adds CI cost and state contention without strengthening the
+// specific guarantees these two tests assert.
+const DESKTOP_CHROME_ONLY_SPECS = [
+  '**/performance-capacity.spec.ts',
+  '**/admin-security-regression.spec.ts',
+];
 const NON_CHROME_IGNORES = [...MOBILE_ONLY_SPECS, ...DESKTOP_CHROME_ONLY_SPECS];
 
 export default defineConfig({
@@ -55,17 +60,26 @@ export default defineConfig({
     { name: 'Mobile',          testIgnore: DESKTOP_CHROME_ONLY_SPECS, use: { ...devices['iPhone 13'] } },
   ],
 
-  // Reused by CI (a real Postgres-backed server) and, optionally, local dev.
-  // PORT is read by scripts/start-production.mjs, which also runs
-  // `prisma migrate deploy` before starting `next start` — no separate
-  // migration step is needed here as long as DATABASE_URL is already set.
+  // EP-027: CI now boots both independently built production runtimes. The
+  // user app remains on 3100; the separate Admin application is on 3101 and
+  // is considered ready only when its own public health endpoint responds.
+  // Both processes share the same real PostgreSQL test database but use
+  // different session cookie names and different session secrets.
   webServer: process.env.E2E_SKIP_WEBSERVER
     ? undefined
-    : {
-        command: 'npm run start',
-        url: baseURL,
-        reuseExistingServer: !process.env.CI,
-        timeout: 120_000,
-        env: { PORT: '3100' },
-      },
+    : [
+        {
+          command: 'npm run start',
+          url: baseURL,
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+          env: { PORT: '3100' },
+        },
+        {
+          command: 'npx next start admin-app -p 3101',
+          url: `${adminBaseURL}/api/health`,
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+        },
+      ],
 });

@@ -13,6 +13,7 @@ import { hashPassword } from '../../src/lib/auth';
 import { loginAndEnsureData, gotoResilient, isolateE2eLoginRateLimit } from './helpers/auth';
 
 const prisma = new PrismaClient();
+const CONFIGURED_ADMIN_APP_URL = process.env.ADMIN_APP_URL?.replace(/\/$/, '');
 
 // Playwright's `page.request` API client doesn't reliably forward this app's
 // `Secure`-flagged session cookie against a plain-HTTP 127.0.0.1 origin (the
@@ -53,11 +54,33 @@ test.describe('add-member request UI stays usable at mobile width', () => {
     await loginAndEnsureData(page);
   });
 
-  test('embedded Admin route fails closed after EP-024 cutover', async ({ page }) => {
-    // The E2E user-app process intentionally has no ADMIN_APP_URL configured.
-    // EP-024 must therefore fail closed to the normal login surface instead of
-    // rendering the retired embedded Admin console behind a dc_session.
+  test('embedded Admin route hands off safely after EP-024 cutover', async ({ page }) => {
     await gotoResilient(page, '/admin/settings');
+
+    if (CONFIGURED_ADMIN_APP_URL) {
+      // EP-027 boots the real separate Admin runtime and configures the user
+      // app with ADMIN_APP_URL. The old embedded route must cross origins into
+      // that runtime, where the user-app dc_session is insufficient and the
+      // Admin middleware sends the browser to its own login surface.
+      const expectedOrigin = new URL(CONFIGURED_ADMIN_APP_URL).origin;
+      await page.waitForURL(url => (
+        url.origin === expectedOrigin &&
+        url.pathname === '/login' &&
+        url.searchParams.get('redirect') === '/'
+      ), { timeout: 30_000 });
+
+      const currentUrl = new URL(page.url());
+      expect(currentUrl.origin).toBe(expectedOrigin);
+      expect(currentUrl.pathname).toBe('/login');
+      expect(currentUrl.searchParams.get('redirect')).toBe('/');
+      expect(currentUrl.searchParams.has('adminUnavailable')).toBe(false);
+      await expect(page.getByRole('heading', { name: 'Admin Console' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+      return;
+    }
+
+    // Local runs may intentionally omit ADMIN_APP_URL. In that configuration
+    // the user app must still fail closed rather than render retired Admin UI.
     await page.waitForURL(url => (
       url.pathname === '/login' && url.searchParams.get('adminUnavailable') === '1'
     ), { timeout: 30_000 });
