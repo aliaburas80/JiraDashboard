@@ -170,6 +170,70 @@ export async function createOrganizationAuditEvent(data: {
   return prisma.auditEvent.create({ data });
 }
 
+/**
+ * Deliberate deployment-wide read used only after requireOwnerAdmin(). Keeping
+ * these org-scoped model calls inside the tenancy boundary makes the global
+ * scope explicit and prevents ordinary Admin routes from copying it casually.
+ */
+export async function getOwnerDeploymentDiagnostics() {
+  const now = new Date();
+  const [
+    totalUsers,
+    activeUsers,
+    adminUsers,
+    totalSessions,
+    activeSessions,
+    totalImports,
+    successImports,
+    failedImports,
+    avgHealthScore,
+    avgProcessingMs,
+    totalSnapshots,
+    totalAuditEvents,
+    unresolvedSystemErrors,
+    latestError,
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.user.count({ where: { isActive: true } }),
+    prisma.user.count({ where: { role: 'admin' } }),
+    prisma.session.count(),
+    prisma.session.count({ where: { expiresAt: { gt: now } } }),
+    prisma.importLog.count(),
+    prisma.importLog.count({ where: { status: 'success' } }),
+    prisma.importLog.count({ where: { status: { in: ['failed', 'validation_failed'] } } }),
+    prisma.importLog.aggregate({ _avg: { healthScore: true }, where: { status: 'success' } }),
+    prisma.importLog.aggregate({ _avg: { processingTimeMs: true }, where: { status: 'success' } }),
+    prisma.dashboardSnapshot.count(),
+    prisma.auditEvent.count(),
+    prisma.systemErrorLog.count({ where: { resolvedAt: null } }),
+    prisma.systemErrorLog.findFirst({ orderBy: { createdAt: 'desc' } }),
+  ]);
+
+  return {
+    totalUsers,
+    activeUsers,
+    adminUsers,
+    totalSessions,
+    activeSessions,
+    totalImports,
+    successImports,
+    failedImports,
+    avgHealthScore: avgHealthScore._avg.healthScore ?? 0,
+    avgProcessingMs: avgProcessingMs._avg.processingTimeMs ?? 0,
+    totalSnapshots,
+    totalAuditEvents,
+    unresolvedSystemErrors,
+    latestError,
+  };
+}
+
+export async function findLatestOrganizationJiraConnection(organizationId: string) {
+  return prisma.jiraConnection.findFirst({
+    where: { organizationId },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
 type UnknownRecord = Record<string, unknown>;
 
 function asRecord(value: unknown): UnknownRecord | null {
