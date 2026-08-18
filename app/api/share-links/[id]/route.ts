@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
+import { safeAuditEvent } from '@/lib/system-error-logger';
+import { getRequestId } from '@/lib/requestId';
 import { revokeReportShare } from '@/server/sharing/reportShare.service';
 
 export const dynamic = 'force-dynamic';
@@ -24,5 +26,13 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
   if (!/^share_[A-Za-z0-9-]{20,80}$/.test(id)) return NextResponse.json({ error: 'Invalid share id.' }, { status: 400 });
   const revoked = await revokeReportShare(session.userId, id);
   if (!revoked) return NextResponse.json({ error: 'Share link not found.' }, { status: 404 });
+
+  await safeAuditEvent({
+    userId: session.userId,
+    eventType: 'report_share_revoke',
+    eventDescription: `Revoked read-only report share ${id}.`,
+    correlationId: getRequestId(req),
+  });
+
   return NextResponse.json({ ok: true });
 }
