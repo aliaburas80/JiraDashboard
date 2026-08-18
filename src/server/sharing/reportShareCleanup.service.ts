@@ -3,7 +3,6 @@
 // AppSetting.ownerId is not a User foreign key, so share rows would otherwise
 // survive user-data reset or account deletion and keep public reports reachable.
 
-import 'server-only';
 import { prisma } from '@/lib/prisma';
 
 const SHARE_KEY_PREFIX = 'report-share:';
