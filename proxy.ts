@@ -19,6 +19,25 @@ const PROTECTED  = [
 ];
 const ADMIN_ONLY = ['/admin'];
 
+// EP-024: these operational endpoints have equivalents inside the separate
+// Admin runtime. They are blocked here so a user-app `dc_session` cannot be
+// used to bypass the separate Admin password+MFA boundary by calling the old
+// API directly. Specialist legacy settings endpoints that have not moved yet
+// are intentionally not listed here; they remain explicit residual work.
+const MIGRATED_LEGACY_ADMIN_API = [
+  '/api/admin/users',
+  '/api/admin/audit-events',
+  '/api/admin/feedback',
+  '/api/admin/system-errors',
+  '/api/admin/diagnostics',
+  '/api/admin/security',
+  '/api/admin/app-config',
+];
+
+function isMigratedLegacyAdminApi(pathname: string): boolean {
+  return MIGRATED_LEGACY_ADMIN_API.some(p => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 // SEC (2026-07-18, docs/product-audit/10-technical-cleanup.md Part 1 finding
 // 1): defense-in-depth backstop for /api/*. Until now every one of the ~73
 // API route handlers was solely, independently responsible for its own auth
@@ -78,6 +97,15 @@ export async function proxy(req: NextRequest) {
     const requestId        = resolveRequestId(req.headers);
     const forwardedHeaders = new Headers(req.headers);
     forwardedHeaders.set(REQUEST_ID_HEADER, requestId);
+
+    if (isMigratedLegacyAdminApi(pathname)) {
+      const retired = NextResponse.json(
+        { error: 'This Admin operation has moved to the separate MFA-protected Admin application.' },
+        { status: 410 },
+      );
+      retired.headers.set(REQUEST_ID_HEADER, requestId);
+      return retired;
+    }
 
     if (isPublicApi(pathname)) {
       const res = NextResponse.next({ request: { headers: forwardedHeaders } });

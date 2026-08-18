@@ -8,6 +8,16 @@ import {
 
 const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/health'];
 const PRE_MFA_PATHS = ['/mfa/enroll', '/mfa/verify', '/api/mfa', '/api/auth/logout'];
+const OWNER_ONLY_PATHS = [
+  '/system-errors',
+  '/diagnostics',
+  '/security',
+  '/settings',
+  '/api/ops/system-errors',
+  '/api/ops/diagnostics',
+  '/api/ops/security',
+  '/api/ops/settings',
+];
 
 function matches(pathname: string, paths: string[]): boolean {
   return paths.some(path => pathname === path || pathname.startsWith(`${path}/`));
@@ -48,6 +58,17 @@ export async function proxy(req: NextRequest) {
     login.pathname = '/login';
     login.searchParams.set('redirect', pathname);
     return NextResponse.redirect(login);
+  }
+
+  // EP-024 defense in depth: Owner-only pages are blocked before React renders,
+  // while their route handlers independently revalidate isSuperAdmin against
+  // the database through requireOwnerAdmin(). The cookie flag alone is never
+  // sufficient for an API authorization decision.
+  if (matches(pathname, OWNER_ONLY_PATHS) && !session.isSuperAdmin) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Owner Admin access required.' }, { status: 403 });
+    }
+    return NextResponse.redirect(new URL('/', req.url));
   }
 
   return res;
