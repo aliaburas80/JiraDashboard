@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { prisma } from '@/lib/prisma';
 import { generateShareToken, hashShareToken } from '@/lib/shareToken';
 import type { SharedReportPayload, SharedRiskItem } from '@/services/export/sharedReportPayload.service';
+import { isCapabilityOwnerActive } from '@/server/tenancy/capabilityAccess';
 
 const SHARE_KEY_PREFIX = 'report-share:';
 const MAX_ACTIVE_SHARES = 50;
@@ -209,9 +210,15 @@ export async function resolveReportShare(rawToken: string): Promise<ResolveShare
   const tokenHash = hashShareToken(rawToken);
   const row = await prisma.appSetting.findFirst({
     where: { key: `${SHARE_KEY_PREFIX}${tokenHash}` },
-    select: { id: true, valueJson: true },
+    select: { id: true, ownerId: true, valueJson: true },
   });
   if (!row) return { state: 'not_found' };
+
+  // A capability cannot outlive the account that issued it. This also makes
+  // admin suspension effective immediately without relying on every account
+  // lifecycle path to remember to revoke public links first.
+  if (!(await isCapabilityOwnerActive(row.ownerId))) return { state: 'not_found' };
+
   const record = parseStored(row.valueJson);
   if (!record) return { state: 'not_found' };
   const status = statusOf(record);
