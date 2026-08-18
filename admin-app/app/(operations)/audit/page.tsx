@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 
 type AuditEvent = {
   id: string;
@@ -12,16 +12,17 @@ type AuditEvent = {
 };
 
 type Stats = { total: number; last24h: number; failedMfa: number; logins: number };
+const EMPTY_STATS: Stats = { total: 0, last24h: 0, failedMfa: 0, logins: 0 };
 
 export default function AuditPage() {
   const [events, setEvents] = useState<AuditEvent[]>([]);
-  const [stats, setStats] = useState<Stats>({ total: 0, last24h: 0, failedMfa: 0, logins: 0 });
+  const [stats, setStats] = useState<Stats>(EMPTY_STATS);
   const [query, setQuery] = useState('');
   const [eventType, setEventType] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  async function load(search = query, type = eventType) {
+  const load = useCallback(async (search: string, type: string) => {
     setLoading(true);
     setError('');
     try {
@@ -32,19 +33,19 @@ export default function AuditPage() {
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? 'Unable to load audit events.');
       setEvents(body.events ?? []);
-      setStats(body.stats ?? stats);
+      setStats(body.stats ?? EMPTY_STATS);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to load audit events.');
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  useEffect(() => { void load('', ''); }, []);
+  useEffect(() => { void load('', ''); }, [load]);
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    void load();
+    void load(query, eventType);
   }
 
   return (
