@@ -25,8 +25,7 @@ export async function verifyAdminCredentials(email: string, password: string) {
   };
 }
 
-export async function isAdminLoginRateLimited(ip: string): Promise<boolean> {
-  const key = `admin-login:${ip}`;
+async function isRateLimited(key: string, maxAttempts: number): Promise<boolean> {
   const windowStart = new Date(Date.now() - 60_000);
   const prunePoint = new Date(Date.now() - 10 * 60_000);
 
@@ -35,9 +34,17 @@ export async function isAdminLoginRateLimited(ip: string): Promise<boolean> {
     prisma.loginAttempt.deleteMany({ where: { ip: key, attemptedAt: { lt: prunePoint } } }),
   ]);
 
-  if (count >= 5) return true;
+  if (count >= maxAttempts) return true;
   await prisma.loginAttempt.create({ data: { ip: key } });
   return false;
+}
+
+export async function isAdminLoginRateLimited(ip: string): Promise<boolean> {
+  return isRateLimited(`admin-login:${ip}`, 5);
+}
+
+export async function isAdminMfaRateLimited(userId: string, ip: string): Promise<boolean> {
+  return isRateLimited(`admin-mfa:${userId}:${ip}`, 8);
 }
 
 export async function safeAdminAudit(data: {
