@@ -26,8 +26,19 @@ function parseCreateRequest(value: unknown): { report: unknown; expiresInDays: n
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
   const body = value as Record<string, unknown>;
   const expiry = body.expiresInDays;
-  if (expiry !== null && expiry !== undefined && (typeof expiry !== 'number' || !ALLOWED_EXPIRY_DAYS.has(expiry))) return null;
-  return { report: body.report, expiresInDays: expiry === undefined ? 30 : expiry };
+
+  let expiresInDays: number | null;
+  if (expiry === undefined) {
+    expiresInDays = 30;
+  } else if (expiry === null) {
+    expiresInDays = null;
+  } else if (typeof expiry === 'number' && ALLOWED_EXPIRY_DAYS.has(expiry)) {
+    expiresInDays = expiry;
+  } else {
+    return null;
+  }
+
+  return { report: body.report, expiresInDays };
 }
 
 export async function GET(): Promise<NextResponse> {
