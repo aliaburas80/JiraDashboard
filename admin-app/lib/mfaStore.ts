@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'crypto';
 import { prisma } from '../../src/lib/prisma';
 import { decryptSecret, encryptSecret } from '../../src/lib/secret-field';
 import {
@@ -55,7 +56,13 @@ async function loadRecord(userId: string): Promise<AdminMfaRecord | null> {
     where: { ownerId_key: { ownerId: ownerId(userId), key: MFA_KEY } },
     select: { valueJson: true },
   });
-  return parseRecord(setting?.valueJson);
+  if (!setting) return null;
+
+  const record = parseRecord(setting.valueJson);
+  if (!record) {
+    throw new Error('Stored Admin MFA state is invalid. Reset MFA through the Owner Admin bootstrap CLI before continuing.');
+  }
+  return record;
 }
 
 async function saveRecord(userId: string, record: AdminMfaRecord): Promise<void> {
@@ -65,6 +72,11 @@ async function saveRecord(userId: string, record: AdminMfaRecord): Promise<void>
     create: { ownerId: ownerId(userId), key: MFA_KEY, valueJson, updatedBy: userId },
     update: { valueJson, updatedBy: userId },
   });
+}
+
+function hashesEqual(left: string, right: string): boolean {
+  if (left.length !== right.length) return false;
+  return timingSafeEqual(Buffer.from(left), Buffer.from(right));
 }
 
 export async function getAdminMfaStatus(userId: string): Promise<{ enabled: boolean; recoveryCodesRemaining: number }> {
@@ -148,7 +160,7 @@ export async function verifyAdminSecondFactor(
 
   const key = recoveryHashKey();
   const candidateHash = hashRecoveryCode(normalized, key);
-  const index = record.recoveryCodeHashes.findIndex(hash => hash === candidateHash);
+  const index = record.recoveryCodeHashes.findIndex(hash => hashesEqual(hash, candidateHash));
   if (index < 0) return { ok: false };
 
   const remaining = record.recoveryCodeHashes.filter((_, currentIndex) => currentIndex !== index);
