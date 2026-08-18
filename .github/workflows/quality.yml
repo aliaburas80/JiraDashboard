@@ -22,6 +22,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/delivery_clarity_ci?sslmode=disable
       SESSION_SECRET: ci-session-secret-value-at-least-32-chars
+      ADMIN_SESSION_SECRET: ci-admin-session-secret-different-at-least-32-chars
       CONFIG_ENCRYPTION_KEY: ci-config-secret-value-at-least-32-chars
       STORAGE_DRIVER: temporary
       MAX_UPLOAD_MB: 20
@@ -46,6 +47,9 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: Type check separate admin app
+        run: npm run admin:typecheck
+
       - name: Lint styles
         run: npm run lint:css
 
@@ -58,6 +62,9 @@ jobs:
           app/api/health/route.ts
           app/api/ready/route.ts
           app/api/upload/route.ts
+          admin-app/app/api/auth/login/route.ts
+          admin-app/lib/session.ts
+          admin-app/proxy.ts
           src/lib/env/server.ts
           src/lib/logger.ts
           src/lib/prisma.ts
@@ -67,5 +74,8 @@ jobs:
       - name: Run tests
         run: npm run test
 
-      - name: Build
+      - name: Build user app
         run: npm run build
+
+      - name: Build separate admin app
+        run: npm run admin:build
