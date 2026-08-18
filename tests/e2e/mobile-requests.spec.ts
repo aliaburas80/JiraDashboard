@@ -79,10 +79,10 @@ test.describe('add-member request UI stays usable at mobile width', () => {
 
       await gotoResilient(page, '/admin/settings');
 
-      // MOBILE-TOPBAR-01: phone width keeps only the compact navigation/search
-      // surface in the fixed header. Desktop actions stay in the DOM but are
-      // hidden, and the entire document must remain within the viewport.
-      await expect(page.getByRole('button', { name: 'Open navigation menu' })).toBeVisible();
+      // MOBILE-TOPBAR-01: phone width keeps the fixed header compact. The
+      // admin shell deliberately does not provide the optional sidebar-toggle
+      // prop, so this test verifies the real overflow contract rather than
+      // assuming a hamburger exists on every shell.
       await expect(page.getByRole('button', { name: 'Search pages and features' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'New Upload' })).toBeHidden();
       await expect(page.getByRole('button', { name: 'Sync new data from Jira' })).toBeHidden();
