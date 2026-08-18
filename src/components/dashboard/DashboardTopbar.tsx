@@ -209,11 +209,13 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
             )}
           </div>
 
-          {/* Data source badge — shows live Jira sync status or upload origin */}
-          <DataSourceBadge compact />
+          <div className={styles.desktopOnly}>
+            {/* Data source badge — shows live Jira sync status or upload origin */}
+            <DataSourceBadge compact />
 
-          {/* Persona preview — soft-launch, hidden unless the super-admin enables it */}
-          <PersonaPreviewSwitcher />
+            {/* Persona preview — soft-launch, hidden unless the super-admin enables it */}
+            <PersonaPreviewSwitcher />
+          </div>
 
           {/* Notification bell */}
           <NotificationBell />
