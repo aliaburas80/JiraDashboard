@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
 
   const session = await getIronSession<AdminSessionData>(await cookies(), ADMIN_SESSION_OPTIONS);
   session.userId = admin.id;
+  session.organizationId = admin.organizationId;
   session.email = admin.email;
   session.name = admin.name;
   session.isSuperAdmin = admin.isSuperAdmin;
