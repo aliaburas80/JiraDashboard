@@ -19,7 +19,11 @@ A share URL is `/share/{token}`. The token is a 256-bit random capability genera
 
 The first usable release stores the share record in the existing server-side `AppSetting` persistence table under the creator's `ownerId`; the key contains only the token hash. The value contains a versioned, sanitized stakeholder-report DTO plus expiry, revocation, last-accessed, and access-count metadata. This avoids exposing raw Jira rows, authenticated dashboard APIs, sessions, account data, or internal resource IDs to recipients.
 
-The public page resolves the hash server-side, rejects invalid/revoked/expired capabilities, updates last-access/access-count, and renders only the sanitized DTO. It has no authenticated AppShell/navigation surface and is marked `noindex,nofollow`.
+The public page resolves the hash server-side, rejects invalid/revoked/expired capabilities, verifies that the issuing account is still active, updates last-access/access-count, and renders only the sanitized DTO. It has no authenticated AppShell/navigation surface and is marked `noindex,nofollow`.
+
+Share creation and revocation are authenticated, same-origin mutations and are written to the audit trail. A user in **local-storage mode cannot create a server-backed public share**: local mode's existing privacy contract says Jira data and derived data remain in the browser, so the API fails closed and the UI explains that Excel/PDF exports remain available locally.
+
+Because the first slice deliberately reuses `AppSetting` rather than a first-class foreign-keyed share model, lifecycle cleanup is explicit: account-deletion requests and user-data resets delete owned report-share rows, inactive/deleted owners cannot resolve public links, and the daily retention job removes any share rows left for inactive or missing owners.
 
 ## Scope deliberately excluded from this slice
 
