@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
-import { prisma } from '../../../../lib/prisma';
+import { findAdminIdentityById } from '../../../../../src/server/tenancy/adminIdentityRepository';
 import { ADMIN_SESSION_OPTIONS, type AdminSessionData } from '../../../../lib/session';
 
 export async function GET() {
@@ -10,10 +10,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { id: true, name: true, email: true, role: true, isActive: true, isSuperAdmin: true },
-  });
+  const user = await findAdminIdentityById(session.userId);
 
   if (!user || !user.isActive || user.role !== 'admin') {
     session.destroy();
