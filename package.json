@@ -26,6 +26,8 @@
     "admin:build": "next build admin-app --webpack",
     "admin:start": "next start admin-app -p 3001",
     "admin:typecheck": "tsc --noEmit -p admin-app/tsconfig.json",
+    "owner:admin:bootstrap": "node scripts/bootstrap-owner-admin.mjs",
+    "owner:admin:reset-mfa": "node scripts/bootstrap-owner-admin.mjs --reset-mfa",
     "lint": "eslint . --max-warnings=8",
     "lint:css": "stylelint 'src/**/*.scss' 'app/**/*.scss' --max-warnings=0",
     "db:generate": "prisma generate",
