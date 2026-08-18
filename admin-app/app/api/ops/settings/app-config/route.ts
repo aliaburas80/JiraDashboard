@@ -8,8 +8,8 @@ import {
   type AppConfig,
 } from '../../../../../../src/lib/app-config';
 import { describeSmtpErrorDetails, sendEmailWith } from '../../../../../../src/lib/email';
-import { prisma } from '../../../../../../src/lib/prisma';
 import { callExternal } from '../../../../../../src/server/gateway/externalGateway';
+import { findLatestOrganizationJiraConnection } from '../../../../../../src/server/tenancy/adminOperationalRepository';
 import { buildJiraAuthHeader, jiraMyselfPath } from '../../../../../../src/services/jira/auth';
 import { requireOwnerAdmin } from '../../../../../lib/adminGuard';
 import { safeAdminAudit } from '../../../../../lib/auth';
@@ -99,10 +99,11 @@ interface JiraMyselfResponse {
 }
 
 async function testJira(guard: Exclude<Awaited<ReturnType<typeof requireOwnerAdmin>>, NextResponse>, apiToken?: string) {
-  const connection = await prisma.jiraConnection.findFirst({
-    where: guard.admin.organizationId ? { organizationId: guard.admin.organizationId } : undefined,
-    orderBy: { createdAt: 'desc' },
-  });
+  if (!guard.admin.organizationId) {
+    return NextResponse.json({ ok: false, skipped: true, error: 'Owner Admin is not assigned to an organization.' }, { status: 409 });
+  }
+
+  const connection = await findLatestOrganizationJiraConnection(guard.admin.organizationId);
   if (!connection) return NextResponse.json({ ok: false, skipped: true, error: 'No Jira connection exists for this organization.' });
 
   const token = apiToken?.trim() || (await getAppConfig(guard.admin.id)).jira.apiToken;
