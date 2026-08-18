@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import AppShell from '@/components/layout/AppShell';
 import { EXPORT_CATALOG } from '@/config/exportCatalog';
 import { exportExecutivePdf, exportToExcel } from '@/lib/exportUtils';
+import { fetchCurrentUser } from '@/lib/currentUser';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { buildExportMetadata } from '@/services/export/exportMetadata.service';
 import { buildSharedReportPayload } from '@/services/export/sharedReportPayload.service';
@@ -20,6 +21,7 @@ export default function ReportsPage() {
   const [expiry,setExpiry]=useState('30');
   const [creating,setCreating]=useState(false);
   const [newLink,setNewLink]=useState<string|null>(null);
+  const [localMode,setLocalMode]=useState(false);
 
   const refreshShares=useCallback(async()=>{
     const res=await fetch('/api/share-links',{cache:'no-store'});
@@ -28,8 +30,9 @@ export default function ReportsPage() {
   },[]);
 
   useEffect(()=>{(async()=>{
-    const result=await loadMetricsWithSource();
+    const [result,user]=await Promise.all([loadMetricsWithSource(),fetchCurrentUser()]);
     setMetrics(result.metrics as DashboardMetrics|null);
+    setLocalMode(user?.dataStorageMode==='local');
     if(!result.metrics)setError(result.message??'No delivery data is available to report.');
     await refreshShares();setLoading(false);
   })();},[refreshShares]);
@@ -38,7 +41,7 @@ export default function ReportsPage() {
   async function downloadPdf(){if(!metrics)return;await exportExecutivePdf(metrics);}
 
   async function createShare(){
-    if(!metrics)return;setCreating(true);setError(null);setNewLink(null);
+    if(!metrics||localMode)return;setCreating(true);setError(null);setNewLink(null);
     try{
       const report=buildSharedReportPayload(metrics);
       const res=await fetch('/api/share-links',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({report,expiresInDays:expiry==='never'?null:Number(expiry)})});
@@ -66,7 +69,8 @@ export default function ReportsPage() {
           <article className={styles.card}><span className={styles.format}>PDF</span><h3>{EXPORT_CATALOG.pdf.label}</h3><p>{EXPORT_CATALOG.pdf.purpose}</p><ul>{EXPORT_CATALOG.pdf.sections.slice(0,5).map(s=><li key={s.id}>{s.label}</li>)}</ul><button disabled={!metrics} onClick={downloadPdf}>Open print-ready PDF</button></article>
         </div></section>
         <section aria-labelledby="sharing-title"><div className={styles.sectionHead}><div><h2 id="sharing-title">Client sharing</h2><p>Create a capability link to one sanitized, read-only report. The recipient does not get dashboard, account, or API access.</p></div></div><div className={styles.card}>
-          <div className={styles.shareControls}><label>Link expiry<select value={expiry} onChange={e=>setExpiry(e.target.value)}><option value="1">1 day</option><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option><option value="90">90 days</option><option value="never">No expiry</option></select></label><button disabled={!metrics||creating} onClick={createShare}>{creating?'Creating…':'Create secure link'}</button></div>
+          {localMode&&<p className={styles.muted}>Client sharing is disabled in local-storage mode because your Jira data and derived reports must remain in this browser. Excel and PDF exports still work locally.</p>}
+          <div className={styles.shareControls}><label>Link expiry<select value={expiry} onChange={e=>setExpiry(e.target.value)} disabled={localMode}><option value="1">1 day</option><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option><option value="90">90 days</option><option value="never">No expiry</option></select></label><button disabled={!metrics||creating||localMode} onClick={createShare}>{creating?'Creating…':'Create secure link'}</button></div>
           {newLink&&<div className={styles.newLink}><div><strong>New share link</strong><p>This is shown only after creation. The raw security token is not stored by Delivery Clarity.</p><code>{newLink}</code></div><button onClick={copyNewLink}>Copy</button></div>}
         </div>
         <div className={styles.card}><h3>Managed links</h3>{shares.length===0?<p className={styles.muted}>No share links created yet.</p>:<div className={styles.shareList}>{shares.map(share=><div className={styles.shareRow} key={share.id}><div><strong>{share.title}</strong><span className={styles.status} data-status={share.status}>{share.status}</span><p>Created {new Date(share.createdAt).toLocaleString()} · {share.expiresAt?`Expires ${new Date(share.expiresAt).toLocaleString()}`:'No expiry'} · {share.accessCount} view{share.accessCount===1?'':'s'}</p></div>{share.status==='active'&&<button className={styles.secondary} onClick={()=>revoke(share.id)}>Revoke</button>}</div>)}</div>}</div>
