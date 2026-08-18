@@ -8,7 +8,7 @@
 // `npx playwright test mobile-requests.spec.ts --project=Mobile`.
 import { test, expect, devices, type Page } from '@playwright/test';
 import { PrismaClient } from '@prisma/client';
-import { loginAndEnsureData, gotoResilient } from './helpers/auth';
+import { loginAndEnsureData, gotoResilient, isolateE2eLoginRateLimit } from './helpers/auth';
 
 const prisma = new PrismaClient();
 
@@ -147,6 +147,10 @@ test.describe('add-member request UI stays usable at mobile width', () => {
       const memberPage = await memberContext.newPage();
 
       try {
+        // This account signs in inside a second browser context during the
+        // same test. Give it its own E2E-only forwarded IP too so it cannot be
+        // throttled by the admin setup logins that ran earlier in the suite.
+        await isolateE2eLoginRateLimit(memberPage);
         await memberPage.goto('/login');
         await memberPage.getByLabel('Email address').fill(THROWAWAY_EMAIL);
         await memberPage.getByLabel('Password', { exact: true }).fill(THROWAWAY_TEMP_PASSWORD);
