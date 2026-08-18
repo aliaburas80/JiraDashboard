@@ -17,13 +17,31 @@ concurrency:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: delivery_clarity_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d delivery_clarity_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/delivery_clarity_ci?sslmode=disable
       SESSION_SECRET: ci-session-secret-value-at-least-32-chars
       ADMIN_SESSION_SECRET: ci-admin-session-secret-different-at-least-32-chars
       CONFIG_ENCRYPTION_KEY: ci-config-secret-value-at-least-32-chars
+      APP_URL: http://127.0.0.1:3100
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
+      ADMIN_APP_URL: http://127.0.0.1:3001
       STORAGE_DRIVER: temporary
       MAX_UPLOAD_MB: 20
       LOG_LEVEL: info
@@ -41,8 +59,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
       - name: Generate Prisma Client
         run: npm run db:generate
+
+      - name: Deploy migrations to clean PostgreSQL
+        run: npm run db:migrate:deploy
 
       - name: Type check
         run: npm run typecheck
@@ -79,3 +103,112 @@ jobs:
 
       - name: Build separate admin app
         run: npm run admin:build
+
+      - name: Production runtime smoke gate
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          USER_LOG="${RUNNER_TEMP}/delivery-clarity-user.log"
+          ADMIN_LOG="${RUNNER_TEMP}/delivery-clarity-admin.log"
+          USER_PID=""
+          ADMIN_PID=""
+
+          cleanup() {
+            set +e
+            if [[ -n "${ADMIN_PID}" ]]; then
+              kill "${ADMIN_PID}" 2>/dev/null || true
+              pkill -P "${ADMIN_PID}" 2>/dev/null || true
+            fi
+            if [[ -n "${USER_PID}" ]]; then
+              kill "${USER_PID}" 2>/dev/null || true
+              pkill -P "${USER_PID}" 2>/dev/null || true
+            fi
+          }
+          trap cleanup EXIT
+
+          wait_for_http() {
+            local url="$1"
+            local log_file="$2"
+            for _ in $(seq 1 60); do
+              if curl --fail --silent --show-error "${url}" >/dev/null; then
+                return 0
+              fi
+              sleep 1
+            done
+            echo "Timed out waiting for ${url}" >&2
+            cat "${log_file}" >&2 || true
+            return 1
+          }
+
+          echo "Starting user app through the real production entrypoint..."
+          PORT=3100 \
+          STORAGE_DRIVER=s3 \
+          STORAGE_BUCKET=ci-production-gate \
+          STORAGE_REGION=us-east-1 \
+          STORAGE_ACCESS_KEY_ID=ci-access-key \
+          STORAGE_SECRET_ACCESS_KEY=ci-secret-key \
+          npm start >"${USER_LOG}" 2>&1 &
+          USER_PID=$!
+
+          wait_for_http "http://127.0.0.1:3100/api/health" "${USER_LOG}"
+          curl --fail --silent --show-error "http://127.0.0.1:3100/api/health" >"${RUNNER_TEMP}/user-health.json"
+          curl --fail --silent --show-error "http://127.0.0.1:3100/api/ready" >"${RUNNER_TEMP}/user-ready.json"
+
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const health = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/user-health.json', 'utf8'));
+          const ready = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/user-ready.json', 'utf8'));
+          if (health.status !== 'ok' || health.service !== 'delivery-clarity') {
+            throw new Error(`Unexpected user health payload: ${JSON.stringify(health)}`);
+          }
+          if (ready.status !== 'ready' || ready.checks?.database !== 'ok') {
+            throw new Error(`Unexpected user readiness payload: ${JSON.stringify(ready)}`);
+          }
+          NODE
+
+          legacy_status="$(curl --silent --show-error --output "${RUNNER_TEMP}/legacy-admin.json" --write-out '%{http_code}' "http://127.0.0.1:3100/api/admin/users")"
+          if [[ "${legacy_status}" != "410" ]]; then
+            echo "Expected retired legacy Admin API to return 410, got ${legacy_status}." >&2
+            cat "${RUNNER_TEMP}/legacy-admin.json" >&2 || true
+            exit 1
+          fi
+
+          echo "Starting separate Admin app in production mode..."
+          npm run admin:start >"${ADMIN_LOG}" 2>&1 &
+          ADMIN_PID=$!
+
+          wait_for_http "http://127.0.0.1:3001/api/health" "${ADMIN_LOG}"
+          curl --fail --silent --show-error "http://127.0.0.1:3001/api/health" >"${RUNNER_TEMP}/admin-health.json"
+
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const health = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/admin-health.json', 'utf8'));
+          if (health.status !== 'ok' || health.service !== 'delivery-clarity-admin') {
+            throw new Error(`Unexpected Admin health payload: ${JSON.stringify(health)}`);
+          }
+          NODE
+
+          admin_api_status="$(curl --silent --show-error --output "${RUNNER_TEMP}/admin-unauth.json" --write-out '%{http_code}' "http://127.0.0.1:3001/api/ops/users")"
+          if [[ "${admin_api_status}" != "401" ]]; then
+            echo "Expected unauthenticated Admin operations API to return 401, got ${admin_api_status}." >&2
+            cat "${RUNNER_TEMP}/admin-unauth.json" >&2 || true
+            exit 1
+          fi
+
+          admin_page_status="$(curl --silent --show-error --output /dev/null --dump-header "${RUNNER_TEMP}/admin-page.headers" --write-out '%{http_code}' "http://127.0.0.1:3001/users")"
+          case "${admin_page_status}" in
+            307|308) ;;
+            *)
+              echo "Expected unauthenticated Admin page to redirect to login, got ${admin_page_status}." >&2
+              cat "${RUNNER_TEMP}/admin-page.headers" >&2 || true
+              exit 1
+              ;;
+          esac
+          if ! grep -qi '^location: .*\/login' "${RUNNER_TEMP}/admin-page.headers"; then
+            echo "Admin page redirect did not target /login." >&2
+            cat "${RUNNER_TEMP}/admin-page.headers" >&2 || true
+            exit 1
+          fi
+
+          echo "Production runtime smoke gate passed."
