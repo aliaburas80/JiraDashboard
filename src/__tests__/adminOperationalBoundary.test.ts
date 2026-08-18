@@ -61,12 +61,30 @@ describe('EP-024 separate Admin operational boundary', () => {
     expect(auditRoute).not.toContain('prisma.auditEvent');
   });
 
-  test('embedded user-app Admin console redirects to the configured separate Admin origin', () => {
+  test('embedded user-app Admin console redirects to the separate Admin origin and fails closed if runtime config is missing', () => {
     const legacyLayout = source('app/admin/layout.tsx');
     expect(legacyLayout).toContain('ADMIN_APP_URL');
     expect(legacyLayout).toContain('redirect(separateAdminUrl())');
+    expect(legacyLayout).toContain("'/login?adminUnavailable=1'");
     expect(legacyLayout).not.toContain('AdminNavSidebar');
     expect(legacyLayout).not.toContain('DashboardTopbar');
+  });
+
+  test('migrated user-app Admin APIs cannot bypass separate Admin MFA', () => {
+    const proxy = source('proxy.ts');
+    const migrated = [
+      '/api/admin/users',
+      '/api/admin/audit-events',
+      '/api/admin/feedback',
+      '/api/admin/system-errors',
+      '/api/admin/diagnostics',
+      '/api/admin/security',
+      '/api/admin/app-config',
+    ];
+    expect(proxy).toContain('MIGRATED_LEGACY_ADMIN_API');
+    expect(proxy).toContain('isMigratedLegacyAdminApi(pathname)');
+    expect(proxy).toContain('status: 410');
+    for (const pathName of migrated) expect(proxy).toContain(`'${pathName}'`);
   });
 
   test('separate Admin navigation exposes migrated operations', () => {
