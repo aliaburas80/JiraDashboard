@@ -1,22 +1,15 @@
-'use client';
-import { useRouter } from 'next/navigation';
-import DashboardTopbar from '@/components/dashboard/DashboardTopbar';
-import AdminNavSidebar from '@/components/admin/AdminNavSidebar';
-import styles from './layout.module.scss';
+import { redirect } from 'next/navigation';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
+function separateAdminUrl(): string {
+  const configured = process.env.ADMIN_APP_URL?.trim();
+  if (configured) return configured.replace(/\/$/, '');
+  if (process.env.NODE_ENV !== 'production') return 'http://localhost:3001';
+  throw new Error('ADMIN_APP_URL must be configured before the embedded Admin console can be retired in production.');
+}
 
-  return (
-    <div className={styles.shell}>
-      <a href="#main-content" className={styles.skipLink}>Skip to main content</a>
-      <DashboardTopbar onNewUpload={() => router.push('/')} />
-      <div className={styles.body}>
-        <AdminNavSidebar />
-        <main className={styles.main} id="main-content">
-          {children}
-        </main>
-      </div>
-    </div>
-  );
+export default function AdminLayout() {
+  // EP-024: operational administration no longer renders inside the user app.
+  // The separate Admin runtime performs its own password + MFA authentication;
+  // the user-app session is intentionally not forwarded or trusted there.
+  redirect(separateAdminUrl());
 }
