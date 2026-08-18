@@ -138,7 +138,7 @@ test('7,000 Jira issues upload, render, filter, and export within CI regression 
 
   const importLog = await prisma.importLog.findFirst({
     where: { userId, fileName: filename },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { uploadedAt: 'desc' },
   });
   expect(importLog).not.toBeNull();
   expect(importLog?.rowCount).toBe(ROWS);
