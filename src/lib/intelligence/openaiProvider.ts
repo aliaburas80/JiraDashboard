@@ -149,6 +149,9 @@ export function buildOpenAIRequestBody(
       userQuestion: question,
       evidenceSnapshot: snapshot,
     }),
+    reasoning: {
+      effort: 'medium',
+    },
     text: {
       format: {
         type: 'json_schema',
