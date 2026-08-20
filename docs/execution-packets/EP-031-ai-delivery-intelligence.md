@@ -1,7 +1,9 @@
 # EP-031 — AI Delivery Intelligence
 
-**Status:** In progress  
+**Status:** Merged to `main` — live Hostinger deployment verification pending  
 **Started from:** `main` commit `c6734244e99bed98a7bf15dc916329d5ce68bfa3`  
+**Merged:** PR #53 on 2026-08-21, merge commit `cf9f3a95ce3948a1cc534322b8929f83e2942905`  
+**Verified PR head:** `d5908d7f948403ff5e66053be2eafd8309521b29` — Security Audit, Quality, and E2E all green  
 **Independent of:** EP-028 staging infrastructure (still externally blocked on Hostinger hPanel provisioning)
 
 ## Goal
@@ -70,10 +72,15 @@ OPENAI_AGENT_MODEL=gpt-5.6-luna
 - [x] AI endpoint has input bounds, timeout, rate limit, output normalization, and Evidence fallback.
 - [x] Unit coverage exists for evidence snapshot construction and specialist outputs.
 - [x] Browser E2E covers navigation, evidence rendering, agent switching, and provider-free asking.
-- [ ] Security Audit green on exact final head.
-- [ ] Quality green on exact final head.
-- [ ] E2E green on exact final head.
-- [ ] No unresolved review threads.
+- [x] Security Audit green on exact final PR head.
+- [x] Quality green on exact final PR head.
+- [x] E2E green on exact final PR head.
+- [x] No unresolved review threads.
+- [ ] Live Hostinger deployment and `/intelligence` production route verified after merge.
+
+## Closeout note
+
+The repository-side implementation is complete and merged. Production verification remains deliberately open because the available Hostinger integration does not expose the existing hPanel deployment/runtime status for this application. Do not mark EP-031 fully shipped until the live Hostinger deployment has been checked after merge.
 
 ## Follow-on enhancements
 
