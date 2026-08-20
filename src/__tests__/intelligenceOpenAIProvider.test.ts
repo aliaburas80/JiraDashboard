@@ -51,12 +51,13 @@ function snapshotFixture(): IntelligenceSnapshot {
 }
 
 describe('Delivery Intelligence OpenAI provider contract', () => {
-  it('uses the stronger default model, strict Structured Outputs, and no provider-side response storage', () => {
+  it('uses the stronger default model, explicit reasoning, strict Structured Outputs, and no provider-side response storage', () => {
     const snapshot = snapshotFixture();
     const request = buildOpenAIRequestBody('executive', 'What should leadership do?', snapshot);
 
     expect(request.model).toBe(DEFAULT_INTELLIGENCE_MODEL);
     expect(request.model).toBe('gpt-5.6-terra');
+    expect(request.reasoning).toEqual({ effort: 'medium' });
     expect(request.store).toBe(false);
     expect(request.text.format).toMatchObject({
       type: 'json_schema',
