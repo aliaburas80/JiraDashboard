@@ -46,11 +46,10 @@ for (const row of rows) {
   if (row.via) console.log(`  via: ${row.via}`);
 }
 
-const high = Number(metadata.high ?? 0);
-const critical = Number(metadata.critical ?? 0);
-if (high > 0 || critical > 0) {
-  console.error(`EP-004 gate failed: high=${high}, critical=${critical}`);
+const total = Number(metadata.total ?? rows.length);
+if (total > 0) {
+  console.error(`EP-004 gate failed: total vulnerabilities=${total}`);
   process.exit(1);
 }
 
-console.log(`EP-004 gate passed: high=${high}, critical=${critical}`);
+console.log('EP-004 gate passed: 0 known npm vulnerabilities');
