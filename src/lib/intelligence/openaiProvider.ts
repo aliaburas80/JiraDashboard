@@ -161,7 +161,7 @@ export function buildOpenAIRequestBody(
         schema: ANSWER_SCHEMA,
       },
     },
-    max_output_tokens: 1_200,
+    max_output_tokens: 2_400,
     store: false,
   };
 }
