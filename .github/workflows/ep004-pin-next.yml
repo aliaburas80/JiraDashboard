@@ -1,0 +1,40 @@
+name: EP-004 Pin Tested Next.js
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  pin-next:
+    if: github.head_ref == 'agent/ep-004-security-remediation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Pin previously tested Next.js and validate audit
+        run: |
+          npm install --save-exact next@16.2.11
+          node scripts/security-audit.mjs
+      - name: Commit dependency manifests if changed
+        run: |
+          if git diff --quiet -- package.json package-lock.json; then
+            echo "Next.js is already pinned."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "fix: pin tested Next.js 16.2.11"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
