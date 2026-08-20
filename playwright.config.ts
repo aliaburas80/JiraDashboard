@@ -18,15 +18,15 @@ const adminBaseURL = (process.env.ADMIN_E2E_BASE_URL ?? 'http://127.0.0.1:3101')
 // timeout-minutes ceiling with nothing left over to even upload a report.
 const MOBILE_ONLY_SPECS = ['**/mobile-dense-tables.spec.ts', '**/mobile-forms.spec.ts', '**/mobile-requests.spec.ts'];
 
-// EP-026/027: the 7,000-row capacity benchmark and the separate-Admin
-// adversarial security regression are intentionally one representative
-// Chromium run. Cross-browser user-flow correctness remains covered by the
-// critical-path suite; multiplying DB-mutating capacity/security scenarios by
-// five projects adds CI cost and state contention without strengthening the
-// specific guarantees these two tests assert.
+// EP-026/027 and the Delivery Intelligence product flow: capacity/security
+// scenarios and provider-free specialist-agent interaction need one
+// representative Chromium run. Cross-browser user-flow correctness remains
+// covered by the critical-path suite; multiplying these stateful flows across
+// five projects adds cost without strengthening their specific guarantees.
 const DESKTOP_CHROME_ONLY_SPECS = [
   '**/performance-capacity.spec.ts',
   '**/admin-security-regression.spec.ts',
+  '**/intelligence.spec.ts',
 ];
 const NON_CHROME_IGNORES = [...MOBILE_ONLY_SPECS, ...DESKTOP_CHROME_ONLY_SPECS];
 
