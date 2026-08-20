@@ -27,6 +27,24 @@ const RATE_WINDOW_MS = 60_000;
 const RATE_MAX = 12;
 const requestsByUser = new Map<string, number[]>();
 
+// Model output is untrusted. Action links are restricted to product routes we
+// deliberately expose from this workspace; protocol-relative links (`//...`),
+// arbitrary internal paths, and external URLs are dropped before rendering.
+const SAFE_ACTION_HREFS = new Set([
+  '/summary',
+  '/dashboard',
+  '/flow-health',
+  '/work-explorer',
+  '/teams',
+  '/roadmap',
+  '/forecast',
+  '/trends',
+  '/data-quality',
+  '/snapshots',
+  '/portfolio',
+  '/release-readiness',
+]);
+
 const AGENT_INSTRUCTIONS: Record<IntelligenceAgentId, string> = {
   executive: 'Act as an executive delivery advisor. Prioritize decisions, exposure, confidence, and concise leadership language.',
   flow: 'Act as a flow and bottleneck specialist. Prioritize blocked work, aging, WIP/capacity concentration, lead time, cycle time, and practical flow interventions.',
@@ -65,6 +83,13 @@ function priority(value: unknown): IntelligenceAction['priority'] {
   return value === 'now' || value === 'next' || value === 'watch' ? value : 'next';
 }
 
+function safeActionHref(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const href = value.trim();
+  if (!href.startsWith('/') || href.startsWith('//')) return undefined;
+  return SAFE_ACTION_HREFS.has(href) ? href : undefined;
+}
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown>
@@ -90,7 +115,7 @@ function normaliseAction(value: unknown): IntelligenceAction | null {
     owner: typeof row.owner === 'string' ? row.owner.slice(0, 100) : 'Delivery Team',
     rationale: row.rationale.slice(0, 700),
     priority: priority(row.priority),
-    href: typeof row.href === 'string' && row.href.startsWith('/') ? row.href.slice(0, 120) : undefined,
+    href: safeActionHref(row.href),
   };
 }
 
@@ -148,6 +173,7 @@ function buildPrompt(agent: IntelligenceAgentId, question: string, snapshot: Int
     'When evidence is insufficient, say that explicitly. Prefer concrete next actions tied to visible evidence.',
     'Return ONLY valid JSON with this shape:',
     '{"title":"...","summary":"...","findings":[{"title":"...","detail":"...","severity":"neutral|good|warning|critical","evidence":"..."}],"actions":[{"title":"...","owner":"...","rationale":"...","priority":"now|next|watch","href":"/optional-route"}]}',
+    `If you provide href, it MUST be exactly one of: ${[...SAFE_ACTION_HREFS].join(', ')}. Otherwise omit href.`,
     'Use at most 4 findings and 4 actions. Keep the answer concise and decision-oriented.',
     '',
     `USER QUESTION: ${question}`,
