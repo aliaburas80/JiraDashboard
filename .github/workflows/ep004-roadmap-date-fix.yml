@@ -1,0 +1,55 @@
+name: EP-004 Roadmap Date Fix
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch-roadmap:
+    if: github.head_ref == 'agent/ep-004-security-remediation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out PR head
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - name: Wire deterministic Jira date parser into roadmap
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'app/roadmap/page.tsx';
+          let source = fs.readFileSync(path, 'utf8');
+
+          const importAnchor = "import { computePortfolioSummary, type EpicSummary } from '@/lib/portfolioHealth';";
+          const parserImport = "import { parseRoadmapDateMs } from '@/lib/roadmapDate';";
+          if (!source.includes(parserImport)) {
+            if (!source.includes(importAnchor)) throw new Error('Roadmap import anchor not found.');
+            source = source.replace(importAnchor, `${importAnchor}\n${parserImport}`);
+          }
+
+          const oldHelper = `function msFromDate(d: string | null | undefined): number | null {\n  if (!d) return null;\n  const ts = Date.parse(d);\n  return isNaN(ts) ? null : ts;\n}\n\n`;
+          if (source.includes(oldHelper)) source = source.replace(oldHelper, '');
+          source = source.replaceAll('msFromDate(item.createdDate)', 'parseRoadmapDateMs(item.createdDate)');
+          source = source.replaceAll('msFromDate(item.doneDate)', 'parseRoadmapDateMs(item.doneDate)');
+
+          if (source.includes('msFromDate(')) throw new Error('Legacy roadmap Date.parse helper is still referenced.');
+          if (!source.includes('parseRoadmapDateMs(item.createdDate)')) throw new Error('Created-date parser was not wired.');
+          if (!source.includes('parseRoadmapDateMs(item.doneDate)')) throw new Error('Done-date parser was not wired.');
+          fs.writeFileSync(path, source);
+          NODE
+      - name: Commit roadmap integration if changed
+        run: |
+          if git diff --quiet -- app/roadmap/page.tsx; then
+            echo "Roadmap parser integration already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/roadmap/page.tsx
+          git commit -m "fix: parse Jira roadmap dates cross-browser"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
