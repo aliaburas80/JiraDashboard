@@ -44,7 +44,7 @@ const PLANNING_ROUTES  = ['/roadmap', '/forecast', '/retro'];
 const DELIVERY_ROUTES  = ['/release-readiness', '/readiness', '/flow-health', '/sprint-kanban', '/delivery-mix', '/explore', '/customer'];
 const DATA_ROUTES      = ['/work-explorer', '/data-quality', '/column-mapping', '/snapshots', '/backend'];
 // All Analytics sub-menu items are visible to every role so the nav is consistent everywhere.
-const ANALYTICS_ROUTES = ['/dashboard', '/summary', '/charts', '/trends', '/teams', '/portfolio'];
+const ANALYTICS_ROUTES = ['/dashboard', '/summary', '/intelligence', '/charts', '/trends', '/teams', '/portfolio'];
 
 export function allowedRoutePrefixesForRole(role: string | null | undefined): string[] {
   switch (role) {
