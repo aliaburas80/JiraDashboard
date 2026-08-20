@@ -9,6 +9,7 @@ import LoadingState from '@/components/ui/LoadingState';
 import { SvgIcon } from '@/components/ui/SvgIcon';
 import { loadMetricsWithSource } from '@/lib/storage';
 import { computePortfolioSummary, type EpicSummary } from '@/lib/portfolioHealth';
+import { parseRoadmapDateMs } from '@/lib/roadmapDate';
 import { computeAverageThroughput } from '@/services/forecast/forecastEngine.service';
 import { exportRoadmapToCsv } from '@/services/export/roadmapExport.service';
 import type { DashboardMetrics } from '@/types/metrics';
@@ -32,12 +33,6 @@ interface EpicTimeline extends EpicForecast {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function msFromDate(d: string | null | undefined): number | null {
-  if (!d) return null;
-  const ts = Date.parse(d);
-  return isNaN(ts) ? null : ts;
-}
-
 function forecastEpic(epic: EpicSummary, avgThroughput: number): EpicForecast {
   const remaining = epic.issues - epic.completedIssues;
   if (epic.progress >= 100)
@@ -57,8 +52,8 @@ function buildTimelines(forecasts: EpicForecast[], flowItems: any[]): EpicTimeli
     const name = (item.epic || '').trim();
     if (!name) continue;
     if (!epicDates[name]) epicDates[name] = { starts: [], ends: [] };
-    const s = msFromDate(item.createdDate);
-    const e = msFromDate(item.doneDate);
+    const s = parseRoadmapDateMs(item.createdDate);
+    const e = parseRoadmapDateMs(item.doneDate);
     if (s) epicDates[name].starts.push(s);
     if (e) epicDates[name].ends.push(e);
   }
