@@ -28,4 +28,55 @@ test.describe('Delivery Intelligence workspace', () => {
     await expect(answer).toContainText(/flow|block|cycle/i);
     await expect(answer).toContainText('Recommended actions');
   });
+
+  test('renders a structured AI provider answer distinctly from Evidence mode', async ({ page }) => {
+    await gotoResilient(page, '/intelligence');
+
+    await page.route('**/api/intelligence/ask', async route => {
+      const request = route.request();
+      expect(request.method()).toBe('POST');
+      const body = request.postDataJSON() as { agent?: string; question?: string };
+      expect(body.agent).toBe('executive');
+      expect(body.question).toBeTruthy();
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          answer: {
+            agent: 'executive',
+            title: 'Leadership delivery brief',
+            summary: 'Delivery confidence needs attention because two blockers remain active.',
+            findings: [
+              {
+                title: 'Blocker pressure',
+                detail: 'Two blocked items are visible in the current delivery snapshot.',
+                severity: 'warning',
+                evidence: '2 blocked items',
+              },
+            ],
+            actions: [
+              {
+                title: 'Clear the highest-impact blocker',
+                owner: 'Delivery Manager',
+                rationale: 'Remove the strongest flow constraint before adding more WIP.',
+                priority: 'now',
+                href: '/flow-health',
+              },
+            ],
+            mode: 'ai',
+            model: 'gpt-5.6-terra',
+          },
+        }),
+      });
+    });
+
+    await page.getByRole('button', { name: 'What should leadership pay attention to today?' }).click();
+
+    const answer = page.getByTestId('intelligence-answer');
+    await expect(answer).toContainText('AI analysis');
+    await expect(answer).toContainText('gpt-5.6-terra');
+    await expect(answer).toContainText('Blocker pressure');
+    await expect(answer).toContainText('Clear the highest-impact blocker');
+  });
 });

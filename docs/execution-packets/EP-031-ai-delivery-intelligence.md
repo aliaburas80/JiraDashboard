@@ -38,28 +38,80 @@ This means the product remains useful when:
 
 ## Optional AI mode
 
-When `OPENAI_API_KEY` is configured, `/api/intelligence/ask` can send a compact decision-evidence snapshot to the OpenAI Responses API. It does **not** send the original Jira CSV/XLS/XLSX export.
+When `OPENAI_API_KEY` is configured, `/api/intelligence/ask` sends a compact decision-evidence snapshot to the OpenAI Responses API. It does **not** send the original Jira CSV/XLS/XLSX export.
 
 The snapshot is deliberately bounded and contains only current delivery evidence needed by the agents: headline metrics, top ranked risk items, capacity hotspots, selected epic signals, forecast data, and existing product insights.
 
-Controls:
+### Provider quality and privacy contract
+
+The provider layer is hardened so AI mode remains grounded and predictable:
+
+- default model is `gpt-5.6-terra`, with `OPENAI_AGENT_MODEL` available for an explicit override such as `gpt-5.6-sol` when maximum reasoning quality is preferred;
+- specialist policy is sent as higher-priority Responses API instructions, while the user question and Jira-derived text remain untrusted input data;
+- OpenAI Structured Outputs use a strict JSON schema for title, summary, findings, severity, actions, priority, and optional safe product links;
+- the compact provider response is explicitly created with `store: false`;
+- output is still defensively normalized before rendering even after schema-constrained generation;
+- action links are allow-listed to known Delivery Clarity routes and arbitrary/external model-generated URLs are discarded;
+- provider failure, refusal, timeout, malformed output, or missing API key falls back to deterministic Evidence mode rather than leaving the workspace unusable.
+
+### Input and operational controls
 
 - authenticated endpoint only;
 - maximum 600-character user question;
 - maximum 48 KB compact snapshot;
 - simple per-user request limiter;
 - 30-second provider timeout;
-- model output normalized into a fixed findings/actions schema;
-- model instructed to treat issue text as data, never as instructions;
-- deterministic Evidence-mode fallback on provider failure;
 - no provider error body exposed to the user.
 
 Optional environment variables:
 
 ```text
 OPENAI_API_KEY=
-OPENAI_AGENT_MODEL=gpt-5.6-luna
+OPENAI_AGENT_MODEL=gpt-5.6-terra
 ```
+
+## AI coverage — what each specialist actually knows
+
+All four agents operate on the same bounded evidence snapshot, but apply a different decision lens.
+
+| Specialist | Primary coverage | Evidence used |
+|---|---|---|
+| Executive Briefing | leadership attention, delivery confidence, overall exposure, immediate decisions | completion, delivery confidence, health score, blockers, critical items, open defects, top risk, capacity concentration, data-quality score |
+| Flow & Bottleneck | work getting stuck, aging/WIP pressure, bottlenecks, capacity concentration | blocked/critical counts, lead time, cycle time, top ranked flow-risk items, assignee load concentration |
+| Risk & Quality | delivery risk, defect/blocker exposure, whether the dataset is trustworthy enough for a decision | critical items, blocked items, open defects, top ranked risks, data-quality score |
+| Forecast | likely finish outlook and signals that could move it | predicted completion/date, estimated days remaining, model velocity when available, completion, delivery confidence, blockers/critical items, leading risk |
+
+### Shared bounded evidence
+
+The AI snapshot currently includes:
+
+- total/done/active issues and completion rate;
+- delivery confidence and health score;
+- blocked, critical, and open-defect counts;
+- data-quality score;
+- average lead time and cycle time;
+- forecast completion state, predicted date, days remaining, and velocity when available;
+- up to 12 ranked risk items with key, summary, status, assignee, reason, age, blocked state, and severity;
+- up to 6 capacity hotspots;
+- up to 8 selected epic signals;
+- up to 8 existing Delivery Clarity source insights.
+
+### Deliberately not covered in this first increment
+
+The AI does not currently receive or operate on:
+
+- the complete raw Jira CSV/XLS/XLSX dataset;
+- every sprint's full detailed metrics;
+- complete Kanban status-distribution records;
+- full quarter-by-quarter history;
+- complete label, issue-type, project, parent, or relation-map datasets;
+- retrospective content or team sentiment;
+- full release-readiness internals beyond evidence already represented in the compact snapshot;
+- external web/company/market information;
+- Jira write-back or any autonomous change to Jira/project data;
+- conversation history across questions or saved long-running agent memory.
+
+Those areas should be added only when the product need is explicit and the additional data boundary, privacy impact, grounding rules, tests, and user experience are designed first.
 
 ## Acceptance criteria
 
