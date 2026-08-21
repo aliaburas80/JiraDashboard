@@ -9,7 +9,7 @@ test.describe('Delivery Intelligence workspace', () => {
     await loginAndEnsureData(page);
   });
 
-  test('presents grounded evidence and runs a specialist without an AI key', async ({ page }) => {
+  test('presents grounded evidence and runs a specialist when Ollama is unavailable', async ({ page }) => {
     await gotoResilient(page, '/intelligence');
 
     await expect(page.getByRole('heading', { name: 'Delivery Intelligence' })).toBeVisible();
@@ -29,7 +29,7 @@ test.describe('Delivery Intelligence workspace', () => {
     await expect(answer).toContainText('Recommended actions');
   });
 
-  test('renders a structured AI provider answer distinctly from Evidence mode', async ({ page }) => {
+  test('renders a structured self-hosted AI answer distinctly from Evidence mode', async ({ page }) => {
     await gotoResilient(page, '/intelligence');
 
     await page.route('**/api/intelligence/ask', async route => {
@@ -65,7 +65,7 @@ test.describe('Delivery Intelligence workspace', () => {
               },
             ],
             mode: 'ai',
-            model: 'gpt-5.6-terra',
+            model: 'qwen3.5:9b',
           },
         }),
       });
@@ -75,7 +75,7 @@ test.describe('Delivery Intelligence workspace', () => {
 
     const answer = page.getByTestId('intelligence-answer');
     await expect(answer).toContainText('AI analysis');
-    await expect(answer).toContainText('gpt-5.6-terra');
+    await expect(answer).toContainText('qwen3.5:9b');
     await expect(answer).toContainText('Blocker pressure');
     await expect(answer).toContainText('Clear the highest-impact blocker');
   });
