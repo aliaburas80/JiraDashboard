@@ -1,85 +1,108 @@
 # EP-031 — AI Delivery Intelligence
 
-**Status:** Merged to `main` — live Hostinger deployment verification pending  
-**Started from:** `main` commit `c6734244e99bed98a7bf15dc916329d5ce68bfa3`  
-**Merged:** PR #53 on 2026-08-21, merge commit `cf9f3a95ce3948a1cc534322b8929f83e2942905`  
-**Verified PR head:** `d5908d7f948403ff5e66053be2eafd8309521b29` — Security Audit, Quality, and E2E all green  
-**Independent of:** EP-028 staging infrastructure (still externally blocked on Hostinger hPanel provisioning)
+**Status:** Provider alignment in PR #56 — live Ollama/Hostinger verification pending  
+**Original workspace merge:** PR #53 on 2026-08-21, merge commit `cf9f3a95ce3948a1cc534322b8929f83e2942905`  
+**Provider hardening experiment:** PR #55, superseded by the canonical self-hosted AI plan  
+**Canonical AI source:** `product/Delivery_Clarity_Soft_Launch_AI_Master_Plan_v1.1.docx`  
+**Independent of:** EP-028 staging infrastructure, except for final environment verification
 
 ## Goal
 
-Turn Delivery Clarity from a collection of dashboards into an interactive delivery-decision workspace. Users should be able to see the strongest signals immediately, explore the evidence behind them, and ask specialist delivery agents focused questions without requiring an AI provider for the core experience.
+Turn Delivery Clarity from a collection of dashboards into an interactive delivery-decision workspace. Users should be able to see the strongest signals immediately, explore the evidence behind them, and ask specialist delivery agents focused questions without making AI a dependency for the core analytics experience.
+
+## Canonical AI architecture correction
+
+The product master plan defines a private/self-hosted AI stack and explicitly avoids paid cloud AI APIs by default. Delivery Intelligence therefore uses **Ollama** as the model runtime with two Qwen models:
+
+- **Qwen3.5:4b** — the fast/light model for focused analysis, classification-style reasoning, summaries, evidence-based suggestions, and bilingual-friendly output;
+- **Qwen3.5:9b** — the stronger optional model for deeper synthesis when infrastructure permits.
+
+PR #56 removes the paid OpenAI provider path introduced during the earlier EP-031 experiment and aligns the live endpoint with this canonical product direction.
+
+### Specialist-to-model routing
+
+| Specialist | Primary model | Why |
+|---|---|---|
+| Flow & Bottleneck | `qwen3.5:4b` | focused bottleneck/aging/capacity analysis benefits from the lower-latency model |
+| Risk & Quality | `qwen3.5:4b` | focused risk classification and evidence review fit the lightweight model |
+| Executive Briefing | `qwen3.5:9b` | cross-signal leadership synthesis benefits from the stronger model |
+| Forecast | `qwen3.5:9b` | completion outlook and interacting risk signals require deeper synthesis |
+
+Executive and Forecast automatically retry with `qwen3.5:4b` if the deep model is unavailable. Flow and Risk go directly to Evidence mode if the fast model is unavailable.
+
+This routing is an implementation bridge for the interactive Delivery Intelligence workspace. The broader master-plan AI worker use cases — weekly product review, feedback clustering, error correlation, feature recommendations, and post-release measurement — remain separate follow-on product-intelligence work and are not falsely claimed as implemented here.
 
 ## User experience
 
-A new `/intelligence` workspace presents:
+The `/intelligence` workspace presents:
 
 - delivery confidence, completion, critical/blocker pressure, and forecast at a glance;
 - ranked priority-attention items with status, owner, age, and blocking state;
 - capacity concentration as an interactive visual distribution;
 - direct links from recommended actions into Work Explorer, Flow Health, Teams, Roadmap, Data Quality, Trends, and Snapshots;
-- four selectable specialist agents:
-  - Executive Briefing Agent;
-  - Flow & Bottleneck Agent;
-  - Risk & Quality Agent;
-  - Forecast Agent;
+- four selectable specialist lenses: Executive, Flow, Risk, and Forecast;
 - suggested prompts plus free-text questions;
-- structured findings and recommended actions rather than an ungrounded generic chat response.
+- structured findings and recommended actions rather than generic chat output.
 
-## Evidence mode
+## Evidence mode — authoritative fallback
 
-Evidence mode is the default and requires no external AI service. It deterministically derives findings and actions from the current authenticated user's `DashboardMetrics` snapshot.
+Evidence mode requires no model runtime. It deterministically derives findings and actions from the authenticated user's `DashboardMetrics` snapshot.
 
-This means the product remains useful when:
+Deterministic Delivery Clarity calculations remain authoritative. AI explains and prioritizes supplied evidence; it does not recalculate or replace the product's metrics. If Ollama is unreachable, a model is missing, a request times out, or output is malformed, the workspace falls back to Evidence mode rather than failing.
 
-- `OPENAI_API_KEY` is not configured;
-- the AI provider is temporarily unavailable;
-- a provider request times out or returns malformed output.
+## Self-hosted AI mode
 
-## Optional AI mode
+`/api/intelligence/ask` sends only a compact decision-evidence snapshot to the privately configured Ollama runtime. It does **not** send the original Jira CSV/XLS/XLSX export.
 
-When `OPENAI_API_KEY` is configured, `/api/intelligence/ask` sends a compact decision-evidence snapshot to the OpenAI Responses API. It does **not** send the original Jira CSV/XLS/XLSX export.
+The endpoint uses Ollama `/api/chat` with structured JSON-schema output and deterministic temperature settings. The user question and Jira-derived text are isolated as untrusted user/data content rather than merged into the higher-priority system instruction.
 
-The snapshot is deliberately bounded and contains only current delivery evidence needed by the agents: headline metrics, top ranked risk items, capacity hotspots, selected epic signals, forecast data, and existing product insights.
+### Environment variables
 
-### Provider quality and privacy contract
+```text
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_FAST_MODEL=qwen3.5:4b
+OLLAMA_DEEP_MODEL=qwen3.5:9b
+```
 
-The provider layer is hardened so AI mode remains grounded and predictable:
+The Ollama endpoint must remain private/internal and must never be publicly exposed. No OpenAI API key is required.
 
-- default model is `gpt-5.6-terra`, with `OPENAI_AGENT_MODEL` available for an explicit override such as `gpt-5.6-sol` when maximum reasoning quality is preferred;
-- specialist policy is sent as higher-priority Responses API instructions, while the user question and Jira-derived text remain untrusted input data;
-- OpenAI Structured Outputs use a strict JSON schema for title, summary, findings, severity, actions, priority, and optional safe product links;
-- the compact provider response is explicitly created with `store: false`;
-- output is still defensively normalized before rendering even after schema-constrained generation;
-- action links are allow-listed to known Delivery Clarity routes and arbitrary/external model-generated URLs are discarded;
-- provider failure, refusal, timeout, malformed output, or missing API key falls back to deterministic Evidence mode rather than leaving the workspace unusable.
-
-### Input and operational controls
+### Provider controls
 
 - authenticated endpoint only;
 - maximum 600-character user question;
 - maximum 48 KB compact snapshot;
-- simple per-user request limiter;
-- 30-second provider timeout;
-- no provider error body exposed to the user.
+- per-user request limiter;
+- per-model timeout;
+- schema-constrained JSON output;
+- output normalization after generation;
+- allow-listed Delivery Clarity action links only;
+- arbitrary/external model-generated URLs discarded;
+- prompt-injection defense: issue summaries, reasons, assignee names, epic names, source insights, and user questions are treated as untrusted data;
+- no provider error body exposed to the user;
+- deterministic Evidence fallback.
 
-Optional environment variables:
+### Master-plan guardrails carried into Delivery Intelligence
 
-```text
-OPENAI_API_KEY=
-OPENAI_AGENT_MODEL=gpt-5.6-terra
-```
+The model is instructed to:
+
+- use only supplied evidence;
+- never invent Jira items, dates, metrics, quotes, causes, trends, benchmarks, or commitments;
+- distinguish confirmed facts from correlation, hypothesis, and recommendation;
+- state insufficient evidence rather than guess;
+- avoid revealing or inferring personal information beyond supplied operational evidence;
+- never make autonomous production changes, change permissions, delete data, contact users, or write back to Jira;
+- return a small prioritized set of findings/actions rather than an unbounded list.
 
 ## AI coverage — what each specialist actually knows
 
-All four agents operate on the same bounded evidence snapshot, but apply a different decision lens.
+All four specialist lenses operate on the same bounded evidence snapshot but apply a different decision lens.
 
 | Specialist | Primary coverage | Evidence used |
 |---|---|---|
 | Executive Briefing | leadership attention, delivery confidence, overall exposure, immediate decisions | completion, delivery confidence, health score, blockers, critical items, open defects, top risk, capacity concentration, data-quality score |
 | Flow & Bottleneck | work getting stuck, aging/WIP pressure, bottlenecks, capacity concentration | blocked/critical counts, lead time, cycle time, top ranked flow-risk items, assignee load concentration |
 | Risk & Quality | delivery risk, defect/blocker exposure, whether the dataset is trustworthy enough for a decision | critical items, blocked items, open defects, top ranked risks, data-quality score |
-| Forecast | likely finish outlook and signals that could move it | predicted completion/date, estimated days remaining, model velocity when available, completion, delivery confidence, blockers/critical items, leading risk |
+| Forecast | likely finish outlook and signals that could move it | predicted completion/date, estimated days remaining, velocity when available, completion, delivery confidence, blockers/critical items, leading risk |
 
 ### Shared bounded evidence
 
@@ -96,9 +119,9 @@ The AI snapshot currently includes:
 - up to 8 selected epic signals;
 - up to 8 existing Delivery Clarity source insights.
 
-### Deliberately not covered in this first increment
+### Deliberately not covered in this interactive increment
 
-The AI does not currently receive or operate on:
+The model does not currently receive or operate on:
 
 - the complete raw Jira CSV/XLS/XLSX dataset;
 - every sprint's full detailed metrics;
@@ -108,32 +131,31 @@ The AI does not currently receive or operate on:
 - retrospective content or team sentiment;
 - full release-readiness internals beyond evidence already represented in the compact snapshot;
 - external web/company/market information;
-- Jira write-back or any autonomous change to Jira/project data;
-- conversation history across questions or saved long-running agent memory.
-
-Those areas should be added only when the product need is explicit and the additional data boundary, privacy impact, grounding rules, tests, and user experience are designed first.
+- Jira write-back or autonomous changes;
+- conversation history or long-running agent memory;
+- the master-plan product-intelligence admin datasets for feedback clustering/error correlation/weekly reports unless separately implemented.
 
 ## Acceptance criteria
 
 - [x] `/intelligence` interactive user workspace exists.
 - [x] Intelligence is available in Analytics navigation and role routing.
 - [x] Live evidence presentation includes risk, flow, capacity, confidence, and forecast signals.
-- [x] Executive, Flow, Risk, and Forecast specialist agents exist.
-- [x] Provider-free Evidence mode works without an API key.
-- [x] Optional authenticated AI endpoint uses a compact evidence snapshot rather than the full Jira export.
-- [x] AI endpoint has input bounds, timeout, rate limit, output normalization, and Evidence fallback.
-- [x] Unit coverage exists for evidence snapshot construction and specialist outputs.
-- [x] Browser E2E covers navigation, evidence rendering, agent switching, and provider-free asking.
-- [x] Security Audit green on exact final PR head.
-- [x] Quality green on exact final PR head.
-- [x] E2E green on exact final PR head.
-- [x] No unresolved review threads.
-- [ ] Live Hostinger deployment and `/intelligence` production route verified after merge.
+- [x] Executive, Flow, Risk, and Forecast specialist lenses exist.
+- [x] Provider-free Evidence mode works when the AI runtime is unavailable.
+- [x] AI endpoint uses a compact evidence snapshot rather than the full Jira export.
+- [x] Paid OpenAI API dependency removed from Delivery Intelligence.
+- [x] Ollama provider adapter implemented with `qwen3.5:4b` and `qwen3.5:9b` routing.
+- [x] Qwen structured-output contract, prompt separation, safe links, URL validation, and response normalization have unit coverage.
+- [x] Browser E2E distinguishes self-hosted AI mode from Evidence mode.
+- [ ] Security Audit green on exact final PR #56 head.
+- [ ] Quality green on exact final PR #56 head.
+- [ ] E2E green on exact final PR #56 head.
+- [ ] No unresolved review threads on final PR #56 head.
+- [ ] Both Qwen models pulled and reachable in the real private Ollama runtime.
+- [ ] Live production `/intelligence` confirms both model routes after deployment.
 
-## Closeout note
+## Deployment boundary
 
-The repository-side implementation is complete and merged. Production verification remains deliberately open because the available Hostinger integration does not expose the existing hPanel deployment/runtime status for this application. Do not mark EP-031 fully shipped until the live Hostinger deployment has been checked after merge.
+Repository implementation alone cannot make self-hosted AI live. The target environment must provide an Ollama service reachable by the Node application and must have both configured models pulled. The existing Hostinger integration available to this workspace does not expose hPanel runtime/package/service provisioning, so Ollama installation/reachability must be verified separately rather than assumed.
 
-## Follow-on enhancements
-
-Once the first workspace is stable, later iterations can add conversation history, snapshot-to-snapshot agent comparisons, saved executive briefs, proactive signal cards, and provider-side tool calling. Those are deliberately outside this first increment so the user-facing value ships without creating a new infrastructure dependency.
+Do not mark this provider alignment fully shipped until those live-runtime checks are complete.
