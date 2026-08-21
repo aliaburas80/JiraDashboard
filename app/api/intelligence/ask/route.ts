@@ -7,11 +7,14 @@ import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { buildEvidenceAnswer, isIntelligenceAgentId } from '@/lib/intelligence/evidence';
 import {
-  buildOpenAIRequestBody,
-  DEFAULT_INTELLIGENCE_MODEL,
-  extractOutputText,
+  buildOllamaModelSequence,
+  buildOllamaRequestBody,
+  DEFAULT_OLLAMA_DEEP_MODEL,
+  DEFAULT_OLLAMA_FAST_MODEL,
+  extractOllamaMessageContent,
+  normaliseOllamaBaseUrl,
   parseAgentJson,
-} from '@/lib/intelligence/openaiProvider';
+} from '@/lib/intelligence/ollamaProvider';
 import type {
   IntelligenceAgentId,
   IntelligenceAnswer,
@@ -24,6 +27,7 @@ const MAX_QUESTION_CHARS = 600;
 const MAX_SNAPSHOT_BYTES = 48_000;
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX = 12;
+const OLLAMA_TIMEOUT_MS = 35_000;
 const requestsByUser = new Map<string, number[]>();
 
 function allowRequest(userId: string): boolean {
@@ -55,30 +59,41 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-async function askOpenAI(
+async function askOllama(
   agent: IntelligenceAgentId,
   question: string,
   snapshot: IntelligenceSnapshot,
 ): Promise<IntelligenceAnswer | null> {
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey) return null;
+  const baseUrl = normaliseOllamaBaseUrl(process.env.OLLAMA_BASE_URL);
+  const fastModel = process.env.OLLAMA_FAST_MODEL?.trim() || DEFAULT_OLLAMA_FAST_MODEL;
+  const deepModel = process.env.OLLAMA_DEEP_MODEL?.trim() || DEFAULT_OLLAMA_DEEP_MODEL;
+  const models = buildOllamaModelSequence(agent, fastModel, deepModel);
 
-  const model = process.env.OPENAI_AGENT_MODEL?.trim() || DEFAULT_INTELLIGENCE_MODEL;
-  const response = await fetch('https://api.openai.com/v1/responses', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(buildOpenAIRequestBody(agent, question, snapshot, model)),
-    signal: AbortSignal.timeout(30_000),
-    cache: 'no-store',
-  });
+  for (const model of models) {
+    try {
+      const response = await fetch(`${baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(buildOllamaRequestBody(agent, question, snapshot, model)),
+        signal: AbortSignal.timeout(OLLAMA_TIMEOUT_MS),
+        cache: 'no-store',
+      });
 
-  if (!response.ok) return null;
-  const payload: unknown = await response.json();
-  const text = extractOutputText(payload);
-  return text ? parseAgentJson(agent, text, model) : null;
+      if (!response.ok) continue;
+      const payload: unknown = await response.json();
+      const text = extractOllamaMessageContent(payload);
+      const answer = text ? parseAgentJson(agent, text, model) : null;
+      if (answer) return answer;
+    } catch {
+      // Try the next configured local model when available. Executive and
+      // Forecast prefer the 9b model and fall back to the 4b model; the focused
+      // Flow/Risk paths use only the 4b model before Evidence mode takes over.
+    }
+  }
+
+  return null;
 }
 
 export async function POST(request: Request) {
@@ -116,20 +131,13 @@ export async function POST(request: Request) {
   }
 
   const fallback = buildEvidenceAnswer(row.agent, row.snapshot, question);
-  try {
-    const ai = await askOpenAI(row.agent, question, row.snapshot);
-    if (ai) return NextResponse.json({ answer: ai });
-  } catch {
-    // Evidence mode is intentionally a first-class fallback: the user still
-    // receives grounded analysis when the optional AI provider is unavailable.
-  }
+  const ai = await askOllama(row.agent, question, row.snapshot);
+  if (ai) return NextResponse.json({ answer: ai });
 
   return NextResponse.json({
     answer: {
       ...fallback,
-      note: process.env.OPENAI_API_KEY?.trim()
-        ? 'AI provider unavailable — showing grounded evidence mode.'
-        : 'Evidence mode — configure OPENAI_API_KEY to activate AI specialist responses.',
+      note: 'Self-hosted AI runtime unavailable — showing grounded Evidence mode. Start Ollama and pull the configured Qwen models to activate AI analysis.',
     },
   });
 }
