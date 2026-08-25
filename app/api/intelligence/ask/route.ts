@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { buildEvidenceAnswer, isIntelligenceAgentId } from '@/lib/intelligence/evidence';
+import { answerFreeformEvidenceQuestion } from '@/lib/intelligence/evidenceFreeform';
 import { refineEvidenceAnswer } from '@/lib/intelligence/evidenceQuestion';
 import {
   buildOllamaModelSequence,
@@ -100,6 +101,18 @@ async function askOllama(
   return null;
 }
 
+function buildQuestionAwareFallback(
+  agent: IntelligenceAgentId,
+  snapshot: IntelligenceSnapshot,
+  question: string,
+): IntelligenceAnswer {
+  const baseEvidence = buildEvidenceAnswer(agent, snapshot);
+  const specialist = refineEvidenceAnswer(baseEvidence, snapshot, question);
+  return specialist === baseEvidence
+    ? answerFreeformEvidenceQuestion(baseEvidence, snapshot, question)
+    : specialist;
+}
+
 export async function POST(request: Request) {
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) {
@@ -134,15 +147,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Intelligence snapshot is too large.' }, { status: 413 });
   }
 
-  const baseEvidence = buildEvidenceAnswer(row.agent, row.snapshot);
-  const fallback = refineEvidenceAnswer(baseEvidence, row.snapshot, question);
+  const fallback = buildQuestionAwareFallback(row.agent, row.snapshot, question);
   const ai = await askOllama(row.agent, question, row.snapshot);
   if (ai) return NextResponse.json({ answer: ai });
 
   return NextResponse.json({
     answer: {
       ...fallback,
-      note: 'Self-hosted AI runtime unavailable — showing grounded Evidence mode. Start Ollama and pull the configured Qwen models to activate AI analysis.',
+      note: 'Self-hosted AI runtime unavailable — showing grounded Evidence mode. Answers are limited to facts present in this analyzed delivery snapshot.',
     },
   });
 }
