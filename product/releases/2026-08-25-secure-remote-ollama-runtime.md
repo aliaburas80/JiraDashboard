@@ -8,6 +8,7 @@ Delivery Clarity's interactive Intelligence provider can now connect safely to a
 - Added a production guard: non-private Ollama endpoints must use HTTPS and a bearer token or the application remains in deterministic Evidence mode.
 - Preserved localhost/private-IP Ollama support for same-host/private-network deployments.
 - Added `ops/ollama/Caddyfile.example`, exposing only authenticated `POST /api/chat` and keeping the raw Ollama listener on `127.0.0.1:11434`.
+- Added `ops/ollama/ollama.service.override.example` to make the localhost bind explicit on systemd hosts.
 - Added a Hostinger VPS deployment runbook at `ops/ollama/README.md`.
 - Added unit coverage for private/local endpoints, protected public HTTPS gateways, token headers, and insecure/missing-auth rejection.
 
