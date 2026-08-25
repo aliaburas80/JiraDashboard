@@ -72,6 +72,8 @@ describe('free-form deterministic evidence QA', () => {
     expect(ask('What is our average cycle time?').summary).toContain('11.4 days');
     expect(ask('How many open defects are there?').summary).toContain('3 open defects');
     expect(ask('What is the delivery confidence score?').summary).toContain('51%');
+    expect(ask('How many issues are blocked?').title).toBe('Blocked work');
+    expect(ask('How many issues are blocked?').summary).toContain('1 blocked');
   });
 
   it('answers named Jira issue questions from ranked evidence', () => {
@@ -102,6 +104,12 @@ describe('free-form deterministic evidence QA', () => {
 
     const points = ask('What does the data say about completed story points?');
     expect(points.findings.some(item => item.detail.includes('5650 of 15948 story points'))).toBe(true);
+  });
+
+  it('explains its evidence coverage when asked generically', () => {
+    const answer = ask('What can you answer from the available data?');
+    expect(answer.title).toBe('What I can answer from this snapshot');
+    expect(answer.summary).toContain('current analyzed delivery snapshot');
   });
 
   it('does not invent an answer outside the snapshot boundary', () => {
