@@ -3,8 +3,6 @@
 
 import type {
   IntelligenceAnswer,
-  IntelligenceCapacityHotspot,
-  IntelligenceEpicSignal,
   IntelligenceFinding,
   IntelligenceRiskItem,
   IntelligenceSnapshot,
@@ -131,11 +129,8 @@ function epicQuestion(base: IntelligenceAnswer, snapshot: IntelligenceSnapshot, 
 }
 
 function metricQuestion(base: IntelligenceAnswer, snapshot: IntelligenceSnapshot, question: string): IntelligenceAnswer | null {
-  if (includesAny(question, ['total issues', 'how many issues', 'issue count', 'total work'])) {
-    return factualAnswer(base, 'Total issues', `The analyzed dataset contains ${snapshot.totalIssues} issues. ${snapshot.doneIssues} are complete and ${snapshot.activeIssues} are active.`, [
-      finding('Issue count', `${snapshot.totalIssues} total · ${snapshot.doneIssues} done · ${snapshot.activeIssues} active`),
-    ]);
-  }
+  // Check qualified issue counts before generic "how many issues" so queries
+  // such as "how many issues are blocked?" cannot be mistaken for total count.
   if (includesAny(question, ['done issues', 'completed issues', 'how many done', 'how many completed'])) {
     return factualAnswer(base, 'Completed work', `${snapshot.doneIssues} of ${snapshot.totalIssues} issues are complete, which is ${snapshot.completionRate}%.`);
   }
@@ -153,11 +148,11 @@ function metricQuestion(base: IntelligenceAnswer, snapshot: IntelligenceSnapshot
   if (includesAny(question, ['health score', 'delivery health', 'health percentage'])) {
     return factualAnswer(base, 'Delivery health', `The current health score is ${snapshot.healthScore}%. Delivery confidence is ${snapshot.deliveryConfidence}%.`);
   }
-  if (includesAny(question, ['blocked issues', 'blockers', 'blocked work', 'how many blocked'])) {
+  if (includesAny(question, ['blocked issues', 'blockers', 'blocked work', 'how many blocked', 'issues are blocked', 'issues blocked'])) {
     const blocked = snapshot.riskItems.filter(isBlocked);
     return factualAnswer(base, 'Blocked work', `${snapshot.blockedIssues} blocked issues are reported in the analyzed metrics.${blocked.length ? ` The ranked snapshot includes ${blocked.map(item => item.key).join(', ')} as blocked.` : ''}`, blocked.slice(0, 4).map(item => finding(item.key, item.summary || item.reason || item.status, item.severity, riskEvidence(item))));
   }
-  if (includesAny(question, ['critical issues', 'how many critical', 'critical work'])) {
+  if (includesAny(question, ['critical issues', 'how many critical', 'critical work', 'issues are critical', 'issues critical'])) {
     return factualAnswer(base, 'Critical work', `${snapshot.criticalIssues} critical items are visible in the analyzed metrics.`, snapshot.riskItems.filter(item => item.severity === 'critical').slice(0, 4).map(item => finding(item.key, item.summary || item.reason || item.status, item.severity, riskEvidence(item))));
   }
   if (includesAny(question, ['open defects', 'defects', 'bugs open', 'open bugs', 'how many bugs'])) {
@@ -182,6 +177,11 @@ function metricQuestion(base: IntelligenceAnswer, snapshot: IntelligenceSnapshot
   }
   if (includesAny(question, ['predicted date', 'forecast date', 'finish date', 'completion date', 'when finish', 'when complete'])) {
     return factualAnswer(base, 'Predicted completion', snapshot.forecast.complete ? 'The current scope is complete.' : snapshot.forecast.predictedDate ? `The current predicted completion date is ${snapshot.forecast.predictedDate}.` : snapshot.forecast.daysRemaining != null ? `No calendar date is present, but the model estimates about ${snapshot.forecast.daysRemaining} days remaining.` : 'The current snapshot does not provide a reliable completion date.');
+  }
+  if (includesAny(question, ['total issues', 'how many issues', 'issue count', 'total work'])) {
+    return factualAnswer(base, 'Total issues', `The analyzed dataset contains ${snapshot.totalIssues} issues. ${snapshot.doneIssues} are complete and ${snapshot.activeIssues} are active.`, [
+      finding('Issue count', `${snapshot.totalIssues} total · ${snapshot.doneIssues} done · ${snapshot.activeIssues} active`),
+    ]);
   }
   return null;
 }
@@ -309,9 +309,8 @@ function insufficientAnswer(base: IntelligenceAnswer, snapshot: IntelligenceSnap
 
 /**
  * Answer a free-form question using only facts already present in the compact
- * Intelligence snapshot. Returns null only when a specialist-specific question
- * should get first chance to answer; otherwise returns a factual or explicit
- * insufficient-evidence response.
+ * Intelligence snapshot. Named entities and qualified metrics are resolved
+ * before generic help/coverage intents so normal phrasing remains useful.
  */
 export function answerFreeformEvidenceQuestion(
   base: IntelligenceAnswer,
@@ -320,14 +319,16 @@ export function answerFreeformEvidenceQuestion(
 ): IntelligenceAnswer {
   const question = ` ${normalise(rawQuestion)} `;
 
-  if (includesAny(question, ['what can you answer', 'what do you know', 'available data', 'what information'])) {
+  const entityAnswer = issueQuestion(base, snapshot, question)
+    ?? personQuestion(base, snapshot, question)
+    ?? epicQuestion(base, snapshot, question);
+  if (entityAnswer) return entityAnswer;
+
+  if (includesAny(question, ['what can you answer', 'available data', 'what information do you have', 'what data do you have', 'what do you know'])) {
     return coverageAnswer(base, snapshot);
   }
 
-  return issueQuestion(base, snapshot, question)
-    ?? personQuestion(base, snapshot, question)
-    ?? epicQuestion(base, snapshot, question)
-    ?? metricQuestion(base, snapshot, question)
+  return metricQuestion(base, snapshot, question)
     ?? rankingQuestion(base, snapshot, question)
     ?? categoryQuestion(base, snapshot, question)
     ?? retrievalQuestion(base, snapshot, question)
