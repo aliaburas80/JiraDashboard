@@ -8,6 +8,12 @@ export interface OllamaRuntimeConfig {
   authToken?: string;
 }
 
+export interface OllamaRuntimeEnv {
+  NODE_ENV?: string;
+  OLLAMA_BASE_URL?: string;
+  OLLAMA_AUTH_TOKEN?: string;
+}
+
 function isPrivateIpv4(hostname: string): boolean {
   const octets = hostname.split('.').map(Number);
   if (octets.length !== 4 || octets.some(value => !Number.isInteger(value) || value < 0 || value > 255)) {
@@ -62,7 +68,7 @@ export function buildOllamaHeaders(authToken?: string): Record<string, string> {
  * Returning null deliberately activates deterministic Evidence mode.
  */
 export function resolveOllamaRuntimeConfig(
-  env: Pick<NodeJS.ProcessEnv, 'NODE_ENV' | 'OLLAMA_BASE_URL' | 'OLLAMA_AUTH_TOKEN'> = process.env,
+  env: OllamaRuntimeEnv = process.env,
 ): OllamaRuntimeConfig | null {
   const baseUrl = normaliseOllamaBaseUrl(env.OLLAMA_BASE_URL);
   const authToken = env.OLLAMA_AUTH_TOKEN?.trim() || undefined;
