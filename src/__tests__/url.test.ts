@@ -1,5 +1,5 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
-// TC-URL-01 to TC-URL-06 — resolveRequestOrigin()
+// TC-URL-01 to TC-URL-07 — resolveRequestOrigin()
 
 import { resolveRequestOrigin, normalizeAppUrl } from '../lib/url';
 
@@ -46,4 +46,12 @@ test('TC-URL-05: a comma-separated X-Forwarded-Host takes only the first value',
 test('TC-URL-06: normalizeAppUrl adds https:// to a bare host and strips trailing slashes', () => {
   expect(normalizeAppUrl('deliveryclarity.app/')).toBe('https://deliveryclarity.app');
   expect(normalizeAppUrl(undefined)).toBe('http://localhost:3000');
+});
+
+test('TC-URL-07: production www alias is canonicalized to the apex HTTPS origin', () => {
+  const req = makeReq(
+    { host: 'internal-host:3000', 'x-forwarded-proto': 'http', 'x-forwarded-host': 'www.deliveryclarity.app' },
+    'http://internal-host:3000/api/auth/register',
+  );
+  expect(resolveRequestOrigin(req)).toBe('https://deliveryclarity.app');
 });
