@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import { buildEvidenceAnswer, isIntelligenceAgentId } from '@/lib/intelligence/evidence';
+import { refineEvidenceAnswer } from '@/lib/intelligence/evidenceQuestion';
 import {
   buildOllamaModelSequence,
   buildOllamaRequestBody,
@@ -133,7 +134,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Intelligence snapshot is too large.' }, { status: 413 });
   }
 
-  const fallback = buildEvidenceAnswer(row.agent, row.snapshot, question);
+  const baseEvidence = buildEvidenceAnswer(row.agent, row.snapshot);
+  const fallback = refineEvidenceAnswer(baseEvidence, row.snapshot, question);
   const ai = await askOllama(row.agent, question, row.snapshot);
   if (ai) return NextResponse.json({ answer: ai });
 
