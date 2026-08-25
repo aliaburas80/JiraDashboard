@@ -12,9 +12,12 @@ import {
   DEFAULT_OLLAMA_DEEP_MODEL,
   DEFAULT_OLLAMA_FAST_MODEL,
   extractOllamaMessageContent,
-  normaliseOllamaBaseUrl,
   parseAgentJson,
 } from '@/lib/intelligence/ollamaProvider';
+import {
+  buildOllamaHeaders,
+  resolveOllamaRuntimeConfig,
+} from '@/lib/intelligence/ollamaRuntime';
 import type {
   IntelligenceAgentId,
   IntelligenceAnswer,
@@ -64,18 +67,18 @@ async function askOllama(
   question: string,
   snapshot: IntelligenceSnapshot,
 ): Promise<IntelligenceAnswer | null> {
-  const baseUrl = normaliseOllamaBaseUrl(process.env.OLLAMA_BASE_URL);
+  const runtime = resolveOllamaRuntimeConfig();
+  if (!runtime) return null;
+
   const fastModel = process.env.OLLAMA_FAST_MODEL?.trim() || DEFAULT_OLLAMA_FAST_MODEL;
   const deepModel = process.env.OLLAMA_DEEP_MODEL?.trim() || DEFAULT_OLLAMA_DEEP_MODEL;
   const models = buildOllamaModelSequence(agent, fastModel, deepModel);
 
   for (const model of models) {
     try {
-      const response = await fetch(`${baseUrl}/api/chat`, {
+      const response = await fetch(`${runtime.baseUrl}/api/chat`, {
         method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
+        headers: buildOllamaHeaders(runtime.authToken),
         body: JSON.stringify(buildOllamaRequestBody(agent, question, snapshot, model)),
         signal: AbortSignal.timeout(OLLAMA_TIMEOUT_MS),
         cache: 'no-store',
@@ -87,9 +90,9 @@ async function askOllama(
       const answer = text ? parseAgentJson(agent, text, model) : null;
       if (answer) return answer;
     } catch {
-      // Try the next configured local model when available. Executive and
-      // Forecast prefer the 9b model and fall back to the 4b model; the focused
-      // Flow/Risk paths use only the 4b model before Evidence mode takes over.
+      // Try the next configured model when available. Executive and Forecast
+      // prefer the 9b model and fall back to the 4b model; the focused Flow/Risk
+      // paths use only the 4b model before Evidence mode takes over.
     }
   }
 
