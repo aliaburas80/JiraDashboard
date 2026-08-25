@@ -1,0 +1,7 @@
+# Install with: sudo systemctl edit ollama.service
+# Ollama already binds to 127.0.0.1 by default; this makes the intended
+# Delivery Clarity security boundary explicit if the host was previously
+# configured to listen on 0.0.0.0.
+
+[Service]
+Environment="OLLAMA_HOST=127.0.0.1:11434"

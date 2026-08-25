@@ -18,9 +18,12 @@ Configured defaults:
 
 ```text
 OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_AUTH_TOKEN=
 OLLAMA_FAST_MODEL=qwen3.5:4b
 OLLAMA_DEEP_MODEL=qwen3.5:9b
 ```
+
+`OLLAMA_AUTH_TOKEN` is optional for localhost/private-IP deployments. In production, a non-private Ollama hostname/IP is accepted only when it uses HTTPS and has a bearer token. This protects against accidentally configuring the raw public Ollama API.
 
 ## Model responsibilities
 
@@ -33,16 +36,30 @@ Executive and Forecast retry with the fast 4b model when the 9b model is unavail
 
 ## Security boundary
 
-Ollama is server-side infrastructure. It must never be exposed directly to a browser or the public internet.
+Ollama is server-side infrastructure. The raw Ollama listener must never be exposed directly to a browser or the public internet.
 
 Preferred deployment shapes:
 
 1. Ollama on the same private host as the Node application, bound to localhost; or
-2. Ollama on a separate private inference host reachable only from the Delivery Clarity application network.
+2. Ollama on a separate private inference host reachable only from the Delivery Clarity application network; or
+3. when the application host cannot join the inference host's private network, a narrowly-scoped HTTPS gateway in front of localhost-bound Ollama, protected by a server-side bearer token.
 
-`OLLAMA_BASE_URL` is read from the server environment only. The browser cannot choose or override the provider URL or model.
+For shape 3, the repository includes `ops/ollama/Caddyfile.example`. It exposes only `POST /api/chat`, validates `Authorization: Bearer <OLLAMA_AUTH_TOKEN>`, strips that credential before proxying, and keeps `127.0.0.1:11434` as the upstream.
+
+`OLLAMA_BASE_URL` and `OLLAMA_AUTH_TOKEN` are read from the server environment only. The browser cannot choose or override the provider URL, token, or model.
 
 Do not put credentials in the URL. The application accepts only `http:` or `https:` Ollama base URLs and falls back to localhost for malformed, unsupported, or credential-bearing URLs.
+
+### Production remote-endpoint guard
+
+For production only:
+
+- localhost/private IPv4/IPv6 endpoints may use HTTP because traffic remains on a local/private route;
+- every other endpoint must use HTTPS;
+- every other endpoint must also configure `OLLAMA_AUTH_TOKEN`;
+- a configuration that violates this guard is treated as unavailable and the app stays in Evidence mode.
+
+This guard is not a substitute for the VPS firewall. Port `11434` must still remain closed externally.
 
 ## Data boundary
 
@@ -71,18 +88,25 @@ Generation temperature is set to `0` to reduce output variability for evidence-g
 
 Before declaring AI live in an environment:
 
-1. Confirm the Ollama service is reachable from the Node application but not from the public internet.
-2. Confirm `qwen3.5:4b` is pulled and can answer a structured chat request.
-3. Confirm `qwen3.5:9b` is pulled and can answer a structured chat request.
-4. Open `/intelligence` with representative Jira evidence.
-5. Run Flow or Risk and confirm the answer displays `qwen3.5:4b` in AI mode.
-6. Run Executive or Forecast and confirm the answer displays `qwen3.5:9b` in AI mode.
-7. Stop or block Ollama temporarily and confirm the same workflow falls back to Evidence mode without breaking the page.
-8. Re-run the AI benchmark on the actual inference host. Do not reuse the historical Qwen2.5 14B benchmark as capacity proof for the Qwen3.5 4b/9b runtime.
+1. Confirm the Ollama service is reachable from the Node application but the raw `11434` listener is not reachable from the public internet.
+2. When a protected HTTPS gateway is used, confirm a request without the bearer token cannot reach Ollama.
+3. Confirm `qwen3.5:4b` is pulled and can answer a structured chat request.
+4. Confirm `qwen3.5:9b` is pulled and can answer a structured chat request.
+5. Open `/intelligence` with representative Jira evidence.
+6. Run Flow or Risk and confirm the answer displays `qwen3.5:4b` in AI mode.
+7. Run Executive or Forecast and confirm the answer displays `qwen3.5:9b` in AI mode.
+8. Stop or block Ollama temporarily and confirm the same workflow falls back to Evidence mode without breaking the page.
+9. Re-run the AI benchmark on the actual inference host. Do not reuse the historical Qwen2.5 14B benchmark as capacity proof for the Qwen3.5 4b/9b runtime.
 
-## Hostinger note
+## Hostinger deployment
 
-The repository can configure and call a private Ollama runtime, but the currently available Hostinger integration for this project does not expose the existing hPanel managed-Node runtime, package installation, private service networking, or environment-variable state. Therefore repository CI cannot prove that Ollama is installed/reachable on production Hostinger infrastructure.
+The current Delivery Clarity production application can remain on Hostinger Managed Node/Web Apps hosting, while Ollama runs on a separate Hostinger VPS. The operational runbook is:
+
+`ops/ollama/README.md`
+
+That runbook covers the VPS capacity baseline, Hostinger Ollama template, localhost verification, model pulls, protected HTTPS gateway, production environment variables, and end-to-end validation.
+
+The currently connected Hostinger ChatGPT integration does not expose VPS purchase/provisioning, hPanel environment variables, SSH, firewall rules, or the existing Managed Node runtime. Repository work therefore prepares and validates the application/runtime contract, but cannot itself create the VPS or insert the production secrets into hPanel.
 
 Keep the application in Evidence mode until the runtime is provisioned and the verification steps above pass.
 

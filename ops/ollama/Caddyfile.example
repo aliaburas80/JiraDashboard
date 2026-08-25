@@ -1,0 +1,27 @@
+# Delivery Clarity — protected Ollama gateway
+#
+# Purpose: expose ONLY POST /api/chat over HTTPS while keeping the raw Ollama
+# listener on 127.0.0.1:11434. Caddy substitutes {$OLLAMA_PUBLIC_HOST} and
+# {$OLLAMA_AUTH_TOKEN} from its process environment before parsing.
+#
+# Example environment:
+#   OLLAMA_PUBLIC_HOST=ai.deliveryclarity.app
+#   OLLAMA_AUTH_TOKEN=<long-random-secret>
+
+{$OLLAMA_PUBLIC_HOST} {
+    @chat {
+        method POST
+        path /api/chat
+        header Authorization "Bearer {$OLLAMA_AUTH_TOKEN}"
+    }
+
+    handle @chat {
+        reverse_proxy 127.0.0.1:11434 {
+            # The gateway validates this secret. Ollama itself does not need it.
+            header_up -Authorization
+        }
+    }
+
+    # Hide every other Ollama endpoint from the public gateway.
+    respond "Not found" 404
+}
