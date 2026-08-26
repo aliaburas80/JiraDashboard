@@ -38,6 +38,30 @@ function isMigratedLegacyAdminApi(pathname: string): boolean {
   return MIGRATED_LEGACY_ADMIN_API.some(p => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+// Preserve the exact operation selected in the user-app Admin menu when
+// crossing into the separate Admin runtime. The Admin app still performs its
+// own password + MFA authentication; this redirect never forwards or trusts
+// the user application's dc_session cookie.
+function adminAppDestination(req: NextRequest, pathname: string): URL | null {
+  const configured = process.env.ADMIN_APP_URL?.trim();
+  if (!configured) return null;
+
+  try {
+    const base = new URL(configured.endsWith('/') ? configured : `${configured}/`);
+    const isLocal = ['localhost', '127.0.0.1', '::1'].includes(base.hostname);
+    if (process.env.NODE_ENV === 'production' && !isLocal && base.protocol !== 'https:') return null;
+
+    const relativePath = pathname === '/admin'
+      ? ''
+      : pathname.replace(/^\/admin\/?/, '');
+    const destination = new URL(relativePath, base);
+    destination.search = req.nextUrl.search;
+    return destination;
+  } catch {
+    return null;
+  }
+}
+
 // SEC (2026-07-18, docs/product-audit/10-technical-cleanup.md Part 1 finding
 // 1): defense-in-depth backstop for /api/*. Until now every one of the ~73
 // API route handlers was solely, independently responsible for its own auth
@@ -145,6 +169,14 @@ export async function proxy(req: NextRequest) {
 
   if (isAdminOnly && session.role !== 'admin') {
     return NextResponse.redirect(new URL('/dashboard', req.url));
+  }
+
+  // When the dedicated Admin origin is configured, cross the runtime boundary
+  // here so /admin/users -> /users, /admin/settings -> /settings, etc. The
+  // separate Admin app will then demand its own dc_admin_session + MFA.
+  if (isAdminOnly) {
+    const destination = adminAppDestination(req, pathname);
+    if (destination) return NextResponse.redirect(destination);
   }
 
   if (!canAccessRoute(session.role, pathname)) {
