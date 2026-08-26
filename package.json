@@ -27,7 +27,7 @@
     "start": "node scripts/start-production.mjs",
     "admin:dev": "next dev admin-app -p 3001",
     "admin:build": "next build admin-app --webpack",
-    "admin:start": "next start admin-app -p 3001",
+    "admin:start": "node scripts/start-admin-production.mjs",
     "admin:typecheck": "tsc --noEmit -p admin-app/tsconfig.json",
     "owner:admin:bootstrap": "node scripts/bootstrap-owner-admin.mjs",
     "owner:admin:reset-mfa": "node scripts/bootstrap-owner-admin.mjs --reset-mfa",
