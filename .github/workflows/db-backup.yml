@@ -37,11 +37,11 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Dump database and upload to S3
+      - name: Dump, validate, and upload database backup
         env:
-          # ubuntu-latest ships pg_dump and the aws CLI preinstalled — no new
-          # runtime dependency (this repo's e2e.yml already relies on the
-          # same runner having pg_dump for its ephemeral postgres:16 service).
+          # ubuntu-latest ships PostgreSQL client tools and the aws CLI. The
+          # direct/unpooled URL is required because pg_dump needs a normal
+          # session rather than transaction pooling.
           DATABASE_URL: ${{ secrets.NEON_DIRECT_DATABASE_URL }}
           AWS_ACCESS_KEY_ID: ${{ secrets.DB_BACKUP_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.DB_BACKUP_AWS_SECRET_ACCESS_KEY }}
@@ -50,21 +50,63 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ -z "${DATABASE_URL:-}" ] || [ -z "${S3_BUCKET:-}" ]; then
-            echo "::error::Required secrets are not set — see product/DATABASE_BACKUP_RESTORE.md §2.3 for setup."
+          missing=0
+          for name in DATABASE_URL AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_DEFAULT_REGION S3_BUCKET; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::$name is not configured — see product/DATABASE_BACKUP_RESTORE.md §2.3."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
             exit 1
           fi
 
-          DUMP_FILE="/tmp/delivery-clarity-$(date -u +%Y%m%dT%H%M%SZ).dump"
+          TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+          DUMP_FILE="/tmp/delivery-clarity-${TIMESTAMP}.dump"
+          CHECKSUM_FILE="${DUMP_FILE}.sha256"
+          S3_KEY="db-backups/$(basename "$DUMP_FILE")"
+          S3_CHECKSUM_KEY="${S3_KEY}.sha256"
 
-          # --dbname carries the connection string; GitHub Actions automatically
-          # redacts any exact-match secret value from all logged output, so the
-          # connection string itself never appears in the run log.
+          cleanup() {
+            rm -f "$DUMP_FILE" "$CHECKSUM_FILE"
+          }
+          trap cleanup EXIT
+
+          # Create a custom-format dump without ownership/privilege metadata so
+          # it can be restored safely into an isolated scratch target.
           pg_dump --format=custom --no-owner --no-privileges \
             --dbname="$DATABASE_URL" \
             -f "$DUMP_FILE"
 
-          aws s3 cp "$DUMP_FILE" "s3://${S3_BUCKET}/db-backups/$(basename "$DUMP_FILE")" \
-            --sse AES256
+          # A zero-byte/corrupt custom-format file must never be uploaded as a
+          # successful backup. pg_restore --list parses the archive catalogue
+          # without writing anything to a database.
+          test -s "$DUMP_FILE"
+          pg_restore --list "$DUMP_FILE" >/dev/null
 
-          rm -f "$DUMP_FILE"
+          # Persist an integrity checksum beside the encrypted dump. The
+          # checksum contains no database content or credentials.
+          (
+            cd /tmp
+            sha256sum "$(basename "$DUMP_FILE")" > "$(basename "$CHECKSUM_FILE")"
+          )
+
+          aws s3 cp "$DUMP_FILE" "s3://${S3_BUCKET}/${S3_KEY}" --sse AES256
+          aws s3 cp "$CHECKSUM_FILE" "s3://${S3_BUCKET}/${S3_CHECKSUM_KEY}" --sse AES256
+
+          # Verify the object exists after upload and that S3 reports encryption
+          # at rest. This turns an upload command returning zero into an explicit
+          # end-to-end storage assertion before the workflow is marked green.
+          ENCRYPTION="$(aws s3api head-object \
+            --bucket "$S3_BUCKET" \
+            --key "$S3_KEY" \
+            --query 'ServerSideEncryption' \
+            --output text)"
+
+          if [ "$ENCRYPTION" != "AES256" ]; then
+            echo "::error::Backup object exists but expected AES256 encryption; got '${ENCRYPTION}'."
+            exit 1
+          fi
+
+          echo "Backup validated and stored: s3://${S3_BUCKET}/${S3_KEY}"
+          echo "Checksum stored: s3://${S3_BUCKET}/${S3_CHECKSUM_KEY}"
