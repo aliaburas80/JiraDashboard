@@ -68,13 +68,23 @@ const canonicalizeHeader = (key: string): string => {
 };
 
 const normalizeRow = (row: Record<string, unknown>): Record<string, unknown> => {
-  return Object.keys(row).reduce<Record<string, unknown>>((acc, key) => {
+  const normalized = Object.keys(row).reduce<Record<string, unknown>>((acc, key) => {
     const normalizedKey = canonicalizeHeader(key);
     if (acc[normalizedKey] === undefined || acc[normalizedKey] === '') {
       acc[normalizedKey] = row[key];
     }
     return acc;
   }, {});
+
+  // Jira exports frequently express blocked work through the workflow status
+  // even when a separate custom "Blocked Flag" field is absent or false.
+  // Treat the canonical Blocked status as authoritative so downstream risk,
+  // flow, and Intelligence metrics cannot report a blocked item as unblocked.
+  if (String(normalized['Status'] ?? '').trim().toLowerCase() === 'blocked') {
+    normalized['Blocked Flag'] = true;
+  }
+
+  return normalized;
 };
 
 // Fields that significantly affect dashboard quality
