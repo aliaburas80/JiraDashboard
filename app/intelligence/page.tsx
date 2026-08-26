@@ -26,6 +26,17 @@ const SEVERITY_LABEL: Record<IntelligenceSeverity, string> = {
   critical: 'Act now',
 };
 
+const FLEXIBLE_QUESTION_EXAMPLES = [
+  'How many active issues do we have?',
+  'What is our average cycle time?',
+  'Who has the highest workload?',
+  'What is the oldest risk item?',
+  'What are the biggest delivery risks?',
+  'When are we expected to finish?',
+  'What does the analysis say about sprint groups?',
+  'What does the data say about completed story points?',
+];
+
 export default function IntelligencePage() {
   const router = useRouter();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -114,7 +125,7 @@ export default function IntelligencePage() {
         id="tour-header-intelligence"
         title="Delivery Intelligence"
         badge="AI + Evidence"
-        subtitle="Interactive decision support grounded in your current Jira delivery data"
+        subtitle="Ask any question about your analyzed Jira delivery data — the assistant answers from the evidence it has"
       />
 
       <main className={styles.pageContent}>
@@ -256,8 +267,26 @@ export default function IntelligencePage() {
               ))}
             </div>
 
+            <details className={styles.answerCard}>
+              <summary className={styles.textLink}>Explore what else you can ask</summary>
+              <p className={styles.answerSummary}>
+                You are not limited to the suggested prompts. Ask naturally about metrics, blockers, risks, people,
+                epics, forecast, flow, defects, data quality, or insights found in the analysis.
+              </p>
+              <div className={styles.suggestionList}>
+                {FLEXIBLE_QUESTION_EXAMPLES.map(example => (
+                  <button key={example} type="button" onClick={() => void askAgent(example)} disabled={asking}>
+                    {example}
+                  </button>
+                ))}
+              </div>
+            </details>
+
             <form className={styles.askForm} onSubmit={submit}>
-              <label htmlFor="intelligence-question">Ask about this delivery snapshot</label>
+              <label htmlFor="intelligence-question">Ask anything about your analyzed delivery data</label>
+              <p className={styles.answerNote}>
+                Use natural language. AI answers from the current analysis and tells you when the evidence is insufficient.
+              </p>
               <div className={styles.askRow}>
                 <input
                   id="intelligence-question"
