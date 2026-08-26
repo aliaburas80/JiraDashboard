@@ -115,11 +115,11 @@ export async function saveToCloud(config: AppConfig): Promise<void> {
 function buildFromEnv(): AppConfig {
   return {
     smtp: {
-      host: process.env.SMTP_HOST ?? '',
+      host: process.env.SMTP_HOST ?? 'smtp.hostinger.com',
       port: parseInt(process.env.SMTP_PORT ?? '587', 10),
-      user: process.env.SMTP_USER ?? '',
+      user: process.env.SMTP_USER ?? 'noreply@deliveryclarity.app',
       pass: process.env.SMTP_PASS ?? '',
-      from: process.env.SMTP_FROM ?? 'JiraDashboard <noreply@deliveryclarity.local>',
+      from: process.env.SMTP_FROM ?? 'Delivery Clarity <noreply@deliveryclarity.app>',
     },
     jira: {
       apiToken: process.env.GATEWAY_JIRA_API_TOKEN ?? '',
@@ -133,7 +133,7 @@ function buildFromEnv(): AppConfig {
 // Priority chain for SMTP config:
 //   1. Database SmtpSettings table (encrypted, set via Admin UI)
 //   2. Cloud S3/Azure/GCP config (legacy encrypted blob)
-//   3. SMTP_* environment variables (local dev / Render dashboard fallback)
+//   3. SMTP_* environment variables, then Hostinger defaults (password stays empty)
 async function readSavedAppUrl(userId?: string): Promise<string> {
   try {
     const { readScopedSetting, GLOBAL_SETTINGS_OWNER } = await import('@/services/settings/scopedAppSettings.service');
@@ -193,7 +193,9 @@ export async function getAppConfig(userId?: string): Promise<AppConfig> {
     return cloud;
   }
 
-  // 3. Fall back to environment variables.
+  // 3. Fall back to environment variables / safe Hostinger defaults.
+  // The password is intentionally never hard-coded and must come from a secret
+  // env var or be saved through Admin Settings → App Config.
   const envConfig = buildFromEnv();
   const config = { ...envConfig, appUrl: savedAppUrl || envConfig.appUrl };
   if (!userId) _cached = config;
