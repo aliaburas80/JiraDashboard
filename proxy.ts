@@ -51,6 +51,11 @@ function adminAppDestination(req: NextRequest, pathname: string): URL | null {
     const isLocal = ['localhost', '127.0.0.1', '::1'].includes(base.hostname);
     if (process.env.NODE_ENV === 'production' && !isLocal && base.protocol !== 'https:') return null;
 
+    // The Admin runtime must be a different origin. Pointing ADMIN_APP_URL at
+    // the user app would turn /admin/settings into /settings on the main site,
+    // producing a 404 and weakening the intended runtime boundary.
+    if (base.origin === req.nextUrl.origin) return null;
+
     const relativePath = pathname === '/admin'
       ? ''
       : pathname.replace(/^\/admin\/?/, '');
@@ -177,6 +182,15 @@ export async function proxy(req: NextRequest) {
   if (isAdminOnly) {
     const destination = adminAppDestination(req, pathname);
     if (destination) return NextResponse.redirect(destination);
+
+    // Missing, invalid, or same-origin Admin configuration must fail closed
+    // instead of letting a retired embedded Admin route render or turning it
+    // into a broken main-site path such as /settings.
+    const unavailable = req.nextUrl.clone();
+    unavailable.pathname = '/login';
+    unavailable.search = '';
+    unavailable.searchParams.set('adminUnavailable', '1');
+    return NextResponse.redirect(unavailable);
   }
 
   if (!canAccessRoute(session.role, pathname)) {
