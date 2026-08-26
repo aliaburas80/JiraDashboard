@@ -59,20 +59,19 @@ test.describe('add-member request UI stays usable at mobile width', () => {
 
     if (CONFIGURED_ADMIN_APP_URL) {
       // EP-027 boots the real separate Admin runtime and configures the user
-      // app with ADMIN_APP_URL. The old embedded route must cross origins into
-      // that runtime, where the user-app dc_session is insufficient and the
-      // Admin middleware sends the browser to its own login surface.
+      // app with ADMIN_APP_URL. The selected operation is preserved across
+      // origins, then the Admin middleware requires its own Admin session.
       const expectedOrigin = new URL(CONFIGURED_ADMIN_APP_URL).origin;
       await page.waitForURL(url => (
         url.origin === expectedOrigin &&
         url.pathname === '/login' &&
-        url.searchParams.get('redirect') === '/'
+        url.searchParams.get('redirect') === '/settings'
       ), { timeout: 30_000 });
 
       const currentUrl = new URL(page.url());
       expect(currentUrl.origin).toBe(expectedOrigin);
       expect(currentUrl.pathname).toBe('/login');
-      expect(currentUrl.searchParams.get('redirect')).toBe('/');
+      expect(currentUrl.searchParams.get('redirect')).toBe('/settings');
       expect(currentUrl.searchParams.has('adminUnavailable')).toBe(false);
       await expect(page.getByRole('heading', { name: 'Admin Console' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();

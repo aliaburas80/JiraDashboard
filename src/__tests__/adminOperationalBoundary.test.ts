@@ -70,6 +70,17 @@ describe('EP-024 separate Admin operational boundary', () => {
     expect(legacyLayout).not.toContain('DashboardTopbar');
   });
 
+  test('user-app Admin cutover preserves the selected Admin operation and rejects same-origin misconfiguration', () => {
+    const proxy = source('proxy.ts');
+    expect(proxy).toContain('adminAppDestination');
+    expect(proxy).toContain('ADMIN_APP_URL');
+    expect(proxy).toContain("pathname.replace(/^\\/admin\\/?/, '')");
+    expect(proxy).toContain('destination.search = req.nextUrl.search');
+    expect(proxy).toContain('base.origin === req.nextUrl.origin');
+    expect(proxy).toContain("unavailable.searchParams.set('adminUnavailable', '1')");
+    expect(proxy).toContain('NextResponse.redirect(destination)');
+  });
+
   test('migrated user-app Admin APIs cannot bypass separate Admin MFA', () => {
     const proxy = source('proxy.ts');
     const migrated = [

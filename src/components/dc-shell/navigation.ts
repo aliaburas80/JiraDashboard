@@ -20,6 +20,10 @@ export type DCShellNavItem = {
   // sidebar (AdminNavSidebar.tsx), while the topbar dropdown and global
   // search render the same group as one flat list and ignore this field.
   section?: string;
+  // Deployment-wide controls in the separate Admin runtime are Owner Admin
+  // only. Keep them out of regular-admin navigation instead of showing links
+  // that the Admin middleware will immediately reject.
+  superAdminOnly?: boolean;
 };
 
 export type DCShellNavGroup = {
@@ -119,26 +123,25 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
     ],
   },
   // ── Administration ────────────────────────────────────────────────────────
-  // Single source of truth for every admin-only destination — also drives
-  // AdminNavSidebar.tsx's sectioned rendering (grouped by `section` below,
-  // in array order) so the topbar dropdown, global search, and the admin
-  // sidebar can never drift into three independently-maintained lists again.
-  // Positioned last: configuration/admin destinations, not day-to-day content.
+  // Mirrors the routes that actually exist in the separate MFA-protected
+  // Admin runtime. Retired embedded-only destinations must not be exposed in
+  // the main application's Admin dropdown because the cutover strips /admin
+  // and routes directly into this list's destination.
   {
     id: 'administration',
     label: 'Administration',
     items: [
       // Activity
-      { id: 'admin-audit',       title: 'Audit Events',     desc: 'Admin action audit trail',    href: '/admin/audit',        status: 'neutral', icon: 'clipboard', section: 'Activity' },
-      { id: 'admin-logs',        title: 'Import Logs',      desc: 'All user import activity',    href: '/admin/logs',         status: 'neutral', icon: 'archive',   section: 'Activity' },
-      { id: 'admin-feedback',    title: 'User Feedback',    desc: 'Submitted feedback & reports', href: '/admin/feedback',    status: 'neutral', icon: 'email',     section: 'Activity' },
-      // Observability
-      { id: 'admin-syserrors',   title: 'System Errors',    desc: 'Logged application errors',   href: '/admin/system-errors', status: 'warning', icon: 'warning',   section: 'Observability' },
-      { id: 'admin-diagnostics', title: 'Diagnostics',      desc: 'System health & admin stats', href: '/admin/diagnostics',  status: 'info',    icon: 'statusInfo', section: 'Observability' },
-      { id: 'admin-security',    title: 'Security',         desc: 'Production security checks',  href: '/admin/security',     status: 'warning', icon: 'shield',    section: 'Observability' },
+      { id: 'admin-overview',    title: 'Admin Overview',   desc: 'Admin operations at a glance', href: '/admin',              status: 'info',    icon: 'dashboard', section: 'Activity' },
+      { id: 'admin-audit',       title: 'Audit Events',     desc: 'Admin action audit trail',     href: '/admin/audit',        status: 'neutral', icon: 'clipboard', section: 'Activity' },
+      { id: 'admin-feedback',    title: 'User Feedback',    desc: 'Submitted feedback & reports', href: '/admin/feedback',     status: 'neutral', icon: 'email',     section: 'Activity' },
+      // Observability — deployment-wide Owner Admin controls
+      { id: 'admin-syserrors',   title: 'System Errors',    desc: 'Logged application errors',    href: '/admin/system-errors', status: 'warning', icon: 'warning',   section: 'Observability', superAdminOnly: true },
+      { id: 'admin-diagnostics', title: 'Diagnostics',      desc: 'System health & admin stats',   href: '/admin/diagnostics',  status: 'info',    icon: 'statusInfo', section: 'Observability', superAdminOnly: true },
+      { id: 'admin-security',    title: 'Security',         desc: 'Production security checks',   href: '/admin/security',     status: 'warning', icon: 'shield',    section: 'Observability', superAdminOnly: true },
       // Configure
-      { id: 'admin-users',       title: 'User Management',  desc: 'Accounts & roles',            href: '/admin/users',        status: 'neutral', icon: 'people',    section: 'Configure' },
-      { id: 'admin-theme',       title: 'Branding',         desc: 'Logo, favicon & app name',    href: '/admin/theme',        status: 'neutral', icon: 'tag',       section: 'Configure' },
+      { id: 'admin-users',       title: 'User Management',  desc: 'Accounts & roles',              href: '/admin/users',        status: 'neutral', icon: 'people',    section: 'Configure' },
+      { id: 'admin-settings',    title: 'Settings',         desc: 'Application, SMTP & Jira config', href: '/admin/settings',   status: 'neutral', icon: 'tag',       section: 'Configure', superAdminOnly: true },
     ],
   },
 ];
@@ -152,12 +155,12 @@ export const DC_NAV_ITEMS = DC_NAV_GROUPS.flatMap(g => g.items);
 // nothing useful once canAccessRoute() blocked the destination page. A group
 // left with zero visible items after filtering is dropped entirely rather than
 // rendering an empty dropdown.
-// EP-025: the 'members' item is a narrow exception on top of the normal
-// role-based filtering above — it's gated by the protected super-admin flag
-// (isSuperAdmin), which is orthogonal to AppRole, rather than by role.
+// EP-025: 'members' and deployment-wide Admin operations are gated by the
+// protected isSuperAdmin flag, which is orthogonal to AppRole.
 export function getNavGroupsForRole(role: string | null | undefined, isSuperAdmin?: boolean): DCShellNavGroup[] {
   function isVisible(item: DCShellNavItem): boolean {
     if (item.id === 'members') return isSuperAdmin === true;
+    if (item.superAdminOnly && isSuperAdmin !== true) return false;
     return canAccessRoute(role, item.href);
   }
 

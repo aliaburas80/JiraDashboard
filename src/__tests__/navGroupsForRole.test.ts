@@ -91,23 +91,23 @@ test('TC-NAV-12: no two items anywhere in DC_NAV_GROUPS share an href — every 
   expect(new Set(hrefs).size).toBe(hrefs.length);
 });
 
-test('TC-NAV-13: admin sees every Administration destination exactly once, not duplicated across sections', () => {
-  const groups = getNavGroupsForRole('admin');
+test('TC-NAV-13: super-admin sees every Administration destination exactly once, not duplicated across sections', () => {
+  const groups = getNavGroupsForRole('admin', true);
   const adminItems = groups.find(g => g.id === 'administration')?.items ?? [];
   const ids = adminItems.map(i => i.id);
   expect(new Set(ids).size).toBe(ids.length);
   expect(adminItems.length).toBe(8);
 });
 
-test('TC-NAV-14: getAdminNavSections groups the Administration items into Activity / Observability / Configure with no cross-section duplicates', () => {
-  const sections = getAdminNavSections('admin');
+test('TC-NAV-14: getAdminNavSections groups all Owner Admin destinations into Activity / Observability / Configure with no cross-section duplicates', () => {
+  const sections = getAdminNavSections('admin', true);
   expect(sections.map(s => s.label)).toEqual(['Activity', 'Observability', 'Configure']);
 
   const allIds = sections.flatMap(s => s.items.map(i => i.id));
   expect(new Set(allIds).size).toBe(allIds.length);
 
   const configureIds = sections.find(s => s.label === 'Configure')?.items.map(i => i.id) ?? [];
-  expect(configureIds).toEqual(['admin-users', 'admin-theme']);
+  expect(configureIds).toEqual(['admin-users', 'admin-settings']);
 });
 
 test('TC-NAV-15: a non-admin role gets no admin sections at all', () => {
@@ -149,4 +149,32 @@ test('TC-NAV-19: Members lives in its own Directory group, Developer in its own 
   const developerToolsGroup = DC_NAV_GROUPS.find(g => g.id === 'developer-tools');
   expect(directoryGroup?.items.map(i => i.id)).toEqual(['members']);
   expect(developerToolsGroup?.items.map(i => i.id)).toEqual(['developer']);
+});
+
+test('TC-NAV-20: regular admin only sees organization-scoped Admin operations', () => {
+  const adminItems = getNavGroupsForRole('admin', false)
+    .find(g => g.id === 'administration')?.items.map(i => i.id) ?? [];
+  expect(adminItems).toEqual([
+    'admin-overview',
+    'admin-audit',
+    'admin-feedback',
+    'admin-users',
+  ]);
+});
+
+test('TC-NAV-21: every Admin menu destination exists in the separate Admin runtime', () => {
+  const adminGroup = DC_NAV_GROUPS.find(g => g.id === 'administration');
+  const runtimePaths = (adminGroup?.items ?? []).map(item => (
+    item.href === '/admin' ? '/' : item.href.replace(/^\/admin/, '')
+  ));
+  expect(runtimePaths).toEqual([
+    '/',
+    '/audit',
+    '/feedback',
+    '/system-errors',
+    '/diagnostics',
+    '/security',
+    '/users',
+    '/settings',
+  ]);
 });
