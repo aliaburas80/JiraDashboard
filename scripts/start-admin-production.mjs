@@ -6,6 +6,7 @@ import process from 'node:process';
 
 const require = createRequire(import.meta.url);
 const errors = [];
+const warnings = [];
 
 function required(name) {
   const value = process.env[name]?.trim() ?? '';
@@ -21,7 +22,15 @@ const userSessionSecret = process.env.SESSION_SECRET?.trim() ?? '';
 
 if (databaseUrl.startsWith('file:')) errors.push('DATABASE_URL must be PostgreSQL.');
 if (adminSessionSecret && adminSessionSecret.length < 32) errors.push('ADMIN_SESSION_SECRET must be at least 32 characters.');
-if (configEncryptionKey && configEncryptionKey.length < 32) errors.push('CONFIG_ENCRYPTION_KEY must be at least 32 characters.');
+// CONFIG_ENCRYPTION_KEY predates the separate Admin runtime and is also used to
+// decrypt already-persisted SMTP / user-storage credentials. Rejecting an
+// existing production key solely because it is shorter than 32 characters
+// would make the Admin app undeployable and tempt an unsafe, uncoordinated key
+// rotation that would strand those encrypted rows. The crypto helper derives a
+// 32-byte AES key via scrypt, so retain compatibility with existing keys while
+// warning operators to rotate through a coordinated re-encryption procedure.
+if (configEncryptionKey && configEncryptionKey.length < 16) errors.push('CONFIG_ENCRYPTION_KEY must be at least 16 characters.');
+else if (configEncryptionKey && configEncryptionKey.length < 32) warnings.push('CONFIG_ENCRYPTION_KEY is a legacy short key. Keep it only for compatibility, then rotate it through a coordinated re-encryption procedure.');
 if (userSessionSecret && adminSessionSecret === userSessionSecret) errors.push('ADMIN_SESSION_SECRET must differ from SESSION_SECRET.');
 
 if (adminAppUrl) {
@@ -35,6 +44,8 @@ if (adminAppUrl) {
     errors.push('ADMIN_APP_URL must be a valid absolute URL.');
   }
 }
+
+for (const warning of warnings) console.warn(JSON.stringify({ level: 'warn', event: 'admin_startup.env_warning', warning }));
 
 if (errors.length) {
   for (const error of errors) console.error(JSON.stringify({ level: 'error', event: 'admin_startup.env_invalid', error }));
