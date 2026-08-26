@@ -27,6 +27,7 @@ const DESKTOP_CHROME_ONLY_SPECS = [
   '**/performance-capacity.spec.ts',
   '**/admin-security-regression.spec.ts',
   '**/intelligence.spec.ts',
+  '**/topbar-layout.spec.ts',
 ];
 const NON_CHROME_IGNORES = [...MOBILE_ONLY_SPECS, ...DESKTOP_CHROME_ONLY_SPECS];
 
