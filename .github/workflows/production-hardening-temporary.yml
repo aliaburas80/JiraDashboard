@@ -1,0 +1,75 @@
+name: Production hardening temporary
+
+on:
+  push:
+    branches:
+      - chore/production-hardening-2026-08-28
+
+permissions:
+  contents: write
+
+jobs:
+  harden-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Migrate Sass import to module system
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('app/globals.scss')
+          text = path.read_text()
+          legacy = "@import '../src/styles/tokens';\n"
+          modern = "@use '../src/styles/tokens';"
+          if modern in text:
+              raise SystemExit('Sass token module is already migrated.')
+          if legacy not in text:
+              raise SystemExit('Expected legacy Sass token import was not found.')
+          text = text.replace(legacy, '', 1)
+          text = modern + '\n\n' + text
+          path.write_text(text)
+          PY
+
+      - name: Use Google Storage 7.22 compatibility release
+        run: npm install @google-cloud/storage@7.22.0 --save-exact
+
+      - name: Confirm deprecated node-domexception is gone
+        run: |
+          if npm ls node-domexception --all 2>/dev/null | grep -q 'node-domexception'; then
+            echo 'node-domexception is still present in the dependency tree.'
+            npm ls node-domexception --all || true
+            exit 1
+          fi
+          echo 'node-domexception is not installed.'
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: SCSS lint
+        run: npm run lint:css
+
+      - name: Unit tests
+        run: npm test -- --runInBand
+
+      - name: Production build
+        run: npm run build
+
+      - name: Commit validated changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/production-hardening-temporary.yml
+          git add app/globals.scss package.json package-lock.json
+          git commit -m 'chore: clean production build warnings'
+          git push origin HEAD:chore/production-hardening-2026-08-28
