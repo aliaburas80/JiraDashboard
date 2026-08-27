@@ -12,6 +12,13 @@ jobs:
   harden-and-validate:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      APP_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      SESSION_SECRET: ci-only-user-session-secret-0123456789abcdef
+      ADMIN_SESSION_SECRET: ci-only-admin-session-secret-fedcba9876543210
+      CONFIG_ENCRYPTION_KEY: ci-only-config-encryption-key-0123456789abcdef
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/delivery_clarity_ci
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,6 +30,12 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Verify production dependency audit
+        run: npm audit --omit=dev --audit-level=moderate
 
       - name: Migrate Sass import to module system
         run: |
@@ -41,18 +54,6 @@ jobs:
           path.write_text(text)
           PY
 
-      - name: Use Google Storage 7.22 compatibility release
-        run: npm install @google-cloud/storage@7.22.0 --save-exact
-
-      - name: Confirm deprecated node-domexception is gone
-        run: |
-          if npm ls node-domexception --all 2>/dev/null | grep -q 'node-domexception'; then
-            echo 'node-domexception is still present in the dependency tree.'
-            npm ls node-domexception --all || true
-            exit 1
-          fi
-          echo 'node-domexception is not installed.'
-
       - name: Typecheck
         run: npm run typecheck
 
@@ -65,11 +66,11 @@ jobs:
       - name: Production build
         run: npm run build
 
-      - name: Commit validated changes
+      - name: Commit validated Sass change
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git rm .github/workflows/production-hardening-temporary.yml
-          git add app/globals.scss package.json package-lock.json
-          git commit -m 'chore: clean production build warnings'
+          git add app/globals.scss
+          git commit -m 'chore: migrate Sass token import to module system'
           git push origin HEAD:chore/production-hardening-2026-08-28
