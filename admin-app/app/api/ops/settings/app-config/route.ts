@@ -7,7 +7,7 @@ import {
   saveAppUrlSetting,
   type AppConfig,
 } from '../../../../../../src/lib/app-config';
-import { describeSmtpErrorDetails, sendEmailWith } from '../../../../../../src/lib/email';
+import { buildAdminTestEmail, describeSmtpErrorDetails, sendEmailWith } from '../../../../../../src/lib/email';
 import { callExternal } from '../../../../../../src/server/gateway/externalGateway';
 import { findLatestOrganizationJiraConnection } from '../../../../../../src/server/tenancy/adminOperationalRepository';
 import { buildJiraAuthHeader, jiraMyselfPath } from '../../../../../../src/services/jira/auth';
@@ -162,11 +162,11 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const provider = usingResend ? 'Resend' : 'SMTP';
+    const template = buildAdminTestEmail(provider, stored.appUrl || 'https://deliveryclarity.app');
     const sent = await sendEmailWith(smtp, {
       to: guard.admin.email,
-      subject: 'Delivery Clarity — Admin email test',
-      text: 'This is a test email from the separate Delivery Clarity Admin console.',
-      html: '<p>This is a <strong>test email</strong> from the separate Delivery Clarity Admin console.</p>',
+      ...template,
     });
     return NextResponse.json({ ok: sent, provider: usingResend ? 'resend' : 'smtp' });
   } catch (error) {
