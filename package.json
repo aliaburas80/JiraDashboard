@@ -27,6 +27,7 @@
     "start": "node scripts/start-production.mjs",
     "admin:dev": "next dev admin-app -p 3001",
     "admin:build": "next build admin-app --webpack",
+    "admin:hostinger:build": "npm run admin:build && node scripts/prepare-admin-hostinger.mjs",
     "admin:start": "node scripts/start-admin-production.mjs",
     "admin:typecheck": "tsc --noEmit -p admin-app/tsconfig.json",
     "owner:admin:bootstrap": "node scripts/bootstrap-owner-admin.mjs",
