@@ -23,7 +23,8 @@
   },
   "scripts": {
     "dev": "node scripts/start-server.js dev",
-    "build": "prisma generate && next build --webpack",
+    "build": "node scripts/build-router.mjs",
+    "build:app": "prisma generate && next build --webpack",
     "start": "node scripts/start-production.mjs",
     "admin:dev": "next dev admin-app -p 3001",
     "admin:build": "next build admin-app --webpack",
