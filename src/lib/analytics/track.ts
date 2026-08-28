@@ -35,6 +35,36 @@ export interface AnalyticsEvent {
 
 export type AnalyticsTransport = (event: AnalyticsEvent) => void;
 
+const UUID_SEGMENT = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const LONG_NUMERIC_SEGMENT = /^\d{4,}$/;
+const OPAQUE_TOKEN_SEGMENT = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9_-]{16,}$/;
+const SENSITIVE_PARENT_SEGMENTS = new Set(['share', 'invite', 'verify', 'verify-email', 'reset-password']);
+
+/**
+ * Keep route-level analytics useful without persisting share tokens, UUIDs,
+ * numeric IDs or other opaque dynamic identifiers. Query strings/fragments
+ * are always discarded before the envelope is built.
+ */
+export function sanitizeAnalyticsPath(pathname: string): string {
+  const pathOnly = (pathname || '/').split(/[?#]/, 1)[0] || '/';
+  const normalized = pathOnly.startsWith('/') ? pathOnly : `/${pathOnly}`;
+  const segments = normalized.split('/');
+
+  const safe = segments.map((segment, index) => {
+    if (index === 0 || !segment) return segment;
+    const previous = segments[index - 1]?.toLowerCase() ?? '';
+    if (
+      SENSITIVE_PARENT_SEGMENTS.has(previous)
+      || UUID_SEGMENT.test(segment)
+      || LONG_NUMERIC_SEGMENT.test(segment)
+      || OPAQUE_TOKEN_SEGMENT.test(segment)
+    ) return ':id';
+    return segment.slice(0, 120);
+  });
+
+  return safe.join('/') || '/';
+}
+
 const devLogTransport: AnalyticsTransport = (event) => {
   if (process.env.NODE_ENV !== 'production') {
     console.debug('[analytics]', event);
@@ -49,10 +79,10 @@ export function configureAnalyticsTransport(next: AnalyticsTransport): void {
 }
 
 export interface TrackEventContext {
-  section?:     string;
-  component?:   string;
+  section?: string;
+  component?: string;
   resultStatus?: string;
-  durationMs?:  number;
+  durationMs?: number;
 }
 
 function buildEnvelope(
@@ -62,27 +92,27 @@ function buildEnvelope(
 ): AnalyticsEvent {
   const user = getCachedUser();
   const browser = getBrowserContext();
-  const device  = getDeviceContext();
+  const device = getDeviceContext();
 
   return {
-    event_id:       crypto.randomUUID(),
+    event_id: crypto.randomUUID(),
     schema_version: 1,
-    event_name:     name,
-    occurred_at:    new Date().toISOString(),
-    user_id:        user?.userId ?? null,
-    anonymous_id:   getAnonymousId(),
-    session_id:     getSessionId(),
-    page:           typeof window !== 'undefined' ? window.location.pathname : '',
-    section:        context.section ?? null,
-    component:      context.component ?? null,
-    app_version:    packageJson.version,
-    role:           user?.role ?? null,
+    event_name: name,
+    occurred_at: new Date().toISOString(),
+    user_id: user?.userId ?? null,
+    anonymous_id: getAnonymousId(),
+    session_id: getSessionId(),
+    page: typeof window !== 'undefined' ? sanitizeAnalyticsPath(window.location.pathname) : '',
+    section: context.section ?? null,
+    component: context.component ?? null,
+    app_version: packageJson.version,
+    role: user?.role ?? null,
     browser_family: browser.browserFamily,
-    browser_major:  browser.browserMajor,
-    os_family:      device.osFamily,
+    browser_major: browser.browserMajor,
+    os_family: device.osFamily,
     device_category: device.deviceCategory,
-    result_status:  context.resultStatus ?? null,
-    duration_ms:    context.durationMs ?? null,
+    result_status: context.resultStatus ?? null,
+    duration_ms: context.durationMs ?? null,
     properties,
   };
 }
