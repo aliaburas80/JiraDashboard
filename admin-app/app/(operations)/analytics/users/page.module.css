@@ -1,0 +1,113 @@
+.flowTable {
+  width: 100%;
+  min-width: 760px;
+  table-layout: fixed;
+}
+
+.flowTable th:nth-child(1) { width: 21%; }
+.flowTable th:nth-child(2) { width: 14%; }
+.flowTable th:nth-child(3) { width: 9%; }
+.flowTable th:nth-child(4) { width: 11%; }
+.flowTable th:nth-child(5) { width: 9%; }
+.flowTable th:nth-child(6) { width: 9%; }
+.flowTable th:nth-child(7) { width: 9%; }
+.flowTable th:nth-child(8) { width: 18%; }
+
+.summaryRow > td {
+  vertical-align: top;
+}
+
+.journeyRow > td,
+.journeyRow > td:last-child {
+  width: auto !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+  vertical-align: top;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.journeyDetails {
+  width: 100%;
+  min-width: 0;
+}
+
+.journeyDetails > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 11px 14px;
+  cursor: pointer;
+  color: #111827;
+  background: #fff;
+  font-weight: 800;
+}
+
+.journeyDetails > summary small {
+  margin: 0;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.journeyDetails[open] > summary {
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.journeyContent {
+  width: 100%;
+  min-width: 0;
+  padding: 14px;
+  background: #f8fafc;
+}
+
+.journeyContent :global(.analytics-session-list),
+.journeyContent :global(.analytics-session-block),
+.journeyContent :global(.ops-table-wrap),
+.journeyContent :global(.analytics-journey-table) {
+  width: 100%;
+  max-width: none;
+}
+
+.journeyContent :global(.analytics-session-list) {
+  margin-top: 0;
+}
+
+.journeyContent :global(.ops-table-wrap) {
+  overflow-x: visible;
+}
+
+.journeyContent :global(.analytics-journey-table) {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.journeyContent :global(.analytics-journey-table th:nth-child(1)) { width: 20%; }
+.journeyContent :global(.analytics-journey-table th:nth-child(2)) { width: 16%; }
+.journeyContent :global(.analytics-journey-table th:nth-child(3)) { width: 8%; }
+.journeyContent :global(.analytics-journey-table th:nth-child(4)) { width: 41%; }
+.journeyContent :global(.analytics-journey-table th:nth-child(5)) { width: 15%; }
+
+@media (max-width: 900px) {
+  .flowTable {
+    min-width: 760px;
+  }
+
+  .journeyContent :global(.ops-table-wrap) {
+    overflow-x: auto;
+  }
+
+  .journeyContent :global(.analytics-journey-table) {
+    min-width: 760px;
+  }
+
+  .journeyDetails > summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+}
