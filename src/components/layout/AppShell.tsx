@@ -16,7 +16,6 @@ import styles from './AppShell.module.scss';
 // Single source of truth: DC_NAV_GROUPS from navigation.ts
 // Status dot colors resolved in SCSS via data-status — see CLAUDE.md §28.
 
-// Label abbreviations matching DashboardTopbar GROUP_LABEL_OVERRIDE
 const GROUP_LABEL_OVERRIDE: Record<string, string> = {
   administration: 'Admin',
 };
@@ -30,10 +29,6 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
   const [openGroup, setOpenGroup]   = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [brandName, setBrandName]   = useState('Delivery Clarity');
-  // Seeded synchronously from the module cache so the nav renders already-filtered
-  // on mount instead of flashing unfiltered/default — AppShell is imported directly
-  // by ~28 individual pages rather than one shared layout, so it fully remounts on
-  // every route change.
   const [role, setRole] = useState<string | null>(getCachedRole);
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(getCachedIsSuperAdmin);
   const navRef = useRef<HTMLElement>(null);
@@ -45,7 +40,6 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
     if (b.appName) setBrandName(b.appName);
   }, []);
 
-  // Nav items/groups this role can't open are filtered out below (getNavGroupsForRole).
   useEffect(() => {
     fetchCurrentUser().then(user => {
       setRole(user?.role ?? null);
@@ -83,10 +77,13 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
       <a href="#main-content" className={styles.skipLink}>Skip to main content</a>
       <header ref={navRef} className={styles.header}>
         <div className={styles.headerInner}>
-
-          {/* ── Left: logo ── */}
           <div className={styles.logoArea}>
-            <Link href="/" className={styles.logoLink}>
+            <Link
+              href="/"
+              className={styles.logoLink}
+              data-analytics-id="nav-logo-home"
+              data-analytics-label="Open Home page"
+            >
               <div className={styles.logoIcon} aria-hidden="true">
                 <Image src="/logo/delivery-clarity-logo-icon.svg" alt="" width={28} height={28} />
               </div>
@@ -95,12 +92,10 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
             </Link>
           </div>
 
-          {/* ── Spacer ── */}
           <div className={styles.spacer} />
 
-          {/* ── CENTER NAV ── */}
           {showNav && (
-            <nav className={styles.desktopNav} aria-label="Primary navigation">
+            <nav className={styles.desktopNav} aria-label="Primary navigation" data-analytics-section="primary-navigation">
               {visibleGroups.map(group => {
                 const active = isGroupActive(group);
                 const open   = openGroup === group.id;
@@ -111,6 +106,8 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                       onClick={() => setOpenGroup(open ? null : group.id)}
                       aria-current={active ? 'page' : undefined}
                       className={clsx(styles.navGroupBtn, { [styles.active]: active })}
+                      data-analytics-id={`nav-group-${group.id}`}
+                      data-analytics-label={`${open ? 'Close' : 'Open'} ${group.label} menu`}
                     >
                       {group.label}
                       <svg
@@ -133,6 +130,8 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                               aria-current={itemActive ? 'page' : undefined}
                               className={clsx(styles.dropdownLink, { [styles.active]: itemActive })}
                               onClick={() => setOpenGroup(null)}
+                              data-analytics-id={`nav-item-${item.id}`}
+                              data-analytics-label={`Open ${item.title} page`}
                             >
                               <span className={styles.dropdownLinkText}>
                                 <span className={styles.dropdownTitle}>{item.title}</span>
@@ -154,14 +153,9 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
             </nav>
           )}
 
-          {/* ── RIGHT RAIL: upload + user ── */}
           <div className={styles.rightRail}>
-            {/* Global page/feature search — ⌘K / Ctrl+K. Matches the primary-nav
-                gate below (showNav): search over the page registry isn't useful
-                on the pages that hide the nav entirely (e.g. the pre-upload landing). */}
             {showNav && <GlobalSearch role={role} isSuperAdmin={isSuperAdmin} />}
 
-            {/* Mobile hamburger */}
             {showNav && (
               <button
                 type="button"
@@ -169,6 +163,8 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                 className={styles.mobileMenuBtn}
                 aria-label="Open navigation menu"
                 aria-expanded={mobileOpen}
+                data-analytics-id="mobile-navigation-menu"
+                data-analytics-label={`${mobileOpen ? 'Close' : 'Open'} navigation menu`}
               >
                 {mobileOpen ? (
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -187,6 +183,8 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                 href="/"
                 title="Upload a new file — resets current session"
                 className={styles.uploadBtn}
+                data-analytics-id="new-upload"
+                data-analytics-label="Start new upload"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0L8 8m4-4l4 4" />
@@ -200,9 +198,8 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
           </div>
         </div>
 
-        {/* Mobile nav panel */}
         {showNav && mobileOpen && (
-          <div className={styles.mobileNav}>
+          <div className={styles.mobileNav} data-analytics-section="mobile-navigation">
             {visibleGroups.map(group => (
               <div key={group.id}>
                 <p className={styles.mobileGroupLabel}>{group.label}</p>
@@ -216,6 +213,8 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
                         aria-current={itemActive ? 'page' : undefined}
                         className={clsx(styles.mobileLink, { [styles.active]: itemActive })}
                         onClick={() => setMobileOpen(false)}
+                        data-analytics-id={`mobile-nav-item-${item.id}`}
+                        data-analytics-label={`Open ${item.title} page`}
                       >
                         {item.title}
                       </Link>
@@ -233,7 +232,12 @@ export default function AppShell({ children, showNav }: { children: React.ReactN
       <footer className={styles.footer}>
         <p className={styles.footerInner}>
           © 2026 Ali Abu Ras · ali.aburas@deliveryclarity.app · Delivery Clarity v4.1 ·{' '}
-          <Link href="/promo" className={styles.footerLink}>
+          <Link
+            href="/promo"
+            className={styles.footerLink}
+            data-analytics-id="product-tour"
+            data-analytics-label="Open Product Tour page"
+          >
             Product tour
           </Link>
         </p>
