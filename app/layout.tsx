@@ -3,6 +3,7 @@ import './globals.scss';
 import { DataSourceProvider, CloudLoadingBanner } from '@/components/ui/DataSourceBadge';
 import { GlobalErrorHandler } from '@/components/ui/GlobalErrorHandler';
 import { AnalyticsQueueInit } from '@/components/ui/AnalyticsQueueInit';
+import { AnalyticsConsentPrompt } from '@/components/ui/AnalyticsConsentPrompt';
 import { FeedbackButton } from '@/components/feedback/FeedbackButton';
 import { EmailVerificationBanner } from '@/components/auth/EmailVerificationBanner';
 import ProductTour from '@/components/tour/ProductTour';
@@ -41,9 +42,6 @@ export const viewport: Viewport = {
   themeColor: '#2563eb',
 };
 
-// Static, server-defined JSON-LD (no user-supplied content) — safe to inline
-// via dangerouslySetInnerHTML per CLAUDE.md §38.3, since nothing here
-// originates from user input or an external source.
 const organizationJsonLd = {
   '@context':  'https://schema.org',
   '@type':     'Organization',
@@ -62,12 +60,6 @@ const websiteJsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // data-palette hardcoded to the real default (mediterranean, THEME-03) so
-    // the html[data-palette] token-remap block in globals.scss is active
-    // from first paint, not just after client-side initThemeCustom() runs
-    // on mount — avoids a flash of the old default look on every page load.
-    // initThemeCustom() re-asserts this on mount (idempotent) unless the
-    // user has a different saved preference.
     <html lang="en" data-palette="mediterranean">
       <body className="antialiased overflow-x-hidden">
         <script
@@ -83,15 +75,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <DataSourceProvider>
           <GlobalErrorHandler />
           <AnalyticsQueueInit />
+          <AnalyticsConsentPrompt />
           <CloudLoadingBanner />
           <EmailVerificationBanner />
           {children}
           <FeedbackButton />
-          {/* Mounted once at the root, alongside PageTourButton (the floating
-              trigger) — each route's tour is self-contained, so ProductTour
-              only needs to read the current pathname, not survive navigating
-              across it. See src/lib/tour.ts (PAGE_TOURS) for the per-route
-              registry both of these read from. */}
           <ProductTour />
           <PageTourButton />
         </DataSourceProvider>
