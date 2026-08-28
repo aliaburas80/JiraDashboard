@@ -22,6 +22,7 @@ import {
   stageForEvents,
   type JourneyOutcome,
 } from '../analyticsIntelligence';
+import styles from './page.module.css';
 
 type PageProps = { searchParams: Promise<{ days?: string | string[] }> };
 
@@ -45,6 +46,15 @@ type FlowSession = {
 
 function dayKey(value: Date): string {
   return value.toISOString().slice(0, 10);
+}
+
+function stableTone(value: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) % 12;
 }
 
 function canonicalVisitorKey(
@@ -271,99 +281,109 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
       ) : null}
 
       <div className="ops-table-wrap">
-        <table className="ops-table analytics-table analytics-user-flow-table">
+        <table className={`ops-table analytics-table analytics-user-flow-table ${styles.flowTable}`}>
           <thead>
-            <tr><th>User / visitor</th><th>Stage</th><th>Sessions</th><th>Page visits</th><th>Actions</th><th>Uploads</th><th>Friction</th><th>Last seen</th><th>Journey</th></tr>
+            <tr><th>User / visitor</th><th>Stage</th><th>Sessions</th><th>Page visits</th><th>Actions</th><th>Uploads</th><th>Friction</th><th>Last seen</th></tr>
           </thead>
           <tbody>
-            {rows.map((row, rowIndex) => (
-              <Fragment key={row.key}>
-                <tr className="analytics-user-summary-row">
-                  <td>
-                    <strong>{row.user?.name ?? 'Anonymous visitor'}</strong>
-                    <span>{row.user?.email ?? `${row.key.slice(0, 24)}…`}</span>
-                    <small>{row.user?.persona || `${row.activeDays} active day${row.activeDays === 1 ? '' : 's'}`}</small>
-                  </td>
-                  <td><strong>{row.stage}</strong><span>{row.tracked ? (row.returned ? 'Returning · tracked' : 'New / one-session · tracked') : row.trackingStatus}</span></td>
-                  <td>{row.sessions || '—'}</td>
-                  <td>
-                    <strong>{row.pageViews || '—'}</strong>
-                    {row.pageViews ? <small>{row.uniquePages} unique</small> : null}
-                  </td>
-                  <td>{row.meaningfulActions || '—'}</td>
-                  <td>{row.imports || '—'}</td>
-                  <td>{row.failures || '—'}</td>
-                  <td>{formatDateTime(row.lastSeen)}</td>
-                  <td>
-                    {row.tracked ? (
-                      <details className="analytics-journey-details">
-                        <summary aria-controls={`analytics-journey-${rowIndex}`}>View journey</summary>
-                        <small>First tracked {formatDateTime(row.firstSeen)}</small>
-                      </details>
-                    ) : <span className="muted">Behavior not tracked</span>}
-                  </td>
-                </tr>
-                {row.tracked ? (
-                  <tr id={`analytics-journey-${rowIndex}`} className="analytics-journey-expansion-row">
-                    <td colSpan={9}>
-                      <div className="analytics-journey-expansion">
-                        {row.sessionFlow.length ? (
-                          <div className="analytics-session-list">
-                            {row.sessionFlow.map((flow, sessionIndex) => (
-                              <section className="analytics-session-block" key={`${flow.key}-${flow.firstAt.toISOString()}-${sessionIndex}`}>
-                                <div className="analytics-session-heading">
-                                  <div>
-                                    <strong>Session {sessionIndex + 1}</strong>
-                                    <span>{formatDateTime(flow.firstAt)} → {formatDateTime(flow.lastAt)}</span>
-                                  </div>
-                                  <small>{flow.pageVisits.length} page visit{flow.pageVisits.length === 1 ? '' : 's'} · {formatDuration(flow.durationMs)}</small>
-                                </div>
-                                <div className="ops-table-wrap">
-                                  <table className="ops-table analytics-journey-table">
-                                    <thead>
-                                      <tr><th>Page</th><th>Arrived</th><th>Time</th><th>Meaningful actions</th><th>Outcome</th></tr>
-                                    </thead>
-                                    <tbody>
-                                      {flow.pageVisits.map((visit, visitIndex) => (
-                                        <tr key={`${visit.route}-${visit.firstAt.toISOString()}-${visitIndex}`}>
-                                          <td>
-                                            <strong>{pageDisplayName(visit.route)}</strong>
-                                            <code>{visit.route}</code>
-                                          </td>
-                                          <td>{formatDateTime(visit.firstAt)}</td>
-                                          <td>{formatDuration(visit.durationMs)}</td>
-                                          <td>
-                                            {visit.actions.length ? (
-                                              <ul className="analytics-action-list">
-                                                {visit.actions.map((event, actionIndex) => (
-                                                  <li key={`${event.occurredAt.toISOString()}-${event.eventName}-${actionIndex}`}>
-                                                    <span>{formatDateTime(event.occurredAt)}</span>
-                                                    <strong>{eventLabel(event)}</strong>
-                                                    {isFailureEvent(event) ? <em>Friction</em> : null}
-                                                  </li>
-                                                ))}
-                                              </ul>
-                                            ) : <span className="muted">Viewed page; no meaningful action recorded.</span>}
-                                          </td>
-                                          <td>
-                                            <span className={`analytics-outcome analytics-outcome-${visit.outcome.kind}`}>{visit.outcome.label}</span>
-                                            {visit.failures.length ? <small>{visit.failures.length} friction event{visit.failures.length === 1 ? '' : 's'}</small> : null}
-                                          </td>
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              </section>
-                            ))}
-                          </div>
-                        ) : <p className="muted">No meaningful journey events yet.</p>}
+            {rows.map(row => {
+              const userTone = stableTone(row.key);
+              return (
+                <Fragment key={row.key}>
+                  <tr className={`${styles.summaryRow} ${styles.tone}`} data-tone={userTone}>
+                    <td>
+                      <div className={`${styles.userIdentity} ${styles.tone}`} data-tone={userTone}>
+                        <span className={styles.colorDot} aria-hidden="true" />
+                        <strong>{row.user?.name ?? 'Anonymous visitor'}</strong>
                       </div>
+                      <span>{row.user?.email ?? `${row.key.slice(0, 24)}…`}</span>
+                      <small>{row.user?.persona || `${row.activeDays} active day${row.activeDays === 1 ? '' : 's'}`}</small>
+                    </td>
+                    <td><strong>{row.stage}</strong><span>{row.tracked ? (row.returned ? 'Returning · tracked' : 'New / one-session · tracked') : row.trackingStatus}</span></td>
+                    <td>{row.sessions || '—'}</td>
+                    <td>
+                      <strong>{row.pageViews || '—'}</strong>
+                      {row.pageViews ? <small>{row.uniquePages} unique</small> : null}
+                    </td>
+                    <td>{row.meaningfulActions || '—'}</td>
+                    <td>{row.imports || '—'}</td>
+                    <td>{row.failures || '—'}</td>
+                    <td>{formatDateTime(row.lastSeen)}</td>
+                  </tr>
+                  <tr className={styles.journeyRow}>
+                    <td colSpan={8}>
+                      {row.tracked ? (
+                        <details className={styles.journeyDetails}>
+                          <summary>
+                            <span>View journey</span>
+                            <small>First tracked {formatDateTime(row.firstSeen)}</small>
+                          </summary>
+                          <div className={styles.journeyContent}>
+                            {row.sessionFlow.length ? (
+                              <div className="analytics-session-list">
+                                {row.sessionFlow.map((flow, sessionIndex) => (
+                                  <section className="analytics-session-block" key={`${flow.key}-${flow.firstAt.toISOString()}-${sessionIndex}`}>
+                                    <div className="analytics-session-heading">
+                                      <div>
+                                        <strong>Session {sessionIndex + 1}</strong>
+                                        <span>{formatDateTime(flow.firstAt)} → {formatDateTime(flow.lastAt)}</span>
+                                      </div>
+                                      <small>{flow.pageVisits.length} page visit{flow.pageVisits.length === 1 ? '' : 's'} · {formatDuration(flow.durationMs)}</small>
+                                    </div>
+                                    <div className="ops-table-wrap">
+                                      <table className="ops-table analytics-journey-table">
+                                        <thead>
+                                          <tr><th>Page</th><th>Arrived</th><th>Time</th><th>Meaningful actions</th><th>Outcome</th></tr>
+                                        </thead>
+                                        <tbody>
+                                          {flow.pageVisits.map((visit, visitIndex) => (
+                                            <tr key={`${visit.route}-${visit.firstAt.toISOString()}-${visitIndex}`}>
+                                              <td>
+                                                <span className={`${styles.pageIdentity} ${styles.tone}`} data-tone={stableTone(visit.route)}>
+                                                  <span className={styles.colorDot} aria-hidden="true" />
+                                                  <strong>{pageDisplayName(visit.route)}</strong>
+                                                </span>
+                                                <code>{visit.route}</code>
+                                              </td>
+                                              <td>{formatDateTime(visit.firstAt)}</td>
+                                              <td>{formatDuration(visit.durationMs)}</td>
+                                              <td>
+                                                {visit.actions.length ? (
+                                                  <ul className="analytics-action-list">
+                                                    {visit.actions.map((event, actionIndex) => {
+                                                      const label = eventLabel(event);
+                                                      return (
+                                                        <li key={`${event.occurredAt.toISOString()}-${event.eventName}-${actionIndex}`}>
+                                                          <span>{formatDateTime(event.occurredAt)}</span>
+                                                          <strong className={`${styles.actionIdentity} ${styles.tone}`} data-tone={stableTone(`${event.eventName}:${label}`)}>{label}</strong>
+                                                          {isFailureEvent(event) ? <em>Friction</em> : null}
+                                                        </li>
+                                                      );
+                                                    })}
+                                                  </ul>
+                                                ) : <span className="muted">Viewed page; no meaningful action recorded.</span>}
+                                              </td>
+                                              <td>
+                                                <span className={`analytics-outcome analytics-outcome-${visit.outcome.kind}`}>{visit.outcome.label}</span>
+                                                {visit.failures.length ? <small>{visit.failures.length} friction event{visit.failures.length === 1 ? '' : 's'}</small> : null}
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </section>
+                                ))}
+                              </div>
+                            ) : <p className="muted">No meaningful journey events yet.</p>}
+                          </div>
+                        </details>
+                      ) : <span className="muted">Behavior not tracked</span>}
                     </td>
                   </tr>
-                ) : null}
-              </Fragment>
-            ))}
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
