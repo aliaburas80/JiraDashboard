@@ -92,6 +92,8 @@ export function isFailureEvent(event: OwnerAnalyticsEvent): boolean {
     || event.eventName === 'client_error'
     || event.eventName === 'api_error'
     || event.eventName === 'dead_click_detected'
+    || event.eventName === 'rage_click_detected'
     || event.resultStatus === 'failed'
-    || event.resultStatus === 'error';
+    || event.resultStatus === 'error'
+    || event.resultStatus === 'friction';
 }
