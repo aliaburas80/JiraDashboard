@@ -59,6 +59,9 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
   const since = new Date(Date.now() - days * 24 * 60 * 60_000);
   const data = await getOwnerAnalyticsIntelligenceData(since);
 
+  const latestConsent = new Map<string, boolean>();
+  for (const consent of data.analyticsConsents) latestConsent.set(consent.userId, consent.granted);
+
   const anonymousOwner = new Map<string, string>();
   for (const event of data.events) {
     if (event.userId && event.anonymousId) anonymousOwner.set(event.anonymousId, event.userId);
@@ -77,7 +80,7 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
   const importsByUser = new Map<string, number>();
   for (const item of data.imports) importsByUser.set(item.userId, (importsByUser.get(item.userId) ?? 0) + 1);
 
-  const rows = [...grouped.entries()].map(([key, events]) => {
+  const trackedRows = [...grouped.entries()].map(([key, events]) => {
     const userId = key.startsWith('user:') ? key.slice(5) : null;
     const user = userId ? usersById.get(userId) : undefined;
     const sessions = new Set(events.map(event => event.sessionId).filter((value): value is string => Boolean(value)));
@@ -95,6 +98,8 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
       key,
       user,
       userId,
+      tracked: true,
+      trackingStatus: 'Behavior tracked',
       sessions: sessions.size,
       activeDays: activeDays.size,
       pageViews,
@@ -107,13 +112,54 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
       stage: stageForEvents(events),
       recentFlow,
     };
-  }).sort((a, b) => (b.lastSeen?.getTime() ?? 0) - (a.lastSeen?.getTime() ?? 0));
+  });
 
-  const registered = rows.filter(row => Boolean(row.user)).length;
-  const anonymous = rows.length - registered;
-  const returning = rows.filter(row => row.returned).length;
-  const activated = rows.filter(row => ['Upload', 'Analysis', 'Dashboard', 'Report'].includes(row.stage)).length;
-  const withFriction = rows.filter(row => row.failures > 0).length;
+  const trackedUserIds = new Set(
+    trackedRows.map(row => row.userId).filter((value): value is string => Boolean(value)),
+  );
+
+  const untrackedRows = data.users
+    .filter(user => !trackedUserIds.has(user.id))
+    .filter(user => user.createdAt >= since || (user.lastLoginAt !== null && user.lastLoginAt >= since) || (importsByUser.get(user.id) ?? 0) > 0)
+    .map(user => {
+      const imports = importsByUser.get(user.id) ?? 0;
+      const decision = latestConsent.get(user.id);
+      const trackingStatus = decision === true
+        ? 'Consent granted · awaiting events'
+        : decision === false
+          ? 'Analytics off'
+          : 'No analytics decision';
+      return {
+        key: `known:${user.id}`,
+        user,
+        userId: user.id,
+        tracked: false,
+        trackingStatus,
+        sessions: 0,
+        activeDays: 0,
+        pageViews: 0,
+        clicks: 0,
+        failures: 0,
+        firstSeen: null,
+        lastSeen: user.lastLoginAt ?? user.createdAt,
+        returned: false,
+        imports,
+        stage: imports > 0 ? 'Upload' : 'Registered',
+        recentFlow: [] as OwnerAnalyticsEvent[],
+      };
+    });
+
+  const rows = [...trackedRows, ...untrackedRows]
+    .sort((a, b) => (b.lastSeen?.getTime() ?? 0) - (a.lastSeen?.getTime() ?? 0));
+
+  const trackedRegistered = trackedRows.filter(row => Boolean(row.user)).length;
+  const anonymous = trackedRows.length - trackedRegistered;
+  const returning = trackedRows.filter(row => row.returned).length;
+  const knownAccountsInPeriod = rows.filter(row => Boolean(row.user)).length;
+  const activatedAccounts = rows.filter(row => Boolean(row.user) && (row.imports > 0 || ['Analysis', 'Dashboard', 'Report'].includes(row.stage))).length;
+  const withFriction = trackedRows.filter(row => row.failures > 0).length;
+  const grantedAccounts = [...latestConsent.values()].filter(Boolean).length;
+  const decidedAccounts = latestConsent.size;
 
   return (
     <section className="ops-page analytics-page">
@@ -121,7 +167,7 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
         <div>
           <p className="eyebrow">Behavior intelligence</p>
           <h2>User Flows</h2>
-          <p className="muted">Follow each consented visitor from arrival through signup, upload, analysis, dashboards and reports. Anonymous activity is joined to a registered user when the same anonymous identifier later authenticates.</p>
+          <p className="muted">Follow consented visitors from arrival through signup, upload, analysis, dashboards and reports. Operational account/upload progress remains visible even when behavioral analytics is off.</p>
         </div>
       </div>
 
@@ -132,11 +178,17 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
       </div>
 
       <div className="analytics-stat-grid">
-        <article className="ops-stat"><span>Tracked visitors</span><strong>{rows.length}</strong><small>{registered} registered · {anonymous} anonymous</small></article>
-        <article className="ops-stat"><span>Returning</span><strong>{percent(returning, rows.length)}%</strong><small>{returning} visitors returned</small></article>
-        <article className="ops-stat"><span>Activated</span><strong>{percent(activated, rows.length)}%</strong><small>{activated} reached upload or beyond</small></article>
-        <article className="ops-stat"><span>Friction detected</span><strong>{withFriction}</strong><small>Visitors with errors or failed steps</small></article>
+        <article className="ops-stat"><span>Tracked visitors</span><strong>{trackedRows.length}</strong><small>{trackedRegistered} registered · {anonymous} anonymous · {data.users.length ? percent(trackedRegistered, data.users.length) : 0}% account coverage</small></article>
+        <article className="ops-stat"><span>Returning</span><strong>{percent(returning, trackedRows.length)}%</strong><small>{returning} consented visitors returned</small></article>
+        <article className="ops-stat"><span>Activated accounts</span><strong>{percent(activatedAccounts, knownAccountsInPeriod)}%</strong><small>{activatedAccounts} of {knownAccountsInPeriod} known accounts uploaded or beyond</small></article>
+        <article className="ops-stat"><span>Friction detected</span><strong>{withFriction}</strong><small>Tracked visitors with errors or failed steps</small></article>
       </div>
+
+      {decidedAccounts === 0 ? (
+        <div className="analytics-note status-warn">Analytics collection is installed, but no signed-in account has made an analytics choice yet. The app now prompts visitors explicitly; behavioral rows will begin filling only after opt-in. Operational user and upload rows below do not depend on behavioral consent.</div>
+      ) : (
+        <div className="analytics-note">Analytics consent coverage: <strong>{grantedAccounts}</strong> granted · <strong>{decidedAccounts - grantedAccounts}</strong> declined · <strong>{Math.max(0, data.users.length - decidedAccounts)}</strong> not decided.</div>
+      )}
 
       {data.eventCount > data.events.length ? (
         <div className="analytics-note status-warn">This period contains more than the detailed event sample limit. The table reflects the first {data.events.length.toLocaleString()} events in the selected period.</div>
@@ -155,28 +207,30 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
                   <span>{row.user?.email ?? `${row.key.slice(0, 24)}…`}</span>
                   <small>{row.user?.persona || `${row.activeDays} active day${row.activeDays === 1 ? '' : 's'}`}</small>
                 </td>
-                <td><strong>{row.stage}</strong><span>{row.returned ? 'Returning' : 'New / one-session'}</span></td>
-                <td>{row.sessions}</td>
-                <td>{row.pageViews}</td>
-                <td>{row.clicks}</td>
-                <td>{row.imports}</td>
+                <td><strong>{row.stage}</strong><span>{row.tracked ? (row.returned ? 'Returning · tracked' : 'New / one-session · tracked') : row.trackingStatus}</span></td>
+                <td>{row.sessions || '—'}</td>
+                <td>{row.pageViews || '—'}</td>
+                <td>{row.clicks || '—'}</td>
+                <td>{row.imports || '—'}</td>
                 <td>{row.failures || '—'}</td>
                 <td>{formatDateTime(row.lastSeen)}</td>
                 <td>
-                  <details>
-                    <summary>View flow</summary>
-                    <small>First seen {formatDateTime(row.firstSeen)}</small>
-                    {row.recentFlow.length ? (
-                      <ol className="ops-list">
-                        {row.recentFlow.map((event, index) => (
-                          <li key={`${event.occurredAt.toISOString()}-${index}`}>
-                            <strong>{formatDateTime(event.occurredAt)}</strong>{' '}
-                            <code>{eventRoute(event)}</code>{' — '}{eventLabel(event)}
-                          </li>
-                        ))}
-                      </ol>
-                    ) : <p className="muted">No detailed journey events yet.</p>}
-                  </details>
+                  {row.tracked ? (
+                    <details>
+                      <summary>View flow</summary>
+                      <small>First tracked {formatDateTime(row.firstSeen)}</small>
+                      {row.recentFlow.length ? (
+                        <ol className="ops-list">
+                          {row.recentFlow.map((event, index) => (
+                            <li key={`${event.occurredAt.toISOString()}-${index}`}>
+                              <strong>{formatDateTime(event.occurredAt)}</strong>{' '}
+                              <code>{eventRoute(event)}</code>{' — '}{eventLabel(event)}
+                            </li>
+                          ))}
+                        </ol>
+                      ) : <p className="muted">No detailed journey events yet.</p>}
+                    </details>
+                  ) : <span className="muted">Behavior not tracked</span>}
                 </td>
               </tr>
             ))}
@@ -184,7 +238,7 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
         </table>
       </div>
 
-      {rows.length === 0 ? <div className="ops-panel">No consented user-flow events have been recorded in this period yet.</div> : null}
+      {rows.length === 0 ? <div className="ops-panel">No accounts, uploads or consented user-flow events were recorded in this period.</div> : null}
     </section>
   );
 }
