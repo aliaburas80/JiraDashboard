@@ -10,11 +10,32 @@ jest.mock('@/lib/currentUser', () => ({
   getCachedUser: () => mockCachedUser,
 }));
 
+function installBrowserStorageStub() {
+  const values = new Map<string, string>();
+  const localStorage = {
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => { values.set(key, value); },
+    removeItem: (key: string) => { values.delete(key); },
+    clear: () => { values.clear(); },
+    key: (index: number) => [...values.keys()][index] ?? null,
+    get length() { return values.size; },
+  };
+  Object.defineProperty(globalThis, 'window', {
+    value: { localStorage },
+    configurable: true,
+    writable: true,
+  });
+}
+
 beforeEach(() => {
   jest.resetModules();
   mockCachedUser = null;
   (global as any).fetch = jest.fn();
-  window.localStorage.clear();
+  installBrowserStorageStub();
+});
+
+afterEach(() => {
+  delete (globalThis as { window?: unknown }).window;
 });
 
 test('TC-ACG-01: anonymous analytics fails closed before a decision', async () => {
