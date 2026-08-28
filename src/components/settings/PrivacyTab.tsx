@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PasswordInput } from '@/components/ui/PasswordInput';
-import { setAnalyticsConsentCache } from '@/lib/analytics';
+import { setAnalyticsConsentCache, setAnonymousAnalyticsConsent } from '@/lib/analytics';
 
 interface ConsentStatus {
   termsAndPrivacy: { granted: boolean; version: string; acceptedAt: string | null };
@@ -44,6 +44,7 @@ export default function PrivacyTab({ onToast }: PrivacyTabProps) {
       if (!res.ok) throw new Error(data.error ?? 'Could not update your preference.');
       setConsent(data.consent);
       setAnalyticsConsentCache(data.consent.analytics.granted);
+      setAnonymousAnalyticsConsent(data.consent.analytics.granted);
       onToast(granted ? 'Analytics sharing enabled.' : 'Analytics sharing disabled.');
     } catch (error) {
       onToast(error instanceof Error ? error.message : 'Failed to update your preference.');
@@ -126,8 +127,9 @@ export default function PrivacyTab({ onToast }: PrivacyTabProps) {
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-sm font-black uppercase tracking-wider text-slate-700">Analytics</h2>
         <p className="mb-4 text-xs text-slate-500">
-          Optionally share anonymous product-usage analytics to help us improve Delivery Clarity.
-          We don&apos;t currently collect product analytics — this preference will be honored once we do.
+          Optionally share privacy-minimised product-usage analytics to help us improve Delivery Clarity.
+          When enabled, we record product pages, product actions, timing and error signals. We do not record Jira issue content,
+          typed text, filenames or form values. You can change this choice at any time.
         </p>
         <label className="flex items-center gap-3">
           <input
@@ -138,11 +140,11 @@ export default function PrivacyTab({ onToast }: PrivacyTabProps) {
             className="h-4 w-4 rounded border-slate-300"
           />
           <span className="text-sm font-semibold text-slate-800">
-            Share anonymous usage analytics
+            Share product-usage analytics
           </span>
         </label>
         {!consent.analytics.decided && (
-          <p className="mt-2 text-[11px] italic text-slate-400">You haven&apos;t made a choice yet — currently treated as not shared.</p>
+          <p className="mt-2 text-[11px] italic text-slate-400">You haven&apos;t made a choice yet — analytics remains off until you opt in.</p>
         )}
       </section>
 
