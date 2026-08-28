@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 export const OWNER_ANALYTICS_EVENT_LIMIT = 50_000;
 
 export async function getOwnerAnalyticsIntelligenceData(since: Date) {
-  const [events, eventCount, users, organizations, imports] = await Promise.all([
+  const [events, eventCount, users, organizations, imports, analyticsConsents] = await Promise.all([
     prisma.productAnalyticsEvent.findMany({
       where: { occurredAt: { gte: since } },
       orderBy: { occurredAt: 'asc' },
@@ -67,9 +67,18 @@ export async function getOwnerAnalyticsIntelligenceData(since: Date) {
         uploadedAt: true,
       },
     }),
+    prisma.consent.findMany({
+      where: { purpose: 'analytics' },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        userId: true,
+        granted: true,
+        createdAt: true,
+      },
+    }),
   ]);
 
-  return { events, eventCount, users, organizations, imports };
+  return { events, eventCount, users, organizations, imports, analyticsConsents };
 }
 
 export type OwnerAnalyticsIntelligenceData = Awaited<ReturnType<typeof getOwnerAnalyticsIntelligenceData>>;
