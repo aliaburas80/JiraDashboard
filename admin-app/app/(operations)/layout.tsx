@@ -16,6 +16,7 @@ export default async function OperationsLayout({ children }: { children: React.R
     { href: '/feedback', label: 'Feedback' },
     ...(session.isSuperAdmin
       ? [
+          { href: '/analytics', label: 'Analytics' },
           { href: '/system-errors', label: 'System Errors' },
           { href: '/diagnostics', label: 'Diagnostics' },
           { href: '/security', label: 'Security' },
