@@ -192,8 +192,8 @@ export default async function BehaviorAnalyticsPage({ searchParams }: PageProps)
     visitors: eventCounts.get(eventName)?.visitors.size ?? 0,
   })).sort((a, b) => b.visitors - a.visitors || b.count - a.count);
 
-  const totalClicks = actionRows.reduce((sum, action) => sum + action.clicks, 0);
-  const totalRepeatClicks = actionRows.reduce((sum, action) => sum + action.repeatClicks, 0);
+  const totalClicks = [...actions.values()].reduce((sum, action) => sum + action.clicks, 0);
+  const totalRepeatClicks = [...actions.values()].reduce((sum, action) => sum + action.repeatClicks, 0);
   const totalErrors = pageRows.reduce((sum, page) => sum + page.errors, 0);
   const measuredEngagement = pageRows.filter(page => page.engagementSamples > 0);
   const avgEngagement = measuredEngagement.length
