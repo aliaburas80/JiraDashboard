@@ -395,3 +395,45 @@
   .analytics-user-list > div { grid-template-columns: 1fr; gap: 6px; }
   .analytics-journey-details[open] { min-width: 720px; }
 }
+
+/* The Journey toggle remains in the final summary column, but its expanded
+   content is rendered in a sibling row that spans the complete analytics table. */
+.analytics-journey-details[open] {
+  min-width: 0;
+}
+
+.analytics-journey-expansion-row {
+  display: none;
+}
+
+.analytics-user-summary-row:has(.analytics-journey-details[open]) + .analytics-journey-expansion-row {
+  display: table-row;
+}
+
+.analytics-journey-expansion-row > td,
+.analytics-user-flow-table > tbody > .analytics-journey-expansion-row > td:last-child {
+  min-width: 0;
+  padding: 0 !important;
+  text-align: left !important;
+  vertical-align: top;
+  background: #f8fafc;
+  border-top: 0;
+}
+
+.analytics-journey-expansion {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 18px 20px;
+}
+
+.analytics-journey-expansion .analytics-session-list {
+  width: 100%;
+  margin-top: 0;
+}
+
+.analytics-journey-expansion .analytics-session-block,
+.analytics-journey-expansion .ops-table-wrap,
+.analytics-journey-expansion .analytics-journey-table {
+  width: 100%;
+  max-width: none;
+}
