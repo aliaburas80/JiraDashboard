@@ -13,11 +13,15 @@ import { getIronSession } from 'iron-session';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 
 export async function GET() {
-  // P0A-04: internal architecture details are not public.
+  // Internal architecture details are restricted to the app Admin role.
   const session = await getIronSession<SessionData>(await cookies(), SESSION_OPTIONS);
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
+  if (session.role !== 'admin') {
+    return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
+  }
+
   const developerView = {
     architecture: {
       framework: "Next.js 16.2.9 (App Router)",
