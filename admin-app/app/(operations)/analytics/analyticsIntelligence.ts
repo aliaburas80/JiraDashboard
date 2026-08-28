@@ -67,11 +67,20 @@ export function formatDateTime(value: Date | null): string {
   }).format(value);
 }
 
+function reachedRoute(routes: string[], prefixes: string[]): boolean {
+  return routes.some(route => prefixes.some(prefix => route === prefix || route.startsWith(`${prefix}/`)));
+}
+
 export function stageForEvents(events: OwnerAnalyticsEvent[]): string {
   const names = new Set(events.map(event => event.eventName));
-  if (names.has('report_exported')) return 'Report';
-  if (names.has('dashboard_viewed')) return 'Dashboard';
-  if (names.has('analysis_completed')) return 'Analysis';
+  const routes = events.map(eventRoute);
+
+  if (names.has('report_exported') || reachedRoute(routes, ['/reports'])) return 'Report';
+  if (names.has('dashboard_viewed') || reachedRoute(routes, ['/dashboard', '/summary'])) return 'Dashboard';
+  if (
+    names.has('analysis_completed')
+    || reachedRoute(routes, ['/intelligence', '/forecast', '/flow-health', '/data-quality', '/release-readiness', '/readiness'])
+  ) return 'Analysis';
   if (names.has('upload_completed')) return 'Upload';
   if (names.has('signup_completed') || events.some(event => Boolean(event.userId))) return 'Signed up';
   return 'Visitor';
