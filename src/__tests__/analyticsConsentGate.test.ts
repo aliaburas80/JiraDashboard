@@ -51,8 +51,8 @@ test('TC-ACG-03: fetches /api/consent once for a signed-in user and returns the 
 });
 
 test('TC-ACG-04: signed-in consent does not inherit an earlier anonymous grant', async () => {
-  const module = await import('../lib/analytics/consentGate');
-  module.setAnonymousAnalyticsConsent(true);
+  const consentGate = await import('../lib/analytics/consentGate');
+  consentGate.setAnonymousAnalyticsConsent(true);
 
   mockCachedUser = { userId: 'user-1' };
   (global.fetch as jest.Mock).mockResolvedValue({
@@ -60,7 +60,7 @@ test('TC-ACG-04: signed-in consent does not inherit an earlier anonymous grant',
     json: async () => ({ consent: { analytics: { granted: false } } }),
   });
 
-  await expect(module.getAnalyticsConsent()).resolves.toBe(false);
+  await expect(consentGate.getAnalyticsConsent()).resolves.toBe(false);
   expect(global.fetch).toHaveBeenCalledTimes(1);
 });
 
