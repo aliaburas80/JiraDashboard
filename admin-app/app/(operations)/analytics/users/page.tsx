@@ -38,6 +38,9 @@ function canonicalVisitorKey(
 function importantEvent(event: OwnerAnalyticsEvent): boolean {
   return event.eventName === 'page_viewed'
     || event.eventName === 'interaction_clicked'
+    || event.eventName === 'control_changed'
+    || event.eventName === 'form_submitted'
+    || event.eventName === 'rage_click_detected'
     || event.eventName === 'upload_completed'
     || event.eventName === 'upload_validation_failed'
     || event.eventName === 'analysis_completed'
@@ -86,7 +89,7 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
     const sessions = new Set(events.map(event => event.sessionId).filter((value): value is string => Boolean(value)));
     const activeDays = new Set(events.map(event => dayKey(event.occurredAt)));
     const pageViews = events.filter(event => event.eventName === 'page_viewed').length;
-    const clicks = events.filter(event => event.eventName === 'interaction_clicked').length;
+    const clicks = events.filter(event => event.eventName === 'interaction_clicked' || event.eventName === 'surface_clicked').length;
     const failures = events.filter(isFailureEvent).length;
     const firstSeen = events[0]?.occurredAt ?? null;
     const lastSeen = events[events.length - 1]?.occurredAt ?? null;
@@ -167,7 +170,7 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
         <div>
           <p className="eyebrow">Behavior intelligence</p>
           <h2>User Flows</h2>
-          <p className="muted">Follow consented visitors from arrival through signup, upload, analysis, dashboards and reports. Operational account/upload progress remains visible even when behavioral analytics is off.</p>
+          <p className="muted">Follow consented visitors from arrival through signup, upload, analysis, dashboards and reports. Page views and all click surfaces are counted globally; operational account/upload progress remains visible even when behavioral analytics is off.</p>
         </div>
       </div>
 
@@ -181,11 +184,11 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
         <article className="ops-stat"><span>Tracked visitors</span><strong>{trackedRows.length}</strong><small>{trackedRegistered} registered · {anonymous} anonymous · {data.users.length ? percent(trackedRegistered, data.users.length) : 0}% account coverage</small></article>
         <article className="ops-stat"><span>Returning</span><strong>{percent(returning, trackedRows.length)}%</strong><small>{returning} consented visitors returned</small></article>
         <article className="ops-stat"><span>Activated accounts</span><strong>{percent(activatedAccounts, knownAccountsInPeriod)}%</strong><small>{activatedAccounts} of {knownAccountsInPeriod} known accounts uploaded or beyond</small></article>
-        <article className="ops-stat"><span>Friction detected</span><strong>{withFriction}</strong><small>Tracked visitors with errors or failed steps</small></article>
+        <article className="ops-stat"><span>Friction detected</span><strong>{withFriction}</strong><small>Errors, failed steps or rage-click behavior</small></article>
       </div>
 
       {decidedAccounts === 0 ? (
-        <div className="analytics-note status-warn">Analytics collection is installed, but no signed-in account has made an analytics choice yet. The app now prompts visitors explicitly; behavioral rows will begin filling only after opt-in. Operational user and upload rows below do not depend on behavioral consent.</div>
+        <div className="analytics-note status-warn">Analytics collection is installed, but no signed-in account has made an analytics choice yet. The app prompts visitors explicitly; behavioral rows begin filling only after opt-in. Operational user and upload rows below do not depend on behavioral consent.</div>
       ) : (
         <div className="analytics-note">Analytics consent coverage: <strong>{grantedAccounts}</strong> granted · <strong>{decidedAccounts - grantedAccounts}</strong> declined · <strong>{Math.max(0, data.users.length - decidedAccounts)}</strong> not decided.</div>
       )}
