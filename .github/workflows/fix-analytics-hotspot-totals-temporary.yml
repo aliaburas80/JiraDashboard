@@ -1,0 +1,34 @@
+name: Fix analytics hotspot totals temporary
+
+on:
+  push:
+    branches: [feat/admin-analytics-product-intelligence]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: feat/admin-analytics-product-intelligence
+      - name: Correct totals and remove temporary workflow
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('admin-app/app/(operations)/analytics/behavior/page.tsx')
+          text = path.read_text()
+          text = text.replace(
+              "  const totalClicks = actionRows.reduce((sum, action) => sum + action.clicks, 0);\n  const totalRepeatClicks = actionRows.reduce((sum, action) => sum + action.repeatClicks, 0);",
+              "  const totalClicks = [...actions.values()].reduce((sum, action) => sum + action.clicks, 0);\n  const totalRepeatClicks = [...actions.values()].reduce((sum, action) => sum + action.repeatClicks, 0);"
+          )
+          path.write_text(text)
+          Path('.github/workflows/fix-analytics-hotspot-totals-temporary.yml').unlink()
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 'admin-app/app/(operations)/analytics/behavior/page.tsx' .github/workflows/fix-analytics-hotspot-totals-temporary.yml
+          git commit -m 'fix(analytics): count all hotspot interactions [skip ci]'
+          git push
