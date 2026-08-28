@@ -1,7 +1,6 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
-// P0B-05: analytics consent cache (src/lib/analytics/consentGate.ts) — TC-ACG-01 to TC-ACG-05
-// trackEvent() must never fire its transport without this returning true —
-// see track.ts and analyticsTrack.test.ts for the enforcement side.
+// Analytics consent cache tests. Anonymous collection is explicit opt-in and
+// signed-in consent remains account-scoped/server-backed.
 
 export {};
 
@@ -15,9 +14,10 @@ beforeEach(() => {
   jest.resetModules();
   mockCachedUser = null;
   (global as any).fetch = jest.fn();
+  window.localStorage.clear();
 });
 
-test('TC-ACG-01: returns false without fetching when no session is cached', async () => {
+test('TC-ACG-01: anonymous analytics fails closed before a decision', async () => {
   const { getAnalyticsConsent } = await import('../lib/analytics/consentGate');
   const granted = await getAnalyticsConsent();
 
@@ -25,7 +25,16 @@ test('TC-ACG-01: returns false without fetching when no session is cached', asyn
   expect(global.fetch).not.toHaveBeenCalled();
 });
 
-test('TC-ACG-02: fetches /api/consent once for a signed-in user and returns the granted flag', async () => {
+test('TC-ACG-02: explicit anonymous opt-in is browser-local and does not fetch', async () => {
+  const { getAnalyticsConsent, setAnonymousAnalyticsConsent } = await import('../lib/analytics/consentGate');
+  setAnonymousAnalyticsConsent(true);
+
+  await expect(getAnalyticsConsent()).resolves.toBe(true);
+  expect(window.localStorage.getItem('dc:analyticsConsent.v1')).toBe('granted');
+  expect(global.fetch).not.toHaveBeenCalled();
+});
+
+test('TC-ACG-03: fetches /api/consent once for a signed-in user and returns the granted flag', async () => {
   mockCachedUser = { userId: 'user-1' };
   (global.fetch as jest.Mock).mockResolvedValue({
     ok: true,
@@ -33,7 +42,7 @@ test('TC-ACG-02: fetches /api/consent once for a signed-in user and returns the 
   });
 
   const { getAnalyticsConsent } = await import('../lib/analytics/consentGate');
-  const first  = await getAnalyticsConsent();
+  const first = await getAnalyticsConsent();
   const second = await getAnalyticsConsent();
 
   expect(first).toBe(true);
@@ -41,7 +50,21 @@ test('TC-ACG-02: fetches /api/consent once for a signed-in user and returns the 
   expect(global.fetch).toHaveBeenCalledTimes(1);
 });
 
-test('TC-ACG-03: a fetch failure resolves to false, not a rejection', async () => {
+test('TC-ACG-04: signed-in consent does not inherit an earlier anonymous grant', async () => {
+  const module = await import('../lib/analytics/consentGate');
+  module.setAnonymousAnalyticsConsent(true);
+
+  mockCachedUser = { userId: 'user-1' };
+  (global.fetch as jest.Mock).mockResolvedValue({
+    ok: true,
+    json: async () => ({ consent: { analytics: { granted: false } } }),
+  });
+
+  await expect(module.getAnalyticsConsent()).resolves.toBe(false);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+});
+
+test('TC-ACG-05: a signed-in fetch failure resolves to false, not a rejection', async () => {
   mockCachedUser = { userId: 'user-1' };
   (global.fetch as jest.Mock).mockRejectedValue(new Error('network down'));
 
@@ -49,7 +72,7 @@ test('TC-ACG-03: a fetch failure resolves to false, not a rejection', async () =
   await expect(getAnalyticsConsent()).resolves.toBe(false);
 });
 
-test('TC-ACG-04: setAnalyticsConsentCache short-circuits future calls without fetching', async () => {
+test('TC-ACG-06: setAnalyticsConsentCache short-circuits future signed-in calls', async () => {
   mockCachedUser = { userId: 'user-1' };
   const { getAnalyticsConsent, setAnalyticsConsentCache } = await import('../lib/analytics/consentGate');
 
@@ -60,7 +83,7 @@ test('TC-ACG-04: setAnalyticsConsentCache short-circuits future calls without fe
   expect(global.fetch).not.toHaveBeenCalled();
 });
 
-test('TC-ACG-05: clearAnalyticsConsentCache forces a re-fetch on the next call', async () => {
+test('TC-ACG-07: clearAnalyticsConsentCache forces a signed-in re-fetch', async () => {
   mockCachedUser = { userId: 'user-1' };
   (global.fetch as jest.Mock).mockResolvedValue({
     ok: true,
