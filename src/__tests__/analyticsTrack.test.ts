@@ -1,8 +1,7 @@
 // © 2026 Ali Abu Ras — ali.aburas@deliveryclarity.app. All rights reserved.
 // P0B-05: envelope construction + consent gating (src/lib/analytics/track.ts)
-// TC-ATR-01 to TC-ATR-07. The transport is injected via
-// configureAnalyticsTransport() so these tests observe the exact envelope
-// without any real delivery mechanism existing yet (see track.ts header).
+// TC-ATR-01 onward. The transport is injected via configureAnalyticsTransport()
+// so these tests observe the exact envelope without real delivery.
 
 export {};
 
@@ -47,6 +46,7 @@ beforeEach(() => {
   mockConsent = true;
   lsStore.local = {};
   lsStore.session = {};
+  (global as any).location.pathname = '/dashboard/flow-health';
 });
 
 test('TC-ATR-01: a granted-consent event is built with the full §6.2 envelope shape', async () => {
@@ -138,7 +138,7 @@ test('TC-ATR-06: event_id is unique per call', async () => {
   expect(first.event_id).not.toBe(second.event_id);
 });
 
-test('TC-ATR-07: user_id/role are null when no session is cached but consent is (hypothetically) granted', async () => {
+test('TC-ATR-07: user_id/role are null when no session is cached but consent is hypothetically granted', async () => {
   mockCachedUser = null;
   mockConsent = true;
   const { trackEvent, configureAnalyticsTransport } = await import('../lib/analytics/track');
@@ -151,4 +151,46 @@ test('TC-ATR-07: user_id/role are null when no session is cached but consent is 
   const event = transport.mock.calls[0][0];
   expect(event.user_id).toBeNull();
   expect(event.role).toBeNull();
+});
+
+test('TC-ATR-08: analytics paths redact private tokens and dynamic identifiers', async () => {
+  const { sanitizeAnalyticsPath } = await import('../lib/analytics/track');
+
+  expect(sanitizeAnalyticsPath('/share/privateTokenWithoutDigits')).toBe('/share/:id');
+  expect(sanitizeAnalyticsPath('/snapshots/550e8400-e29b-41d4-a716-446655440000')).toBe('/snapshots/:id');
+  expect(sanitizeAnalyticsPath('/users/12345')).toBe('/users/:id');
+  expect(sanitizeAnalyticsPath('/items/cuid1234567890123456')).toBe('/items/:id');
+  expect(sanitizeAnalyticsPath('/delivery-composition')).toBe('/delivery-composition');
+  expect(sanitizeAnalyticsPath('/dashboard?email=a@example.com')).toBe('/dashboard');
+});
+
+test('TC-ATR-09: envelope page is redacted before transport', async () => {
+  (global as any).location.pathname = '/share/privateTokenWithoutDigits';
+  const { trackEvent, configureAnalyticsTransport } = await import('../lib/analytics/track');
+  const transport = jest.fn();
+  configureAnalyticsTransport(transport);
+
+  trackEvent('page_viewed');
+  await flushMicrotasks();
+
+  expect(transport.mock.calls[0][0].page).toBe('/share/:id');
+});
+
+test('TC-ATR-10: session id rotates after 20 minutes of inactivity', async () => {
+  const now = jest.spyOn(Date, 'now');
+  const base = 1_700_000_000_000;
+  now.mockReturnValue(base);
+  const { getSessionId, ANALYTICS_SESSION_IDLE_MS } = await import('../lib/analytics/clientContext');
+
+  const first = getSessionId();
+  now.mockReturnValue(base + 60_000);
+  const active = getSessionId();
+  now.mockReturnValue(base + 60_000 + ANALYTICS_SESSION_IDLE_MS + 1);
+  const rotated = getSessionId();
+  now.mockRestore();
+
+  expect(first).toBeTruthy();
+  expect(active).toBe(first);
+  expect(rotated).toBeTruthy();
+  expect(rotated).not.toBe(first);
 });
