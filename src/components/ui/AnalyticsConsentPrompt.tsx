@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { fetchCurrentUser, getCachedUser } from '@/lib/currentUser';
 import {
   getAnonymousAnalyticsConsentDecision,
+  sanitizeAnalyticsPath,
   setAnalyticsConsentCache,
   setAnonymousAnalyticsConsent,
   trackEvent,
@@ -13,12 +14,19 @@ import {
 
 type PromptMode = 'anonymous' | 'account' | null;
 
+function safeAcquisitionValue(raw: string | null): string {
+  if (!raw) return '';
+  const value = raw.replace(/\s+/g, ' ').trim().slice(0, 160);
+  if (!value || /@|https?:\/\/|\b\d{4,}\b/i.test(value)) return '';
+  return /^[A-Za-z0-9 _./:+-]+$/.test(value) ? value : '';
+}
+
 function currentAcquisitionSource(): string {
   if (typeof window === 'undefined') return 'direct';
   try {
     const params = new URLSearchParams(window.location.search);
-    const explicit = params.get('utm_source');
-    if (explicit) return explicit.slice(0, 160);
+    const explicit = safeAcquisitionValue(params.get('utm_source'));
+    if (explicit) return explicit;
     if (!document.referrer) return 'direct';
     const referrer = new URL(document.referrer);
     return referrer.hostname === window.location.hostname ? 'direct' : referrer.hostname.slice(0, 160);
@@ -30,7 +38,7 @@ function currentAcquisitionSource(): string {
 function recordCurrentPageAfterGrant(): void {
   if (typeof window === 'undefined') return;
   trackEvent('page_viewed', {
-    route: window.location.pathname.slice(0, 2_000),
+    route: sanitizeAnalyticsPath(window.location.pathname).slice(0, 2_000),
     acquisition_source: currentAcquisitionSource(),
     consent_activation: true,
   }, { section: 'navigation', component: 'consent' });
@@ -126,8 +134,8 @@ export function AnalyticsConsentPrompt() {
         <div className="min-w-0">
           <p className="text-sm font-black text-slate-900">Help us improve Delivery Clarity</p>
           <p className="mt-1 text-xs leading-5 text-slate-600">
-            Share optional product-usage analytics such as pages visited, product actions, timing and errors.
-            We do not collect Jira issue content, typed text, filenames or form values.{' '}
+            Share optional product-usage analytics such as pages visited, clicks, control actions, scroll depth, timing and errors.
+            We do not collect Jira issue content, typed text, filenames, form values or private link tokens.{' '}
             <Link href="/privacy" className="font-bold text-blue-600 hover:underline">Privacy details</Link>
           </p>
           {mode === 'account' ? (

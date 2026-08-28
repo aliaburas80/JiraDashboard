@@ -7,10 +7,13 @@ const EXPECTED_DOMAINS: Record<string, string[]> = {
   identity: ['signup_started', 'signup_completed', 'email_verified', 'login_completed', 'role_selected'],
   upload: ['upload_started', 'upload_validation_failed', 'upload_completed', 'analysis_started', 'analysis_completed', 'analysis_failed'],
   value: ['dashboard_viewed', 'insight_opened', 'calculation_explanation_opened', 'relation_map_opened', 'report_exported'],
-  navigation: ['page_viewed', 'page_engaged', 'interaction_clicked', 'section_viewed', 'filter_applied', 'search_used', 'help_opened'],
+  navigation: [
+    'page_viewed', 'page_engaged', 'interaction_clicked', 'surface_clicked', 'control_changed',
+    'form_submitted', 'section_viewed', 'scroll_depth_reached', 'filter_applied', 'search_used', 'help_opened',
+  ],
   feedback: ['feedback_opened', 'feedback_submitted', 'feedback_attachment_added'],
-  lifecycle: ['trial_expiring', 'trial_expired', 'return_visit', 'release_note_viewed'],
-  quality: ['client_error', 'api_error', 'performance_threshold_exceeded', 'dead_click_detected'],
+  lifecycle: ['session_started', 'trial_expiring', 'trial_expired', 'return_visit', 'release_note_viewed'],
+  quality: ['client_error', 'api_error', 'performance_threshold_exceeded', 'dead_click_detected', 'rage_click_detected'],
   payments: [
     'pricing_viewed', 'checkout_started', 'checkout_completed', 'checkout_failed',
     'subscription_started', 'subscription_renewed', 'subscription_cancelled',

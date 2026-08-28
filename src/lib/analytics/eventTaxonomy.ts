@@ -31,7 +31,11 @@ export const ANALYTICS_EVENT_DOMAINS = {
     'page_viewed',
     'page_engaged',
     'interaction_clicked',
+    'surface_clicked',
+    'control_changed',
+    'form_submitted',
     'section_viewed',
+    'scroll_depth_reached',
     'filter_applied',
     'search_used',
     'help_opened',
@@ -42,6 +46,7 @@ export const ANALYTICS_EVENT_DOMAINS = {
     'feedback_attachment_added',
   ],
   lifecycle: [
+    'session_started',
     'trial_expiring',
     'trial_expired',
     'return_visit',
@@ -52,6 +57,7 @@ export const ANALYTICS_EVENT_DOMAINS = {
     'api_error',
     'performance_threshold_exceeded',
     'dead_click_detected',
+    'rage_click_detected',
   ],
   payments: [
     'pricing_viewed',

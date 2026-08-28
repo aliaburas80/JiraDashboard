@@ -24,6 +24,9 @@ type PageMetric = {
   visitors: Set<string>;
   sessions: Set<string>;
   clicks: number;
+  controls: number;
+  forms: number;
+  maxScrollDepth: number;
   exits: number;
   errors: number;
   repeatClicks: number;
@@ -58,6 +61,9 @@ function pageMetric(map: Map<string, PageMetric>, route: string): PageMetric {
     visitors: new Set<string>(),
     sessions: new Set<string>(),
     clicks: 0,
+    controls: 0,
+    forms: 0,
+    maxScrollDepth: 0,
     exits: 0,
     errors: 0,
     repeatClicks: 0,
@@ -103,10 +109,16 @@ export default async function BehaviorAnalyticsPage({ searchParams }: PageProps)
 
   for (const event of data.events) {
     const route = eventRoute(event);
-    if (event.eventName === 'interaction_clicked') pageMetric(pages, route).clicks += 1;
-    if (isFailureEvent(event)) pageMetric(pages, route).errors += 1;
+    const metric = pageMetric(pages, route);
+    if (event.eventName === 'interaction_clicked' || event.eventName === 'surface_clicked') metric.clicks += 1;
+    if (event.eventName === 'control_changed') metric.controls += 1;
+    if (event.eventName === 'form_submitted') metric.forms += 1;
+    if (event.eventName === 'scroll_depth_reached') {
+      const depth = eventProperties(event).depth_pct;
+      if (typeof depth === 'number' && Number.isFinite(depth)) metric.maxScrollDepth = Math.max(metric.maxScrollDepth, depth);
+    }
+    if (isFailureEvent(event)) metric.errors += 1;
     if (event.eventName === 'page_engaged' && event.durationMs) {
-      const metric = pageMetric(pages, route);
       metric.engagementMs += event.durationMs;
       metric.engagementSamples += 1;
     }
@@ -192,7 +204,11 @@ export default async function BehaviorAnalyticsPage({ searchParams }: PageProps)
     visitors: eventCounts.get(eventName)?.visitors.size ?? 0,
   })).sort((a, b) => b.visitors - a.visitors || b.count - a.count);
 
-  const totalClicks = [...actions.values()].reduce((sum, action) => sum + action.clicks, 0);
+  const totalClicks = pageRows.reduce((sum, page) => sum + page.clicks, 0);
+  const semanticClicks = [...actions.values()].reduce((sum, action) => sum + action.clicks, 0);
+  const surfaceClicks = eventCounts.get('surface_clicked')?.count ?? 0;
+  const totalControlChanges = pageRows.reduce((sum, page) => sum + page.controls, 0);
+  const totalForms = pageRows.reduce((sum, page) => sum + page.forms, 0);
   const totalRepeatClicks = [...actions.values()].reduce((sum, action) => sum + action.repeatClicks, 0);
   const totalErrors = pageRows.reduce((sum, page) => sum + page.errors, 0);
   const measuredEngagement = pageRows.filter(page => page.engagementSamples > 0);
@@ -206,7 +222,7 @@ export default async function BehaviorAnalyticsPage({ searchParams }: PageProps)
         <div>
           <p className="eyebrow">Product improvement</p>
           <h2>Behavior & Hotspots</h2>
-          <p className="muted">Find the pages people use most, the controls they click, where sessions end, where errors appear, and where repeated clicks suggest friction.</p>
+          <p className="muted">Find the pages people use most, every click surface, semantic controls, scroll depth, forms, session exits, errors and repeated-click friction.</p>
         </div>
       </div>
 
@@ -218,9 +234,10 @@ export default async function BehaviorAnalyticsPage({ searchParams }: PageProps)
 
       <div className="analytics-stat-grid">
         <article className="ops-stat"><span>Page views</span><strong>{pageViews.length}</strong><small>{pageRows.length} pages observed</small></article>
-        <article className="ops-stat"><span>Tracked clicks</span><strong>{totalClicks}</strong><small>{actionRows.length} hot actions shown</small></article>
+        <article className="ops-stat"><span>Tracked clicks</span><strong>{totalClicks}</strong><small>{semanticClicks} controls · {surfaceClicks} surfaces</small></article>
+        <article className="ops-stat"><span>Control / form actions</span><strong>{totalControlChanges + totalForms}</strong><small>{totalControlChanges} changes · {totalForms} submits</small></article>
         <article className="ops-stat"><span>Repeat-click signals</span><strong>{totalRepeatClicks}</strong><small>Same control clicked again within 2s</small></article>
-        <article className="ops-stat"><span>Errors / failed steps</span><strong>{totalErrors}</strong><small>Client, API, upload or analysis friction</small></article>
+        <article className="ops-stat"><span>Errors / friction</span><strong>{totalErrors}</strong><small>Client, API, failed-step or rage-click signals</small></article>
         <article className="ops-stat"><span>Avg. page engagement</span><strong>{formatDuration(avgEngagement)}</strong><small>Measured page-engagement samples</small></article>
       </div>
 
@@ -229,7 +246,7 @@ export default async function BehaviorAnalyticsPage({ searchParams }: PageProps)
           <div className="analytics-panel-heading"><div><h3>Improvement opportunities</h3><p className="muted">Heuristic priority based on traffic, exit rate, errors, short engagement and repeated clicks.</p></div></div>
           <div className="ops-table-wrap">
             <table className="ops-table analytics-table">
-              <thead><tr><th>Page</th><th>Priority</th><th>Views</th><th>Exit rate</th><th>Errors</th><th>Repeat clicks</th><th>Avg. engagement</th></tr></thead>
+              <thead><tr><th>Page</th><th>Priority</th><th>Views</th><th>Exit rate</th><th>Errors</th><th>Repeat clicks</th><th>Scroll</th><th>Avg. engagement</th></tr></thead>
               <tbody>
                 {opportunityRows.map(row => (
                   <tr key={row.route}>
@@ -239,6 +256,7 @@ export default async function BehaviorAnalyticsPage({ searchParams }: PageProps)
                     <td>{row.exitRate}%</td>
                     <td>{row.errors || '—'}</td>
                     <td>{row.repeatClicks || '—'}</td>
+                    <td>{row.maxScrollDepth ? `${row.maxScrollDepth}%` : '—'}</td>
                     <td>{formatDuration(row.avgEngagementMs)}</td>
                   </tr>
                 ))}
@@ -262,13 +280,13 @@ export default async function BehaviorAnalyticsPage({ searchParams }: PageProps)
 
       <div className="analytics-two-col">
         <div className="ops-panel">
-          <div className="analytics-panel-heading"><div><h3>Hot pages</h3><p className="muted">Traffic, unique visitors and session exits.</p></div></div>
+          <div className="analytics-panel-heading"><div><h3>Hot pages</h3><p className="muted">Traffic, unique visitors, clicks, control activity and session exits.</p></div></div>
           <div className="ops-table-wrap">
             <table className="ops-table analytics-table">
-              <thead><tr><th>Page</th><th>Views</th><th>Visitors</th><th>Sessions</th><th>Clicks</th><th>Exit rate</th></tr></thead>
+              <thead><tr><th>Page</th><th>Views</th><th>Visitors</th><th>Sessions</th><th>Clicks</th><th>Controls</th><th>Forms</th><th>Exit rate</th></tr></thead>
               <tbody>
                 {pageRows.slice(0, 25).map(row => (
-                  <tr key={row.route}><td><code>{row.route}</code></td><td>{row.views}</td><td>{row.visitors.size}</td><td>{row.sessions.size}</td><td>{row.clicks}</td><td>{row.exitRate}%</td></tr>
+                  <tr key={row.route}><td><code>{row.route}</code></td><td>{row.views}</td><td>{row.visitors.size}</td><td>{row.sessions.size}</td><td>{row.clicks}</td><td>{row.controls || '—'}</td><td>{row.forms || '—'}</td><td>{row.exitRate}%</td></tr>
                 ))}
               </tbody>
             </table>
@@ -276,7 +294,7 @@ export default async function BehaviorAnalyticsPage({ searchParams }: PageProps)
         </div>
 
         <div className="ops-panel">
-          <div className="analytics-panel-heading"><div><h3>Hot buttons & actions</h3><p className="muted">Privacy-safe labels only; form values and arbitrary user content are never captured.</p></div></div>
+          <div className="analytics-panel-heading"><div><h3>Hot buttons & actions</h3><p className="muted">Stable privacy-safe labels only; typed text, form values, Jira content and dynamic identifiers are never captured.</p></div></div>
           <div className="ops-table-wrap">
             <table className="ops-table analytics-table">
               <thead><tr><th>Action</th><th>Page</th><th>Clicks</th><th>Users</th><th>Repeat</th></tr></thead>
@@ -297,7 +315,7 @@ export default async function BehaviorAnalyticsPage({ searchParams }: PageProps)
       </div>
 
       {data.eventCount > data.events.length ? <div className="analytics-note status-warn">Detailed behavior is sampled from the first {data.events.length.toLocaleString()} events in this period.</div> : null}
-      {pageRows.length === 0 ? <div className="ops-panel">No behavior events have been recorded yet. Page and click telemetry begins as users visit the newly deployed release.</div> : null}
+      {pageRows.length === 0 ? <div className="ops-panel">No behavior events have been recorded yet. Global page, click, control, form, scroll and engagement telemetry begins after users opt in on the deployed release.</div> : null}
     </section>
   );
 }
