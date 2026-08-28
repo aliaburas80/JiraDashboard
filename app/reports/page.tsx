@@ -6,6 +6,7 @@ import { EXPORT_CATALOG } from '@/config/exportCatalog';
 import { exportExecutivePdf, exportToExcel } from '@/lib/exportUtils';
 import { fetchCurrentUser } from '@/lib/currentUser';
 import { loadMetricsWithSource } from '@/lib/storage';
+import { trackEvent } from '@/lib/analytics';
 import { buildExportMetadata } from '@/services/export/exportMetadata.service';
 import { buildSharedReportPayload } from '@/services/export/sharedReportPayload.service';
 import type { DashboardMetrics } from '@/types/metrics';
@@ -37,8 +38,18 @@ export default function ReportsPage() {
     await refreshShares();setLoading(false);
   })();},[refreshShares]);
 
-  async function downloadExcel(){if(!metrics)return;const meta=buildExportMetadata({format:'xlsx',reportName:'Delivery Clarity Report'});await exportToExcel(metrics,meta.filename);}
-  async function downloadPdf(){if(!metrics)return;await exportExecutivePdf(metrics);}
+  async function downloadExcel(){
+    if(!metrics)return;
+    const meta=buildExportMetadata({format:'xlsx',reportName:'Delivery Clarity Report'});
+    await exportToExcel(metrics,meta.filename);
+    trackEvent('report_exported',{format:'xlsx',report:'delivery_clarity'},{section:'reports',component:'export',resultStatus:'success'});
+  }
+
+  async function downloadPdf(){
+    if(!metrics)return;
+    await exportExecutivePdf(metrics);
+    trackEvent('report_exported',{format:'pdf',report:'executive'},{section:'reports',component:'export',resultStatus:'success'});
+  }
 
   async function createShare(){
     if(!metrics||localMode)return;setCreating(true);setError(null);setNewLink(null);
@@ -65,15 +76,15 @@ export default function ReportsPage() {
       {error&&<div className={styles.error} role="alert">{error}</div>}
       {loading?<div className={styles.card}>Loading reporting data…</div>:<>
         <section aria-labelledby="exports-title"><div className={styles.sectionHead}><div><h2 id="exports-title">Export current report</h2><p>Exports use the data currently loaded and verified for your account.</p></div></div><div className={styles.exportGrid}>
-          <article className={styles.card}><span className={styles.format}>XLSX</span><h3>{EXPORT_CATALOG.xlsx.label}</h3><p>{EXPORT_CATALOG.xlsx.purpose}</p><ul>{EXPORT_CATALOG.xlsx.sections.slice(0,5).map(s=><li key={s.id}>{s.label}</li>)}</ul><button disabled={!metrics} onClick={downloadExcel}>Download Excel</button></article>
-          <article className={styles.card}><span className={styles.format}>PDF</span><h3>{EXPORT_CATALOG.pdf.label}</h3><p>{EXPORT_CATALOG.pdf.purpose}</p><ul>{EXPORT_CATALOG.pdf.sections.slice(0,5).map(s=><li key={s.id}>{s.label}</li>)}</ul><button disabled={!metrics} onClick={downloadPdf}>Open print-ready PDF</button></article>
+          <article className={styles.card}><span className={styles.format}>XLSX</span><h3>{EXPORT_CATALOG.xlsx.label}</h3><p>{EXPORT_CATALOG.xlsx.purpose}</p><ul>{EXPORT_CATALOG.xlsx.sections.slice(0,5).map(s=><li key={s.id}>{s.label}</li>)}</ul><button disabled={!metrics} onClick={downloadExcel} data-analytics-label="Export Excel report">Download Excel</button></article>
+          <article className={styles.card}><span className={styles.format}>PDF</span><h3>{EXPORT_CATALOG.pdf.label}</h3><p>{EXPORT_CATALOG.pdf.purpose}</p><ul>{EXPORT_CATALOG.pdf.sections.slice(0,5).map(s=><li key={s.id}>{s.label}</li>)}</ul><button disabled={!metrics} onClick={downloadPdf} data-analytics-label="Export PDF report">Open print-ready PDF</button></article>
         </div></section>
         <section aria-labelledby="sharing-title"><div className={styles.sectionHead}><div><h2 id="sharing-title">Client sharing</h2><p>Create a capability link to one sanitized, read-only report. The recipient does not get dashboard, account, or API access.</p></div></div><div className={styles.card}>
           {localMode&&<p className={styles.muted}>Client sharing is disabled in local-storage mode because your Jira data and derived reports must remain in this browser. Excel and PDF exports still work locally.</p>}
-          <div className={styles.shareControls}><label>Link expiry<select value={expiry} onChange={e=>setExpiry(e.target.value)} disabled={localMode}><option value="1">1 day</option><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option><option value="90">90 days</option><option value="never">No expiry</option></select></label><button disabled={!metrics||creating||localMode} onClick={createShare}>{creating?'Creating…':'Create secure link'}</button></div>
-          {newLink&&<div className={styles.newLink}><div><strong>New share link</strong><p>This is shown only after creation. The raw security token is not stored by Delivery Clarity.</p><code>{newLink}</code></div><button onClick={copyNewLink}>Copy</button></div>}
+          <div className={styles.shareControls}><label>Link expiry<select value={expiry} onChange={e=>setExpiry(e.target.value)} disabled={localMode} data-analytics-label="Change share link expiry"><option value="1">1 day</option><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option><option value="90">90 days</option><option value="never">No expiry</option></select></label><button disabled={!metrics||creating||localMode} onClick={createShare} data-analytics-label="Create secure report link">{creating?'Creating…':'Create secure link'}</button></div>
+          {newLink&&<div className={styles.newLink}><div><strong>New share link</strong><p>This is shown only after creation. The raw security token is not stored by Delivery Clarity.</p><code>{newLink}</code></div><button onClick={copyNewLink} data-analytics-label="Copy secure report link">Copy</button></div>}
         </div>
-        <div className={styles.card}><h3>Managed links</h3>{shares.length===0?<p className={styles.muted}>No share links created yet.</p>:<div className={styles.shareList}>{shares.map(share=><div className={styles.shareRow} key={share.id}><div><strong>{share.title}</strong><span className={styles.status} data-status={share.status}>{share.status}</span><p>Created {new Date(share.createdAt).toLocaleString()} · {share.expiresAt?`Expires ${new Date(share.expiresAt).toLocaleString()}`:'No expiry'} · {share.accessCount} view{share.accessCount===1?'':'s'}</p></div>{share.status==='active'&&<button className={styles.secondary} onClick={()=>revoke(share.id)}>Revoke</button>}</div>)}</div>}</div>
+        <div className={styles.card}><h3>Managed links</h3>{shares.length===0?<p className={styles.muted}>No share links created yet.</p>:<div className={styles.shareList}>{shares.map(share=><div className={styles.shareRow} key={share.id}><div><strong>{share.title}</strong><span className={styles.status} data-status={share.status}>{share.status}</span><p>Created {new Date(share.createdAt).toLocaleString()} · {share.expiresAt?`Expires ${new Date(share.expiresAt).toLocaleString()}`:'No expiry'} · {share.accessCount} view{share.accessCount===1?'':'s'}</p></div>{share.status==='active'&&<button className={styles.secondary} onClick={()=>revoke(share.id)} data-analytics-label="Revoke secure report link">Revoke</button>}</div>)}</div>}</div>
         </section>
       </>}
     </div>

@@ -207,6 +207,175 @@
 .analytics-user-list strong { margin-bottom: 3px; }
 .analytics-user-list small { margin-top: 3px; line-height: 1.45; }
 
+.analytics-user-flow-table > tbody > tr > td:last-child {
+  min-width: 180px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.analytics-journey-details > summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: #111827;
+  white-space: nowrap;
+}
+
+.analytics-journey-details[open] {
+  min-width: min(920px, 78vw);
+}
+
+.analytics-journey-details > small {
+  margin: 5px 0 12px;
+  color: #6b7280;
+}
+
+.analytics-session-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.analytics-session-block {
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.analytics-session-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 13px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+  text-align: left;
+}
+
+.analytics-session-heading > div {
+  min-width: 0;
+}
+
+.analytics-session-heading strong,
+.analytics-session-heading span,
+.analytics-session-heading small {
+  display: block;
+}
+
+.analytics-session-heading strong {
+  margin: 0 0 2px;
+  color: #111827;
+}
+
+.analytics-session-heading span,
+.analytics-session-heading small {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.analytics-session-block .ops-table-wrap {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.analytics-journey-table {
+  min-width: 820px;
+  margin: 0;
+}
+
+.analytics-journey-table th,
+.analytics-journey-table td,
+.analytics-journey-table th:nth-child(n+2),
+.analytics-journey-table td:nth-child(n+2) {
+  text-align: left;
+  vertical-align: top;
+}
+
+.analytics-journey-table th:nth-child(1) { width: 21%; }
+.analytics-journey-table th:nth-child(2) { width: 16%; }
+.analytics-journey-table th:nth-child(3) { width: 9%; }
+.analytics-journey-table th:nth-child(4) { width: 39%; }
+.analytics-journey-table th:nth-child(5) { width: 15%; }
+
+.analytics-journey-table td:first-child strong,
+.analytics-journey-table td:first-child code,
+.analytics-journey-table td:last-child small {
+  display: block;
+}
+
+.analytics-journey-table td:first-child strong {
+  margin-bottom: 4px;
+  color: #111827;
+}
+
+.analytics-action-list {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.analytics-action-list li {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.analytics-action-list li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.analytics-action-list li > span {
+  color: #6b7280;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.analytics-action-list li > strong {
+  color: #111827;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.analytics-action-list li > em {
+  border-radius: 999px;
+  padding: 2px 6px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.analytics-outcome {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.analytics-outcome-success { background: #ecfdf5; color: #047857; }
+.analytics-outcome-friction { background: #fef2f2; color: #b91c1c; }
+.analytics-outcome-engaged { background: #eff6ff; color: #1d4ed8; }
+.analytics-outcome-viewed { background: #f3f4f6; color: #4b5563; }
+
+.analytics-journey-table td:last-child small {
+  margin-top: 5px;
+  color: #b91c1c;
+  font-size: 11px;
+}
+
 @media (max-width: 1180px) {
   .analytics-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .analytics-two-col,
@@ -224,4 +393,5 @@
   .analytics-bar-row.flow-row { grid-template-columns: minmax(120px, 1fr) 38px; }
   .analytics-bar-row .analytics-track { grid-column: 1 / -1; grid-row: 2; }
   .analytics-user-list > div { grid-template-columns: 1fr; gap: 6px; }
+  .analytics-journey-details[open] { min-width: 720px; }
 }

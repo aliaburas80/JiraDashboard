@@ -2,6 +2,54 @@ import type { OwnerAnalyticsEvent } from '../../../../src/server/tenancy/ownerAn
 
 export const ANALYTICS_PERIODS = [1, 7, 30, 90] as const;
 
+const LOW_VALUE_EVENT_NAMES = new Set([
+  'page_viewed',
+  'page_engaged',
+  'session_started',
+  'surface_clicked',
+  'section_viewed',
+  'scroll_depth_reached',
+]);
+
+const SUCCESS_EVENT_NAMES = new Set([
+  'signup_completed',
+  'email_verified',
+  'upload_completed',
+  'analysis_completed',
+  'dashboard_viewed',
+  'insight_opened',
+  'calculation_explanation_opened',
+  'relation_map_opened',
+  'report_exported',
+  'feedback_submitted',
+  'checkout_completed',
+  'subscription_started',
+  'subscription_renewed',
+  'refund_completed',
+]);
+
+const GENERIC_ACTION_LABELS = new Set([
+  'click control',
+  'clicked control',
+  'click button',
+  'clicked button',
+  'click div',
+  'clicked div',
+  'click span',
+  'clicked span',
+  'click page surface',
+  'clicked page surface',
+  'open menu',
+  'opened menu',
+  'close menu',
+  'closed menu',
+]);
+
+export type JourneyOutcome = {
+  kind: 'success' | 'friction' | 'engaged' | 'viewed';
+  label: string;
+};
+
 export function resolveDays(raw: string | string[] | undefined): number {
   const value = Number(Array.isArray(raw) ? raw[0] : raw ?? 30);
   return ANALYTICS_PERIODS.includes(value as (typeof ANALYTICS_PERIODS)[number]) ? value : 30;
@@ -47,9 +95,52 @@ function usableLabel(value: unknown): string {
   return label && label.toLowerCase() !== 'unlabeled action' ? label : '';
 }
 
+export function pageDisplayName(route: string): string {
+  if (!route || route === '/') return 'Upload / Home';
+  const segments = route
+    .split('/')
+    .filter(Boolean)
+    .map(segment => humanize(segment));
+  return segments.length ? segments.join(' / ') : 'Home';
+}
+
+function routeFromLegacyLabel(label: string): string | null {
+  const direct = label.match(/^\/?([a-z0-9][a-z0-9/_-]*)$/i);
+  if (label.startsWith('/') && direct) return label;
+  const open = label.match(/^Open\s+(\/[A-Za-z0-9/_-]+)(?:\s+page)?$/i);
+  return open?.[1] ?? null;
+}
+
+function pastTenseAction(label: string): string {
+  const replacements: Array<[RegExp, string]> = [
+    [/^Open\s+/i, 'Opened '],
+    [/^Click\s+/i, 'Clicked '],
+    [/^Change\s+/i, 'Changed '],
+    [/^Select\s+/i, 'Selected '],
+    [/^Toggle\s+/i, 'Toggled '],
+    [/^Close\s+/i, 'Closed '],
+    [/^Expand\s+/i, 'Expanded '],
+    [/^Collapse\s+/i, 'Collapsed '],
+    [/^Use\s+/i, 'Used '],
+    [/^Submit\s+/i, 'Submitted '],
+  ];
+  for (const [pattern, replacement] of replacements) {
+    if (pattern.test(label)) return label.replace(pattern, replacement);
+  }
+  return label;
+}
+
+function normalizedStoredLabel(value: unknown): string {
+  const label = usableLabel(value);
+  if (!label) return '';
+  const route = routeFromLegacyLabel(label);
+  if (route) return `Opened ${pageDisplayName(route)} page`;
+  return pastTenseAction(label);
+}
+
 export function eventLabel(event: OwnerAnalyticsEvent): string {
   const props = eventProperties(event);
-  const label = usableLabel(props.label);
+  const label = normalizedStoredLabel(props.label);
   const target = typeof props.target === 'string' ? props.target : '';
   const targetKind = typeof props.target_kind === 'string' ? props.target_kind : '';
   const controlKey = humanize(props.control_key);
@@ -57,24 +148,26 @@ export function eventLabel(event: OwnerAnalyticsEvent): string {
 
   switch (event.eventName) {
     case 'page_viewed':
-      return 'Viewed page';
+      return `Viewed ${pageDisplayName(eventRoute(event))}`;
+    case 'page_engaged':
+      return event.durationMs ? `Spent ${formatDuration(event.durationMs)} on page` : 'Engaged with page';
     case 'interaction_clicked':
+      if (targetKind === 'route' && target) return `Opened ${pageDisplayName(target)} page`;
+      if (targetKind === 'external' && target) return `Opened external site ${target}`;
       if (label) return label;
-      if (targetKind === 'route' && target) return `Open ${target} page`;
-      if (targetKind === 'external' && target) return `Open external site ${target}`;
-      if (controlKey) return `Click ${controlKey}`;
-      if (elementType) return `Click ${elementType}`;
-      return 'Click control';
+      if (controlKey) return `Clicked ${controlKey}`;
+      if (elementType) return `Clicked ${elementType}`;
+      return 'Clicked control';
     case 'surface_clicked':
-      return `Click ${elementType || 'page'} surface`;
+      return `Clicked ${elementType || 'page'} surface`;
     case 'control_changed': {
       const subject = label || controlKey || humanize(props.control_type) || 'control';
-      return `Change ${subject}`;
+      return subject.toLowerCase().startsWith('changed ') ? subject : `Changed ${subject}`;
     }
     case 'form_submitted': {
       const form = humanize(props.form_key);
-      if (form) return `Submit ${form}`;
-      return target && target !== eventRoute(event) ? `Submit form to ${target}` : 'Submit form';
+      if (form) return `Submitted ${form}`;
+      return target && target !== eventRoute(event) ? `Submitted form to ${target}` : 'Submitted form';
     }
     case 'section_viewed': {
       const section = humanize(props.section_key);
@@ -136,9 +229,70 @@ export function eventLabel(event: OwnerAnalyticsEvent): string {
       return 'API error';
     case 'performance_threshold_exceeded':
       return 'Performance threshold exceeded';
+    case 'pricing_viewed':
+      return 'Viewed pricing';
+    case 'checkout_started':
+      return 'Started checkout';
+    case 'checkout_completed':
+      return 'Completed checkout';
+    case 'checkout_failed':
+      return 'Checkout failed';
+    case 'subscription_started':
+      return 'Started subscription';
+    case 'subscription_renewed':
+      return 'Renewed subscription';
+    case 'subscription_cancelled':
+      return 'Cancelled subscription';
+    case 'refund_requested':
+      return 'Requested refund';
+    case 'refund_completed':
+      return 'Completed refund';
     default:
       return label || humanize(event.eventName) || event.eventName;
   }
+}
+
+export function isMeaningfulJourneyAction(event: OwnerAnalyticsEvent): boolean {
+  if (LOW_VALUE_EVENT_NAMES.has(event.eventName)) return false;
+  if (isFailureEvent(event)) return true;
+
+  if (event.eventName === 'interaction_clicked') {
+    const props = eventProperties(event);
+    const targetKind = typeof props.target_kind === 'string' ? props.target_kind : '';
+    const target = typeof props.target === 'string' ? props.target : '';
+    if (targetKind === 'route' && target) return true;
+    if (targetKind === 'external' && target) return true;
+
+    const label = eventLabel(event).trim().toLowerCase();
+    if (!label || GENERIC_ACTION_LABELS.has(label)) return false;
+    if (/^(opened|closed) .* menu$/.test(label)) return false;
+    if (/^(opened|closed) navigation menu$/.test(label)) return false;
+    return true;
+  }
+
+  return true;
+}
+
+export function journeyOutcome(events: OwnerAnalyticsEvent[]): JourneyOutcome {
+  if (events.some(isFailureEvent)) return { kind: 'friction', label: 'Friction' };
+  if (events.some(event => SUCCESS_EVENT_NAMES.has(event.eventName)
+    || ['success', 'completed', 'ok'].includes((event.resultStatus ?? '').toLowerCase()))) {
+    return { kind: 'success', label: 'Completed' };
+  }
+  if (events.some(isMeaningfulJourneyAction)) return { kind: 'engaged', label: 'Engaged' };
+  return { kind: 'viewed', label: 'Viewed only' };
+}
+
+export function measuredEngagementMs(events: OwnerAnalyticsEvent[]): number {
+  const measured = events
+    .filter(event => event.eventName === 'page_engaged' && typeof event.durationMs === 'number' && event.durationMs > 0)
+    .reduce((total, event) => total + (event.durationMs ?? 0), 0);
+  if (measured > 0) return measured;
+
+  if (events.length < 2) return 0;
+  const ordered = [...events].sort((a, b) => a.occurredAt.getTime() - b.occurredAt.getTime());
+  const elapsed = ordered[ordered.length - 1].occurredAt.getTime() - ordered[0].occurredAt.getTime();
+  return Math.min(Math.max(0, elapsed), 30 * 60_000);
 }
 
 export function compactNumber(value: number): string {
@@ -195,6 +349,7 @@ export function isFailureEvent(event: OwnerAnalyticsEvent): boolean {
     || event.eventName === 'api_error'
     || event.eventName === 'dead_click_detected'
     || event.eventName === 'rage_click_detected'
+    || event.eventName === 'checkout_failed'
     || event.resultStatus === 'failed'
     || event.resultStatus === 'error'
     || event.resultStatus === 'friction';
