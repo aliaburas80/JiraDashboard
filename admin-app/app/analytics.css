@@ -113,6 +113,7 @@
 
 .analytics-track i {
   display: block;
+  width: var(--analytics-width, 0%);
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #111827, #2563eb);

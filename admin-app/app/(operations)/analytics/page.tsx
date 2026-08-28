@@ -1,7 +1,9 @@
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { prisma } from '../../../../src/lib/prisma';
+import { getOwnerProductAnalyticsOperationalData } from '../../../../src/server/tenancy/ownerProductAnalyticsRepository';
 import { ADMIN_SESSION_OPTIONS, type AdminSessionData } from '../../../lib/session';
 
 const PERIODS = [1, 7, 30, 90] as const;
@@ -25,6 +27,11 @@ type EventRow = {
 
 function percent(value: number, total: number): number {
   return total > 0 ? Math.round((value / total) * 100) : 0;
+}
+
+function analyticsWidthStyle(value: number): CSSProperties {
+  const bounded = Math.max(0, Math.min(100, value));
+  return { '--analytics-width': `${bounded}%` } as CSSProperties;
 }
 
 function dayKey(date: Date): string {
@@ -89,7 +96,7 @@ export default async function ProductAnalyticsPage({ searchParams }: PageProps) 
     : 30;
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1_000);
 
-  const [events, eventCount, totalUsers, newUsers, imports] = await Promise.all([
+  const [events, eventCount, operational] = await Promise.all([
     prisma.productAnalyticsEvent.findMany({
       where: { occurredAt: { gte: since } },
       orderBy: { occurredAt: 'asc' },
@@ -107,35 +114,9 @@ export default async function ProductAnalyticsPage({ searchParams }: PageProps) 
       },
     }),
     prisma.productAnalyticsEvent.count({ where: { occurredAt: { gte: since } } }),
-    prisma.user.count(),
-    prisma.user.findMany({
-      where: { createdAt: { gte: since } },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        persona: true,
-        emailVerified: true,
-        createdAt: true,
-        lastLoginAt: true,
-      },
-    }),
-    prisma.importLog.findMany({
-      where: { uploadedAt: { gte: since } },
-      orderBy: { uploadedAt: 'desc' },
-      select: {
-        id: true,
-        userId: true,
-        status: true,
-        sourceType: true,
-        rowCount: true,
-        totalIssues: true,
-        processingTimeMs: true,
-        uploadedAt: true,
-      },
-    }),
+    getOwnerProductAnalyticsOperationalData(since),
   ]);
+  const { totalUsers, newUsers, imports } = operational;
 
   const sampled = eventCount > events.length;
   const pageViews = events.filter(event => event.eventName === 'page_viewed');
@@ -331,7 +312,7 @@ export default async function ProductAnalyticsPage({ searchParams }: PageProps) 
             {visibleDayRows.map(row => (
               <div className="analytics-day-row" key={row.key}>
                 <span>{shortDate(row.date)}</span>
-                <div className="analytics-track"><i style={{ width: `${Math.max(row.visitors.size ? 4 : 0, percent(row.visitors.size, maxDailyVisitors))}%` }} /></div>
+                <div className="analytics-track"><i style={analyticsWidthStyle(Math.max(row.visitors.size ? 4 : 0, percent(row.visitors.size, maxDailyVisitors)))} /></div>
                 <strong>{row.visitors.size}</strong>
                 <small>{row.uploads} uploads · {row.signups} new</small>
               </div>
@@ -347,7 +328,7 @@ export default async function ProductAnalyticsPage({ searchParams }: PageProps) 
             {stages.map((stage, index) => (
               <div key={stage.label} className="analytics-funnel-row">
                 <span>{index + 1}. {stage.label}</span>
-                <div className="analytics-track"><i style={{ width: `${Math.max(stage.value ? 4 : 0, percent(stage.value, journeyMax))}%` }} /></div>
+                <div className="analytics-track"><i style={analyticsWidthStyle(Math.max(stage.value ? 4 : 0, percent(stage.value, journeyMax)))} /></div>
                 <strong>{stage.value}</strong>
               </div>
             ))}
@@ -383,7 +364,7 @@ export default async function ProductAnalyticsPage({ searchParams }: PageProps) 
             <div className="analytics-bar-list">
               {sources.map(item => (
                 <div key={item.source} className="analytics-bar-row">
-                  <span>{item.source}</span><div className="analytics-track"><i style={{ width: `${percent(item.sessions, maxSourceSessions)}%` }} /></div><strong>{item.sessions}</strong>
+                  <span>{item.source}</span><div className="analytics-track"><i style={analyticsWidthStyle(percent(item.sessions, maxSourceSessions))} /></div><strong>{item.sessions}</strong>
                 </div>
               ))}
             </div>
@@ -397,7 +378,7 @@ export default async function ProductAnalyticsPage({ searchParams }: PageProps) 
           {transitions.length > 0 ? (
             <div className="analytics-bar-list">
               {transitions.map(([transition, count]) => (
-                <div key={transition} className="analytics-bar-row flow-row"><span>{transition}</span><div className="analytics-track"><i style={{ width: `${percent(count, maxTransition)}%` }} /></div><strong>{count}</strong></div>
+                <div key={transition} className="analytics-bar-row flow-row"><span>{transition}</span><div className="analytics-track"><i style={analyticsWidthStyle(percent(count, maxTransition))} /></div><strong>{count}</strong></div>
               ))}
             </div>
           ) : <p className="muted">More than one tracked page in a session is needed before flows appear.</p>}
@@ -409,7 +390,7 @@ export default async function ProductAnalyticsPage({ searchParams }: PageProps) 
             <div>
               <h4>Devices</h4>
               <div className="analytics-bar-list compact">
-                {devices.slice(0, 5).map(([device, count]) => <div key={device} className="analytics-bar-row"><span>{device}</span><div className="analytics-track"><i style={{ width: `${percent(count, maxDevice)}%` }} /></div><strong>{count}</strong></div>)}
+                {devices.slice(0, 5).map(([device, count]) => <div key={device} className="analytics-bar-row"><span>{device}</span><div className="analytics-track"><i style={analyticsWidthStyle(percent(count, maxDevice))} /></div><strong>{count}</strong></div>)}
               </div>
             </div>
             <div>
