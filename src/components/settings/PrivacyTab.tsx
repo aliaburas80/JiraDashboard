@@ -128,8 +128,9 @@ export default function PrivacyTab({ onToast }: PrivacyTabProps) {
         <h2 className="mb-1 text-sm font-black uppercase tracking-wider text-slate-700">Analytics</h2>
         <p className="mb-4 text-xs text-slate-500">
           Optionally share privacy-minimised product-usage analytics to help us improve Delivery Clarity.
-          When enabled, we record product pages, product actions, timing and error signals. We do not record Jira issue content,
-          typed text, filenames or form values. You can change this choice at any time.
+          When enabled, we record product pages, click surfaces, control actions, form submissions, section/scroll engagement,
+          timing and error/friction signals. We do not record Jira issue content, typed text, filenames, form values,
+          query strings or private-link tokens. You can change this choice at any time.
         </p>
         <label className="flex items-center gap-3">
           <input
