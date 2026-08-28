@@ -18,6 +18,13 @@ import {
 
 type PageProps = { searchParams: Promise<{ days?: string | string[] }> };
 
+type FlowPageGroup = {
+  route: string;
+  firstAt: Date;
+  lastAt: Date;
+  events: OwnerAnalyticsEvent[];
+};
+
 function dayKey(value: Date): string {
   return value.toISOString().slice(0, 10);
 }
@@ -38,17 +45,43 @@ function canonicalVisitorKey(
 function importantEvent(event: OwnerAnalyticsEvent): boolean {
   return event.eventName === 'page_viewed'
     || event.eventName === 'interaction_clicked'
+    || event.eventName === 'surface_clicked'
     || event.eventName === 'control_changed'
     || event.eventName === 'form_submitted'
+    || event.eventName === 'section_viewed'
+    || event.eventName === 'scroll_depth_reached'
     || event.eventName === 'rage_click_detected'
+    || event.eventName === 'upload_started'
     || event.eventName === 'upload_completed'
     || event.eventName === 'upload_validation_failed'
+    || event.eventName === 'analysis_started'
     || event.eventName === 'analysis_completed'
     || event.eventName === 'analysis_failed'
     || event.eventName === 'dashboard_viewed'
+    || event.eventName === 'insight_opened'
     || event.eventName === 'report_exported'
     || event.eventName === 'client_error'
     || event.eventName === 'api_error';
+}
+
+function groupFlowByPage(events: OwnerAnalyticsEvent[]): FlowPageGroup[] {
+  const groups: FlowPageGroup[] = [];
+  for (const event of events) {
+    const route = eventRoute(event);
+    const current = groups[groups.length - 1];
+    if (!current || current.route !== route) {
+      groups.push({
+        route,
+        firstAt: event.occurredAt,
+        lastAt: event.occurredAt,
+        events: [event],
+      });
+      continue;
+    }
+    current.lastAt = event.occurredAt;
+    current.events.push(event);
+  }
+  return groups;
 }
 
 export default async function UserFlowAnalyticsPage({ searchParams }: PageProps) {
@@ -84,16 +117,18 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
   for (const item of data.imports) importsByUser.set(item.userId, (importsByUser.get(item.userId) ?? 0) + 1);
 
   const trackedRows = [...grouped.entries()].map(([key, events]) => {
+    const orderedEvents = [...events].sort((a, b) => a.occurredAt.getTime() - b.occurredAt.getTime());
     const userId = key.startsWith('user:') ? key.slice(5) : null;
     const user = userId ? usersById.get(userId) : undefined;
-    const sessions = new Set(events.map(event => event.sessionId).filter((value): value is string => Boolean(value)));
-    const activeDays = new Set(events.map(event => dayKey(event.occurredAt)));
-    const pageViews = events.filter(event => event.eventName === 'page_viewed').length;
-    const clicks = events.filter(event => event.eventName === 'interaction_clicked' || event.eventName === 'surface_clicked').length;
-    const failures = events.filter(isFailureEvent).length;
-    const firstSeen = events[0]?.occurredAt ?? null;
-    const lastSeen = events[events.length - 1]?.occurredAt ?? null;
-    const recentFlow = events.filter(importantEvent).slice(-18);
+    const sessions = new Set(orderedEvents.map(event => event.sessionId).filter((value): value is string => Boolean(value)));
+    const activeDays = new Set(orderedEvents.map(event => dayKey(event.occurredAt)));
+    const pageViews = orderedEvents.filter(event => event.eventName === 'page_viewed').length;
+    const clicks = orderedEvents.filter(event => event.eventName === 'interaction_clicked' || event.eventName === 'surface_clicked').length;
+    const failures = orderedEvents.filter(isFailureEvent).length;
+    const firstSeen = orderedEvents[0]?.occurredAt ?? null;
+    const lastSeen = orderedEvents[orderedEvents.length - 1]?.occurredAt ?? null;
+    const recentFlow = orderedEvents.filter(importantEvent).slice(-80);
+    const pageFlow = groupFlowByPage(recentFlow);
     const returned = sessions.size > 1 || activeDays.size > 1;
     const imports = userId ? importsByUser.get(userId) ?? 0 : 0;
 
@@ -112,8 +147,8 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
       lastSeen,
       returned,
       imports,
-      stage: stageForEvents(events),
-      recentFlow,
+      stage: stageForEvents(orderedEvents),
+      pageFlow,
     };
   });
 
@@ -148,7 +183,7 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
         returned: false,
         imports,
         stage: imports > 0 ? 'Upload' : 'Registered',
-        recentFlow: [] as OwnerAnalyticsEvent[],
+        pageFlow: [] as FlowPageGroup[],
       };
     });
 
@@ -170,7 +205,7 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
         <div>
           <p className="eyebrow">Behavior intelligence</p>
           <h2>User Flows</h2>
-          <p className="muted">Follow consented visitors from arrival through signup, upload, analysis, dashboards and reports. Page views and all click surfaces are counted globally; operational account/upload progress remains visible even when behavioral analytics is off.</p>
+          <p className="muted">Follow consented visitors from arrival through signup, upload, analysis, dashboards and reports. Expand any tracked user to see each page visit and exactly what actions happened there.</p>
         </div>
       </div>
 
@@ -220,17 +255,43 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
                 <td>
                   {row.tracked ? (
                     <details>
-                      <summary>View flow</summary>
+                      <summary>View page & action flow</summary>
                       <small>First tracked {formatDateTime(row.firstSeen)}</small>
-                      {row.recentFlow.length ? (
-                        <ol className="ops-list">
-                          {row.recentFlow.map((event, index) => (
-                            <li key={`${event.occurredAt.toISOString()}-${index}`}>
-                              <strong>{formatDateTime(event.occurredAt)}</strong>{' '}
-                              <code>{eventRoute(event)}</code>{' — '}{eventLabel(event)}
-                            </li>
-                          ))}
-                        </ol>
+                      {row.pageFlow.length ? (
+                        <div className="ops-table-wrap">
+                          <table className="ops-table analytics-table">
+                            <thead>
+                              <tr><th>Page</th><th>Visit</th><th>Actions on this page</th></tr>
+                            </thead>
+                            <tbody>
+                              {row.pageFlow.map((group, groupIndex) => {
+                                const actions = group.events.filter(event => event.eventName !== 'page_viewed');
+                                return (
+                                  <tr key={`${group.route}-${group.firstAt.toISOString()}-${groupIndex}`}>
+                                    <td><code>{group.route}</code></td>
+                                    <td>
+                                      <strong>{formatDateTime(group.firstAt)}</strong>
+                                      {group.lastAt.getTime() !== group.firstAt.getTime() ? <small>Last action {formatDateTime(group.lastAt)}</small> : null}
+                                    </td>
+                                    <td>
+                                      {actions.length ? (
+                                        <ol className="ops-list">
+                                          {actions.map((event, index) => (
+                                            <li key={`${event.occurredAt.toISOString()}-${event.eventName}-${index}`}>
+                                              <strong>{formatDateTime(event.occurredAt)}</strong>{' — '}
+                                              {eventLabel(event)}
+                                              <small> · {event.eventName.replaceAll('_', ' ')}</small>
+                                            </li>
+                                          ))}
+                                        </ol>
+                                      ) : <span className="muted">Viewed page; no additional action recorded.</span>}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
                       ) : <p className="muted">No detailed journey events yet.</p>}
                     </details>
                   ) : <span className="muted">Behavior not tracked</span>}
