@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { ADMIN_SESSION_OPTIONS, type AdminSessionData } from '../../../../lib/session';
@@ -126,7 +127,7 @@ export default async function UserFlowAnalyticsPage({ searchParams }: PageProps)
 
       <div className="analytics-periods" aria-label="User-flow period">
         {[1, 7, 30, 90].map(period => (
-          <a key={period} href={`/analytics/users?days=${period}`} className={period === days ? 'active' : ''}>{period === 1 ? '24h' : `${period} days`}</a>
+          <Link key={period} href={`/analytics/users?days=${period}`} className={period === days ? 'active' : ''}>{period === 1 ? '24h' : `${period} days`}</Link>
         ))}
       </div>
 
