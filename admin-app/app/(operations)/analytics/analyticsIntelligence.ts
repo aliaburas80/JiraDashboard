@@ -31,12 +31,114 @@ export function eventRoute(event: OwnerAnalyticsEvent): string {
   return typeof route === 'string' && route ? route : event.page || '/';
 }
 
+function humanize(value: unknown): string {
+  if (typeof value !== 'string' || !value.trim()) return '';
+  const result = value
+    .replace(/[-_:]+/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return result.replace(/\b\w/g, char => char.toUpperCase());
+}
+
+function usableLabel(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const label = value.trim();
+  return label && label.toLowerCase() !== 'unlabeled action' ? label : '';
+}
+
 export function eventLabel(event: OwnerAnalyticsEvent): string {
   const props = eventProperties(event);
-  const label = props.label;
-  if (typeof label === 'string' && label) return label;
-  if (event.eventName === 'page_viewed') return eventRoute(event);
-  return event.eventName.replaceAll('_', ' ');
+  const label = usableLabel(props.label);
+  const target = typeof props.target === 'string' ? props.target : '';
+  const targetKind = typeof props.target_kind === 'string' ? props.target_kind : '';
+  const controlKey = humanize(props.control_key);
+  const elementType = humanize(props.element_type);
+
+  switch (event.eventName) {
+    case 'page_viewed':
+      return 'Viewed page';
+    case 'interaction_clicked':
+      if (label) return label;
+      if (targetKind === 'route' && target) return `Open ${target} page`;
+      if (targetKind === 'external' && target) return `Open external site ${target}`;
+      if (controlKey) return `Click ${controlKey}`;
+      if (elementType) return `Click ${elementType}`;
+      return 'Click control';
+    case 'surface_clicked':
+      return `Click ${elementType || 'page'} surface`;
+    case 'control_changed': {
+      const subject = label || controlKey || humanize(props.control_type) || 'control';
+      return `Change ${subject}`;
+    }
+    case 'form_submitted': {
+      const form = humanize(props.form_key);
+      if (form) return `Submit ${form}`;
+      return target && target !== eventRoute(event) ? `Submit form to ${target}` : 'Submit form';
+    }
+    case 'section_viewed': {
+      const section = humanize(props.section_key);
+      return section ? `Viewed ${section} section` : 'Viewed section';
+    }
+    case 'scroll_depth_reached':
+      return typeof props.depth_pct === 'number' ? `Scrolled to ${props.depth_pct}%` : 'Scrolled page';
+    case 'session_started':
+      return 'Session started';
+    case 'rage_click_detected':
+      return label ? `Repeated rapid clicks on ${label}` : 'Repeated rapid clicks detected';
+    case 'dead_click_detected':
+      return label ? `Dead click on ${label}` : 'Dead click detected';
+    case 'signup_started':
+      return 'Started signup';
+    case 'signup_completed':
+      return 'Completed signup';
+    case 'email_verified':
+      return 'Verified email';
+    case 'login_completed':
+      return 'Logged in';
+    case 'role_selected':
+      return 'Selected role';
+    case 'upload_started':
+      return 'Started upload';
+    case 'upload_completed':
+      return 'Completed upload';
+    case 'upload_validation_failed':
+      return 'Upload validation failed';
+    case 'analysis_started':
+      return 'Started analysis';
+    case 'analysis_completed':
+      return 'Completed analysis';
+    case 'analysis_failed':
+      return 'Analysis failed';
+    case 'dashboard_viewed':
+      return 'Viewed dashboard';
+    case 'insight_opened':
+      return 'Opened insight';
+    case 'calculation_explanation_opened':
+      return 'Opened calculation explanation';
+    case 'relation_map_opened':
+      return 'Opened relation map';
+    case 'report_exported':
+      return 'Exported report';
+    case 'filter_applied':
+      return 'Applied filter';
+    case 'search_used':
+      return 'Used search';
+    case 'help_opened':
+      return 'Opened help';
+    case 'feedback_opened':
+      return 'Opened feedback';
+    case 'feedback_submitted':
+      return 'Submitted feedback';
+    case 'client_error':
+      return 'Client error';
+    case 'api_error':
+      return 'API error';
+    case 'performance_threshold_exceeded':
+      return 'Performance threshold exceeded';
+    default:
+      return label || humanize(event.eventName) || event.eventName;
+  }
 }
 
 export function compactNumber(value: number): string {

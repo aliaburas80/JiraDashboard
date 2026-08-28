@@ -138,6 +138,44 @@ function safeControlKey(element: Element): string {
   return '';
 }
 
+function humanizeControlKey(value: string): string {
+  const normalized = value
+    .replace(/[-_:]+/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return normalized.replace(/\b\w/g, char => char.toUpperCase());
+}
+
+function fallbackInteractionLabel(element: Element): string {
+  const key = safeControlKey(element);
+  const subject = key ? humanizeControlKey(key) : '';
+  const role = element.getAttribute('role') ?? '';
+  const expanded = element.getAttribute('aria-expanded');
+
+  if (expanded !== null) {
+    return `${expanded === 'true' ? 'Close' : 'Open'} ${subject || 'menu'}`;
+  }
+  if (role === 'tab') return `Select ${subject || 'tab'}`;
+  if (role.startsWith('menuitem')) return `Select ${subject || 'menu item'}`;
+  if (element instanceof HTMLInputElement) {
+    if (element.type === 'checkbox' || element.type === 'radio') {
+      return `Toggle ${subject || element.type}`;
+    }
+    return `Change ${subject || 'input'}`;
+  }
+  if (element instanceof HTMLSelectElement) return `Change ${subject || 'selection'}`;
+  if (element instanceof HTMLTextAreaElement) return `Change ${subject || 'text area'}`;
+  if (element.tagName.toLowerCase() === 'summary') {
+    const details = element.closest('details');
+    return `${details?.open ? 'Collapse' : 'Expand'} ${subject || 'section'}`;
+  }
+  if (element instanceof HTMLButtonElement || role === 'button') {
+    return `Click ${subject || 'button'}`;
+  }
+  return subject ? `Use ${subject}` : `Click ${element.tagName.toLowerCase()}`;
+}
+
 function interactionSection(element: Element): string {
   const explicit = element.closest('[data-analytics-section]')?.getAttribute('data-analytics-section');
   if (explicit && SAFE_CONTROL_KEY.test(explicit)) return explicit;
@@ -164,9 +202,9 @@ function interactionLabel(element: Element): string {
   const explicit = safeExplicitLabel(element.getAttribute('data-analytics-label'));
   if (explicit) return explicit;
 
-  const aria = safeAutomaticLabel(element.getAttribute('aria-label'));
+  const aria = safeExplicitLabel(element.getAttribute('aria-label'));
   if (aria) return aria;
-  const title = safeAutomaticLabel(element.getAttribute('title'));
+  const title = safeExplicitLabel(element.getAttribute('title'));
   if (title) return title;
 
   if (element instanceof HTMLAnchorElement) {
@@ -177,8 +215,7 @@ function interactionLabel(element: Element): string {
   const text = safeAutomaticLabel(element.textContent);
   if (text) return text;
 
-  const key = safeControlKey(element);
-  return key ? `Control ${key}` : 'Unlabeled action';
+  return fallbackInteractionLabel(element);
 }
 
 function isDisabled(element: Element): boolean {

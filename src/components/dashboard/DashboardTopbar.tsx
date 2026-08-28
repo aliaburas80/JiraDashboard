@@ -38,12 +38,9 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
   const [dropPos, setDropPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const groupButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const dropMenuRef = useRef<HTMLDivElement>(null);
-  // Seeded synchronously from the module cache so the nav renders already-filtered
-  // on mount instead of flashing unfiltered/default on every route change.
   const [role, setRole] = useState<string | null>(getCachedRole);
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(getCachedIsSuperAdmin);
 
-  // Nav items/groups this role can't open are filtered out below (getNavGroupsForRole).
   useEffect(() => {
     fetchCurrentUser().then(user => {
       setRole(user?.role ?? null);
@@ -67,7 +64,6 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
         return;
       }
       setSyncMessage(`Synced ${data.totalIssues ?? 0} issues from ${data.connectionName ?? 'Jira'}.`);
-      // Reload so every page/component re-fetches the now-fresh dashboard data.
       window.location.reload();
     } catch {
       setSyncMessage('Sync failed — check your connection and try again.');
@@ -110,8 +106,6 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
   return (
     <>
       <header className={styles.header}>
-
-        {/* ── HAMBURGER — mobile only, opens dashboard nav sidebar ── */}
         {onToggleSidebar && (
           <button
             type="button"
@@ -119,6 +113,8 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
             onClick={onToggleSidebar}
             aria-label="Open navigation menu"
             aria-haspopup="dialog"
+            data-analytics-id="dashboard-navigation-menu"
+            data-analytics-label="Open navigation menu"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M3 12h18M3 6h18M3 18h18" strokeLinecap="round" />
@@ -126,8 +122,12 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
           </button>
         )}
 
-        {/* ── BRAND ── */}
-        <Link href="/" className={styles.logo}>
+        <Link
+          href="/"
+          className={styles.logo}
+          data-analytics-id="dashboard-logo-home"
+          data-analytics-label="Open Home page"
+        >
           <div className={styles.logoIcon} aria-hidden="true">
             <Image src="/logo/delivery-clarity-logo-icon.svg" alt="" width={28} height={28} />
           </div>
@@ -135,11 +135,9 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
           <span className={styles.logoVersion}>v4.1</span>
         </Link>
 
-        {/* ── SPACER — pushes nav to center-right ── */}
         <div className={styles.spacer} />
 
-        {/* ── CENTER NAV ── */}
-        <nav className={styles.nav} aria-label="Primary navigation">
+        <nav className={styles.nav} aria-label="Primary navigation" data-analytics-section="primary-navigation">
           {visibleGroups.map(group => {
             const active = groupIsActive(pathname, group);
             const isOpen = openGroup === group.id;
@@ -154,6 +152,8 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
                 aria-expanded={isOpen}
                 aria-current={active ? 'page' : undefined}
                 className={clsx(styles.navGroupBtn, { [styles.active]: active, [styles.open]: isOpen })}
+                data-analytics-id={`nav-group-${group.id}`}
+                data-analytics-label={`${isOpen ? 'Close' : 'Open'} ${label} menu`}
               >
                 {label}
                 <svg
@@ -164,27 +164,28 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
                 >
                   <path d="M6 9l6 6 6-6" />
                 </svg>
-                {/* Blue underline at the bottom of the header when group is active */}
                 {active && <span className={styles.activeBar} aria-hidden="true" />}
               </button>
             );
           })}
         </nav>
 
-        {/* ── RIGHT RAIL ── */}
         <div className={styles.rightRail}>
-          {/* Global page/feature search — ⌘K / Ctrl+K */}
           <GlobalSearch role={role} isSuperAdmin={isSuperAdmin} />
 
-          {/* Upload button — solid primary blue, white text */}
-          <button type="button" onClick={onNewUpload} className={styles.uploadBtn}>
+          <button
+            type="button"
+            onClick={onNewUpload}
+            className={styles.uploadBtn}
+            data-analytics-id="new-upload"
+            data-analytics-label="Start new upload"
+          >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
             </svg>
             New Upload
           </button>
 
-          {/* Sync Jira — any logged-in user can pull fresh data from the live Jira connection */}
           <div className={styles.syncWrap}>
             <button
               type="button"
@@ -193,6 +194,8 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
               className={styles.syncBtn}
               aria-label="Sync new data from Jira"
               title="Pull the latest data from the connected Jira project"
+              data-analytics-id="sync-jira"
+              data-analytics-label="Sync Jira"
             >
               <svg
                 width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
@@ -210,27 +213,22 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
           </div>
 
           <div className={styles.desktopOnly}>
-            {/* Data source badge — shows live Jira sync status or upload origin */}
             <DataSourceBadge compact />
-
-            {/* Persona preview — soft-launch, hidden unless the super-admin enables it */}
             <PersonaPreviewSwitcher />
           </div>
 
-          {/* Notification bell */}
           <NotificationBell />
-          {/* User menu */}
           <UserMenu />
         </div>
       </header>
 
-      {/* Nav dropdown panel */}
       {openGroup && activeGroup && (
         <div
           ref={dropMenuRef}
           role="menu"
           className={styles.dropdownPanel}
           style={{ '--drop-top': `${dropPos.top}px`, '--drop-left': `${dropPos.left}px` } as CSSProperties}
+          data-analytics-section="primary-navigation-menu"
         >
           {activeGroup.items.map(item => {
             const active = isActivePath(pathname, item.href);
@@ -241,6 +239,8 @@ export default function DashboardTopbar({ onNewUpload, onToggleSidebar }: Props)
                 role="menuitem"
                 onClick={() => setOpenGroup(null)}
                 className={clsx(styles.dropdownItem, { [styles.itemActive]: active })}
+                data-analytics-id={`nav-item-${item.id}`}
+                data-analytics-label={`Open ${item.title} page`}
               >
                 <span>
                   <span className={styles.dropdownItemTitle}>{item.title}</span>

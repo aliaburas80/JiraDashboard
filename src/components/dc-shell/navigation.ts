@@ -20,6 +20,10 @@ export type DCShellNavItem = {
   // sidebar (AdminNavSidebar.tsx), while the topbar dropdown and global
   // search render the same group as one flat list and ignore this field.
   section?: string;
+  // Explicit role gate for user-app destinations such as Developer Tools.
+  // This is intentionally separate from superAdminOnly: a normal app admin
+  // may use Developer Tools, while every non-admin role must never see it.
+  adminOnly?: boolean;
   // Deployment-wide controls in the separate Admin runtime are Owner Admin
   // only. Keep them out of regular-admin navigation instead of showing links
   // that the Admin middleware will immediately reject.
@@ -98,21 +102,15 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
     ],
   },
   // ── Developer Tools ───────────────────────────────────────────────────────
-  // Split out of the former 'reference' group — 'developer' is admin-only
-  // technical/API documentation (see the admin-only '/developer' entry in
-  // roles.ts, alongside '/admin'), a different audience than the self-serve
-  // end-user docs kept in 'reference' below.
+  // Technical/API documentation is deliberately restricted to app admins.
   {
     id: 'developer-tools',
     label: 'Developer Tools',
     items: [
-      { id: 'developer', title: 'Developer', desc: 'API & technical docs', href: '/developer', status: 'neutral', icon: 'terminal' },
+      { id: 'developer', title: 'Developer', desc: 'API & technical docs', href: '/developer', status: 'neutral', icon: 'terminal', adminOnly: true },
     ],
   },
   // ── Reference ─────────────────────────────────────────────────────────────
-  // Self-serve, product-info destinations open to every role — trimmed to
-  // this one coherent audience (07-information-architecture.md §D); 'members'
-  // and 'developer' moved to their own groups above.
   {
     id: 'reference',
     label: 'Reference',
@@ -123,10 +121,6 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
     ],
   },
   // ── Administration ────────────────────────────────────────────────────────
-  // Mirrors the routes that actually exist in the separate MFA-protected
-  // Admin runtime. Retired embedded-only destinations must not be exposed in
-  // the main application's Admin dropdown because the cutover strips /admin
-  // and routes directly into this list's destination.
   {
     id: 'administration',
     label: 'Administration',
@@ -148,18 +142,11 @@ export const DC_NAV_GROUPS: DCShellNavGroup[] = [
 
 export const DC_NAV_ITEMS = DC_NAV_GROUPS.flatMap(g => g.items);
 
-// Filters the shared nav config down to what the given role can actually open —
-// previously every menu showed every group/item to every role (AppShell.tsx and
-// DashboardTopbar.tsx each had a "no role-based filtering in the nav" comment
-// baked in), so clicking an item a role isn't allowed to open would render
-// nothing useful once canAccessRoute() blocked the destination page. A group
-// left with zero visible items after filtering is dropped entirely rather than
-// rendering an empty dropdown.
-// EP-025: 'members' and deployment-wide Admin operations are gated by the
-// protected isSuperAdmin flag, which is orthogonal to AppRole.
+// Filters the shared nav config down to what the given role can actually open.
 export function getNavGroupsForRole(role: string | null | undefined, isSuperAdmin?: boolean): DCShellNavGroup[] {
   function isVisible(item: DCShellNavItem): boolean {
     if (item.id === 'members') return isSuperAdmin === true;
+    if (item.adminOnly && role !== 'admin') return false;
     if (item.superAdminOnly && isSuperAdmin !== true) return false;
     return canAccessRoute(role, item.href);
   }

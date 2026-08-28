@@ -76,10 +76,6 @@ test('TC-NAV-10: isSuperAdmin: true shows the Members link regardless of role', 
 });
 
 // ── Navigation duplication cleanup — single-source-of-truth guarantees ──────
-// Fixes duplicate/confusing menu entries reported across the topbar Reference
-// menu, user avatar dropdown, admin sidebar, and Settings nested menu — every
-// surface now derives from DC_NAV_GROUPS (or, for Settings tabs, ADMIN_TABS
-// in adminConsole.ts) instead of independently hand-maintained arrays.
 
 test('TC-NAV-11: no two items anywhere in DC_NAV_GROUPS share an id', () => {
   const ids = DC_NAV_GROUPS.flatMap(g => g.items.map(i => i.id));
@@ -131,11 +127,6 @@ test('TC-NAV-17: the Reference menu contains only non-admin reference/help desti
   }
 });
 
-// 07-information-architecture.md §D: 'Reference' used to mix a people
-// directory ('members'), marketing ('landing'), self-serve docs ('glossary',
-// 'help'), and admin-only developer tooling ('developer') under one
-// ambiguous label. Split into 'directory' and 'developer-tools' so the
-// trimmed 'reference' group holds only self-serve, every-role product info.
 test('TC-NAV-18: the Reference group no longer mixes the people directory or developer tooling with end-user docs', () => {
   const referenceGroup = DC_NAV_GROUPS.find(g => g.id === 'reference');
   const referenceIds = referenceGroup?.items.map(i => i.id) ?? [];
@@ -177,4 +168,11 @@ test('TC-NAV-21: every Admin menu destination exists in the separate Admin runti
     '/users',
     '/settings',
   ]);
+});
+
+test('TC-NAV-22: Developer Tools carries an explicit adminOnly defense-in-depth gate', () => {
+  const developer = DC_NAV_GROUPS
+    .find(group => group.id === 'developer-tools')
+    ?.items.find(item => item.id === 'developer');
+  expect(developer?.adminOnly).toBe(true);
 });
