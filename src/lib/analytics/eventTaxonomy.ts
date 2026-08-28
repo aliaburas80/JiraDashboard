@@ -2,7 +2,7 @@
 // P0B-05: the versioned product-event taxonomy — master plan §4.2.
 // This module only defines *what* events exist. Nothing here sends or
 // stores anything — see track.ts for envelope construction and the
-// consent-gated, currently-inert transport.
+// consent-gated transport.
 
 export const ANALYTICS_EVENT_DOMAINS = {
   identity: [
@@ -29,6 +29,8 @@ export const ANALYTICS_EVENT_DOMAINS = {
   ],
   navigation: [
     'page_viewed',
+    'page_engaged',
+    'interaction_clicked',
     'section_viewed',
     'filter_applied',
     'search_used',
